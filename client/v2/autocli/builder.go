@@ -5,13 +5,8 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
-<<<<<<< HEAD
 
-	"github.com/cosmos/cosmos-sdk/client"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-=======
-	authtx "cosmossdk.io/x/auth/tx"
->>>>>>> 8f39bfb4e (fix(client/v2): resolve keyring flags properly (#19060))
 )
 
 // Builder manages options for building CLI commands.

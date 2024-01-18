@@ -61,15 +61,7 @@ func initFixture(t *testing.T) *fixture {
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
 
-<<<<<<< HEAD
-	var initClientCtx client.Context
-	initClientCtx = initClientCtx.
-=======
 	clientCtx := client.Context{}.
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
->>>>>>> 8f39bfb4e (fix(client/v2): resolve keyring flags properly (#19060))
 		WithKeyring(kr).
 		WithKeyringDir(home).
 		WithHomeDir(home).
@@ -84,12 +76,6 @@ func initFixture(t *testing.T) *fixture {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          protoregistry.GlobalFiles,
-<<<<<<< HEAD
-=======
-			AddressCodec:          clientCtx.AddressCodec,
-			ValidatorAddressCodec: clientCtx.ValidatorAddressCodec,
-			ConsensusAddressCodec: clientCtx.ConsensusAddressCodec,
->>>>>>> 8f39bfb4e (fix(client/v2): resolve keyring flags properly (#19060))
 			Keyring:               akr,
 			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),

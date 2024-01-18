@@ -112,13 +112,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 
 // BuildMsgMethodCommand returns a command that outputs the JSON representation of the message.
 func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-<<<<<<< HEAD
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &b.ClientCtx))
-
-=======
-	execFunc := func(cmd *cobra.Command, input protoreflect.Message) error {
->>>>>>> 8f39bfb4e (fix(client/v2): resolve keyring flags properly (#19060))
 		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err

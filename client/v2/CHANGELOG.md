@@ -36,15 +36,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<<<<<<< HEAD
-=======
-<!-- ## [v2.1.0-beta.1] to be tagged after v0.51 final or in SDK agnostic version -->
-
-### Features
-
-* [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
-* [#19039](https://github.com/cosmos/cosmos-sdk/pull/19039) Add support for pubkey in autocli.
-
 ### Improvements
 
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
@@ -54,11 +45,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Simplify key flag parsing logic in flag handler.
 
-### API Breaking Changes
-
-* [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
-
->>>>>>> 8f39bfb4e (fix(client/v2): resolve keyring flags properly (#19060))
 ## [v2.0.0-beta.1] - 2023-11-07
 
 This is the first tagged version of client/v2.

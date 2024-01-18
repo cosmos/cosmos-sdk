@@ -42,7 +42,7 @@ type ContinuousVestingAccount struct {
 // --------------- Init -----------------
 
 func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
-	if msg.StartTime < 1 {
+	if msg.StartTime < 0 {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %d, length must be greater than 0", msg.StartTime)
 	}
 

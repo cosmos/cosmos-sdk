@@ -30,7 +30,7 @@ type FraudProof struct {
 	// Fraudulent state transition has to be one of these
 	// Only one have of these three can be non-nil
 	FraudulentBeginBlock *abci.RequestBeginBlock
-	FraudulentDeliverTx  []*abci.RequestDeliverTx
+	FraudulentDeliverTx  *abci.RequestDeliverTx
 	FraudulentEndBlock   *abci.RequestEndBlock
 
 	// TODO: Add Proof that fraudulent state transition is inside merkelizied transactions in block header
@@ -244,9 +244,9 @@ func (fraudProof *FraudProof) toABCI() (*abci.FraudProof, error) {
 		PreStateAppHash:      fraudProof.PreStateAppHash,
 		ExpectedValidAppHash: fraudProof.ExpectedValidAppHash,
 		StateWitness:         abciStateWitness,
-		BeginBlock:           fraudProof.FraudulentBeginBlock,
-		DeliverTx:            fraudProof.FraudulentDeliverTx,
-		EndBlock:             fraudProof.FraudulentEndBlock,
+		FraudulentBeginBlock: fraudProof.FraudulentBeginBlock,
+		FraudulentDeliverTx:  fraudProof.FraudulentDeliverTx,
+		FraudulentEndBlock:   fraudProof.FraudulentEndBlock,
 	}, nil
 }
 
@@ -277,8 +277,8 @@ func (fraudProof *FraudProof) FromABCI(abciFraudProof abci.FraudProof) error {
 	fraudProof.PreStateAppHash = abciFraudProof.PreStateAppHash
 	fraudProof.ExpectedValidAppHash = abciFraudProof.ExpectedValidAppHash
 	fraudProof.stateWitness = stateWitness
-	fraudProof.FraudulentBeginBlock = abciFraudProof.BeginBlock
-	fraudProof.FraudulentDeliverTx = abciFraudProof.DeliverTx
-	fraudProof.FraudulentEndBlock = abciFraudProof.EndBlock
+	fraudProof.FraudulentBeginBlock = abciFraudProof.FraudulentBeginBlock
+	fraudProof.FraudulentDeliverTx = abciFraudProof.FraudulentDeliverTx
+	fraudProof.FraudulentEndBlock = abciFraudProof.FraudulentEndBlock
 	return nil
 }

@@ -384,6 +384,10 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 
+func (app *BaseApp) SetInitialHeight(initialHeight int64) {
+	app.initialHeight = initialHeight
+}
+
 func (app *BaseApp) setHaltHeight(haltHeight uint64) {
 	app.haltHeight = haltHeight
 }
@@ -454,6 +458,10 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
+}
+
+func (app *BaseApp) ResetDeliverState() {
+	app.deliverState = nil
 }
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's

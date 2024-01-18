@@ -140,7 +140,7 @@ func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 }
 
 func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
-	if app.sealed {
+	if app.sealed && beginBlocker != nil {
 		panic("SetBeginBlocker() on sealed BaseApp")
 	}
 
@@ -148,7 +148,7 @@ func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
 }
 
 func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
-	if app.sealed {
+	if app.sealed && endBlocker != nil {
 		panic("SetEndBlocker() on sealed BaseApp")
 	}
 
@@ -164,7 +164,7 @@ func (app *BaseApp) GetEndBlocker() sdk.EndBlocker {
 }
 
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
-	if app.sealed {
+	if app.sealed && ah != nil {
 		panic("SetAnteHandler() on sealed BaseApp")
 	}
 

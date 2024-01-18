@@ -175,7 +175,6 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 	}
 
-	// emit signing events.
 	var events sdk.Events
 	for i, sig := range signatures {
 		signerStr, err := svd.ak.AddressCodec().BytesToString(signers[i])

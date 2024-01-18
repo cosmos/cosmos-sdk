@@ -363,6 +363,14 @@ func (bva BaseVesting) Authenticate(ctx context.Context, msg *account_abstractio
 		return nil, fmt.Errorf("bundler is not the owner of this vesting account")
 	}
 
+	// prevent bypass vesting account check for send, delegate and undelegate action
+	// when execute messages by pass it in bundler. Since vesting doesn't have a handler
+	// for payBundler message, this could lead to accounts keeper executes the messages
+	// directly without going through vesting account ExecuteMessages handler.
+	if len(msg.UserOperation.BundlerPaymentMessages) > 0 {
+		return nil, fmt.Errorf("all message should only be execute by vesting account ExecuteMessages handler")
+	}
+
 	return &account_abstractionv1.MsgAuthenticateResponse{}, nil
 }
 

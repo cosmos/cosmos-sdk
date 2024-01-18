@@ -42,9 +42,8 @@ func initFixture(t *testing.T) *fixture {
 	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
 	ac := addresscodec.NewBech32Codec("cosmos")
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	sk := map[string]*storetypes.KVStoreKey{}
-	sk[types.ModuleName] = mockStoreKey
-	env := runtime.NewEnvironment(sk, nil)
+
+	env := runtime.NewEnvironment(mockStoreKey, nil)
 	k := keeper.NewKeeper(env, encCfg.Codec, authtypes.NewModuleAddress("gov").String(), ac)
 
 	bz, err := ac.StringToBytes(authtypes.NewModuleAddress("gov").String())

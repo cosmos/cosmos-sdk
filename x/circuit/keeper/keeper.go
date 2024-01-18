@@ -37,7 +37,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, authority strin
 		panic(err)
 	}
 
-	storeService := env.KVStoreService[types.ModuleName]
+	storeService := env.KVStoreService
 
 	sb := collections.NewSchemaBuilder(storeService)
 

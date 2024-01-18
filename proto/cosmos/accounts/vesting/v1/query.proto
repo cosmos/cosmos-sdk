@@ -3,9 +3,7 @@ package cosmos.accounts.vesting.v1;
 
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/msg/v1/msg.proto";
 import "cosmos/accounts/vesting/v1/vesting.proto";
-import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "cosmossdk.io/x/vesting/types/v1";

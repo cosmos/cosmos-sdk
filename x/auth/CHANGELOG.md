@@ -49,3 +49,5 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18817](https://github.com/cosmos/cosmos-sdk/pull/18817) SigVerification, GasConsumption, IncreaseSequence ante decorators have all been joined into one SigVerification decorator. Gas consumption during TX validation flow has reduced.
 
 ### Bug Fixes
+
+* [#19099](https://github.com/cosmos/cosmos-sdk/pull/19099) Sets automatically `gas=auto` for simulation to avoid empty pk error.

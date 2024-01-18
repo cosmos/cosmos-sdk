@@ -12,14 +12,14 @@ import (
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
+	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/orm/model/ormdb"
 	"cosmossdk.io/orm/model/ormtable"
 )
 
 func init() {
-	am.Register(&modulev1alpha1.Module{},
-		am.Provide(ProvideModuleDB),
+	appconfig.RegisterModule(&modulev1alpha1.Module{},
+		appconfig.Provide(ProvideModuleDB),
 	)
 }
 

@@ -47,8 +47,6 @@ type AppModule struct {
 	k Keeper
 }
 
-func (m AppModule) IsOnePerModuleType() {}
-
 func (m AppModule) IsAppModule() {}
 
 func (m AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}

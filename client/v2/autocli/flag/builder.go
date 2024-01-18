@@ -28,6 +28,7 @@ const (
 	AddressStringScalarType          = "cosmos.AddressString"
 	ValidatorAddressStringScalarType = "cosmos.ValidatorAddressString"
 	ConsensusAddressStringScalarType = "cosmos.ConsensusAddressString"
+	PubkeyScalarType                 = "cosmos.Pubkey"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.
@@ -71,6 +72,7 @@ func (b *Builder) init() {
 		b.scalarFlagTypes[AddressStringScalarType] = addressStringType{}
 		b.scalarFlagTypes[ValidatorAddressStringScalarType] = validatorAddressStringType{}
 		b.scalarFlagTypes[ConsensusAddressStringScalarType] = consensusAddressStringType{}
+		b.scalarFlagTypes[PubkeyScalarType] = pubkeyType{}
 	}
 }
 

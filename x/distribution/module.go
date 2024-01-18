@@ -8,17 +8,11 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
 	"cosmossdk.io/x/distribution/types"
-	staking "cosmossdk.io/x/staking/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -37,7 +31,6 @@ var (
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
-	_ depinject.OnePerModuleType = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
@@ -117,9 +110,6 @@ func NewAppModule(
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -194,67 +184,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
 	)
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	am.Register(&modulev1.Module{},
-		am.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
-	PoolKeeper    types.PoolKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	DistrKeeper keeper.Keeper
-	Module      appmodule.AppModule
-	Hooks       staking.StakingHooksWrapper
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	feeCollectorName := in.Config.FeeCollectorName
-	if feeCollectorName == "" {
-		feeCollectorName = authtypes.FeeCollectorName
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	k := keeper.NewKeeper(
-		in.Cdc,
-		in.StoreService,
-		in.AccountKeeper,
-		in.BankKeeper,
-		in.StakingKeeper,
-		in.PoolKeeper,
-		feeCollectorName,
-		authority.String(),
-	)
-
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.PoolKeeper)
-
-	return ModuleOutputs{
-		DistrKeeper: k,
-		Module:      m,
-		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-	}
 }

@@ -12,7 +12,6 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/depinject/appmodule"
 	internal "cosmossdk.io/depinject/internal/appconfig"
 	"cosmossdk.io/depinject/internal/appconfig/testpb"
 )
@@ -102,7 +101,7 @@ modules:
 	assert.NilError(t, depinject.Inject(opt))
 
 	// module registration failures:
-	appmodule.Register(&testpb.TestNoModuleOptionModule{})
+	appconfig.RegisterModule(&testpb.TestNoModuleOptionModule{})
 	opt = appconfig.LoadYAML([]byte(`
 modules:
 - name: a
@@ -112,7 +111,7 @@ modules:
 	expectContainerErrorContains(t, opt, "module should have the option cosmos.app.v1alpha1.module")
 
 	internal.ModuleRegistry = map[reflect.Type]*internal.ModuleInitializer{} // reset module registry
-	appmodule.Register(&testpb.TestNoGoImportModule{})
+	appconfig.RegisterModule(&testpb.TestNoGoImportModule{})
 	opt = appconfig.LoadYAML([]byte(`
 modules:
 - name: a
@@ -127,16 +126,16 @@ modules:
 //
 
 func init() {
-	appmodule.Register(&testpb.TestRuntimeModule{},
-		appmodule.Provide(ProvideRuntimeState, ProvideStoreKey, ProvideApp),
+	appconfig.RegisterModule(&testpb.TestRuntimeModule{},
+		appconfig.Provide(ProvideRuntimeState, ProvideStoreKey, ProvideApp),
 	)
 
-	appmodule.Register(&testpb.TestModuleA{},
-		appmodule.Provide(ProvideModuleA),
+	appconfig.RegisterModule(&testpb.TestModuleA{},
+		appconfig.Provide(ProvideModuleA),
 	)
 
-	appmodule.Register(&testpb.TestModuleB{},
-		appmodule.Provide(ProvideModuleB),
+	appconfig.RegisterModule(&testpb.TestModuleB{},
+		appconfig.Provide(ProvideModuleB),
 	)
 }
 

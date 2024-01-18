@@ -20,7 +20,6 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	am "cosmossdk.io/depinject/appmodule"
 	_ "cosmossdk.io/orm" // required for ORM module registration
 	"cosmossdk.io/orm/internal/testkv"
 	"cosmossdk.io/orm/internal/testpb"
@@ -36,8 +35,8 @@ import (
 
 func init() {
 	// this registers the test module with the module registry
-	am.Register(&testpb.Module{},
-		am.Provide(NewKeeper),
+	appconfig.RegisterModule(&testpb.Module{},
+		appconfig.Provide(NewKeeper),
 	)
 }
 

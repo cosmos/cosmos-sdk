@@ -54,6 +54,7 @@ x/{module_name}
 │   └── module.go
 │   └── abci.go
 │   └── autocli.go
+│   └── depinject.go
 ├── simulation
 │   ├── decoder.go
 │   ├── genesis.go

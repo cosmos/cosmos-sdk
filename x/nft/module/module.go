@@ -7,12 +7,8 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
@@ -104,9 +100,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak nft.AccountKeeper, b
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -149,39 +142,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	am.Register(&modulev1.Module{},
-		am.Provide(ProvideModule),
-	)
-}
-
-type NftInputs struct {
-	depinject.In
-
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	Registry     cdctypes.InterfaceRegistry
-
-	AccountKeeper nft.AccountKeeper
-	BankKeeper    nft.BankKeeper
-}
-
-type NftOutputs struct {
-	depinject.Out
-
-	NFTKeeper keeper.Keeper
-	Module    appmodule.AppModule
-}
-
-func ProvideModule(in NftInputs) NftOutputs {
-	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.AccountKeeper, in.BankKeeper)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-
-	return NftOutputs{NFTKeeper: k, Module: m}
 }

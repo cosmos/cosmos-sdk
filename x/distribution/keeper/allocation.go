@@ -79,7 +79,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	}
 
 	// set ToDistribute in protocolpool to keep track of continuous funds distribution
-	if err := k.poolKeeper.SetToDistribute(ctx, amt, k.GetAuthority()); err != nil {
+	if err := k.poolKeeper.SetToDistribute(ctx, amt, k.GetAuthority()); err != nil { // TODO: this should be distribution module account
 		return err
 	}
 

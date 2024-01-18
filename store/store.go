@@ -28,7 +28,7 @@ type RootStore interface {
 
 	// Query performs a query on the RootStore for a given store key, version (height),
 	// and key tuple. Queries should be routed to the underlying SS engine.
-	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
+	Query(version uint64, key []byte, prove bool) (QueryResult, error)
 
 	// LoadVersion loads the RootStore to the given version.
 	LoadVersion(version uint64) error

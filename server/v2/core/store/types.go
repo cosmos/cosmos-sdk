@@ -27,6 +27,8 @@ type Store interface {
 // ChangeSet represents a change in a key and value of state.
 // Remove being true signals the key must be removed from state.
 type ChangeSet struct {
+	// Address is the idenifier of the store being updated.
+	Address []byte
 	// Key defines the key being updated.
 	Key []byte
 	// Value defines the value associated with the updated key.
@@ -47,7 +49,7 @@ type WritableState interface {
 // ReadonlyState defines a sub-set of the methods exposed by store.KVStore.
 // The methods defined work only at read level.
 type ReadonlyState interface {
-	Has(key []byte) (bool, error)
+	Has([]byte) (bool, error)
 	Get([]byte) ([]byte, error)
 	Iterator(start, end []byte) (store.Iterator, error)        // consider removing iterate?
 	ReverseIterator(start, end []byte) (store.Iterator, error) // consider removing reverse iterate

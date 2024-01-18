@@ -54,6 +54,7 @@ func New(
 	sc store.Committer,
 	ssOpts, scOpts pruning.Options,
 	m metrics.StoreMetrics,
+	keyHandler func([]byte) (string, []byte),
 ) (store.RootStore, error) {
 	pruningManager := pruning.NewManager(logger, ss, sc)
 	pruningManager.SetStorageOptions(ssOpts)
@@ -168,7 +169,8 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 	return lastCommitID.Version, nil
 }
 
-func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
+func (s *Store) Query(version uint64, key []byte, prove bool) (store.QueryResult, error) {
+	storeKey := "main" // TODO extract store key
 	if s.telemetry != nil {
 		now := time.Now()
 		s.telemetry.MeasureSince(now, "root_store", "query")

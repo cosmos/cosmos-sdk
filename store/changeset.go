@@ -1,8 +1,10 @@
 package store
 
-import (
-	corestore "cosmossdk.io/server/v2/core/store"
-)
+// Changeset defines a set of KVPair entries by maintaining a map from store key
+// to a slice of KVPair objects.
+type Changeset struct {
+	Pairs map[string]KVPairs
+}
 
 // KVPair defines a key-value pair with additional metadata that is used to
 // track writes. Deletion can be denoted by a nil value or explicitly by the
@@ -15,14 +17,14 @@ type KVPair struct {
 
 type KVPairs []KVPair
 
-func NewChangeset() *corestore.ChangeSet {
-	return &corestore.ChangeSet{
+func NewChangeset() *Changeset {
+	return &Changeset{
 		Pairs: make(map[string]KVPairs),
 	}
 }
 
-func NewChangesetWithPairs(pairs map[string]KVPairs) *corestore.ChangeSet {
-	return &corestore.ChangeSet{
+func NewChangesetWithPairs(pairs map[string]KVPairs) *Changeset {
+	return &Changeset{
 		Pairs: pairs,
 	}
 }

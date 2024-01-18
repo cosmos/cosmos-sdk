@@ -33,8 +33,7 @@ func (roa *ReadOnlyAdapter) Has(key []byte) (bool, error) {
 }
 
 func (roa *ReadOnlyAdapter) Get(key []byte) ([]byte, error) {
-	storeKey := "main" // TODO extract store key, check if fine with store team
-	result, err := roa.rootStore.Query(storeKey, roa.version, key, false)
+	result, err := roa.rootStore.Query(roa.version, key, false)
 	if err != nil {
 		return nil, err
 	}

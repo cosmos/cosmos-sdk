@@ -78,7 +78,6 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 			Keyring:               appOptions.Keyring,
 		},
-		ClientCtx:    appOptions.ClientCtx,
 		TxConfigOpts: appOptions.TxConfigOpts,
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
@@ -119,7 +118,7 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 			return err
 		}
 	} else {
-		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds)
+		queryCmd, err := builder.BuildQueryCommand(rootCmd.Context(), appOptions, customQueryCmds)
 		if err != nil {
 			return err
 		}
@@ -132,7 +131,7 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 			return err
 		}
 	} else {
-		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds)
+		subCmd, err := builder.BuildMsgCommand(rootCmd.Context(), appOptions, customMsgCmds)
 		if err != nil {
 			return err
 		}

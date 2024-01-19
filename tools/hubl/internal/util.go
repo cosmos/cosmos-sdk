@@ -27,3 +27,17 @@ func getAddressCodecFromConfig(cfg *config.Config, chainName string) (address.Co
 		addresscodec.NewBech32Codec(fmt.Sprintf("%svalcons", addressPrefix)),
 		nil
 }
+
+// getAddressPrefixFromConfig returns the address prefixes for the given chain name
+func getAddressPrefixFromConfig(cfg *config.Config, chainName string) (string, string, string, error) {
+	if chainName != config.GlobalKeyringDirName {
+		chainConfig, ok := cfg.Chains[chainName]
+		if !ok {
+			return "", "", "", fmt.Errorf("chain %s not found in config", chainName)
+		}
+
+		return chainConfig.AddressPrefix, fmt.Sprintf("%svaloper", chainConfig.AddressPrefix), fmt.Sprintf("%svalcons", chainConfig.AddressPrefix), nil
+	}
+
+	return "cosmos", "cosmosvaloper", "cosmosvalcons", nil
+}

@@ -57,6 +57,15 @@ func TestIavlTree(t *testing.T) {
 	require.Equal(t, workingHash, commitHash)
 	require.Equal(t, uint64(1), tree.GetLatestVersion())
 
+	// ensure we can get expected values
+	bz, err := tree.Get(1, []byte("key1"))
+	require.NoError(t, err)
+	require.Equal(t, []byte("value1"), bz)
+
+	bz, err = tree.Get(2, []byte("key1"))
+	require.Error(t, err)
+	require.Nil(t, bz)
+
 	// write a batch of version 2
 	require.NoError(t, tree.Set([]byte("key4"), []byte("value4")))
 	require.NoError(t, tree.Set([]byte("key5"), []byte("value5")))

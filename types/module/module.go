@@ -791,11 +791,11 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			startTime := time.Now()
 			if err := module.BeginBlock(ctx); err != nil {
-				startTime := time.Now()
-				telemetry.ModuleMeasureSince(moduleName, startTime, telemetry.MetricKeyBeginBlocker)
 				return sdk.BeginBlock{}, err
 			}
+			telemetry.ModuleMeasureSince(moduleName, startTime, telemetry.MetricKeyBeginBlocker)
 		}
 	}
 
@@ -817,10 +817,12 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 				m.beforeModuleEndBlock(moduleName)
 			}
 
+			startTime := time.Now()
 			err := module.EndBlock(ctx)
 			if err != nil {
 				return sdk.EndBlock{}, err
 			}
+			telemetry.ModuleMeasureSince(moduleName, startTime, telemetry.MetricKeyEndBlocker)
 
 			if m.afterModuleEndBlock != nil {
 				m.afterModuleEndBlock(moduleName)

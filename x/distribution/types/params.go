@@ -19,7 +19,16 @@ func DefaultParams() Params {
 
 // ValidateBasic performs basic validation on distribution parameters.
 func (p Params) ValidateBasic() error {
-	return validateCommunityTax(p.CommunityTax)
+	if err := validateCommunityTax(p.CommunityTax); err != nil {
+		return err
+	}
+	if err := validateLiquidityProviderReward(p.CommunityTax); err != nil {
+		return err
+	}
+	if err := validateWithdrawAddrEnabled(p.CommunityTax); err != nil {
+		return err
+	}
+	return nil
 }
 
 func validateCommunityTax(i interface{}) error {

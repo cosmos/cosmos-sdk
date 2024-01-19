@@ -4,8 +4,9 @@ import paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 // Parameter keys
 var (
-	ParamStoreKeyCommunityTax        = []byte("communitytax")
-	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
+	ParamStoreKeyCommunityTax            = []byte("communitytax")
+	ParamStoreKeyWithdrawAddrEnabled     = []byte("withdrawaddrenabled")
+	ParamStoreKeyLiquidityProviderReward = []byte("liquidityproviderreward")
 )
 
 // Deprecated: ParamKeyTable returns the parameter key table.
@@ -18,5 +19,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyCommunityTax, &p.CommunityTax, validateCommunityTax),
 		paramtypes.NewParamSetPair(ParamStoreKeyWithdrawAddrEnabled, &p.WithdrawAddrEnabled, validateWithdrawAddrEnabled),
+		paramtypes.NewParamSetPair(ParamStoreKeyLiquidityProviderReward, &p.LiquidityProviderReward, validateLiquidityProviderReward),
 	}
 }

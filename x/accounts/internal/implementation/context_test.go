@@ -16,7 +16,7 @@ func TestMakeAccountContext(t *testing.T) {
 	storeService, originalContext := colltest.MockStore()
 	accountAddr := []byte("accountAddr")
 	sender := []byte("sender")
-	sb := collections.NewSchemaBuilderFromAccessor(OpenKVStore)
+	sb := collections.NewSchemaBuilderFromAccessor(openKVStore)
 
 	accountCtx := MakeAccountContext(originalContext, storeService, 1, accountAddr, sender, nil, nil, nil)
 

@@ -9,12 +9,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/client/cli"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/simulation"
@@ -95,9 +90,6 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 }
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
@@ -182,78 +174,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, simState.TxConfig, am.accountKeeper, am.keeper,
 	)
-}
-
-// App Wiring Setup
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	StoreService corestore.KVStoreService
-	Logger       log.Logger
-
-	AccountKeeper types.AccountKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	BankKeeper keeper.BaseKeeper
-	Module     appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// Configure blocked module accounts.
-	//
-	// Default behavior for blockedAddresses is to regard any module mentioned in
-	// AccountKeeper's module account permissions as blocked.
-	blockedAddresses := make(map[string]bool)
-	if len(in.Config.BlockedModuleAccountsOverride) > 0 {
-		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
-			addrStr, err := in.AccountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(moduleName))
-			if err != nil {
-				panic(err)
-			}
-			blockedAddresses[addrStr] = true
-		}
-	} else {
-		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			addrStr, err := in.AccountKeeper.AddressCodec().BytesToString(permission.GetAddress())
-			if err != nil {
-				panic(err)
-			}
-			blockedAddresses[addrStr] = true
-		}
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	authStr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(err)
-	}
-
-	bankKeeper := keeper.NewBaseKeeper(
-		in.Cdc,
-		in.StoreService,
-		in.AccountKeeper,
-		blockedAddresses,
-		authStr,
-		in.Logger,
-	)
-	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
-
-	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
 }

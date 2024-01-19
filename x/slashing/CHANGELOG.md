@@ -30,7 +30,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#18959](https://github.com/cosmos/cosmos-sdk/pull/18959) Avoid deserialization of parameters with every validator lookup
+* [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `JailUntil` and `Tombstone` methods no longer panics if the signing info does not exist for the validator but instead returns error.
 
 ### API Breaking Changes
+
+* [#16441](https://github.com/cosmos/cosmos-sdk/pull/16441) Params state is migrated to collections. `GetParams` has been removed.
+* [#17023](https://github.com/cosmos/cosmos-sdk/pull/17023) Use collections for `ValidatorSigningInfo`:
+    * remove `Keeper`: `SetValidatorSigningInfo`, `GetValidatorSigningInfo`, `IterateValidatorSigningInfos`
+* [#17044](https://github.com/cosmos/cosmos-sdk/pull/17044) Use collections for `AddrPubkeyRelation`:
+    * remove from `types`: `AddrPubkeyRelationKey`
+    * remove from `Keeper`: `AddPubkey`
 
 ### Bug Fixes

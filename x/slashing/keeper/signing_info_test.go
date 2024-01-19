@@ -124,7 +124,7 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 	newConsAddr := sdk.ConsAddress(pks[1].Address())
 
 	newInfo := slashingtypes.NewValidatorSigningInfo(
-		oldConsAddr.String(),
+		newConsAddr.String(),
 		int64(4),
 		int64(3),
 		time.Unix(2, 0).UTC(),

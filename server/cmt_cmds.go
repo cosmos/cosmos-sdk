@@ -440,7 +440,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 				// it breaks the invariant that blocks in range [Base, Height] must exists, but it do works in practice.
 				Base:   state.LastBlockHeight,
 				Height: state.LastBlockHeight,
-			}, blockStoreDB)
+			}, blockStoreDB.NewBatch())
 
 			return nil
 		},

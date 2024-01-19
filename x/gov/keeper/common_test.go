@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -33,7 +32,7 @@ import (
 var (
 	_, _, addr   = testdata.KeyTestPubAddr()
 	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
-	poolAcct     = authtypes.NewModuleAddress(pooltypes.ModuleName)
+	poolAcct     = authtypes.NewModuleAddress(protocolModuleName)
 	govAcctStr   = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 	addrStr      = addr.String()
 	TestProposal = getTestProposal()
@@ -42,7 +41,10 @@ var (
 // mintModuleName duplicates the mint module's name to avoid a cyclic dependency with x/mint.
 // It should be synced with the mint module's name if it is ever changed.
 // See: https://github.com/cosmos/cosmos-sdk/blob/0e34478eb7420b69869ed50f129fc274a97a9b06/x/mint/types/keys.go#L13
-const mintModuleName = "mint"
+const (
+	mintModuleName     = "mint"
+	protocolModuleName = "protocolpool"
+)
 
 // getTestProposal creates and returns a test proposal message.
 func getTestProposal() []sdk.Msg {
@@ -66,7 +68,7 @@ type mocks struct {
 
 func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
 	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
-	m.acctKeeper.EXPECT().GetModuleAddress(pooltypes.ModuleName).Return(poolAcct).AnyTimes()
+	m.acctKeeper.EXPECT().GetModuleAddress(protocolModuleName).Return(poolAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	m.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 }

@@ -394,11 +394,15 @@ func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, 
 				ts.totalTxGas += txGasLimit
 				ts.totalTxBytes += txSize
 				ts.selectedTxs = append(ts.selectedTxs, txBz)
+			} else {
+				return true
 			}
 		} else {
 			ts.totalTxBytes += txSize
 			ts.selectedTxs = append(ts.selectedTxs, txBz)
 		}
+	} else {
+		return true
 	}
 
 	// check if we've reached capacity; if so, we cannot select any more transactions

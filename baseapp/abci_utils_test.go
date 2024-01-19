@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -413,6 +414,93 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 			}
 		})
 	}
+}
+
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSelection() {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	ctrl := gomock.NewController(s.T())
+	app := mock.NewMockProposalTxVerifier(ctrl)
+	mp := mempool.NewPriorityMempool(
+		mempool.PriorityNonceMempoolConfig[int64]{
+			TxPriority:      mempool.NewDefaultTxPriority(),
+			MaxTx:           0,
+			SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
+		},
+	)
+	ph := baseapp.NewDefaultProposalHandler(mp, app)
+	handler := ph.PrepareProposalHandler()
+	var (
+		secret1 = []byte("secret1")
+		secret2 = []byte("secret2")
+		tx1     = buildMsg(s.T(), txConfig, []byte(`1`), secret1, 1)
+		ctx1    = s.ctx.WithPriority(10)
+		tx2     = buildMsg(s.T(), txConfig, []byte(`12345678910`), secret1, 2)
+		tx3     = buildMsg(s.T(), txConfig, []byte(`12`), secret1, 3)
+
+		ctx2 = s.ctx.WithPriority(8)
+		tx4  = buildMsg(s.T(), txConfig, []byte(`12`), secret2, 1)
+	)
+	mp.Insert(ctx1, tx1)
+	mp.Insert(ctx1, tx2)
+	mp.Insert(ctx1, tx3)
+	mp.Insert(ctx2, tx4)
+
+	txBz1, err := txConfig.TxEncoder()(tx1)
+	s.Require().NoError(err)
+	txBz2, err := txConfig.TxEncoder()(tx2)
+	s.Require().NoError(err)
+	txBz3, err := txConfig.TxEncoder()(tx3)
+	s.Require().NoError(err)
+	txBz4, err := txConfig.TxEncoder()(tx4)
+	s.Require().NoError(err)
+
+	app.EXPECT().PrepareProposalVerifyTx(tx1).Return(txBz1, nil).AnyTimes()
+	app.EXPECT().PrepareProposalVerifyTx(tx2).Return(txBz2, nil).AnyTimes()
+	app.EXPECT().PrepareProposalVerifyTx(tx3).Return(txBz3, nil).AnyTimes()
+	app.EXPECT().PrepareProposalVerifyTx(tx4).Return(txBz4, nil).AnyTimes()
+
+	txDataSize1 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz1}))
+	txDataSize2 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz2}))
+	txDataSize3 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz3}))
+	txDataSize4 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz4}))
+	s.Require().Equal(txDataSize1, 111)
+	s.Require().Equal(txDataSize2, 121)
+	s.Require().Equal(txDataSize3, 112)
+	s.Require().Equal(txDataSize4, 112)
+
+	testCases := map[string]struct {
+		ctx         sdk.Context
+		req         *abci.RequestPrepareProposal
+		expectedTxs [][]byte
+	}{
+		"must skip same-sender non-sequential sequence": {
+			ctx: s.ctx,
+			req: &abci.RequestPrepareProposal{
+				Txs:        [][]byte{txBz1, txBz2, txBz3, txBz4},
+				MaxTxBytes: 111 + 112 + 1,
+			},
+			expectedTxs: [][]byte{txBz1},
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			resp, err := handler(tc.ctx, tc.req)
+			s.Require().NoError(err)
+			s.Require().EqualValues(resp.Txs, tc.expectedTxs)
+		})
+	}
+}
+
+func buildMsg(t *testing.T, txConfig client.TxConfig, value, secret []byte, nonce uint64) sdk.Tx {
+	builder := txConfig.NewTxBuilder()
+	builder.SetMsgs(
+		&baseapptestutil.MsgKeyValue{Value: value},
+	)
+	setTxSignatureWithSecret(t, builder, nonce, secret)
+	return builder.GetTx()
 }
 
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {

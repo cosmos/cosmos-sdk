@@ -414,3 +414,17 @@ func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 	require.NoError(t, err)
 	return builder.GetTx()
 }
+
+func setTxSignatureWithSecret(t *testing.T, builder client.TxBuilder, nonce uint64, secret []byte) {
+	t.Helper()
+	privKey := secp256k1.GenPrivKeyFromSecret(secret)
+	pubKey := privKey.PubKey()
+	err := builder.SetSignatures(
+		signingtypes.SignatureV2{
+			PubKey:   pubKey,
+			Sequence: nonce,
+			Data:     &signingtypes.SingleSignatureData{},
+		},
+	)
+	require.NoError(t, err)
+}

@@ -1,4 +1,4 @@
-package testutil
+package staking
 
 import (
 	_ "cosmossdk.io/x/auth"           // import as blank for app wiring

@@ -1,4 +1,4 @@
-package simulation_test
+package nft
 
 import (
 	"math/rand"
@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
-	"cosmossdk.io/x/nft/testutil"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -47,7 +46,7 @@ type SimTestSuite struct {
 func (suite *SimTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
-			testutil.AppConfig,
+			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&suite.codec,

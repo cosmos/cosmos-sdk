@@ -11,7 +11,6 @@ require (
 	cosmossdk.io/log v1.3.0
 	cosmossdk.io/math v1.2.0
 	cosmossdk.io/store v1.0.2
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v0.38.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.51.0
@@ -26,6 +25,8 @@ require (
 	google.golang.org/grpc v1.60.1
 	gotest.tools/v3 v3.5.1
 )
+
+require cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 
 require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -166,9 +167,5 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/auth => ../auth
-	cosmossdk.io/x/distribution => ../distribution
-	cosmossdk.io/x/mint => ../mint
-	cosmossdk.io/x/protocolpool => ../protocolpool
-	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 )

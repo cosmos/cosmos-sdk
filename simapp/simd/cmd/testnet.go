@@ -39,7 +39,7 @@ import (
 
 var (
 	flagNodeDirPrefix     = "node-dir-prefix"
-	flagNumValidators     = "v"
+	flagNumValidators     = "validator-count"
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
@@ -78,7 +78,11 @@ type startArgs struct {
 }
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
-	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
+	cmd.Flags().IntP(flagNumValidators, "n", 4, "Number of validators to initialize the testnet with")
+	cmd.Flags().Int("v", 4, fmt.Sprintf("Alias for --%s", flagNumValidators))
+	if vFlag := cmd.Flags().Lookup("v"); vFlag != nil {
+		vFlag.Deprecated = fmt.Sprintf("use --%s", flagNumValidators)
+	}
 	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
@@ -116,7 +120,7 @@ func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.Genes
 	cmd := &cobra.Command{
 		Use:   "init-files",
 		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
-		Long: `init-files will setup "v" number of directories and populate each with
+		Long: `init-files will setup one directory per validator and populate each with
 necessary files (private validator, genesis, config, etc.) for running "v" validator nodes.
 
 Booting up a network with these validator folders is intended to be used with Docker Compose,
@@ -125,7 +129,7 @@ or a similar setup where each node has a manually configurable IP address.
 Note, strict routability for addresses is turned off in the config file.
 
 Example:
-	simd testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
+	simd testnet init-files -n 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -148,12 +152,19 @@ Example:
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 
+			if cmd.Flags().Changed("v") {
+				if cmd.Flags().Changed(flagNumValidators) {
+					return fmt.Errorf("--%s and --v are mutually exclusive", flagNumValidators)
+				}
+				args.numValidators, _ = cmd.Flags().GetInt("v")
+			}
+
 			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, clientCtx.TxConfig.SigningContext().ValidatorAddressCodec(), args)
 		},
 	}
 
 	addTestnetFlagsToCmd(cmd)
-	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
+	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix for the name of per-validator subdirectories (to be number-suffixed like node0, node1, ...)")
 	cmd.Flags().String(flagNodeDaemonHome, "simd", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flagListenIPAddress, "127.0.0.1", "TCP or UNIX socket IP address for the RPC server to listen on")
@@ -172,7 +183,7 @@ and generate "v" directories, populated with necessary validator configuration f
 (private validator, genesis, config, etc.).
 
 Example:
-	simd testnet --v 4 --output-dir ./.testnets
+	simd testnet -n 4 --output-dir ./.testnets
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			args := startArgs{}
@@ -186,6 +197,13 @@ Example:
 			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
 			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
+
+			if cmd.Flags().Changed("v") {
+				if cmd.Flags().Changed(flagNumValidators) {
+					return fmt.Errorf("--%s and --v are mutually exclusive", flagNumValidators)
+				}
+				args.numValidators, _ = cmd.Flags().GetInt("v")
+			}
 
 			return startTestnet(cmd, args)
 		},

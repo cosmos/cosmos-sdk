@@ -78,6 +78,10 @@ Every Module contains its own CHANGELOG.md. Please refer to the module you are i
 * (testutil) [#18930](https://github.com/cosmos/cosmos-sdk/pull/18930) Add NodeURI for clientCtx.
 * (types) [#18963](https://github.com/cosmos/cosmos-sdk/pull/18963) Swap out amino json encoding of `ABCIMessageLogs` for std lib json encoding
 
+### Deprecated
+
+* (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Deprecate `--v` CLI option in favor of `--validator-count`/`-n`.
+
 ### Bug Fixes
 
 * (baseapp) [#19058](https://github.com/cosmos/cosmos-sdk/pull/19058) Fix baseapp posthandler branch would fail if the `runMsgs` had returned an error.

@@ -35,19 +35,6 @@ type HasServices interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
-// HasPrepareCheckState is an extension interface that contains information about the AppModule
-// and PrepareCheckState.
-type HasPrepareCheckState interface {
-	AppModule
-	PrepareCheckState(context.Context) error
-}
-
-// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
-type HasPrecommit interface {
-	AppModule
-	Precommit(context.Context) error
-}
-
 // ResponsePreBlock represents the response from the PreBlock method.
 // It can modify consensus parameters in storage and signal the caller through the return value.
 // When it returns ConsensusParamsChanged=true, the caller must refresh the consensus parameter in the finalize context.
@@ -82,4 +69,58 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
+}
+
+// HasTxValidation is the extension interface that modules should implement to run
+// custom logic for validating transactions.
+// It was previously known as AnteHandler/Decorator.
+type HasTxValidation interface {
+	AppModule
+
+	// TxValidator is a method that will be run on each transaction.
+	// If an error is returned:
+	// 	                          ,---.
+	//                           /    |
+	//                          /     |
+	//  You shall not pass!    /      |
+	//                        /       |
+	//           \       ___,'        |
+	//                 <  -'          :
+	//                  `-.__..--'``-,_\_
+	//                     |o/ <o>` :,.)_`>
+	//                     :/ `     ||/)
+	//                     (_.).__,-` |\
+	//                     /( `.``   `| :
+	//                     \'`-.)  `  ; ;
+	//                     | `       /-<
+	//                     |     `  /   `.
+	//     ,-_-..____     /|  `    :__..-'\
+	//    /,'-.__\\  ``-./ :`      ;       \
+	//    `\ `\  `\\  \ :  (   `  /  ,   `. \
+	//      \` \   \\   |  | `   :  :     .\ \
+	//       \ `\_  ))  :  ;     |  |      ): :
+	//      (`-.-'\ ||  |\ \   ` ;  ;       | |
+	//       \-_   `;;._   ( `  /  /_       | |
+	//        `-.-.// ,'`-._\__/_,'         ; |
+	//           \:: :     /     `     ,   /  |
+	//            || |    (        ,' /   /   |
+	//            ||                ,'   /    |
+	TxValidator(ctx context.Context, msg any) error
+}
+
+// **********************************************
+// The following interfaces are baseapp specific and will be deprecated in the future.
+// **********************************************
+
+// HasPrepareCheckState is an extension interface that contains information about the AppModule
+// and PrepareCheckState.
+type HasPrepareCheckState interface {
+	AppModule
+	PrepareCheckState(context.Context) error
+}
+
+// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
+type HasPrecommit interface {
+	AppModule
+	Precommit(context.Context) error
 }

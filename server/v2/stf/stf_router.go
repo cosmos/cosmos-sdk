@@ -19,21 +19,21 @@ type PostMsgHandler = func(ctx context.Context, msg, msgResp Type) (err error)
 
 type QueryHandler = MsgHandler
 
-func newMsgRouterBuilder() *msgRouterBuilder {
-	return &msgRouterBuilder{
+func NewMsgRouterBuilder() *MsgRouterBuilder {
+	return &MsgRouterBuilder{
 		handlers:     make(map[string]MsgHandler),
 		preHandlers:  make(map[string][]PreMsgHandler),
 		postHandlers: make(map[string][]PostMsgHandler),
 	}
 }
 
-type msgRouterBuilder struct {
+type MsgRouterBuilder struct {
 	handlers     map[string]MsgHandler
 	preHandlers  map[string][]PreMsgHandler
 	postHandlers map[string][]PostMsgHandler
 }
 
-func (b *msgRouterBuilder) RegisterHandler(msgType string, handler MsgHandler) error {
+func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler MsgHandler) error {
 	// panic on override
 	if _, ok := b.handlers[msgType]; ok {
 		return fmt.Errorf("handler already registered: %s", msgType)
@@ -42,15 +42,15 @@ func (b *msgRouterBuilder) RegisterHandler(msgType string, handler MsgHandler) e
 	return nil
 }
 
-func (b *msgRouterBuilder) RegisterPreHandler(msgType string, handler PreMsgHandler) {
+func (b *MsgRouterBuilder) RegisterPreHandler(msgType string, handler PreMsgHandler) {
 	b.preHandlers[msgType] = append(b.preHandlers[msgType], handler)
 }
 
-func (b *msgRouterBuilder) RegisterPostHandler(msgType string, handler PostMsgHandler) {
+func (b *MsgRouterBuilder) RegisterPostHandler(msgType string, handler PostMsgHandler) {
 	b.postHandlers[msgType] = append(b.postHandlers[msgType], handler)
 }
 
-func (b *msgRouterBuilder) Build() (MsgHandler, error) {
+func (b *MsgRouterBuilder) Build() (MsgHandler, error) {
 	handlers := make(map[string]MsgHandler)
 	for msgType, handler := range b.handlers {
 		// find pre handler

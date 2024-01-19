@@ -36,6 +36,30 @@ type STF[T transaction.Tx] struct {
 	branch         func(store store.ReadonlyState) store.WritableState // branch is a function that given a readonly store it returns a writable version of it.
 }
 
+// NewSTF returns a new STF instance.
+func NewSTF[T transaction.Tx](
+	handleMsg func(ctx context.Context, msg Type) (msgResp Type, err error),
+	handleQuery func(ctx context.Context, req Type) (resp Type, err error),
+	doUpgradeBlock func(ctx context.Context) (bool, error),
+	doBeginBlock func(ctx context.Context) error,
+	doEndBlock func(ctx context.Context) error,
+	doTxValidation func(ctx context.Context, tx T) error,
+	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error),
+	branch func(store store.ReadonlyState) store.WritableState,
+) *STF[T] {
+	return &STF[T]{
+		handleMsg:         handleMsg,
+		handleQuery:       handleQuery,
+		doUpgradeBlock:    doUpgradeBlock,
+		doBeginBlock:      doBeginBlock,
+		doEndBlock:        doEndBlock,
+		doTxValidation:    doTxValidation,
+		doValidatorUpdate: doValidatorUpdate,
+		postTxExec:        nil, // TODO
+		branch:            branch,
+	}
+}
+
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.

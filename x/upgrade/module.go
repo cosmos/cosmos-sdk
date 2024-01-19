@@ -147,3 +147,11 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
 	return PreBlocker(ctx, am.keeper)
 }
+
+// Implements serverv2/core/UpgradeBlocker.
+func (am AppModule) UpgradeBlocker() func(ctx context.Context) (bool, error) {
+	return func(ctx context.Context) (bool, error) {
+		result, err := PreBlocker(ctx, am.keeper)
+		return result.IsConsensusParamsChanged(), err
+	}
+}

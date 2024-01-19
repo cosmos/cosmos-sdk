@@ -43,7 +43,7 @@ var (
 // See: https://github.com/cosmos/cosmos-sdk/blob/0e34478eb7420b69869ed50f129fc274a97a9b06/x/mint/types/keys.go#L13
 const (
 	mintModuleName     = "mint"
-	protocolModuleName = "protocolpool"
+	protocolModuleName = "protocol-pool"
 )
 
 // getTestProposal creates and returns a test proposal message.

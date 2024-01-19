@@ -2,17 +2,20 @@ package baseapp_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
+	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
@@ -21,10 +24,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 const (
@@ -34,11 +39,11 @@ const (
 type testValidator struct {
 	consAddr sdk.ConsAddress
 	tmPk     cmtprotocrypto.PublicKey
-	privKey  secp256k1.PrivKey
+	privKey  cmtsecp256k1.PrivKey
 }
 
 func newTestValidator() testValidator {
-	privkey := secp256k1.GenPrivKey()
+	privkey := cmtsecp256k1.GenPrivKey()
 	pubkey := privkey.PubKey()
 	tmPk := cmtprotocrypto.PublicKey{
 		Sum: &cmtprotocrypto.PublicKey_Secp256K1{
@@ -415,6 +420,93 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	}
 }
 
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSelection() {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	ctrl := gomock.NewController(s.T())
+	app := mock.NewMockProposalTxVerifier(ctrl)
+	mp := mempool.NewPriorityMempool(
+		mempool.PriorityNonceMempoolConfig[int64]{
+			TxPriority:      mempool.NewDefaultTxPriority(),
+			MaxTx:           0,
+			SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
+		},
+	)
+	ph := baseapp.NewDefaultProposalHandler(mp, app)
+	handler := ph.PrepareProposalHandler()
+	var (
+		secret1 = []byte("secret1")
+		secret2 = []byte("secret2")
+		tx1     = buildMsg(s.T(), txConfig, []byte(`1`), secret1, 1)
+		ctx1    = s.ctx.WithPriority(10)
+		tx2     = buildMsg(s.T(), txConfig, []byte(`12345678910`), secret1, 2)
+		tx3     = buildMsg(s.T(), txConfig, []byte(`12`), secret1, 3)
+
+		ctx2 = s.ctx.WithPriority(8)
+		tx4  = buildMsg(s.T(), txConfig, []byte(`12`), secret2, 1)
+	)
+	err := mp.Insert(ctx1, tx1)
+	s.Require().NoError(err)
+	err = mp.Insert(ctx1, tx2)
+	s.Require().NoError(err)
+	err = mp.Insert(ctx1, tx3)
+	s.Require().NoError(err)
+	err = mp.Insert(ctx2, tx4)
+	s.Require().NoError(err)
+
+	txBz1, err := txConfig.TxEncoder()(tx1)
+	s.Require().NoError(err)
+	txBz2, err := txConfig.TxEncoder()(tx2)
+	s.Require().NoError(err)
+	txBz3, err := txConfig.TxEncoder()(tx3)
+	s.Require().NoError(err)
+	txBz4, err := txConfig.TxEncoder()(tx4)
+	s.Require().NoError(err)
+
+	app.EXPECT().PrepareProposalVerifyTx(tx1).Return(txBz1, nil).AnyTimes()
+	app.EXPECT().PrepareProposalVerifyTx(tx2).Return(txBz2, nil).AnyTimes()
+	app.EXPECT().PrepareProposalVerifyTx(tx3).Return(txBz3, nil).AnyTimes()
+	app.EXPECT().PrepareProposalVerifyTx(tx4).Return(txBz4, nil).AnyTimes()
+
+	txDataSize1 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz1}))
+	txDataSize2 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz2}))
+	txDataSize3 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz3}))
+	txDataSize4 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz4}))
+	s.Require().Equal(txDataSize1, 111)
+	s.Require().Equal(txDataSize2, 121)
+	s.Require().Equal(txDataSize3, 112)
+	s.Require().Equal(txDataSize4, 112)
+	mapTxs := map[string]string{
+		string(txBz1): "1",
+		string(txBz2): "2",
+		string(txBz3): "3",
+		string(txBz4): "4",
+	}
+	testCases := map[string]struct {
+		ctx         sdk.Context
+		req         *abci.RequestPrepareProposal
+		expectedTxs [][]byte
+	}{
+		"skip same-sender non-sequential sequence and then add others txs": {
+			ctx: s.ctx,
+			req: &abci.RequestPrepareProposal{
+				Txs:        [][]byte{txBz1, txBz2, txBz3, txBz4},
+				MaxTxBytes: 111 + 112,
+			},
+			expectedTxs: [][]byte{txBz1, txBz4},
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			resp, err := handler(tc.ctx, tc.req)
+			s.Require().NoError(err)
+			s.Require().EqualValues(toHumanReadable(mapTxs, resp.Txs), toHumanReadable(mapTxs, tc.expectedTxs))
+		})
+	}
+}
+
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
@@ -422,4 +514,36 @@ func marshalDelimitedFn(msg proto.Message) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func buildMsg(t *testing.T, txConfig client.TxConfig, value, secret []byte, nonce uint64) sdk.Tx {
+	t.Helper()
+	builder := txConfig.NewTxBuilder()
+	_ = builder.SetMsgs(
+		&baseapptestutil.MsgKeyValue{Value: value},
+	)
+	setTxSignatureWithSecret(t, builder, nonce, secret)
+	return builder.GetTx()
+}
+
+func toHumanReadable(mapTxs map[string]string, txs [][]byte) string {
+	strs := []string{}
+	for _, v := range txs {
+		strs = append(strs, mapTxs[string(v)])
+	}
+	return strings.Join(strs, ",")
+}
+
+func setTxSignatureWithSecret(t *testing.T, builder client.TxBuilder, nonce uint64, secret []byte) {
+	t.Helper()
+	privKey := secp256k1.GenPrivKeyFromSecret(secret)
+	pubKey := privKey.PubKey()
+	err := builder.SetSignatures(
+		signingtypes.SignatureV2{
+			PubKey:   pubKey,
+			Sequence: nonce,
+			Data:     &signingtypes.SingleSignatureData{},
+		},
+	)
+	require.NoError(t, err)
 }

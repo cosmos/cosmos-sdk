@@ -47,7 +47,10 @@ func init() {
 type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 
 // SigVerificationDecorator verifies all signatures for a tx and returns an
-// error if any are invalid. Note, the SigVerificationDecorator will not check
+// error if any are invalid.
+// It will populate an account's public key if that is not present only if
+// PubKey.Address() == Account.Address().
+// Note, the SigVerificationDecorator will not check
 // signatures on ReCheckTx. It will also increase the sequence number, and consume
 // gas for signature verification.
 //
@@ -55,7 +58,6 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 // to to set unordered=true with a reasonable timeout_height value, in which case
 // this nonce verification and increment will be skipped.
 //
-// CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              AccountKeeper

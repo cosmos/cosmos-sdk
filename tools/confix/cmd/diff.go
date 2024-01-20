@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -27,7 +28,7 @@ func DiffCommand() *cobra.Command {
 			case len(args) > 1:
 				configPath = args[1]
 			case clientCtx.HomeDir != "":
-				configPath = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
+				configPath = filepath.Join(clientCtx.HomeDir, "config", "app.toml")
 			default:
 				return errors.New("must provide a path to the app.toml or client.toml")
 			}

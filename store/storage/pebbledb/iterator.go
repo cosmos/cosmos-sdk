@@ -180,7 +180,6 @@ func (itr *iterator) Next() {
 	}
 
 	itr.valid = false
-	return
 }
 
 func (itr *iterator) Valid() bool {

@@ -82,7 +82,7 @@ for more details.
 
 ### Params
 
-* Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+* Params migrations were removed. It is required to migrate to 0.50 prior to upgrading to v0.51.
 
 ### SimApp
 
@@ -112,13 +112,18 @@ clientCtx = clientCtx.
 
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
 
+#### Dependency Injection 
+
+<!-- explain app_config.go changes -->
+
 ### Modules
 
 #### `**all**`
 
 ##### Dependency Injection 
 
-Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appmodule`. All modules using dependency injection must update their imports.
+Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appconfig`.
+All modules using dependency injection must update their imports.
 
 ##### Genesis Interface
 

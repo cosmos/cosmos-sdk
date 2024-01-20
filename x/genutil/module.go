@@ -8,11 +8,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -94,9 +91,6 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	})
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModule) IsAppModule() {}
 
@@ -119,24 +113,3 @@ func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.R
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-func init() {
-	am.Register(&modulev1.Module{},
-		am.Provide(ProvideModule),
-	)
-}
-
-// ModuleInputs defines the inputs needed for the genutil module.
-type ModuleInputs struct {
-	depinject.In
-
-	AccountKeeper types.AccountKeeper
-	StakingKeeper types.StakingKeeper
-	DeliverTx     genesis.TxHandler
-	Config        client.TxConfig
-}
-
-func ProvideModule(in ModuleInputs) appmodule.AppModule {
-	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
-	return m
-}

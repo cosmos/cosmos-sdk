@@ -33,7 +33,7 @@ func ModulesByProtoMessageName() (map[protoreflect.FullName]*ModuleInitializer, 
 		descriptor := initializer.ConfigProtoMessage.ProtoReflect().Descriptor()
 		fullName := descriptor.FullName()
 		if _, ok := res[fullName]; ok {
-			return nil, fmt.Errorf("duplicate module registratio for %s", fullName)
+			return nil, fmt.Errorf("duplicate module registration for %s", fullName)
 		}
 
 		modDesc := proto.GetExtension(descriptor.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)

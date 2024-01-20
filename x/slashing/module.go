@@ -7,16 +7,10 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
-	store "cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
 	"cosmossdk.io/x/slashing/types"
-	staking "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -111,9 +105,6 @@ func NewAppModule(
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -181,58 +172,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
 	)
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	am.Register(
-		&modulev1.Module{},
-		am.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	LegacyAmino  *codec.LegacyAmino
-	Registry     cdctypes.InterfaceRegistry
-
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Keeper keeper.Keeper
-	Module appmodule.AppModule
-	Hooks  staking.StakingHooksWrapper
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	authStr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(fmt.Errorf("unable to decode authority in slashing: %w", err))
-	}
-
-	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.StoreService, in.StakingKeeper, authStr)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.Registry)
-	return ModuleOutputs{
-		Keeper: k,
-		Module: m,
-		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-	}
 }

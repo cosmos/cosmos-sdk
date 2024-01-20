@@ -22,7 +22,7 @@ type Store interface {
 
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
-	StateCommit(changes []StateChange) (Hash, error)
+	StateCommit(changes []AccountStateChanges) (Hash, error)
 }
 
 // ReadonlyAccountsState represents a readonly view over all the accounts state.
@@ -49,7 +49,7 @@ type WritableAccountsState interface {
 }
 
 type AccountStateChanges struct {
-	Account      []byte
+	Account      []byte // Staking/Bank/x/Account
 	StateChanges []StateChange
 }
 

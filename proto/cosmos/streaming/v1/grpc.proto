@@ -34,9 +34,15 @@ service ListenerService {
 
 // StoreKVPair is a single key-value pair, associated with a store.
 message StoreKVPair {
-  bytes key   = 1; // the store key for the KVStore this pair originates from
-  bytes value = 2;
-  bool delete = 3; // true indicates a delete operation, false indicates a set operation
+  // address defines the address of the account the state changes are coming from.
+  // In case of modules you can expect a stringified
+  bytes address = 1;
+  // key defines the key of the address that changed.
+  bytes key = 2;
+  // value defines the value that changed, empty in case of removal.
+  bytes value = 3;
+  // delete defines if the key was removed.
+  bool delete = 4; // true indicates a delete operation, false indicates a set operation
 }
 
 // Event is a single event, associated with a transaction.

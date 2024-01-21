@@ -467,6 +467,8 @@ func (app *BaseApp) ResetDeliverState() {
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
 func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
+	return nil
+
 	if app.paramStore == nil {
 		return nil
 	}
@@ -506,6 +508,8 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams) {
+	return
+
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}

@@ -125,7 +125,6 @@ func (app *BaseApp) executeNonFraudulentTransactions(req abci.RequestGenerateFra
 func (app *BaseApp) getFraudProof(storeKeyToWitnessData map[string][]iavl.WitnessData) (FraudProof, error) {
 	fraudProof := FraudProof{}
 	fraudProof.stateWitness = make(map[string]StateWitness)
-	// fraudProof.BlockHeight = app.LastBlockHeight() + 1 //FIXME: patch
 	fraudProof.BlockHeight = app.LastBlockHeight()
 	cms := app.cms.(*rootmulti.Store)
 
@@ -134,7 +133,6 @@ func (app *BaseApp) getFraudProof(storeKeyToWitnessData map[string][]iavl.Witnes
 		return FraudProof{}, err
 	}
 	fraudProof.PreStateAppHash = appHash
-	app.logger.Info("AppHash", "getFraudProof", hex.EncodeToString(appHash))
 
 	for storeKeyName := range storeKeyToWitnessData {
 		iavlStore, err := cms.GetIAVLStore(storeKeyName)

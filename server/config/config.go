@@ -29,10 +29,6 @@ const (
 	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
 	// bytes the server can send.
 	DefaultGRPCMaxSendMsgSize = math.MaxInt32
-
-	// DefaultLogQueries defines the default value for the log_queries parameter.
-	// Should be set to false unless debugging.
-	DefaultLogQueries = false
 )
 
 // BaseConfig defines the server's basic configuration
@@ -143,9 +139,6 @@ type GRPCConfig struct {
 	// MaxSendMsgSize defines the max message size in bytes the server can send.
 	// The default value is math.MaxInt32.
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
-
-	// LogQueries logs every gRPC query to the console as an info log.
-	LogQueries bool `mapstructure:"log-queries"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -255,7 +248,6 @@ func DefaultConfig() *Config {
 			Address:        DefaultGRPCAddress,
 			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
 			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
-			LogQueries:     DefaultLogQueries,
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable: true,

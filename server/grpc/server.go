@@ -37,7 +37,7 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
 	)
 
-	app.RegisterGRPCServer(grpcSrv, cfg.LogQueries)
+	app.RegisterGRPCServer(grpcSrv)
 
 	// Reflection allows consumers to build dynamic clients that can write to any
 	// Cosmos SDK application without relying on application packages at compile

@@ -24,7 +24,7 @@ import (
 func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
-func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server, logQueries bool) {
+func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
 	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
@@ -68,9 +68,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server, logQueries bool) 
 			app.logger.Error("failed to set gRPC header", "err", err)
 		}
 
-		if logQueries {
-			app.logger.Debug("gRPC query received of type: " + fmt.Sprintf("%#v", req))
-		}
+		app.logger.Debug("gRPC query received of type: " + fmt.Sprintf("%#v", req))
 
 		return handler(grpcCtx, req)
 	}

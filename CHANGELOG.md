@@ -51,7 +51,7 @@ Every Module contains its own CHANGELOG.md. Please refer to the module you are i
 * (runtime) [#18475](https://github.com/cosmos/cosmos-sdk/pull/18475) Adds an implementation for core.branch.Service.
 * (baseapp) [#18499](https://github.com/cosmos/cosmos-sdk/pull/18499) Add `MsgRouter` response type from message name function.
 * (types) [#18768](https://github.com/cosmos/cosmos-sdk/pull/18768) Add MustValAddressFromBech32 function.
-* (gRPC) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) Add config option to log gRPC queries.
+* (gRPC) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) Add debug log prints for each gRPC request.
 
 ### Improvements
 
@@ -130,7 +130,6 @@ Every Module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#18372](https://github.com/cosmos/cosmos-sdk/pull/18372) Removed global configuration for coin type and purpose. Setters and getters should be removed and access directly to defined types.
 * (types) [#18695](https://github.com/cosmos/cosmos-sdk/pull/18695) Removed global configuration for txEncoder.
 * (server) [#18909](https://github.com/cosmos/cosmos-sdk/pull/18909) Remove configuration endpoint on grpc reflection endpoint in favour of auth module bech32prefix endpoint already exposed.
-* (baseapp) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) `RegisterGRPCServer` now also takes a `logQueries` boolean.
 
 ### Client Breaking Changes
 

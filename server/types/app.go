@@ -41,7 +41,7 @@ type (
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.
-		RegisterGRPCServer(grpc.Server, bool)
+		RegisterGRPCServer(grpc.Server)
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).

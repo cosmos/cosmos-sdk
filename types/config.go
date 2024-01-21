@@ -82,6 +82,28 @@ func (config *Config) assertNotSealed() {
 	}
 }
 
+// SetBech32PrefixForAccountNoAssert builds the Config with Bech32 addressPrefix and publKeyPrefix for accounts
+// and returns the config instance
+func (config *Config) SetBech32PrefixForAccountNoAssert(addressPrefix, pubKeyPrefix string) {
+	config.bech32AddressPrefix["account_addr"] = addressPrefix
+	config.bech32AddressPrefix["account_pub"] = pubKeyPrefix
+}
+
+// SetBech32PrefixForValidatorNoAssert builds the Config with Bech32 addressPrefix and publKeyPrefix for validators
+//
+//	and returns the config instance
+func (config *Config) SetBech32PrefixForValidatorNoAssert(addressPrefix, pubKeyPrefix string) {
+	config.bech32AddressPrefix["validator_addr"] = addressPrefix
+	config.bech32AddressPrefix["validator_pub"] = pubKeyPrefix
+}
+
+// SetBech32PrefixForConsensusNodeNoAssert builds the Config with Bech32 addressPrefix and publKeyPrefix for consensus nodes
+// and returns the config instance
+func (config *Config) SetBech32PrefixForConsensusNodeNoAssert(addressPrefix, pubKeyPrefix string) {
+	config.bech32AddressPrefix["consensus_addr"] = addressPrefix
+	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
+}
+
 // SetBech32PrefixForAccount builds the Config with Bech32 addressPrefix and publKeyPrefix for accounts
 // and returns the config instance
 func (config *Config) SetBech32PrefixForAccount(addressPrefix, pubKeyPrefix string) {

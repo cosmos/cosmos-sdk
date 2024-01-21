@@ -147,12 +147,7 @@ func (app *BaseApp) GetAppHashInternal() (apphash []byte) {
 // GetAppHash implements the ABCI application interface. It returns an App Hash
 // whiich acts as a unique ID of the current state of the BaseApp.
 func (app *BaseApp) GetAppHash(req abci.RequestGetAppHash) (res abci.ResponseGetAppHash) {
-	cms := app.cms.(*rootmulti.Store)
-
-	appHash, err := cms.GetAppHash()
-	if err != nil {
-		panic(err)
-	}
+	appHash := app.GetAppHashInternal()
 	res = abci.ResponseGetAppHash{
 		AppHash: appHash,
 	}

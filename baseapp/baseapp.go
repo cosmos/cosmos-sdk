@@ -112,8 +112,6 @@ type BaseApp struct { // nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
-
-	routerOpts map[string]func(*BaseApp)
 }
 
 type appStore struct {
@@ -231,8 +229,6 @@ func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgService
 func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
 }
-
-//TODO: check if used
 
 // SetCircuitBreaker sets the circuit breaker for the BaseApp.
 // The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.

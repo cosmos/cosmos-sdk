@@ -16,16 +16,6 @@ type queryServer struct {
 	k Keeper
 }
 
-// Params returns params of the mint module.
-func (q queryServer) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := q.k.Params.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryParamsResponse{Params: params}, nil
-}
-
 // Inflation returns minter.Inflation of the mint module.
 func (q queryServer) Inflation(ctx context.Context, _ *types.QueryInflationRequest) (*types.QueryInflationResponse, error) {
 	minter, err := q.k.Minter.Get(ctx)
@@ -44,4 +34,14 @@ func (q queryServer) AnnualProvisions(ctx context.Context, _ *types.QueryAnnualP
 	}
 
 	return &types.QueryAnnualProvisionsResponse{AnnualProvisions: minter.AnnualProvisions}, nil
+}
+
+// GenesisTime returns minter.GenesisTime of the mint module.
+func (q queryServer) GenesisTime(ctx context.Context, _ *types.QueryGenesisTimeRequest) (*types.QueryGenesisTimeResponse, error) {
+	minter, err := q.k.Minter.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryGenesisTimeResponse{GenesisTime: minter.GenesisTime}, nil
 }

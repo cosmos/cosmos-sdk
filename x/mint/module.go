@@ -43,14 +43,10 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
-}
+func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types
-func (b AppModuleBasic) RegisterInterfaces(r cdctypes.InterfaceRegistry) {
-	types.RegisterInterfaces(r)
-}
+func (b AppModuleBasic) RegisterInterfaces(cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint
 // module.
@@ -81,10 +77,6 @@ type AppModule struct {
 
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
-
-	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
-	// If inflationCalculator is nil, the default inflation calculation logic is used.
-	inflationCalculator types.InflationCalculationFn
 }
 
 // NewAppModule creates a new AppModule object. If the InflationCalculationFn
@@ -93,17 +85,11 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-	ic types.InflationCalculationFn,
 ) AppModule {
-	if ic == nil {
-		ic = types.DefaultInflationCalculationFn
-	}
-
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{cdc: cdc},
-		keeper:              keeper,
-		authKeeper:          ak,
-		inflationCalculator: ic,
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		authKeeper:     ak,
 	}
 }
 
@@ -113,7 +99,6 @@ func (am AppModule) IsAppModule() {}
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
 
 	m := keeper.NewMigrator(am.keeper)
@@ -144,7 +129,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper, am.inflationCalculator)
+	return BeginBlocker(ctx, am.keeper)
 }
 
 // AppModuleSimulation functions
@@ -152,11 +137,6 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 // GenerateGenesisState creates a randomized GenState of the mint module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
-}
-
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.

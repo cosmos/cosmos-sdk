@@ -11,11 +11,6 @@ func (keeper Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, da
 	if err := keeper.Minter.Set(ctx, data.Minter); err != nil {
 		panic(err)
 	}
-
-	if err := keeper.Params.Set(ctx, data.Params); err != nil {
-		panic(err)
-	}
-
 	ak.GetModuleAccount(ctx, types.ModuleName)
 }
 
@@ -25,11 +20,5 @@ func (keeper Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
-
-	params, err := keeper.Params.Get(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	return types.NewGenesisState(minter, params)
+	return types.NewGenesisState(minter)
 }

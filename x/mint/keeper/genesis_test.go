@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -56,20 +57,13 @@ func (s *GenesisTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(minterAcc.Name).Return(minterAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(s.sdkCtx, minterAcc.Name).Return(minterAcc)
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(key), stakingKeeper, accountKeeper, bankKeeper, "", "")
+	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(key), stakingKeeper, accountKeeper, bankKeeper, "")
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {
 	genesisState := types.DefaultGenesisState()
-	genesisState.Minter = types.NewMinter(math.LegacyNewDecWithPrec(20, 2), math.LegacyNewDec(1))
-	genesisState.Params = types.NewParams(
-		"testDenom",
-		math.LegacyNewDecWithPrec(15, 2),
-		math.LegacyNewDecWithPrec(22, 2),
-		math.LegacyNewDecWithPrec(9, 2),
-		math.LegacyNewDecWithPrec(69, 2),
-		uint64(60*60*8766/5),
-	)
+	now := time.Now().UTC()
+	genesisState.Minter = types.NewMinter(math.LegacyNewDecWithPrec(20, 2), math.LegacyNewDec(1), &now, "")
 
 	s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
 
@@ -80,10 +74,6 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, storetypes.NewTransientStoreKey("transient_test"))
 	_, err = s.keeper.Minter.Get(invalidCtx.Ctx)
 	s.Require().ErrorIs(err, collections.ErrNotFound)
-
-	params, err := s.keeper.Params.Get(s.sdkCtx)
-	s.Require().Equal(genesisState.Params, params)
-	s.Require().NoError(err)
 
 	genesisState2 := s.keeper.ExportGenesis(s.sdkCtx)
 	s.Require().Equal(genesisState, genesisState2)

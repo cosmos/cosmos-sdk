@@ -6,16 +6,12 @@ import "google/api/annotations.proto";
 import "cosmos/mint/v1beta1/mint.proto";
 import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "cosmossdk.io/x/mint/types";
 
 // Query provides defines the gRPC querier service.
 service Query {
-  // Params returns the total set of minting parameters.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/mint/v1beta1/params";
-  }
-
   // Inflation returns the current minting inflation value.
   rpc Inflation(QueryInflationRequest) returns (QueryInflationResponse) {
     option (google.api.http).get = "/cosmos/mint/v1beta1/inflation";
@@ -25,15 +21,11 @@ service Query {
   rpc AnnualProvisions(QueryAnnualProvisionsRequest) returns (QueryAnnualProvisionsResponse) {
     option (google.api.http).get = "/cosmos/mint/v1beta1/annual_provisions";
   }
-}
 
-// QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is the response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  // params defines the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // GenesisTime returns the genesis time.
+  rpc GenesisTime(QueryGenesisTimeRequest) returns (QueryGenesisTimeResponse) {
+    option (google.api.http).get = "/cosmos/mint/v1beta1/genesis_time";
+  }
 }
 
 // QueryInflationRequest is the request type for the Query/Inflation RPC method.
@@ -65,4 +57,13 @@ message QueryAnnualProvisionsResponse {
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
+}
+
+// QueryGenesisTimeRequest is the request type for the Query/GenesisTime RPC method.
+message QueryGenesisTimeRequest {}
+
+// QueryGenesisTimeResponse is the response type for the Query/GenesisTime RPC method.
+message QueryGenesisTimeResponse {
+  // GenesisTime is the timestamp associated with the first block.
+  google.protobuf.Timestamp genesis_time = 1 [(gogoproto.stdtime) = true];
 }

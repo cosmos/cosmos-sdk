@@ -20,14 +20,11 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
-
 type IntegrationTestSuite struct {
 	suite.Suite
 
 	mintKeeper    keeper.Keeper
 	ctx           sdk.Context
-	msgServer     types.MsgServer
 	stakingKeeper *minttestutil.MockStakingKeeper
 	bankKeeper    *minttestutil.MockBankKeeper
 }
@@ -58,7 +55,6 @@ func (s *IntegrationTestSuite) SetupTest() {
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
-		govModuleNameStr,
 	)
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper
@@ -66,11 +62,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
 		s.mintKeeper.Logger(testCtx.Ctx))
 
-	err := s.mintKeeper.Params.Set(s.ctx, types.DefaultParams())
-	s.Require().NoError(err)
-
 	s.Require().NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
-	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 }
 
 func (s *IntegrationTestSuite) TestAliasFunctions() {
@@ -79,12 +71,6 @@ func (s *IntegrationTestSuite) TestAliasFunctions() {
 	tokenSupply, err := s.mintKeeper.StakingTokenSupply(s.ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(tokenSupply, stakingTokenSupply)
-
-	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
-	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil)
-	ratio, err := s.mintKeeper.BondedRatio(s.ctx)
-	s.Require().NoError(err)
-	s.Require().Equal(ratio, bondedRatio)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)))
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, coins).Return(nil)

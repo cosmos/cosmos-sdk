@@ -11,7 +11,4 @@ option go_package = "cosmossdk.io/x/mint/types";
 message GenesisState {
   // minter is a space for holding current inflation information.
   Minter minter = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-
-  // params defines all the parameters of the module.
-  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

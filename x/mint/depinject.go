@@ -27,11 +27,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleKey              depinject.OwnModuleKey
-	Config                 *modulev1.Module
-	StoreService           store.KVStoreService
-	Cdc                    codec.Codec
-	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
+	ModuleKey    depinject.OwnModuleKey
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -51,17 +50,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(err)
-	}
-
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -69,11 +57,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
-		as,
 	)
 
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper)
 
 	return ModuleOutputs{MintKeeper: k, Module: m}
 }

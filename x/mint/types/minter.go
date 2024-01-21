@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	"cosmossdk.io/math"
 
@@ -9,19 +10,30 @@ import (
 )
 
 // NewMinter returns a new Minter object with the given inflation and annual
-// provisions values.
-func NewMinter(inflation, annualProvisions math.LegacyDec) Minter {
+// provisions values. Previous block time is initially nil and will be set during the execution.
+func NewMinter(
+	inflation math.LegacyDec,
+	annualProvisions math.LegacyDec,
+	genesisTime *time.Time,
+	mintDenom string,
+) Minter {
 	return Minter{
-		Inflation:        inflation,
-		AnnualProvisions: annualProvisions,
+		Inflation:         inflation,
+		AnnualProvisions:  annualProvisions,
+		GenesisTime:       genesisTime,
+		PreviousBlockTime: nil, // is nil here
+		MintDenom:         mintDenom,
 	}
 }
 
 // InitialMinter returns an initial Minter object with a given inflation value.
 func InitialMinter(inflation math.LegacyDec) Minter {
+	genesisTime := time.Unix(0, 0).UTC()
 	return NewMinter(
 		inflation,
-		math.LegacyNewDec(0),
+		math.LegacyZeroDec(),
+		&genesisTime,
+		sdk.DefaultBondDenom,
 	)
 }
 
@@ -29,54 +41,59 @@ func InitialMinter(inflation math.LegacyDec) Minter {
 // which uses an inflation rate of 13%.
 func DefaultInitialMinter() Minter {
 	return InitialMinter(
-		math.LegacyNewDecWithPrec(13, 2),
+		initialInflationRate,
 	)
 }
 
 // ValidateMinter does a basic validation on minter.
 func ValidateMinter(minter Minter) error {
 	if minter.Inflation.IsNegative() {
-		return fmt.Errorf("mint parameter Inflation should be positive, is %s",
-			minter.Inflation.String())
+		return fmt.Errorf("inflation %v should be positive", minter.Inflation.String())
+	}
+	if minter.AnnualProvisions.IsNegative() {
+		return fmt.Errorf("annual provisions %v should be positive", minter.AnnualProvisions.String())
 	}
 	return nil
 }
 
-// NextInflationRate returns the new inflation rate for the next block.
-func (m Minter) NextInflationRate(params Params, bondedRatio math.LegacyDec) math.LegacyDec {
-	// The target annual inflation rate is recalculated for each block. The inflation
-	// is also subject to a rate change (positive or negative) depending on the
-	// distance from the desired ratio (67%). The maximum rate change possible is
-	// defined to be 13% per year, however the annual inflation is capped as between
-	// 7% and 20%.
-
-	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := math.LegacyOneDec().
-		Sub(bondedRatio.Quo(params.GoalBonded)).
-		Mul(params.InflationRateChange)
-	inflationRateChange := inflationRateChangePerYear.Quo(math.LegacyNewDec(int64(params.BlocksPerYear)))
-
-	// adjust the new annual inflation for this next block
-	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
-	if inflation.GT(params.InflationMax) {
-		inflation = params.InflationMax
-	}
-	if inflation.LT(params.InflationMin) {
-		inflation = params.InflationMin
-	}
-
-	return inflation
+// AnnualProvisions returns the annual provisions based on the total supply and the inflation rate.
+func AnnualProvisions(inflation math.LegacyDec, totalSupply math.Int) math.LegacyDec {
+	return inflation.MulInt(totalSupply)
 }
 
-// NextAnnualProvisions returns the annual provisions based on current total
-// supply and inflation rate.
-func (m Minter) NextAnnualProvisions(_ Params, totalSupply math.Int) math.LegacyDec {
-	return m.Inflation.MulInt(totalSupply)
+// BlockProvision returns the provisions for a block based on the annual provisions rate.
+func BlockProvision(
+	currentBlockTime time.Time,
+	previousBlockTime time.Time,
+	annualProvisions math.LegacyDec,
+) math.Int {
+	// nanosecs in year / diff == blocks - the number of blocks if the rate keeps the same
+	// provision / blocks == provision per block
+	// -> provision per block = provision * diff / year
+
+	diff := currentBlockTime.Sub(previousBlockTime).Nanoseconds() // nanosecs between the blocks
+	provisionAmt := annualProvisions.Mul(math.LegacyNewDec(diff)).Quo(nanosecondsPerYearDec)
+
+	return provisionAmt.TruncateInt()
 }
 
-// BlockProvision returns the provisions for a block based on the annual
-// provisions rate.
-func (m Minter) BlockProvision(params Params) sdk.Coin {
-	provisionAmt := m.AnnualProvisions.QuoInt(math.NewInt(int64(params.BlocksPerYear)))
-	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+// InflationRate returns the new inflation rate for the given block.
+// The algorithm is implemented according to the ADR 019 of Celestia.
+func InflationRate(genesisTime, blockTime time.Time) math.LegacyDec {
+	years := yearsSinceGenesis(genesisTime, blockTime)
+	inflationRate := initialInflationRate.Mul(math.LegacyOneDec().Sub(disinflationRate).Power(uint64(years)))
+
+	if inflationRate.LT(targetInflationRate) {
+		return targetInflationRate
+	}
+	return inflationRate
+}
+
+// yearsSinceGenesis returns the number of years that have passed between
+// genesis and current (rounded down).
+func yearsSinceGenesis(genesis time.Time, current time.Time) (years int64) {
+	if current.Before(genesis) {
+		return 0
+	}
+	return current.Sub(genesis).Nanoseconds() / nanosecondsPerYear
 }

@@ -13,6 +13,7 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	ormmodulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 	"cosmossdk.io/core/genesis"
@@ -34,8 +35,8 @@ import (
 
 func init() {
 	// this registers the test module with the module registry
-	am.Register(&testpb.Module{},
-		am.Provide(NewKeeper),
+	appconfig.RegisterModule(&testpb.Module{},
+		appconfig.Provide(NewKeeper),
 	)
 }
 

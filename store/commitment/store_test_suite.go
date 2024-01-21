@@ -45,12 +45,12 @@ func (s *CommitStoreTestSuite) TestSnapshotter() {
 		}
 		s.Require().NoError(commitStore.WriteBatch(store.NewChangesetWithPairs(kvPairs)))
 
-		_, err = commitStore.Commit()
+		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
 	}
 
-	latestStoreInfos := commitStore.WorkingStoreInfos(latestVersion)
-	s.Require().Equal(len(storeKeys), len(latestStoreInfos))
+	cInfo := commitStore.WorkingCommitInfo(latestVersion)
+	s.Require().Equal(len(storeKeys), len(cInfo.StoreInfos))
 
 	// create a snapshot
 	dummyExtensionItem := snapshotstypes.SnapshotItem{
@@ -106,11 +106,10 @@ func (s *CommitStoreTestSuite) TestSnapshotter() {
 	}
 
 	// check the restored tree hash
-	targetStoreInfos := targetStore.WorkingStoreInfos(latestVersion)
-	s.Require().Equal(len(storeKeys), len(targetStoreInfos))
-	for _, storeInfo := range targetStoreInfos {
+	targetCommitInfo := targetStore.WorkingCommitInfo(latestVersion)
+	for _, storeInfo := range targetCommitInfo.StoreInfos {
 		matched := false
-		for _, latestStoreInfo := range latestStoreInfos {
+		for _, latestStoreInfo := range cInfo.StoreInfos {
 			if storeInfo.Name == latestStoreInfo.Name {
 				s.Require().Equal(latestStoreInfo.GetHash(), storeInfo.GetHash())
 				matched = true

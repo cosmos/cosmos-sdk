@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
@@ -17,13 +18,14 @@ func ViewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "view [config]",
 		Short: "View the config file",
+		Long:  "View the config file. The [config] argument must be the path of the file when using the `confix` tool standalone, otherwise it must be the name of the config file without the .toml extension.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			filename := args[0]
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
+				filename = filepath.Join(clientCtx.HomeDir, "config", filename+tomlSuffix)
 			}
 
 			file, err := os.ReadFile(filename)

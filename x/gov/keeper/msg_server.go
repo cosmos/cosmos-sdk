@@ -329,7 +329,7 @@ func (k msgServer) UpdateMessageParams(ctx context.Context, msg *v1.MsgUpdateMes
 	}
 
 	// delete the message params if the params are empty
-	if *msg.Params == (v1.MessageBasedParams{}) {
+	if msg.Params == nil || *msg.Params == (v1.MessageBasedParams{}) {
 		if err := k.MessageBasedParams.Remove(ctx, msg.MsgUrl); err != nil {
 			return nil, err
 		}

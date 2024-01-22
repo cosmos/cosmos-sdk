@@ -1850,19 +1850,120 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgUpdateMesagedParams() {
+func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
 	testCases := []struct {
 		name      string
-		input     func() *v1.MsgUpdateMessageParams
-		expErr    bool
+		input     *v1.MsgUpdateMessageParams
 		expErrMsg string
-	}{}
-
-	// TODO
+	}{
+		{
+			name: "invalid authority",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: "invalid",
+				MsgUrl:    "",
+				Params:    nil,
+			},
+			expErrMsg: "invalid authority",
+		},
+		{
+			name: "invalid msg url (valid as not checked in msg handler)",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    "invalid",
+				Params:    nil,
+			},
+			expErrMsg: "",
+		},
+		{
+			name: "empty params (valid = deleting params)",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    "",
+				Params:    nil,
+			},
+			expErrMsg: "",
+		},
+		{
+			name: "invalid quorum",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "-0.334",
+					Threshold:     "0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+			expErrMsg: "quorom cannot be negative",
+		},
+		{
+			name: "invalid threshold",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "0.334",
+					Threshold:     "-0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+			expErrMsg: "vote threshold must be positive",
+		},
+		{
+			name: "invalid veto threshold",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "0.334",
+					Threshold:     "0.5",
+					VetoThreshold: "-0.334",
+				},
+			},
+			expErrMsg: "veto threshold must be positive",
+		},
+		{
+			name: "invalid voting period",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := -time.Hour; return &d }(),
+					Quorum:        "0.334",
+					Threshold:     "0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+			expErrMsg: "voting period must be positive",
+		},
+		{
+			name: "valid",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "0.334",
+					Threshold:     "0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+		},
+	}
 
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.name, func() {
+			_, err := suite.msgSrvr.UpdateMessageParams(suite.ctx, tc.input)
+			if tc.expErrMsg != "" {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+			}
 		})
 	}
 }

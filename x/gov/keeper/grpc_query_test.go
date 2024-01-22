@@ -932,25 +932,69 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCQueryMessagedBasedParams() {
+	// create custom message based params for x/gov/MsgUpdateParams
+	err := suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgUpdateParams{}), v1.MessageBasedParams{
+		VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+		Quorum:        "0.4",
+		Threshold:     "0.5",
+		VetoThreshold: "0.66",
+	})
+	suite.Require().NoError(err)
+
+	defaultGovParams := v1.DefaultParams()
+
 	queryClient := suite.queryClient
 	testCases := []struct {
-		msg     string
-		req     v1.QueryMessageBasedParamsRequest
-		expPass bool
-	}{}
-
-	// TODO: add test cases
+		msg       string
+		req       v1.QueryMessageBasedParamsRequest
+		expResp   *v1.QueryMessageBasedParamsResponse
+		expErrMsg string
+	}{
+		{
+			msg:       "empty request",
+			req:       v1.QueryMessageBasedParamsRequest{},
+			expErrMsg: "invalid request",
+		},
+		{
+			msg: "valid request (custom msg based params)",
+			req: v1.QueryMessageBasedParamsRequest{
+				MsgUrl: sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+			},
+			expResp: &v1.QueryMessageBasedParamsResponse{
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+					Quorum:        "0.4",
+					Threshold:     "0.5",
+					VetoThreshold: "0.66",
+				},
+			},
+		},
+		{
+			msg: "valid request (default msg based params)",
+			req: v1.QueryMessageBasedParamsRequest{
+				MsgUrl: sdk.MsgTypeURL(&v1.MsgSubmitProposal{}),
+			},
+			expResp: &v1.QueryMessageBasedParamsResponse{
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  defaultGovParams.VotingPeriod,
+					Quorum:        defaultGovParams.Quorum,
+					Threshold:     defaultGovParams.Threshold,
+					VetoThreshold: defaultGovParams.VetoThreshold,
+				},
+			},
+		},
+	}
 
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			params, err := queryClient.MessageBasedParams(gocontext.Background(), &tc.req)
-
-			if tc.expPass {
-				suite.Require().NoError(err)
-			} else {
+			params, err := queryClient.MessageBasedParams(suite.ctx, &tc.req)
+			if tc.expErrMsg != "" {
 				suite.Require().Error(err)
-				suite.Require().Nil(params)
+				suite.Require().ErrorContains(err, tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expResp, params)
 			}
 		})
 	}

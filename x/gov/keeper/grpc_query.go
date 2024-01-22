@@ -222,7 +222,7 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 
 // MessageBasedParams queries params for a specific message
 func (q queryServer) MessageBasedParams(ctx context.Context, req *v1.QueryMessageBasedParamsRequest) (*v1.QueryMessageBasedParamsResponse, error) {
-	if req == nil {
+	if req == nil || req.MsgUrl == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 

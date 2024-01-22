@@ -272,12 +272,12 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		return err
 	}
 
-	err = svd.consumeSignatureGas(ctx, simulate, acc.GetPubKey(), sig)
+	err = svd.consumeSignatureGas(ctx, acc.GetPubKey(), sig)
 	if err != nil {
 		return err
 	}
 
-	err = svd.verifySig(ctx, simulate, tx, acc, sig)
+	err = svd.verifySig(ctx, tx, acc, sig)
 	if err != nil {
 		return err
 	}
@@ -296,11 +296,10 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 // consumeSignatureGas will consume gas according to the pub-key being verified.
 func (svd SigVerificationDecorator) consumeSignatureGas(
 	ctx sdk.Context,
-	simulate bool,
 	pubKey cryptotypes.PubKey,
 	signature signing.SignatureV2,
 ) error {
-	if simulate && pubKey == nil {
+	if ctx.ExecMode() == sdk.ExecModeSimulate && pubKey == nil {
 		pubKey = simSecp256k1Pubkey
 	}
 
@@ -322,10 +321,10 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 // it will assess:
 // - the pub key is on the curve.
 // - verify sig
-func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
+func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
 	// retrieve pubkey
 	pubKey := acc.GetPubKey()
-	if !simulate && pubKey == nil {
+	if ctx.ExecMode() != sdk.ExecModeSimulate && pubKey == nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 
@@ -343,7 +342,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 	// we're in simulation mode, or in ReCheckTx, or context is not
 	// on sig verify tx, then we do not need to verify the signatures
 	// in the tx.
-	if simulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
+	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
 		return nil
 	}
 

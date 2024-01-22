@@ -6,17 +6,17 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 )
 
-type branchedAccountsState struct {
-	state                 store.ReadonlyAccountsState
-	branchedAccountsState map[string]store.WritableState
-	branch                func(state store.ReadonlyState) store.WritableState
+type branchedState struct {
+	state                 store.GetReader
+	branchedAccountsState map[string]store.Writer
+	branch                func(state store.Reader) store.Writer
 }
 
-func (b branchedAccountsState) GetAccountReadonlyState(address []byte) (store.ReadonlyState, error) {
-	return b.GetAccountWritableState(address)
+func (b branchedState) GetAccountReader(address []byte) (store.Reader, error) {
+	return b.GetAccountWriter(address)
 }
 
-func (b branchedAccountsState) GetAccountWritableState(address []byte) (store.WritableState, error) {
+func (b branchedState) GetAccountWriter(address []byte) (store.Writer, error) {
 	addressStr := string(address)
 	// this is the case in which we have already cached some branched state.
 	branchedState, ok := b.branchedAccountsState[addressStr]
@@ -25,7 +25,7 @@ func (b branchedAccountsState) GetAccountWritableState(address []byte) (store.Wr
 	}
 	// this is the case in which it's the first time in the execution context
 	// we were asked for this account's state, so we will fetch it from the state.
-	accountState, err := b.state.GetAccountReadonlyState(address)
+	accountState, err := b.state.GetAccountReader(address)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (b branchedAccountsState) GetAccountWritableState(address []byte) (store.Wr
 	return branchedState, nil
 }
 
-func (b branchedAccountsState) ApplyAccountsStateChanges(stateChanges []store.AccountStateChanges) error {
+func (b branchedState) ApplyStateChanges(stateChanges []store.AccountStateChanges) error {
 	for _, sc := range stateChanges {
 		err := b.applyStateChange(sc)
 		if err != nil {
@@ -45,7 +45,7 @@ func (b branchedAccountsState) ApplyAccountsStateChanges(stateChanges []store.Ac
 	return nil
 }
 
-func (b branchedAccountsState) GetAccountsStateChanges() ([]store.AccountStateChanges, error) {
+func (b branchedState) GetStateChanges() ([]store.AccountStateChanges, error) {
 	sc := make([]store.AccountStateChanges, len(b.branchedAccountsState))
 	for account, stateChange := range b.branchedAccountsState {
 		kvChanges, err := stateChange.ChangeSets()
@@ -60,8 +60,8 @@ func (b branchedAccountsState) GetAccountsStateChanges() ([]store.AccountStateCh
 	return sc, nil
 }
 
-func (b branchedAccountsState) applyStateChange(sc store.AccountStateChanges) error {
-	writableState, err := b.GetAccountWritableState(sc.Account)
+func (b branchedState) applyStateChange(sc store.AccountStateChanges) error {
+	writableState, err := b.GetAccountWriter(sc.Account)
 	if err != nil {
 		return err
 	}
@@ -69,12 +69,12 @@ func (b branchedAccountsState) applyStateChange(sc store.AccountStateChanges) er
 }
 
 func newBranchedAccountsState(
-	state store.ReadonlyAccountsState,
-	branch func(readonlyState store.ReadonlyState) store.WritableState) store.WritableAccountsState {
+	state store.GetReader,
+	branch func(readonlyState store.Reader) store.Writer) store.GetWriter {
 
-	return branchedAccountsState{
+	return branchedState{
 		state:                 state,
-		branchedAccountsState: make(map[string]store.WritableState),
+		branchedAccountsState: make(map[string]store.Writer),
 		branch:                branch,
 	}
 }

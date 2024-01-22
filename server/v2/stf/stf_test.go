@@ -44,8 +44,8 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "post-tx-exec")
 			return nil
 		},
-		branch: func(state store.ReadonlyAccountsState) store.WritableAccountsState {
-			return newBranchedAccountsState(state, func(readonlyState store.ReadonlyState) store.WritableState {
+		branch: func(state store.GetReader) store.GetWriter {
+			return newBranchedAccountsState(state, func(readonlyState store.Reader) store.Writer {
 				return branch.NewStore(readonlyState)
 			})
 		},
@@ -143,23 +143,23 @@ var accountName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) {
 	t.Helper()
-	state, err := ctx.(*executionContext).store.GetAccountWritableState(accountName)
+	state, err := ctx.(*executionContext).store.GetAccountWriter(accountName)
 	require.NoError(t, err)
 	require.NoError(t, state.Set([]byte(v), []byte(v)))
 }
 
-func stateHas(t *testing.T, accountState store.ReadonlyAccountsState, key string) {
+func stateHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
-	state, err := accountState.GetAccountReadonlyState(accountName)
+	state, err := accountState.GetAccountReader(accountName)
 	require.NoError(t, err)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Truef(t, has, "state did not have key: %s", key)
 }
 
-func stateNotHas(t *testing.T, accountState store.ReadonlyAccountsState, key string) {
+func stateNotHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
-	state, err := accountState.GetAccountReadonlyState(accountName)
+	state, err := accountState.GetAccountReader(accountName)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Falsef(t, has, "state was not supposed to have key: %s", key)

@@ -5,7 +5,7 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 )
 
-func DB() store.ReadonlyAccountsState {
+func DB() store.GetReader {
 	return accountState{kv: map[string][]byte{}}
 }
 
@@ -13,7 +13,7 @@ type accountState struct {
 	kv map[string][]byte
 }
 
-func (m accountState) GetAccountReadonlyState(address []byte) (store.ReadonlyState, error) {
+func (m accountState) GetAccountReader(address []byte) (store.Reader, error) {
 	return memState{address, m.kv}, nil
 }
 

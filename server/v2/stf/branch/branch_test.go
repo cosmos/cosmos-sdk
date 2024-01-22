@@ -108,7 +108,7 @@ func newMemState() memStore {
 	return memStore{btree.NewBTreeGOptions(byKeys, btree.Options{Degree: bTreeDegree, NoLocks: true})}
 }
 
-var _ store.WritableState = memStore{}
+var _ store.Writer = memStore{}
 
 type memStore struct {
 	t *btree.BTreeG[item]

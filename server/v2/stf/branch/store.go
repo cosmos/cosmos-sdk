@@ -5,16 +5,16 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 )
 
-var _ store.WritableState = (*Store[store.ReadonlyState])(nil)
+var _ store.Writer = (*Store[store.Reader])(nil)
 
 // Store wraps an in-memory cache around an underlying types.KVStore.
-type Store[T store.ReadonlyState] struct {
+type Store[T store.Reader] struct {
 	changeSet changeSet // always ascending sorted
 	parent    T
 }
 
 // NewStore creates a new Store object
-func NewStore[T store.ReadonlyState](parent T) Store[T] {
+func NewStore[T store.Reader](parent T) Store[T] {
 	return Store[T]{
 		changeSet: newChangeSet(),
 		parent:    parent,

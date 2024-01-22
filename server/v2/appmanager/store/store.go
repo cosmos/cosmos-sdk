@@ -21,12 +21,12 @@ type Store[SS storev2.VersionedDatabase, SC storev2.Committer] struct {
 	latest *atomic.Uint64
 }
 
-func (s Store[SS, SC]) StateLatest() (uint64, store.ReadonlyAccountsState, error) {
+func (s Store[SS, SC]) StateLatest() (uint64, store.GetReader, error) {
 	latest := s.latest.Load()
 	return latest, accountsState[SS]{latest, s.ss}, nil
 }
 
-func (s Store[SS, SC]) StateAt(version uint64) (store.ReadonlyAccountsState, error) {
+func (s Store[SS, SC]) StateAt(version uint64) (store.GetReader, error) {
 	return accountsState[SS]{version, s.ss}, nil
 }
 
@@ -62,7 +62,7 @@ type accountsState[SS storev2.VersionedDatabase] struct {
 	ss      SS
 }
 
-func (a accountsState[SS]) GetAccountReadonlyState(address []byte) (store.ReadonlyState, error) {
+func (a accountsState[SS]) GetAccountReader(address []byte) (store.Reader, error) {
 	return state[SS]{
 		version:  a.version,
 		storeKey: string(address),

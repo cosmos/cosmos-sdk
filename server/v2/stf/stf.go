@@ -27,14 +27,14 @@ type STF[T transaction.Tx] struct {
 
 	doTxValidation func(ctx context.Context, tx T) error // TODO: rewrite antehandlers remove simulate
 	postTxExec     func(ctx context.Context, tx T, success bool) error
-	branch         func(state store.ReadonlyAccountsState) store.WritableAccountsState // branch is a function that given a readonly store it returns a writable version of it.
+	branch         func(state store.GetReader) store.GetWriter // branch is a function that given a readonly store it returns a writable version of it.
 	// TODO: add gas store
 }
 
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
-func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T], state store.ReadonlyAccountsState) (blockResult *appmanager.BlockResponse, newState store.WritableAccountsState, err error) {
+func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T], state store.GetReader) (blockResult *appmanager.BlockResponse, newState store.GetWriter, err error) {
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
@@ -95,7 +95,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 }
 
 // deliverTx executes a TX and returns the result.
-func (s STF[T]) deliverTx(ctx context.Context, state store.WritableAccountsState, tx T) appmanager.TxResult {
+func (s STF[T]) deliverTx(ctx context.Context, state store.GetWriter, tx T) appmanager.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
 	defer func() {
@@ -127,7 +127,7 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WritableAccountsState
 
 // validateTx validates a transaction given the provided WritableState and gas limit.
 // If the validation is successful, state is committed
-func (s STF[T]) validateTx(ctx context.Context, state store.WritableAccountsState, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
+func (s STF[T]) validateTx(ctx context.Context, state store.GetWriter, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branch(state)
 	validateCtx := s.makeContext(ctx, tx.GetSenders(), validateState, gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
@@ -139,7 +139,7 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WritableAccountsStat
 }
 
 // execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
-func (s STF[T]) execTx(ctx context.Context, state store.WritableAccountsState, gasLimit uint64, tx T) ([]transaction.Type, uint64, []event.Event, error) {
+func (s STF[T]) execTx(ctx context.Context, state store.GetWriter, gasLimit uint64, tx T) ([]transaction.Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
 
@@ -189,7 +189,7 @@ func (s STF[T]) execTx(ctx context.Context, state store.WritableAccountsState, g
 
 // runTxMsgs will execute the messages contained in the TX with the provided state.
 // TODO: multimessage both atomic and non atomic
-func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableAccountsState, gasLimit uint64, tx T) ([]transaction.Type, error) {
+func (s STF[T]) runTxMsgs(ctx context.Context, state store.GetWriter, gasLimit uint64, tx T) ([]transaction.Type, error) {
 	execCtx := s.makeContext(ctx, tx.GetSenders(), state, gasLimit)
 	msgs := tx.GetMessages()
 	msgResps := make([]transaction.Type, len(msgs))
@@ -203,7 +203,7 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableAccountsState
 	return msgResps, nil
 }
 
-func (s STF[T]) upgradeBlock(ctx context.Context, state store.WritableAccountsState) ([]event.Event, error) {
+func (s STF[T]) upgradeBlock(ctx context.Context, state store.GetWriter) ([]event.Event, error) {
 	pbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit
 	err := s.doPreBlock(pbCtx, txs)
 	if err != nil {
@@ -221,7 +221,7 @@ func (s STF[T]) upgradeBlock(ctx context.Context, state store.WritableAccountsSt
 	return pbCtx.events, nil
 }
 
-func (s STF[T]) beginBlock(ctx context.Context, state store.WritableAccountsState) (beginBlockEvents []event.Event, err error) {
+func (s STF[T]) beginBlock(ctx context.Context, state store.GetWriter) (beginBlockEvents []event.Event, err error) {
 	bbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
 	err = s.doBeginBlock(bbCtx)
 	if err != nil {
@@ -238,7 +238,7 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WritableAccountsStat
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.WritableAccountsState) ([]event.Event, []appmanager.ValidatorUpdate, error) {
+func (s STF[T]) endBlock(ctx context.Context, state store.GetWriter) ([]event.Event, []appmanager.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
@@ -263,7 +263,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WritableAccountsState)
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.WritableAccountsState) ([]event.Event, []appmanager.ValidatorUpdate, error) {
+func (s STF[T]) validatorUpdates(ctx context.Context, state store.GetWriter) ([]event.Event, []appmanager.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {
@@ -273,14 +273,14 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.WritableAccoun
 }
 
 // Simulate simulates the execution of a tx on the provided state.
-func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyAccountsState, gasLimit uint64, tx T) (appmanager.TxResult, store.WritableAccountsState) {
+func (s STF[T]) Simulate(ctx context.Context, state store.GetReader, gasLimit uint64, tx T) (appmanager.TxResult, store.GetWriter) {
 	simulationState := s.branch(state)
 	return s.deliverTx(ctx, simulationState, tx), simulationState
 }
 
 // ValidateTx will run only the validation steps required for a transaction.
 // Validations are run over the provided state, with the provided gas limit.
-func (s STF[T]) ValidateTx(ctx context.Context, state store.ReadonlyAccountsState, gasLimit uint64, tx T) appmanager.TxResult {
+func (s STF[T]) ValidateTx(ctx context.Context, state store.GetReader, gasLimit uint64, tx T) appmanager.TxResult {
 	validationState := s.branch(state)
 	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
 	return appmanager.TxResult{
@@ -291,7 +291,7 @@ func (s STF[T]) ValidateTx(ctx context.Context, state store.ReadonlyAccountsStat
 }
 
 // Query executes the query on the provided state with the provided gas limits.
-func (s STF[T]) Query(ctx context.Context, state store.ReadonlyAccountsState, gasLimit uint64, req transaction.Type) (transaction.Type, error) {
+func (s STF[T]) Query(ctx context.Context, state store.GetReader, gasLimit uint64, req transaction.Type) (transaction.Type, error) {
 	queryState := s.branch(state)
 	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit)
 	return s.handleQuery(queryCtx, req)
@@ -301,7 +301,7 @@ func (s STF[T]) Query(ctx context.Context, state store.ReadonlyAccountsState, ga
 // TODO: look if we are missing anything here
 type executionContext struct {
 	context.Context
-	store    store.WritableAccountsState
+	store    store.GetWriter
 	gasUsed  uint64
 	gasLimit uint64
 	events   []event.Event
@@ -313,7 +313,7 @@ type executionContext struct {
 func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender []transaction.Identity,
-	store store.WritableAccountsState,
+	store store.GetWriter,
 	gasLimit uint64,
 	// TODO add exec mode
 ) *executionContext {
@@ -327,10 +327,10 @@ func (s STF[T]) makeContext(
 	}
 }
 
-func applyStateChanges(dst store.WritableAccountsState, src store.WritableAccountsState) error {
-	changes, err := src.GetAccountsStateChanges()
+func applyStateChanges(dst store.GetWriter, src store.GetWriter) error {
+	changes, err := src.GetStateChanges()
 	if err != nil {
 		return err
 	}
-	return dst.ApplyAccountsStateChanges(changes)
+	return dst.ApplyStateChanges(changes)
 }

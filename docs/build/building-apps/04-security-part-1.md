@@ -2,6 +2,8 @@
 
 > Thank you to **[Roman Akhtariev](https://twitter.com/akhtariev) and [Alpin Yukseloglu](https://twitter.com/0xalpo)** for authoring this post. The original post can be found [here](https://www.faulttolerant.xyz/2024-01-16-cosmos-security-1/).
 
+> [Trail of bits](https://www.trailofbits.com/) hosts another set of guidelines [here](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cosmos)
+
 The defining property of the Cosmos stack is that it is unconstrained. The layers of the stack are porous, and, to a sufficiently motivated developer, nothing is off-limits. From a security standpoint, this freedom can be terrifying.
 
 In this post, we aim to shed some light on the security landscape for the Cosmos stack.  We will emphasize areas that are particularly unintuitive, either because they are unique to Cosmos or because they are areas that developers who have not built appchains before are unlikely to have encountered.

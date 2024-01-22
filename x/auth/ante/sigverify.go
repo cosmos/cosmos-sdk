@@ -1,7 +1,6 @@
 package ante
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -47,107 +46,11 @@ func init() {
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 
-// SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
-// PubKeys must be set in context for all signers before any other sigverify decorators run
-// CONTRACT: Tx must implement SigVerifiableTx interface
-type SetPubKeyDecorator struct {
-	ak AccountKeeper
-}
-
-func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
-	return SetPubKeyDecorator{
-		ak: ak,
-	}
-}
-
-func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
-	}
-
-	pubkeys, err := sigTx.GetPubKeys()
-	if err != nil {
-		return ctx, err
-	}
-
-	signers, err := sigTx.GetSigners()
-	if err != nil {
-		return sdk.Context{}, err
-	}
-
-	signerStrs := make([]string, len(signers))
-	for i, pk := range pubkeys {
-		var err error
-		signerStrs[i], err = spkd.ak.AddressCodec().BytesToString(signers[i])
-		if err != nil {
-			return sdk.Context{}, err
-		}
-
-		// PublicKey was omitted from slice since it has already been set in context
-		if pk == nil {
-			if !simulate {
-				continue
-			}
-			pk = simSecp256k1Pubkey
-		}
-		// Only make check if simulate=false
-		if !simulate && !bytes.Equal(pk.Address(), signers[i]) && ctx.IsSigverifyTx() {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
-				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
-		}
-		if err := verifyIsOnCurve(pk); err != nil {
-			return ctx, err
-		}
-
-		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
-		if err != nil {
-			return ctx, err
-		}
-		// account already has pubkey set,no need to reset
-		if acc.GetPubKey() != nil {
-			continue
-		}
-		err = acc.SetPubKey(pk)
-		if err != nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
-		}
-		spkd.ak.SetAccount(ctx, acc)
-	}
-
-	// Also emit the following events, so that txs can be indexed by these
-	// indices:
-	// - signature (via `tx.signature='<sig_as_base64>'`),
-	// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return ctx, err
-	}
-
-	var events sdk.Events
-	for i, sig := range sigs {
-		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStrs[i], sig.Sequence)),
-		))
-
-		sigBzs, err := signatureDataToBz(sig.Data)
-		if err != nil {
-			return ctx, err
-		}
-		for _, sigBz := range sigBzs {
-			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-				sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
-			))
-		}
-	}
-
-	ctx.EventManager().EmitEvents(events)
-
-	return next(ctx, tx, simulate)
-}
-
 // SigVerificationDecorator verifies all signatures for a tx and returns an
-// error if any are invalid. Note, the SigVerificationDecorator will not check
+// error if any are invalid.
+// It will populate an account's public key if that is not present only if
+// PubKey.Address() == Account.Address().
+// Note, the SigVerificationDecorator will not check
 // signatures on ReCheckTx. It will also increase the sequence number, and consume
 // gas for signature verification.
 //
@@ -155,7 +58,6 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 // to to set unordered=true with a reasonable timeout_height value, in which case
 // this nonce verification and increment will be skipped.
 //
-// CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
@@ -255,21 +157,66 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(signatures))
 	}
 
+	pubKeys, err := sigTx.GetPubKeys()
+	if err != nil {
+		return ctx, err
+	}
+
+	// NOTE: the tx_wrapper implementation returns nil, in case the pubkey is not populated.
+	// so we can always expect the pubkey of the signer to be at the same index as the signer
+	// itself. If this does not work, it's a failure in the implementation of the interface.
+	// we're erroring, but most likely we should be panicking.
+	if len(pubKeys) != len(signers) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid number of pubkeys; expected %d, got %d", len(signers), len(pubKeys))
+	}
+
 	for i := range signers {
-		err = svd.authenticate(ctx, tx, simulate, signers[i], signatures[i])
+		err = svd.authenticate(ctx, sigTx, simulate, signers[i], signatures[i], pubKeys[i])
 		if err != nil {
 			return ctx, err
 		}
 	}
 
+	var events sdk.Events
+	for i, sig := range signatures {
+		signerStr, err := svd.ak.AddressCodec().BytesToString(signers[i])
+		if err != nil {
+			return ctx, err
+		}
+		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStr, sig.Sequence)),
+		))
+
+		sigBzs, err := signatureDataToBz(sig.Data)
+		if err != nil {
+			return ctx, err
+		}
+		for _, sigBz := range sigBzs {
+			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
+				sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
+			))
+		}
+	}
+
+	ctx.EventManager().EmitEvents(events)
+
 	return next(ctx, tx, simulate)
 }
 
 // authenticate the authentication of the TX for a specific tx signer.
-func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, simulate bool, signer []byte, sig signing.SignatureV2) error {
+func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, simulate bool, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
 	acc, err := GetSignerAcc(ctx, svd.ak, signer)
 	if err != nil {
 		return err
+	}
+
+	// the account is without a pubkey, let's attempt to check if in the
+	// tx we were correctly provided a valid pubkey.
+	if acc.GetPubKey() == nil {
+		err = svd.setPubKey(ctx.IsSigverifyTx(), simulate, acc, txPubKey)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = svd.consumeSignatureGas(ctx, simulate, acc.GetPubKey(), sig)
@@ -282,15 +229,13 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		return err
 	}
 
-	// Bypass incrementing sequence for transactions with unordered set to true.
-	// The actual parameters of the un-ordered tx will be checked in a separate
-	// decorator.
-	unorderedTx, ok := tx.(sdk.TxWithUnordered)
-	if ok && unorderedTx.GetUnordered() {
-		return nil
+	err = svd.increaseSequence(tx, acc)
+	if err != nil {
+		return err
 	}
-
-	return svd.increaseSequence(ctx, acc)
+	// update account changes in state.
+	svd.ak.SetAccount(ctx, acc)
+	return nil
 }
 
 // consumeSignatureGas will consume gas according to the pub-key being verified.
@@ -319,20 +264,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 }
 
 // verifySig will verify the signature of the provided signer account.
-// it will assess:
-// - the pub key is on the curve.
-// - verify sig
 func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
-	// retrieve pubkey
-	pubKey := acc.GetPubKey()
-	if !simulate && pubKey == nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
-	}
-
-	if err := verifyIsOnCurve(pubKey); err != nil {
-		return err
-	}
-
 	if sig.Sequence != acc.GetSequence() {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
@@ -345,6 +277,12 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 	// in the tx.
 	if simulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
 		return nil
+	}
+
+	// retrieve pubkey
+	pubKey := acc.GetPubKey()
+	if pubKey == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 
 	// retrieve signer data
@@ -388,14 +326,57 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 	return nil
 }
 
-// increaseSequence will increase the sequence number of the account.
-func (svd SigVerificationDecorator) increaseSequence(ctx sdk.Context, acc sdk.AccountI) error {
-	if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
+// setPubKey will attempt to set the pubkey for the account given the list of available public keys.
+// This must be called only in case the account has not a pubkey set yet.
+func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
+	// if we're not in sig verify then we can just skip.
+	if !isSigVerifyTx {
+		return nil
+	}
+	// if the pubkey is nil then we don't have any pubkey to set
+	// for this account, which alwo means we cannot do signature
+	// verification.
+	if txPubKey == nil {
+		// if we're not in simulation mode, and we do not have a valid pubkey
+		// for this signer, then we simply error.
+		if !simulate {
+			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", acc.GetAddress().String())
+		}
+		// if we're in simulation mode, then we can populate the pubkey with the
+		// sim one and simply return.
+		txPubKey = simSecp256k1Pubkey
+		return acc.SetPubKey(txPubKey)
+	}
+
+	// NOTE(tip): this is a way to claim the account, in a context in which the
+	// account was created in an implicit way.
+	// TODO(tip): considering moving account initialization logic: https://github.com/cosmos/cosmos-sdk/issues/19092
+	if !acc.GetAddress().Equals(sdk.AccAddress(txPubKey.Address().Bytes())) {
+		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", acc.GetAddress(), txPubKey.Address())
+	}
+
+	err := verifyIsOnCurve(txPubKey)
+	if err != nil {
 		return err
 	}
 
-	svd.ak.SetAccount(ctx, acc)
-	return nil
+	// we set the pubkey in the account, without setting it in state.
+	// this will be done by the increaseSequenceAndUpdateAccount method.
+	return acc.SetPubKey(txPubKey)
+}
+
+// increaseSequence will increase the provided account interface sequence, unless
+// the tx is unordered.
+func (svd SigVerificationDecorator) increaseSequence(tx authsigning.Tx, acc sdk.AccountI) error {
+	// Bypass incrementing sequence for transactions with unordered set to true.
+	// The actual parameters of the un-ordered tx will be checked in a separate
+	// decorator.
+	unorderedTx, ok := tx.(sdk.TxWithUnordered)
+	if ok && unorderedTx.GetUnordered() {
+		return nil
+	}
+
+	return acc.SetSequence(acc.GetSequence() + 1)
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
@@ -97,12 +98,12 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.Block
 // ValidateTx will validate the tx against the latest storage state. This means that
 // only the stateful validation will be run, not the execution portion of the tx.
 // If full execution is needed, Simulate must be used.
-func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error) {
+func (a AppManager[T]) ValidateTx(ctx context.Context, tx T, execMode corecontext.ExecMode) (appmanager.TxResult, error) {
 	_, latestState, err := a.db.StateLatest()
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
-	return a.stf.ValidateTx(ctx, latestState, a.ValidateTxGasLimit, tx), nil
+	return a.stf.ValidateTx(ctx, latestState, a.ValidateTxGasLimit, tx, execMode), nil
 }
 
 // Simulate runs validation and execution flow of a Tx.

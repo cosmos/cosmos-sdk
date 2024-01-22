@@ -3,6 +3,7 @@ package stf
 import (
 	"context"
 
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
@@ -24,5 +25,5 @@ type STF[T transaction.Tx] interface {
 	// Query runs the provided query over the provided readonly state.
 	Query(ctx context.Context, state store.ReadonlyState, gasLimit uint64, queryRequest appmanager.Type) (queryResponse appmanager.Type, err error)
 	// ValidateTx validates the TX.
-	ValidateTx(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) appmanager.TxResult
+	ValidateTx(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T, execMode corecontext.ExecMode) appmanager.TxResult
 }

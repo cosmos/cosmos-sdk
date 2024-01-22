@@ -79,10 +79,6 @@ type startArgs struct {
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().IntP(flagNumValidators, "n", 4, "Number of validators to initialize the testnet with")
-	cmd.Flags().Int("v", 4, fmt.Sprintf("Alias for --%s", flagNumValidators))
-	if vFlag := cmd.Flags().Lookup("v"); vFlag != nil {
-		vFlag.Deprecated = fmt.Sprintf("use --%s", flagNumValidators)
-	}
 	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
@@ -152,13 +148,6 @@ Example:
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 
-			if cmd.Flags().Changed("v") {
-				if cmd.Flags().Changed(flagNumValidators) {
-					return fmt.Errorf("--%s and --v are mutually exclusive", flagNumValidators)
-				}
-				args.numValidators, _ = cmd.Flags().GetInt("v")
-			}
-
 			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, clientCtx.TxConfig.SigningContext().ValidatorAddressCodec(), args)
 		},
 	}
@@ -197,13 +186,6 @@ Example:
 			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
 			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
-
-			if cmd.Flags().Changed("v") {
-				if cmd.Flags().Changed(flagNumValidators) {
-					return fmt.Errorf("--%s and --v are mutually exclusive", flagNumValidators)
-				}
-				args.numValidators, _ = cmd.Flags().GetInt("v")
-			}
 
 			return startTestnet(cmd, args)
 		},

@@ -80,7 +80,7 @@ Every Module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Deprecated
 
-* (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Deprecate `--v` CLI option in favor of `--validator-count`/`-n`.
+* (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 
 ### Bug Fixes
 

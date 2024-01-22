@@ -59,7 +59,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			}
 
 			if proposalType != v1.ProposalType_PROPOSAL_TYPE_STANDARD {
-				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, "cannot submit non standard proposal with message based params")
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalType, "cannot submit non standard proposal with message based params")
 			}
 		}
 

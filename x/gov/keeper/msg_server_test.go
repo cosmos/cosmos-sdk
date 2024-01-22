@@ -1895,7 +1895,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
 					VetoThreshold: "0.334",
 				},
 			},
-			expErrMsg: "quorom cannot be negative",
+			expErrMsg: "quorum cannot be negative",
 		},
 		{
 			name: "invalid threshold",

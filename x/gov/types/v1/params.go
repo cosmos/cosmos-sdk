@@ -252,10 +252,10 @@ func (p MessageBasedParams) ValidateBasic() error {
 		return fmt.Errorf("invalid quorum string: %w", err)
 	}
 	if quorum.IsNegative() {
-		return fmt.Errorf("quorom cannot be negative: %s", quorum)
+		return fmt.Errorf("quorum cannot be negative: %s", quorum)
 	}
 	if quorum.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("quorom too large: %s", p.Quorum)
+		return fmt.Errorf("quorum too large: %s", p.Quorum)
 	}
 
 	vetoThreshold, err := sdkmath.LegacyNewDecFromStr(p.VetoThreshold)

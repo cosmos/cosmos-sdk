@@ -8,10 +8,6 @@ const (
 	ExecModeCheck ExecMode = iota
 	ExecModeReCheck
 	ExecModeSimulate
-	ExecModePrepareProposal     // Deprecated:
-	ExecModeProcessProposal     // Deprecated:
-	ExecModeVoteExtension       // Deprecated:
-	ExecModeVerifyVoteExtension // Deprecated:
 	ExecModeFinalize
 	ExecModeQuery
 )

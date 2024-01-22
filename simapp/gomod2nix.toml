@@ -38,8 +38,8 @@ schema = 3
     version = "v0.13.0"
     hash = "sha256-KL7X0tDc5dky07uf0qEn5sDMA+2SPxb0f9vW1bCWfPQ="
   [mod."filippo.io/edwards25519"]
-    version = "v1.0.0"
-    hash = "sha256-APnPAcmItvtJ5Zsy863lzR2TjEBF9Y66TY1e4M1ap98="
+    version = "v1.1.0"
+    hash = "sha256-9ACANrgWZSd5HYPfDZHY8DVbPSC9LOMgy8deq3rDOoc="
   [mod."github.com/99designs/go-keychain"]
     version = "v0.0.0-20191008050251-8e49817e8af4"
     hash = "sha256-4EndKcspGC3GOPCmctXF1NnWzxWwMyY/OQpFMmr8Sc0="
@@ -297,8 +297,8 @@ schema = 3
     version = "v0.1.1"
     hash = "sha256-jr4ZFM3XHSwGoZcRcmmdGTq4IqxBTnimojIPDgK0USU="
   [mod."github.com/hdevalence/ed25519consensus"]
-    version = "v0.1.0"
-    hash = "sha256-MkqFWnyXt653RaJQUMWWxcW6NCskIxou8VEfj+8vd3Y="
+    version = "v0.2.0"
+    hash = "sha256-KTbeKMOT/HCJjDHqyciQjJPPgpNk6H0VyQCCbeGgs7Y="
   [mod."github.com/huandu/skiplist"]
     version = "v1.2.0"
     hash = "sha256-/r4QP1SldMlhpkr1ZQFHImSYaeMZEtqBW7R53yN+JtQ="

@@ -510,8 +510,8 @@ func ConsumeMultisignatureVerificationGas(
 // a simulation tx the number of signatures its equal to the multisig threshold.
 func multisignatureSimulationVerificationGas(
 	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
-	params types.Params, accSeq uint64) error {
-
+	params types.Params, accSeq uint64,
+) error {
 	for i := 0; i < len(sig.Signatures); i++ {
 		sigV2 := signing.SignatureV2{
 			PubKey:   pubKey.GetPubKeys()[i],

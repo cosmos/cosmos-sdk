@@ -14,12 +14,7 @@ import (
 
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
-	//  TODO: add configs to config.go with toml annotations (mapstructure)
-	// configs
-	ValidateTxGasLimit uint64
-	queryGasLimit      uint64
-	simulationGasLimit uint64
-	// configs - end
+	config Config
 
 	db store.Store
 
@@ -103,7 +98,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T, execMode corecontex
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
-	return a.stf.ValidateTx(ctx, latestState, a.ValidateTxGasLimit, tx, execMode), nil
+	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx, execMode), nil
 }
 
 // Simulate runs validation and execution flow of a Tx.
@@ -112,7 +107,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 	if err != nil {
 		return appmanager.TxResult{}, nil, err
 	}
-	result, cs := a.stf.Simulate(ctx, state, a.simulationGasLimit, tx)
+	result, cs := a.stf.Simulate(ctx, state, a.config.simulationGasLimit, tx)
 	return result, cs, nil
 }
 
@@ -124,7 +119,7 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 		if err != nil {
 			return nil, err
 		}
-		return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
+		return a.stf.Query(ctx, queryState, a.config.queryGasLimit, request)
 	}
 
 	// otherwise rely on latest available state.
@@ -132,7 +127,7 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 	if err != nil {
 		return nil, err
 	}
-	return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
+	return a.stf.Query(ctx, queryState, a.config.queryGasLimit, request)
 }
 
 func (a AppManager[T]) QueryWitStateChanges(ctx context.Context, changeset []store.ChangeSet, request transaction.Type) (response transaction.Type, err error) {

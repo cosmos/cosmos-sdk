@@ -51,3 +51,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#19099](https://github.com/cosmos/cosmos-sdk/pull/19099) Sets automatically `gas=auto` for simulation to avoid empty pk error.
+* [#19106](https://github.com/cosmos/cosmos-sdk/pull/19106) Allow empty public keys when setting signatures. Public keys aren't needed for every transaction. 

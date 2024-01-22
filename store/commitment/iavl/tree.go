@@ -67,12 +67,21 @@ func (t *IavlTree) Commit() ([]byte, uint64, error) {
 
 // GetProof returns a proof for the given key and version.
 func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
-	imutableTree, err := t.tree.GetImmutable(int64(version))
+	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
 	}
 
-	return imutableTree.GetProof(key)
+	return immutableTree.GetProof(key)
+}
+
+func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
+	immutableTree, err := t.tree.GetImmutable(int64(version))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
+	}
+
+	return immutableTree.Get(key)
 }
 
 // GetLatestVersion returns the latest version of the tree.

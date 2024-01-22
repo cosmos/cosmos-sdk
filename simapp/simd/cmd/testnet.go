@@ -121,7 +121,7 @@ func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.Genes
 		Use:   "init-files",
 		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
 		Long: `init-files will setup one directory per validator and populate each with
-necessary files (private validator, genesis, config, etc.) for running "v" validator nodes.
+necessary files (private validator, genesis, config, etc.) for running validator nodes.
 
 Booting up a network with these validator folders is intended to be used with Docker Compose,
 or a similar setup where each node has a manually configurable IP address.
@@ -179,8 +179,8 @@ func testnetStartCmd() *cobra.Command {
 		Use:   "start",
 		Short: "Launch an in-process multi-validator testnet",
 		Long: `testnet will launch an in-process multi-validator testnet,
-and generate "v" directories, populated with necessary validator configuration files
-(private validator, genesis, config, etc.).
+and generate a directory for each validator populated with necessary
+configuration files (private validator, genesis, config, etc.).
 
 Example:
 	simd testnet -n 4 --output-dir ./.testnets

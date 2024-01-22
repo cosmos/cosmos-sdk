@@ -96,6 +96,7 @@ ifeq (debug,$(findstring debug,$(COSMOS_BUILD_OPTIONS)))
   BUILD_FLAGS += -gcflags "all=-N -l"
 endif
 
+#? all: Run tools build lint test vulncheck
 all: tools build lint test vulncheck
 
 # The below include contains the tools and runsim targets.
@@ -107,11 +108,14 @@ include contrib/devtools/Makefile
 
 BUILD_TARGETS := build install
 
+#? build: Build simapp
 build: BUILD_ARGS=-o $(BUILDDIR)/
 
+#? build-linux-amd64: Build simapp for GOOS=linux GOARCH=amd64
 build-linux-amd64:
 	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
 
+#? build-linux-arm64: Build simapp for GOOS=linux GOARCH=arm64
 build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
@@ -121,24 +125,27 @@ $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
+#? cosmovisor: Build cosmovisor
 cosmovisor:
 	$(MAKE) -C tools/cosmovisor cosmovisor
 
+#? confix: Build confix
 confix:
 	$(MAKE) -C tools/confix confix
 
+#? hubl: Build hubl
 hubl:
 	$(MAKE) -C tools/hubl hubl
 
 .PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
 
-
+#? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
 	@go install github.com/golang/mock/mockgen@v1.6.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
-
+#? vulncheck: Run govulncheck
 vulncheck: $(BUILDDIR)/
 	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
 	$(BUILDDIR)/govulncheck ./...
@@ -146,7 +153,10 @@ vulncheck: $(BUILDDIR)/
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 
+#? distclean: Run `make clean` and `make tools-clean`
 distclean: clean tools-clean
+
+#? clean: Clean some auto generated directory
 clean:
 	rm -rf \
 	$(BUILDDIR)/ \
@@ -169,6 +179,7 @@ go.sum: go.mod
 ###                              Documentation                              ###
 ###############################################################################
 
+#? godocs: Generate go doc
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	go install golang.org/x/tools/cmd/godoc@latest
@@ -182,18 +193,25 @@ godocs:
 # it is useful for testing and development
 # Usage: make install && make init-simapp && simd start
 # Warning: make init-simapp will remove all data in simapp home directory
+#? init-simapp: Initializes a single local node network
 init-simapp:
 	./scripts/init-simapp.sh
 
+#? test: Run `make test-unit`
 test: test-unit
+#? test-e2e: Run `make -C tests test-e2e`
 test-e2e:
 	$(MAKE) -C tests test-e2e
+#? test-e2e-cov: Run `make -C tests test-e2e-cov`
 test-e2e-cov:
 	$(MAKE) -C tests test-e2e-cov
+#? test-integration: Run `make -C tests test-integration`
 test-integration:
 	$(MAKE) -C tests test-integration
+#? test-integration-cov: Run `make -C tests test-integration-cov`
 test-integration-cov:
 	$(MAKE) -C tests test-integration-cov
+#? test-all: Run all test
 test-all: test-unit test-e2e test-integration test-ledger-mock test-race
 
 TEST_PACKAGES=./...
@@ -220,6 +238,7 @@ $(CHECK_TEST_TARGETS): run-tests
 ARGS += -tags "$(test_tags)"
 SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort)
 CURRENT_DIR = $(shell pwd)
+#? run-tests: Run every sub modules' tests
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
 	@echo "Starting unit tests"; \
@@ -247,6 +266,7 @@ endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)
 
+#? test-sim-nondeterminism: Run non-determinism test for simapp
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
@@ -314,6 +334,7 @@ SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 
+#? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
@@ -354,6 +375,7 @@ test-sim-profile-streaming:
 
 .PHONY: test-sim-profile test-sim-benchmark
 
+#? benchmark: Run benchmark tests
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 .PHONY: benchmark
@@ -364,15 +386,18 @@ benchmark:
 
 golangci_version=v1.55.0
 
+#? lint-install: Install golangci-lint
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
 
+#? lint: Run golangci-lint
 lint:
 	@echo "--> Running linter"
 	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
 
+#? lint: Run golangci-lint and fix
 lint-fix:
 	@echo "--> Running linter"
 	$(MAKE) lint-install
@@ -388,22 +413,28 @@ protoVer=0.14.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
+#? proto-all: Run make proto-format proto-lint proto-gen
 proto-all: proto-format proto-lint proto-gen
 
+#? proto-gen: Generate Protobuf files
 proto-gen:
 	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protocgen.sh
 
+#? proto-swagger-gen: Generate Protobuf Swagger
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
 	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
 
+#? proto-format: Format proto file
 proto-format:
 	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
+#? proto-lint: Lint proto file
 proto-lint:
 	@$(protoImage) buf lint --error-format=json
 
+#? proto-check-breaking: Check proto file is breaking
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
@@ -416,6 +447,7 @@ CMT_VERSION          = proto/tendermint/version
 CMT_LIBS             = proto/tendermint/libs/bits
 CMT_P2P              = proto/tendermint/p2p
 
+#? proto-update-deps: Update protobuf dependencies
 proto-update-deps:
 	@echo "Updating Protobuf dependencies"
 
@@ -450,25 +482,36 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
+#? localnet-build-env: Run `make -C contrib/images simd-env`
 localnet-build-env:
 	$(MAKE) -C contrib/images simd-env
+#? localnet-build-dlv: Run `make -C contrib/images simd-dlv`
 localnet-build-dlv:
 	$(MAKE) -C contrib/images simd-dlv
-
+#? localnet-build-nodes: Start localnet node
 localnet-build-nodes:
 	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
 			  testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test --listen-ip-address 0.0.0.0
 	docker-compose up -d
 
+#? localnet-stop: Stop localnet node
 localnet-stop:
 	docker-compose down
 
 # localnet-start will run a 4-node testnet locally. The nodes are
 # based off the docker images in: ./contrib/images/simd-env
+#? localnet-start: Run a 4-node testnet locally
 localnet-start: localnet-stop localnet-build-env localnet-build-nodes
 
 # localnet-debug will run a 4-node testnet locally in debug mode
 # you can read more about the debug mode here: ./contrib/images/simd-dlv/README.md
+#? localnet-debug: Run a 4-node testnet locally in debug mode
 localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
+
+#? help: Get more info on make commands.
+help: Makefile
+	@echo " Choose a command run in "$(PROJECT_NAME)":"
+	@sed -n 's/^#?//p' $< | column -t -s ':' |  sort | sed -e 's/^/ /'
+.PHONY: help

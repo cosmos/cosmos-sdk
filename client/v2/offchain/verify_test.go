@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -29,51 +28,27 @@ func Test_Verify(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name:       "signMode direct json",
-			digest:     []byte("{\"body\":{\"messages\":[{\"@type\":\"/offchain.MsgSignArbitraryData\",\"appDomain\":\"simd\",\"signer\":\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq\",\"data\":\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}],\"memo\":\"\",\"timeoutHeight\":\"0\",\"extensionOptions\":[],\"nonCriticalExtensionOptions\":[]},\"authInfo\":{\"signerInfos\":[{\"publicKey\":{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"Ayw88k8vMspZcgo6qkL8INRzP2HVQJZWu6amPsq+Fg4U\"},\"modeInfo\":{\"single\":{\"mode\":\"SIGN_MODE_DIRECT\"}},\"sequence\":\"0\"}],\"fee\":{\"amount\":[],\"gasLimit\":\"0\",\"payer\":\"\",\"granter\":\"\"},\"tip\":null},\"signatures\":[\"RUf2CTYcyeFIijviTAtRN9oqlY7BcaWsQtGvmTVQff0sinh6C1IeL4M2UxakDa1PSVveZyy8gdTsQs3zG43/Kw==\"]}"),
-			fileFormat: "json",
-			ctx:        ctx,
-		},
-		{
-			name:       "signMode textual json",
-			digest:     []byte("{\"body\":{\"messages\":[{\"@type\":\"/offchain.MsgSignArbitraryData\",\"appDomain\":\"simd\",\"signer\":\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq\",\"data\":\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}],\"memo\":\"\",\"timeoutHeight\":\"0\",\"extensionOptions\":[],\"nonCriticalExtensionOptions\":[]},\"authInfo\":{\"signerInfos\":[{\"publicKey\":{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"Ayw88k8vMspZcgo6qkL8INRzP2HVQJZWu6amPsq+Fg4U\"},\"modeInfo\":{\"single\":{\"mode\":\"SIGN_MODE_TEXTUAL\"}},\"sequence\":\"0\"}],\"fee\":{\"amount\":[],\"gasLimit\":\"0\",\"payer\":\"\",\"granter\":\"\"},\"tip\":null},\"signatures\":[\"vAGdBHxFWQUtkHg0zZFgXnYZmUCIIBfdAKVGy7NGaaA8Wyz5E6qpmrDW6929U+L/pKU3u1kZ1JKSYsWgcgPzpw==\"]}"),
-			fileFormat: "json",
-			ctx:        ctx,
-		},
-		{
-			name:       "signMode legacyAmino json",
-			digest:     []byte("{\"body\":{\"messages\":[{\"@type\":\"/offchain.MsgSignArbitraryData\",\"appDomain\":\"simd\",\"signer\":\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq\",\"data\":\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}],\"memo\":\"\",\"timeoutHeight\":\"0\",\"extensionOptions\":[],\"nonCriticalExtensionOptions\":[]},\"authInfo\":{\"signerInfos\":[{\"publicKey\":{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"Ayw88k8vMspZcgo6qkL8INRzP2HVQJZWu6amPsq+Fg4U\"},\"modeInfo\":{\"single\":{\"mode\":\"SIGN_MODE_LEGACY_AMINO_JSON\"}},\"sequence\":\"0\"}],\"fee\":{\"amount\":[],\"gasLimit\":\"0\",\"payer\":\"\",\"granter\":\"\"},\"tip\":null},\"signatures\":[\"83vXwdnwHK4EhA6d8ynRwpee/tE5CBAr3t5tsW/DMLpjxSD1pSmqHpBeB+t19WOK/plBv2ODLMQKZlz/kMdcjg==\"]}"),
+			name:       "verify json",
+			digest:     []byte("{\"body\":{\"messages\":[{\"@type\":\"/offchain.MsgSignArbitraryData\", \"appDomain\":\"simd\", \"signer\":\"cosmos1x33fy6rusfprkntvjsfregss7rvsvyy4lkwrqu\", \"data\":\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}]}, \"authInfo\":{\"signerInfos\":[{\"publicKey\":{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\", \"key\":\"A/Bfsb7grZtysreo48oB1XAXbcgHnEJyhAqzDMgbLlXw\"}, \"modeInfo\":{\"single\":{\"mode\":\"SIGN_MODE_TEXTUAL\"}}}], \"fee\":{}}, \"signatures\":[\"gRufjcmATaJ3hZSiXII3lcsLDJlHM4OhQs3O/QgAK4weQ73kmj30/gw3HwTKxGb4pnVe0iyLXrKRNeSl1O3zSQ==\"]}"),
 			fileFormat: "json",
 			ctx:        ctx,
 		},
 		{
 			name:       "wrong signer json",
-			digest:     []byte("{\"body\":{\"messages\":[{\"@type\":\"/offchain.MsgSignArbitraryData\",\"appDomain\":\"simd\",\"signer\":\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74gmaq\",\"data\":\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}],\"memo\":\"\",\"timeoutHeight\":\"0\",\"extensionOptions\":[],\"nonCriticalExtensionOptions\":[]},\"authInfo\":{\"signerInfos\":[{\"publicKey\":{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"Ayw88k8vMspZcgo6qkL8INRzP2HVQJZWu6amPsq+Fg4U\"},\"modeInfo\":{\"single\":{\"mode\":\"SIGN_MODE_DIRECT\"}},\"sequence\":\"0\"}],\"fee\":{\"amount\":[],\"gasLimit\":\"0\",\"payer\":\"\",\"granter\":\"\"},\"tip\":null},\"signatures\":[\"RUf2CTYcyeFIijviTAtRN9oqlY7BcaWsQtGvmTVQff0sinh6C1IeL4M2UxakDa1PSVveZyy8gdTsQs3zG43/Kw==\"]}"),
+			digest:     []byte("{\"body\":{\"messages\":[{\"@type\":\"/offchain.MsgSignArbitraryData\", \"appDomain\":\"simd\", \"signer\":\"cosmos1450l4uau674z55c36df0v7904rnvdk9aq8w96j\", \"data\":\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}]}, \"authInfo\":{\"signerInfos\":[{\"publicKey\":{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\", \"key\":\"A/Bfsb7grZtysreo48oB1XAXbcgHnEJyhAqzDMgbLlXw\"}, \"modeInfo\":{\"single\":{\"mode\":\"SIGN_MODE_TEXTUAL\"}}}], \"fee\":{}}, \"signatures\":[\"gRufjcmATaJ3hZSiXII3lcsLDJlHM4OhQs3O/QgAK4weQ73kmj30/gw3HwTKxGb4pnVe0iyLXrKRNeSl1O3zSQ==\"]}"),
 			fileFormat: "json",
 			ctx:        ctx,
 			wantErr:    true,
 		},
 		{
-			name:       "signMode direct text",
-			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\"simd\" signer:\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq\" data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}} auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03,<\\xf2O/2\\xcaYr\\n:\\xaaB\\xfc \\xd4s?a\\xd5@\\x96V\\xbb\\xa6\\xa6>ʾ\\x16\\x0e\\x14\"}} mode_info:{single:{mode:SIGN_MODE_DIRECT}}} fee:{}} signatures:\"EG\\xf6\\t6\\x1c\\xc9\\xe1H\\x8a;\\xe2L\\x0bQ7\\xda*\\x95\\x8e\\xc1q\\xa5\\xacBѯ\\x995P}\\xfd,\\x8axz\\x0bR\\x1e/\\x836S\\x16\\xa4\\r\\xadOI[\\xdeg,\\xbc\\x81\\xd4\\xecB\\xcd\\xf3\\x1b\\x8d\\xff+\""),
-			fileFormat: "text",
-			ctx:        ctx,
-		},
-		{
-			name:       "signMode textual text",
-			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\"simd\" signer:\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq\" data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}} auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03,<\\xf2O/2\\xcaYr\\n:\\xaaB\\xfc \\xd4s?a\\xd5@\\x96V\\xbb\\xa6\\xa6>ʾ\\x16\\x0e\\x14\"}} mode_info:{single:{mode:SIGN_MODE_TEXTUAL}}} fee:{}} signatures:\"\\xbc\\x01\\x9d\\x04|EY\\x05-\\x90x4͑`^v\\x19\\x99@\\x88 \\x17\\xdd\\x00\\xa5F˳Fi\\xa0<[,\\xf9\\x13\\xaa\\xa9\\x9a\\xb0\\xd6\\xebݽS\\xe2\\xff\\xa4\\xa57\\xbbY\\x19Ԓ\\x92bŠr\\x03\\xf3\\xa7\""),
-			fileFormat: "text",
-			ctx:        ctx,
-		},
-		{
-			name:       "signMode legacyAmino text",
-			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\"simd\" signer:\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq\" data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}} auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03,<\\xf2O/2\\xcaYr\\n:\\xaaB\\xfc \\xd4s?a\\xd5@\\x96V\\xbb\\xa6\\xa6>ʾ\\x16\\x0e\\x14\"}} mode_info:{single:{mode:SIGN_MODE_LEGACY_AMINO_JSON}}} fee:{}} signatures:\"\\xf3{\\xd7\\xc1\\xd9\\xf0\\x1c\\xae\\x04\\x84\\x0e\\x9d\\xf3)\\xd1\\u0097\\x9e\\xfe\\xd19\\x08\\x10+\\xde\\xdem\\xb1o\\xc30\\xbac\\xc5 \\xf5\\xa5)\\xaa\\x1e\\x90^\\x07\\xebu\\xf5c\\x8a\\xfe\\x99A\\xbfc\\x83,\\xc4\\nf\\\\\\xff\\x90\\xc7\\\\\\x8e\""),
+			name:       "verify text",
+			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\"simd\"  signer:\"cosmos1x33fy6rusfprkntvjsfregss7rvsvyy4lkwrqu\"  data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}}  auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03\\xf0_\\xb1\\xbe\u0B5Br\\xb2\\xb7\\xa8\\xe3\\xca\\x01\\xd5p\\x17m\\xc8\\x07\\x9cBr\\x84\\n\\xb3\\x0c\\xc8\\x1b.U\\xf0\"}}  mode_info:{single:{mode:SIGN_MODE_TEXTUAL}}}  fee:{}}  signatures:\"\\x81\\x1b\\x9f\\x8dɀM\\xa2w\\x85\\x94\\xa2\\\\\\x827\\x95\\xcb\\x0b\\x0c\\x99G3\\x83\\xa1B\\xcd\\xce\\xfd\\x08\\x00+\\x8c\\x1eC\\xbd\\xe4\\x9a=\\xf4\\xfe\\x0c7\\x1f\\x04\\xca\\xc4f\\xf8\\xa6u^\\xd2,\\x8b^\\xb2\\x915\\xe4\\xa5\\xd4\\xed\\xf3I\"\n"),
 			fileFormat: "text",
 			ctx:        ctx,
 		},
 		{
 			name:       "wrong signer text",
-			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\"simd\" signer:\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74gmaq\" data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}} auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03,<\\xf2O/2\\xcaYr\\n:\\xaaB\\xfc \\xd4s?a\\xd5@\\x96V\\xbb\\xa6\\xa6>ʾ\\x16\\x0e\\x14\"}} mode_info:{single:{mode:SIGN_MODE_DIRECT}}} fee:{}} signatures:\"EG\\xf6\\t6\\x1c\\xc9\\xe1H\\x8a;\\xe2L\\x0bQ7\\xda*\\x95\\x8e\\xc1q\\xa5\\xacBѯ\\x995P}\\xfd,\\x8axz\\x0bR\\x1e/\\x836S\\x16\\xa4\\r\\xadOI[\\xdeg,\\xbc\\x81\\xd4\\xecB\\xcd\\xf3\\x1b\\x8d\\xff+\""),
+			digest:     []byte("\"body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\\\"simd\\\"  signer:\\\"cosmos1450l4uau674z55c36df0v7904rnvdk9aq8w96j\\\"  data:\\\"{\\\\n\\\\t\\\\\\\"name\\\\\\\": \\\\\\\"John\\\\\\\",\\\\n\\\\t\\\\\\\"surname\\\\\\\": \\\\\\\"Connor\\\\\\\",\\\\n\\\\t\\\\\\\"age\\\\\\\": 15\\\\n}\\\\n\\\"}}}  auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\\\"\\\\x03\\\\xf0_\\\\xb1\\\\xbe\\u0B5Br\\\\xb2\\\\xb7\\\\xa8\\\\xe3\\\\xca\\\\x01\\\\xd5p\\\\x17m\\\\xc8\\\\x07\\\\x9cBr\\\\x84\\\\n\\\\xb3\\\\x0c\\\\xc8\\\\x1b.U\\\\xf0\\\"}}  mode_info:{single:{mode:SIGN_MODE_TEXTUAL}}}  fee:{}}  signatures:\\\"\\\\x81\\\\x1b\\\\x9f\\\\x8dɀM\\\\xa2w\\\\x85\\\\x94\\\\xa2\\\\\\\\\\\\x827\\\\x95\\\\xcb\\\\x0b\\\\x0c\\\\x99G3\\\\x83\\\\xa1B\\\\xcd\\\\xce\\\\xfd\\\\x08\\\\x00+\\\\x8c\\\\x1eC\\\\xbd\\\\xe4\\\\x9a=\\\\xf4\\\\xfe\\\\x0c7\\\\x1f\\\\x04\\\\xca\\\\xc4f\\\\xf8\\\\xa6u^\\\\xd2,\\\\x8b^\\\\xb2\\\\x915\\\\xe4\\\\xa5\\\\xd4\\\\xed\\\\xf3I\\\"\\n"),
 			fileFormat: "text",
 			ctx:        ctx,
 			wantErr:    true,
@@ -103,7 +78,7 @@ func Test_SignVerify(t *testing.T) {
 		Keyring:      k,
 	}
 
-	tx, err := sign(ctx, "signVerify", "digest", apitxsigning.SignMode_SIGN_MODE_DIRECT)
+	tx, err := sign(ctx, "signVerify", "digest")
 	require.NoError(t, err)
 
 	err = verify(ctx, tx)
@@ -118,12 +93,12 @@ func Test_unmarshal(t *testing.T) {
 	}{
 		{
 			name:       "json test",
-			digest:     []byte(`{"body":{"messages":[{"@type":"/offchain.MsgSignArbitraryData","appDomain":"simd","signer":"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq","data":"{\n\t\"name\": \"John\",\n\t\"surname\": \"Connor\",\n\t\"age\": 15\n}\n"}],"memo":"","timeoutHeight":"0","extensionOptions":[],"nonCriticalExtensionOptions":[]},"authInfo":{"signerInfos":[{"publicKey":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Ayw88k8vMspZcgo6qkL8INRzP2HVQJZWu6amPsq+Fg4U"},"modeInfo":{"single":{"mode":"SIGN_MODE_DIRECT"}},"sequence":"0"}],"fee":{"amount":[],"gasLimit":"0","payer":"","granter":""},"tip":null},"signatures":["RUf2CTYcyeFIijviTAtRN9oqlY7BcaWsQtGvmTVQff0sinh6C1IeL4M2UxakDa1PSVveZyy8gdTsQs3zG43/Kw=="]}`),
+			digest:     []byte(`{"body":{"messages":[{"@type":"/offchain.MsgSignArbitraryData", "appDomain":"simd", "signer":"cosmos1x33fy6rusfprkntvjsfregss7rvsvyy4lkwrqu", "data":"{\n\t\"name\": \"John\",\n\t\"surname\": \"Connor\",\n\t\"age\": 15\n}\n"}]}, "authInfo":{"signerInfos":[{"publicKey":{"@type":"/cosmos.crypto.secp256k1.PubKey", "key":"A/Bfsb7grZtysreo48oB1XAXbcgHnEJyhAqzDMgbLlXw"}, "modeInfo":{"single":{"mode":"SIGN_MODE_TEXTUAL"}}}], "fee":{}}, "signatures":["gRufjcmATaJ3hZSiXII3lcsLDJlHM4OhQs3O/QgAK4weQ73kmj30/gw3HwTKxGb4pnVe0iyLXrKRNeSl1O3zSQ=="]}`),
 			fileFormat: "json",
 		},
 		{
 			name:       "text test",
-			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\"simd\" signer:\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq\" data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}} auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03,<\\xf2O/2\\xcaYr\\n:\\xaaB\\xfc \\xd4s?a\\xd5@\\x96V\\xbb\\xa6\\xa6>ʾ\\x16\\x0e\\x14\"}} mode_info:{single:{mode:SIGN_MODE_DIRECT}}} fee:{}} signatures:\"EG\\xf6\\t6\\x1c\\xc9\\xe1H\\x8a;\\xe2L\\x0bQ7\\xda*\\x95\\x8e\\xc1q\\xa5\\xacBѯ\\x995P}\\xfd,\\x8axz\\x0bR\\x1e/\\x836S\\x16\\xa4\\r\\xadOI[\\xdeg,\\xbc\\x81\\xd4\\xecB\\xcd\\xf3\\x1b\\x8d\\xff+\""),
+			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\"simd\"  signer:\"cosmos1x33fy6rusfprkntvjsfregss7rvsvyy4lkwrqu\"  data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}}  auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03\\xf0_\\xb1\\xbe\u0B5Br\\xb2\\xb7\\xa8\\xe3\\xca\\x01\\xd5p\\x17m\\xc8\\x07\\x9cBr\\x84\\n\\xb3\\x0c\\xc8\\x1b.U\\xf0\"}}  mode_info:{single:{mode:SIGN_MODE_TEXTUAL}}}  fee:{}}  signatures:\"\\x81\\x1b\\x9f\\x8dɀM\\xa2w\\x85\\x94\\xa2\\\\\\x827\\x95\\xcb\\x0b\\x0c\\x99G3\\x83\\xa1B\\xcd\\xce\\xfd\\x08\\x00+\\x8c\\x1eC\\xbd\\xe4\\x9a=\\xf4\\xfe\\x0c7\\x1f\\x04\\xca\\xc4f\\xf8\\xa6u^\\xd2,\\x8b^\\xb2\\x915\\xe4\\xa5\\xd4\\xed\\xf3I\"\n"),
 			fileFormat: "text",
 		},
 	}

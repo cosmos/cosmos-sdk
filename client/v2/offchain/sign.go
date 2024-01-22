@@ -11,7 +11,6 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -35,22 +34,6 @@ type signerData struct {
 	PubKey        cryptotypes.PubKey
 }
 
-// getSignMode returns the expected SignMode.
-func getSignMode(signModeStr string) apisigning.SignMode {
-	signMode := apisigning.SignMode_SIGN_MODE_UNSPECIFIED
-	switch signModeStr {
-	case flags.SignModeDirect:
-		signMode = apisigning.SignMode_SIGN_MODE_DIRECT
-	case flags.SignModeLegacyAminoJSON:
-		signMode = apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	case flags.SignModeDirectAux:
-		signMode = apisigning.SignMode_SIGN_MODE_DIRECT_AUX
-	case flags.SignModeTextual:
-		signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
-	}
-	return signMode
-}
-
 // Sign signs given bytes using the specified encoder and SignMode.
 func Sign(ctx client.Context, rawBytes []byte, fromName, indent, encoding, output string, emitUnpopulated bool) (string, error) {
 	encoder, err := getEncoder(encoding)
@@ -63,7 +46,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, indent, encoding, outpu
 		return "", err
 	}
 
-	tx, err := sign(ctx, fromName, digest, getSignMode(flags.SignModeTextual))
+	tx, err := sign(ctx, fromName, digest)
 	if err != nil {
 		return "", err
 	}
@@ -77,7 +60,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, indent, encoding, outpu
 }
 
 // sign signs a digest with provided key and SignMode.
-func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignMode) (*apitx.Tx, error) {
+func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
 	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring)
 	if err != nil {
 		return nil, err
@@ -114,7 +97,7 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 	}
 
 	sigData := &SingleSignatureData{
-		SignMode:  signMode,
+		SignMode:  apisigning.SignMode_SIGN_MODE_TEXTUAL,
 		Signature: nil,
 	}
 
@@ -131,13 +114,12 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 	}
 
 	bytesToSign, err := getSignBytes(
-		context.Background(), ctx.TxConfig.SignModeHandler(),
-		signMode, signerData, txBuilder)
+		context.Background(), ctx.TxConfig.SignModeHandler(), signerData, txBuilder)
 	if err != nil {
 		return nil, err
 	}
 
-	signedBytes, err := keybase.Sign(fromName, bytesToSign, signMode)
+	signedBytes, err := keybase.Sign(fromName, bytesToSign, apisigning.SignMode_SIGN_MODE_TEXTUAL)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +137,6 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 // getSignBytes gets the bytes to be signed for the given Tx and SignMode.
 func getSignBytes(ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
-	mode apisigning.SignMode,
 	signerData signerData,
 	tx *builder,
 ) ([]byte, error) {
@@ -180,5 +161,5 @@ func getSignBytes(ctx context.Context,
 		},
 	}
 
-	return handlerMap.GetSignBytes(ctx, mode, txSignerData, txData)
+	return handlerMap.GetSignBytes(ctx, apisigning.SignMode_SIGN_MODE_TEXTUAL, txSignerData, txData)
 }

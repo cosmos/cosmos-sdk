@@ -127,6 +127,20 @@ func TestTxBuilder(t *testing.T) {
 	})
 }
 
+func TestSetSignaturesNoPublicKey(t *testing.T) {
+	_, pubkey, _ := testdata.KeyTestPubAddr()
+	txBuilder := newBuilder(nil)
+	sig2 := signing.SignatureV2{
+		Data: &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+			Signature: legacy.Cdc.MustMarshal(pubkey),
+		},
+		Sequence: 1,
+	}
+	err := txBuilder.SetSignatures(sig2)
+	require.NoError(t, err)
+}
+
 func TestBuilderValidateBasic(t *testing.T) {
 	// keys and addresses
 	_, pubKey1, addr1 := testdata.KeyTestPubAddr()

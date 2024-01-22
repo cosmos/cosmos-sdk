@@ -52,7 +52,7 @@ func getSignMode(signModeStr string) apisigning.SignMode {
 }
 
 // Sign signs given bytes using the specified encoder and SignMode.
-func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encoding, output string, emitUnpopulated bool) (string, error) {
+func Sign(ctx client.Context, rawBytes []byte, fromName, indent, encoding, output string, emitUnpopulated bool) (string, error) {
 	encoder, err := getEncoder(encoding)
 	if err != nil {
 		return "", err
@@ -63,7 +63,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encod
 		return "", err
 	}
 
-	tx, err := sign(ctx, fromName, digest, getSignMode(signMode))
+	tx, err := sign(ctx, fromName, digest, getSignMode(flags.SignModeTextual))
 	if err != nil {
 		return "", err
 	}

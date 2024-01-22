@@ -21,7 +21,7 @@ const (
 // OffChain off-chain utilities.
 func OffChain() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "offchain",
+		Use:   "off-chain",
 		Short: "Off-chain utilities.",
 		Long:  `Utilities for off-chain data.`,
 	}
@@ -50,13 +50,12 @@ func SignFile() *cobra.Command {
 				return err
 			}
 
-			signmode, _ := cmd.Flags().GetString(flags.FlagSignMode)
 			notEmitUnpopulated, _ := cmd.Flags().GetBool(flagNotEmitUnpopulated)
 			indent, _ := cmd.Flags().GetString(flagIndent)
 			encoding, _ := cmd.Flags().GetString(flagEncoding)
 			outputFormat, _ := cmd.Flags().GetString(v2flags.FlagOutput)
 
-			signedTx, err := Sign(clientCtx, bz, args[0], signmode, indent, encoding, outputFormat, !notEmitUnpopulated)
+			signedTx, err := Sign(clientCtx, bz, args[0], indent, encoding, outputFormat, !notEmitUnpopulated)
 			if err != nil {
 				return err
 			}
@@ -69,7 +68,6 @@ func SignFile() *cobra.Command {
 	cmd.PersistentFlags().String(flagIndent, "  ", "Choose an indent for the tx")
 	cmd.PersistentFlags().String(v2flags.FlagOutput, "json", "Choose output format (json|text")
 	cmd.PersistentFlags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
-	cmd.PersistentFlags().String(flags.FlagSignMode, "direct", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
 	cmd.PersistentFlags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as the tx data (no-encoding|base64)")
 	return cmd
 }

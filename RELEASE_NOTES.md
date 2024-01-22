@@ -6,7 +6,7 @@
 
 First and foremost, happy new year! 🎉
 
-No specific notable change in this release apart from the usual bug fixes and improvements.
+There is no specific notable change in this release apart from the usual bug fixes and improvements.
 
 Curious? Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.8/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.7...v0.47.8) from last release.
 

@@ -424,7 +424,7 @@ func (q legacyQueryServer) Votes(ctx context.Context, req *v1beta1.QueryVotesReq
 	}, nil
 }
 
-//nolint:staticcheck // this is needed for legacy param support
+
 func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

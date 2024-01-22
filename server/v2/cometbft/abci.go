@@ -83,8 +83,6 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 	var execMode corecontext.ExecMode
 	if req.Type == abci.CheckTxType_Recheck {
 		execMode = corecontext.ExecModeReCheck
-	} else {
-		execMode = corecontext.ExecModeCheck
 	}
 	resp, err := c.app.ValidateTx(ctx, decodedTx, execMode)
 	if err != nil {

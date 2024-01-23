@@ -163,6 +163,104 @@ func (itr *iterator) Close() error {
 	return err
 }
 
+func (itr *iterator) assertIsValid() {
+	if !itr.valid {
+		panic("iterator is invalid")
+	}
+}
+
+// cursorTombstoned checks if the current cursor is pointing at a key/value pair
+// that is tombstoned. If the cursor is tombstoned, <true> is returned, otherwise
+// <false> is returned. In the case where the iterator is valid but the key/value
+// pair is tombstoned, the caller should call Next(). Note, this method assumes
+// the caller assures the iterator is valid first!
+func (itr *iterator) cursorTombstoned() bool {
+	_, tombBz, ok := SplitMVCCKey(itr.source.Value())
+	if !ok {
+		// XXX: This should not happen as that would indicate we have a malformed
+		// MVCC value.
+		panic(fmt.Sprintf("invalid PebbleDB MVCC value: %s", itr.source.Key()))
+	}
+
+	// If the tombstone suffix is empty, we consider this a zero value and thus it
+	// is not tombstoned.
+	if len(tombBz) == 0 {
+		return false
+	}
+
+	// If the tombstone suffix is non-empty and greater than the target version,
+	// the value is not tombstoned.
+	tombstone, err := decodeUint64Ascending(tombBz)
+	if err != nil {
+		panic(fmt.Errorf("failed to decode value tombstone: %w", err))
+	}
+	if tombstone > itr.version {
+		return false
+	}
+
+	return true
+}
+
+func (itr *iterator) DebugRawIterate() {
+	valid := itr.source.Valid()
+	if valid {
+		// The first key may not represent the desired target version, so move the
+		// cursor to the correct location.
+		firstKey, _, _ := SplitMVCCKey(itr.source.Key())
+		valid = itr.source.SeekLT(MVCCEncode(firstKey, itr.version+1))
+	}
+
+	for valid {
+		key, vBz, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+		}
+
+		version, err := decodeUint64Ascending(vBz)
+		if err != nil {
+			panic(fmt.Errorf("failed to decode key version: %w", err))
+		}
+
+		val, tombBz, ok := SplitMVCCKey(itr.source.Value())
+		if !ok {
+			panic(fmt.Sprintf("invalid PebbleDB MVCC value: %s", itr.source.Value()))
+		}
+
+		var tombstone uint64
+		if len(tombBz) > 0 {
+			tombstone, err = decodeUint64Ascending(vBz)
+			if err != nil {
+				panic(fmt.Errorf("failed to decode value tombstone: %w", err))
+			}
+		}
+
+		fmt.Printf("KEY: %s, VALUE: %s, VERSION: %d, TOMBSTONE: %d\n", key, val, version, tombstone)
+
+		var next bool
+		if itr.reverse {
+			next = itr.source.SeekLT(MVCCEncode(key, 0))
+		} else {
+			next = itr.source.NextPrefix()
+		}
+
+		if next {
+			nextKey, _, ok := SplitMVCCKey(itr.source.Key())
+			if !ok {
+				panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+			}
+
+			// the next key must have itr.prefix as the prefix
+			if !bytes.HasPrefix(nextKey, itr.prefix) {
+				valid = false
+			} else {
+				valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
+			}
+		} else {
+			valid = false
+		}
+	}
+}
+
 func (itr *iterator) nextForward() {
 	if !itr.source.Valid() {
 		itr.valid = false
@@ -325,102 +423,4 @@ func (itr *iterator) nextReverse() {
 	}
 
 	itr.valid = false
-}
-
-func (itr *iterator) assertIsValid() {
-	if !itr.valid {
-		panic("iterator is invalid")
-	}
-}
-
-// cursorTombstoned checks if the current cursor is pointing at a key/value pair
-// that is tombstoned. If the cursor is tombstoned, <true> is returned, otherwise
-// <false> is returned. In the case where the iterator is valid but the key/value
-// pair is tombstoned, the caller should call Next(). Note, this method assumes
-// the caller assures the iterator is valid first!
-func (itr *iterator) cursorTombstoned() bool {
-	_, tombBz, ok := SplitMVCCKey(itr.source.Value())
-	if !ok {
-		// XXX: This should not happen as that would indicate we have a malformed
-		// MVCC value.
-		panic(fmt.Sprintf("invalid PebbleDB MVCC value: %s", itr.source.Key()))
-	}
-
-	// If the tombstone suffix is empty, we consider this a zero value and thus it
-	// is not tombstoned.
-	if len(tombBz) == 0 {
-		return false
-	}
-
-	// If the tombstone suffix is non-empty and greater than the target version,
-	// the value is not tombstoned.
-	tombstone, err := decodeUint64Ascending(tombBz)
-	if err != nil {
-		panic(fmt.Errorf("failed to decode value tombstone: %w", err))
-	}
-	if tombstone > itr.version {
-		return false
-	}
-
-	return true
-}
-
-func (itr *iterator) DebugRawIterate() {
-	valid := itr.source.Valid()
-	if valid {
-		// The first key may not represent the desired target version, so move the
-		// cursor to the correct location.
-		firstKey, _, _ := SplitMVCCKey(itr.source.Key())
-		valid = itr.source.SeekLT(MVCCEncode(firstKey, itr.version+1))
-	}
-
-	for valid {
-		key, vBz, ok := SplitMVCCKey(itr.source.Key())
-		if !ok {
-			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
-		}
-
-		version, err := decodeUint64Ascending(vBz)
-		if err != nil {
-			panic(fmt.Errorf("failed to decode key version: %w", err))
-		}
-
-		val, tombBz, ok := SplitMVCCKey(itr.source.Value())
-		if !ok {
-			panic(fmt.Sprintf("invalid PebbleDB MVCC value: %s", itr.source.Value()))
-		}
-
-		var tombstone uint64
-		if len(tombBz) > 0 {
-			tombstone, err = decodeUint64Ascending(vBz)
-			if err != nil {
-				panic(fmt.Errorf("failed to decode value tombstone: %w", err))
-			}
-		}
-
-		fmt.Printf("KEY: %s, VALUE: %s, VERSION: %d, TOMBSTONE: %d\n", key, val, version, tombstone)
-
-		var next bool
-		if itr.reverse {
-			next = itr.source.SeekLT(MVCCEncode(key, 0))
-		} else {
-			next = itr.source.NextPrefix()
-		}
-
-		if next {
-			nextKey, _, ok := SplitMVCCKey(itr.source.Key())
-			if !ok {
-				panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
-			}
-
-			// the next key must have itr.prefix as the prefix
-			if !bytes.HasPrefix(nextKey, itr.prefix) {
-				valid = false
-			} else {
-				valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
-			}
-		} else {
-			valid = false
-		}
-	}
 }

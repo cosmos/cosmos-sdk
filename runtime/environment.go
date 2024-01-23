@@ -2,23 +2,17 @@ package runtime
 
 import (
 	"cosmossdk.io/core/appmodule"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 )
 
-func NewEnvironment(storeKey *storetypes.KVStoreKey, memKey *storetypes.MemoryStoreKey) appmodule.Environment {
-	env := appmodule.Environment{}
-	if storeKey != nil {
-		env.KVStoreService = NewKVStoreService(storeKey)
+// NewEnvironment creates a new environment for the application
+// if memstoreservice is needed, it can be added to the environment: environment.MemStoreService = memstoreservice
+func NewEnvironment(kvService store.KVStoreService) appmodule.Environment {
+	return appmodule.Environment{
+		EventService:   EventService{},
+		HeaderService:  HeaderService{},
+		BranchService:  BranchService{},
+		GasService:     GasService{},
+		KVStoreService: kvService,
 	}
-
-	if memKey != nil {
-		env.MemStoreService = NewMemStoreService(memKey)
-	}
-
-	env.EventService = EventService{}
-	env.HeaderService = HeaderService{}
-	env.BranchService = BranchService{}
-	env.GasService = GasService{}
-
-	return env
 }

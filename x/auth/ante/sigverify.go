@@ -405,7 +405,43 @@ func (svd SigVerificationDecorator) increaseSequence(tx authsigning.Tx, acc sdk.
 
 // aaAuthenticate deals with the authentication flow of an abstracted account.
 func (svd SigVerificationDecorator) aaAuthenticate(ctx sdk.Context, signer []byte, tx authsigning.Tx, sig signing.SignatureV2) error {
-	return fmt.Errorf("aa not implemented")
+	signers, err := tx.GetSigners()
+	if err != nil {
+		return err
+	}
+	if len(signers) != 1 {
+		return fmt.Errorf("if an abstracted account is transacting no more than 1 signers are allowed in the TX") // TODO, can lift?
+	}
+	adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
+	if !ok {
+		return fmt.Errorf("wanted adaptable tx, got %T", tx)
+	}
+	txData := adaptableTx.GetSigningTxData()
+
+	signerStr, err := svd.ak.AddressCodec().BytesToString(signer)
+	if err != nil {
+		return err
+	}
+
+	op := &accountsv1.UserOperation{
+		Sender:                 signerStr,
+		AuthenticationMethod:   "",
+		AuthenticationData:     nil,
+		AuthenticationGasLimit: 0,
+		BundlerPaymentMessages: nil,
+		BundlerPaymentGasLimit: 0,
+		ExecutionMessages:      nil,
+		ExecutionGasLimit:      0,
+		TxCompat: &accountsv1.TxCompat{
+			AuthInfoBytes: txData.AuthInfoBytes,
+			BodyBytes:     txData.BodyBytes,
+		},
+	}
+	_, err = svd.accountAbstraction.Authenticate(ctx, signerStr, op)
+	if err != nil {
+		return fmt.Errorf("authentication error: %w", err)
+	}
+	return nil
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params

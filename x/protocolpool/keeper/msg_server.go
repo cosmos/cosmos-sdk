@@ -128,13 +128,13 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
 		return false, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 	percentage := msg.Percentage.MulInt64(100)
 	totalStreamFundsPercentage = totalStreamFundsPercentage.Add(percentage.TruncateInt())
 	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
 		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %v", totalStreamFundsPercentage.Sub(percentage.TruncateInt()))
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	// Create continuous fund proposal

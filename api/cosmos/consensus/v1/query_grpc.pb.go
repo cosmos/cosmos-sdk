@@ -21,7 +21,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName = "/cosmos.consensus.v1.Query/Params"
+	Query_Params_FullMethodName                = "/cosmos.consensus.v1.Query/Params"
+	Query_ExtendVote_FullMethodName            = "/cosmos.consensus.v1.Query/ExtendVote"
+	Query_VerifyVoteExtension_FullMethodName   = "/cosmos.consensus.v1.Query/VerifyVoteExtension"
+	Query_ProcessVoteExtensions_FullMethodName = "/cosmos.consensus.v1.Query/ProcessVoteExtensions"
 )
 
 // QueryClient is the client API for Query service.
@@ -30,6 +33,12 @@ const (
 type QueryClient interface {
 	// Params queries the parameters of x/consensus module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// these endpoints should be used in the corresponding ABCI methods
+	ExtendVote(ctx context.Context, in *RequestExtendVote, opts ...grpc.CallOption) (*ResponseExtendVote, error)
+	VerifyVoteExtension(ctx context.Context, in *RequestVerifyVoteExtension, opts ...grpc.CallOption) (*ResponseVerifyVoteExtension, error)
+	// ProcessVoteExtensions should be used in the PrepareProposal method by the proposer.
+	// TODO: find a better name, something that would evoke turning VEs into a consensus message.
+	ProcessVoteExtensions(ctx context.Context, in *ProcessVoteExtensionsRequest, opts ...grpc.CallOption) (*ProcessVoteExtensionsResponse, error)
 }
 
 type queryClient struct {
@@ -49,12 +58,45 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) ExtendVote(ctx context.Context, in *RequestExtendVote, opts ...grpc.CallOption) (*ResponseExtendVote, error) {
+	out := new(ResponseExtendVote)
+	err := c.cc.Invoke(ctx, Query_ExtendVote_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) VerifyVoteExtension(ctx context.Context, in *RequestVerifyVoteExtension, opts ...grpc.CallOption) (*ResponseVerifyVoteExtension, error) {
+	out := new(ResponseVerifyVoteExtension)
+	err := c.cc.Invoke(ctx, Query_VerifyVoteExtension_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ProcessVoteExtensions(ctx context.Context, in *ProcessVoteExtensionsRequest, opts ...grpc.CallOption) (*ProcessVoteExtensionsResponse, error) {
+	out := new(ProcessVoteExtensionsResponse)
+	err := c.cc.Invoke(ctx, Query_ProcessVoteExtensions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
 	// Params queries the parameters of x/consensus module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// these endpoints should be used in the corresponding ABCI methods
+	ExtendVote(context.Context, *RequestExtendVote) (*ResponseExtendVote, error)
+	VerifyVoteExtension(context.Context, *RequestVerifyVoteExtension) (*ResponseVerifyVoteExtension, error)
+	// ProcessVoteExtensions should be used in the PrepareProposal method by the proposer.
+	// TODO: find a better name, something that would evoke turning VEs into a consensus message.
+	ProcessVoteExtensions(context.Context, *ProcessVoteExtensionsRequest) (*ProcessVoteExtensionsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -64,6 +106,15 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) ExtendVote(context.Context, *RequestExtendVote) (*ResponseExtendVote, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExtendVote not implemented")
+}
+func (UnimplementedQueryServer) VerifyVoteExtension(context.Context, *RequestVerifyVoteExtension) (*ResponseVerifyVoteExtension, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyVoteExtension not implemented")
+}
+func (UnimplementedQueryServer) ProcessVoteExtensions(context.Context, *ProcessVoteExtensionsRequest) (*ProcessVoteExtensionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessVoteExtensions not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -96,6 +147,60 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ExtendVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestExtendVote)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ExtendVote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ExtendVote_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ExtendVote(ctx, req.(*RequestExtendVote))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_VerifyVoteExtension_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestVerifyVoteExtension)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VerifyVoteExtension(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_VerifyVoteExtension_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VerifyVoteExtension(ctx, req.(*RequestVerifyVoteExtension))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ProcessVoteExtensions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessVoteExtensionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ProcessVoteExtensions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ProcessVoteExtensions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ProcessVoteExtensions(ctx, req.(*ProcessVoteExtensionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -106,6 +211,18 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "ExtendVote",
+			Handler:    _Query_ExtendVote_Handler,
+		},
+		{
+			MethodName: "VerifyVoteExtension",
+			Handler:    _Query_VerifyVoteExtension_Handler,
+		},
+		{
+			MethodName: "ProcessVoteExtensions",
+			Handler:    _Query_ProcessVoteExtensions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

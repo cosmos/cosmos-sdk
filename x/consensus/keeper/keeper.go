@@ -21,8 +21,9 @@ import (
 var StoreKey = "Consensus"
 
 type Keeper struct {
-	storeService storetypes.KVStoreService
-	event        event.Service
+	storeService    storetypes.KVStoreService
+	memStoreService storetypes.MemoryStoreService
+	event           event.Service
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
@@ -30,14 +31,16 @@ type Keeper struct {
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, memStoreService storetypes.MemoryStoreService, authority string, em event.Service) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
-		storeService: storeService,
-		authority:    authority,
-		event:        em,
-		ParamsStore:  collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+		storeService:    storeService,
+		memStoreService: memStoreService,
+		authority:       authority,
+		event:           em,
+		ParamsStore:     collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
+
 }
 
 func (k *Keeper) GetAuthority() string {

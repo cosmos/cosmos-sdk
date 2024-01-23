@@ -51,7 +51,7 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	app appmanager.AppManager[T],
 	mp mempool.Mempool[T],
-	store store.Store,
+	store types.Store,
 	cfg Config,
 ) *Consensus[T] {
 	return &Consensus[T]{
@@ -110,24 +110,22 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 
 // Info implements types.Application.
 func (c *Consensus[T]) Info(context.Context, *abci.RequestInfo) (*abci.ResponseInfo, error) {
-	version, _, err := c.store.StateLatest()
-	if err != nil {
-		return nil, err
-	}
-
 	cp, err := c.GetConsensusParams()
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO use rootstore interface and that has LastCommitID
+	lastCommitID, err := c.store.LastCommitID()
+	if err != nil {
+		return nil, err
+	}
 
 	return &abci.ResponseInfo{
-		Data:            c.cfg.Name,
-		Version:         c.cfg.Version,
-		AppVersion:      cp.GetVersion().App,
-		LastBlockHeight: int64(version),
-		// LastBlockAppHash: c.store.LastCommittedID().Hash(), // TODO: implement this on store. It's required by CometBFT
+		Data:             c.cfg.Name,
+		Version:          c.cfg.Version,
+		AppVersion:       cp.GetVersion().App,
+		LastBlockHeight:  lastCommitID.Version(),
+		LastBlockAppHash: lastCommitID.Hash(),
 	}, nil
 }
 
@@ -157,7 +155,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 
 	switch path[0] {
 	case QueryPathApp:
-		resp, err = c.handlerQueryApp(ctx, path, req)
+		resp, err = c.handleQueryApp(ctx, path, req)
 
 	case QueryPathStore:
 		resp, err = c.handleQueryStore(path, c.store, req)

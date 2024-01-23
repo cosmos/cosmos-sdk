@@ -28,49 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-func TestSetPubKey(t *testing.T) {
-	suite := SetupTestSuite(t, true)
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-	// keys and addresses
-	priv1, pub1, addr1 := testdata.KeyTestPubAddr()
-	priv2, pub2, addr2 := testdata.KeyTestPubAddr()
-	priv3, pub3, addr3 := testdata.KeyTestPubAddrSecp256R1(t)
-
-	addrs := []sdk.AccAddress{addr1, addr2, addr3}
-	pubs := []cryptotypes.PubKey{pub1, pub2, pub3}
-
-	msgs := make([]sdk.Msg, len(addrs))
-	// set accounts and create msg for each address
-	for i, addr := range addrs {
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i+1000)))
-		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		msgs[i] = testdata.NewTestMsg(addr)
-	}
-	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
-	suite.txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
-	suite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
-	require.NoError(t, err)
-
-	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-	antehandler := sdk.ChainAnteDecorators(spkd)
-
-	ctx, err := antehandler(suite.ctx, tx, false)
-	require.NoError(t, err)
-
-	// Require that all accounts have pubkey set after Decorator runs
-	for i, addr := range addrs {
-		pk, err := suite.accountKeeper.GetPubKey(ctx, addr)
-		require.NoError(t, err, "Error on retrieving pubkey from account")
-		require.True(t, pubs[i].Equals(pk),
-			"Wrong Pubkey retrieved from AccountKeeper, idx=%d\nexpected=%s\n     got=%s", i, pubs[i], pk)
-	}
-}
-
 func TestConsumeSignatureVerificationGas(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	params := types.DefaultParams()
@@ -168,7 +125,6 @@ func TestSigVerification(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
-	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	txConfigOpts = authtx.ConfigOptions{
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper),
 		EnabledSignModes:           enabledSignModes,
@@ -180,7 +136,7 @@ func TestSigVerification(t *testing.T) {
 	require.NoError(t, err)
 	noOpGasConsume := func(_ storetypes.GasMeter, _ signing.SignatureV2, _ types.Params) error { return nil }
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume)
-	antehandler := sdk.ChainAnteDecorators(spkd, svd)
+	antehandler := sdk.ChainAnteDecorators(svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
 	require.NoError(t, err)
 
@@ -313,9 +269,8 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer)
-	antehandler := sdk.ChainAnteDecorators(spkd, svd)
+	antehandler := sdk.ChainAnteDecorators(svd)
 
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -370,10 +325,9 @@ func TestAnteHandlerChecks(t *testing.T) {
 		accs[i] = acc
 	}
 
-	setPubKeyDecorator := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer)
 
-	anteHandler := sdk.ChainAnteDecorators(setPubKeyDecorator, sigVerificationDecorator)
+	anteHandler := sdk.ChainAnteDecorators(sigVerificationDecorator)
 
 	type testCase struct {
 		name      string

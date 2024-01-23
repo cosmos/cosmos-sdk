@@ -37,7 +37,8 @@ func ResetArgs(cmd *cobra.Command) {
 				defSliceVal = strings.Split(defVal, ",")
 			}
 			if err := v.Replace(defSliceVal); err != nil {
-				panic(fmt.Errorf("reset argument<%s> with default value<%+v> error %v", pf.Name, defSliceVal, err))
+				panic(fmt.Errorf("error resetting argument <%s> with default value <%+v>: %v", pf.Name, defSliceVal, err))
+
 			}
 			return
 		}

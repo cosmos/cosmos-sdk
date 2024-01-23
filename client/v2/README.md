@@ -260,7 +260,7 @@ The `encoding` flag lets you choose how the contents of the file should be encod
 ### Verify a file
 
 To verify a file only the key name used and the previously signed file are needed.
-simd off-chain verify-file alice signedFile.json
+
 ```text
 ➜ simd off-chain verify-file alice signedFile.json
 Verification OK!

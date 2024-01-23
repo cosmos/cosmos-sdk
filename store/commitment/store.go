@@ -255,6 +255,20 @@ func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]s
 	return []store.CommitmentOp{commitOp, *storeCommitmentOp}, nil
 }
 
+func (c *CommitStore) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
+	tree, ok := c.multiTrees[storeKey]
+	if !ok {
+		return nil, fmt.Errorf("store %s not found", storeKey)
+	}
+
+	bz, err := tree.Get(version, key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get key %s from store %s: %w", key, storeKey, err)
+	}
+
+	return bz, nil
+}
+
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	batch := c.db.NewBatch()

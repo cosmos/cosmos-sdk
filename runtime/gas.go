@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/core/gas"
 	storetypes "cosmossdk.io/store/types"
@@ -33,6 +34,7 @@ func (g GasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) cont
 // Gas Meter Wrappers
 // ______________________________________________________________________________________________
 
+// SDKGasMeter is a wrapper around the SDK's GasMeter that implements the GasMeter interface.
 type SDKGasMeter struct {
 	gm gas.Meter
 }
@@ -42,7 +44,10 @@ func (gm SDKGasMeter) GasConsumed() storetypes.Gas {
 }
 
 func (gm SDKGasMeter) GasConsumedToLimit() storetypes.Gas {
-	return gm.gm.Limit() // TODO is this correct?
+	if gm.IsPastLimit() {
+		return gm.gm.Limit()
+	}
+	return gm.gm.Remaining()
 }
 
 func (gm SDKGasMeter) GasRemaining() storetypes.Gas {
@@ -70,9 +75,10 @@ func (gm SDKGasMeter) IsOutOfGas() bool {
 }
 
 func (gm SDKGasMeter) String() string {
-	return "gas go fast" // TODO
+	return fmt.Sprintf("BasicGasMeter:\n  limit: %d\n  consumed: %d", gm.gm.Limit(), gm.gm.Remaining())
 }
 
+// CoreGasmeter is a wrapper around the SDK's GasMeter that implements the GasMeter interface.
 type CoreGasmeter struct {
 	gm storetypes.GasMeter
 }

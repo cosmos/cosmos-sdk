@@ -3,6 +3,7 @@ package appmodule
 import (
 	"context"
 
+	"cosmossdk.io/server/v2/core/transaction"
 	"google.golang.org/grpc"
 )
 
@@ -74,7 +75,7 @@ type HasEndBlocker interface {
 // HasTxValidation is the extension interface that modules should implement to run
 // custom logic for validating transactions.
 // It was previously known as AnteHandler/Decorator.
-type HasTxValidation interface {
+type HasTxValidation[T transaction.Tx] interface {
 	AppModule
 
 	// TxValidator is a method that will be run on each transaction.
@@ -105,7 +106,7 @@ type HasTxValidation interface {
 	//           \:: :     /     `     ,   /  |
 	//            || |    (        ,' /   /   |
 	//            ||                ,'   /    |
-	TxValidator(ctx context.Context, msg any) error
+	TxValidator(ctx context.Context, tx T) error
 }
 
 // **********************************************

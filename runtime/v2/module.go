@@ -127,7 +127,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.config = inputs.Config
 	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
-	app.moduleManager = &MMv2{config: inputs.Config, modules: inputs.Modules}
+	app.moduleManager = NewMMv2(inputs.Config, inputs.Modules)
 
 	for name, mod := range inputs.Modules {
 		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {

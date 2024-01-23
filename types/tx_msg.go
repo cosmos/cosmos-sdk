@@ -7,7 +7,9 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/dynamicpb"
 
+	servertx "cosmossdk.io/server/v2/core/transaction"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -135,4 +137,29 @@ func GetModuleNameFromTypeURL(input string) string {
 	}
 
 	return ""
+}
+
+func ServerTxToSDKTx(tx servertx.Tx) Tx {
+	return wrapperServerTx{tx}
+}
+
+var _ Tx = wrapperServerTx{}
+
+type wrapperServerTx struct {
+	servertx.Tx
+}
+
+func (w wrapperServerTx) GetMsgs() []Msg {
+	msgs := make([]Msg, len(w.Tx.GetMessages()))
+	for i, msg := range w.Tx.GetMessages() {
+		msg := dynamicpb.NewMessage(msg.ProtoReflect().Descriptor())
+		protov2.Merge(msg, msg.ProtoReflect().Interface())
+		msgs[i] = msg
+	}
+
+	return msgs
+}
+
+func (w wrapperServerTx) GetMsgsV2() ([]protov2.Message, error) {
+	return w.Tx.GetMessages(), nil
 }

@@ -85,35 +85,3 @@ func ChainPostDecorators(chain ...PostDecorator) PostHandler {
 	}
 	return handlerChain[0]
 }
-
-// Terminator AnteDecorator will get added to the chain to simplify decorator code
-// Don't need to check if next == nil further up the chain
-//
-//	                      ______
-//	                   <((((((\\\
-//	                   /      . }\
-//	                   ;--..--._|}
-//	(\                 '--/\--'  )
-//	 \\                | '-'  :'|
-//	  \\               . -==- .-|
-//	   \\               \.__.'   \--._
-//	   [\\          __.--|       //  _/'--.
-//	   \ \\       .'-._ ('-----'/ __/      \
-//	    \ \\     /   __>|      | '--.       |
-//	     \ \\   |   \   |     /    /       /
-//	      \ '\ /     \  |     |  _/       /
-//	       \  \       \ |     | /        /
-//	 snd    \  \      \        /
-//
-// Deprecated: Terminator is retired (ref https://github.com/cosmos/cosmos-sdk/pull/16076).
-type Terminator struct{}
-
-// AnteHandle returns the provided Context and nil error
-func (t Terminator) AnteHandle(ctx Context, _ Tx, _ bool, _ AnteHandler) (Context, error) {
-	return ctx, nil
-}
-
-// PostHandle returns the provided Context and nil error
-func (t Terminator) PostHandle(ctx Context, _ Tx, _, _ bool, _ PostHandler) (Context, error) {
-	return ctx, nil
-}

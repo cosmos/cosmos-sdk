@@ -49,7 +49,6 @@ type App struct {
 	mempool             mempool.Mempool[servertx.Tx]
 	prepareBlockHandler coreappmanager.PrepareHandler[servertx.Tx]
 	verifyBlockHandler  coreappmanager.ProcessHandler[servertx.Tx]
-	branch              func(state store.ReadonlyState) store.WritableState
 	db                  store.Store
 
 	// app configuration

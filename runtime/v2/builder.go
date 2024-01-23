@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -18,6 +19,10 @@ import (
 // the existing app.go initialization conventions.
 type AppBuilder struct {
 	app *App
+
+	// config
+	branch      func(state store.ReadonlyState) store.WritableState
+	txValidator func(ctx context.Context, tx servertx.Tx) error
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
@@ -71,15 +76,21 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 	}
 
 	// default branch
-	if a.app.branch == nil {
-		a.app.branch = func(state store.ReadonlyState) store.WritableState {
+	if a.branch == nil {
+		a.branch = func(state store.ReadonlyState) store.WritableState {
 			return branch.NewStore(state)
 		}
+	}
+
+	// default tx validator
+	if a.txValidator == nil {
+		a.txValidator = a.app.moduleManager.TxValidation()
 	}
 
 	if err := a.app.moduleManager.RegisterMsgs(a.app.msgRouterBuilder); err != nil {
 		return nil, err
 	}
+
 	stfMsgHandler, err := a.app.msgRouterBuilder.Build()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build STF message handler: %w", err)
@@ -93,9 +104,9 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 		a.app.moduleManager.UpgradeBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,
-		a.app.moduleManager.TxValidation(),
+		a.txValidator,
 		valUpdate,
-		a.app.branch,
+		a.branch,
 	)
 	a.app.db = db
 
@@ -126,12 +137,20 @@ func AppBuilderWithVerifyBlockHandler(handler coreappmanager.ProcessHandler[serv
 
 func AppBuilderWithBranch(branch func(state store.ReadonlyState) store.WritableState) AppBuilderOption {
 	return func(a *AppBuilder) {
-		a.app.branch = branch
+		a.branch = branch
 	}
 }
 
 func AppBuilderWithGasConfig(gasConfig interface{}) AppBuilderOption { // TODO
 	return func(a *AppBuilder) {
 		// a.app.gasConfig = gasConfig
+	}
+}
+
+// AppBuilderWithTxValidator sets the tx validator for the app.
+// It overrides the default tx validator from all modules.
+func AppBuilderWithTxValidator(validator func(ctx context.Context, tx servertx.Tx) error) AppBuilderOption {
+	return func(a *AppBuilder) {
+		a.txValidator = validator
 	}
 }

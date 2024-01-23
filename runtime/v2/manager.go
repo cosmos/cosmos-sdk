@@ -7,10 +7,12 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
+	"golang.org/x/exp/maps"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/transaction"
 	servertx "cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf"
 )
@@ -20,10 +22,35 @@ type MMv2 struct {
 	modules map[string]appmodule.AppModule
 }
 
-// bring config vs modules checks like in mm
+func NewMMv2(config *runtimev2.Module, modules map[string]appmodule.AppModule) *MMv2 {
+	modulesName := maps.Keys(modules)
+
+	if len(config.BeginBlockers) == 0 {
+		config.BeginBlockers = modulesName
+	}
+	if len(config.EndBlockers) == 0 {
+		config.EndBlockers = modulesName
+	}
+	if len(config.TxValidation) == 0 {
+		config.TxValidation = modulesName
+	}
+	if len(config.InitGenesis) == 0 {
+		config.InitGenesis = modulesName
+	}
+	if len(config.ExportGenesis) == 0 {
+		config.ExportGenesis = modulesName
+	}
+
+	return &MMv2{
+		config:  config,
+		modules: modules,
+	}
+}
 
 // TODO refactor
 func (m *MMv2) BeginBlock() func(ctx context.Context) error {
+	// TODO rewrap the context into sdk.Context
+
 	return func(ctx context.Context) error {
 		for _, moduleName := range m.config.BeginBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasBeginBlocker); ok {
@@ -39,6 +66,8 @@ func (m *MMv2) BeginBlock() func(ctx context.Context) error {
 
 // TODO refactor
 func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)) {
+	// TODO rewrap the context into sdk.Context
+
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	endBlock := func(ctx context.Context) error {
@@ -88,7 +117,9 @@ func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate f
 }
 
 // UpgradeBlocker is PreBlocker for server v2, it supports only the upgrade module
-func (m *MMv2) UpgradeBlocker() func(context.Context) (bool, error) {
+func (m *MMv2) UpgradeBlocker() func(ctx context.Context) (bool, error) {
+	// TODO rewrap the context into sdk.Context
+
 	return func(ctx context.Context) (bool, error) {
 		for _, moduleName := range m.config.BeginBlockers {
 			if moduleName != "upgrade" {
@@ -106,12 +137,18 @@ func (m *MMv2) UpgradeBlocker() func(context.Context) (bool, error) {
 	}
 }
 
-// TODO refactor
+// TxValidators validates incoming transactions
 func (m *MMv2) TxValidation() func(ctx context.Context, tx servertx.Tx) error {
+	// TODO rewrap the context into sdk.Context
+
 	return func(ctx context.Context, tx servertx.Tx) error {
 		for _, moduleName := range m.config.TxValidation {
-			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation); ok {
+			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[servertx.Tx]); ok {
 				return module.TxValidator(ctx, tx)
+			}
+
+			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[transaction.Tx]); ok {
+				return module.TxValidator(ctx, transaction.Tx(tx))
 			}
 		}
 

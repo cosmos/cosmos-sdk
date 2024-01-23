@@ -75,9 +75,9 @@ func SignFile() *cobra.Command {
 	}
 
 	cmd.Flags().String(flagIndent, "  ", "Choose an indent for the tx")
-	cmd.Flags().String(v2flags.FlagOutput, "json", "Choose output format (json|text")
+	cmd.Flags().String(v2flags.FlagOutput, "json", "Choose an output format for the tx (json|text")
 	cmd.Flags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
-	cmd.Flags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as the tx data (no-encoding|base64|hex)")
+	cmd.Flags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as msg data (no-encoding|base64|hex)")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	return cmd
 }

@@ -234,12 +234,6 @@ func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, perce
 	amt := poolAmtDec.MulDec(math.LegacyNewDecFromIntWithPrec(percentage, 2))
 	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, amt.AmountOf(denom).TruncateInt()))
 
-	// moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.StreamAccount)
-	// if moduleAccount == nil {
-	// 	k.authKeeper.
-	// 	// return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccount)
-	// }
-
 	// Send streaming funds to the StreamModuleAccount
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
 		return err

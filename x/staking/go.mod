@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log v1.3.0
 	cosmossdk.io/math v1.2.0
 	cosmossdk.io/store v1.0.2
-	github.com/cometbft/cometbft v0.38.2
+	github.com/cometbft/cometbft v0.38.4
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.11
@@ -29,9 +29,10 @@ require (
 	gotest.tools/v3 v3.5.1
 )
 
+require cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
+
 require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

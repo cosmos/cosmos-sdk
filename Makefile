@@ -386,6 +386,13 @@ benchmark:
 
 golangci_version=v1.55.0
 
+#? setup-pre-commit: Set pre-commit git hook
+setup-pre-commit:
+	@cp .git/hooks/pre-commit .git/hooks/pre-commit.bak 2>/dev/null || true
+	@echo "Installing pre-commit hook..."
+	@ln -sf ../../scripts/hooks/pre-commit.sh .git/hooks/pre-commit
+	@echo "Pre-commit hook installed successfully"
+
 #? lint-install: Install golangci-lint
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

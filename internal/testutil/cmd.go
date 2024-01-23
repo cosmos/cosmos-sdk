@@ -44,7 +44,8 @@ func ResetArgs(cmd *cobra.Command) {
 		}
 		// handle pflag.Value
 		if err := pf.Value.Set(pf.DefValue); err != nil {
-			panic(fmt.Errorf("reset argument<%s> with default value<%s> error %v", pf.Name, pf.DefValue, err))
+			panic(fmt.Errorf("error resetting argument <%s> with default value <%s>: %v", pf.Name, pf.DefValue, err))
+
 		}
 	})
 }

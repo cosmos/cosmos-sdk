@@ -447,9 +447,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		if err := vacc.TrackDelegation(sdkCtx.HeaderInfo().Time, balance, amt); err != nil {
-			return err
-		}
+		vacc.TrackDelegation(sdkCtx.HeaderInfo().Time, balance, amt)
 	}
 
 	return nil
@@ -464,9 +462,8 @@ func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, 
 
 	vacc, ok := acc.(types.VestingAccount)
 	if ok {
-		if err := vacc.TrackUndelegation(amt); err != nil {
-			return err
-		}
+		// TODO: return error on account.TrackUndelegation
+		vacc.TrackUndelegation(amt)
 	}
 
 	return nil

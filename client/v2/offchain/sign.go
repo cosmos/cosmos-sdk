@@ -24,6 +24,8 @@ const (
 	ExpectedAccountNumber = 0
 	// ExpectedSequence defines the sequence number an off-chain message must have
 	ExpectedSequence = 0
+
+	signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 )
 
 type signerData struct {
@@ -97,7 +99,7 @@ func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
 	}
 
 	sigData := &SingleSignatureData{
-		SignMode:  apisigning.SignMode_SIGN_MODE_TEXTUAL,
+		SignMode:  signMode,
 		Signature: nil,
 	}
 
@@ -119,7 +121,7 @@ func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
 		return nil, err
 	}
 
-	signedBytes, err := keybase.Sign(fromName, bytesToSign, apisigning.SignMode_SIGN_MODE_TEXTUAL)
+	signedBytes, err := keybase.Sign(fromName, bytesToSign, signMode)
 	if err != nil {
 		return nil, err
 	}
@@ -161,5 +163,5 @@ func getSignBytes(ctx context.Context,
 		},
 	}
 
-	return handlerMap.GetSignBytes(ctx, apisigning.SignMode_SIGN_MODE_TEXTUAL, txSignerData, txData)
+	return handlerMap.GetSignBytes(ctx, signMode, txSignerData, txData)
 }

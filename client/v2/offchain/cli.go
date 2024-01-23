@@ -54,10 +54,19 @@ func SignFile() *cobra.Command {
 			indent, _ := cmd.Flags().GetString(flagIndent)
 			encoding, _ := cmd.Flags().GetString(flagEncoding)
 			outputFormat, _ := cmd.Flags().GetString(v2flags.FlagOutput)
+			outputFile, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
 			signedTx, err := Sign(clientCtx, bz, args[0], indent, encoding, outputFormat, !notEmitUnpopulated)
 			if err != nil {
 				return err
+			}
+
+			if outputFile != "" {
+				fp, err := os.OpenFile(outputFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+				if err != nil {
+					return err
+				}
+				cmd.SetOut(fp)
 			}
 
 			cmd.Println(signedTx)
@@ -65,10 +74,11 @@ func SignFile() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().String(flagIndent, "  ", "Choose an indent for the tx")
-	cmd.PersistentFlags().String(v2flags.FlagOutput, "json", "Choose output format (json|text")
-	cmd.PersistentFlags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
-	cmd.PersistentFlags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as the tx data (no-encoding|base64)")
+	cmd.Flags().String(flagIndent, "  ", "Choose an indent for the tx")
+	cmd.Flags().String(v2flags.FlagOutput, "json", "Choose output format (json|text")
+	cmd.Flags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
+	cmd.Flags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as the tx data (no-encoding|base64)")
+	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	return cmd
 }
 
@@ -100,6 +110,6 @@ func VerifyFile() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().String(flagFileFormat, "json", "Choose whats the file format to be verified (json|text)")
+	cmd.Flags().String(flagFileFormat, "json", "Choose whats the file format to be verified (json|text)")
 	return cmd
 }

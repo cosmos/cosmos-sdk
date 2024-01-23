@@ -171,7 +171,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	for i := range signers {
-		err = svd.authenticate(ctx, sigTx, simulate, signers[i], signatures[i], pubKeys[i])
+		err = svd.authenticate(ctx, sigTx, signers[i], signatures[i], pubKeys[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -204,7 +204,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 }
 
 // authenticate the authentication of the TX for a specific tx signer.
-func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, simulate bool, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
 	acc, err := GetSignerAcc(ctx, svd.ak, signer)
 	if err != nil {
 		return err
@@ -213,7 +213,7 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 	// the account is without a pubkey, let's attempt to check if in the
 	// tx we were correctly provided a valid pubkey.
 	if acc.GetPubKey() == nil {
-		err = svd.setPubKey(ctx.IsSigverifyTx(), simulate, acc, txPubKey)
+		err = svd.setPubKey(ctx.IsSigverifyTx(), ctx.ExecMode() == sdk.ExecModeSimulate, acc, txPubKey)
 		if err != nil {
 			return err
 		}

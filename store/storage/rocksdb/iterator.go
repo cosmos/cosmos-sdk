@@ -134,8 +134,6 @@ func (itr iterator) Next() {
 	} else {
 		itr.source.Next()
 	}
-
-	return
 }
 
 func (itr *iterator) Error() error {

@@ -1,4 +1,4 @@
-package slashing_test
+package slashing
 
 import (
 	"testing"
@@ -31,7 +31,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	app, err := simtestutil.Setup(
 		depinject.Configs(
-			testutil.AppConfig,
+			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&interfaceRegistry,

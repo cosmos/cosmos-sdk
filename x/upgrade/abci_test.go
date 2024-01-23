@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
-	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -29,6 +28,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
+
+const govModuleName = "gov"
 
 type TestSuite struct {
 	preModule appmodule.HasPreBlocker
@@ -124,7 +125,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 
 	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
 
-	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	require.NoError(t, err)
 
 	s.keeper = keeper.NewKeeper(skip, storeService, s.encCfg.Codec, t.TempDir(), s.baseApp, authority)
@@ -464,7 +465,7 @@ func TestDowngradeVerification(t *testing.T) {
 
 	skip := map[int64]bool{}
 
-	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	require.NoError(t, err)
 
 	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authority)
@@ -512,7 +513,7 @@ func TestDowngradeVerification(t *testing.T) {
 	for name, tc := range testCases {
 		ctx, _ := ctx.CacheContext()
 
-		authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 		require.NoError(t, err)
 
 		// downgrade. now keeper does not have the handler.

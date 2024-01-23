@@ -35,7 +35,7 @@ func (b branchedState) GetAccountWriter(address []byte) (store.Writer, error) {
 	return branchedState, nil
 }
 
-func (b branchedState) ApplyStateChanges(stateChanges []store.AccountStateChanges) error {
+func (b branchedState) ApplyStateChanges(stateChanges []store.StateChanges) error {
 	for _, sc := range stateChanges {
 		err := b.applyStateChange(sc)
 		if err != nil {
@@ -45,14 +45,14 @@ func (b branchedState) ApplyStateChanges(stateChanges []store.AccountStateChange
 	return nil
 }
 
-func (b branchedState) GetStateChanges() ([]store.AccountStateChanges, error) {
-	sc := make([]store.AccountStateChanges, len(b.branchedAccountsState))
+func (b branchedState) GetStateChanges() ([]store.StateChanges, error) {
+	sc := make([]store.StateChanges, len(b.branchedAccountsState))
 	for account, stateChange := range b.branchedAccountsState {
 		kvChanges, err := stateChange.ChangeSets()
 		if err != nil {
 			return nil, err
 		}
-		sc = append(sc, store.AccountStateChanges{
+		sc = append(sc, store.StateChanges{
 			Account:      []byte(account),
 			StateChanges: kvChanges,
 		})
@@ -60,7 +60,7 @@ func (b branchedState) GetStateChanges() ([]store.AccountStateChanges, error) {
 	return sc, nil
 }
 
-func (b branchedState) applyStateChange(sc store.AccountStateChanges) error {
+func (b branchedState) applyStateChange(sc store.StateChanges) error {
 	writableState, err := b.GetAccountWriter(sc.Account)
 	if err != nil {
 		return err

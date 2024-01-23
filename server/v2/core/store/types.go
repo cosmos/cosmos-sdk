@@ -22,7 +22,7 @@ type Store interface {
 
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
-	StateCommit(changes []AccountStateChanges) (Hash, error)
+	StateCommit(changes []StateChanges) (Hash, error)
 }
 
 // GetReader represents a readonly view over all the accounts state.
@@ -42,20 +42,20 @@ type GetWriter interface {
 	// ApplyAccountsStateChanges applies all the state changes
 	// of the accounts. Ordering of the returned state changes
 	// is an implementation detail and must not be assumed.
-	ApplyStateChanges(stateChanges []AccountStateChanges) error
+	ApplyStateChanges(stateChanges []StateChanges) error
 	// GetAccountsStateChanges returns the list of the state
 	// changes so far applied. Order must not be assumed.
-	GetStateChanges() ([]AccountStateChanges, error)
+	GetStateChanges() ([]StateChanges, error)
 }
 
-type AccountStateChanges struct {
+type StateChanges struct {
 	Account      []byte // address represents the space in storage where state is stored, previously this was called a "storekey"
-	StateChanges []StateChange
+	StateChanges []KVPair
 }
 
-// StateChange represents a change in a key and value of state.
+// KVPair represents a change in a key and value of state.
 // Remove being true signals the key must be removed from state.
-type StateChange struct {
+type KVPair struct {
 	// Key defines the key being updated.
 	Key []byte
 	// Value defines the value associated with the updated key.
@@ -69,8 +69,8 @@ type Writer interface {
 	Reader
 	Set(key, value []byte) error
 	Delete(key []byte) error
-	ApplyChangeSets(changes []StateChange) error
-	ChangeSets() ([]StateChange, error)
+	ApplyChangeSets(changes []KVPair) error
+	ChangeSets() ([]KVPair, error)
 }
 
 // Reader defines a sub-set of the methods exposed by store.KVStore.

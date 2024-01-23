@@ -93,7 +93,7 @@ func (s Store[T]) iterator(start, end []byte, ascending bool) (corestore.Iterato
 	}
 }
 
-func (s Store[T]) ApplyChangeSets(changes []store.StateChange) error {
+func (s Store[T]) ApplyChangeSets(changes []store.KVPair) error {
 	for _, c := range changes {
 		if c.Remove {
 			err := s.Delete(c.Key)
@@ -110,7 +110,7 @@ func (s Store[T]) ApplyChangeSets(changes []store.StateChange) error {
 	return nil
 }
 
-func (s Store[T]) ChangeSets() (cs []store.StateChange, err error) {
+func (s Store[T]) ChangeSets() (cs []store.KVPair, err error) {
 	iter, err := s.changeSet.iterator(nil, nil)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (s Store[T]) ChangeSets() (cs []store.StateChange, err error) {
 
 	for ; iter.Valid(); iter.Next() {
 		k, v := iter.Key(), iter.Value()
-		cs = append(cs, store.StateChange{
+		cs = append(cs, store.KVPair{
 			Key:    k,
 			Value:  v,
 			Remove: v == nil, // maybe we can optimistically compute size.

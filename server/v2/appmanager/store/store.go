@@ -30,7 +30,7 @@ func (s Store[SS, SC]) StateAt(version uint64) (store.GetReader, error) {
 	return accountsState[SS]{version, s.ss}, nil
 }
 
-func (s Store[SS, SC]) StateCommit(changes []store.AccountStateChanges) (store.Hash, error) {
+func (s Store[SS, SC]) StateCommit(changes []store.StateChanges) (store.Hash, error) {
 	panic("impl")
 }
 

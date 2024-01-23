@@ -13,7 +13,7 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	ctx context.Context,
 	height int64,
 	events []event.Event,
-	stateChanges []store.AccountStateChanges,
+	stateChanges []store.StateChanges,
 ) error {
 	for _, streamingListener := range c.streaming.Listeners {
 		if err := streamingListener.ListenDeliverBlock(ctx, streaming.ListenDeliverBlockRequest{
@@ -31,7 +31,7 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	return nil
 }
 
-func intoStreamingKVPairs(stateChanges []store.AccountStateChanges) []*streaming.StoreKVPair {
+func intoStreamingKVPairs(stateChanges []store.StateChanges) []*streaming.StoreKVPair {
 	// Calculate the total number of KV pairs to preallocate the slice with the required capacity.
 	totalKvPairs := 0
 	for _, accounts := range stateChanges {

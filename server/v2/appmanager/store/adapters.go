@@ -44,7 +44,7 @@ func newIterAdapter(iter corestore.Iterator) corestore.Iterator {
 	return iterAdapter{iter: iter}
 }
 
-func intoStoreV2ChangeSet(changes []store.StateChange) *storev2.Changeset {
+func intoStoreV2ChangeSet(changes []store.KVPair) *storev2.Changeset {
 	kvPairs := make([]storev2.KVPair, len(changes))
 	for i, c := range changes {
 		kvPairs[i] = storev2.KVPair{

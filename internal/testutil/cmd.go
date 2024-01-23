@@ -23,7 +23,7 @@ func ResetArgs(cmd *cobra.Command) {
 	if !cmd.Flags().Parsed() {
 		return
 	}
-	// if flags have been parsed yet, we should reset flags's value that don't been set
+	// If flags have already been parsed, we should reset the values of flags that haven't been set
 	cmd.Flags().Visit(func(pf *pflag.Flag) {
 		// if the flag hasn't been changed, there is no need to reset the args
 		if !pf.Changed {

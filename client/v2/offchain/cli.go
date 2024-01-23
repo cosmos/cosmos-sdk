@@ -2,6 +2,7 @@ package offchain
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -62,7 +63,7 @@ func SignFile() *cobra.Command {
 			}
 
 			if outputFile != "" {
-				fp, err := os.OpenFile(outputFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+				fp, err := os.OpenFile(filepath.Clean(outputFile), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 				if err != nil {
 					return err
 				}

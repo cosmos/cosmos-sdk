@@ -230,6 +230,13 @@ This means that proposals are accepted iff:
 
 For expedited proposals, by default, the threshold is higher than with a *normal proposal*, namely, 66.7%.
 
+### Yes Quorum
+
+Yes quorum is a more restrictive quorum that is used to determine if a proposal passes.
+It is defined as the minimum percentage of voting power that needs to have voted `Yes` for the proposal to pass.
+It differs from `Threshold` as it takes the whole voting power into account, not only `Yes` and `No` votes.
+By default, `YesQuorum` is set to 0, which means disabled.
+
 #### Inheritance
 
 If a delegator does not vote, it will inherit its validator vote.
@@ -606,6 +613,7 @@ The governance module contains the following parameters:
 | max_deposit_period              | string (time ns)  | "172800000000000" (17280s)              |
 | voting_period                   | string (time ns)  | "172800000000000" (17280s)              |
 | quorum                          | string (dec)      | "0.334000000000000000"                  |
+| yes_quorum                      | string (dec)      | "0.4"                                   |
 | threshold                       | string (dec)      | "0.500000000000000000"                  |
 | veto                            | string (dec)      | "0.334000000000000000"                  |
 | expedited_threshold             | string (time ns)  | "0.667000000000000000"                  |
@@ -629,12 +637,12 @@ to be included and not the entire parameter object structure.
 
 In addition to the parameters above, the governance module can also be configured to have different parameters for a given proposal message.
 
-| Key                             | Type              | Example                                 |
-| ------------------------------- | ----------------- | --------------------------------------- |
-| voting_period                   | string (time ns)  | "172800000000000" (17280s)              |
-| quorum                          | string (dec)      | "0.334000000000000000"                  |
-| threshold                       | string (dec)      | "0.500000000000000000"                  |
-| veto                            | string (dec)      | "0.334000000000000000"                  |
+| Key           | Type             | Example                    |
+| ------------- | ---------------- | -------------------------- |
+| voting_period | string (time ns) | "172800000000000" (17280s) |
+| quorum        | string (dec)     | "0.334000000000000000"     |
+| threshold     | string (dec)     | "0.500000000000000000"     |
+| veto          | string (dec)     | "0.334000000000000000"     |
 
 If configured, these params will take precedence over the global params for a specific proposal.
 

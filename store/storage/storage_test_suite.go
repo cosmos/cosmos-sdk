@@ -3,7 +3,9 @@ package storage
 import (
 	"fmt"
 	"slices"
+	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/store/v2"
@@ -402,30 +404,11 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 
 	defer db.Close()
 
-	cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
-		{Key: []byte("keyC"), Value: []byte("value003")},
-	}})
-	s.Require().NoError(db.ApplyChangeset(58827506, cs))
-
-	cs = store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
-		{Key: []byte("keyE"), Value: []byte("value000")},
-	}})
-	s.Require().NoError(db.ApplyChangeset(58827506, cs))
-
-	cs = store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
-		{Key: []byte("keyF"), Value: []byte("value000")},
-	}})
-	s.Require().NoError(db.ApplyChangeset(58827506, cs))
-
-	cs = store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
-		{Key: []byte("keyC"), Value: []byte("value004")},
-	}})
-	s.Require().NoError(db.ApplyChangeset(58833605, cs))
-
-	cs = store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
-		{Key: []byte("keyD"), Value: []byte("value006")},
-	}})
-	s.Require().NoError(db.ApplyChangeset(58833606, cs))
+	DBApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
+	DBApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value000")})
+	DBApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value000")})
+	DBApplyChangeset(s.T(), db, 58833605, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value004")})
+	DBApplyChangeset(s.T(), db, 58833606, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value006")})
 
 	itr, err := db.Iterator(storeKey1, 58831525, []byte("key"), nil)
 	s.Require().NoError(err)
@@ -437,6 +420,60 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 	}
 
 	s.Require().Equal(3, len(count))
+}
+
+func (s *StorageTestSuite) TestDatabaseIterator_ForwardIteration() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	DBApplyChangeset(s.T(), db, 8, storeKey1, [][]byte{[]byte("keyA")}, [][]byte{[]byte("value001")})
+	DBApplyChangeset(s.T(), db, 9, storeKey1, [][]byte{[]byte("keyB")}, [][]byte{[]byte("value002")})
+	DBApplyChangeset(s.T(), db, 10, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
+	DBApplyChangeset(s.T(), db, 11, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value004")})
+
+	DBApplyChangeset(s.T(), db, 2, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value007")})
+	DBApplyChangeset(s.T(), db, 3, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value008")})
+	DBApplyChangeset(s.T(), db, 4, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value009")})
+	DBApplyChangeset(s.T(), db, 5, storeKey1, [][]byte{[]byte("keyH")}, [][]byte{[]byte("value010")})
+
+	itr, err := db.Iterator(storeKey1, 6, nil, []byte("keyZ"))
+	s.Require().NoError(err)
+
+	defer itr.Close()
+	count := 0
+	for ; itr.Valid(); itr.Next() {
+		count++
+	}
+
+	s.Require().Equal(4, count)
+}
+
+func (s *StorageTestSuite) TestDatabaseIterator_ForwardIterationHigher() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	DBApplyChangeset(s.T(), db, 9, storeKey1, [][]byte{[]byte("keyB")}, [][]byte{[]byte("value002")})
+	DBApplyChangeset(s.T(), db, 10, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
+	DBApplyChangeset(s.T(), db, 11, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value004")})
+
+	DBApplyChangeset(s.T(), db, 12, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value007")})
+	DBApplyChangeset(s.T(), db, 13, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value008")})
+	DBApplyChangeset(s.T(), db, 14, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value009")})
+	DBApplyChangeset(s.T(), db, 15, storeKey1, [][]byte{[]byte("keyH")}, [][]byte{[]byte("value010")})
+
+	itr, err := db.Iterator(storeKey1, 6, nil, []byte("keyZ"))
+	s.Require().NoError(err)
+
+	defer itr.Close()
+
+	count := 0
+	for ; itr.Valid(); itr.Next() {
+		count++
+	}
+
+	s.Require().Equal(0, count)
 }
 
 func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
@@ -592,4 +629,24 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	bz, err = db.Get(storeKey1, 201, key)
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("val200"), bz)
+}
+
+func DBApplyChangeset(
+	t *testing.T,
+	db store.VersionedDatabase,
+	version uint64,
+	storeKey string,
+	keys, vals [][]byte,
+) {
+	t.Helper()
+
+	require.Greater(t, version, uint64(0))
+	require.Equal(t, len(keys), len(vals))
+
+	cs := store.NewChangeset()
+	for i := 0; i < len(keys); i++ {
+		cs.AddKVPair(storeKey, store.KVPair{Key: keys[i], Value: vals[i]})
+	}
+
+	require.NoError(t, db.ApplyChangeset(version, cs))
 }

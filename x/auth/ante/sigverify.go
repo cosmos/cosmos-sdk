@@ -213,7 +213,7 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 	// the account is without a pubkey, let's attempt to check if in the
 	// tx we were correctly provided a valid pubkey.
 	if acc.GetPubKey() == nil {
-		err = svd.setPubKey(ctx.IsSigverifyTx(), simulate, acc, txPubKey)
+		err = svd.setPubKey(ctx, ctx.IsSigverifyTx(), acc, txPubKey)
 		if err != nil {
 			return err
 		}
@@ -333,7 +333,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 
 // setPubKey will attempt to set the pubkey for the account given the list of available public keys.
 // This must be called only in case the account has not a pubkey set yet.
-func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, isSigVerifyTx bool, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
 	// if we're not in sig verify then we can just skip.
 	if !isSigVerifyTx {
 		return nil
@@ -344,7 +344,7 @@ func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc 
 	if txPubKey == nil {
 		// if we're not in simulation mode, and we do not have a valid pubkey
 		// for this signer, then we simply error.
-		if !simulate {
+		if ctx.ExecMode() != sdk.ExecModeSimulate {
 			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", acc.GetAddress().String())
 		}
 		// if we're in simulation mode, then we can populate the pubkey with the
@@ -360,6 +360,9 @@ func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc 
 		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", acc.GetAddress(), txPubKey.Address())
 	}
 
+	// Create account
+	accI := svd.ak.NewAccountWithAddress(ctx, txPubKey.Address().Bytes())
+
 	err := verifyIsOnCurve(txPubKey)
 	if err != nil {
 		return err
@@ -367,7 +370,7 @@ func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc 
 
 	// we set the pubkey in the account, without setting it in state.
 	// this will be done by the increaseSequenceAndUpdateAccount method.
-	return acc.SetPubKey(txPubKey)
+	return accI.SetPubKey(txPubKey)
 }
 
 // increaseSequence will increase the provided account interface sequence, unless

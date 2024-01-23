@@ -9,6 +9,7 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestSigVerify_setPubKey(t *testing.T) {
@@ -22,36 +23,43 @@ func TestSigVerify_setPubKey(t *testing.T) {
 	aliceAddr, err := cdc.BytesToString(alicePk.Address())
 	require.NoError(t, err)
 
+	ctx := sdk.NewContext(nil, false, nil)
+
 	t.Run("on not sig verify tx - skip", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{}
-		err := svd.setPubKey(false, false, acc, nil)
+		ctx = ctx.WithExecMode(sdk.ExecModeSimulate)
+		err := svd.setPubKey(ctx, false, acc, nil)
 		require.NoError(t, err)
 	})
 
 	t.Run("on sim, populate with sim key, if pubkey is nil", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		err := svd.setPubKey(true, true, acc, nil)
+		ctx = ctx.WithExecMode(sdk.ExecModeSimulate)
+		err := svd.setPubKey(ctx, true, acc, nil)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), simSecp256k1Pubkey)
 	})
 
 	t.Run("on sim, populate with real pub key, if pubkey is not nil", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		err := svd.setPubKey(true, true, acc, alicePk)
+		ctx = ctx.WithExecMode(sdk.ExecModeSimulate)
+		err := svd.setPubKey(ctx, true, acc, alicePk)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), alicePk)
 	})
 
 	t.Run("not on sim, populate the address", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		err := svd.setPubKey(true, false, acc, alicePk)
+		ctx = ctx.WithExecMode(sdk.ExecModeFinalize)
+		err := svd.setPubKey(ctx, false, acc, alicePk)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), alicePk)
 	})
 
 	t.Run("not on sim, fail on invalid pubkey.address", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		err := svd.setPubKey(true, false, acc, bobPk)
+		ctx = ctx.WithExecMode(sdk.ExecModeFinalize)
+		err := svd.setPubKey(ctx, false, acc, bobPk)
 		require.ErrorContains(t, err, "cannot be claimed")
 	})
 }

@@ -1,4 +1,4 @@
-package staking_test
+package mint
 
 import (
 	"testing"
@@ -7,27 +7,24 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	authKeeper "cosmossdk.io/x/auth/keeper"
+	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/staking/testutil"
-	"cosmossdk.io/x/staking/types"
+	"cosmossdk.io/x/mint/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
-	var accountKeeper authKeeper.AccountKeeper
+	var accountKeeper authkeeper.AccountKeeper
+
 	app, err := simtestutil.SetupAtGenesis(
 		depinject.Configs(
-			testutil.AppConfig,
+			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		), &accountKeeper)
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(false)
-	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.BondedPoolName))
-	require.NotNil(t, acc)
-
-	acc = accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.NotBondedPoolName))
+	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	require.NotNil(t, acc)
 }

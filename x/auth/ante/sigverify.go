@@ -217,6 +217,11 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 		if err != nil {
 			return err
 		}
+		// get the account again, as it may have been created
+		acc, err = GetSignerAcc(ctx, svd.ak, signer)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = svd.consumeSignatureGas(ctx, simulate, acc.GetPubKey(), sig)

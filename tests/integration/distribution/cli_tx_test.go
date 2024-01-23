@@ -1,4 +1,4 @@
-package cli_test
+package distribution_test
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/client/cli"
-	distrtestutil "cosmossdk.io/x/distribution/testutil"
+
 	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -62,7 +62,7 @@ func (s *CLITestSuite) SetupSuite() {
 	}
 	s.clientCtx = ctxGen()
 
-	cfg, err := network.DefaultConfigWithAppConfig(distrtestutil.AppConfig)
+	cfg, err := network.DefaultConfigWithAppConfig(AppConfig)
 	s.Require().NoError(err)
 
 	genesisState := cfg.GenesisState

@@ -167,9 +167,5 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/distribution => ../distribution
-	cosmossdk.io/x/mint => ../mint
-	cosmossdk.io/x/protocolpool => ../protocolpool
-	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 )

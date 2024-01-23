@@ -1,4 +1,4 @@
-package simulation_test
+package slashing
 
 import (
 	"fmt"
@@ -25,7 +25,6 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
-	"cosmossdk.io/x/slashing/testutil"
 	"cosmossdk.io/x/slashing/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -83,7 +82,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
-			testutil.AppConfig,
+			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
 		startupCfg,

@@ -104,8 +104,8 @@ type ReadOnlyRootStore interface {
 
 // QueryResult defines the response type to performing a query on a RootStore.
 type QueryResult struct {
-	Key     []byte
-	Value   []byte
-	Version uint64
-	Proof   CommitmentOp
+	Key      []byte
+	Value    []byte
+	Version  uint64
+	ProofOps []CommitmentOp
 }

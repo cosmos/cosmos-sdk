@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/log"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/distribution/testutil"
 	"cosmossdk.io/x/distribution/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -20,7 +19,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 
 	app, err := simtestutil.SetupAtGenesis(
 		depinject.Configs(
-			testutil.AppConfig,
+			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&accountKeeper)

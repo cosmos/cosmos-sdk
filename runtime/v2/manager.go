@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/transaction"
-	servertx "cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -138,17 +137,13 @@ func (m *MMv2) UpgradeBlocker() func(ctx context.Context) (bool, error) {
 }
 
 // TxValidators validates incoming transactions
-func (m *MMv2) TxValidation() func(ctx context.Context, tx servertx.Tx) error {
+func (m *MMv2) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
 	// TODO rewrap the context into sdk.Context
 
-	return func(ctx context.Context, tx servertx.Tx) error {
+	return func(ctx context.Context, tx transaction.Tx) error {
 		for _, moduleName := range m.config.TxValidation {
-			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[servertx.Tx]); ok {
-				return module.TxValidator(ctx, tx)
-			}
-
 			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[transaction.Tx]); ok {
-				return module.TxValidator(ctx, transaction.Tx(tx))
+				return module.TxValidator(ctx, tx)
 			}
 		}
 

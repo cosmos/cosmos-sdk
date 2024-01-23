@@ -8,7 +8,7 @@ import (
 	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
-	servertx "cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -22,7 +22,7 @@ type AppBuilder struct {
 
 	// config
 	branch      func(state store.ReadonlyState) store.WritableState
-	txValidator func(ctx context.Context, tx servertx.Tx) error
+	txValidator func(ctx context.Context, tx transaction.Tx) error
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
@@ -98,7 +98,7 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	a.app.stf = stf.NewSTF[servertx.Tx](
+	a.app.stf = stf.NewSTF[transaction.Tx](
 		stfMsgHandler,
 		stfMsgHandler,
 		a.app.moduleManager.UpgradeBlocker(),
@@ -117,19 +117,19 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 // customize the resulting app.
 type AppBuilderOption func(*AppBuilder)
 
-func AppBuilderWithMempool(mempool mempool.Mempool[servertx.Tx]) AppBuilderOption {
+func AppBuilderWithMempool(mempool mempool.Mempool[transaction.Tx]) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.app.mempool = mempool
 	}
 }
 
-func AppBuilderWithPrepareBlockHandler(handler coreappmanager.PrepareHandler[servertx.Tx]) AppBuilderOption {
+func AppBuilderWithPrepareBlockHandler(handler coreappmanager.PrepareHandler[transaction.Tx]) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.app.prepareBlockHandler = handler
 	}
 }
 
-func AppBuilderWithVerifyBlockHandler(handler coreappmanager.ProcessHandler[servertx.Tx]) AppBuilderOption {
+func AppBuilderWithVerifyBlockHandler(handler coreappmanager.ProcessHandler[transaction.Tx]) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.app.verifyBlockHandler = handler
 	}
@@ -149,7 +149,7 @@ func AppBuilderWithGasConfig(gasConfig interface{}) AppBuilderOption { // TODO
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides the default tx validator from all modules.
-func AppBuilderWithTxValidator(validator func(ctx context.Context, tx servertx.Tx) error) AppBuilderOption {
+func AppBuilderWithTxValidator(validator func(ctx context.Context, tx transaction.Tx) error) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.txValidator = validator
 	}

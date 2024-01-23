@@ -13,7 +13,7 @@ import (
 	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
-	servertx "cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 	authtx "cosmossdk.io/x/auth/tx"
@@ -41,14 +41,14 @@ import (
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app_.go for an example of this setup.
 type App struct {
-	*appmanager.AppManager[servertx.Tx]
+	*appmanager.AppManager[transaction.Tx]
 
 	// app manager dependencies
-	stf                 *stf.STF[servertx.Tx]
+	stf                 *stf.STF[transaction.Tx]
 	msgRouterBuilder    *stf.MsgRouterBuilder
-	mempool             mempool.Mempool[servertx.Tx]
-	prepareBlockHandler coreappmanager.PrepareHandler[servertx.Tx]
-	verifyBlockHandler  coreappmanager.ProcessHandler[servertx.Tx]
+	mempool             mempool.Mempool[transaction.Tx]
+	prepareBlockHandler coreappmanager.PrepareHandler[transaction.Tx]
+	verifyBlockHandler  coreappmanager.ProcessHandler[transaction.Tx]
 	db                  store.Store
 
 	// app configuration
@@ -97,7 +97,7 @@ func (a *App) Load() error {
 		// a.verifyBlockHandler = appmanager.DefaultProcessBlockHandler
 	}
 
-	appManagerBuilder := appmanager.Builder[servertx.Tx]{
+	appManagerBuilder := appmanager.Builder[transaction.Tx]{
 		STF:                 a.stf,
 		DB:                  a.db,
 		ValidateTxGasLimit:  a.config.GasConfig.ValidateTxGasLimit,

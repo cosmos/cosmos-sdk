@@ -139,14 +139,14 @@ func GetModuleNameFromTypeURL(input string) string {
 	return ""
 }
 
-func ServerTxToSDKTx(tx servertx.Tx) Tx {
+func ServerTxToSDKTx(tx transaction.Tx) Tx {
 	return wrapperServerTx{tx}
 }
 
 var _ Tx = wrapperServerTx{}
 
 type wrapperServerTx struct {
-	servertx.Tx
+	transaction.Tx
 }
 
 func (w wrapperServerTx) GetMsgs() []Msg {

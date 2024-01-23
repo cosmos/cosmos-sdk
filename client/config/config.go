@@ -89,7 +89,7 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 		}
 	}
 
-	conf, err := getClientConfig(configPath, *ctx.Viper)
+	conf, err := getClientConfig(configPath, ctx.Viper)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client config: %w", err)
 	}

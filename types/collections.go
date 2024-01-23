@@ -55,6 +55,9 @@ var (
 	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
 )
 
+const Int string = "math.Int"
+const Uint string = "math.Uint"
+
 type addressUnion interface {
 	AccAddress | ValAddress | ConsAddress
 	String() string
@@ -201,7 +204,7 @@ func (i intValueCodec) Stringify(value math.Int) string {
 }
 
 func (i intValueCodec) ValueType() string {
-	return "math.Int"
+	return Int
 }
 
 type uintValueCodec struct{}
@@ -237,7 +240,7 @@ func (i uintValueCodec) Stringify(value math.Uint) string {
 }
 
 func (i uintValueCodec) ValueType() string {
-	return "math.Uint"
+	return Uint
 }
 
 type timeKeyCodec struct{}

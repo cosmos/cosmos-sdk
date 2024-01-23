@@ -604,15 +604,18 @@ func NewSimApp(
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
-			ante.HandlerOptions{
-				AccountKeeper:   app.AuthKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			HandlerOptions: ante.HandlerOptions{
+				AccountKeeper:                   app.AuthKeeper,
+				AccountAbstractionAuthenticator: app.AccountsKeeper,
+				BankKeeper:                      app.BankKeeper,
+				ExtensionOptionChecker:          nil,
+				FeegrantKeeper:                  app.FeeGrantKeeper,
+				SignModeHandler:                 txConfig.SignModeHandler(),
+				SigGasConsumer:                  ante.DefaultSigVerificationGasConsumer,
+				TxFeeChecker:                    nil,
 			},
-			&app.CircuitKeeper,
-			app.UnorderedTxManager,
+			CircuitKeeper: &app.CircuitKeeper,
+			TxManager:     app.UnorderedTxManager,
 		},
 	)
 	if err != nil {

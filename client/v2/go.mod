@@ -164,6 +164,8 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
+require cosmossdk.io/x/accounts v0.0.0-20240123112446-6d10c507842e // indirect
+
 replace github.com/cosmos/cosmos-sdk => ./../../
 
 replace (

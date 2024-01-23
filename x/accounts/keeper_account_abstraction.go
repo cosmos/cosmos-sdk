@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
@@ -212,6 +213,25 @@ func (k Keeper) payBundler(
 	default:
 		// some other execution error.
 		return nil, err
+	}
+}
+
+// IsAbstractedAccount reports if the provided address is an abstracted account or not.
+// If x/accounts does not know about the address then false is returned.
+func (k Keeper) IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error) {
+	accType, err := k.AccountsByType.Get(ctx, addr)
+	switch {
+	case err == nil:
+		impl, err := k.getImplementation(accType)
+		if err != nil {
+			return false, err
+		}
+		// the minimum expected interface for an abstracted account, TODO: maybe add more!
+		return impl.HasExec(&account_abstractionv1.MsgAuthenticate{}), nil
+	case errors.Is(err, collections.ErrNotFound):
+		return false, nil
+	default:
+		return false, err
 	}
 }
 

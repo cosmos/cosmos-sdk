@@ -1,11 +1,13 @@
 package ante
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 
+	accountsv1 "cosmossdk.io/x/accounts/v1"
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -46,6 +48,15 @@ func init() {
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 
+type AccountAbstractionAuthenticator interface {
+	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
+	Authenticate(
+		ctx context.Context,
+		bundler string,
+		op *accountsv1.UserOperation,
+	) (gasUsed uint64, err error)
+}
+
 // SigVerificationDecorator verifies all signatures for a tx and returns an
 // error if any are invalid.
 // It will populate an account's public key if that is not present only if
@@ -60,16 +71,18 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak              AccountKeeper
-	signModeHandler *txsigning.HandlerMap
-	sigGasConsumer  SignatureVerificationGasConsumer
+	ak                 AccountKeeper
+	accountAbstraction AccountAbstractionAuthenticator
+	signModeHandler    *txsigning.HandlerMap
+	sigGasConsumer     SignatureVerificationGasConsumer
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aak AccountAbstractionAuthenticator) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		ak:              ak,
-		signModeHandler: signModeHandler,
-		sigGasConsumer:  sigGasConsumer,
+		ak:                 ak,
+		accountAbstraction: aak,
+		signModeHandler:    signModeHandler,
+		sigGasConsumer:     sigGasConsumer,
 	}
 }
 
@@ -205,6 +218,17 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // authenticate the authentication of the TX for a specific tx signer.
 func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, simulate bool, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
+	if svd.accountAbstraction != nil {
+		isAa, err := svd.accountAbstraction.IsAbstractedAccount(ctx, signer)
+		if err != nil {
+			return err
+		}
+		if isAa {
+			// NOTE: pubkey is not needed since aa's do not have implicit account creation.
+			return svd.aaAuthenticate(ctx, signer, tx, sig)
+		}
+	}
+
 	acc, err := GetSignerAcc(ctx, svd.ak, signer)
 	if err != nil {
 		return err
@@ -377,6 +401,11 @@ func (svd SigVerificationDecorator) increaseSequence(tx authsigning.Tx, acc sdk.
 	}
 
 	return acc.SetSequence(acc.GetSequence() + 1)
+}
+
+// aaAuthenticate deals with the authentication flow of an abstracted account.
+func (svd SigVerificationDecorator) aaAuthenticate(ctx sdk.Context, signer []byte, tx authsigning.Tx, sig signing.SignatureV2) error {
+	return fmt.Errorf("aa not implemented")
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params

@@ -27,6 +27,7 @@ func TestBaseAccount(t *testing.T) {
 
 	// fund base account! this will also cause an auth base account to be created
 	// by the bank module.
+	// TODO: fixed by letting x/auth rely on x/accounts for acc existence checks.
 	fundAccount(t, app, ctx, baseAccountAddr, "1000000stake")
 
 	// now we make the account send a tx, public key not present.

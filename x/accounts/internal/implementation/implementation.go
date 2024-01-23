@@ -126,6 +126,13 @@ type Implementation struct {
 	ExecuteHandlersSchema map[string]HandlerSchema
 }
 
+// HasExec reports if the account exposes a handler that can
+// execute the provided message.
+func (i Implementation) HasExec(msg ProtoMsg) bool {
+	_, has := i.ExecuteHandlersSchema[MessageName(msg)]
+	return has
+}
+
 // MessageSchema defines the schema of a message.
 // A message can also define a state schema.
 type MessageSchema struct {

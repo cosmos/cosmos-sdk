@@ -30,6 +30,7 @@ require (
 )
 
 require (
+	cosmossdk.io/x/accounts v0.0.0-20240123112446-6d10c507842e // indirect
 	cosmossdk.io/x/tx v0.13.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

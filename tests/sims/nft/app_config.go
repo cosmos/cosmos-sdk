@@ -1,12 +1,11 @@
-package testutil
+package nft
 
 import (
 	_ "cosmossdk.io/x/auth"           // import as blank for app wiring
 	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
-	_ "cosmossdk.io/x/authz/module"   // import as blank for app wiring
 	_ "cosmossdk.io/x/bank"           // import as blank for app wiring
-	_ "cosmossdk.io/x/gov"            // import as blank for app wiring
 	_ "cosmossdk.io/x/mint"           // import as blank for app wiring
+	_ "cosmossdk.io/x/nft/module"     // import as blank for app wiring
 	_ "cosmossdk.io/x/staking"        // import as blank for app wiring
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -21,6 +20,6 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.TxModule(),
 	configurator.ConsensusModule(),
 	configurator.GenutilModule(),
-	configurator.AuthzModule(),
 	configurator.MintModule(),
+	configurator.NFTModule(),
 )

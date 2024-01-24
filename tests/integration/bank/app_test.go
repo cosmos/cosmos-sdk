@@ -223,9 +223,9 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		},
 		{
 			desc:       "wrong accNum should pass Simulate, but not Deliver",
-			msgs:       []sdk.Msg{multiSendMsg1, multiSendMsg2},
+			msgs:       []sdk.Msg{multiSendMsg1},
 			accNums:    []uint64{1}, // wrong account number
-			accSeqs:    []uint64{1},
+			accSeqs:    []uint64{0},
 			expSimPass: true, // doesn't check signature
 			expPass:    false,
 			privKeys:   []cryptotypes.PrivKey{priv1},
@@ -251,19 +251,20 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Logf("testing %s", tc.desc)
-		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
-		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
-		if tc.expPass {
-			require.NoError(t, err)
-		} else {
-			require.Error(t, err)
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			header := header.Info{Height: baseApp.LastBlockHeight() + 1}
+			txConfig := moduletestutil.MakeTestTxConfig()
+			_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+			if tc.expPass {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+			}
 
-		for _, eb := range tc.expectedBalances {
-			checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
-		}
+			for _, eb := range tc.expectedBalances {
+				checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
+			}
+		})
 	}
 }
 

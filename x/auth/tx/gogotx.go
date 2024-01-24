@@ -39,13 +39,16 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 		if !ok {
 			return nil, fmt.Errorf("invalid fee coin amount at index %d: %s", i, fee.Amount)
 		}
+		if err = sdk.ValidateDenom(fee.Denom); err != nil {
+			return nil, fmt.Errorf("invalid fee coin denom at index %d: %w", i, err)
+		}
 		fees[i] = sdk.Coin{
 			Denom:  fee.Denom,
 			Amount: amtInt,
 		}
 	}
-	if err = fees.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid tx fees: %w", err)
+	if !fees.IsSorted() {
+		return nil, fmt.Errorf("invalid not sorted tx fees: %s", fees.String())
 	}
 	// set fee payer
 	var feePayer []byte

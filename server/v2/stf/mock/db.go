@@ -6,14 +6,14 @@ import (
 )
 
 func DB() store.GetReader {
-	return accountState{kv: map[string][]byte{}}
+	return actorState{kv: map[string][]byte{}}
 }
 
-type accountState struct {
+type actorState struct {
 	kv map[string][]byte
 }
 
-func (m accountState) GetAccountReader(address []byte) (store.Reader, error) {
+func (m actorState) GetReader(address []byte) (store.Reader, error) {
 	return memState{address, m.kv}, nil
 }
 

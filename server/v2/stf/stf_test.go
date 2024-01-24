@@ -139,18 +139,18 @@ func TestSTF(t *testing.T) {
 	})
 }
 
-var accountName = []byte("cookies")
+var actorName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) {
 	t.Helper()
-	state, err := ctx.(*executionContext).store.GetAccountWriter(accountName)
+	state, err := ctx.(*executionContext).store.GetWriter(actorName)
 	require.NoError(t, err)
 	require.NoError(t, state.Set([]byte(v), []byte(v)))
 }
 
 func stateHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
-	state, err := accountState.GetAccountReader(accountName)
+	state, err := accountState.GetReader(actorName)
 	require.NoError(t, err)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
@@ -159,7 +159,7 @@ func stateHas(t *testing.T, accountState store.GetReader, key string) {
 
 func stateNotHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
-	state, err := accountState.GetAccountReader(accountName)
+	state, err := accountState.GetReader(actorName)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Falsef(t, has, "state was not supposed to have key: %s", key)

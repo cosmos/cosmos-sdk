@@ -9,15 +9,15 @@ import (
 var _ store.KVStoreService = (*StoreService)(nil)
 
 func NewStoreService(address []byte) store.KVStoreService {
-	return StoreService{address: address}
+	return StoreService{actor: address}
 }
 
 type StoreService struct {
-	address []byte
+	actor []byte
 }
 
 func (s StoreService) OpenKVStore(ctx context.Context) store.KVStore {
-	state, err := ctx.(*executionContext).store.GetAccountWriter(s.address)
+	state, err := ctx.(*executionContext).store.GetWriter(s.actor)
 	if err != nil {
 		// tODO: maybe return an erroring store
 		panic(err)

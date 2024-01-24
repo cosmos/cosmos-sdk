@@ -12,26 +12,26 @@ type branchedState struct {
 	branch                func(state store.Reader) store.Writer
 }
 
-func (b branchedState) GetAccountReader(address []byte) (store.Reader, error) {
-	return b.GetAccountWriter(address)
+func (b branchedState) GetReader(actor []byte) (store.Reader, error) {
+	return b.GetWriter(actor)
 }
 
-func (b branchedState) GetAccountWriter(address []byte) (store.Writer, error) {
-	addressStr := string(address)
+func (b branchedState) GetWriter(actor []byte) (store.Writer, error) {
+	actorStr := string(actor)
 	// this is the case in which we have already cached some branched state.
-	branchedState, ok := b.branchedAccountsState[addressStr]
+	branchedState, ok := b.branchedAccountsState[actorStr]
 	if ok {
 		return branchedState, nil
 	}
 	// this is the case in which it's the first time in the execution context
 	// we were asked for this account's state, so we will fetch it from the state.
-	accountState, err := b.state.GetAccountReader(address)
+	accountState, err := b.state.GetReader(actor)
 	if err != nil {
 		return nil, err
 	}
 
 	branchedState = b.branch(accountState)
-	b.branchedAccountsState[addressStr] = branchedState
+	b.branchedAccountsState[actorStr] = branchedState
 	return branchedState, nil
 }
 
@@ -39,7 +39,7 @@ func (b branchedState) ApplyStateChanges(stateChanges []store.StateChanges) erro
 	for _, sc := range stateChanges {
 		err := b.applyStateChange(sc)
 		if err != nil {
-			return fmt.Errorf("unable to apply state change for address %X: %w", sc.Account, err)
+			return fmt.Errorf("unable to apply state change for actor %X: %w", sc.Actor, err)
 		}
 	}
 	return nil
@@ -53,7 +53,7 @@ func (b branchedState) GetStateChanges() ([]store.StateChanges, error) {
 			return nil, err
 		}
 		sc = append(sc, store.StateChanges{
-			Account:      []byte(account),
+			Actor:        []byte(account),
 			StateChanges: kvChanges,
 		})
 	}
@@ -61,7 +61,7 @@ func (b branchedState) GetStateChanges() ([]store.StateChanges, error) {
 }
 
 func (b branchedState) applyStateChange(sc store.StateChanges) error {
-	writableState, err := b.GetAccountWriter(sc.Account)
+	writableState, err := b.GetWriter(sc.Actor)
 	if err != nil {
 		return err
 	}

@@ -43,7 +43,7 @@ func intoStreamingKVPairs(stateChanges []store.StateChanges) []*streaming.StoreK
 
 	for _, accounts := range stateChanges {
 		// Reducing the scope of address variable.
-		address := accounts.Account
+		address := accounts.Actor
 
 		for _, kv := range accounts.StateChanges {
 			streamKvPairs = append(streamKvPairs, &streaming.StoreKVPair{

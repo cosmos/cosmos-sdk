@@ -23,11 +23,11 @@ type Store[SS storev2.VersionedDatabase, SC storev2.Committer] struct {
 
 func (s Store[SS, SC]) StateLatest() (uint64, store.GetReader, error) {
 	latest := s.latest.Load()
-	return latest, accountsState[SS]{latest, s.ss}, nil
+	return latest, actorsState[SS]{latest, s.ss}, nil
 }
 
 func (s Store[SS, SC]) StateAt(version uint64) (store.GetReader, error) {
-	return accountsState[SS]{version, s.ss}, nil
+	return actorsState[SS]{version, s.ss}, nil
 }
 
 func (s Store[SS, SC]) StateCommit(changes []store.StateChanges) (store.Hash, error) {
@@ -57,12 +57,12 @@ func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Stor
 	return s, nil
 }
 
-type accountsState[SS storev2.VersionedDatabase] struct {
+type actorsState[SS storev2.VersionedDatabase] struct {
 	version uint64
 	ss      SS
 }
 
-func (a accountsState[SS]) GetAccountReader(address []byte) (store.Reader, error) {
+func (a actorsState[SS]) GetReader(address []byte) (store.Reader, error) {
 	return state[SS]{
 		version:  a.version,
 		storeKey: string(address),

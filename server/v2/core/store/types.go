@@ -27,29 +27,29 @@ type Store interface {
 
 // GetReader represents a readonly view over all the accounts state.
 type GetReader interface {
-	// GetAccountReadonlyState must return the state for the provided address.
-	// Storage implements might treat this as a prefix store over an address.
+	// GetReader must return the state for the provided actor.
+	// Storage implements might treat this as a prefix store over an actor.
 	// Prefix safety is on the implementer.
-	GetAccountReader(address []byte) (Reader, error)
+	GetReader(actor []byte) (Reader, error)
 }
 
 // WritableAccountsState represents a writable account state.
 type GetWriter interface {
 	GetReader
-	// GetAccountWritableState must the return a WritableState
-	// for the provided account address.
-	GetAccountWriter(address []byte) (Writer, error)
-	// ApplyAccountsStateChanges applies all the state changes
+	// GetWriter must the return a WritableState
+	// for the provided actor namespace.
+	GetWriter(actor []byte) (Writer, error)
+	// ApplyStateChanges applies all the state changes
 	// of the accounts. Ordering of the returned state changes
 	// is an implementation detail and must not be assumed.
 	ApplyStateChanges(stateChanges []StateChanges) error
-	// GetAccountsStateChanges returns the list of the state
+	// GetStateChanges returns the list of the state
 	// changes so far applied. Order must not be assumed.
 	GetStateChanges() ([]StateChanges, error)
 }
 
 type StateChanges struct {
-	Account      []byte // address represents the space in storage where state is stored, previously this was called a "storekey"
+	Actor        []byte // actor represents the space in storage where state is stored, previously this was called a "storekey"
 	StateChanges []KVPair
 }
 
@@ -64,7 +64,7 @@ type KVPair struct {
 	Remove bool
 }
 
-// Writer defines an instance of an address state at a specific version that can be written to.
+// Writer defines an instance of an actor state at a specific version that can be written to.
 type Writer interface {
 	Reader
 	Set(key, value []byte) error

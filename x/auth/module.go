@@ -9,6 +9,8 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	servertx "cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
@@ -16,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -32,7 +35,8 @@ var (
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule                       = AppModule{}
+	_ appmodule.HasTxValidation[transaction.Tx] = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the auth module.
@@ -134,6 +138,28 @@ func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data j
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.accountKeeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
+}
+
+// TxValidator implements appmodule.HasTxValidation.
+// It replaces auth ante handlers for server/v2
+func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// supports legacy ante handler
+	// eventually do the reverse, write ante handler as TxValidator
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewSetUpContextDecorator(),
+		ante.NewValidateBasicDecorator(),
+		ante.NewTxTimeoutHeightDecorator(),
+		ante.NewValidateMemoDecorator(am.accountKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
+		ante.NewSetPubKeyDecorator(am.accountKeeper),
+		ante.NewValidateSigCountDecorator(am.accountKeeper),
+	}
+
+	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
+	_, err := anteHandler(sdkCtx, sdk.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate)
+	return err
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

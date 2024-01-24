@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/simulation"
+	"cosmossdk.io/x/feegrant/txvalidator"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -35,11 +36,12 @@ type FeegrantInputs struct {
 	AccountKeeper feegrant.AccountKeeper
 	BankKeeper    feegrant.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
+	TxFeeChecker  txvalidator.TxFeeChecker `optional:"true"`
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
 	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper)
-	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
+	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry, in.TxFeeChecker)
 	return k, m
 }
 

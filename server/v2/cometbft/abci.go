@@ -350,8 +350,8 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	}
 
 	events := []event.Event{}
-	events = append(events, resp.BeginBlockEvents...)
 	events = append(events, resp.PreBlockEvents...)
+	events = append(events, resp.BeginBlockEvents...)
 	for _, tx := range resp.TxResults {
 		events = append(events, tx.Events...)
 	}

@@ -52,7 +52,7 @@ In order to fully understand the need for changes and improvements to the crypto
 * Type leakage outside the current crypto module pose backward compatibility and extensibility challenges.
 * The demand for a more flexible and extensible approach to cryptography and address management is high.
 * Architectural changes are necessary to resolve many of the currently open issues.
-* There is a current tread towards modularity in the ICF stack (e.g. runtime modules)
+* There is a current trend towards modularity in the Interchain stack (e.g. runtime modules)
 * Security implications are a critical consideration during the redesign work.
 
 ## Objectives

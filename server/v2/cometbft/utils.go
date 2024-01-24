@@ -1,6 +1,7 @@
 package cometbft
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -16,6 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
+	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	sdkabci "cosmossdk.io/api/tendermint/abci"
 	"cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
@@ -322,9 +325,41 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.RequestFinalizeBloc
 
 // TODO: implement this, only from committed state, there's no need to get it from
 // uncommitted store because we are committing before responding to FinalizeBlock.
-func (c *Consensus[T]) GetConsensusParams() (*cmtproto.ConsensusParams, error) {
-	// I think we should be able to do a query here, or allow consensus to read from store?
-	return &cmtproto.ConsensusParams{}, nil
+func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
+	cs := &cmtproto.ConsensusParams{}
+	latestVersion, err := c.store.LatestVerseion()
+
+	res, err := c.app.Query(ctx, latestVersion, &consensusv1.QueryParamsRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	if r, ok := res.(*consensusv1.QueryParamsResponse); !ok {
+		return nil, fmt.Errorf("failed to query consensus params")
+	} else {
+		// convert our params to cometbft params
+		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds) // TODO verify this conversion
+		cs = &types1.ConsensusParams{
+			Block: &types1.BlockParams{
+				MaxBytes: r.Params.Block.MaxBytes,
+				MaxGas:   r.Params.Block.MaxGas,
+			},
+			Evidence: &types1.EvidenceParams{
+				MaxAgeNumBlocks: r.Params.Evidence.MaxAgeNumBlocks,
+				MaxAgeDuration:  evidenceMaxDuration,
+			},
+			Validator: &types1.ValidatorParams{
+				PubKeyTypes: r.Params.Validator.PubKeyTypes,
+			},
+			Version: &types1.VersionParams{
+				App: r.Params.Version.App,
+			},
+			Abci: &types1.ABCIParams{
+				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
+			},
+		}
+	}
+	return cs, nil
 }
 
 func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, commitHeight int64) int64 {

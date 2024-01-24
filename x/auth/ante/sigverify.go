@@ -171,7 +171,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	for i := range signers {
-		err = svd.authenticate(ctx, sigTx, simulate, signers[i], signatures[i], pubKeys[i])
+		err = svd.authenticate(ctx, sigTx, signers[i], signatures[i], pubKeys[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -204,7 +204,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 }
 
 // authenticate the authentication of the TX for a specific tx signer.
-func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, simulate bool, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
 	acc, err := GetSignerAcc(ctx, svd.ak, signer)
 	if err != nil {
 		return err
@@ -213,18 +213,18 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 	// the account is without a pubkey, let's attempt to check if in the
 	// tx we were correctly provided a valid pubkey.
 	if acc.GetPubKey() == nil {
-		err = svd.setPubKey(ctx.IsSigverifyTx(), simulate, acc, txPubKey)
+		err = svd.setPubKey(ctx.IsSigverifyTx(), ctx.ExecMode() == sdk.ExecModeSimulate, acc, txPubKey)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = svd.consumeSignatureGas(ctx, simulate, acc.GetPubKey(), sig)
+	err = svd.consumeSignatureGas(ctx, acc.GetPubKey(), sig)
 	if err != nil {
 		return err
 	}
 
-	err = svd.verifySig(ctx, simulate, tx, acc, sig)
+	err = svd.verifySig(ctx, tx, acc, sig)
 	if err != nil {
 		return err
 	}
@@ -241,11 +241,10 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 // consumeSignatureGas will consume gas according to the pub-key being verified.
 func (svd SigVerificationDecorator) consumeSignatureGas(
 	ctx sdk.Context,
-	simulate bool,
 	pubKey cryptotypes.PubKey,
 	signature signing.SignatureV2,
 ) error {
-	if simulate && pubKey == nil {
+	if ctx.ExecMode() == sdk.ExecModeSimulate && pubKey == nil {
 		pubKey = simSecp256k1Pubkey
 	}
 
@@ -264,7 +263,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 }
 
 // verifySig will verify the signature of the provided signer account.
-func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
+func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
 	if sig.Sequence != acc.GetSequence() {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
@@ -275,7 +274,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 	// we're in simulation mode, or in ReCheckTx, or context is not
 	// on sig verify tx, then we do not need to verify the signatures
 	// in the tx.
-	if simulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
+	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
 		return nil
 	}
 

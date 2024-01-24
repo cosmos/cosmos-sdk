@@ -48,13 +48,17 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 		return nil, fmt.Errorf("invalid tx fees: %w", err)
 	}
 	// set fee payer
-	feePayer := decodedTx.Signers[0]
-	if decodedTx.Tx.AuthInfo.Fee.Payer != "" {
-		feePayer, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Payer)
-		if err != nil {
-			return nil, err
+	var feePayer []byte
+	if len(decodedTx.Signers) != 0 {
+		feePayer = decodedTx.Signers[0]
+		if decodedTx.Tx.AuthInfo.Fee.Payer != "" {
+			feePayer, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Payer)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
+
 	// fee granter
 	var feeGranter []byte
 	if decodedTx.Tx.AuthInfo.Fee.Granter != "" {

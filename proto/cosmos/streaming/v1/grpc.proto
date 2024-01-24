@@ -6,9 +6,10 @@ option go_package = "cosmossdk.io/server/v2/streaming";
 
 // ListenDeliverBlockRequest is the request type for the ListenDeliverBlock RPC method
 message ListenDeliverBlockRequest {
-  int64                block_height = 1;
-  repeated Transaction txs          = 2;
-  repeated Event       events       = 3;
+  int64                 block_height = 1;
+  repeated bytes        txs          = 2;
+  repeated Event        events       = 3;
+  repeated ExecTxResult tx_results   = 4;
 }
 
 // ListenDeliverBlockResponse is the response type for the ListenDeliverBlock RPC method
@@ -55,12 +56,6 @@ message Event {
 message EventAttribute {
   string key   = 1;
   string value = 2;
-}
-
-// Transactions is the transaction bytes and the associated result
-message Transaction {
-  bytes        tx_bytes = 1;
-  ExecTxResult result   = 2;
 }
 
 // ExecTxResult contains results of executing one individual transaction.

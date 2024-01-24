@@ -250,7 +250,6 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	// TODO: consensus has access query router, grpc or appmanger, to query consensuns param info
 	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err

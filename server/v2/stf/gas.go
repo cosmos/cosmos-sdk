@@ -26,7 +26,7 @@ type Store struct {
 // TODO: users should be able to swap gas store implementations in order to have different gas configs, do this later as it will be easier later on
 
 // TODO: add this to stf
-func New( gc store.GasConfig) store.WritableState {
+func New(gc store.GasConfig) store.WritableState {
 	return &Store{
 		gasConfig: gc,
 	}

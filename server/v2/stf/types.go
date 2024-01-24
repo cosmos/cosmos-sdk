@@ -1,8 +1,9 @@
 package stf
 
 import (
-	"cosmossdk.io/server/v2/core/transaction"
 	"google.golang.org/protobuf/proto"
+
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
 func typeName(msg transaction.Type) string {

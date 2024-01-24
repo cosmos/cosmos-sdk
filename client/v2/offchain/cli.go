@@ -111,6 +111,6 @@ func VerifyFile() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagFileFormat, "json", "Choose whats the file format to be verified (json|text)")
+	cmd.Flags().String(flagFileFormat, "json", "Choose what's the file format to be verified (json|text)")
 	return cmd
 }

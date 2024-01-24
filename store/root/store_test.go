@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
 	coreheader "cosmossdk.io/core/header"
@@ -12,6 +11,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"

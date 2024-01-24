@@ -7,11 +7,11 @@ import (
 	"io"
 	"math"
 
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"

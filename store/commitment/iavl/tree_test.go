@@ -3,12 +3,12 @@ package iavl
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2/commitment"
+	dbm "cosmossdk.io/store/v2/db"
 )
 
 func TestCommitterSuite(t *testing.T) {

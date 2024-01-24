@@ -16,10 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
@@ -120,24 +116,6 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 		clientCtx = clientCtx.WithCmdContext(cmd.Context())
 		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
-
-		// enable sign mode textual
-		// the config is always overwritten as we need to have set the flags to the client context
-		// this ensures that the context has the correct client.
-		if !clientCtx.Offline {
-			b.TxConfigOpts.EnabledSignModes = append(b.TxConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-			b.TxConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
-
-			txConfig, err := authtx.NewTxConfigWithOptions(
-				codec.NewProtoCodec(clientCtx.InterfaceRegistry),
-				b.TxConfigOpts,
-			)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithTxConfig(txConfig)
-		}
 
 		// set signer to signer field if empty
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))

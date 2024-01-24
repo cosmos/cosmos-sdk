@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.2
-	cosmossdk.io/client/v2 v2.0.0-beta.1.0.20240118205803-02b5997c5192
+	cosmossdk.io/client/v2 v2.0.0-beta.1.0.20240124105859-5ad1805d0e79
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -27,7 +27,7 @@ require (
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.18.1
+	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/protobuf v1.32.0
 )

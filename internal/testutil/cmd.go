@@ -38,14 +38,12 @@ func ResetArgs(cmd *cobra.Command) {
 			}
 			if err := v.Replace(defSliceVal); err != nil {
 				panic(fmt.Errorf("error resetting argument <%s> with default value <%+v>: %v", pf.Name, defSliceVal, err))
-
 			}
 			return
 		}
 		// handle pflag.Value
 		if err := pf.Value.Set(pf.DefValue); err != nil {
 			panic(fmt.Errorf("error resetting argument <%s> with default value <%s>: %v", pf.Name, pf.DefValue, err))
-
 		}
 	})
 }

@@ -39,7 +39,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` for modifying how long a proposal can be cancelled after it has been submitted.
 * [#18445](https://github.com/cosmos/cosmos-sdk/pull/18445) Extend gov config.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Repurpose `govcliutils.NormalizeProposalType` to work for gov v1 proposal types.
-* [#18707](https://github.com/cosmos/cosmos-sdk/pull/18707) Improve genesis validation.
 
 ### State Machine Breaking
 

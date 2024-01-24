@@ -15,7 +15,7 @@ import (
 var _ protoreflect.List = (*_ListenDeliverBlockRequest_2_list)(nil)
 
 type _ListenDeliverBlockRequest_2_list struct {
-	list *[]*Transaction
+	list *[][]byte
 }
 
 func (x *_ListenDeliverBlockRequest_2_list) Len() int {
@@ -26,37 +26,32 @@ func (x *_ListenDeliverBlockRequest_2_list) Len() int {
 }
 
 func (x *_ListenDeliverBlockRequest_2_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+	return protoreflect.ValueOfBytes((*x.list)[i])
 }
 
 func (x *_ListenDeliverBlockRequest_2_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Transaction)
+	valueUnwrapped := value.Bytes()
+	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_ListenDeliverBlockRequest_2_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Transaction)
+	valueUnwrapped := value.Bytes()
+	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_ListenDeliverBlockRequest_2_list) AppendMutable() protoreflect.Value {
-	v := new(Transaction)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
+	panic(fmt.Errorf("AppendMutable can not be called on message ListenDeliverBlockRequest at list field Txs as it is not of Message kind"))
 }
 
 func (x *_ListenDeliverBlockRequest_2_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
 	*x.list = (*x.list)[:n]
 }
 
 func (x *_ListenDeliverBlockRequest_2_list) NewElement() protoreflect.Value {
-	v := new(Transaction)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
+	var v []byte
+	return protoreflect.ValueOfBytes(v)
 }
 
 func (x *_ListenDeliverBlockRequest_2_list) IsValid() bool {
@@ -114,11 +109,63 @@ func (x *_ListenDeliverBlockRequest_3_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_ListenDeliverBlockRequest_4_list)(nil)
+
+type _ListenDeliverBlockRequest_4_list struct {
+	list *[]*ExecTxResult
+}
+
+func (x *_ListenDeliverBlockRequest_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_ListenDeliverBlockRequest_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_ListenDeliverBlockRequest_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ExecTxResult)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_ListenDeliverBlockRequest_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ExecTxResult)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_ListenDeliverBlockRequest_4_list) AppendMutable() protoreflect.Value {
+	v := new(ExecTxResult)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_ListenDeliverBlockRequest_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_ListenDeliverBlockRequest_4_list) NewElement() protoreflect.Value {
+	v := new(ExecTxResult)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_ListenDeliverBlockRequest_4_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_ListenDeliverBlockRequest              protoreflect.MessageDescriptor
 	fd_ListenDeliverBlockRequest_block_height protoreflect.FieldDescriptor
 	fd_ListenDeliverBlockRequest_txs          protoreflect.FieldDescriptor
 	fd_ListenDeliverBlockRequest_events       protoreflect.FieldDescriptor
+	fd_ListenDeliverBlockRequest_tx_results   protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -127,6 +174,7 @@ func init() {
 	fd_ListenDeliverBlockRequest_block_height = md_ListenDeliverBlockRequest.Fields().ByName("block_height")
 	fd_ListenDeliverBlockRequest_txs = md_ListenDeliverBlockRequest.Fields().ByName("txs")
 	fd_ListenDeliverBlockRequest_events = md_ListenDeliverBlockRequest.Fields().ByName("events")
+	fd_ListenDeliverBlockRequest_tx_results = md_ListenDeliverBlockRequest.Fields().ByName("tx_results")
 }
 
 var _ protoreflect.Message = (*fastReflection_ListenDeliverBlockRequest)(nil)
@@ -212,6 +260,12 @@ func (x *fastReflection_ListenDeliverBlockRequest) Range(f func(protoreflect.Fie
 			return
 		}
 	}
+	if len(x.TxResults) != 0 {
+		value := protoreflect.ValueOfList(&_ListenDeliverBlockRequest_4_list{list: &x.TxResults})
+		if !f(fd_ListenDeliverBlockRequest_tx_results, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -233,6 +287,8 @@ func (x *fastReflection_ListenDeliverBlockRequest) Has(fd protoreflect.FieldDesc
 		return len(x.Txs) != 0
 	case "cosmos.streaming.v1.ListenDeliverBlockRequest.events":
 		return len(x.Events) != 0
+	case "cosmos.streaming.v1.ListenDeliverBlockRequest.tx_results":
+		return len(x.TxResults) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.ListenDeliverBlockRequest"))
@@ -255,6 +311,8 @@ func (x *fastReflection_ListenDeliverBlockRequest) Clear(fd protoreflect.FieldDe
 		x.Txs = nil
 	case "cosmos.streaming.v1.ListenDeliverBlockRequest.events":
 		x.Events = nil
+	case "cosmos.streaming.v1.ListenDeliverBlockRequest.tx_results":
+		x.TxResults = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.ListenDeliverBlockRequest"))
@@ -286,6 +344,12 @@ func (x *fastReflection_ListenDeliverBlockRequest) Get(descriptor protoreflect.F
 		}
 		listValue := &_ListenDeliverBlockRequest_3_list{list: &x.Events}
 		return protoreflect.ValueOfList(listValue)
+	case "cosmos.streaming.v1.ListenDeliverBlockRequest.tx_results":
+		if len(x.TxResults) == 0 {
+			return protoreflect.ValueOfList(&_ListenDeliverBlockRequest_4_list{})
+		}
+		listValue := &_ListenDeliverBlockRequest_4_list{list: &x.TxResults}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.ListenDeliverBlockRequest"))
@@ -316,6 +380,10 @@ func (x *fastReflection_ListenDeliverBlockRequest) Set(fd protoreflect.FieldDesc
 		lv := value.List()
 		clv := lv.(*_ListenDeliverBlockRequest_3_list)
 		x.Events = *clv.list
+	case "cosmos.streaming.v1.ListenDeliverBlockRequest.tx_results":
+		lv := value.List()
+		clv := lv.(*_ListenDeliverBlockRequest_4_list)
+		x.TxResults = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.ListenDeliverBlockRequest"))
@@ -338,7 +406,7 @@ func (x *fastReflection_ListenDeliverBlockRequest) Mutable(fd protoreflect.Field
 	switch fd.FullName() {
 	case "cosmos.streaming.v1.ListenDeliverBlockRequest.txs":
 		if x.Txs == nil {
-			x.Txs = []*Transaction{}
+			x.Txs = [][]byte{}
 		}
 		value := &_ListenDeliverBlockRequest_2_list{list: &x.Txs}
 		return protoreflect.ValueOfList(value)
@@ -347,6 +415,12 @@ func (x *fastReflection_ListenDeliverBlockRequest) Mutable(fd protoreflect.Field
 			x.Events = []*Event{}
 		}
 		value := &_ListenDeliverBlockRequest_3_list{list: &x.Events}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.streaming.v1.ListenDeliverBlockRequest.tx_results":
+		if x.TxResults == nil {
+			x.TxResults = []*ExecTxResult{}
+		}
+		value := &_ListenDeliverBlockRequest_4_list{list: &x.TxResults}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.streaming.v1.ListenDeliverBlockRequest.block_height":
 		panic(fmt.Errorf("field block_height of message cosmos.streaming.v1.ListenDeliverBlockRequest is not mutable"))
@@ -366,11 +440,14 @@ func (x *fastReflection_ListenDeliverBlockRequest) NewField(fd protoreflect.Fiel
 	case "cosmos.streaming.v1.ListenDeliverBlockRequest.block_height":
 		return protoreflect.ValueOfInt64(int64(0))
 	case "cosmos.streaming.v1.ListenDeliverBlockRequest.txs":
-		list := []*Transaction{}
+		list := [][]byte{}
 		return protoreflect.ValueOfList(&_ListenDeliverBlockRequest_2_list{list: &list})
 	case "cosmos.streaming.v1.ListenDeliverBlockRequest.events":
 		list := []*Event{}
 		return protoreflect.ValueOfList(&_ListenDeliverBlockRequest_3_list{list: &list})
+	case "cosmos.streaming.v1.ListenDeliverBlockRequest.tx_results":
+		list := []*ExecTxResult{}
+		return protoreflect.ValueOfList(&_ListenDeliverBlockRequest_4_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.ListenDeliverBlockRequest"))
@@ -444,13 +521,19 @@ func (x *fastReflection_ListenDeliverBlockRequest) ProtoMethods() *protoiface.Me
 			n += 1 + runtime.Sov(uint64(x.BlockHeight))
 		}
 		if len(x.Txs) > 0 {
-			for _, e := range x.Txs {
-				l = options.Size(e)
+			for _, b := range x.Txs {
+				l = len(b)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
 		if len(x.Events) > 0 {
 			for _, e := range x.Events {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.TxResults) > 0 {
+			for _, e := range x.TxResults {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -484,6 +567,22 @@ func (x *fastReflection_ListenDeliverBlockRequest) ProtoMethods() *protoiface.Me
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
+		if len(x.TxResults) > 0 {
+			for iNdEx := len(x.TxResults) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.TxResults[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
+		}
 		if len(x.Events) > 0 {
 			for iNdEx := len(x.Events) - 1; iNdEx >= 0; iNdEx-- {
 				encoded, err := options.Marshal(x.Events[iNdEx])
@@ -502,16 +601,9 @@ func (x *fastReflection_ListenDeliverBlockRequest) ProtoMethods() *protoiface.Me
 		}
 		if len(x.Txs) > 0 {
 			for iNdEx := len(x.Txs) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Txs[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i -= len(x.Txs[iNdEx])
+				copy(dAtA[i:], x.Txs[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Txs[iNdEx])))
 				i--
 				dAtA[i] = 0x12
 			}
@@ -593,7 +685,7 @@ func (x *fastReflection_ListenDeliverBlockRequest) ProtoMethods() *protoiface.Me
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Txs", wireType)
 				}
-				var msglen int
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -603,25 +695,23 @@ func (x *fastReflection_ListenDeliverBlockRequest) ProtoMethods() *protoiface.Me
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + msglen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Txs = append(x.Txs, &Transaction{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Txs[len(x.Txs)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
+				x.Txs = append(x.Txs, make([]byte, postIndex-iNdEx))
+				copy(x.Txs[len(x.Txs)-1], dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -654,6 +744,40 @@ func (x *fastReflection_ListenDeliverBlockRequest) ProtoMethods() *protoiface.Me
 				}
 				x.Events = append(x.Events, &Event{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Events[len(x.Events)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TxResults", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.TxResults = append(x.TxResults, &ExecTxResult{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TxResults[len(x.TxResults)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -2013,15 +2137,17 @@ func (x *fastReflection_ListenStateChangesResponse) ProtoMethods() *protoiface.M
 }
 
 var (
-	md_StoreKVPair        protoreflect.MessageDescriptor
-	fd_StoreKVPair_key    protoreflect.FieldDescriptor
-	fd_StoreKVPair_value  protoreflect.FieldDescriptor
-	fd_StoreKVPair_delete protoreflect.FieldDescriptor
+	md_StoreKVPair         protoreflect.MessageDescriptor
+	fd_StoreKVPair_address protoreflect.FieldDescriptor
+	fd_StoreKVPair_key     protoreflect.FieldDescriptor
+	fd_StoreKVPair_value   protoreflect.FieldDescriptor
+	fd_StoreKVPair_delete  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_streaming_v1_grpc_proto_init()
 	md_StoreKVPair = File_cosmos_streaming_v1_grpc_proto.Messages().ByName("StoreKVPair")
+	fd_StoreKVPair_address = md_StoreKVPair.Fields().ByName("address")
 	fd_StoreKVPair_key = md_StoreKVPair.Fields().ByName("key")
 	fd_StoreKVPair_value = md_StoreKVPair.Fields().ByName("value")
 	fd_StoreKVPair_delete = md_StoreKVPair.Fields().ByName("delete")
@@ -2092,6 +2218,12 @@ func (x *fastReflection_StoreKVPair) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_StoreKVPair) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Address) != 0 {
+		value := protoreflect.ValueOfBytes(x.Address)
+		if !f(fd_StoreKVPair_address, value) {
+			return
+		}
+	}
 	if len(x.Key) != 0 {
 		value := protoreflect.ValueOfBytes(x.Key)
 		if !f(fd_StoreKVPair_key, value) {
@@ -2125,6 +2257,8 @@ func (x *fastReflection_StoreKVPair) Range(f func(protoreflect.FieldDescriptor, 
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_StoreKVPair) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "cosmos.streaming.v1.StoreKVPair.address":
+		return len(x.Address) != 0
 	case "cosmos.streaming.v1.StoreKVPair.key":
 		return len(x.Key) != 0
 	case "cosmos.streaming.v1.StoreKVPair.value":
@@ -2147,6 +2281,8 @@ func (x *fastReflection_StoreKVPair) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_StoreKVPair) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "cosmos.streaming.v1.StoreKVPair.address":
+		x.Address = nil
 	case "cosmos.streaming.v1.StoreKVPair.key":
 		x.Key = nil
 	case "cosmos.streaming.v1.StoreKVPair.value":
@@ -2169,6 +2305,9 @@ func (x *fastReflection_StoreKVPair) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_StoreKVPair) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "cosmos.streaming.v1.StoreKVPair.address":
+		value := x.Address
+		return protoreflect.ValueOfBytes(value)
 	case "cosmos.streaming.v1.StoreKVPair.key":
 		value := x.Key
 		return protoreflect.ValueOfBytes(value)
@@ -2198,6 +2337,8 @@ func (x *fastReflection_StoreKVPair) Get(descriptor protoreflect.FieldDescriptor
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_StoreKVPair) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "cosmos.streaming.v1.StoreKVPair.address":
+		x.Address = value.Bytes()
 	case "cosmos.streaming.v1.StoreKVPair.key":
 		x.Key = value.Bytes()
 	case "cosmos.streaming.v1.StoreKVPair.value":
@@ -2224,6 +2365,8 @@ func (x *fastReflection_StoreKVPair) Set(fd protoreflect.FieldDescriptor, value 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_StoreKVPair) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.streaming.v1.StoreKVPair.address":
+		panic(fmt.Errorf("field address of message cosmos.streaming.v1.StoreKVPair is not mutable"))
 	case "cosmos.streaming.v1.StoreKVPair.key":
 		panic(fmt.Errorf("field key of message cosmos.streaming.v1.StoreKVPair is not mutable"))
 	case "cosmos.streaming.v1.StoreKVPair.value":
@@ -2243,6 +2386,8 @@ func (x *fastReflection_StoreKVPair) Mutable(fd protoreflect.FieldDescriptor) pr
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_StoreKVPair) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.streaming.v1.StoreKVPair.address":
+		return protoreflect.ValueOfBytes(nil)
 	case "cosmos.streaming.v1.StoreKVPair.key":
 		return protoreflect.ValueOfBytes(nil)
 	case "cosmos.streaming.v1.StoreKVPair.value":
@@ -2318,6 +2463,10 @@ func (x *fastReflection_StoreKVPair) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		l = len(x.Address)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		l = len(x.Key)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -2366,19 +2515,26 @@ func (x *fastReflection_StoreKVPair) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0
 			}
 			i--
-			dAtA[i] = 0x18
+			dAtA[i] = 0x20
 		}
 		if len(x.Value) > 0 {
 			i -= len(x.Value)
 			copy(dAtA[i:], x.Value)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Value)))
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x1a
 		}
 		if len(x.Key) > 0 {
 			i -= len(x.Key)
 			copy(dAtA[i:], x.Key)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Key)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Address) > 0 {
+			i -= len(x.Address)
+			copy(dAtA[i:], x.Address)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Address)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -2433,6 +2589,40 @@ func (x *fastReflection_StoreKVPair) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Address = append(x.Address[:0], dAtA[iNdEx:postIndex]...)
+				if x.Address == nil {
+					x.Address = []byte{}
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
 				}
 				var byteLen int
@@ -2465,7 +2655,7 @@ func (x *fastReflection_StoreKVPair) ProtoMethods() *protoiface.Methods {
 					x.Key = []byte{}
 				}
 				iNdEx = postIndex
-			case 2:
+			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
 				}
@@ -2499,7 +2689,7 @@ func (x *fastReflection_StoreKVPair) ProtoMethods() *protoiface.Methods {
 					x.Value = []byte{}
 				}
 				iNdEx = postIndex
-			case 3:
+			case 4:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Delete", wireType)
 				}
@@ -3596,507 +3786,6 @@ func (x *fastReflection_EventAttribute) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var (
-	md_Transaction          protoreflect.MessageDescriptor
-	fd_Transaction_tx_bytes protoreflect.FieldDescriptor
-	fd_Transaction_result   protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_cosmos_streaming_v1_grpc_proto_init()
-	md_Transaction = File_cosmos_streaming_v1_grpc_proto.Messages().ByName("Transaction")
-	fd_Transaction_tx_bytes = md_Transaction.Fields().ByName("tx_bytes")
-	fd_Transaction_result = md_Transaction.Fields().ByName("result")
-}
-
-var _ protoreflect.Message = (*fastReflection_Transaction)(nil)
-
-type fastReflection_Transaction Transaction
-
-func (x *Transaction) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Transaction)(x)
-}
-
-func (x *Transaction) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_streaming_v1_grpc_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_Transaction_messageType fastReflection_Transaction_messageType
-var _ protoreflect.MessageType = fastReflection_Transaction_messageType{}
-
-type fastReflection_Transaction_messageType struct{}
-
-func (x fastReflection_Transaction_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Transaction)(nil)
-}
-func (x fastReflection_Transaction_messageType) New() protoreflect.Message {
-	return new(fastReflection_Transaction)
-}
-func (x fastReflection_Transaction_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Transaction
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_Transaction) Descriptor() protoreflect.MessageDescriptor {
-	return md_Transaction
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Transaction) Type() protoreflect.MessageType {
-	return _fastReflection_Transaction_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Transaction) New() protoreflect.Message {
-	return new(fastReflection_Transaction)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_Transaction) Interface() protoreflect.ProtoMessage {
-	return (*Transaction)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_Transaction) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.TxBytes) != 0 {
-		value := protoreflect.ValueOfBytes(x.TxBytes)
-		if !f(fd_Transaction_tx_bytes, value) {
-			return
-		}
-	}
-	if x.Result != nil {
-		value := protoreflect.ValueOfMessage(x.Result.ProtoReflect())
-		if !f(fd_Transaction_result, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_Transaction) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "cosmos.streaming.v1.Transaction.tx_bytes":
-		return len(x.TxBytes) != 0
-	case "cosmos.streaming.v1.Transaction.result":
-		return x.Result != nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.Transaction"))
-		}
-		panic(fmt.Errorf("message cosmos.streaming.v1.Transaction does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Transaction) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "cosmos.streaming.v1.Transaction.tx_bytes":
-		x.TxBytes = nil
-	case "cosmos.streaming.v1.Transaction.result":
-		x.Result = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.Transaction"))
-		}
-		panic(fmt.Errorf("message cosmos.streaming.v1.Transaction does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Transaction) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "cosmos.streaming.v1.Transaction.tx_bytes":
-		value := x.TxBytes
-		return protoreflect.ValueOfBytes(value)
-	case "cosmos.streaming.v1.Transaction.result":
-		value := x.Result
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.Transaction"))
-		}
-		panic(fmt.Errorf("message cosmos.streaming.v1.Transaction does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Transaction) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "cosmos.streaming.v1.Transaction.tx_bytes":
-		x.TxBytes = value.Bytes()
-	case "cosmos.streaming.v1.Transaction.result":
-		x.Result = value.Message().Interface().(*ExecTxResult)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.Transaction"))
-		}
-		panic(fmt.Errorf("message cosmos.streaming.v1.Transaction does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Transaction) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.streaming.v1.Transaction.result":
-		if x.Result == nil {
-			x.Result = new(ExecTxResult)
-		}
-		return protoreflect.ValueOfMessage(x.Result.ProtoReflect())
-	case "cosmos.streaming.v1.Transaction.tx_bytes":
-		panic(fmt.Errorf("field tx_bytes of message cosmos.streaming.v1.Transaction is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.Transaction"))
-		}
-		panic(fmt.Errorf("message cosmos.streaming.v1.Transaction does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Transaction) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.streaming.v1.Transaction.tx_bytes":
-		return protoreflect.ValueOfBytes(nil)
-	case "cosmos.streaming.v1.Transaction.result":
-		m := new(ExecTxResult)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.streaming.v1.Transaction"))
-		}
-		panic(fmt.Errorf("message cosmos.streaming.v1.Transaction does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Transaction) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.streaming.v1.Transaction", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Transaction) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Transaction) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_Transaction) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_Transaction) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Transaction)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.TxBytes)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Result != nil {
-			l = options.Size(x.Result)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Transaction)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.Result != nil {
-			encoded, err := options.Marshal(x.Result)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.TxBytes) > 0 {
-			i -= len(x.TxBytes)
-			copy(dAtA[i:], x.TxBytes)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TxBytes)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Transaction)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Transaction: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Transaction: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TxBytes", wireType)
-				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.TxBytes = append(x.TxBytes[:0], dAtA[iNdEx:postIndex]...)
-				if x.TxBytes == nil {
-					x.TxBytes = []byte{}
-				}
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Result == nil {
-					x.Result = &ExecTxResult{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Result); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
 var _ protoreflect.List = (*_ExecTxResult_7_list)(nil)
 
 type _ExecTxResult_7_list struct {
@@ -4182,7 +3871,7 @@ func (x *ExecTxResult) ProtoReflect() protoreflect.Message {
 }
 
 func (x *ExecTxResult) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_streaming_v1_grpc_proto_msgTypes[8]
+	mi := &file_cosmos_streaming_v1_grpc_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5012,9 +4701,10 @@ type ListenDeliverBlockRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BlockHeight int64          `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	Txs         []*Transaction `protobuf:"bytes,2,rep,name=txs,proto3" json:"txs,omitempty"`
-	Events      []*Event       `protobuf:"bytes,3,rep,name=events,proto3" json:"events,omitempty"`
+	BlockHeight int64           `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	Txs         [][]byte        `protobuf:"bytes,2,rep,name=txs,proto3" json:"txs,omitempty"`
+	Events      []*Event        `protobuf:"bytes,3,rep,name=events,proto3" json:"events,omitempty"`
+	TxResults   []*ExecTxResult `protobuf:"bytes,4,rep,name=tx_results,json=txResults,proto3" json:"tx_results,omitempty"`
 }
 
 func (x *ListenDeliverBlockRequest) Reset() {
@@ -5044,7 +4734,7 @@ func (x *ListenDeliverBlockRequest) GetBlockHeight() int64 {
 	return 0
 }
 
-func (x *ListenDeliverBlockRequest) GetTxs() []*Transaction {
+func (x *ListenDeliverBlockRequest) GetTxs() [][]byte {
 	if x != nil {
 		return x.Txs
 	}
@@ -5054,6 +4744,13 @@ func (x *ListenDeliverBlockRequest) GetTxs() []*Transaction {
 func (x *ListenDeliverBlockRequest) GetEvents() []*Event {
 	if x != nil {
 		return x.Events
+	}
+	return nil
+}
+
+func (x *ListenDeliverBlockRequest) GetTxResults() []*ExecTxResult {
+	if x != nil {
+		return x.TxResults
 	}
 	return nil
 }
@@ -5170,9 +4867,15 @@ type StoreKVPair struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key    []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"` // the store key for the KVStore this pair originates from
-	Value  []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	Delete bool   `protobuf:"varint,3,opt,name=delete,proto3" json:"delete,omitempty"` // true indicates a delete operation, false indicates a set operation
+	// address defines the address of the account the state changes are coming from.
+	// In case of modules you can expect a stringified
+	Address []byte `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// key defines the key of the address that changed.
+	Key []byte `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// value defines the value that changed, empty in case of removal.
+	Value []byte `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	// delete defines if the key was removed.
+	Delete bool `protobuf:"varint,4,opt,name=delete,proto3" json:"delete,omitempty"` // true indicates a delete operation, false indicates a set operation
 }
 
 func (x *StoreKVPair) Reset() {
@@ -5193,6 +4896,13 @@ func (*StoreKVPair) ProtoMessage() {}
 // Deprecated: Use StoreKVPair.ProtoReflect.Descriptor instead.
 func (*StoreKVPair) Descriptor() ([]byte, []int) {
 	return file_cosmos_streaming_v1_grpc_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *StoreKVPair) GetAddress() []byte {
+	if x != nil {
+		return x.Address
+	}
+	return nil
 }
 
 func (x *StoreKVPair) GetKey() []byte {
@@ -5304,50 +5014,6 @@ func (x *EventAttribute) GetValue() string {
 	return ""
 }
 
-// Transactions is the transaction bytes and the associated result
-type Transaction struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	TxBytes []byte        `protobuf:"bytes,1,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
-	Result  *ExecTxResult `protobuf:"bytes,2,opt,name=result,proto3" json:"result,omitempty"`
-}
-
-func (x *Transaction) Reset() {
-	*x = Transaction{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_streaming_v1_grpc_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Transaction) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Transaction) ProtoMessage() {}
-
-// Deprecated: Use Transaction.ProtoReflect.Descriptor instead.
-func (*Transaction) Descriptor() ([]byte, []int) {
-	return file_cosmos_streaming_v1_grpc_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *Transaction) GetTxBytes() []byte {
-	if x != nil {
-		return x.TxBytes
-	}
-	return nil
-}
-
-func (x *Transaction) GetResult() *ExecTxResult {
-	if x != nil {
-		return x.Result
-	}
-	return nil
-}
-
 // ExecTxResult contains results of executing one individual transaction.
 type ExecTxResult struct {
 	state         protoimpl.MessageState
@@ -5367,7 +5033,7 @@ type ExecTxResult struct {
 func (x *ExecTxResult) Reset() {
 	*x = ExecTxResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_streaming_v1_grpc_proto_msgTypes[8]
+		mi := &file_cosmos_streaming_v1_grpc_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5381,7 +5047,7 @@ func (*ExecTxResult) ProtoMessage() {}
 
 // Deprecated: Use ExecTxResult.ProtoReflect.Descriptor instead.
 func (*ExecTxResult) Descriptor() ([]byte, []int) {
-	return file_cosmos_streaming_v1_grpc_proto_rawDescGZIP(), []int{8}
+	return file_cosmos_streaming_v1_grpc_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ExecTxResult) GetCode() uint32 {
@@ -5446,17 +5112,19 @@ var file_cosmos_streaming_v1_grpc_proto_rawDesc = []byte{
 	0x0a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69,
 	0x6e, 0x67, 0x2f, 0x76, 0x31, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x12, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69,
-	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x22, 0xa6, 0x01, 0x0a, 0x19, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x22, 0xc6, 0x01, 0x0a, 0x19, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e,
 	0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x68, 0x65, 0x69,
 	0x67, 0x68, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
-	0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x32, 0x0a, 0x03, 0x74, 0x78, 0x73, 0x18, 0x02, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72,
-	0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61,
-	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x03, 0x74, 0x78, 0x73, 0x12, 0x32, 0x0a, 0x06, 0x65, 0x76,
-	0x65, 0x6e, 0x74, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
-	0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x06, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x22, 0x1c,
+	0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x74, 0x78, 0x73, 0x18, 0x02, 0x20,
+	0x03, 0x28, 0x0c, 0x52, 0x03, 0x74, 0x78, 0x73, 0x12, 0x32, 0x0a, 0x06, 0x65, 0x76, 0x65, 0x6e,
+	0x74, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x52, 0x06, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x12, 0x40, 0x0a, 0x0a,
+	0x74, 0x78, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x21, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x54, 0x78, 0x52, 0x65, 0x73,
+	0x75, 0x6c, 0x74, 0x52, 0x09, 0x74, 0x78, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x22, 0x1c,
 	0x0a, 0x1a, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x42,
 	0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x9a, 0x01, 0x0a,
 	0x19, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x43, 0x68, 0x61, 0x6e,
@@ -5470,72 +5138,67 @@ var file_cosmos_streaming_v1_grpc_proto_rawDesc = []byte{
 	0x0a, 0x08, 0x61, 0x70, 0x70, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c,
 	0x52, 0x07, 0x61, 0x70, 0x70, 0x48, 0x61, 0x73, 0x68, 0x22, 0x1c, 0x0a, 0x1a, 0x4c, 0x69, 0x73,
 	0x74, 0x65, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4d, 0x0a, 0x0b, 0x53, 0x74, 0x6f, 0x72, 0x65,
-	0x4b, 0x56, 0x50, 0x61, 0x69, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x16,
-	0x0a, 0x06, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06,
-	0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x22, 0x60, 0x0a, 0x05, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12,
-	0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74,
-	0x79, 0x70, 0x65, 0x12, 0x43, 0x0a, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65,
-	0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x52, 0x0a, 0x61, 0x74,
-	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x22, 0x38, 0x0a, 0x0e, 0x45, 0x76, 0x65, 0x6e,
-	0x74, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65,
-	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x22, 0x63, 0x0a, 0x0b, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f,
-	0x6e, 0x12, 0x19, 0x0a, 0x08, 0x74, 0x78, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x07, 0x74, 0x78, 0x42, 0x79, 0x74, 0x65, 0x73, 0x12, 0x39, 0x0a, 0x06,
-	0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e,
-	0x76, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x54, 0x78, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52,
-	0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x22, 0xe8, 0x01, 0x0a, 0x0c, 0x45, 0x78, 0x65, 0x63,
-	0x54, 0x78, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x12, 0x0a, 0x04,
-	0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61,
-	0x12, 0x10, 0x0a, 0x03, 0x6c, 0x6f, 0x67, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6c,
-	0x6f, 0x67, 0x12, 0x12, 0x0a, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x12, 0x1d, 0x0a, 0x0a, 0x67, 0x61, 0x73, 0x5f, 0x77, 0x61,
-	0x6e, 0x74, 0x65, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x67, 0x61, 0x73, 0x57,
-	0x61, 0x6e, 0x74, 0x65, 0x64, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x61, 0x73, 0x5f, 0x75, 0x73, 0x65,
-	0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x67, 0x61, 0x73, 0x55, 0x73, 0x65, 0x64,
-	0x12, 0x32, 0x0a, 0x06, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b,
-	0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d,
-	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x06, 0x65, 0x76,
-	0x65, 0x6e, 0x74, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6f, 0x64, 0x65, 0x73, 0x70, 0x61, 0x63,
-	0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x6f, 0x64, 0x65, 0x73, 0x70, 0x61,
-	0x63, 0x65, 0x32, 0xff, 0x01, 0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x65, 0x72, 0x53,
-	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x75, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e,
-	0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x2e, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e,
-	0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72,
-	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e,
-	0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72,
-	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x75, 0x0a,
-	0x12, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x43, 0x68, 0x61, 0x6e,
-	0x67, 0x65, 0x73, 0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72,
-	0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e,
-	0x53, 0x74, 0x61, 0x74, 0x65, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72,
-	0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e,
-	0x53, 0x74, 0x61, 0x74, 0x65, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x42, 0xc4, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
-	0x42, 0x09, 0x47, 0x72, 0x70, 0x63, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67,
-	0x2f, 0x76, 0x31, 0x3b, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x76, 0x31, 0xa2,
-	0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53,
-	0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x5c, 0x56,
-	0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x72, 0x65, 0x61,
-	0x6d, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x53, 0x74,
-	0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x67, 0x0a, 0x0b, 0x53, 0x74, 0x6f, 0x72, 0x65,
+	0x4b, 0x56, 0x50, 0x61, 0x69, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b,
+	0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x65, 0x6c, 0x65,
+	0x74, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65,
+	0x22, 0x60, 0x0a, 0x05, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x43, 0x0a,
+	0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61,
+	0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x41, 0x74, 0x74,
+	0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x52, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
+	0x65, 0x73, 0x22, 0x38, 0x0a, 0x0e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x41, 0x74, 0x74, 0x72, 0x69,
+	0x62, 0x75, 0x74, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xe8, 0x01, 0x0a,
+	0x0c, 0x45, 0x78, 0x65, 0x63, 0x54, 0x78, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x12, 0x0a,
+	0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x63, 0x6f, 0x64,
+	0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x10, 0x0a, 0x03, 0x6c, 0x6f, 0x67, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x03, 0x6c, 0x6f, 0x67, 0x12, 0x12, 0x0a, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x12, 0x1d, 0x0a, 0x0a, 0x67,
+	0x61, 0x73, 0x5f, 0x77, 0x61, 0x6e, 0x74, 0x65, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x09, 0x67, 0x61, 0x73, 0x57, 0x61, 0x6e, 0x74, 0x65, 0x64, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x61,
+	0x73, 0x5f, 0x75, 0x73, 0x65, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x67, 0x61,
+	0x73, 0x55, 0x73, 0x65, 0x64, 0x12, 0x32, 0x0a, 0x06, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x18,
+	0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
+	0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76, 0x65, 0x6e,
+	0x74, 0x52, 0x06, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6f, 0x64,
+	0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x6f,
+	0x64, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x32, 0xff, 0x01, 0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74,
+	0x65, 0x6e, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x75, 0x0a, 0x12, 0x4c,
+	0x69, 0x73, 0x74, 0x65, 0x6e, 0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x42, 0x6c, 0x6f, 0x63,
+	0x6b, 0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61,
+	0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x44, 0x65,
+	0x6c, 0x69, 0x76, 0x65, 0x72, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61,
+	0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x44, 0x65,
+	0x6c, 0x69, 0x76, 0x65, 0x72, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x75, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x53, 0x74, 0x61, 0x74,
+	0x65, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x73, 0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4c,
+	0x69, 0x73, 0x74, 0x65, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4c,
+	0x69, 0x73, 0x74, 0x65, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xc4, 0x01, 0x0a, 0x17, 0x63, 0x6f,
+	0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x42, 0x09, 0x47, 0x72, 0x70, 0x63, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x72, 0x65,
+	0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x3b, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69,
+	0x6e, 0x67, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x2e, 0x56, 0x31,
+	0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d,
+	0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x3a, 0x3a, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -5550,7 +5213,7 @@ func file_cosmos_streaming_v1_grpc_proto_rawDescGZIP() []byte {
 	return file_cosmos_streaming_v1_grpc_proto_rawDescData
 }
 
-var file_cosmos_streaming_v1_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_cosmos_streaming_v1_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_cosmos_streaming_v1_grpc_proto_goTypes = []interface{}{
 	(*ListenDeliverBlockRequest)(nil),  // 0: cosmos.streaming.v1.ListenDeliverBlockRequest
 	(*ListenDeliverBlockResponse)(nil), // 1: cosmos.streaming.v1.ListenDeliverBlockResponse
@@ -5559,25 +5222,23 @@ var file_cosmos_streaming_v1_grpc_proto_goTypes = []interface{}{
 	(*StoreKVPair)(nil),                // 4: cosmos.streaming.v1.StoreKVPair
 	(*Event)(nil),                      // 5: cosmos.streaming.v1.Event
 	(*EventAttribute)(nil),             // 6: cosmos.streaming.v1.EventAttribute
-	(*Transaction)(nil),                // 7: cosmos.streaming.v1.Transaction
-	(*ExecTxResult)(nil),               // 8: cosmos.streaming.v1.ExecTxResult
+	(*ExecTxResult)(nil),               // 7: cosmos.streaming.v1.ExecTxResult
 }
 var file_cosmos_streaming_v1_grpc_proto_depIdxs = []int32{
-	7, // 0: cosmos.streaming.v1.ListenDeliverBlockRequest.txs:type_name -> cosmos.streaming.v1.Transaction
-	5, // 1: cosmos.streaming.v1.ListenDeliverBlockRequest.events:type_name -> cosmos.streaming.v1.Event
+	5, // 0: cosmos.streaming.v1.ListenDeliverBlockRequest.events:type_name -> cosmos.streaming.v1.Event
+	7, // 1: cosmos.streaming.v1.ListenDeliverBlockRequest.tx_results:type_name -> cosmos.streaming.v1.ExecTxResult
 	4, // 2: cosmos.streaming.v1.ListenStateChangesRequest.change_set:type_name -> cosmos.streaming.v1.StoreKVPair
 	6, // 3: cosmos.streaming.v1.Event.attributes:type_name -> cosmos.streaming.v1.EventAttribute
-	8, // 4: cosmos.streaming.v1.Transaction.result:type_name -> cosmos.streaming.v1.ExecTxResult
-	5, // 5: cosmos.streaming.v1.ExecTxResult.events:type_name -> cosmos.streaming.v1.Event
-	0, // 6: cosmos.streaming.v1.ListenerService.ListenDeliverBlock:input_type -> cosmos.streaming.v1.ListenDeliverBlockRequest
-	2, // 7: cosmos.streaming.v1.ListenerService.ListenStateChanges:input_type -> cosmos.streaming.v1.ListenStateChangesRequest
-	1, // 8: cosmos.streaming.v1.ListenerService.ListenDeliverBlock:output_type -> cosmos.streaming.v1.ListenDeliverBlockResponse
-	3, // 9: cosmos.streaming.v1.ListenerService.ListenStateChanges:output_type -> cosmos.streaming.v1.ListenStateChangesResponse
-	8, // [8:10] is the sub-list for method output_type
-	6, // [6:8] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	5, // 4: cosmos.streaming.v1.ExecTxResult.events:type_name -> cosmos.streaming.v1.Event
+	0, // 5: cosmos.streaming.v1.ListenerService.ListenDeliverBlock:input_type -> cosmos.streaming.v1.ListenDeliverBlockRequest
+	2, // 6: cosmos.streaming.v1.ListenerService.ListenStateChanges:input_type -> cosmos.streaming.v1.ListenStateChangesRequest
+	1, // 7: cosmos.streaming.v1.ListenerService.ListenDeliverBlock:output_type -> cosmos.streaming.v1.ListenDeliverBlockResponse
+	3, // 8: cosmos.streaming.v1.ListenerService.ListenStateChanges:output_type -> cosmos.streaming.v1.ListenStateChangesResponse
+	7, // [7:9] is the sub-list for method output_type
+	5, // [5:7] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_streaming_v1_grpc_proto_init() }
@@ -5671,18 +5332,6 @@ func file_cosmos_streaming_v1_grpc_proto_init() {
 			}
 		}
 		file_cosmos_streaming_v1_grpc_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Transaction); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cosmos_streaming_v1_grpc_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ExecTxResult); i {
 			case 0:
 				return &v.state
@@ -5701,7 +5350,7 @@ func file_cosmos_streaming_v1_grpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_streaming_v1_grpc_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

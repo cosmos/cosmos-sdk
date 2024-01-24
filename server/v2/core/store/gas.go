@@ -10,6 +10,7 @@ type Gas = uint64
 
 // GasMeter defines an interface for gas consumption tracking.
 type GasMeter interface {
+	// TODO: modify to new interface (marko)
 	// GasConsumed returns the amount of gas consumed so far.
 	GasConsumed() Gas
 	// GasConsumedToLimit returns the gas limit if gas consumed is past the limit,

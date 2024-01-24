@@ -108,7 +108,7 @@ func newMemState() memStore {
 	return memStore{btree.NewBTreeGOptions(byKeys, btree.Options{Degree: bTreeDegree, NoLocks: true})}
 }
 
-var _ store.WritableState = memStore{}
+var _ store.Writer = memStore{}
 
 type memStore struct {
 	t *btree.BTreeG[item]
@@ -124,11 +124,11 @@ func (m memStore) Delete(key []byte) error {
 	return nil
 }
 
-func (m memStore) ApplyChangeSets(changes []store.ChangeSet) error {
+func (m memStore) ApplyChangeSets(changes []store.KVPair) error {
 	panic("not callable")
 }
 
-func (m memStore) ChangeSets() ([]store.ChangeSet, error) { panic("not callable") }
+func (m memStore) ChangeSets() ([]store.KVPair, error) { panic("not callable") }
 
 func (m memStore) Has(key []byte) (bool, error) {
 	_, found := m.t.Get(item{key: key})

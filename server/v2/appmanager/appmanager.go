@@ -32,6 +32,7 @@ type AppManager[T transaction.Tx] struct {
 
 // TODO add initgenesis and figure out how to use it
 // TODO make sure to provide defaults for handlers and configs
+// TODO: handle multimessage txs
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
 func (a AppManager[T]) BuildBlock(ctx context.Context, height, maxBlockBytes uint64) ([]T, error) {
@@ -70,7 +71,7 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 	return nil
 }
 
-func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T]) (*appmanager.BlockResponse, []store.ChangeSet, error) {
+func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T]) (*appmanager.BlockResponse, store.GetWriter, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -85,12 +86,7 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.Block
 		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
 
-	newStateChanges, err := newState.ChangeSets()
-	if err != nil {
-		return nil, nil, fmt.Errorf("change set: %w", err)
-	}
-
-	return blockResponse, newStateChanges, nil
+	return blockResponse, newState, nil
 }
 
 // ValidateTx will validate the tx against the latest storage state. This means that
@@ -105,13 +101,13 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 }
 
 // Simulate runs validation and execution flow of a Tx.
-func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, error) {
+func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, store.GetWriter, error) {
 	_, state, err := a.db.StateLatest()
 	if err != nil {
-		return appmanager.TxResult{}, err
+		return appmanager.TxResult{}, nil, err
 	}
-	result := a.stf.Simulate(ctx, state, a.simulationGasLimit, tx)
-	return result, nil
+	result, cs := a.stf.Simulate(ctx, state, a.simulationGasLimit, tx)
+	return result, cs, nil
 }
 
 // Query queries the application at the provided version.
@@ -133,9 +129,9 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 	return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
 }
 
-/* TODO query with state changes
-func (a Appmanager[T]) QueryWitStateChanges(ctx context.Context, changeset []store.ChangeSet, request Type) (response Type, err error) {
-
-
+// QueryWithState executes a query with the provided state. This allows to process a query
+// independently of the db state. For example, it can be used to process a query with temporary
+// and uncommitted state
+func (a AppManager[T]) QueryWithState(ctx context.Context, state store.GetReader, request appmanager.Type) (appmanager.Type, error) {
+	return a.stf.Query(ctx, state, a.queryGasLimit, request)
 }
-*/

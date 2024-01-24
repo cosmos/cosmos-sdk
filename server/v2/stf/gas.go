@@ -18,15 +18,16 @@ const (
 )
 
 type Store struct {
-	parent    store.WritableState
+	parent    store.Writer
 	gasMeter  store.GasMeter
 	gasConfig store.GasConfig
 }
 
-func New(p store.WritableState, gm store.GasMeter, gc store.GasConfig) store.WritableState {
+// TODO: users should be able to swap gas store implementations in order to have different gas configs, do this later as it will be easier later on
+
+// TODO: add this to stf
+func New(gc store.GasConfig) store.Writer {
 	return &Store{
-		parent:    p,
-		gasMeter:  gm,
 		gasConfig: gc,
 	}
 }
@@ -77,11 +78,11 @@ func (s *Store) Delete(key []byte) error {
 	return s.parent.Delete(key)
 }
 
-func (b *Store) ApplyChangeSets(changes []store.ChangeSet) error {
+func (b *Store) ApplyChangeSets(changes []store.KVPair) error {
 	return b.parent.ApplyChangeSets(changes)
 }
 
-func (b *Store) ChangeSets() ([]store.ChangeSet, error) {
+func (b *Store) ChangeSets() ([]store.KVPair, error) {
 	return b.parent.ChangeSets()
 }
 

@@ -23,11 +23,11 @@ func TestSTF(t *testing.T) {
 	}
 
 	stf := &STF[mock.Tx]{
-		handleMsg: func(ctx context.Context, msg Type) (msgResp Type, err error) {
+		handleMsg: func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
 			kvSet(t, ctx, "exec")
 			return nil, nil
 		},
-		doUpgradeBlock: func(ctx context.Context) (bool, error) { return false, nil },
+		doPreBlock: func(ctx context.Context, txs []mock.Tx) error { return nil },
 		doBeginBlock: func(ctx context.Context) error {
 			kvSet(t, ctx, "begin-block")
 			return nil
@@ -44,7 +44,11 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "post-tx-exec")
 			return nil
 		},
-		branch:            func(store store.ReadonlyState) store.WritableState { return branch.NewStore(store) },
+		branch: func(state store.GetReader) store.GetWriter {
+			return newBranchedAccountsState(state, func(readonlyState store.Reader) store.Writer {
+				return branch.NewStore(readonlyState)
+			})
+		},
 		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
 	}
 
@@ -68,7 +72,9 @@ func TestSTF(t *testing.T) {
 	t.Run("fail exec tx", func(t *testing.T) {
 		// update the stf to fail on the handler
 		stf := cloneSTF(stf)
-		stf.handleMsg = func(ctx context.Context, msg Type) (msgResp Type, err error) { return nil, fmt.Errorf("failure") }
+		stf.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+			return nil, fmt.Errorf("failure")
+		}
 
 		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
@@ -101,7 +107,9 @@ func TestSTF(t *testing.T) {
 
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
 		stf := cloneSTF(stf)
-		stf.handleMsg = func(ctx context.Context, msg Type) (msgResp Type, err error) { return nil, fmt.Errorf("exec failure") }
+		stf.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+			return nil, fmt.Errorf("exec failure")
+		}
 		stf.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
 		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
@@ -131,20 +139,27 @@ func TestSTF(t *testing.T) {
 	})
 }
 
+var actorName = []byte("cookies")
+
 func kvSet(t *testing.T, ctx context.Context, v string) {
 	t.Helper()
-	require.NoError(t, ctx.(*executionContext).store.Set([]byte(v), []byte(v)))
+	state, err := ctx.(*executionContext).store.GetWriter(actorName)
+	require.NoError(t, err)
+	require.NoError(t, state.Set([]byte(v), []byte(v)))
 }
 
-func stateHas(t *testing.T, state store.ReadonlyState, key string) {
+func stateHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
+	state, err := accountState.GetReader(actorName)
+	require.NoError(t, err)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Truef(t, has, "state did not have key: %s", key)
 }
 
-func stateNotHas(t *testing.T, state store.ReadonlyState, key string) {
+func stateNotHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
+	state, err := accountState.GetReader(actorName)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Falsef(t, has, "state was not supposed to have key: %s", key)
@@ -154,7 +169,7 @@ func cloneSTF[T transaction.Tx](stf *STF[T]) *STF[T] {
 	return &STF[T]{
 		handleMsg:         stf.handleMsg,
 		handleQuery:       stf.handleQuery,
-		doUpgradeBlock:    stf.doUpgradeBlock,
+		doPreBlock:        stf.doPreBlock,
 		doBeginBlock:      stf.doBeginBlock,
 		doEndBlock:        stf.doEndBlock,
 		doValidatorUpdate: stf.doValidatorUpdate,

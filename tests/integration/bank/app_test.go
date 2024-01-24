@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -100,6 +101,7 @@ type suite struct {
 	AccountKeeper      types.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
 	App                *runtime.App
+	TxConfig           client.TxConfig
 }
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
@@ -128,7 +130,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper)
+		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
 
 	res.App = app
 
@@ -439,8 +441,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(tt *testing.T) {
 			header := header.Info{Height: s.App.LastBlockHeight() + 1}
-			txGen := moduletestutil.MakeTestTxConfig()
-			_, _, err = simtestutil.SignCheckDeliver(tt, txGen, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
+			_, _, err = simtestutil.SignCheckDeliver(tt, s.TxConfig, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
 			if len(tc.expInError) > 0 {
 				require.Error(tt, err)
 				for _, exp := range tc.expInError {

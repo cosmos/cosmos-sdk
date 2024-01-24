@@ -260,6 +260,9 @@ func decodeFromAny(cdc codec.BinaryCodec, anyPB *anypb.Any) (proto.Message, erro
 		messageName = messageName[i+len("/"):]
 	}
 	typ := proto.MessageType(messageName)
+	if typ == nil {
+		return nil, fmt.Errorf("cannot find type: %s", anyPB.TypeUrl)
+	}
 	v1 := reflect.New(typ.Elem()).Interface().(proto.Message)
 	err := cdc.Unmarshal(anyPB.Value, v1)
 	if err != nil {

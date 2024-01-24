@@ -140,7 +140,7 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 }
 
 // protoTxProvider is a type which can provide a proto transaction. It is a
-// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+// workaround to get access to the gogoTxWrapper TxBuilder's method GetProtoTx().
 // ref: https://github.com/cosmos/cosmos-sdk/issues/10347
 type protoTxProvider interface {
 	GetProtoTx() *txtypes.Tx
@@ -228,7 +228,7 @@ func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	txBuilder := &wrapper{tx: req.Tx}
+	txBuilder := &gogoTxWrapper{tx: req.Tx}
 
 	encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(txBuilder)
 	if err != nil {
@@ -273,14 +273,14 @@ func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*
 		return nil, err
 	}
 
-	txWrapper, ok := txb.(*wrapper)
+	txWrapper, ok := txb.(*gogoTxWrapper)
 	if ok {
 		return &txtypes.TxDecodeResponse{
 			Tx: txWrapper.tx,
 		}, nil
 	}
 
-	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
+	return nil, fmt.Errorf("expected %T, got %T", &gogoTxWrapper{}, txb)
 }
 
 // TxDecodeAmino implements the ServiceServer.TxDecodeAmino RPC method.

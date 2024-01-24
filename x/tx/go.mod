@@ -34,3 +34,7 @@ require (
 	google.golang.org/grpc v1.60.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace (
+cosmossdk.io/api => ../../api
+)

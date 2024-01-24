@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	authcodec "cosmossdk.io/x/auth/codec"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -10,6 +11,7 @@ import (
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
 
+	txdecode "cosmossdk.io/x/tx/decode"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -173,7 +175,11 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		jsonEncoder: configOptions.JSONEncoder,
 	}
 	if configOptions.ProtoDecoder == nil {
-		txConfig.decoder = DefaultTxDecoder(protoCodec)
+		dec, err := txdecode.NewDecoder(txdecode.Options{SigningContext: configOptions.SigningContext})
+		if err != nil {
+			return nil, err
+		}
+		txConfig.decoder = txV2toInterface(configOptions.SigningOptions.AddressCodec, protoCodec, dec)
 	}
 	if configOptions.ProtoEncoder == nil {
 		txConfig.encoder = DefaultTxEncoder()
@@ -222,9 +228,9 @@ func (g config) NewTxBuilder() client.TxBuilder {
 
 // WrapTxBuilder returns a builder from provided transaction
 func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
-	newBuilder, ok := newTx.(*wrapper)
+	newBuilder, ok := newTx.(*gogoTxWrapper)
 	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, newTx)
+		return nil, fmt.Errorf("expected %T, got %T", &gogoTxWrapper{}, newTx)
 	}
 
 	return newBuilder, nil
@@ -252,4 +258,14 @@ func (g config) TxJSONDecoder() sdk.TxDecoder {
 
 func (g config) SigningContext() *txsigning.Context {
 	return g.signingContext
+}
+
+func txV2toInterface(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *txdecode.Decoder) func([]byte) (sdk.Tx, error) {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		decodedTx, err := decoder.Decode(txBytes)
+		if err != nil {
+			return nil, err
+		}
+		return newWrapperFromDecodedTx(addrCodec, cdc, decodedTx)
+	}
 }

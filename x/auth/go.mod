@@ -165,6 +165,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
+	cosmossdk.io/api => ../../api
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution
@@ -172,4 +173,5 @@ replace (
 	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
+	cosmossdk.io/x/tx => ../tx
 )

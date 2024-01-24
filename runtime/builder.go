@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -29,7 +30,7 @@ func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...fu
 		baseAppOptions = append(baseAppOptions, option)
 	}
 
-	bApp := baseapp.NewBaseApp(a.app.config.AppName, a.app.logger, db, nil, baseAppOptions...)
+	bApp := baseapp.NewBaseApp(a.app.config.AppName, a.app.logger.With(log.ModuleKey, "baseapp"), db, nil, baseAppOptions...)
 	bApp.SetMsgServiceRouter(a.app.msgServiceRouter)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)

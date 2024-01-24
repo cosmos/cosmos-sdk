@@ -203,7 +203,7 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.GetWriter, gasLimit u
 	return msgResps, nil
 }
 
-func (s STF[T]) upgradeBlock(ctx context.Context, state store.GetWriter) ([]event.Event, error) {
+func (s STF[T]) preBlock(ctx context.Context, state store.GetWriter, txs []T) ([]event.Event, error) {
 	pbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit
 	err := s.doPreBlock(pbCtx, txs)
 	if err != nil {

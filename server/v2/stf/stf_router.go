@@ -83,7 +83,6 @@ func (b *msgRouterBuilder) Build() (MsgHandler, error) {
 
 func buildHandler(handler MsgHandler, preHandlers []PreMsgHandler, postHandlers []PostMsgHandler) MsgHandler {
 	return func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
-
 		if len(preHandlers) != 0 {
 			for _, preHandler := range preHandlers {
 				if err := preHandler(ctx, msg); err != nil {

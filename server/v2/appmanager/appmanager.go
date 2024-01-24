@@ -135,7 +135,6 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 }
 
 func (a AppManager[T]) QueryWitStateChanges(ctx context.Context, changeset []store.ChangeSet, request transaction.Type) (response transaction.Type, err error) {
-
 	// // otherwise rely on latest available state.
 	// _, queryState, err := a.db.StateLatest()
 	// if err != nil {

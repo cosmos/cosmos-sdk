@@ -20,7 +20,7 @@ type STF[T transaction.Tx] struct {
 	handleMsg   func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error)
 	handleQuery func(ctx context.Context, req transaction.Type) (resp transaction.Type, err error)
 
-	doUpgradeBlock    func(ctx context.Context) (bool, error) // TODO: look into preblock for vote extensions
+	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
 	doEndBlock        func(ctx context.Context) error
 	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
@@ -40,7 +40,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	newState = s.branch(state)
 
 	// upgrade block is called separate from begin block in order to refresh state updates
-	upgradeBlockEvents, err := s.upgradeBlock(ctx, newState)
+	preBlockEvents, err := s.preBlock(ctx, newState, block.Txs)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -69,6 +69,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 
 	// execute txs
 	txResults := make([]appmanager.TxResult, len(block.Txs))
+	// TODO: skip first tx if vote extensions are enabled (marko)
 	for i, txBytes := range block.Txs {
 		// check if we need to return early or continue delivering txs
 		select {
@@ -85,11 +86,11 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	}
 
 	return &appmanager.BlockResponse{
-		UpgradeBlockEvents: upgradeBlockEvents,
-		BeginBlockEvents:   beginBlockEvents,
-		TxResults:          txResults,
-		EndBlockEvents:     endBlockEvents,
-		ValidatorUpdates:   valset,
+		PreBlockEvents:   preBlockEvents,
+		BeginBlockEvents: beginBlockEvents,
+		TxResults:        txResults,
+		EndBlockEvents:   endBlockEvents,
+		ValidatorUpdates: valset,
 	}, newState, nil
 }
 
@@ -202,11 +203,18 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableState, gasLim
 	return msgResps, nil
 }
 
-func (s STF[T]) upgradeBlock(ctx context.Context, state store.WritableState) ([]event.Event, error) {
+func (s STF[T]) preBlock(ctx context.Context, state store.WritableState, txs []T) ([]event.Event, error) {
 	pbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit
-	_, err := s.doUpgradeBlock(pbCtx)
+	err := s.doPreBlock(pbCtx, txs)
 	if err != nil {
 		return nil, err
+	}
+
+	for i, e := range pbCtx.events {
+		pbCtx.events[i].Attributes = append(
+			e.Attributes,
+			coreevent.Attribute{Key: "mode", Value: "PreBlock"},
+		)
 	}
 	// TODO: update consensus module to accept consensus messages (facu)
 

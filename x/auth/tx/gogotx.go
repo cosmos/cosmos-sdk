@@ -117,11 +117,11 @@ func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {
-	if len(w.decodedTx.Signers) != len(w.decodedTx.Tx.Signatures) {
-		return fmt.Errorf("invalid number of signatures: got %d signatures and %d signers", len(w.decodedTx.Tx.Signatures), len(w.decodedTx.Signers))
-	}
 	if len(w.decodedTx.Tx.Signatures) == 0 {
-		return fmt.Errorf("empty signatures")
+		return sdkerrors.ErrNoSignatures.Wrapf("empty signatures")
+	}
+	if len(w.decodedTx.Signers) != len(w.decodedTx.Tx.Signatures) {
+		return sdkerrors.ErrUnauthorized.Wrapf("invalid number of signatures: got %d signatures and %d signers", len(w.decodedTx.Tx.Signatures), len(w.decodedTx.Signers))
 	}
 	return nil
 }

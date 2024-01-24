@@ -850,18 +850,28 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 // skipped. This is to support compatibility with proposers injecting vote
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
-func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
+	defer func() {
+		// call the streaming service hooks with the FinalizeBlock messages
+		for _, streamingListener := range app.streamingManager.ABCIListeners {
+			if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {
+				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
+			}
+		}
+	}()
+
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
 		// Wait for the OE to finish, regardless of whether it was aborted or not
-		res, err := app.optimisticExec.WaitResult()
+		res, err = app.optimisticExec.WaitResult()
 
 		// only return if we are not aborting
 		if !aborted {
 			if res != nil {
 				res.AppHash = app.workingHash()
 			}
+
 			return res, err
 		}
 
@@ -871,16 +881,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
-	res, err := app.internalFinalizeBlock(context.Background(), req)
+	res, err = app.internalFinalizeBlock(context.Background(), req)
 	if res != nil {
 		res.AppHash = app.workingHash()
-	}
-
-	// call the streaming service hooks with the FinalizeBlock messages
-	for _, streamingListener := range app.streamingManager.ABCIListeners {
-		if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {
-			app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
-		}
 	}
 
 	return res, err

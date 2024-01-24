@@ -27,6 +27,8 @@ import (
 	_ "cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/signing"
 	_ "cosmossdk.io/x/auth/tx/config"
+	_ "cosmossdk.io/x/bank"
+	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"

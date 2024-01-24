@@ -13,6 +13,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/util"
+<<<<<<< HEAD
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -20,6 +21,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+=======
+	addresscodec "cosmossdk.io/core/address"
+
+	// the following will be extracted to a separate module
+	// https://github.com/cosmos/cosmos-sdk/issues/14403
+	authtypes "cosmossdk.io/x/auth/types"
+	govcli "cosmossdk.io/x/gov/client/cli"
+	govtypes "cosmossdk.io/x/gov/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+>>>>>>> bff1d823f (refactor(client/v2,simapp): align and simplify sign mode wiring (#19216))
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
@@ -121,6 +134,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		clientCtx = clientCtx.WithCmdContext(cmd.Context())
 		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
 
+<<<<<<< HEAD
 		// enable sign mode textual
 		// the config is always overwritten as we need to have set the flags to the client context
 		// this ensures that the context has the correct client.
@@ -137,6 +151,15 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			}
 
 			clientCtx = clientCtx.WithTxConfig(txConfig)
+=======
+		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
+		addressCodec := b.Builder.AddressCodec
+
+		// handle gov proposals commands
+		skipProposal, _ := cmd.Flags().GetBool(flags.FlagNoProposal)
+		if options.GovProposal && !skipProposal {
+			return b.handleGovProposal(options, cmd, input, clientCtx, addressCodec, fd)
+>>>>>>> bff1d823f (refactor(client/v2,simapp): align and simplify sign mode wiring (#19216))
 		}
 
 		// set signer to signer field if empty

@@ -5,8 +5,11 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
+<<<<<<< HEAD
 
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+=======
+>>>>>>> bff1d823f (refactor(client/v2,simapp): align and simplify sign mode wiring (#19216))
 )
 
 // Builder manages options for building CLI commands.
@@ -17,9 +20,6 @@ type Builder struct {
 	// GetClientConn specifies how CLI commands will resolve a grpc.ClientConnInterface
 	// from a given context.
 	GetClientConn func(*cobra.Command) (grpc.ClientConnInterface, error)
-
-	// TxConfigOptions is required to support sign mode textual
-	TxConfigOpts authtx.ConfigOptions
 
 	// AddQueryConnFlags and AddTxConnFlags are functions that add flags to query and transaction commands
 	AddQueryConnFlags func(*cobra.Command)

@@ -204,15 +204,11 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableState, gasLim
 
 func (s STF[T]) upgradeBlock(ctx context.Context, state store.WritableState) ([]event.Event, error) {
 	pbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit
-	refresh, err := s.doUpgradeBlock(pbCtx)
+	_, err := s.doUpgradeBlock(pbCtx)
 	if err != nil {
 		return nil, err
 	}
-	// TODO deprecate consensus params on context (marko)
 	// TODO: update consensus module to accept consensus messages (facu)
-	if refresh {
-		// TODO: maybe remove
-	}
 
 	return pbCtx.events, nil
 }

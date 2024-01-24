@@ -5,10 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	"google.golang.org/protobuf/proto"
 
+	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	corecomet "cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -178,12 +181,40 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 
 // InitChain implements types.Application.
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	resInit := &abci.ResponseInitChain{}
+	latestVersion, err := c.store.LatestVerseion()
+
+	res, err := c.app.Query(ctx, latestVersion, &consensusv1.QueryParamsRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	if r, ok := res.(*consensusv1.QueryParamsResponse); !ok {
+		return nil, fmt.Errorf("failed to query consensus params")
+	} else {
+		// convert our params to cometbft params
+		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds) // TODO verify this conversion
+		resInit.ConsensusParams = &types1.ConsensusParams{
+			Block: &types1.BlockParams{
+				MaxBytes: r.Params.Block.MaxBytes,
+				MaxGas:   r.Params.Block.MaxGas,
+			},
+			Evidence: &types1.EvidenceParams{
+				MaxAgeNumBlocks: r.Params.Evidence.MaxAgeNumBlocks,
+				MaxAgeDuration:  evidenceMaxDuration,
+			},
+			Validator: &types1.ValidatorParams{
+				PubKeyTypes: r.Params.Validator.PubKeyTypes,
+			},
+			Version: &types1.VersionParams{
+				App: r.Params.Version.App,
+			},
+			Abci: &types1.ABCIParams{
+				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
+			},
+		}
+	}
 	// TODO: won't work for now
-	return &abci.ResponseInitChain{
-		ConsensusParams: req.ConsensusParams,
-		Validators:      req.Validators,
-		AppHash:         []byte{},
-	}, nil
 
 	// valUpdates := []validator.Update{}
 	// for _, v := range req.Validators {
@@ -240,6 +271,8 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 	// 		}
 	// 	}
 	// }
+
+	return resInit, nil
 }
 
 // PrepareProposal implements types.Application.

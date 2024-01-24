@@ -5,11 +5,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
-<<<<<<< HEAD
-
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-=======
->>>>>>> bff1d823f (refactor(client/v2,simapp): align and simplify sign mode wiring (#19216))
 )
 
 // Builder manages options for building CLI commands.

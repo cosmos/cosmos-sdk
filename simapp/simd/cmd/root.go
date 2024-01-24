@@ -8,14 +8,8 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
-<<<<<<< HEAD
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-=======
-	"cosmossdk.io/x/auth/tx"
-	authtxconfig "cosmossdk.io/x/auth/tx/config"
-	"cosmossdk.io/x/auth/types"
->>>>>>> bff1d823f (refactor(client/v2,simapp): align and simplify sign mode wiring (#19216))
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -24,7 +18,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 

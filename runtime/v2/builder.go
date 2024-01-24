@@ -14,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
+type branchFunc func(state store.Reader) store.Writer
+
 // AppBuilder is a type that is injected into a container by the runtime module
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.
@@ -21,7 +23,7 @@ type AppBuilder struct {
 	app *App
 
 	// config
-	branch      func(state store.ReadonlyState) store.WritableState
+	branch      branchFunc
 	txValidator func(ctx context.Context, tx transaction.Tx) error
 }
 
@@ -77,7 +79,7 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 
 	// default branch
 	if a.branch == nil {
-		a.branch = func(state store.ReadonlyState) store.WritableState {
+		a.branch = func(state store.Reader) store.Writer {
 			return branch.NewStore(state)
 		}
 	}
@@ -135,13 +137,13 @@ func AppBuilderWithVerifyBlockHandler(handler coreappmanager.ProcessHandler[tran
 	}
 }
 
-func AppBuilderWithBranch(branch func(state store.ReadonlyState) store.WritableState) AppBuilderOption {
+func AppBuilderWithBranch(branch branchFunc) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.branch = branch
 	}
 }
 
-func AppBuilderWithGasConfig(gasConfig interface{}) AppBuilderOption { // TODO
+func AppBuilderWithGasConfig(gasConfig interface{}) AppBuilderOption {
 	return func(a *AppBuilder) {
 		// a.app.gasConfig = gasConfig
 	}

@@ -1,4 +1,4 @@
-package simulation_test
+package distribution
 
 import (
 	"math/rand"
@@ -16,7 +16,6 @@ import (
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
-	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	"cosmossdk.io/x/distribution/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -214,7 +213,7 @@ func (suite *SimTestSuite) SetupTest() {
 	)
 	suite.app, err = simtestutil.Setup(
 		depinject.Configs(
-			distrtestutil.AppConfig,
+			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&suite.accountKeeper,

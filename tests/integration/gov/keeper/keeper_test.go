@@ -62,6 +62,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	maccPerms := map[string][]string{
 		pooltypes.ModuleName:           {},
+		pooltypes.StreamAccount:        {},
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},

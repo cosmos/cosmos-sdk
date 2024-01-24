@@ -1,4 +1,4 @@
-package simulation_test
+package authz
 
 import (
 	"math/rand"
@@ -15,11 +15,18 @@ import (
 	"cosmossdk.io/x/authz"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	"cosmossdk.io/x/authz/simulation"
-	"cosmossdk.io/x/authz/testutil"
+
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
+	_ "cosmossdk.io/x/auth"           // import as blank for app wiring
+	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
+	_ "cosmossdk.io/x/authz/module"   // import as blank for app wiring
+	_ "cosmossdk.io/x/bank"           // import as blank for app wiring
+	_ "cosmossdk.io/x/gov"            // import as blank for app wiring
+	_ "cosmossdk.io/x/mint"           // import as blank for app wiring
+	_ "cosmossdk.io/x/staking"        // import as blank for app wiring
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -27,6 +34,21 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"   // import as blank for app wiring
+)
+
+var AppConfig = configurator.NewAppConfig(
+	configurator.AuthModule(),
+	configurator.BankModule(),
+	configurator.StakingModule(),
+	configurator.TxModule(),
+	configurator.ConsensusModule(),
+	configurator.GenutilModule(),
+	configurator.AuthzModule(),
+	configurator.MintModule(),
 )
 
 type SimTestSuite struct {
@@ -47,7 +69,7 @@ type SimTestSuite struct {
 func (suite *SimTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
-			testutil.AppConfig,
+			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&suite.legacyAmino,

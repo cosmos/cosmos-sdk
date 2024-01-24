@@ -126,9 +126,17 @@ func ValidateVoteExtensions(
 		sumVP += vote.Validator.Power
 	}
 
+	// This check is probably unnecessary, but better safe than sorry.
+	if totalVP <= 0 {
+		return fmt.Errorf("total voting power must be positive, got: %d", totalVP)
+	}
+
 	// If the sum of the voting power has not reached (2/3 + 1) we need to error.
-	if sumVP < (totalVP*2/3)+1 {
-		return fmt.Errorf("insufficient cumulative voting power received to verify vote extensions; got: %d, expected: >=%d", sumVP, (totalVP*2/3)+1)
+	if requiredVP := ((totalVP * 2) / 3) + 1; sumVP < requiredVP {
+		return fmt.Errorf(
+			"insufficient cumulative voting power received to verify vote extensions; got: %d, expected: >=%d",
+			sumVP, requiredVP,
+		)
 	}
 	return nil
 }

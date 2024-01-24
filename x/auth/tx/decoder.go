@@ -16,13 +16,28 @@ func DefaultJSONTxDecoder(addrCodec address.Codec, cdc codec.BinaryCodec, decode
 		DiscardUnknown: false,
 	}
 	return func(txBytes []byte) (sdk.Tx, error) {
-		jsonTx := new(txv1beta1.TxRaw)
+		jsonTx := new(txv1beta1.Tx)
 		err := jsonUnmarshaller.Unmarshal(txBytes, jsonTx)
 		if err != nil {
 			return nil, err
 		}
 
-		protoTxBytes, err := marshalOption.Marshal(jsonTx)
+		// need to convert jsonTx into raw tx.
+		bodyBytes, err := marshalOption.Marshal(jsonTx.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		authInfoBytes, err := marshalOption.Marshal(jsonTx.AuthInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		protoTxBytes, err := marshalOption.Marshal(&txv1beta1.TxRaw{
+			BodyBytes:     bodyBytes,
+			AuthInfoBytes: authInfoBytes,
+			Signatures:    jsonTx.Signatures,
+		})
 		if err != nil {
 			return nil, err
 		}

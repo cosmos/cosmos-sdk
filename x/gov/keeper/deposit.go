@@ -48,6 +48,19 @@ func (k Keeper) DeleteAndBurnDeposits(ctx context.Context, proposalID uint64) er
 	return k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.ModuleName), coinsToBurn)
 }
 
+// RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
+func (k Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uint64) error {
+	return k.IterateDeposits(ctx, proposalID, func(key collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
+		depositor := key.K2()
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
+		if err != nil {
+			return false, err
+		}
+		err = k.Deposits.Remove(ctx, key)
+		return false, err
+	})
+}
+
 // IterateDeposits iterates over all the proposals deposits and performs a callback function
 func (k Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb func(key collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (bool, error)) error {
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
@@ -263,19 +276,6 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 	}
 
 	return nil
-}
-
-// RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
-func (k Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uint64) error {
-	return k.IterateDeposits(ctx, proposalID, func(key collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
-		depositor := key.K2()
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
-		if err != nil {
-			return false, err
-		}
-		err = k.Deposits.Remove(ctx, key)
-		return false, err
-	})
 }
 
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum

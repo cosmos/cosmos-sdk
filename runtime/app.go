@@ -76,8 +76,8 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		appModule.RegisterInterfaces(a.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.amino)
 
-		if module, ok := appModule.(module.HasServices); ok {
-			module.RegisterServices(a.configurator)
+		if mod, ok := appModule.(module.HasServices); ok {
+			mod.RegisterServices(a.configurator)
 		} else if module, ok := appModule.(appmodule.HasServices); ok {
 			if err := module.RegisterServices(a.configurator); err != nil {
 				return err

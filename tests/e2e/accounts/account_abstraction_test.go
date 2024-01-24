@@ -327,6 +327,47 @@ func TestAccountAbstraction(t *testing.T) {
 		})
 		require.Empty(t, resp.Error) // no error
 	})
+
+	t.Run("Simulate - OK", func(t *testing.T) {
+		queryServer := accounts.NewQueryServer(ak)
+
+		// gas in unspecified
+		op := &accountsv1.UserOperation{
+			Sender:               aaAddrStr,
+			AuthenticationMethod: "secp256k1",
+			AuthenticationData:   mockSignature,
+			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1stake"),
+			}),
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   aliceAddrStr,
+				Amount:      coins(t, "2000stake"),
+			}),
+		}
+		queryResp, err := queryServer.SimulateUserOperation(ctx, &accountsv1.SimulateUserOperationRequest{
+			Bundler:       bundlerAddrStr,
+			UserOperation: op,
+		})
+		require.NoError(t, err)
+
+		resp := queryResp.UserOperationResponse
+		require.Empty(t, resp.Error) // no error
+		require.Len(t, resp.BundlerPaymentResponses, 1)
+		require.Len(t, resp.ExecutionResponses, 1)
+		// assess gas is filled
+		require.NotZero(t, resp.ExecutionGasUsed)
+		require.NotZero(t, resp.BundlerPaymentGasUsed)
+		require.NotZero(t, resp.AuthenticationGasUsed)
+	})
+
+	t.Run("Simulate - Fail empty user operation", func(t *testing.T) {
+		queryServer := accounts.NewQueryServer(ak)
+		_, err := queryServer.SimulateUserOperation(ctx, &accountsv1.SimulateUserOperationRequest{})
+		require.Error(t, err)
+	})
 }
 
 func intoAny(t *testing.T, msgs ...gogoproto.Message) (anys []*codectypes.Any) {

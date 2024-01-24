@@ -26,6 +26,7 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
+	DefaultWeightMsgRotateConsPubKey          int = 100
 
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
@@ -33,6 +34,7 @@ const (
 	OpWeightMsgUndelegate                = "op_weight_msg_undelegate"
 	OpWeightMsgBeginRedelegate           = "op_weight_msg_begin_redelegate"
 	OpWeightMsgCancelUnbondingDelegation = "op_weight_msg_cancel_unbonding_delegation"
+	OpWeightMsgRotateConsPubKey          = "op_weight_msg_rotate_cons_pubkey"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -51,6 +53,7 @@ func WeightedOperations(
 		weightMsgUndelegate                int
 		weightMsgBeginRedelegate           int
 		weightMsgCancelUnbondingDelegation int
+		weightMsgRotateConsPubKey          int
 	)
 
 	appParams.GetOrGenerate(OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil, func(_ *rand.Rand) {
@@ -75,6 +78,10 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil, func(_ *rand.Rand) {
 		weightMsgCancelUnbondingDelegation = DefaultWeightMsgCancelUnbondingDelegation
+	})
+
+	appParams.GetOrGenerate(OpWeightMsgRotateConsPubKey, &weightMsgRotateConsPubKey, nil, func(_ *rand.Rand) {
+		weightMsgRotateConsPubKey = DefaultWeightMsgRotateConsPubKey
 	})
 
 	return simulation.WeightedOperations{
@@ -102,6 +109,10 @@ func WeightedOperations(
 			weightMsgCancelUnbondingDelegation,
 			SimulateMsgCancelUnbondingDelegate(txGen, ak, bk, k),
 		),
+		simulation.NewWeightedOperation(
+			weightMsgRotateConsPubKey,
+			SimulateMsgRotateConsPubKey(txGen, ak, bk, k),
+		),
 	}
 }
 
@@ -124,6 +135,12 @@ func SimulateMsgCreateValidator(
 		_, err := k.GetValidator(ctx, address)
 		if err == nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator already exists"), nil, nil
+		}
+
+		consPubKey := sdk.GetConsAddress(simAccount.ConsKey.PubKey())
+		_, err = k.GetValidatorByConsAddr(ctx, consPubKey)
+		if err == nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used"), nil, nil
 		}
 
 		denom, err := k.BondDenom(ctx)
@@ -687,6 +704,105 @@ func SimulateMsgBeginRedelegate(
 			delAddr, srcVal.GetOperator(), destVal.GetOperator(),
 			sdk.NewCoin(bondDenom, redAmt),
 		)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           txGen,
+			Cdc:             nil,
+			Msg:             msg,
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgRotateConsPubKey{})
+
+		vals, err := k.GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validators"), nil, err
+		}
+
+		if len(vals) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "number of validators equal zero"), nil, nil
+		}
+
+		val, ok := testutil.RandSliceElem(r, vals)
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to pick a validator"), nil, nil
+		}
+
+		if val.Status != types.Bonded || val.ConsensusPower(sdk.DefaultPowerReduction) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator not bonded."), nil, nil
+		}
+
+		valAddr := val.GetOperator()
+		valBytes, err := k.ValidatorAddressCodec().StringToBytes(valAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator address bytes"), nil, err
+		}
+
+		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(valBytes))
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
+		}
+
+		cons, err := val.GetConsAddr()
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get conskey"), nil, err
+		}
+
+		acc, _ := simtypes.RandomAcc(r, accs)
+		if sdk.ConsAddress(cons).String() == sdk.ConsAddress(acc.ConsKey.PubKey().Address()).String() {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "new pubkey and current pubkey should be different"), nil, nil
+		}
+
+		account := ak.GetAccount(ctx, simAccount.Address)
+		if account == nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, nil
+		}
+
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+		params, err := k.Params.Get(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get params"), nil, err
+		}
+
+		if !spendable.IsAllGTE(sdk.NewCoins(params.KeyRotationFee)) {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "not enough balance to pay fee"), nil, nil
+		}
+
+		if err := k.ExceedsMaxRotations(ctx, valBytes); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "rotations limit reached within unbonding period"), nil, nil
+		}
+
+		_, err = k.GetValidatorByConsAddr(ctx, cons)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get validator"), nil, err
+		}
+
+		// check whether the new cons key associated with another validator
+		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
+		_, err = k.GetValidatorByConsAddr(ctx, newConsAddr)
+		if err == nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used"), nil, nil
+		}
+
+		msg, err := types.NewMsgRotateConsPubKey(valAddr, acc.ConsKey.PubKey())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to build msg"), nil, err
+		}
 
 		txCtx := simulation.OperationInput{
 			R:               r,

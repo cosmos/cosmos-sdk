@@ -7,11 +7,8 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
@@ -19,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -89,9 +85,6 @@ type AppModule struct {
 	accountKeeper     keeper.AccountKeeper
 	randGenAccountsFn types.RandomGenesisAccountsFn
 }
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
@@ -166,64 +159,4 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations doesn't return any auth module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-
-	AddressCodec            address.Codec
-	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
-	AccountI                func() sdk.AccountI           `optional:"true"`
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	AccountKeeper keeper.AccountKeeper
-	Module        appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	maccPerms := map[string][]string{}
-	for _, permission := range in.Config.ModuleAccountPermissions {
-		maccPerms[permission.Account] = permission.Permissions
-	}
-
-	// default to governance authority if not provided
-	authority := types.NewModuleAddress(GovModuleName)
-	if in.Config.Authority != "" {
-		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	if in.RandomGenesisAccountsFn == nil {
-		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
-	}
-
-	if in.AccountI == nil {
-		in.AccountI = types.ProtoBaseAccount
-	}
-
-	auth, err := in.AddressCodec.BytesToString(authority)
-	if err != nil {
-		panic(err)
-	}
-
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
-	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
-
-	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

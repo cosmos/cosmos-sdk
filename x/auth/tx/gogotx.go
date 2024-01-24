@@ -186,7 +186,7 @@ func (w *gogoTxWrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 
 	for i, si := range signerInfos {
 		// handle nil signatures (in case of simulation)
-		if si.ModeInfo == nil {
+		if si.ModeInfo == nil || si.ModeInfo.Sum == nil {
 			res[i] = signing.SignatureV2{
 				PubKey: pubKeys[i],
 			}

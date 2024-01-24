@@ -56,8 +56,8 @@ func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*tx.ModeInfo, []
 
 // ModeInfoAndSigToSignatureData converts a ModeInfo and raw bytes signature to a SignatureData or returns
 // an error
-func ModeInfoAndSigToSignatureData(modeInfo *txv1beta1.ModeInfo, sig []byte) (signing.SignatureData, error) {
-	switch modeInfo := modeInfo.Sum.(type) {
+func ModeInfoAndSigToSignatureData(modeInfoPb *txv1beta1.ModeInfo, sig []byte) (signing.SignatureData, error) {
+	switch modeInfo := modeInfoPb.Sum.(type) {
 	case *txv1beta1.ModeInfo_Single_:
 		return &signing.SingleSignatureData{
 			SignMode:  signing.SignMode(modeInfo.Single.Mode),

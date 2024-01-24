@@ -37,7 +37,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.5 // indirect
 	cloud.google.com/go/storage v1.35.1 // indirect
-	cosmossdk.io/client/v2 v2.0.0-beta.1.0.20240118205803-02b5997c5192 // indirect
+	cosmossdk.io/client/v2 v2.0.0-beta.1.0.20240124105859-5ad1805d0e79 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/circuit v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect

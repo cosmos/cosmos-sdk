@@ -360,6 +360,348 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	var mode runTxMode
 
+<<<<<<< HEAD
+=======
+	// If we're extending the vote for the initial height, we need to use the
+	// finalizeBlockState context, otherwise we don't get the uncommitted data
+	// from InitChain.
+	if req.Height == app.initialHeight {
+		ctx, _ = app.finalizeBlockState.Context().CacheContext()
+	} else {
+		ms := app.cms.CacheMultiStore()
+		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	}
+
+	if app.extendVote == nil {
+		return nil, errors.New("application ExtendVote handler not set")
+	}
+
+	// If vote extensions are not enabled, as a safety precaution, we return an
+	// error.
+	cp := app.GetConsensusParams(ctx)
+
+	// Note: In this case, we do want to extend vote if the height is equal or
+	// greater than VoteExtensionsEnableHeight. This defers from the check done
+	// in ValidateVoteExtensions and PrepareProposal in which we'll check for
+	// vote extensions on VoteExtensionsEnableHeight+1.
+	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	if !extsEnabled {
+		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
+	}
+
+	ctx = ctx.
+		WithConsensusParams(cp).
+		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
+		WithBlockHeight(req.Height).
+		WithHeaderHash(req.Hash).
+		WithExecMode(sdk.ExecModeVoteExtension).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Hash:    req.Hash,
+		})
+
+	// add a deferred recover handler in case extendVote panics
+	defer func() {
+		if r := recover(); r != nil {
+			app.logger.Error(
+				"panic recovered in ExtendVote",
+				"height", req.Height,
+				"hash", fmt.Sprintf("%X", req.Hash),
+				"panic", err,
+			)
+			err = fmt.Errorf("recovered application panic in ExtendVote: %v", r)
+		}
+	}()
+
+	resp, err = app.extendVote(ctx, req)
+	if err != nil {
+		app.logger.Error("failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
+		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
+	}
+
+	return resp, err
+}
+
+// VerifyVoteExtension implements the VerifyVoteExtension ABCI method and returns
+// a ResponseVerifyVoteExtension. It calls the applications' VerifyVoteExtension
+// handler which is responsible for performing application-specific business
+// logic in verifying a vote extension from another validator during the pre-commit
+// phase. The response MUST be deterministic. An error is returned if vote
+// extensions are not enabled or if verifyVoteExt fails or panics.
+// We highly recommend a size validation due to performance degradation,
+// see more here https://docs.cometbft.com/v0.38/qa/cometbft-qa-38#vote-extensions-testbed
+func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
+	if app.verifyVoteExt == nil {
+		return nil, errors.New("application VerifyVoteExtension handler not set")
+	}
+
+	var ctx sdk.Context
+
+	// If we're verifying the vote for the initial height, we need to use the
+	// finalizeBlockState context, otherwise we don't get the uncommitted data
+	// from InitChain.
+	if req.Height == app.initialHeight {
+		ctx, _ = app.finalizeBlockState.Context().CacheContext()
+	} else {
+		ms := app.cms.CacheMultiStore()
+		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	}
+
+	// If vote extensions are not enabled, as a safety precaution, we return an
+	// error.
+	cp := app.GetConsensusParams(ctx)
+
+	// Note: we verify votes extensions on VoteExtensionsEnableHeight+1. Check
+	// comment in ExtendVote and ValidateVoteExtensions for more details.
+	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	if !extsEnabled {
+		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
+	}
+
+	// add a deferred recover handler in case verifyVoteExt panics
+	defer func() {
+		if r := recover(); r != nil {
+			app.logger.Error(
+				"panic recovered in VerifyVoteExtension",
+				"height", req.Height,
+				"hash", fmt.Sprintf("%X", req.Hash),
+				"validator", fmt.Sprintf("%X", req.ValidatorAddress),
+				"panic", r,
+			)
+			err = fmt.Errorf("recovered application panic in VerifyVoteExtension: %v", r)
+		}
+	}()
+
+	ctx = ctx.
+		WithConsensusParams(cp).
+		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
+		WithBlockHeight(req.Height).
+		WithHeaderHash(req.Hash).
+		WithExecMode(sdk.ExecModeVerifyVoteExtension).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Hash:    req.Hash,
+		})
+
+	resp, err = app.verifyVoteExt(ctx, req)
+	if err != nil {
+		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+
+	return resp, err
+}
+
+// internalFinalizeBlock executes the block, called by the Optimistic
+// Execution flow or by the FinalizeBlock ABCI method. The context received is
+// only used to handle early cancellation, for anything related to state app.finalizeBlockState.Context()
+// must be used.
+func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	var events []abci.Event
+
+	if err := app.checkHalt(req.Height, req.Time); err != nil {
+		return nil, err
+	}
+
+	if err := app.validateFinalizeBlockHeight(req); err != nil {
+		return nil, err
+	}
+
+	if app.cms.TracingEnabled() {
+		app.cms.SetTracingContext(storetypes.TraceContext(
+			map[string]any{"blockHeight": req.Height},
+		))
+	}
+
+	header := cmtproto.Header{
+		ChainID:            app.chainID,
+		Height:             req.Height,
+		Time:               req.Time,
+		ProposerAddress:    req.ProposerAddress,
+		NextValidatorsHash: req.NextValidatorsHash,
+		AppHash:            app.LastCommitID().Hash,
+	}
+
+	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
+	// nil, it means we are replaying this block and we need to set the state here
+	// given that during block replay ProcessProposal is not executed by CometBFT.
+	if app.finalizeBlockState == nil {
+		app.setState(execModeFinalize, header)
+	}
+
+	// Context is now updated with Header information.
+	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().
+		WithBlockHeader(header).
+		WithHeaderHash(req.Hash).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Time:    req.Time,
+			Hash:    req.Hash,
+			AppHash: app.LastCommitID().Hash,
+		}).
+		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.Context())).
+		WithVoteInfos(req.DecidedLastCommit.Votes).
+		WithExecMode(sdk.ExecModeFinalize).
+		WithCometInfo(corecomet.Info{
+			Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
+			ValidatorsHash:  req.NextValidatorsHash,
+			ProposerAddress: req.ProposerAddress,
+			LastCommit:      sdk.ToSDKCommitInfo(req.DecidedLastCommit),
+		}))
+
+	// GasMeter must be set after we get a context with updated consensus params.
+	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.Context())
+	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
+
+	if app.checkState != nil {
+		app.checkState.SetContext(app.checkState.Context().
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash))
+	}
+
+	if err := app.preBlock(req); err != nil {
+		return nil, err
+	}
+
+	beginBlock, err := app.beginBlock(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// First check for an abort signal after beginBlock, as it's the first place
+	// we spend any significant amount of time.
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
+	}
+
+	events = append(events, beginBlock.Events...)
+
+	// Reset the gas meter so that the AnteHandlers aren't required to
+	gasMeter = app.getBlockGasMeter(app.finalizeBlockState.Context())
+	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
+
+	// Iterate over all raw transactions in the proposal and attempt to execute
+	// them, gathering the execution results.
+	//
+	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
+	// vote extensions, so skip those.
+	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
+	for _, rawTx := range req.Txs {
+		var response *abci.ExecTxResult
+
+		if _, err := app.txDecoder(rawTx); err == nil {
+			response = app.deliverTx(rawTx)
+		} else {
+			// In the case where a transaction included in a block proposal is malformed,
+			// we still want to return a default response to comet. This is because comet
+			// expects a response for each transaction included in a block proposal.
+			response = sdkerrors.ResponseExecTxResultWithEvents(
+				sdkerrors.ErrTxDecode,
+				0,
+				0,
+				nil,
+				false,
+			)
+		}
+
+		// check after every tx if we should abort
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// continue
+		}
+
+		txResults = append(txResults, response)
+	}
+
+	if app.finalizeBlockState.ms.TracingEnabled() {
+		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
+	}
+
+	endBlock, err := app.endBlock(app.finalizeBlockState.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	// check after endBlock if we should abort, to avoid propagating the result
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
+	}
+
+	events = append(events, endBlock.Events...)
+	cp := app.GetConsensusParams(app.finalizeBlockState.Context())
+
+	return &abci.ResponseFinalizeBlock{
+		Events:                events,
+		TxResults:             txResults,
+		ValidatorUpdates:      endBlock.ValidatorUpdates,
+		ConsensusParamUpdates: &cp,
+	}, nil
+}
+
+// FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.
+// Specifically, it will execute an application's BeginBlock (if defined), followed
+// by the transactions in the proposal, finally followed by the application's
+// EndBlock (if defined).
+//
+// For each raw transaction, i.e. a byte slice, BaseApp will only execute it if
+// it adheres to the sdk.Tx interface. Otherwise, the raw transaction will be
+// skipped. This is to support compatibility with proposers injecting vote
+// extensions into the proposal, which should not themselves be executed in cases
+// where they adhere to the sdk.Tx interface.
+func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
+	defer func() {
+		// call the streaming service hooks with the FinalizeBlock messages
+		for _, streamingListener := range app.streamingManager.ABCIListeners {
+			if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {
+				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
+			}
+		}
+	}()
+
+	if app.optimisticExec.Initialized() {
+		// check if the hash we got is the same as the one we are executing
+		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		// Wait for the OE to finish, regardless of whether it was aborted or not
+		res, err = app.optimisticExec.WaitResult()
+
+		// only return if we are not aborting
+		if !aborted {
+			if res != nil {
+				res.AppHash = app.workingHash()
+			}
+
+			return res, err
+		}
+
+		// if it was aborted, we need to reset the state
+		app.finalizeBlockState = nil
+		app.optimisticExec.Reset()
+	}
+
+	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
+	res, err = app.internalFinalizeBlock(context.Background(), req)
+	if res != nil {
+		res.AppHash = app.workingHash()
+	}
+
+	return res, err
+}
+
+// checkHalt checks if height or time exceeds halt-height or halt-time respectively.
+func (app *BaseApp) checkHalt(height int64, time time.Time) error {
+	var halt bool
+>>>>>>> bda2d1123 (fix(baseapp): ensure ABCI listeners always run in FinalizeBlock (#19202))
 	switch {
 	case req.Type == abci.CheckTxType_New:
 		mode = runTxModeCheck

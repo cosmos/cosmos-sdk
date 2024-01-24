@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -647,6 +648,12 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
+	if err != nil {
+		return nil, err
+	}
+
+	codec := address.NewBech32Codec(prefix)
+	_, err = codec.BytesToString(bz)
 	if err != nil {
 		return nil, err
 	}

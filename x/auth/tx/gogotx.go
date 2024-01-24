@@ -6,10 +6,12 @@ import (
 	"strings"
 
 	"cosmossdk.io/core/address"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -62,6 +64,7 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 		}
 	}
 	return &gogoTxWrapper{
+		cdc:        cdc,
 		decodedTx:  decodedTx,
 		msgsV1:     msgv1,
 		fees:       fees,
@@ -74,6 +77,7 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 // body and auth_info bytes.
 type gogoTxWrapper struct {
 	decodedTx *decode.DecodedTx
+	cdc       codec.BinaryCodec
 
 	msgsV1     []proto.Message
 	fees       sdk.Coins
@@ -106,7 +110,8 @@ func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {
-	panic("called")
+	// TODO:
+	return nil
 }
 
 func (w *gogoTxWrapper) GetSigners() ([][]byte, error) {
@@ -114,7 +119,28 @@ func (w *gogoTxWrapper) GetSigners() ([][]byte, error) {
 }
 
 func (w *gogoTxWrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
-	panic("impl")
+	signerInfos := w.decodedTx.Tx.AuthInfo.SignerInfos
+	pks := make([]cryptotypes.PubKey, len(signerInfos))
+
+	for i, si := range signerInfos {
+		// NOTE: it is okay to leave this nil if there is no PubKey in the SignerInfo.
+		// PubKey's can be left unset in SignerInfo.
+		if si.PublicKey == nil {
+			continue
+		}
+		maybePK, err := decodeFromAny(w.cdc, si.PublicKey)
+		if err != nil {
+			return nil, err
+		}
+		pk, ok := maybePK.(cryptotypes.PubKey)
+		if ok {
+			pks[i] = pk
+		} else {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "expecting pubkey, got: %T", maybePK)
+		}
+	}
+
+	return pks, nil
 }
 
 func (w *gogoTxWrapper) GetGas() uint64 {
@@ -207,17 +233,25 @@ func decodeMsgsV1(cdc codec.BinaryCodec, anyPBs []*anypb.Any) ([]proto.Message, 
 	v1s := make([]proto.Message, len(anyPBs))
 
 	for i, anyPB := range anyPBs {
-		messageName := anyPB.TypeUrl
-		if i := strings.LastIndexByte(anyPB.TypeUrl, '/'); i >= 0 {
-			messageName = messageName[i+len("/"):]
-		}
-		typ := proto.MessageType(messageName)
-		v1 := reflect.New(typ).Elem().Interface().(proto.Message)
-		err := cdc.Unmarshal(anyPB.Value, v1)
+		v1, err := decodeFromAny(cdc, anyPB)
 		if err != nil {
 			return nil, err
 		}
 		v1s[i] = v1
 	}
 	return v1s, nil
+}
+
+func decodeFromAny(cdc codec.BinaryCodec, anyPB *anypb.Any) (proto.Message, error) {
+	messageName := anyPB.TypeUrl
+	if i := strings.LastIndexByte(anyPB.TypeUrl, '/'); i >= 0 {
+		messageName = messageName[i+len("/"):]
+	}
+	typ := proto.MessageType(messageName)
+	v1 := reflect.New(typ.Elem()).Interface().(proto.Message)
+	err := cdc.Unmarshal(anyPB.Value, v1)
+	if err != nil {
+		return nil, err
+	}
+	return v1, nil
 }

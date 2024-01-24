@@ -175,22 +175,6 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		jsonDecoder: configOptions.JSONDecoder,
 		jsonEncoder: configOptions.JSONEncoder,
 	}
-	if configOptions.ProtoDecoder == nil {
-		dec, err := txdecode.NewDecoder(txdecode.Options{SigningContext: configOptions.SigningContext})
-		if err != nil {
-			return nil, err
-		}
-		txConfig.decoder = txV2toInterface(configOptions.SigningOptions.AddressCodec, protoCodec, dec)
-	}
-	if configOptions.ProtoEncoder == nil {
-		txConfig.encoder = DefaultTxEncoder()
-	}
-	if configOptions.JSONDecoder == nil {
-		txConfig.jsonDecoder = DefaultJSONTxDecoder(protoCodec)
-	}
-	if configOptions.JSONEncoder == nil {
-		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
-	}
 
 	var err error
 	if configOptions.SigningContext == nil {
@@ -208,6 +192,25 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 			return nil, err
 		}
 	}
+
+	if configOptions.ProtoDecoder == nil {
+		dec, err := txdecode.NewDecoder(txdecode.Options{SigningContext: configOptions.SigningContext})
+		if err != nil {
+			return nil, err
+		}
+		txConfig.decoder = txV2toInterface(configOptions.SigningOptions.AddressCodec, protoCodec, dec)
+		txConfig.txDecoder = dec
+	}
+	if configOptions.ProtoEncoder == nil {
+		txConfig.encoder = DefaultTxEncoder()
+	}
+	if configOptions.JSONDecoder == nil {
+		txConfig.jsonDecoder = DefaultJSONTxDecoder(configOptions.SigningOptions.AddressCodec, protoCodec, txConfig.txDecoder)
+	}
+	if configOptions.JSONEncoder == nil {
+		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
+	}
+
 	txConfig.signingContext = configOptions.SigningContext
 
 	if configOptions.SigningHandler != nil {

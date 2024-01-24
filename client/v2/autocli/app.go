@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/x/auth/tx"
+	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
@@ -42,8 +42,8 @@ type AppOptions struct {
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context
 
-	// TxConfigOptions are the transactions config options.
-	TxConfigOpts tx.ConfigOptions
+	// TxConfigOpts are the transactions config options.
+	TxConfigOpts authtx.ConfigOptions
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,

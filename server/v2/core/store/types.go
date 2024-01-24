@@ -33,7 +33,7 @@ type GetReader interface {
 	GetReader(actor []byte) (Reader, error)
 }
 
-// WritableAccountsState represents a writable account state.
+// GetWriter represents a writable actor state.
 type GetWriter interface {
 	GetReader
 	// GetWriter must the return a WritableState

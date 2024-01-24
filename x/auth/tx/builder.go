@@ -308,8 +308,9 @@ func intoV2ModeInfo(v1 *tx.ModeInfo, v2 *txv1beta1.ModeInfo) {
 	case *tx.ModeInfo_Multi_:
 		multiModeInfos := v1.GetMulti().ModeInfos
 		modeInfos := make([]*txv1beta1.ModeInfo, len(multiModeInfos))
-		for _, modeInfo := range multiModeInfos {
-			intoV2ModeInfo(modeInfo, &txv1beta1.ModeInfo{})
+		for i, modeInfo := range multiModeInfos {
+			modeInfos[i] = new(txv1beta1.ModeInfo)
+			intoV2ModeInfo(modeInfo, modeInfos[i])
 		}
 		v2.Sum = &txv1beta1.ModeInfo_Multi_{
 			Multi: &txv1beta1.ModeInfo_Multi{
@@ -344,8 +345,8 @@ func fromV2ModeInfo(v2 *txv1beta1.ModeInfo, v1 *tx.ModeInfo) {
 
 		// Recursively convert each modeInfo
 		for i, modeInfo := range multiModeInfos {
-			fromV2ModeInfo(modeInfo, &tx.ModeInfo{})
-			modeInfos[i] = &tx.ModeInfo{} // Assuming the result of conversion is stored back in modeInfos[i]
+			modeInfos[i] = &tx.ModeInfo{}
+			fromV2ModeInfo(modeInfo, modeInfos[i])
 		}
 		v1.Sum = &tx.ModeInfo_Multi_{
 			Multi: &tx.ModeInfo_Multi{

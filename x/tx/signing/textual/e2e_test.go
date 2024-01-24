@@ -70,7 +70,10 @@ func TestE2EJSONTestcases(t *testing.T) {
 				BodyBytes:     bodyBz,
 				AuthInfoBytes: authInfoBz,
 			})
+			decodeWant, err := hex.DecodeString(tc.Cbor)
 			require.NoError(t, err)
+			t.Log("got: " + string(signDoc))
+			t.Log("want " + string(decodeWant))
 			require.Equal(t, tc.Cbor, hex.EncodeToString(signDoc))
 		})
 	}

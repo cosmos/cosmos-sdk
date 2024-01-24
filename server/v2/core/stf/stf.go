@@ -20,7 +20,7 @@ type STF[T transaction.Tx] interface {
 		state store.ReadonlyState,
 	) (*appmanager.BlockResponse, store.WritableState, error)
 	// Simulate simulates the execution of a transaction over the provided state, with the provided gas limit.
-	Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) (appmanager.TxResult, []store.ChangeSet)
+	Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) (appmanager.TxResult, []store.StateChange)
 	// Query runs the provided query over the provided readonly state.
 	Query(ctx context.Context, state store.ReadonlyState, gasLimit uint64, queryRequest appmanager.Type) (queryResponse appmanager.Type, err error)
 	// ValidateTx validates the TX.

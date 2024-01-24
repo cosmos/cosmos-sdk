@@ -14,20 +14,48 @@ type Store interface {
 	// StateLatest returns a readonly view over the latest
 	// committed state of the store. Alongside the version
 	// associated with it.
-	StateLatest() (uint64, ReadonlyState, error)
+	StateLatest() (uint64, ReadonlyAccountsState, error)
 
 	// StateAt returns a readonly view over the provided
 	// state. Must error when the version does not exist.
-	StateAt(version uint64) (ReadonlyState, error)
+	StateAt(version uint64) (ReadonlyAccountsState, error)
 
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
-	StateCommit(changes []ChangeSet) (Hash, error)
+	StateCommit(changes []StateChange) (Hash, error)
 }
 
-// ChangeSet represents a change in a key and value of state.
+// ReadonlyAccountsState represents a readonly view over all the accounts state.
+type ReadonlyAccountsState interface {
+	// GetAccountReadonlyState must return the state for the provided address.
+	// Storage implements might treat this as a prefix store over an address.
+	// Prefix safety is on the implementer.
+	GetAccountReadonlyState(address []byte) (ReadonlyState, error)
+}
+
+// WritableAccountsState represents a writable account state.
+type WritableAccountsState interface {
+	ReadonlyAccountsState
+	// GetAccountWritableState must the return a WritableState
+	// for the provided account address.
+	GetAccountWritableState(address []byte) (WritableState, error)
+	// ApplyAccountsStateChanges applies all the state changes
+	// of the accounts. Ordering of the returned state changes
+	// is an implementation detail and must not be assumed.
+	ApplyAccountsStateChanges(stateChanges []AccountStateChanges) error
+	// GetAccountsStateChanges returns the list of the state
+	// changes so far applied. Order must not be assumed.
+	GetAccountsStateChanges() ([]AccountStateChanges, error)
+}
+
+type AccountStateChanges struct {
+	Account      []byte
+	StateChanges []StateChange
+}
+
+// StateChange represents a change in a key and value of state.
 // Remove being true signals the key must be removed from state.
-type ChangeSet struct {
+type StateChange struct {
 	// Key defines the key being updated.
 	Key []byte
 	// Value defines the value associated with the updated key.
@@ -41,8 +69,8 @@ type WritableState interface {
 	ReadonlyState
 	Set(key, value []byte) error
 	Delete(key []byte) error
-	ApplyChangeSets(changes []ChangeSet) error
-	ChangeSets() ([]ChangeSet, error)
+	ApplyChangeSets(changes []StateChange) error
+	ChangeSets() ([]StateChange, error)
 }
 
 // ReadonlyState defines a sub-set of the methods exposed by store.KVStore.

@@ -68,7 +68,7 @@ func NewConsensus[T transaction.Tx](
 type BlockData struct {
 	Height    int64
 	Hash      []byte
-	ChangeSet []store.ChangeSet
+	ChangeSet []store.StateChange
 }
 
 // CheckTx implements types.Application.

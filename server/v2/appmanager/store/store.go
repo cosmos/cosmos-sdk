@@ -59,7 +59,7 @@ func (s Store[SS, SC]) StateAt(version uint64) (store.ReadonlyState, error) {
 // StateCommit commits the provided state changes to SS and SC.
 // NOTE: on error after applying changesets to SS we could consider
 // attempting a rollback on SS.
-func (s Store[SS, SC]) StateCommit(changes []store.ChangeSet) (store.Hash, error) {
+func (s Store[SS, SC]) StateCommit(changes []store.StateChange) (store.Hash, error) {
 	next := s.latest.Add(1)
 	storeV2ChangeSet := intoStoreV2ChangeSet(changes)
 	// commit ss

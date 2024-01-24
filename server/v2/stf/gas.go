@@ -78,11 +78,11 @@ func (s *Store) Delete(key []byte) error {
 	return s.parent.Delete(key)
 }
 
-func (b *Store) ApplyChangeSets(changes []store.ChangeSet) error {
+func (b *Store) ApplyChangeSets(changes []store.StateChange) error {
 	return b.parent.ApplyChangeSets(changes)
 }
 
-func (b *Store) ChangeSets() ([]store.ChangeSet, error) {
+func (b *Store) ChangeSets() ([]store.StateChange, error) {
 	return b.parent.ChangeSets()
 }
 

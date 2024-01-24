@@ -124,11 +124,11 @@ func (m memStore) Delete(key []byte) error {
 	return nil
 }
 
-func (m memStore) ApplyChangeSets(changes []store.ChangeSet) error {
+func (m memStore) ApplyChangeSets(changes []store.StateChange) error {
 	panic("not callable")
 }
 
-func (m memStore) ChangeSets() ([]store.ChangeSet, error) { panic("not callable") }
+func (m memStore) ChangeSets() ([]store.StateChange, error) { panic("not callable") }
 
 func (m memStore) Has(key []byte) (bool, error) {
 	_, found := m.t.Get(item{key: key})

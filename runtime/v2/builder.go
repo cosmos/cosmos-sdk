@@ -10,11 +10,10 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf"
-	"cosmossdk.io/server/v2/stf/branch"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-type branchFunc func(state store.Reader) store.Writer
+type branchFunc func(state store.GetReader) store.GetWriter
 
 // AppBuilder is a type that is injected into a container by the runtime module
 // (as *AppBuilder) which can be used to create an app which is compatible with
@@ -79,9 +78,9 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 
 	// default branch
 	if a.branch == nil {
-		a.branch = func(state store.Reader) store.Writer {
-			return branch.NewStore(state)
-		}
+		// a.branch = func(state store.GetReader) store.GetWriter {
+		// 	return branch.NewStore(state)
+		// }
 	}
 
 	// default tx validator
@@ -103,7 +102,7 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 	a.app.stf = stf.NewSTF[transaction.Tx](
 		stfMsgHandler,
 		stfMsgHandler,
-		a.app.moduleManager.UpgradeBlocker(),
+		a.app.moduleManager.PreBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,
 		a.txValidator,

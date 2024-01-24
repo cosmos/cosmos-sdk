@@ -109,6 +109,22 @@ type HasTxValidation[T transaction.Tx] interface {
 	TxValidator(ctx context.Context, tx T) error
 }
 
+// HasUpdateValidators is an extension interface that contains information about the AppModule and UpdateValidators.
+// It can be seen as the alternative of the Cosmos SDK' HasABCIEndBlocker.
+// Both are still supported.
+type HasUpdateValidators interface {
+	AppModule
+
+	UpdateValidators(ctx context.Context) ([]ValidatorUpdate, error)
+}
+
+// ValidatorUpdate defines a validator update.
+type ValidatorUpdate struct {
+	PubKey     []byte
+	PubKeyType string
+	Power      int64 // updated power of the validtor
+}
+
 // **********************************************
 // The following interfaces are baseapp specific and will be deprecated in the future.
 // **********************************************

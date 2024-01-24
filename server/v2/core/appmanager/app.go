@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
@@ -38,7 +39,7 @@ type BlockRequest[T any] struct {
 
 type BlockResponse struct {
 	Apphash          []byte
-	ValidatorUpdates []ValidatorUpdate
+	ValidatorUpdates []appmodule.ValidatorUpdate
 	PreBlockEvents   []event.Event
 	BeginBlockEvents []event.Event
 	TxResults        []TxResult
@@ -48,13 +49,13 @@ type BlockResponse struct {
 type RequestInitChain struct {
 	Time          time.Time
 	ChainId       string
-	Validators    []ValidatorUpdate
+	Validators    []appmodule.ValidatorUpdate
 	AppStateBytes []byte
 	InitialHeight int64
 }
 
 type ResponseInitChain struct {
-	Validators []ValidatorUpdate
+	Validators []appmodule.ValidatorUpdate
 	AppHash    []byte
 }
 

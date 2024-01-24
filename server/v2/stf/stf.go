@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 
+	"cosmossdk.io/core/appmodule"
 	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
@@ -23,7 +24,7 @@ type STF[T transaction.Tx] struct {
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
 	doEndBlock        func(ctx context.Context) error
-	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
+	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)
 
 	doTxValidation func(ctx context.Context, tx T) error // TODO: rewrite antehandlers remove simulate
 	postTxExec     func(ctx context.Context, tx T, success bool) error
@@ -33,19 +34,19 @@ type STF[T transaction.Tx] struct {
 
 // NewSTF returns a new STF instance.
 func NewSTF[T transaction.Tx](
-	handleMsg func(ctx context.Context, msg Type) (msgResp Type, err error),
-	handleQuery func(ctx context.Context, req Type) (resp Type, err error),
-	doUpgradeBlock func(ctx context.Context) (bool, error),
+	handleMsg func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error),
+	handleQuery func(ctx context.Context, req transaction.Type) (resp transaction.Type, err error),
+	doPreBlock func(ctx context.Context, txs []T) error,
 	doBeginBlock func(ctx context.Context) error,
 	doEndBlock func(ctx context.Context) error,
 	doTxValidation func(ctx context.Context, tx T) error,
-	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error),
-	branch func(store store.ReadonlyState) store.WritableState,
+	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error),
+	branch func(store store.GetReader) store.GetWriter,
 ) *STF[T] {
 	return &STF[T]{
 		handleMsg:         handleMsg,
 		handleQuery:       handleQuery,
-		doUpgradeBlock:    doUpgradeBlock,
+		doPreBlock:        doPreBlock,
 		doBeginBlock:      doBeginBlock,
 		doEndBlock:        doEndBlock,
 		doTxValidation:    doTxValidation,
@@ -262,7 +263,7 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.GetWriter) (beginBlo
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.GetWriter) ([]event.Event, []appmanager.ValidatorUpdate, error) {
+func (s STF[T]) endBlock(ctx context.Context, state store.GetWriter) ([]event.Event, []appmodule.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
@@ -287,7 +288,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.GetWriter) ([]event.Ev
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.GetWriter) ([]event.Event, []appmanager.ValidatorUpdate, error) {
+func (s STF[T]) validatorUpdates(ctx context.Context, state store.GetWriter) ([]event.Event, []appmodule.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {

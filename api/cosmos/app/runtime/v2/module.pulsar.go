@@ -43,7 +43,7 @@ func (x *_Module_2_list) Append(value protoreflect.Value) {
 }
 
 func (x *_Module_2_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field BeginBlockers as it is not of Message kind"))
+	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field PreBlockers as it is not of Message kind"))
 }
 
 func (x *_Module_2_list) Truncate(n int) {
@@ -89,7 +89,7 @@ func (x *_Module_3_list) Append(value protoreflect.Value) {
 }
 
 func (x *_Module_3_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field EndBlockers as it is not of Message kind"))
+	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field BeginBlockers as it is not of Message kind"))
 }
 
 func (x *_Module_3_list) Truncate(n int) {
@@ -135,7 +135,7 @@ func (x *_Module_4_list) Append(value protoreflect.Value) {
 }
 
 func (x *_Module_4_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field TxValidation as it is not of Message kind"))
+	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field EndBlockers as it is not of Message kind"))
 }
 
 func (x *_Module_4_list) Truncate(n int) {
@@ -181,7 +181,7 @@ func (x *_Module_5_list) Append(value protoreflect.Value) {
 }
 
 func (x *_Module_5_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field InitGenesis as it is not of Message kind"))
+	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field TxValidation as it is not of Message kind"))
 }
 
 func (x *_Module_5_list) Truncate(n int) {
@@ -227,7 +227,7 @@ func (x *_Module_6_list) Append(value protoreflect.Value) {
 }
 
 func (x *_Module_6_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field ExportGenesis as it is not of Message kind"))
+	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field InitGenesis as it is not of Message kind"))
 }
 
 func (x *_Module_6_list) Truncate(n int) {
@@ -246,7 +246,7 @@ func (x *_Module_6_list) IsValid() bool {
 var _ protoreflect.List = (*_Module_7_list)(nil)
 
 type _Module_7_list struct {
-	list *[]*StoreKeyConfig
+	list *[]string
 }
 
 func (x *_Module_7_list) Len() int {
@@ -257,46 +257,93 @@ func (x *_Module_7_list) Len() int {
 }
 
 func (x *_Module_7_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+	return protoreflect.ValueOfString((*x.list)[i])
 }
 
 func (x *_Module_7_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*StoreKeyConfig)
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_Module_7_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*StoreKeyConfig)
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_Module_7_list) AppendMutable() protoreflect.Value {
-	v := new(StoreKeyConfig)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
+	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field ExportGenesis as it is not of Message kind"))
 }
 
 func (x *_Module_7_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
 	*x.list = (*x.list)[:n]
 }
 
 func (x *_Module_7_list) NewElement() protoreflect.Value {
-	v := new(StoreKeyConfig)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
+	v := ""
+	return protoreflect.ValueOfString(v)
 }
 
 func (x *_Module_7_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_Module_10_list)(nil)
+
+type _Module_10_list struct {
+	list *[]*StoreKeyConfig
+}
+
+func (x *_Module_10_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Module_10_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Module_10_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*StoreKeyConfig)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Module_10_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*StoreKeyConfig)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Module_10_list) AppendMutable() protoreflect.Value {
+	v := new(StoreKeyConfig)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Module_10_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Module_10_list) NewElement() protoreflect.Value {
+	v := new(StoreKeyConfig)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Module_10_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_Module                     protoreflect.MessageDescriptor
 	fd_Module_app_name            protoreflect.FieldDescriptor
+	fd_Module_pre_blockers        protoreflect.FieldDescriptor
 	fd_Module_begin_blockers      protoreflect.FieldDescriptor
 	fd_Module_end_blockers        protoreflect.FieldDescriptor
 	fd_Module_tx_validation       protoreflect.FieldDescriptor
@@ -309,6 +356,7 @@ func init() {
 	file_cosmos_app_runtime_v2_module_proto_init()
 	md_Module = File_cosmos_app_runtime_v2_module_proto.Messages().ByName("Module")
 	fd_Module_app_name = md_Module.Fields().ByName("app_name")
+	fd_Module_pre_blockers = md_Module.Fields().ByName("pre_blockers")
 	fd_Module_begin_blockers = md_Module.Fields().ByName("begin_blockers")
 	fd_Module_end_blockers = md_Module.Fields().ByName("end_blockers")
 	fd_Module_tx_validation = md_Module.Fields().ByName("tx_validation")
@@ -388,38 +436,44 @@ func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if len(x.PreBlockers) != 0 {
+		value := protoreflect.ValueOfList(&_Module_2_list{list: &x.PreBlockers})
+		if !f(fd_Module_pre_blockers, value) {
+			return
+		}
+	}
 	if len(x.BeginBlockers) != 0 {
-		value := protoreflect.ValueOfList(&_Module_2_list{list: &x.BeginBlockers})
+		value := protoreflect.ValueOfList(&_Module_3_list{list: &x.BeginBlockers})
 		if !f(fd_Module_begin_blockers, value) {
 			return
 		}
 	}
 	if len(x.EndBlockers) != 0 {
-		value := protoreflect.ValueOfList(&_Module_3_list{list: &x.EndBlockers})
+		value := protoreflect.ValueOfList(&_Module_4_list{list: &x.EndBlockers})
 		if !f(fd_Module_end_blockers, value) {
 			return
 		}
 	}
 	if len(x.TxValidation) != 0 {
-		value := protoreflect.ValueOfList(&_Module_4_list{list: &x.TxValidation})
+		value := protoreflect.ValueOfList(&_Module_5_list{list: &x.TxValidation})
 		if !f(fd_Module_tx_validation, value) {
 			return
 		}
 	}
 	if len(x.InitGenesis) != 0 {
-		value := protoreflect.ValueOfList(&_Module_5_list{list: &x.InitGenesis})
+		value := protoreflect.ValueOfList(&_Module_6_list{list: &x.InitGenesis})
 		if !f(fd_Module_init_genesis, value) {
 			return
 		}
 	}
 	if len(x.ExportGenesis) != 0 {
-		value := protoreflect.ValueOfList(&_Module_6_list{list: &x.ExportGenesis})
+		value := protoreflect.ValueOfList(&_Module_7_list{list: &x.ExportGenesis})
 		if !f(fd_Module_export_genesis, value) {
 			return
 		}
 	}
 	if len(x.OverrideStoreKeys) != 0 {
-		value := protoreflect.ValueOfList(&_Module_7_list{list: &x.OverrideStoreKeys})
+		value := protoreflect.ValueOfList(&_Module_10_list{list: &x.OverrideStoreKeys})
 		if !f(fd_Module_override_store_keys, value) {
 			return
 		}
@@ -441,6 +495,8 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.app.runtime.v2.Module.app_name":
 		return x.AppName != ""
+	case "cosmos.app.runtime.v2.Module.pre_blockers":
+		return len(x.PreBlockers) != 0
 	case "cosmos.app.runtime.v2.Module.begin_blockers":
 		return len(x.BeginBlockers) != 0
 	case "cosmos.app.runtime.v2.Module.end_blockers":
@@ -471,6 +527,8 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.app.runtime.v2.Module.app_name":
 		x.AppName = ""
+	case "cosmos.app.runtime.v2.Module.pre_blockers":
+		x.PreBlockers = nil
 	case "cosmos.app.runtime.v2.Module.begin_blockers":
 		x.BeginBlockers = nil
 	case "cosmos.app.runtime.v2.Module.end_blockers":
@@ -502,41 +560,47 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "cosmos.app.runtime.v2.Module.app_name":
 		value := x.AppName
 		return protoreflect.ValueOfString(value)
-	case "cosmos.app.runtime.v2.Module.begin_blockers":
-		if len(x.BeginBlockers) == 0 {
+	case "cosmos.app.runtime.v2.Module.pre_blockers":
+		if len(x.PreBlockers) == 0 {
 			return protoreflect.ValueOfList(&_Module_2_list{})
 		}
-		listValue := &_Module_2_list{list: &x.BeginBlockers}
+		listValue := &_Module_2_list{list: &x.PreBlockers}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.app.runtime.v2.Module.begin_blockers":
+		if len(x.BeginBlockers) == 0 {
+			return protoreflect.ValueOfList(&_Module_3_list{})
+		}
+		listValue := &_Module_3_list{list: &x.BeginBlockers}
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.app.runtime.v2.Module.end_blockers":
 		if len(x.EndBlockers) == 0 {
-			return protoreflect.ValueOfList(&_Module_3_list{})
+			return protoreflect.ValueOfList(&_Module_4_list{})
 		}
-		listValue := &_Module_3_list{list: &x.EndBlockers}
+		listValue := &_Module_4_list{list: &x.EndBlockers}
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.app.runtime.v2.Module.tx_validation":
 		if len(x.TxValidation) == 0 {
-			return protoreflect.ValueOfList(&_Module_4_list{})
+			return protoreflect.ValueOfList(&_Module_5_list{})
 		}
-		listValue := &_Module_4_list{list: &x.TxValidation}
+		listValue := &_Module_5_list{list: &x.TxValidation}
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.app.runtime.v2.Module.init_genesis":
 		if len(x.InitGenesis) == 0 {
-			return protoreflect.ValueOfList(&_Module_5_list{})
+			return protoreflect.ValueOfList(&_Module_6_list{})
 		}
-		listValue := &_Module_5_list{list: &x.InitGenesis}
+		listValue := &_Module_6_list{list: &x.InitGenesis}
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.app.runtime.v2.Module.export_genesis":
 		if len(x.ExportGenesis) == 0 {
-			return protoreflect.ValueOfList(&_Module_6_list{})
+			return protoreflect.ValueOfList(&_Module_7_list{})
 		}
-		listValue := &_Module_6_list{list: &x.ExportGenesis}
+		listValue := &_Module_7_list{list: &x.ExportGenesis}
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.app.runtime.v2.Module.override_store_keys":
 		if len(x.OverrideStoreKeys) == 0 {
-			return protoreflect.ValueOfList(&_Module_7_list{})
+			return protoreflect.ValueOfList(&_Module_10_list{})
 		}
-		listValue := &_Module_7_list{list: &x.OverrideStoreKeys}
+		listValue := &_Module_10_list{list: &x.OverrideStoreKeys}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -560,29 +624,33 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 	switch fd.FullName() {
 	case "cosmos.app.runtime.v2.Module.app_name":
 		x.AppName = value.Interface().(string)
-	case "cosmos.app.runtime.v2.Module.begin_blockers":
+	case "cosmos.app.runtime.v2.Module.pre_blockers":
 		lv := value.List()
 		clv := lv.(*_Module_2_list)
+		x.PreBlockers = *clv.list
+	case "cosmos.app.runtime.v2.Module.begin_blockers":
+		lv := value.List()
+		clv := lv.(*_Module_3_list)
 		x.BeginBlockers = *clv.list
 	case "cosmos.app.runtime.v2.Module.end_blockers":
 		lv := value.List()
-		clv := lv.(*_Module_3_list)
+		clv := lv.(*_Module_4_list)
 		x.EndBlockers = *clv.list
 	case "cosmos.app.runtime.v2.Module.tx_validation":
 		lv := value.List()
-		clv := lv.(*_Module_4_list)
+		clv := lv.(*_Module_5_list)
 		x.TxValidation = *clv.list
 	case "cosmos.app.runtime.v2.Module.init_genesis":
 		lv := value.List()
-		clv := lv.(*_Module_5_list)
+		clv := lv.(*_Module_6_list)
 		x.InitGenesis = *clv.list
 	case "cosmos.app.runtime.v2.Module.export_genesis":
 		lv := value.List()
-		clv := lv.(*_Module_6_list)
+		clv := lv.(*_Module_7_list)
 		x.ExportGenesis = *clv.list
 	case "cosmos.app.runtime.v2.Module.override_store_keys":
 		lv := value.List()
-		clv := lv.(*_Module_7_list)
+		clv := lv.(*_Module_10_list)
 		x.OverrideStoreKeys = *clv.list
 	default:
 		if fd.IsExtension() {
@@ -604,41 +672,47 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.app.runtime.v2.Module.pre_blockers":
+		if x.PreBlockers == nil {
+			x.PreBlockers = []string{}
+		}
+		value := &_Module_2_list{list: &x.PreBlockers}
+		return protoreflect.ValueOfList(value)
 	case "cosmos.app.runtime.v2.Module.begin_blockers":
 		if x.BeginBlockers == nil {
 			x.BeginBlockers = []string{}
 		}
-		value := &_Module_2_list{list: &x.BeginBlockers}
+		value := &_Module_3_list{list: &x.BeginBlockers}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.app.runtime.v2.Module.end_blockers":
 		if x.EndBlockers == nil {
 			x.EndBlockers = []string{}
 		}
-		value := &_Module_3_list{list: &x.EndBlockers}
+		value := &_Module_4_list{list: &x.EndBlockers}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.app.runtime.v2.Module.tx_validation":
 		if x.TxValidation == nil {
 			x.TxValidation = []string{}
 		}
-		value := &_Module_4_list{list: &x.TxValidation}
+		value := &_Module_5_list{list: &x.TxValidation}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.app.runtime.v2.Module.init_genesis":
 		if x.InitGenesis == nil {
 			x.InitGenesis = []string{}
 		}
-		value := &_Module_5_list{list: &x.InitGenesis}
+		value := &_Module_6_list{list: &x.InitGenesis}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.app.runtime.v2.Module.export_genesis":
 		if x.ExportGenesis == nil {
 			x.ExportGenesis = []string{}
 		}
-		value := &_Module_6_list{list: &x.ExportGenesis}
+		value := &_Module_7_list{list: &x.ExportGenesis}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.app.runtime.v2.Module.override_store_keys":
 		if x.OverrideStoreKeys == nil {
 			x.OverrideStoreKeys = []*StoreKeyConfig{}
 		}
-		value := &_Module_7_list{list: &x.OverrideStoreKeys}
+		value := &_Module_10_list{list: &x.OverrideStoreKeys}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.app.runtime.v2.Module.app_name":
 		panic(fmt.Errorf("field app_name of message cosmos.app.runtime.v2.Module is not mutable"))
@@ -657,24 +731,27 @@ func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protor
 	switch fd.FullName() {
 	case "cosmos.app.runtime.v2.Module.app_name":
 		return protoreflect.ValueOfString("")
-	case "cosmos.app.runtime.v2.Module.begin_blockers":
+	case "cosmos.app.runtime.v2.Module.pre_blockers":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Module_2_list{list: &list})
-	case "cosmos.app.runtime.v2.Module.end_blockers":
+	case "cosmos.app.runtime.v2.Module.begin_blockers":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Module_3_list{list: &list})
-	case "cosmos.app.runtime.v2.Module.tx_validation":
+	case "cosmos.app.runtime.v2.Module.end_blockers":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Module_4_list{list: &list})
-	case "cosmos.app.runtime.v2.Module.init_genesis":
+	case "cosmos.app.runtime.v2.Module.tx_validation":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Module_5_list{list: &list})
-	case "cosmos.app.runtime.v2.Module.export_genesis":
+	case "cosmos.app.runtime.v2.Module.init_genesis":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Module_6_list{list: &list})
+	case "cosmos.app.runtime.v2.Module.export_genesis":
+		list := []string{}
+		return protoreflect.ValueOfList(&_Module_7_list{list: &list})
 	case "cosmos.app.runtime.v2.Module.override_store_keys":
 		list := []*StoreKeyConfig{}
-		return protoreflect.ValueOfList(&_Module_7_list{list: &list})
+		return protoreflect.ValueOfList(&_Module_10_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.runtime.v2.Module"))
@@ -747,6 +824,12 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		l = len(x.AppName)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.PreBlockers) > 0 {
+			for _, s := range x.PreBlockers {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
 		}
 		if len(x.BeginBlockers) > 0 {
 			for _, s := range x.BeginBlockers {
@@ -826,7 +909,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x3a
+				dAtA[i] = 0x52
 			}
 		}
 		if len(x.ExportGenesis) > 0 {
@@ -835,7 +918,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], x.ExportGenesis[iNdEx])
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ExportGenesis[iNdEx])))
 				i--
-				dAtA[i] = 0x32
+				dAtA[i] = 0x3a
 			}
 		}
 		if len(x.InitGenesis) > 0 {
@@ -844,7 +927,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], x.InitGenesis[iNdEx])
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.InitGenesis[iNdEx])))
 				i--
-				dAtA[i] = 0x2a
+				dAtA[i] = 0x32
 			}
 		}
 		if len(x.TxValidation) > 0 {
@@ -853,7 +936,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], x.TxValidation[iNdEx])
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TxValidation[iNdEx])))
 				i--
-				dAtA[i] = 0x22
+				dAtA[i] = 0x2a
 			}
 		}
 		if len(x.EndBlockers) > 0 {
@@ -862,7 +945,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], x.EndBlockers[iNdEx])
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.EndBlockers[iNdEx])))
 				i--
-				dAtA[i] = 0x1a
+				dAtA[i] = 0x22
 			}
 		}
 		if len(x.BeginBlockers) > 0 {
@@ -870,6 +953,15 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				i -= len(x.BeginBlockers[iNdEx])
 				copy(dAtA[i:], x.BeginBlockers[iNdEx])
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.BeginBlockers[iNdEx])))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if len(x.PreBlockers) > 0 {
+			for iNdEx := len(x.PreBlockers) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.PreBlockers[iNdEx])
+				copy(dAtA[i:], x.PreBlockers[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PreBlockers[iNdEx])))
 				i--
 				dAtA[i] = 0x12
 			}
@@ -964,6 +1056,38 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PreBlockers", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PreBlockers = append(x.PreBlockers, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BeginBlockers", wireType)
 				}
 				var stringLen uint64
@@ -994,7 +1118,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				}
 				x.BeginBlockers = append(x.BeginBlockers, string(dAtA[iNdEx:postIndex]))
 				iNdEx = postIndex
-			case 3:
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EndBlockers", wireType)
 				}
@@ -1026,7 +1150,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				}
 				x.EndBlockers = append(x.EndBlockers, string(dAtA[iNdEx:postIndex]))
 				iNdEx = postIndex
-			case 4:
+			case 5:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TxValidation", wireType)
 				}
@@ -1058,7 +1182,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				}
 				x.TxValidation = append(x.TxValidation, string(dAtA[iNdEx:postIndex]))
 				iNdEx = postIndex
-			case 5:
+			case 6:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field InitGenesis", wireType)
 				}
@@ -1090,7 +1214,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				}
 				x.InitGenesis = append(x.InitGenesis, string(dAtA[iNdEx:postIndex]))
 				iNdEx = postIndex
-			case 6:
+			case 7:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExportGenesis", wireType)
 				}
@@ -1122,7 +1246,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				}
 				x.ExportGenesis = append(x.ExportGenesis, string(dAtA[iNdEx:postIndex]))
 				iNdEx = postIndex
-			case 7:
+			case 10:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OverrideStoreKeys", wireType)
 				}
@@ -1696,28 +1820,32 @@ type Module struct {
 
 	// app_name is the name of the app.
 	AppName string `protobuf:"bytes,1,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
+	// pre_blockers specifies the module names of pre blockers
+	// to call in the order in which they should be called. If this is left empty
+	// no pre blocker will be registered.
+	PreBlockers []string `protobuf:"bytes,2,rep,name=pre_blockers,json=preBlockers,proto3" json:"pre_blockers,omitempty"`
 	// begin_blockers specifies the module names of begin blockers
 	// to call in the order in which they should be called. If this is left empty
 	// no begin blocker will be registered.
-	BeginBlockers []string `protobuf:"bytes,2,rep,name=begin_blockers,json=beginBlockers,proto3" json:"begin_blockers,omitempty"`
+	BeginBlockers []string `protobuf:"bytes,3,rep,name=begin_blockers,json=beginBlockers,proto3" json:"begin_blockers,omitempty"`
 	// end_blockers specifies the module names of the end blockers
 	// to call in the order in which they should be called. If this is left empty
 	// no end blocker will be registered.
-	EndBlockers []string `protobuf:"bytes,3,rep,name=end_blockers,json=endBlockers,proto3" json:"end_blockers,omitempty"`
+	EndBlockers []string `protobuf:"bytes,4,rep,name=end_blockers,json=endBlockers,proto3" json:"end_blockers,omitempty"`
 	// tx_validation specifies the module names for tx validations
 	// If this is left empty, no tx validation will be registered.
-	TxValidation []string `protobuf:"bytes,4,rep,name=tx_validation,json=txValidation,proto3" json:"tx_validation,omitempty"`
+	TxValidation []string `protobuf:"bytes,5,rep,name=tx_validation,json=txValidation,proto3" json:"tx_validation,omitempty"`
 	// init_genesis specifies the module names of init genesis functions
 	// to call in the order in which they should be called. If this is left empty
 	// no init genesis function will be registered.
-	InitGenesis []string `protobuf:"bytes,5,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
+	InitGenesis []string `protobuf:"bytes,6,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
 	// export_genesis specifies the order in which to export module genesis data.
 	// If this is left empty, the init_genesis order will be used for export genesis
 	// if it is specified.
-	ExportGenesis []string `protobuf:"bytes,6,rep,name=export_genesis,json=exportGenesis,proto3" json:"export_genesis,omitempty"`
+	ExportGenesis []string `protobuf:"bytes,7,rep,name=export_genesis,json=exportGenesis,proto3" json:"export_genesis,omitempty"`
 	// override_store_keys is an optional list of overrides for the module store keys
 	// to be used in keeper construction.
-	OverrideStoreKeys []*StoreKeyConfig `protobuf:"bytes,7,rep,name=override_store_keys,json=overrideStoreKeys,proto3" json:"override_store_keys,omitempty"`
+	OverrideStoreKeys []*StoreKeyConfig `protobuf:"bytes,10,rep,name=override_store_keys,json=overrideStoreKeys,proto3" json:"override_store_keys,omitempty"`
 }
 
 func (x *Module) Reset() {
@@ -1745,6 +1873,13 @@ func (x *Module) GetAppName() string {
 		return x.AppName
 	}
 	return ""
+}
+
+func (x *Module) GetPreBlockers() []string {
+	if x != nil {
+		return x.PreBlockers
+	}
+	return nil
 }
 
 func (x *Module) GetBeginBlockers() []string {
@@ -1844,49 +1979,51 @@ var file_cosmos_app_runtime_v2_module_proto_rawDesc = []byte{
 	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70,
 	0x2e, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x2e, 0x76, 0x32, 0x1a, 0x20, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31,
-	0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xeb, 0x02,
+	0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x8e, 0x03,
 	0x0a, 0x06, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x61, 0x70, 0x70, 0x5f,
 	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x70, 0x70, 0x4e,
-	0x61, 0x6d, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x62, 0x65, 0x67, 0x69, 0x6e, 0x5f, 0x62, 0x6c, 0x6f,
-	0x63, 0x6b, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0d, 0x62, 0x65, 0x67,
-	0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x65, 0x6e,
-	0x64, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09,
-	0x52, 0x0b, 0x65, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x12, 0x23, 0x0a,
-	0x0d, 0x74, 0x78, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04,
-	0x20, 0x03, 0x28, 0x09, 0x52, 0x0c, 0x74, 0x78, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x69, 0x6e, 0x69, 0x74, 0x5f, 0x67, 0x65, 0x6e, 0x65, 0x73,
-	0x69, 0x73, 0x18, 0x05, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0b, 0x69, 0x6e, 0x69, 0x74, 0x47, 0x65,
-	0x6e, 0x65, 0x73, 0x69, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x65, 0x78, 0x70, 0x6f, 0x72, 0x74, 0x5f,
-	0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0d, 0x65,
-	0x78, 0x70, 0x6f, 0x72, 0x74, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x12, 0x55, 0x0a, 0x13,
-	0x6f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x5f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x5f, 0x6b,
-	0x65, 0x79, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x61, 0x6d, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x70, 0x72, 0x65, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
+	0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0b, 0x70, 0x72, 0x65, 0x42, 0x6c,
+	0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x62, 0x65, 0x67, 0x69, 0x6e, 0x5f,
+	0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0d,
+	0x62, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x12, 0x21, 0x0a,
+	0x0c, 0x65, 0x6e, 0x64, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x18, 0x04, 0x20,
+	0x03, 0x28, 0x09, 0x52, 0x0b, 0x65, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73,
+	0x12, 0x23, 0x0a, 0x0d, 0x74, 0x78, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x18, 0x05, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0c, 0x74, 0x78, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x69, 0x6e, 0x69, 0x74, 0x5f, 0x67, 0x65,
+	0x6e, 0x65, 0x73, 0x69, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0b, 0x69, 0x6e, 0x69,
+	0x74, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x65, 0x78, 0x70, 0x6f,
+	0x72, 0x74, 0x5f, 0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28, 0x09,
+	0x52, 0x0d, 0x65, 0x78, 0x70, 0x6f, 0x72, 0x74, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x12,
+	0x55, 0x0a, 0x13, 0x6f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x5f, 0x73, 0x74, 0x6f, 0x72,
+	0x65, 0x5f, 0x6b, 0x65, 0x79, 0x73, 0x18, 0x0a, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d,
+	0x65, 0x2e, 0x76, 0x32, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x4b, 0x65, 0x79, 0x43, 0x6f, 0x6e,
+	0x66, 0x69, 0x67, 0x52, 0x11, 0x6f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x53, 0x74, 0x6f,
+	0x72, 0x65, 0x4b, 0x65, 0x79, 0x73, 0x3a, 0x36, 0xba, 0xc0, 0x96, 0xda, 0x01, 0x30, 0x0a, 0x17,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x72, 0x75, 0x6e,
+	0x74, 0x69, 0x6d, 0x65, 0x2f, 0x76, 0x32, 0x12, 0x15, 0x0a, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x22, 0x53,
+	0x0a, 0x0e, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x4b, 0x65, 0x79, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x12, 0x1f, 0x0a, 0x0b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x4e, 0x61, 0x6d,
+	0x65, 0x12, 0x20, 0x0a, 0x0c, 0x6b, 0x76, 0x5f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x5f, 0x6b, 0x65,
+	0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6b, 0x76, 0x53, 0x74, 0x6f, 0x72, 0x65,
+	0x4b, 0x65, 0x79, 0x42, 0xd1, 0x01, 0x0a, 0x19, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x2e, 0x76,
-	0x32, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x4b, 0x65, 0x79, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67,
-	0x52, 0x11, 0x6f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x4b,
-	0x65, 0x79, 0x73, 0x3a, 0x36, 0xba, 0xc0, 0x96, 0xda, 0x01, 0x30, 0x0a, 0x17, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d,
-	0x65, 0x2f, 0x76, 0x32, 0x12, 0x15, 0x0a, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
-	0x70, 0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x22, 0x53, 0x0a, 0x0e, 0x53,
-	0x74, 0x6f, 0x72, 0x65, 0x4b, 0x65, 0x79, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x1f, 0x0a,
-	0x0b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0a, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x20,
-	0x0a, 0x0c, 0x6b, 0x76, 0x5f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6b, 0x76, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x4b, 0x65, 0x79,
-	0x42, 0xd1, 0x01, 0x0a, 0x19, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x61, 0x70, 0x70, 0x2e, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x2e, 0x76, 0x32, 0x42, 0x0b,
-	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x72, 0x75, 0x6e, 0x74, 0x69,
-	0x6d, 0x65, 0x2f, 0x76, 0x32, 0x3b, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x76, 0x32, 0xa2,
-	0x02, 0x03, 0x43, 0x41, 0x52, 0xaa, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
-	0x70, 0x70, 0x2e, 0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x2e, 0x56, 0x32, 0xca, 0x02, 0x15,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x70, 0x70, 0x5c, 0x52, 0x75, 0x6e, 0x74, 0x69,
-	0x6d, 0x65, 0x5c, 0x56, 0x32, 0xe2, 0x02, 0x21, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41,
-	0x70, 0x70, 0x5c, 0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x5c, 0x56, 0x32, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x70, 0x70, 0x3a, 0x3a, 0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65,
-	0x3a, 0x3a, 0x56, 0x32, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x32, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x72, 0x75,
+	0x6e, 0x74, 0x69, 0x6d, 0x65, 0x2f, 0x76, 0x32, 0x3b, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65,
+	0x76, 0x32, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x52, 0xaa, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x2e, 0x56, 0x32,
+	0xca, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x70, 0x70, 0x5c, 0x52, 0x75,
+	0x6e, 0x74, 0x69, 0x6d, 0x65, 0x5c, 0x56, 0x32, 0xe2, 0x02, 0x21, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x41, 0x70, 0x70, 0x5c, 0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x5c, 0x56, 0x32,
+	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x70, 0x70, 0x3a, 0x3a, 0x52, 0x75, 0x6e, 0x74,
+	0x69, 0x6d, 0x65, 0x3a, 0x3a, 0x56, 0x32, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

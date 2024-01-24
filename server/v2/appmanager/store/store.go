@@ -21,6 +21,19 @@ type Store[SS storev2.VersionedDatabase, SC storev2.Committer] struct {
 	latest *atomic.Uint64
 }
 
+func (s Store[SS, SC]) StateLatest() (uint64, store.GetReader, error) {
+	latest := s.latest.Load()
+	return latest, actorsState[SS]{latest, s.ss}, nil
+}
+
+func (s Store[SS, SC]) StateAt(version uint64) (store.GetReader, error) {
+	return actorsState[SS]{version, s.ss}, nil
+}
+
+func (s Store[SS, SC]) StateCommit(changes []store.StateChanges) (store.Hash, error) {
+	panic("impl")
+}
+
 func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Store[SS, SC], error) {
 	// sanity checks.
 	ssVersion, err := ss.GetLatestVersion()
@@ -44,73 +57,33 @@ func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Stor
 	return s, nil
 }
 
-func (s Store[SS, SC]) StateLatest() (uint64, store.ReadonlyState, error) {
-	latest := s.latest.Load()
-	return latest, ssAt[SS]{latest, s.ss}, nil
-}
-
-func (s Store[SS, SC]) StateAt(version uint64) (store.ReadonlyState, error) {
-	if latest := s.latest.Load(); version > latest {
-		return nil, fmt.Errorf("can not create readonly state: latest %d, got: %d", latest, version)
-	}
-	return ssAt[SS]{version, s.ss}, nil
-}
-
-// StateCommit commits the provided state changes to SS and SC.
-// NOTE: on error after applying changesets to SS we could consider
-// attempting a rollback on SS.
-func (s Store[SS, SC]) StateCommit(changes []store.ChangeSet) (store.Hash, error) {
-	next := s.latest.Add(1)
-	storeV2ChangeSet := intoStoreV2ChangeSet(changes)
-	// commit ss
-	err := s.ss.ApplyChangeset(next, intoStoreV2ChangeSet(changes))
-	if err != nil {
-		return nil, err
-	}
-
-	// commit sc, this should probably be one method only
-	err = s.sc.WriteBatch(storeV2ChangeSet)
-	if err != nil {
-		return nil, err
-	}
-	si, err := s.sc.Commit()
-	if err != nil {
-		return nil, err
-	}
-	// no store keys, only one commit.
-	return si[0].GetHash(), nil
-}
-
-func (s Store[SS, SC]) LatestVersion() (uint64, error) {
-	return s.latest.Load(), nil
-}
-
-// ssAt implements a storev2.VersionedDatabase adapter which queries the database at the given version.
-type ssAt[SS storev2.VersionedDatabase] struct {
+type actorsState[SS storev2.VersionedDatabase] struct {
 	version uint64
 	ss      SS
 }
 
-func (s ssAt[SS]) Has(key []byte) (bool, error) {
-	return s.ss.Has("", s.version, key)
+func (a actorsState[SS]) GetReader(address []byte) (store.Reader, error) {
+	return state[SS]{
+		version:  a.version,
+		storeKey: string(address),
+		ss:       a.ss,
+	}, nil
 }
 
-func (s ssAt[SS]) Get(bytes []byte) ([]byte, error) {
-	return s.ss.Get("", s.version, bytes)
+type state[SS storev2.VersionedDatabase] struct {
+	version  uint64
+	storeKey string
+	ss       SS
 }
 
-func (s ssAt[SS]) Iterator(start, end []byte) (corestore.Iterator, error) {
-	iter, err := s.ss.Iterator("", s.version, start, end)
-	if err != nil {
-		return nil, err
-	}
-	return newIterAdapter(iter), nil
+func (s state[SS]) Has(key []byte) (bool, error) { return s.ss.Has(s.storeKey, s.version, key) }
+
+func (s state[SS]) Get(bytes []byte) ([]byte, error) { return s.ss.Get(s.storeKey, s.version, bytes) }
+
+func (s state[SS]) Iterator(start, end []byte) (corestore.Iterator, error) {
+	return s.ss.Iterator(s.storeKey, s.version, start, end)
 }
 
-func (s ssAt[SS]) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
-	iter, err := s.ss.ReverseIterator("", s.version, start, end)
-	if err != nil {
-		return nil, err
-	}
-	return newIterAdapter(iter), nil
+func (s state[SS]) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
+	return s.ss.ReverseIterator(s.storeKey, s.version, start, end)
 }

@@ -20,14 +20,14 @@ func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
 		beginBlockers:      make(map[string]func(ctx context.Context) error),
 		endBlockers:        make(map[string]func(ctx context.Context) error),
 		postExecHandler:    make(map[string]func(ctx context.Context, tx T, success bool) error),
-		branch:             func(state store.ReadonlyState) store.WritableState { return branch.NewStore(state) },
+		branch:             func(state store.Reader) store.Writer { return branch.NewStore(state) },
 	}
 }
 
 type STFBuilder[T transaction.Tx] struct {
 	err error
 
-	branch             func(state store.ReadonlyState) store.WritableState
+	branch             func(state store.Reader) store.Writer
 	msgRouterBuilder   *msgRouterBuilder
 	queryRouterBuilder *msgRouterBuilder
 	txValidators       map[string]func(ctx context.Context, tx T) error

@@ -44,7 +44,7 @@ type Consensus[T transaction.Tx] struct {
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
-	// committed block.
+	// committed block. TODO(tip): check if concurrency is really needed
 	lastCommittedBlock atomic.Pointer[BlockData]
 }
 
@@ -66,9 +66,9 @@ func NewConsensus[T transaction.Tx](
 // we only use the height, the rest is not needed right now and might get removed
 // in the future.
 type BlockData struct {
-	Height    int64
-	Hash      []byte
-	ChangeSet []store.ChangeSet
+	Height       int64
+	Hash         []byte
+	StateChanges []store.StateChanges
 }
 
 // CheckTx implements types.Application.
@@ -337,14 +337,18 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 		ConsensusMessages: []proto.Message{cometInfo},
 	}
 
-	resp, changeSet, err := c.app.DeliverBlock(ctx, blockReq)
+	resp, newState, err := c.app.DeliverBlock(ctx, blockReq)
 	if err != nil {
 		return nil, err
 	}
 
 	// after we get the changeset we can produce the commit hash,
 	// from the store.
-	appHash, err := c.store.StateCommit(changeSet)
+	stateChanges, err := newState.GetStateChanges()
+	if err != nil {
+		return nil, err
+	}
+	appHash, err := c.store.StateCommit(stateChanges)
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}
@@ -358,27 +362,9 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	events = append(events, resp.EndBlockEvents...)
 
 	// listen to state streaming changes in accordance with the block
-	for _, streamingListener := range c.streaming.Listeners {
-		if err := streamingListener.ListenDeliverBlock(ctx, streaming.ListenDeliverBlockRequest{
-			BlockHeight: req.Height,
-			// Txs:         req.Txs, TODO: see how to map txs
-			Events: streaming.IntoStreamingEvents(events),
-		}); err != nil {
-			c.logger.Error("ListenDeliverBlock listening hook failed", "height", req.Height, "err", err)
-		}
-
-		strChangeSet := make([]*streaming.StoreKVPair, len(changeSet))
-		for i, cs := range changeSet {
-			strChangeSet[i] = &streaming.StoreKVPair{
-				Key:    cs.Key,
-				Value:  cs.Value,
-				Delete: cs.Remove,
-			}
-		}
-
-		if err := streamingListener.ListenStateChanges(ctx, strChangeSet); err != nil {
-			c.logger.Error("ListenStateChanges listening hook failed", "height", req.Height, "err", err)
-		}
+	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, resp.TxResults, events, stateChanges)
+	if err != nil {
+		return nil, err
 	}
 
 	// remove txs from the mempool
@@ -388,9 +374,9 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	}
 
 	c.lastCommittedBlock.Store(&BlockData{
-		Height:    req.Height,
-		Hash:      appHash,
-		ChangeSet: changeSet,
+		Height:       req.Height,
+		Hash:         appHash,
+		StateChanges: stateChanges,
 	})
 
 	cp, err := c.GetConsensusParams(ctx)

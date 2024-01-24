@@ -63,17 +63,8 @@ func (s *PluginTestSuite) SetupTest() {
 
 	s.deliverBlockrequest = ListenDeliverBlockRequest{
 		BlockHeight: s.loggerCtx.BlockHeight(),
-		Txs: []*Transaction{{TxBytes: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}, Result: &ExecTxResult{
-			Events:    []*Event{},
-			Code:      1,
-			Codespace: "mockCodeSpace",
-			Data:      []byte{5, 6, 7, 8},
-			GasUsed:   2,
-			GasWanted: 3,
-			Info:      "mockInfo",
-			Log:       "mockLog",
-		}}},
-		Events: []*Event{},
+		Txs:         [][]byte{[]byte{1, 2, 3, 4, 5, 6, 7, 8, 9}},
+		Events:      []*Event{},
 	}
 	s.stateChangeRequest = ListenStateChangesRequest{}
 

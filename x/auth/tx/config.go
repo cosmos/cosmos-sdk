@@ -26,6 +26,7 @@ type config struct {
 	jsonEncoder    sdk.TxEncoder
 	protoCodec     codec.Codec
 	signingContext *txsigning.Context
+	txDecoder      *txdecode.Decoder
 }
 
 // ConfigOptions define the configuration of a TxConfig when calling NewTxConfigWithOptions.
@@ -223,17 +224,17 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {
-	return newBuilder(g.protoCodec)
+	return newBuilder(g.signingContext.AddressCodec(), g.txDecoder, g.protoCodec)
 }
 
 // WrapTxBuilder returns a builder from provided transaction
 func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
-	newBuilder, ok := newTx.(*gogoTxWrapper)
+	gogoTx, ok := newTx.(*gogoTxWrapper)
 	if !ok {
 		return nil, fmt.Errorf("expected %T, got %T", &gogoTxWrapper{}, newTx)
 	}
 
-	return newBuilder, nil
+	return newBuilderFromDecodedTx(g.signingContext.AddressCodec(), g.txDecoder, g.protoCodec, gogoTx)
 }
 
 func (g config) SignModeHandler() *txsigning.HandlerMap {

@@ -2,7 +2,6 @@ package tx
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -224,20 +223,23 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 
 // TxEncode implements the ServiceServer.TxEncode RPC method.
 func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
-	if req.Tx == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
-	}
+	panic("todo")
+	/*
+		if req.Tx == nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+		}
 
-	txBuilder := &gogoTxWrapper{tx: req.Tx}
+		txBuilder := &gogoTxWrapper{tx: req.Tx}
 
-	encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(txBuilder)
-	if err != nil {
-		return nil, err
-	}
+		encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(txBuilder)
+		if err != nil {
+			return nil, err
+		}
 
-	return &txtypes.TxEncodeResponse{
-		TxBytes: encodedBytes,
-	}, nil
+		return &txtypes.TxEncodeResponse{
+			TxBytes: encodedBytes,
+		}, nil
+	*/
 }
 
 // TxEncodeAmino implements the ServiceServer.TxEncodeAmino RPC method.
@@ -264,23 +266,26 @@ func (s txServer) TxEncodeAmino(ctx context.Context, req *txtypes.TxEncodeAminoR
 
 // TxDecode implements the ServiceServer.TxDecode RPC method.
 func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
-	if req.TxBytes == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
-	}
+	panic("todo")
+	/*
+		if req.TxBytes == nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+		}
 
-	txb, err := s.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
-	if err != nil {
-		return nil, err
-	}
+		txb, err := s.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
+		if err != nil {
+			return nil, err
+		}
 
-	txWrapper, ok := txb.(*gogoTxWrapper)
-	if ok {
-		return &txtypes.TxDecodeResponse{
-			Tx: txWrapper.tx,
-		}, nil
-	}
+		txWrapper, ok := txb.(*gogoTxWrapper)
+		if ok {
+			return &txtypes.TxDecodeResponse{
+				Tx: txWrapper.,
+			}, nil
+		}
 
-	return nil, fmt.Errorf("expected %T, got %T", &gogoTxWrapper{}, txb)
+		return nil, fmt.Errorf("expected %T, got %T", &gogoTxWrapper{}, txb)
+	*/
 }
 
 // TxDecodeAmino implements the ServiceServer.TxDecodeAmino RPC method.

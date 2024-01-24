@@ -21,7 +21,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -172,16 +171,6 @@ func (w *gogoTxWrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	return res, nil
 }
 
-func (w *gogoTxWrapper) GetProtoTx() *tx.Tx {
-	return w.tx
-}
-
-// Deprecated: AsAny extracts proto Tx and wraps it into Any.
-// NOTE: You should probably use `GetProtoTx` if you want to serialize the transaction.
-func (w *gogoTxWrapper) AsAny() *codectypes.Any {
-	return codectypes.UnsafePackAny(w.tx)
-}
-
 // GetSigningTxData returns an x/tx/signing.TxData representation of a transaction for use in the signing
 // TODO: evaluate if this is even needed considering we have decoded tx.
 func (w *gogoTxWrapper) GetSigningTxData() txsigning.TxData {
@@ -191,13 +180,6 @@ func (w *gogoTxWrapper) GetSigningTxData() txsigning.TxData {
 		BodyBytes:                  w.decodedTx.TxRaw.BodyBytes,
 		AuthInfoBytes:              w.decodedTx.TxRaw.AuthInfoBytes,
 		BodyHasUnknownNonCriticals: w.decodedTx.TxBodyHasUnknownNonCriticals,
-	}
-}
-
-// WrapTx creates a TxBuilder gogoTxWrapper around a tx.Tx proto message.
-func WrapTx(protoTx *tx.Tx) client.TxBuilder {
-	return &gogoTxWrapper{
-		tx: protoTx,
 	}
 }
 

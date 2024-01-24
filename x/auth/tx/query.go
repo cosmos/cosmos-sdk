@@ -5,12 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"time"
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -132,20 +130,16 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*coretypes.ResultT
 }
 
 func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *coretypes.ResultBlock) (*sdk.TxResponse, error) {
-	txb, err := txConfig.TxDecoder()(resTx.Tx)
-	if err != nil {
-		return nil, err
-	}
-	p, ok := txb.(intoAny)
-	if !ok {
-		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
-	}
-	any := p.AsAny()
-	return sdk.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
-}
-
-// Deprecated: this interface is used only internally for scenario we are
-// deprecating (StdTxConfig support)
-type intoAny interface {
-	AsAny() *codectypes.Any
+	panic("todo")
+	/*
+		txb, err := txConfig.TxDecoder()(resTx.Tx)
+		if err != nil {
+			return nil, err
+		}
+		p, ok := txb.(*gogoTxWrapper)
+		if !ok {
+			return nil, fmt.Errorf("unexpected type, wnted gogoTxWrapper, got: %T", txb)
+		}
+		return sdk.NewResponseResultTx(resTx, p.decodedTx.Tx, resBlock.Block.Time.Format(time.RFC3339)), nil
+	*/
 }

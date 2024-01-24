@@ -10,6 +10,7 @@ var _ store.KVStore = (WritableState)(nil)
 
 // Store defines the underlying storage engine of an app.
 type Store interface {
+	LatestVerseion() (uint64, error)
 	// StateLatest returns a readonly view over the latest
 	// committed state of the store. Alongside the version
 	// associated with it.

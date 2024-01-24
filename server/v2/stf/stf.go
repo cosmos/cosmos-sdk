@@ -216,7 +216,6 @@ func (s STF[T]) preBlock(ctx context.Context, state store.WritableState, txs []T
 			coreevent.Attribute{Key: "mode", Value: "PreBlock"},
 		)
 	}
-	// TODO deprecate consensus params on context (marko)
 	// TODO: update consensus module to accept consensus messages (facu)
 
 	return pbCtx.events, nil

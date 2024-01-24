@@ -109,13 +109,13 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 }
 
 // Info implements types.Application.
-func (c *Consensus[T]) Info(context.Context, *abci.RequestInfo) (*abci.ResponseInfo, error) {
+func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	version, _, err := c.store.StateLatest()
 	if err != nil {
 		return nil, err
 	}
 
-	cp, err := c.GetConsensusParams()
+	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -178,6 +178,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 
 // InitChain implements types.Application.
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+
 	// TODO: won't work for now
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
@@ -249,8 +250,7 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	// TODO: consensus has access query router, grpc or appmanger, to query consensuns param info
-	cp, err := c.GetConsensusParams()
+	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +393,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 		ChangeSet: changeSet,
 	})
 
-	cp, err := c.GetConsensusParams()
+	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +408,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci
 
 	c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
 
-	cp, err := c.GetConsensusParams()
+	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err
 	}

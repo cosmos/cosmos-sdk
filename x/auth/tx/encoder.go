@@ -22,11 +22,9 @@ func DefaultTxEncoder() sdk.TxEncoder {
 // DefaultJSONTxEncoder returns a default protobuf JSON TxEncoder using the provided Marshaler.
 func DefaultJSONTxEncoder(cdc codec.Codec) sdk.TxEncoder {
 	jsonMarshaler := protojson.MarshalOptions{
-		Multiline:     false,
-		Indent:        "",
-		AllowPartial:  false,
-		UseProtoNames: true,
-		Resolver:      nil,
+		Indent:         "",
+		UseProtoNames:  true,
+		UseEnumNumbers: false,
 	}
 	return func(tx sdk.Tx) ([]byte, error) {
 		gogoWrapper, ok := tx.(*gogoTxWrapper)

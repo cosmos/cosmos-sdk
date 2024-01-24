@@ -114,7 +114,12 @@ func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {
-	// TODO:
+	if len(w.decodedTx.Signers) != len(w.decodedTx.Tx.Signatures) {
+		return fmt.Errorf("invalid number of signatures: got %d signers and %d signatures", len(w.decodedTx.Tx.Signatures), len(w.decodedTx.Signers))
+	}
+	if len(w.decodedTx.Tx.Signatures) == 0 {
+		return fmt.Errorf("empty signatures")
+	}
 	return nil
 }
 

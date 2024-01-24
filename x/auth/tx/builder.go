@@ -171,7 +171,7 @@ func intoV2Fees(fees sdk.Coins) []*basev1beta1.Coin {
 			Amount: c.Amount.String(),
 		}
 	}
-	return nil
+	return coins
 }
 
 func (w *builder) SetMsgs(msgs ...sdk.Msg) error {
@@ -253,12 +253,14 @@ func (w *builder) getFee() (fee *txv1beta1.Fee, err error) {
 			return nil, err
 		}
 	}
-	return &txv1beta1.Fee{
+	fee = &txv1beta1.Fee{
 		Amount:   intoV2Fees(w.fees),
 		GasLimit: w.gasLimit,
 		Payer:    payerStr,
 		Granter:  granterStr,
-	}, nil
+	}
+
+	return fee, nil
 }
 
 func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {

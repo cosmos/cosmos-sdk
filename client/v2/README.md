@@ -209,15 +209,23 @@ For example, here is how the SDK does it for `cometbft` gRPC commands:
 https://github.com/cosmos/cosmos-sdk/blob/main/client/grpc/cmtservice/autocli.go#L52-L71
 ```
 
-## Off-Chain
+## Summary
+
+`autocli` lets you generate CLI to your Cosmos SDK-based applications without any cobra boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
+
+To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `hubl`. `hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With `hubl`, you can easily configure a new chain and query modules with just a few simple commands.
+
+For more information on `hubl`, including how to configure a new chain and query a module, see the [Hubl documentation](https://docs.cosmos.network/main/tooling/hubl).
+
+# Off-Chain
 
 Off-chain functionalities allow you to sign and verify files with two commands:
- + `sign-file` for signing a file.
- + `verify-file` for verifying a previously signed file.
++ `sign-file` for signing a file.
++ `verify-file` for verifying a previously signed file.
 
 Signing a file will result in a Tx with a `MsgSignArbitraryData` as described in the [Off-chain CIP](https://github.com/cosmos/cips/blob/main/cips/cip-X.md).
 
-### Sign a file
+## Sign a file
 
 To sign a file `sign-file` command offers some helpful flags:
 ```text
@@ -229,8 +237,8 @@ To sign a file `sign-file` command offers some helpful flags:
 ```
 
 The `encoding` flag lets you choose how the contents of the file should be encoded. For example:
- + `simd off-chain sign-file alice myFile.json`
-   + ```json
++ `simd off-chain sign-file alice myFile.json`
+    + ```json
       {
         "@type":  "/offchain.MsgSignArbitraryData",
         "appDomain":  "simd",
@@ -238,8 +246,8 @@ The `encoding` flag lets you choose how the contents of the file should be encod
         "data":  "Hello World!\n"
       }
      ```
- + `simd off-chain sign-file alice myFile.json --encoding base64`
-   + ```json
++ `simd off-chain sign-file alice myFile.json --encoding base64`
+    + ```json
       {
         "@type":  "/offchain.MsgSignArbitraryData",
         "appDomain":  "simd",
@@ -248,7 +256,7 @@ The `encoding` flag lets you choose how the contents of the file should be encod
       }
      ```
 + `simd off-chain sign-file alice myFile.json --encoding hex`
-  + ```json
+    + ```json
         {
           "@type":  "/offchain.MsgSignArbitraryData",
           "appDomain":  "simd",
@@ -256,8 +264,8 @@ The `encoding` flag lets you choose how the contents of the file should be encod
           "data":  "48656c6c6f20576f726c64210a"
         }
        ```
-  
-### Verify a file
+
+## Verify a file
 
 To verify a file only the key name used and the previously signed file are needed.
 
@@ -265,11 +273,3 @@ To verify a file only the key name used and the previously signed file are neede
 ➜ simd off-chain verify-file alice signedFile.json
 Verification OK!
 ```
-
-## Summary
-
-`autocli` lets you generate CLI to your Cosmos SDK-based applications without any cobra boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
-
-To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `hubl`. `hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With `hubl`, you can easily configure a new chain and query modules with just a few simple commands.
-
-For more information on `hubl`, including how to configure a new chain and query a module, see the [Hubl documentation](https://docs.cosmos.network/main/tooling/hubl).

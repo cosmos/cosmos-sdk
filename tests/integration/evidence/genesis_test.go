@@ -13,7 +13,7 @@ import (
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
-	"cosmossdk.io/x/evidence/testutil"
+
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -34,7 +34,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
 			depinject.Supply(log.NewNopLogger()),
-			testutil.AppConfig,
+			AppConfig,
 		),
 		&evidenceKeeper)
 	require.NoError(suite.T(), err)

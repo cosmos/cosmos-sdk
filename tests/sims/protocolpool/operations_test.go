@@ -1,4 +1,4 @@
-package simulation_test
+package protocolpool
 
 import (
 	"math/rand"
@@ -14,7 +14,6 @@ import (
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/simulation"
-	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
 	"cosmossdk.io/x/protocolpool/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 
@@ -49,7 +48,7 @@ func setUpTest(t *testing.T) suite {
 
 	app, err := simtestutil.Setup(
 		depinject.Configs(
-			pooltestutil.AppConfig,
+			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&res.AccountKeeper,

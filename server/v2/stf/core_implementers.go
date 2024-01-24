@@ -19,7 +19,6 @@ type StoreService struct {
 func (s StoreService) OpenKVStore(ctx context.Context) store.KVStore {
 	state, err := ctx.(*executionContext).store.GetWriter(s.actor)
 	if err != nil {
-		// tODO: maybe return an erroring store
 		panic(err)
 	}
 	return state

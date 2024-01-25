@@ -85,11 +85,9 @@ func (s *KeeperTestSuite) TestGetLastValidators() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
-	params, err := keeper.Params.Get(ctx)
-	require.NoError(err)
-
+	params := keeper.GetParams(ctx)
 	params.MaxValidators = 50
-	require.NoError(keeper.Params.Set(ctx, params))
+	require.NoError(keeper.SetParams(ctx, params))
 
 	// construct 50 validators all with equal power of 100
 	var validators [50]stakingtypes.Validator
@@ -107,21 +105,19 @@ func (s *KeeperTestSuite) TestGetLastValidators() {
 		validators[i] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[i], true)
 		require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[i]))
 
-		resVal, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[i].Address().Bytes()))
-		require.NoError(err)
+		resVal, ok := keeper.GetValidator(ctx, sdk.ValAddress(PKs[i].Address().Bytes()))
+		require.True(ok)
 		require.True(validators[i].MinEqual(&resVal))
 	}
 
-	res, err := keeper.GetLastValidators(ctx)
-	require.NoError(err)
+	res := keeper.GetLastValidators(ctx)
 	require.Len(res, 50)
 
 	// reduce max validators to 30 and ensure we only get 30 back
 	params.MaxValidators = 30
-	require.NoError(keeper.Params.Set(ctx, params))
+	require.NoError(keeper.SetParams(ctx, params))
 
-	res, err = keeper.GetLastValidators(ctx)
-	require.NoError(err)
+	res = keeper.GetLastValidators(ctx)
 	require.Len(res, 30)
 }
 

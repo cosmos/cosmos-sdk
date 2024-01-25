@@ -29,15 +29,16 @@ type STF[T transaction.Tx] struct {
 	doTxValidation func(ctx context.Context, tx T) error // TODO: rewrite antehandlers remove simulate
 	postTxExec     func(ctx context.Context, tx T, success bool) error
 
-	branch      func(state store.ReaderMap) store.WriterMap // branch is a function that given a readonly store it returns a writable version of it.
-	getGasMeter func(gasLimit uint64) stf.GasMeter
+	branch           func(state store.ReaderMap) store.WriterMap // branch is a function that given a readonly state it returns a writable version of it.
+	getGasMeter      func(gasLimit uint64) stf.GasMeter
+	wrapWithGasMeter func(meter stf.GasMeter, store store.WriterMap) store.WriterMap
 }
 
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
 func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T], state store.ReaderMap) (blockResult *appmanager.BlockResponse, newState store.WriterMap, err error) {
-	// creates a new branch store, from the readonly view of the state
+	// creates a new branch state, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
 
@@ -257,7 +258,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Ev
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
 func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]event.Event, []appmanager.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
+	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, math.MaxUint64)
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {
 		return nil, nil, err
@@ -290,11 +291,29 @@ func (s STF[T]) Query(ctx context.Context, state store.ReaderMap, gasLimit uint6
 	return s.handleQuery(queryCtx, req)
 }
 
+// clone clones STF.
+func (s STF[T]) clone() STF[T] {
+	return STF[T]{
+		handleMsg:         s.handleMsg,
+		handleQuery:       s.handleQuery,
+		doPreBlock:        s.doPreBlock,
+		doBeginBlock:      s.doBeginBlock,
+		doEndBlock:        s.doEndBlock,
+		doValidatorUpdate: s.doValidatorUpdate,
+		doTxValidation:    s.doTxValidation,
+		postTxExec:        s.postTxExec,
+		branch:            s.branch,
+		getGasMeter:       s.getGasMeter,
+		wrapWithGasMeter:  s.wrapWithGasMeter,
+	}
+}
+
 // executionContext is a struct that holds the context for the execution of a tx.
 // TODO: look if we are missing anything here
 type executionContext struct {
 	context.Context
-	store  store.WriterMap
+
+	state  store.WriterMap
 	meter  stf.GasMeter
 	events []event.Event
 	sender []transaction.Identity
@@ -308,9 +327,10 @@ func (s STF[T]) makeContext(
 	// TODO add exec mode
 ) *executionContext {
 	meter := s.getGasMeter(gasLimit)
+	store = s.wrapWithGasMeter(meter, store)
 	return &executionContext{
 		Context: ctx,
-		store:   store,
+		state:   store,
 		meter:   meter,
 		events:  make([]event.Event, 0),
 		sender:  sender,

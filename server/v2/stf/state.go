@@ -2,6 +2,7 @@ package stf
 
 import (
 	"fmt"
+	"unsafe"
 
 	"cosmossdk.io/server/v2/core/store"
 )
@@ -17,21 +18,19 @@ func (b cachedWritersMap) GetReader(actor []byte) (store.Reader, error) {
 }
 
 func (b cachedWritersMap) GetWriter(actor []byte) (store.Writer, error) {
-	actorStr := string(actor)
-	// this is the case in which we have already cached some branched state.
-	actorState, ok := b.branchedAccountsState[actorStr]
+	actorState, ok := b.branchedAccountsState[unsafeString(actor)]
 	if ok {
 		return actorState, nil
 	}
-	// this is the case in which it's the first time in the execution context
-	// we were asked for this account's state, so we will fetch it from the state.
+
 	accountState, err := b.state.GetReader(actor)
 	if err != nil {
 		return nil, err
 	}
 
 	actorState = b.branch(accountState)
-	b.branchedAccountsState[actorStr] = actorState
+	b.branchedAccountsState[string(actor)] = actorState
+
 	return actorState, nil
 }
 
@@ -78,3 +77,5 @@ func newBranchedAccountsState(
 		branch:                branch,
 	}
 }
+
+func unsafeString(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }

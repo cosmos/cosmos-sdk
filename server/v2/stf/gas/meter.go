@@ -6,6 +6,13 @@ import (
 
 var _ stf.GasMeter = (*Meter)(nil)
 
+func NewMeter(gasLimit uint64) *Meter {
+	return &Meter{
+		limit:    gasLimit,
+		consumed: 0,
+	}
+}
+
 type Meter struct {
 	limit    uint64
 	consumed uint64

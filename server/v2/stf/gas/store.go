@@ -30,8 +30,10 @@ type Store struct {
 	gasConfig StoreConfig
 }
 
-func New(gc StoreConfig) store.Writer {
+func NewStore(gc StoreConfig, meter stf.GasMeter, parent store.Writer) *Store {
 	return &Store{
+		parent:    parent,
+		gasMeter:  meter,
 		gasConfig: gc,
 	}
 }

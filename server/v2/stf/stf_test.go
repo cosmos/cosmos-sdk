@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/server/v2/core/stf"
+	"cosmossdk.io/server/v2/stf/gas"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -22,12 +24,13 @@ func TestSTF(t *testing.T) {
 		Msg:    wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
 	}
 
-	stf := &STF[mock.Tx]{
+	s := &STF[mock.Tx]{
 		handleMsg: func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
 			kvSet(t, ctx, "exec")
 			return nil, nil
 		},
-		doPreBlock: func(ctx context.Context, txs []mock.Tx) error { return nil },
+		handleQuery: nil,
+		doPreBlock:  func(ctx context.Context, txs []mock.Tx) error { return nil },
 		doBeginBlock: func(ctx context.Context) error {
 			kvSet(t, ctx, "begin-block")
 			return nil
@@ -36,6 +39,7 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "end-block")
 			return nil
 		},
+		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
 		doTxValidation: func(ctx context.Context, tx mock.Tx) error {
 			kvSet(t, ctx, "validate")
 			return nil
@@ -49,18 +53,21 @@ func TestSTF(t *testing.T) {
 				return branch.NewStore(readonlyState)
 			})
 		},
-		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
+		getGasMeter: func(gasLimit uint64) stf.GasMeter { return gas.NewMeter(gasLimit) },
+		wrapWithGasMeter: func(meter stf.GasMeter, store store.WriterMap) store.WriterMap {
+			return gas.NewMeteredWriterMap(gas.DefaultConfig, meter, store)
+		},
 	}
 
 	t.Run("begin and end block", func(t *testing.T) {
-		_, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{}, state)
+		_, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{}, state)
 		require.NoError(t, err)
 		stateHas(t, newState, "begin-block")
 		stateHas(t, newState, "end-block")
 	})
 
 	t.Run("basic tx", func(t *testing.T) {
-		_, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		_, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
@@ -71,7 +78,7 @@ func TestSTF(t *testing.T) {
 
 	t.Run("fail exec tx", func(t *testing.T) {
 		// update the stf to fail on the handler
-		stf := cloneSTF(stf)
+		stf := s.clone()
 		stf.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
 			return nil, fmt.Errorf("failure")
 		}
@@ -89,7 +96,7 @@ func TestSTF(t *testing.T) {
 	})
 
 	t.Run("tx is success but post tx failed", func(t *testing.T) {
-		stf := cloneSTF(stf)
+		stf := s.clone()
 		stf.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error {
 			return fmt.Errorf("post tx failure")
 		}
@@ -106,7 +113,7 @@ func TestSTF(t *testing.T) {
 	})
 
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
-		stf := cloneSTF(stf)
+		stf := s.clone()
 		stf.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
 			return nil, fmt.Errorf("exec failure")
 		}
@@ -125,7 +132,7 @@ func TestSTF(t *testing.T) {
 
 	t.Run("fail validate tx", func(t *testing.T) {
 		// update stf to fail on the validation step
-		stf := cloneSTF(stf)
+		stf := s.clone()
 		stf.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return fmt.Errorf("failure") }
 		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
@@ -143,7 +150,7 @@ var actorName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) {
 	t.Helper()
-	state, err := ctx.(*executionContext).store.GetWriter(actorName)
+	state, err := ctx.(*executionContext).state.GetWriter(actorName)
 	require.NoError(t, err)
 	require.NoError(t, state.Set([]byte(v), []byte(v)))
 }
@@ -163,18 +170,4 @@ func stateNotHas(t *testing.T, accountState store.ReaderMap, key string) {
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Falsef(t, has, "state was not supposed to have key: %s", key)
-}
-
-func cloneSTF[T transaction.Tx](stf *STF[T]) *STF[T] {
-	return &STF[T]{
-		handleMsg:         stf.handleMsg,
-		handleQuery:       stf.handleQuery,
-		doPreBlock:        stf.doPreBlock,
-		doBeginBlock:      stf.doBeginBlock,
-		doEndBlock:        stf.doEndBlock,
-		doValidatorUpdate: stf.doValidatorUpdate,
-		doTxValidation:    stf.doTxValidation,
-		postTxExec:        stf.postTxExec,
-		branch:            stf.branch,
-	}
 }

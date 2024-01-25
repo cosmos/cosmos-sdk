@@ -28,7 +28,7 @@ type AppBuilder struct {
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
-	return a.app.DefaultGenesis()
+	panic("not implemented")
 }
 
 // RegisterModules registers the provided modules with the module manager and

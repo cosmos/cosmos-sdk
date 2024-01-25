@@ -56,7 +56,7 @@ func (m *MMv2) BeginBlock() func(ctx context.Context) error {
 		for _, moduleName := range m.config.BeginBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasBeginBlocker); ok {
 				if err := module.BeginBlock(ctx); err != nil {
-					return fmt.Errorf("beginblocker of module %s failure: %w", module, err)
+					return fmt.Errorf("failed to run beginblocker for %s: %w", moduleName, err)
 				}
 			}
 		}
@@ -76,12 +76,12 @@ func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate f
 			if module, ok := m.modules[moduleName].(appmodule.HasEndBlocker); ok {
 				err := module.EndBlock(ctx)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to run endblock for %s: %w", moduleName, err)
 				}
 			} else if module, ok := m.modules[moduleName].(sdkmodule.HasABCIEndBlock); ok { // we need to keep this for our module compatibility promise
 				moduleValUpdates, err := module.EndBlock(ctx)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to run enblock for %s: %w", moduleName, err)
 				}
 				// use these validator updates if provided, the module manager assumes
 				// only one module will update the validator set
@@ -138,8 +138,9 @@ func (m *MMv2) PreBlocker() func(ctx context.Context, txs []transaction.Tx) erro
 	return func(ctx context.Context, txs []transaction.Tx) error {
 		for _, moduleName := range m.config.PreBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasPreBlocker); ok {
-				_, err := module.PreBlock(ctx)
-				return err
+				if _, err := module.PreBlock(ctx); err != nil {
+					return fmt.Errorf("failed to run preblock for %s: %w", moduleName, err)
+				}
 			}
 		}
 
@@ -154,7 +155,9 @@ func (m *MMv2) TxValidation() func(ctx context.Context, tx transaction.Tx) error
 	return func(ctx context.Context, tx transaction.Tx) error {
 		for _, moduleName := range m.config.TxValidation {
 			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[transaction.Tx]); ok {
-				return module.TxValidator(ctx, tx)
+				if err := module.TxValidator(ctx, tx); err != nil {
+					return fmt.Errorf("failed to run txvalidator for %s: %w", moduleName, err)
+				}
 			}
 		}
 

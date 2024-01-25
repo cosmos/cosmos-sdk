@@ -564,8 +564,8 @@ func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, 
 	return last, nil
 }
 
-// given a map of remaining validators to previous bonded power
-// returns the list of validators to be unbonded, sorted by operator address
+// sortNoLongerBonded is given a map of remaining validators to previous bonded
+// power returns the list of validators to be unbonded, sorted by operator address.
 func sortNoLongerBonded(last validatorsByAddr, ac address.Codec) ([][]byte, error) {
 	// sort the map keys for determinism
 	noLongerBonded := make([][]byte, len(last))
@@ -576,6 +576,7 @@ func sortNoLongerBonded(last validatorsByAddr, ac address.Codec) ([][]byte, erro
 		if err != nil {
 			return nil, err
 		}
+
 		noLongerBonded[index] = valAddrBytes
 		index++
 	}

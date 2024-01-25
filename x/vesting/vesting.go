@@ -143,7 +143,7 @@ func (bva *BaseVesting) TrackDelegation(
 		// Panic if the delegation amount is zero or if the base coins does not
 		// exceed the desired delegation amount.
 		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
-			panic("delegation attempt with zero coins or insufficient funds")
+			sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
 		}
 
 		// compute x and y per the specification, where:
@@ -190,7 +190,7 @@ func (bva *BaseVesting) TrackUndelegation(ctx context.Context, amount sdk.Coins)
 	for _, coin := range amount {
 		// panic if the undelegation amount is zero
 		if coin.Amount.IsZero() {
-			panic("undelegation attempt with zero coins")
+			return sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins")
 		}
 		delFreeAmt, err := bva.DelegatedFree.Get(ctx, coin.Denom)
 		if err != nil {

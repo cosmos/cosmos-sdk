@@ -1,28 +1,13 @@
 package gas
 
 import (
-	"math"
 	"unsafe"
 
 	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
 )
 
-var DefaultConfig = StoreConfig{
-	ReadCostFlat:     0,
-	ReadCostPerByte:  0,
-	HasCost:          0,
-	WriteCostFlat:    0,
-	WriteCostPerByte: 0,
-	DeleteCostFlat:   0,
-	IterNextCostFlat: 0,
-}
-
-func NewMeteredWriterMap(conf StoreConfig, meter stf.GasMeter, state store.WriterMap) store.WriterMap {
-	// fast path in case of no gas limits.
-	if meter.Limit() == math.MaxUint64 {
-		return state
-	}
+func NewMeteredWriterMap(conf StoreConfig, meter stf.GasMeter, state store.WriterMap) MeteredWriterMap {
 	return MeteredWriterMap{
 		config:             conf,
 		meter:              meter,

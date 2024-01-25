@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/stf/gas"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -20,8 +19,9 @@ import (
 func TestSTF(t *testing.T) {
 	state := mock.DB()
 	mockTx := mock.Tx{
-		Sender: []byte("sender"),
-		Msg:    wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
+		Sender:   []byte("sender"),
+		Msg:      wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
+		GasLimit: 100_000,
 	}
 
 	s := &STF[mock.Tx]{
@@ -48,15 +48,9 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "post-tx-exec")
 			return nil
 		},
-		branch: func(state store.ReaderMap) store.WriterMap {
-			return newBranchedAccountsState(state, func(readonlyState store.Reader) store.Writer {
-				return branch.NewStore(readonlyState)
-			})
-		},
-		getGasMeter: func(gasLimit uint64) stf.GasMeter { return gas.NewMeter(gasLimit) },
-		wrapWithGasMeter: func(meter stf.GasMeter, store store.WriterMap) store.WriterMap {
-			return gas.NewMeteredWriterMap(gas.DefaultConfig, meter, store)
-		},
+		branch:           branch.DefaultNewWriterMap,
+		getGasMeter:      gas.DefaultGetMeter,
+		wrapWithGasMeter: gas.DefaultWrapWithGasMeter,
 	}
 
 	t.Run("begin and end block", func(t *testing.T) {
@@ -67,13 +61,18 @@ func TestSTF(t *testing.T) {
 	})
 
 	t.Run("basic tx", func(t *testing.T) {
-		_, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
 		stateHas(t, newState, "validate")
 		stateHas(t, newState, "exec")
 		stateHas(t, newState, "post-tx-exec")
+
+		require.Len(t, result.TxResults, 1)
+		txResult := result.TxResults[0]
+		require.NotZero(t, txResult.GasUsed)
+		require.Equal(t, mockTx.GasLimit, txResult.GasWanted)
 	})
 
 	t.Run("fail exec tx", func(t *testing.T) {

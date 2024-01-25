@@ -3,6 +3,7 @@ package stf
 import (
 	"context"
 	"errors"
+	"math"
 
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
@@ -37,6 +38,9 @@ var ErrOutOfGas = errors.New("out of gas")
 // to measure computational overhead when executing state transitions,
 // it might be related to storage access and not only.
 type Gas = uint64
+
+// NoGasLimit signals that no gas limit must be applied.
+const NoGasLimit Gas = math.MaxUint64
 
 // GasMeter defines an interface for gas consumption tracking.
 type GasMeter interface {

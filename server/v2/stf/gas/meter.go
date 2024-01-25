@@ -26,11 +26,12 @@ func (m *Meter) Limit() stf.Gas {
 	return m.limit
 }
 
-func (m *Meter) ConsumeGas(amount stf.Gas, _ string) error {
-	if m.limit-m.consumed > amount {
+func (m *Meter) ConsumeGas(requested stf.Gas, _ string) error {
+	remaining := m.limit - m.consumed
+	if requested > remaining {
 		return stf.ErrOutOfGas
 	}
-	m.consumed += amount
+	m.consumed += requested
 	return nil
 }
 

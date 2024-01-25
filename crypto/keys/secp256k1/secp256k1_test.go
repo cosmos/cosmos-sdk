@@ -238,7 +238,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 }
 
 func TestGenPrivKeyFromSecret(t *testing.T) {
-	// curve oder N
+	// curve order N
 	N := secp.S256().N
 	tests := []struct {
 		name   string

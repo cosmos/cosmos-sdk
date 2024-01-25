@@ -70,8 +70,8 @@ func (b branchedState) applyStateChange(sc store.StateChanges) error {
 
 func newBranchedAccountsState(
 	state store.GetReader,
-	branch func(readonlyState store.Reader) store.Writer) store.GetWriter {
-
+	branch func(readonlyState store.Reader) store.Writer,
+) store.GetWriter {
 	return branchedState{
 		state:                 state,
 		branchedAccountsState: make(map[string]store.Writer),

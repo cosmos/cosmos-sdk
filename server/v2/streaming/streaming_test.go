@@ -63,7 +63,7 @@ func (s *PluginTestSuite) SetupTest() {
 
 	s.deliverBlockrequest = ListenDeliverBlockRequest{
 		BlockHeight: s.loggerCtx.BlockHeight(),
-		Txs:         [][]byte{[]byte{1, 2, 3, 4, 5, 6, 7, 8, 9}},
+		Txs:         [][]byte{{1, 2, 3, 4, 5, 6, 7, 8, 9}},
 		Events:      []*Event{},
 	}
 	s.stateChangeRequest = ListenStateChangesRequest{}

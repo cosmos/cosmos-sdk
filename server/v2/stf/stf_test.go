@@ -160,6 +160,7 @@ func stateHas(t *testing.T, accountState store.GetReader, key string) {
 func stateNotHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
 	state, err := accountState.GetReader(actorName)
+	require.NoError(t, err)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Falsef(t, has, "state was not supposed to have key: %s", key)

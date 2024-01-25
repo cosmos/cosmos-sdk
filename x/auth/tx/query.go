@@ -8,10 +8,8 @@ import (
 	"time"
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/cosmos/cosmos-proto/anyutil"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -142,9 +140,13 @@ func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *c
 		return nil, fmt.Errorf("unexpected type, wnted gogoTxWrapper, got: %T", txb)
 	}
 
-	anyPB, err := anyutil.New(p.decodedTx.Tx)
+	tx, err := p.AsTx()
 	if err != nil {
 		return nil, err
 	}
-	return sdk.NewResponseResultTx(resTx, intoAnyV1([]*anypb.Any{anyPB})[0], resBlock.Block.Time.Format(time.RFC3339)), nil
+	anyTx, err := codectypes.NewAnyWithValue(tx)
+	if err != nil {
+		return nil, err
+	}
+	return sdk.NewResponseResultTx(resTx, anyTx, resBlock.Block.Time.Format(time.RFC3339)), nil
 }

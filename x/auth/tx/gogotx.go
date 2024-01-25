@@ -93,6 +93,8 @@ type gogoTxWrapper struct {
 	feeGranter []byte
 }
 
+func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
+
 var (
 	_ authsigning.Tx             = &gogoTxWrapper{}
 	_ ante.HasExtensionOptionsTx = &gogoTxWrapper{}

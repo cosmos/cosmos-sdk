@@ -833,7 +833,8 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 
-	encodedTx, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
+	goodTx := txBuilder.GetTx()
+	encodedTx, err := val.GetClientCtx().TxConfig.TxEncoder()(goodTx)
 	s.Require().NoError(err)
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -863,9 +864,12 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 				s.Require().NotEmpty(res.GetTx())
 
 				txb := wrapTx(s.T(), s.cfg.TxConfig, res.Tx)
-				tx, err := val.GetClientCtx().TxConfig.TxEncoder()(txb.GetTx())
+				gotTx := txb.GetTx()
+				gotEncoded, err := val.GetClientCtx().TxConfig.TxEncoder()(gotTx)
 				s.Require().NoError(err)
-				s.Require().Equal(encodedTx, tx)
+				s.T().Log(goodTx.(fmt.Stringer).String())
+				s.T().Log(gotTx.(fmt.Stringer).String())
+				s.Require().Equal(encodedTx, gotEncoded)
 			}
 		})
 	}
@@ -926,6 +930,7 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 				txb := wrapTx(s.T(), s.cfg.TxConfig, result.Tx)
 				tx, err := val.GetClientCtx().TxConfig.TxEncoder()(txb.GetTx())
 				s.Require().NoError(err)
+				s.T().Log(len(tx), len(encodedTxBytes))
 				s.Require().Equal(encodedTxBytes, tx)
 			}
 		})

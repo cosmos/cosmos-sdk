@@ -47,6 +47,11 @@ func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, c
 		}
 	}
 
+	var payer []byte
+	if decoded.feePayer != nil {
+		decoded.feePayer = payer
+	}
+
 	return &builder{
 		addressCodec:                addrCodec,
 		decoder:                     decoder,
@@ -54,7 +59,7 @@ func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, c
 		msgs:                        decoded.msgsV1,
 		timeoutHeight:               decoded.GetTimeoutHeight(),
 		granter:                     decoded.FeeGranter(),
-		payer:                       decoded.FeePayer(),
+		payer:                       payer,
 		unordered:                   decoded.GetUnordered(),
 		memo:                        decoded.GetMemo(),
 		gasLimit:                    decoded.GetGas(),

@@ -3,6 +3,9 @@ package tx
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	multisigv1beta1 "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -10,6 +13,7 @@ import (
 	"cosmossdk.io/core/address"
 	authsign "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/tx/decode"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -17,8 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
@@ -165,7 +167,6 @@ func msgsV1toAnyV2(msgs []sdk.Msg) ([]*anypb.Any, error) {
 	}
 
 	return intoAnyV2(anys), nil
-
 }
 
 func intoV2Fees(fees sdk.Coins) []*basev1beta1.Coin {

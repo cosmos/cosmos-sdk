@@ -874,6 +874,7 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 }
 
 func wrapTx(t *testing.T, conf client.TxConfig, dTx *tx.Tx) client.TxBuilder {
+	t.Helper()
 	bodyBytes, err := dTx.Body.Marshal()
 	require.NoError(t, err)
 	authInfoBytes, err := dTx.AuthInfo.Marshal()

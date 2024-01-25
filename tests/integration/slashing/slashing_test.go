@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
@@ -18,6 +17,7 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

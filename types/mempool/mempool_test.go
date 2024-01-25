@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	protov2 "google.golang.org/protobuf/proto"
 
+	_ "cosmossdk.io/api/cosmos/counter/v1"
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/signing"
 
-	_ "cosmossdk.io/api/cosmos/counter/v1"
-	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"

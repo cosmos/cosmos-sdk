@@ -3,9 +3,10 @@ package tx
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/encoding/protojson"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // DefaultTxEncoder returns a default protobuf TxEncoder using the provided Marshaler

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

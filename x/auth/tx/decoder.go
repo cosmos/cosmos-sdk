@@ -1,12 +1,14 @@
 package tx
 
 import (
+	"google.golang.org/protobuf/encoding/protojson"
+
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/tx/decode"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler.

@@ -7,11 +7,11 @@ import (
 	"os"
 	"sync"
 
-	authtx "cosmossdk.io/x/auth/tx"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"

@@ -5,13 +5,13 @@ import (
 
 	"cosmossdk.io/core/address"
 	authcodec "cosmossdk.io/x/auth/codec"
+	txdecode "cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
 
-	txdecode "cosmossdk.io/x/tx/decode"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

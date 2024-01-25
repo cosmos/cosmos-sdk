@@ -1972,7 +1972,7 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "can't rename a key that doesnt exist",
+			name: "can't rename a key that doesn't exist",
 			run: func(kr Keyring) {
 				err := kr.Rename("bogus", "bogus2")
 				require.Error(t, err)

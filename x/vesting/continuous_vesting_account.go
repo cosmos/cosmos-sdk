@@ -82,7 +82,7 @@ func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *a
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
 func (cva ContinuousVestingAccount) GetVestedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	var vestedCoins sdk.Coins
+	vestedCoins := sdk.Coins{}
 
 	// We must handle the case where the start time for a vesting account has
 	// been set into the future or when the start of the chain is not exactly
@@ -122,7 +122,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(ctx context.Context, blockTim
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	var originalVesting sdk.Coins
+	originalVesting := sdk.Coins{}
 	cva.IterateCoinEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false

@@ -51,7 +51,7 @@ func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *ac
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
 	return plva.BaseVesting.ExecuteMessages(ctx, msg, func(_ context.Context, _ time.Time) (sdk.Coins, error) {
-		var originalVesting sdk.Coins
+		originalVesting := sdk.Coins{}
 		plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 			originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 			return false
@@ -73,7 +73,7 @@ func (plva PermanentLockedAccount) QueryVestedCoins(ctx context.Context, msg *ve
 func (plva PermanentLockedAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
 	*vestingtypes.QueryVestingCoinsResponse, error,
 ) {
-	var originalVesting sdk.Coins
+	originalVesting := sdk.Coins{}
 	plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false

@@ -396,7 +396,7 @@ func (bva BaseVesting) IterateCoinEntries(
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
 func (bva BaseVesting) LockedCoinsFromVesting(ctx context.Context, vestingCoins sdk.Coins) sdk.Coins {
-	var delegatedVestingCoins sdk.Coins
+	delegatedVestingCoins := sdk.Coins{}
 	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
 		delegatedVestingCoins = append(delegatedVestingCoins, sdk.NewCoin(key, value))
 		return false
@@ -413,7 +413,7 @@ func (bva BaseVesting) LockedCoinsFromVesting(ctx context.Context, vestingCoins 
 func (bva BaseVesting) QueryOriginalVesting(ctx context.Context, _ *vestingtypes.QueryOriginalVestingRequest) (
 	*vestingtypes.QueryOriginalVestingResponse, error,
 ) {
-	var originalVesting sdk.Coins
+	originalVesting := sdk.Coins{}
 	bva.IterateCoinEntries(ctx, bva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
@@ -428,7 +428,7 @@ func (bva BaseVesting) QueryOriginalVesting(ctx context.Context, _ *vestingtypes
 func (bva BaseVesting) QueryDelegatedFree(ctx context.Context, _ *vestingtypes.QueryDelegatedFreeRequest) (
 	*vestingtypes.QueryDelegatedFreeResponse, error,
 ) {
-	var delegatedFree sdk.Coins
+	delegatedFree := sdk.Coins{}
 	bva.IterateCoinEntries(ctx, bva.DelegatedFree, func(key string, value math.Int) (stop bool) {
 		delegatedFree = append(delegatedFree, sdk.NewCoin(key, value))
 		return false
@@ -443,7 +443,7 @@ func (bva BaseVesting) QueryDelegatedFree(ctx context.Context, _ *vestingtypes.Q
 func (bva BaseVesting) QueryDelegatedVesting(ctx context.Context, _ *vestingtypes.QueryDelegatedVestingRequest) (
 	*vestingtypes.QueryDelegatedVestingResponse, error,
 ) {
-	var delegatedVesting sdk.Coins
+	delegatedVesting := sdk.Coins{}
 	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
 		delegatedVesting = append(delegatedVesting, sdk.NewCoin(key, value))
 		return false

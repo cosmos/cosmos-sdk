@@ -59,7 +59,7 @@ func (dva DelayedVestingAccount) GetVestedCoins(ctx context.Context, blockTime t
 	if err != nil {
 		return nil, err
 	}
-	var originalVesting sdk.Coins
+	originalVesting := sdk.Coins{}
 	dva.IterateCoinEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
@@ -74,7 +74,7 @@ func (dva DelayedVestingAccount) GetVestedCoins(ctx context.Context, blockTime t
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	var originalVesting sdk.Coins
+	originalVesting := sdk.Coins{}
 	dva.IterateCoinEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false

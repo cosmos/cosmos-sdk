@@ -69,7 +69,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %d, length must be greater than 0", msg.StartTime)
 	}
 
-	var totalCoins sdk.Coins
+	totalCoins := sdk.Coins{}
 	endTime := msg.StartTime
 	for i, period := range msg.VestingPeriods {
 		if period.Length < 1 {
@@ -143,7 +143,7 @@ func (pva PeriodicVestingAccount) IteratePeriods(
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
 func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	var vestedCoins sdk.Coins
+	vestedCoins := sdk.Coins{}
 
 	// We must handle the case where the start time for a vesting account has
 	// been set into the future or when the start of the chain is not exactly
@@ -156,7 +156,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime 
 	if err != nil {
 		return nil, err
 	}
-	var originalVesting sdk.Coins
+	originalVesting := sdk.Coins{}
 	pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
@@ -195,7 +195,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (pva PeriodicVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	var originalVesting sdk.Coins
+	originalVesting := sdk.Coins{}
 	pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
@@ -250,7 +250,7 @@ func (pva PeriodicVestingAccount) QueryStartTime(ctx context.Context, msg *vesti
 func (pva PeriodicVestingAccount) QueryVestingPeriods(ctx context.Context, msg *vestingtypes.QueryVestingPeriodsRequest) (
 	*vestingtypes.QueryVestingPeriodsResponse, error,
 ) {
-	var vestingPeriods []vestingtypes.Period
+	vestingPeriods := []vestingtypes.Period{}
 	pva.IteratePeriods(ctx, func(_ string, period vestingtypes.Period) (stop bool) {
 		vestingPeriods = append(vestingPeriods, period)
 		return false

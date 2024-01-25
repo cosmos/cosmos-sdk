@@ -85,7 +85,6 @@ func NewKeeper(
 		msgRouter:       execRouter,
 		signerProvider:  signerProvider,
 		queryRouter:     queryRouter,
-		Schema:          collections.Schema{},
 		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
 		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
@@ -263,7 +262,6 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 			accountNumber,
 			accountAddr,
 			sender,
-			k.addressCodec,
 			k.sendModuleMessage,
 			k.sendModuleMessageUntyped,
 			k.queryModule,
@@ -278,7 +276,6 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 		accountNumber,
 		accountAddr,
 		nil,
-		k.addressCodec,
 		func(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 			return fmt.Errorf("cannot execute in query context")
 		},

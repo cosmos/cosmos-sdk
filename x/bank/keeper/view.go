@@ -252,7 +252,5 @@ func (k BaseViewKeeper) ValidateBalance(ctx context.Context, addr sdk.AccAddress
 		}
 	}
 
-	// TODO: Add check for x/accounts vesting account
-
 	return nil
 }

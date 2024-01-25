@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
@@ -45,7 +44,6 @@ func MakeAccountContext(
 	accNumber uint64,
 	accountAddr []byte,
 	sender []byte,
-	addressCodec address.Codec,
 	moduleExec ModuleExecFunc,
 	moduleExecUntyped ModuleExecUntypedFunc,
 	moduleQuery ModuleQueryFunc,

@@ -328,7 +328,7 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 		// call should ensure the validators past the cliff will be moved to the
 		// unbonding set.
 		if i >= int(maxValidators) {
-			return validators
+			break
 		}
 
 		address := types.AddressFromLastValidatorPowerKey(iterator.Key())

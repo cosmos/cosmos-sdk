@@ -25,17 +25,19 @@ type (
 	// DefaultProposalHandler defines the default ABCI PrepareProposal and
 	// ProcessProposal handlers.
 	DefaultProposalHandler struct {
-		mempool    mempool.Mempool
-		txVerifier ProposalTxVerifier
-		txSelector TxSelector
+		mempool          mempool.Mempool
+		txVerifier       ProposalTxVerifier
+		txSelector       TxSelector
+		signerExtAdapter mempool.SignerExtractionAdapter
 	}
 )
 
 func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
 	return &DefaultProposalHandler{
-		mempool:    mp,
-		txVerifier: txVerifier,
-		txSelector: NewDefaultTxSelector(),
+		mempool:          mp,
+		txVerifier:       txVerifier,
+		txSelector:       NewDefaultTxSelector(),
+		signerExtAdapter: mempool.NewDefaultSignerExtractionAdapter(),
 	}
 }
 
@@ -93,8 +95,40 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		}
 
 		iterator := h.mempool.Select(ctx, req.Txs)
+		selectedTxsSignersSeqs := make(map[string]uint64)
+		var selectedTxsNums int
 		for iterator != nil {
 			memTx := iterator.Tx()
+			signerData, err := h.signerExtAdapter.GetSigners(memTx)
+			if err != nil {
+				return nil, err
+			}
+
+			// if the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
+			// so we add them and return true so this tx gets selected.
+			shouldAdd := true
+			txSignersSeqs := make(map[string]uint64)
+			for _, signer := range signerData {
+				seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
+				if !ok {
+					txSignersSeqs[signer.Signer.String()] = signer.Sequence
+					continue
+				}
+
+				// if we have seen this signer before we check if the sequence we just got is
+				// seq+1 and if it is we update the sequence and return true so this tx gets
+				// selected. If it isn't seq+1 we return false so this tx doesn't get
+				// selected (it could be the same sequence or seq+2 which are invalid).
+				if seq+1 != signer.Sequence {
+					shouldAdd = false
+					break
+				}
+				txSignersSeqs[signer.Signer.String()] = signer.Sequence
+			}
+			if !shouldAdd {
+				iterator = iterator.Next()
+				continue
+			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
 			// which calls mempool.Insert, in theory everything in the pool should be
@@ -111,6 +145,16 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				if stop {
 					break
 				}
+
+				txsLen := len(h.txSelector.SelectedTxs(ctx))
+				for sender, seq := range txSignersSeqs {
+					if txsLen != selectedTxsNums {
+						selectedTxsSignersSeqs[sender] = seq
+					} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
+						selectedTxsSignersSeqs[sender] = seq - 1
+					}
+				}
+				selectedTxsNums = txsLen
 			}
 
 			iterator = iterator.Next()

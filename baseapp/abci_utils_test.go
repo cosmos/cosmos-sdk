@@ -196,6 +196,40 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteAbsent() {
 	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
 }
 
+// check ValidateVoteExtensions works with duplicate votes
+func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsDuplicateVotes() {
+	ext := []byte("vote-extension")
+	cve := cmtproto.CanonicalVoteExtension{
+		Extension: ext,
+		Height:    2,
+		Round:     int64(0),
+		ChainId:   chainID,
+	}
+
+	bz, err := marshalDelimitedFn(&cve)
+	s.Require().NoError(err)
+
+	extSig0, err := s.vals[0].privKey.Sign(bz)
+	s.Require().NoError(err)
+
+	ve := abci.ExtendedVoteInfo{
+		Validator:          s.vals[0].toValidator(333),
+		VoteExtension:      ext,
+		ExtensionSignature: extSig0,
+		BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+	}
+
+	llc := abci.ExtendedCommitInfo{
+		Round: 0,
+		Votes: []abci.ExtendedVoteInfo{
+			ve,
+			ve,
+		},
+	}
+	// expect fail (duplicate votes)
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+}
+
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Nil
 func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteNil() {
 	ext := []byte("vote-extension")

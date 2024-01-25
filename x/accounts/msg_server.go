@@ -3,9 +3,6 @@ package accounts
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
@@ -103,5 +100,15 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 }
 
 func (m msgServer) ExecuteBundle(ctx context.Context, req *v1.MsgExecuteBundle) (*v1.MsgExecuteBundleResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	_, err := m.k.addressCodec.StringToBytes(req.Bundler)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &v1.MsgExecuteBundleResponse{Responses: make([]*v1.UserOperationResponse, len(req.Operations))}
+	for i, op := range req.Operations {
+		resp.Responses[i] = m.k.ExecuteUserOperation(ctx, req.Bundler, op)
+	}
+
+	return resp, nil
 }

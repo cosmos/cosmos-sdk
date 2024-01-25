@@ -461,11 +461,20 @@ More information on how to submit proposals in the [client section](#client).
 
 ### Proposal Submission
 
-Proposals can be submitted by any account via a `MsgSubmitProposal` transaction.
+Proposals can be submitted by any account via a `MsgSubmitProposal` or a `MsgSubmitMultipleChoiceProposal` transaction.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L42-L69
 ```
+
+:::note
+A multiple choice proposal is a proposal where the voting options can be defined by the proposer.
+It cannot have messages to execute. It is only a text proposal.
+:::
+
+:::warning
+Submitting a multiple choice proposal using `MsgSubmitProposal` is invalid, as vote options cannot be defined.
+:::
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
@@ -540,7 +549,7 @@ The governance module emits the following events:
 
 ### Handlers
 
-#### MsgSubmitProposal
+#### MsgSubmitProposal, MsgSubmitMultipleChoiceProposal
 
 | Type                | Attribute Key       | Attribute Value |
 | ------------------- | ------------------- | --------------- |
@@ -591,23 +600,26 @@ The governance module emits the following events:
 
 The governance module contains the following parameters:
 
-| Key                             | Type                   | Example                                 |
-| ------------------------------- | ---------------------- | --------------------------------------- |
-| min_deposit                     | array (coins)          | [{"denom":"uatom","amount":"10000000"}] |
-| max_deposit_period              | string (time ns)       | "172800000000000" (17280s)              |
-| voting_period                   | string (time ns)       | "172800000000000" (17280s)              |
-| quorum                          | string (dec)           | "0.334000000000000000"                  |
-| threshold                       | string (dec)           | "0.500000000000000000"                  |
-| veto                            | string (dec)           | "0.334000000000000000"                  |
-| expedited_threshold             | string (time ns)       | "0.667000000000000000"                  |
-| expedited_voting_period         | string (time ns)       | "86400000000000" (8600s)                |
-| expedited_min_deposit           | array (coins)          | [{"denom":"uatom","amount":"50000000"}] |
-| burn_proposal_deposit_prevote   | bool                   | false                                   |
-| burn_vote_quorum                | bool                   | false                                   |
-| burn_vote_veto                  | bool                   | true                                    |
-| min_initial_deposit_ratio       | string                 | "0.1"                                   |
-| optimistic_rejected_threshold   | string (dec)           | "0.1"                                   |
-| optimistic_authorized_addresses | bytes array (addresses) | [][]                                    |
+| Key                             | Type              | Example                                 |
+| ------------------------------- | ----------------- | --------------------------------------- |
+| min_deposit                     | array (coins)     | [{"denom":"uatom","amount":"10000000"}] |
+| max_deposit_period              | string (time ns)  | "172800000000000" (17280s)              |
+| voting_period                   | string (time ns)  | "172800000000000" (17280s)              |
+| quorum                          | string (dec)      | "0.334000000000000000"                  |
+| threshold                       | string (dec)      | "0.500000000000000000"                  |
+| veto                            | string (dec)      | "0.334000000000000000"                  |
+| expedited_threshold             | string (time ns)  | "0.667000000000000000"                  |
+| expedited_voting_period         | string (time ns)  | "86400000000000" (8600s)                |
+| expedited_min_deposit           | array (coins)     | [{"denom":"uatom","amount":"50000000"}] |
+| burn_proposal_deposit_prevote   | bool              | false                                   |
+| burn_vote_quorum                | bool              | false                                   |
+| burn_vote_veto                  | bool              | true                                    |
+| min_initial_deposit_ratio       | string            | "0.1"                                   |
+| proposal_cancel_ratio           | string (dec)      | "0.5"                                   |
+| proposal_cancel_dest            | string (address)  | "cosmos1.." or empty for burn           |
+| proposal_cancel_max_period      | string (dec)      | "0.5"                                   |
+| optimistic_rejected_threshold   | string (dec)      | "0.1"                                   |
+| optimistic_authorized_addresses | array (addresses) | []                                      |
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

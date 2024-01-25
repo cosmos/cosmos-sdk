@@ -29,7 +29,7 @@ func (c *Chain) GetFaucetAddr() interface{} {
 }
 
 type Upgrade struct {
-	Enabled  bool   `name:"eanbled" json:"enabled" yaml:"enabled"`
+	Enabled  bool   `name:"enabled" json:"enabled" yaml:"enabled"`
 	Type     string `name:"type" json:"type" yaml:"type"`
 	Genesis  string `name:"genesis" json:"genesis" yaml:"genesis"`
 	Upgrades []struct {

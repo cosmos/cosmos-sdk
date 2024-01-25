@@ -46,22 +46,24 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
 	const (
-		tallyQuorum             = "0.350000000000000000"
-		tallyThreshold          = "0.495000000000000000"
-		tallyExpeditedThreshold = "0.545000000000000000"
-		tallyVetoThreshold      = "0.327000000000000000"
+		tallyQuorum             = "0.387000000000000000"
+		tallyThreshold          = "0.452000000000000000"
+		tallyExpeditedThreshold = "0.537000000000000000"
+		tallyVetoThreshold      = "0.276000000000000000"
 		minInitialDepositDec    = "0.880000000000000000"
+		proposalCancelMaxPeriod = "0.110000000000000000"
 	)
 
 	assert.Equal(t, "272stake", govGenesis.Params.MinDeposit[0].String())
 	assert.Equal(t, "800stake", govGenesis.Params.ExpeditedMinDeposit[0].String())
 	assert.Equal(t, "41h11m36s", govGenesis.Params.MaxDepositPeriod.String())
-	assert.Equal(t, float64(283889), govGenesis.Params.VotingPeriod.Seconds())
-	assert.Equal(t, float64(123081), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
+	assert.Equal(t, float64(291928), govGenesis.Params.VotingPeriod.Seconds())
+	assert.Equal(t, float64(33502), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
 	assert.Equal(t, tallyQuorum, govGenesis.Params.Quorum)
 	assert.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
 	assert.Equal(t, tallyExpeditedThreshold, govGenesis.Params.ExpeditedThreshold)
 	assert.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)
+	assert.Equal(t, proposalCancelMaxPeriod, govGenesis.Params.ProposalCancelMaxPeriod)
 	assert.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
 	assert.DeepEqual(t, []*v1.Deposit{}, govGenesis.Deposits)
 	assert.DeepEqual(t, []*v1.Vote{}, govGenesis.Votes)

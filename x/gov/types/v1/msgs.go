@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"errors"
+
 	"cosmossdk.io/x/gov/types/v1beta1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -9,8 +11,8 @@ import (
 )
 
 var (
-	_, _, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}, &MsgCancelProposal{}
-	_, _                codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
+	_, _, _, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}, &MsgCancelProposal{}, &MsgSubmitMultipleChoiceProposal{}
+	_, _                   codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -59,6 +61,28 @@ func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)
+}
+
+// NewMsgSubmitMultipleChoiceProposal creates a new MsgSubmitMultipleChoiceProposal.
+func NewMultipleChoiceMsgSubmitProposal(
+	initialDeposit sdk.Coins,
+	proposer, metadata, title, summary string,
+	votingOptions *ProposalVoteOptions,
+) (*MsgSubmitMultipleChoiceProposal, error) {
+	if votingOptions == nil {
+		return nil, errors.New("voting options cannot be nil")
+	}
+
+	m := &MsgSubmitMultipleChoiceProposal{
+		InitialDeposit: initialDeposit,
+		Proposer:       proposer,
+		Metadata:       metadata,
+		Title:          title,
+		Summary:        summary,
+		VoteOptions:    votingOptions,
+	}
+
+	return m, nil
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance

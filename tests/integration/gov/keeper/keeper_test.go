@@ -62,6 +62,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	maccPerms := map[string][]string{
 		pooltypes.ModuleName:           {},
+		pooltypes.StreamAccount:        {},
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -92,7 +93,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
+	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, authority.String())
 
 	// set default staking params
 	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())

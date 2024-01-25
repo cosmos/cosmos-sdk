@@ -28,8 +28,9 @@ var (
 	DefaultMinInitialDepositRatio       = sdkmath.LegacyZeroDec()
 	DefaultProposalCancelRatio          = sdkmath.LegacyMustNewDecFromStr("0.5")
 	DefaultProposalCancelDestAddress    = ""
+	DefaultProposalCancelMaxPeriod      = sdkmath.LegacyMustNewDecFromStr("0.5")
 	DefaultBurnProposalPrevote          = false // set to false to replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteQuorom               = false // set to false to  replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteQuorum               = false // set to false to  replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteVeto                 = true  // set to true to replicate behavior of when this change was made (0.47)
 	DefaultMinDepositRatio              = sdkmath.LegacyMustNewDecFromStr("0.01")
 	DefaultOptimisticRejectedThreshold  = sdkmath.LegacyMustNewDecFromStr("0.1")
@@ -63,7 +64,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 // NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
-	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string,
+	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest, proposalMaxCancelVotingPeriod string,
 	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio, optimisticRejectedThreshold string, optimisticAuthorizedAddresses []string,
 ) Params {
 	return Params{
@@ -79,6 +80,7 @@ func NewParams(
 		MinInitialDepositRatio:        minInitialDepositRatio,
 		ProposalCancelRatio:           proposalCancelRatio,
 		ProposalCancelDest:            proposalCancelDest,
+		ProposalCancelMaxPeriod:       proposalMaxCancelVotingPeriod,
 		BurnProposalDepositPrevote:    burnProposalDeposit,
 		BurnVoteQuorum:                burnVoteQuorum,
 		BurnVoteVeto:                  burnVoteVeto,
@@ -103,8 +105,9 @@ func DefaultParams() Params {
 		DefaultMinInitialDepositRatio.String(),
 		DefaultProposalCancelRatio.String(),
 		DefaultProposalCancelDestAddress,
+		DefaultProposalCancelMaxPeriod.String(),
 		DefaultBurnProposalPrevote,
-		DefaultBurnVoteQuorom,
+		DefaultBurnVoteQuorum,
 		DefaultBurnVoteVeto,
 		DefaultMinDepositRatio.String(),
 		DefaultOptimisticRejectedThreshold.String(),
@@ -138,10 +141,10 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		return fmt.Errorf("invalid quorum string: %w", err)
 	}
 	if quorum.IsNegative() {
-		return fmt.Errorf("quorom cannot be negative: %s", quorum)
+		return fmt.Errorf("quorum cannot be negative: %s", quorum)
 	}
 	if quorum.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("quorom too large: %s", p.Quorum)
+		return fmt.Errorf("quorum too large: %s", p.Quorum)
 	}
 
 	threshold, err := sdkmath.LegacyNewDecFromStr(p.Threshold)
@@ -159,11 +162,11 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	if err != nil {
 		return fmt.Errorf("invalid expedited threshold string: %w", err)
 	}
-	if !threshold.IsPositive() {
-		return fmt.Errorf("expedited vote threshold must be positive: %s", threshold)
+	if !expeditedThreshold.IsPositive() {
+		return fmt.Errorf("expedited vote threshold must be positive: %s", expeditedThreshold)
 	}
-	if threshold.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("expedited vote threshold too large: %s", threshold)
+	if expeditedThreshold.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("expedited vote threshold too large: %s", expeditedThreshold)
 	}
 	if expeditedThreshold.LTE(threshold) {
 		return fmt.Errorf("expedited vote threshold %s, must be greater than the regular threshold %s", expeditedThreshold, threshold)
@@ -207,7 +210,7 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		return fmt.Errorf("expedited voting period must be positive: %s", p.ExpeditedVotingPeriod)
 	}
 	if p.ExpeditedVotingPeriod.Seconds() >= p.VotingPeriod.Seconds() {
-		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
+		return fmt.Errorf("expedited voting period %s must be strictly less than the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
 	}
 
 	for _, addr := range p.OptimisticAuthorizedAddresses {
@@ -236,6 +239,17 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	}
 	if proposalCancelRate.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelRate)
+	}
+
+	proposalCancelMaxPeriod, err := sdkmath.LegacyNewDecFromStr(p.ProposalCancelMaxPeriod)
+	if err != nil {
+		return fmt.Errorf("invalid max cancel period of cancel proposal: %w", err)
+	}
+	if proposalCancelMaxPeriod.IsNegative() {
+		return fmt.Errorf("max cancel period of cancel proposal must be positive: %s", proposalCancelMaxPeriod)
+	}
+	if proposalCancelMaxPeriod.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("max cancel period of cancel proposal is too large: %s", proposalCancelMaxPeriod)
 	}
 
 	if len(p.ProposalCancelDest) != 0 {

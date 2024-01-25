@@ -252,6 +252,12 @@ func (k Keeper) performConsensusPubKeyUpdate(ctx context.Context, oldPubKey, new
 		return types.ErrInvalidConsPubKey.Wrap("failed to get signing info for old public key")
 	}
 
+	consAddr, err := k.sk.ConsensusAddressCodec().BytesToString(newPubKey.Address())
+	if err != nil {
+		return err
+	}
+
+	signingInfo.Address = consAddr
 	if err := k.ValidatorSigningInfo.Set(ctx, sdk.ConsAddress(newPubKey.Address()), signingInfo); err != nil {
 		return err
 	}

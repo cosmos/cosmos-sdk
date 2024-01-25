@@ -25,4 +25,5 @@ var (
 	VotesKeyPrefix                = collections.NewPrefix(32) // VotesKeyPrefix stores the votes of proposals.
 	ParamsKey                     = collections.NewPrefix(48) // ParamsKey stores the module's params.
 	ConstitutionKey               = collections.NewPrefix(49) // ConstitutionKey stores a chain's constitution.
+	ProposalVoteOptionsKeyPrefix  = collections.NewPrefix(50) // ProposalVoteOptionsKeyPrefix stores the vote options of proposals.
 )

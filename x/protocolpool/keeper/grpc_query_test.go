@@ -4,14 +4,12 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (suite *KeeperTestSuite) TestUnclaimedBudget() {
-	queryServer := keeper.NewQuerier(suite.poolKeeper)
 	startTime := suite.ctx.BlockTime().Add(-70 * time.Second)
 	period := time.Duration(60) * time.Second
 	zeroCoin := sdk.NewCoin("foo", math.ZeroInt())
@@ -112,7 +110,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			if tc.preRun != nil {
 				tc.preRun()
 			}
-			resp, err := queryServer.UnclaimedBudget(suite.ctx, tc.req)
+			resp, err := suite.queryServer.UnclaimedBudget(suite.ctx, tc.req)
 			if tc.expErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expErrMsg)

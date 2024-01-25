@@ -139,7 +139,7 @@ message Proposal {
 
   // proposal_type defines the type of the proposal
   //
-  // Since: cosmos-sdk 0.51
+  // Since: x/gov v1.0.0
   ProposalType proposal_type = 16;
 }
 
@@ -162,6 +162,27 @@ enum ProposalStatus {
   // PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
   // failed.
   PROPOSAL_STATUS_FAILED = 5;
+}
+
+// ProposalVoteOptions defines the stringified vote options for proposals.
+// This allows to support multiple choice options for a given proposal.
+//
+// Since: x/gov v1.0.0
+message ProposalVoteOptions {
+  // option_one is the first option of the proposal
+  string option_one = 1;
+
+  // option_two is the second option of the proposal
+  string option_two = 2;
+
+  // option_three is the third option of the proposal
+  string option_three = 3;
+
+  // option_four is the fourth option of the proposal
+  string option_four = 4;
+
+  // option_spam is always present for all proposals.
+  string option_spam = 5;
 }
 
 // TallyResult defines a standard tally for a governance proposal.
@@ -289,12 +310,18 @@ message Params {
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // burn deposits if a proposal does not meet quorum
+  //
+  // Since: cosmos-sdk 0.47
   bool burn_vote_quorum = 13;
 
   // burn deposits if the proposal does not enter voting period
+  //
+  // Since: cosmos-sdk 0.47
   bool burn_proposal_deposit_prevote = 14;
 
   // burn deposits if quorum with vote type no_veto is met
+  //
+  // Since: cosmos-sdk 0.47
   bool burn_vote_veto = 15;
 
   // The ratio representing the proportion of the deposit value minimum that must be met when making a deposit.
@@ -304,15 +331,23 @@ message Params {
   // Since: cosmos-sdk 0.50
   string min_deposit_ratio = 16 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
+  // proposal_cancel_max_period defines how far in the voting period a proposer can cancel a proposal.
+  // If the proposal is cancelled before the max cancel period, the deposit will be returned/burn to the
+  // depositors, according to the proposal_cancel_ratio and proposal_cancel_dest parameters.
+  // After the max cancel period, the proposal cannot be cancelled anymore.
+  //
+  // Since: x/gov v1.0.0
+  string proposal_cancel_max_period = 17 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
   // optimistic_authorized_addresses is an optional governance parameter that limits the authorized accounts than can
   // submit optimistic proposals
   //
   // Since: x/gov v1.0.0
-  repeated string optimistic_authorized_addresses = 17 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated string optimistic_authorized_addresses = 18 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // optimistic rejected threshold defines at which percentage of NO votes, the optimistic proposal should fail and be
   // converted to a standard proposal. The threshold is expressed as a percentage of the total bonded tokens.
   //
   // Since: x/gov v1.0.0
-  string optimistic_rejected_threshold = 18 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  string optimistic_rejected_threshold = 19 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

@@ -32,7 +32,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
- * [#17656](https://github.com/cosmos/cosmos-sdk/pull/17656) – Introduces `Vec`, a collection type that allows to represent a growable array on top of a KVStore.
+
+* [#17656](https://github.com/cosmos/cosmos-sdk/pull/17656) – Introduces `Vec`, a collection type that allows to represent a growable array on top of a KVStore.
 
 ## [v0.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.4.0)
 
@@ -69,4 +70,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.1.0)
 
-Collections `v0.1.0` is released! Check out the [docs](https://docs.cosmos.network/main/packages/collections) to know how to use the APIs.
+Collections `v0.1.0` is released! Check out the [docs](https://docs.cosmos.network/main/build/packages/collections) to know how to use the APIs.

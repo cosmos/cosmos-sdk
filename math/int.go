@@ -333,12 +333,8 @@ func (i Int) MulRaw(i2 int64) Int {
 
 // SafeMul multiples Int from another and returns an error if overflow
 func (i Int) SafeMul(i2 Int) (res Int, err error) {
-	// Check overflow
-	if i.i.BitLen()+i2.i.BitLen()-1 > MaxBitLen {
-		return Int{}, ErrIntOverflow
-	}
 	res = Int{mul(i.i, i2.i)}
-	// Check overflow if sign of both are same
+	// Check overflow
 	if res.i.BitLen() > MaxBitLen {
 		return Int{}, ErrIntOverflow
 	}

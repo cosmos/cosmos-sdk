@@ -15,9 +15,13 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (
@@ -54,18 +58,18 @@ type SignerProvider interface {
 	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error)
 }
 
-// BranchExecutor defines an interface used to execute ops in a branch.
-type BranchExecutor = branch.Service
-
 type InterfaceRegistry interface {
 	RegisterInterface(name string, iface any, impls ...gogoproto.Message)
 	RegisterImplementations(iface any, impls ...gogoproto.Message)
 }
 
 func NewKeeper(
+	cdc codec.BinaryCodec,
 	ss store.KVStoreService,
 	es event.Service,
-	bs BranchExecutor,
+	hs header.Service,
+	bs branch.Service,
+	gs gas.Service,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -77,12 +81,11 @@ func NewKeeper(
 	keeper := Keeper{
 		storeService:    ss,
 		eventService:    es,
-		branchExecutor:  bs,
 		addressCodec:    addressCodec,
-		signerProvider:  signerProvider,
+		branchExecutor:  bs,
 		msgRouter:       execRouter,
+		signerProvider:  signerProvider,
 		queryRouter:     queryRouter,
-		Schema:          collections.Schema{},
 		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
 		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
@@ -94,7 +97,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, hs, gs, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}
@@ -107,7 +110,7 @@ type Keeper struct {
 	storeService   store.KVStoreService
 	eventService   event.Service
 	addressCodec   address.Codec
-	branchExecutor BranchExecutor
+	branchExecutor branch.Service
 	msgRouter      MsgRouter
 	signerProvider SignerProvider
 	queryRouter    QueryRouter

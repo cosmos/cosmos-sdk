@@ -37,18 +37,29 @@ func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validato
 // GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
 	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		// if the validator not found try to find it in the map of `OldToNewConsKeyMap`` because validator may've rotated it's key.
+	if err != nil {
+		// if the validator not found try to find it in the map of `OldToNewConsKeyMap` because validator may've rotated it's key.
 		if !errors.Is(err, collections.ErrNotFound) {
 			return types.Validator{}, err
 		}
 
-		newConsAddr, err := k.OldToNewConsKeyMap.Get(ctx, consAddr)
+		newConsAddr, err := k.OldToNewConsKeyMap.Get(ctx, consAddr.Bytes())
 		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				return types.Validator{}, types.ErrNoValidatorFound
+			}
 			return types.Validator{}, err
 		}
 
-		opAddr = newConsAddr
+		operatorAddr, err := k.ValidatorByConsensusAddress.Get(ctx, newConsAddr)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				return types.Validator{}, types.ErrNoValidatorFound
+			}
+			return types.Validator{}, err
+		}
+
+		opAddr = operatorAddr
 	}
 
 	if opAddr == nil {
@@ -372,13 +383,19 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 	if err != nil {
 		return nil, err
 	}
-	validators = make([]types.Validator, maxValidators)
 
 	i := 0
+	validators = make([]types.Validator, maxValidators)
+
 	err = k.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
-		// sanity check
+		// Note, we do NOT error here as the MaxValidators param may change via on-chain
+		// governance. In cases where the param is increased, this case should never
+		// be hit. In cases where the param is decreased, we will simply not return
+		// the remainder of the validator set, as the ApplyAndReturnValidatorSetUpdates
+		// call should ensure the validators past the cliff will be moved to the
+		// unbonding set.
 		if i >= int(maxValidators) {
-			return true, fmt.Errorf("more validators than maxValidators found")
+			return true, nil
 		}
 
 		validator, err := k.GetValidator(ctx, key)
@@ -388,6 +405,7 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 
 		validators[i] = validator
 		i++
+
 		return false, nil
 	})
 	if err != nil {

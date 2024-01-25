@@ -3,7 +3,7 @@ package store
 import (
 	"io"
 
-	ics23 "github.com/cosmos/ics23/go"
+	corestore "cosmossdk.io/core/store"
 )
 
 // Reader wraps the Has and Get method of a backing data store.
@@ -38,7 +38,7 @@ type Writer interface {
 type Database interface {
 	Reader
 	Writer
-	IteratorCreator
+	corestore.IteratorCreator
 	io.Closer
 }
 
@@ -50,8 +50,8 @@ type VersionedDatabase interface {
 	GetLatestVersion() (uint64, error)
 	SetLatestVersion(version uint64) error
 
-	Iterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
-	ReverseIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
+	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 
 	ApplyChangeset(version uint64, cs *Changeset) error
 
@@ -67,13 +67,35 @@ type VersionedDatabase interface {
 
 // Committer defines an API for committing state.
 type Committer interface {
+	// WriteBatch writes a batch of key-value pairs to the tree.
 	WriteBatch(cs *Changeset) error
-	WorkingStoreInfos(version uint64) []StoreInfo
+
+	// WorkingCommitInfo returns the CommitInfo for the working tree.
+	WorkingCommitInfo(version uint64) *CommitInfo
+
+	// GetLatestVersion returns the latest version.
 	GetLatestVersion() (uint64, error)
+
+	// LoadVersion loads the tree at the given version.
 	LoadVersion(targetVersion uint64) error
-	Commit() ([]StoreInfo, error)
+
+	// Commit commits the working tree to the database.
+	Commit(version uint64) (*CommitInfo, error)
+
+	// GetProof returns the proof of existence or non-existence for the given key.
+	GetProof(storeKey string, version uint64, key []byte) ([]CommitmentOp, error)
+
+	// Get returns the value for the given key at the given version.
+	//
+	// NOTE: This method only exists to support migration from IAVL v0/v1 to v2.
+	// Once migration is complete, this method should be removed and/or not used.
+	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+
+	// SetInitialVersion sets the initial version of the tree.
 	SetInitialVersion(version uint64) error
-	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
+
+	// GetCommitInfo returns the CommitInfo for the given version.
+	GetCommitInfo(version uint64) (*CommitInfo, error)
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be

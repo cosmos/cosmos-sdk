@@ -82,12 +82,12 @@ A new vote option `SPAM` will be added and distinguished from those voting optio
 
 Multiple choice proposals, contrary to any other proposal type, cannot have messages to execute. They are only text proposals.
 
-Submitting a new multiple choice proposal will use a different message than the [`v1.MsgSubmitProposal`][5]. This is done in order to simplify the proposal submittion and allow defining the voting options directly.
+Submitting a new multiple choice proposal will use a different message than the [`v1.MsgSubmitProposal`][5]. This is done in order to simplify the proposal submission and allow defining the voting options directly.
 
 
 ```protobuf
 message MsgSubmitMultipleChoiceProposal {
-  repeated cosmos.base.v1beta1.Coin initial_deposit = 1
+  repeated cosmos.base.v1beta1.Coin initial_deposit = 1;
   string proposer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string metadata = 3;
   string title = 4;

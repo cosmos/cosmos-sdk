@@ -5,8 +5,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"time"
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/cosmos/cosmos-proto/anyutil"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -130,16 +133,18 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*coretypes.ResultT
 }
 
 func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *coretypes.ResultBlock) (*sdk.TxResponse, error) {
-	panic("todo")
-	/*
-		txb, err := txConfig.TxDecoder()(resTx.Tx)
-		if err != nil {
-			return nil, err
-		}
-		p, ok := txb.(*gogoTxWrapper)
-		if !ok {
-			return nil, fmt.Errorf("unexpected type, wnted gogoTxWrapper, got: %T", txb)
-		}
-		return sdk.NewResponseResultTx(resTx, p.decodedTx.Tx, resBlock.Block.Time.Format(time.RFC3339)), nil
-	*/
+	txb, err := txConfig.TxDecoder()(resTx.Tx)
+	if err != nil {
+		return nil, err
+	}
+	p, ok := txb.(*gogoTxWrapper)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type, wnted gogoTxWrapper, got: %T", txb)
+	}
+
+	anyPB, err := anyutil.New(p.decodedTx.Tx)
+	if err != nil {
+		return nil, err
+	}
+	return sdk.NewResponseResultTx(resTx, intoAnyV1([]*anypb.Any{anyPB})[0], resBlock.Block.Time.Format(time.RFC3339)), nil
 }

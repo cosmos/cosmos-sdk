@@ -12,6 +12,7 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -227,6 +228,33 @@ func (w *gogoTxWrapper) GetExtensionOptions() []*codectypes.Any {
 
 func (w *gogoTxWrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
 	return intoAnyV1(w.decodedTx.Tx.Body.NonCriticalExtensionOptions)
+}
+
+func (w *gogoTxWrapper) AsTx() (*txtypes.Tx, error) {
+	body := new(txtypes.TxBody)
+	authInfo := new(txtypes.AuthInfo)
+
+	err := w.cdc.Unmarshal(w.decodedTx.TxRaw.BodyBytes, body)
+	if err != nil {
+		return nil, err
+	}
+	err = w.cdc.Unmarshal(w.decodedTx.TxRaw.AuthInfoBytes, authInfo)
+	if err != nil {
+		return nil, err
+	}
+	return &txtypes.Tx{
+		Body:       body,
+		AuthInfo:   authInfo,
+		Signatures: w.decodedTx.TxRaw.Signatures,
+	}, nil
+}
+
+func (w *gogoTxWrapper) AsTxRaw() (*txtypes.TxRaw, error) {
+	return &txtypes.TxRaw{
+		BodyBytes:     w.decodedTx.TxRaw.BodyBytes,
+		AuthInfoBytes: w.decodedTx.TxRaw.AuthInfoBytes,
+		Signatures:    w.decodedTx.TxRaw.Signatures,
+	}, nil
 }
 
 func intoAnyV1(v2s []*anypb.Any) []*codectypes.Any {

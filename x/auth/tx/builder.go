@@ -49,7 +49,7 @@ func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, c
 
 	var payer []byte
 	if decoded.feePayer != nil {
-		decoded.feePayer = payer
+		payer = decoded.feePayer
 	}
 
 	return &builder{

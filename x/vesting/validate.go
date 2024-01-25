@@ -10,7 +10,7 @@ func validateAmount(amount sdk.Coins) error {
 		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
 	}
 
-	if !amount.IsZero() {
+	if amount.IsZero() {
 		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
 	}
 

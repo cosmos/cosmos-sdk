@@ -17,7 +17,7 @@ var (
 	_ accountstd.Interface = (*PermanentLockedAccount)(nil)
 )
 
-// Permernant Vesting Account
+// Permanent Vesting Account
 
 // NewPermanentLockedAccount creates a new PermanentLockedAccount object.
 func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccount, error) {

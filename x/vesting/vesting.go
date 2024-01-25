@@ -31,10 +31,10 @@ var (
 )
 
 var (
-	CONTINUOS_VESTING_ACCOUNT  = "continuos-vesting-acount"
+	CONTINUOUS_VESTING_ACCOUNT = "continuous-vesting-account"
 	DELAYED_VESTING_ACCOUNT    = "delayed-vesting-account"
 	PERIODIC_VESTING_ACCOUNT   = "periodic-vesting-account"
-	PERMERNANT_VESTING_ACCOUNT = "permernant-vesting-account"
+	PERMANENT_VESTING_ACCOUNT  = "permanent-vesting-account"
 )
 
 type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, error)

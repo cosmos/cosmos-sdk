@@ -125,7 +125,7 @@ func ProvideClientContext(
 		panic(err)
 	}
 
-	// re-create the tx config grpc instead of bank keeper
+	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
 	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
 	txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
 	if err != nil {

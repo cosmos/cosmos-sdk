@@ -54,8 +54,8 @@ schema = 3
     version = "v1.5.5"
     hash = "sha256-tSw0aq0pPyroZtQYYb9lWOtPVNaQOt8skYQ4TMXGvAQ="
   [mod."github.com/Microsoft/go-winio"]
-    version = "v0.6.0"
-    hash = "sha256-TQ0AvXZfuT3PDnb4p/h5zmyT8m9VPcwxlXMJuVD6ltE="
+    version = "v0.6.1"
+    hash = "sha256-BL0BVaHtmPKQts/711W59AbHXjGKqFS4ZTal0RYnR9I="
   [mod."github.com/aws/aws-sdk-go"]
     version = "v1.45.25"
     hash = "sha256-ZzeU4WSHm5shDqGnK2mXC2p18NyAO+hKZHP7l1KR69k="
@@ -105,8 +105,8 @@ schema = 3
     version = "v1.1.5"
     hash = "sha256-0rtT7LRO0wxf9XovOK8GXRrhmx8OcbdPK/mXOKbJdog="
   [mod."github.com/cometbft/cometbft"]
-    version = "v0.38.4"
-    hash = "sha256-HaGrgyiUcot01XiVPchW5qtclIMwAGV0tZBWwlUQhQM="
+    version = "v0.38.5"
+    hash = "sha256-F1NmnJxYCt3dTDS6Z/9zbCEUf2vjUdQs9mQiZEhxyj0="
   [mod."github.com/cometbft/cometbft-db"]
     version = "v0.8.0"
     hash = "sha256-Tlm2V9zDs/wVoFvMmJSdCzCdZKiFRC7Qk8FS3FaqQyk="

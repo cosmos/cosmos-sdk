@@ -77,6 +77,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+* (x/staking) [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
 * (baseapp) [#19198](https://github.com/cosmos/cosmos-sdk/pull/19198) Remove usage of pointers in logs in all OE goroutines.
 * (baseapp) [#18727](https://github.com/cosmos/cosmos-sdk/pull/18727) Ensure that `BaseApp.Init` firstly returns any errors from a nil commit multistore instead of panicking on nil dereferencing and before sealing the app.
 * (client) [#18622](https://github.com/cosmos/cosmos-sdk/pull/18622) Fixed a potential under/overflow from `uint64->int64` when computing gas fees as a LegacyDec.
@@ -542,14 +543,14 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
-* [#19106](https://github.com/cosmos/cosmos-sdk/pull/19106) Allow empty public keys when setting signatures. Public keys aren't needed for every transaction. 
+* [#19106](https://github.com/cosmos/cosmos-sdk/pull/19106) Allow empty public keys when setting signatures. Public keys aren't needed for every transaction.
 * (server) [#18920](https://github.com/cosmos/cosmos-sdk/pull/18920) Fixes consensus failure while restart node with wrong `chainId` in genesis.
 
 ## [v0.47.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.7) - 2023-12-20
 
 ### Improvements
 
-* (x/gov) [#18707](https://github.com/cosmos/cosmos-sdk/pull/18707) Improve genesis validation. 
+* (x/gov) [#18707](https://github.com/cosmos/cosmos-sdk/pull/18707) Improve genesis validation.
 * (server) [#18478](https://github.com/cosmos/cosmos-sdk/pull/18478) Add command flag to disable colored logs.
 
 ### Bug Fixes

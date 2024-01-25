@@ -27,7 +27,7 @@ var (
 
 // NewPeriodicVestingAccount creates a new PeriodicVestingAccount object.
 func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccount, error) {
-	baseVestingAccount, err := NewBaseVesting(d)
+	baseVestingAccount := NewBaseVesting(d)
 
 	periodicsVestingAccount := PeriodicVestingAccount{
 		BaseVesting:    baseVestingAccount,
@@ -35,7 +35,7 @@ func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccou
 		VestingPeriods: collections.NewMap(d.SchemaBuilder, VestingPeriodsPrefix, "vesting_periods", collections.StringKey, codec.CollValue[vestingtypes.Period](d.LegacyStateCodec)),
 	}
 
-	return &periodicsVestingAccount, err
+	return &periodicsVestingAccount, nil
 }
 
 type PeriodicVestingAccount struct {

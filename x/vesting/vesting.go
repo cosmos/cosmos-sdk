@@ -40,7 +40,7 @@ var (
 type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, error)
 
 // NewBaseVesting creates a new BaseVesting object.
-func NewBaseVesting(d accountstd.Dependencies) (*BaseVesting, error) {
+func NewBaseVesting(d accountstd.Dependencies) *BaseVesting {
 	baseVestingAccount := &BaseVesting{
 		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.StringValue),
 		OriginalVesting:  collections.NewMap(d.SchemaBuilder, OriginalVestingPrefix, "original_vesting", collections.StringKey, sdk.IntValue),
@@ -51,7 +51,7 @@ func NewBaseVesting(d accountstd.Dependencies) (*BaseVesting, error) {
 		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", sdk.IntValue),
 	}
 
-	return baseVestingAccount, nil
+	return baseVestingAccount
 }
 
 type BaseVesting struct {

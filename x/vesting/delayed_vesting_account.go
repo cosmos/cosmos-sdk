@@ -22,10 +22,10 @@ var (
 
 // NewDelayedVestingAccount creates a new DelayedVestingAccount object.
 func NewDelayedVestingAccount(d accountstd.Dependencies) (*DelayedVestingAccount, error) {
-	baseVestingAccount, err := NewBaseVesting(d)
+	baseVestingAccount := NewBaseVesting(d)
 	return &DelayedVestingAccount{
 		baseVestingAccount,
-	}, err
+	}, nil
 }
 
 type DelayedVestingAccount struct {

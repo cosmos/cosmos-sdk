@@ -21,9 +21,9 @@ var (
 
 // NewPermanentLockedAccount creates a new PermanentLockedAccount object.
 func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccount, error) {
-	baseVestingAccount, err := NewBaseVesting(d)
+	baseVestingAccount := NewBaseVesting(d)
 
-	return &PermanentLockedAccount{baseVestingAccount}, err
+	return &PermanentLockedAccount{baseVestingAccount}, nil
 }
 
 type PermanentLockedAccount struct {
@@ -63,7 +63,7 @@ func (plva PermanentLockedAccount) QueryVestedCoins(ctx context.Context, msg *ve
 	*vestingtypes.QueryVestedCoinsResponse, error,
 ) {
 	return &vestingtypes.QueryVestedCoinsResponse{
-		VestedVesting: nil,
+		VestedVesting: sdk.Coins{},
 	}, nil
 }
 

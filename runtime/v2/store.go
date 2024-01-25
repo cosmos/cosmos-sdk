@@ -12,6 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO use server/v2 core service implementation
+
 func NewKVStoreService(storeKey *storetypes.KVStoreKey) store.KVStoreService {
 	return &kvStoreService{key: storeKey}
 }

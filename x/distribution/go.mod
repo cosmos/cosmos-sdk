@@ -30,7 +30,7 @@ require (
 	gotest.tools/v3 v3.5.1
 )
 
-require github.com/cometbft/cometbft v0.38.4 // indirect
+require github.com/cometbft/cometbft v0.38.5 // indirect
 
 require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -40,7 +40,7 @@ require (
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
-	github.com/Microsoft/go-winio v0.6.0 // indirect
+	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect

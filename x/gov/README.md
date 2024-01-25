@@ -235,7 +235,7 @@ For expedited proposals, by default, the threshold is higher than with a *normal
 Yes quorum is a more restrictive quorum that is used to determine if a proposal passes.
 It is defined as the minimum percentage of voting power that needs to have voted `Yes` for the proposal to pass.
 It differs from `Threshold` as it takes the whole voting power into account, not only `Yes` and `No` votes.
-By default, `YesQuorum` is set to 0, which means disabled.
+By default, `YesQuorum` is set to 0, which means no minimum.
 
 #### Inheritance
 

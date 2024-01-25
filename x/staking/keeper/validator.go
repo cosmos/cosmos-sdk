@@ -313,17 +313,38 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 	store := ctx.KVStore(k.storeKey)
 
 	// add the actual validator power sorted store
+<<<<<<< HEAD
 	maxValidators := k.MaxValidators(ctx)
 	validators = make([]types.Validator, maxValidators)
+=======
+	maxValidators, err := k.MaxValidators(ctx)
+	if err != nil {
+		return nil, err
+	}
+>>>>>>> a69836b3b (fix(x/staking): Refactor GetLastValidators  (#19226))
 
 	iterator := sdk.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
 	defer iterator.Close()
 
 	i := 0
+<<<<<<< HEAD
 	for ; iterator.Valid(); iterator.Next() {
 		// sanity check
 		if i >= int(maxValidators) {
 			panic("more validators than maxValidators found")
+=======
+	validators = make([]types.Validator, maxValidators)
+
+	err = k.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
+		// Note, we do NOT error here as the MaxValidators param may change via on-chain
+		// governance. In cases where the param is increased, this case should never
+		// be hit. In cases where the param is decreased, we will simply not return
+		// the remainder of the validator set, as the ApplyAndReturnValidatorSetUpdates
+		// call should ensure the validators past the cliff will be moved to the
+		// unbonding set.
+		if i >= int(maxValidators) {
+			return true, nil
+>>>>>>> a69836b3b (fix(x/staking): Refactor GetLastValidators  (#19226))
 		}
 
 		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
@@ -331,6 +352,14 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 
 		validators[i] = validator
 		i++
+<<<<<<< HEAD
+=======
+
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+>>>>>>> a69836b3b (fix(x/staking): Refactor GetLastValidators  (#19226))
 	}
 
 	return validators[:i] // trim

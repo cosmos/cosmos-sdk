@@ -55,8 +55,10 @@ var (
 	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
 )
 
-const Int string = "math.Int"
-const Uint string = "math.Uint"
+const (
+	Int  string = "math.Int"
+	Uint string = "math.Uint"
+)
 
 type addressUnion interface {
 	AccAddress | ValAddress | ConsAddress

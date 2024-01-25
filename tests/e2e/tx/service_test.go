@@ -867,8 +867,6 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 				gotTx := txb.GetTx()
 				gotEncoded, err := val.GetClientCtx().TxConfig.TxEncoder()(gotTx)
 				s.Require().NoError(err)
-				s.T().Log(goodTx.(fmt.Stringer).String())
-				s.T().Log(gotTx.(fmt.Stringer).String())
 				s.Require().Equal(encodedTx, gotEncoded)
 			}
 		})

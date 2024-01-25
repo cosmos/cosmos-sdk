@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -115,6 +116,19 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 
 				msg := gen.Draw(t, "msg")
 				postFixPulsarMessage(msg)
+				// txBuilder.GetTx will fail if the msg has no signers
+				// so it does not make sense to run these cases, apparently.
+				signers, err := encCfg.TxConfig.SigningContext().GetSigners(msg)
+				if len(signers) == 0 {
+					// skip
+					return
+				}
+				if err != nil {
+					if strings.Contains(err.Error(), "empty address string is not allowed") {
+						return
+					}
+					require.NoError(t, err)
+				}
 
 				gogo := tt.Gogo
 				sanity := tt.Pulsar

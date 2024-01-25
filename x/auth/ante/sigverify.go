@@ -95,6 +95,11 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 }
 
 func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
+	// when simulating pubKey.Key will always be nil
+	if pubKey.Bytes() == nil {
+		return nil
+	}
+
 	switch typedPubKey := pubKey.(type) {
 	case *secp256k1.PubKey:
 		pubKeyObject, err := secp256k1dcrd.ParsePubKey(typedPubKey.Bytes())

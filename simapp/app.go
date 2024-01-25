@@ -303,10 +303,10 @@ func NewSimApp(
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
 		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
 		// new vesting account
-		accountstd.AddAccount(vestingv1.CONTINUOS_VESTING_ACCOUNT, vestingv1.NewContinuousVestingAccount),
+		accountstd.AddAccount(vestingv1.CONTINUOUS_VESTING_ACCOUNT, vestingv1.NewContinuousVestingAccount),
 		accountstd.AddAccount(vestingv1.PERIODIC_VESTING_ACCOUNT, vestingv1.NewPeriodicVestingAccount),
 		accountstd.AddAccount(vestingv1.DELAYED_VESTING_ACCOUNT, vestingv1.NewDelayedVestingAccount),
-		accountstd.AddAccount(vestingv1.PERMERNANT_VESTING_ACCOUNT, vestingv1.NewPermanentLockedAccount),
+		accountstd.AddAccount(vestingv1.PERMANENT_VESTING_ACCOUNT, vestingv1.NewPermanentLockedAccount),
 	)
 	if err != nil {
 		panic(err)

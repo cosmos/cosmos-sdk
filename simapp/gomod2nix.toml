@@ -77,6 +77,9 @@ schema = 3
   [mod."github.com/btcsuite/btcd/btcec/v2"]
     version = "v2.3.2"
     hash = "sha256-natWs+yIAuD1UI07iZtjPilroQLfXizFn3lNOiOT83U="
+  [mod."github.com/bufbuild/protocompile"]
+    version = "v0.7.1"
+    hash = "sha256-62+Erve5L0OH086eIdPL8vnZ3yDvdAXzCLx6PDPiqmc="
   [mod."github.com/cenkalti/backoff/v4"]
     version = "v4.1.3"
     hash = "sha256-u6MEDopHoTWAZoVvvXOKnAg++xre53YgQx0gmf6t2KU="

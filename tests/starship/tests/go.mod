@@ -8,6 +8,7 @@ replace (
 	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../../../.
+	github.com/cosmos/cosmos-sdk/tests => ../../../tests/.
 )
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk

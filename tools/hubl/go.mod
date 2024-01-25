@@ -5,7 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/api v0.7.2
 	cosmossdk.io/client/v2 v2.0.0-beta.1.0.20240118210941-3897926e722e
-	cosmossdk.io/core v0.11.0
+	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-sdk v0.50.4-0.20240118210941-3897926e722e

@@ -62,7 +62,6 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
-			ProvideBasicManager,
 			ProvideAddressCodec,
 		),
 		appconfig.Invoke(SetupAppBuilder),
@@ -101,7 +100,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
-		basicManager:      module.BasicManager{},
 		msgRouterBuilder:  msgRouterBuilder,
 	}
 	appBuilder := &AppBuilder{app: app}
@@ -131,14 +129,12 @@ func SetupAppBuilder(inputs AppInputs) {
 
 	for name, mod := range inputs.Modules {
 		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
-			app.basicManager[name] = customBasicMod
 			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
 			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 			continue
 		}
 
 		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
-		app.basicManager[name] = coreAppModuleBasic
 		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
 		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	}
@@ -225,10 +221,6 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
-}
-
-func ProvideBasicManager(app *AppBuilder) module.BasicManager {
-	return app.app.basicManager
 }
 
 type (

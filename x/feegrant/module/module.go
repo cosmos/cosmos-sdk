@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
-	"cosmossdk.io/x/feegrant/txvalidator"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -27,9 +27,8 @@ var (
 	_ module.HasServices         = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 
-	_ appmodule.AppModule                       = AppModule{}
-	_ appmodule.HasEndBlocker                   = AppModule{}
-	_ appmodule.HasTxValidation[transaction.Tx] = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -108,18 +107,16 @@ type AppModule struct {
 	accountKeeper feegrant.AccountKeeper
 	bankKeeper    feegrant.BankKeeper
 	registry      cdctypes.InterfaceRegistry
-	txFeeChecker  txvalidator.TxFeeChecker
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry, txFeeChecker txvalidator.TxFeeChecker) AppModule {
+func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		registry:       registry,
-		txFeeChecker:   txFeeChecker,
 	}
 }
 
@@ -161,6 +158,6 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 // TxValidator implements appmodule.HasTxValidation.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	txValidator := txvalidator.NewDeductFeeDecorator(am.accountKeeper, am.bankKeeper, am.keeper, am.txFeeChecker)
-	return txValidator.TxValidator(ctx, tx)
+	// TODO in follow-up
+	return nil
 }

@@ -19,7 +19,7 @@ type Builder[T transaction.Tx] struct {
 
 func (b Builder[T]) Build() (*AppManager[T], error) {
 	return &AppManager[T]{
-		ValidateTxGasLimit: b.ValidateTxGasLimit,
+		validateTxGasLimit: b.ValidateTxGasLimit,
 		queryGasLimit:      b.QueryGasLimit,
 		simulationGasLimit: b.SimulationGasLimit,
 		db:                 b.DB,

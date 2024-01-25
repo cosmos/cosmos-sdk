@@ -21,7 +21,7 @@ type branchFunc func(state store.GetReader) store.GetWriter
 type AppBuilder struct {
 	app *App
 
-	// config
+	// options for building the app
 	branch      branchFunc
 	txValidator func(ctx context.Context, tx transaction.Tx) error
 }
@@ -41,12 +41,7 @@ func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error {
 			return fmt.Errorf("AppModule named %q already exists", name)
 		}
 
-		if _, ok := a.app.basicManager[name]; ok {
-			return fmt.Errorf("AppModuleBasic named %q already exists", name)
-		}
-
 		a.app.moduleManager.modules[name] = appModule
-		a.app.basicManager[name] = appModule
 		appModule.RegisterInterfaces(a.app.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.app.amino)
 
@@ -71,7 +66,7 @@ func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, error) {
+func (a *AppBuilder) Build(store store.Store, opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -109,7 +104,7 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 		valUpdate,
 		a.branch,
 	)
-	a.app.db = db
+	a.app.store = store
 
 	return a.app, nil
 }
@@ -139,12 +134,6 @@ func AppBuilderWithVerifyBlockHandler(handler coreappmanager.ProcessHandler[tran
 func AppBuilderWithBranch(branch branchFunc) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.branch = branch
-	}
-}
-
-func AppBuilderWithGasConfig(gasConfig interface{}) AppBuilderOption {
-	return func(a *AppBuilder) {
-		// a.app.gasConfig = gasConfig
 	}
 }
 

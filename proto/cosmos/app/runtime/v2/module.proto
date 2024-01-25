@@ -43,9 +43,19 @@ message Module {
   // if it is specified.
   repeated string export_genesis = 7;
 
+  // GasConfig is the config object for gas limits.
+  GasConfig gas_config = 8;
+
   // override_store_keys is an optional list of overrides for the module store keys
   // to be used in keeper construction.
-  repeated StoreKeyConfig override_store_keys = 10;
+  repeated StoreKeyConfig override_store_keys = 9;
+}
+
+// GasConfig is the config object for gas limits.
+message GasConfig {
+  uint64 validate_tx_gas_limit = 1;
+  uint64 query_gas_limit       = 2;
+  uint64 simulation_gas_limit  = 3;
 }
 
 // StoreKeyConfig may be supplied to override the default module store key, which

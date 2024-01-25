@@ -1,4 +1,4 @@
-package txvalidator
+package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
@@ -9,7 +9,7 @@ import (
 )
 
 // checkTxFeeWithValidatorMinGasPrices implements the default fee logic, where the minimum price per
-// unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
+// unit of gas is fixed and set by each validator.
 func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {

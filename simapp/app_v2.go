@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authzkeeper "cosmossdk.io/x/authz/keeper"

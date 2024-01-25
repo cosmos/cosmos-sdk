@@ -5,7 +5,7 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 )
 
-func DB() store.GetReader {
+func DB() store.ReaderMap {
 	return actorState{kv: map[string][]byte{}}
 }
 

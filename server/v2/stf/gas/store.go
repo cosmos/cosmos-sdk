@@ -1,44 +1,51 @@
-package stf
+package gas
 
 import (
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
 )
 
 // Gas consumption descriptors.
 const (
-	GasDescIterNextCostFlat = "IterNextFlat"
-	GasDescValuePerByte     = "ValuePerByte"
-	GasDescWritePerByte     = "WritePerByte"
-	GasDescReadPerByte      = "ReadPerByte"
-	GasDescWriteCostFlat    = "WriteFlat"
-	GasDescReadCostFlat     = "ReadFlat"
-	GasDescHas              = "Has"
-	GasDescDelete           = "Delete"
+	DescIterNextCostFlat = "IterNextFlat"
+	DescValuePerByte     = "ValuePerByte"
+	DescWritePerByte     = "WritePerByte"
+	DescReadPerByte      = "ReadPerByte"
+	DescWriteCostFlat    = "WriteFlat"
+	DescReadCostFlat     = "ReadFlat"
+	DescHas              = "Has"
+	DescDelete           = "Delete"
 )
+
+type StoreConfig struct {
+	ReadCostFlat, ReadCostPerByte, HasCost          stf.Gas
+	WriteCostFlat, WriteCostPerByte, DeleteCostFlat stf.Gas
+	IterNextCostFlat                                stf.Gas
+}
 
 type Store struct {
 	parent    store.Writer
-	gasMeter  store.GasMeter
-	gasConfig store.GasConfig
+	gasMeter  stf.GasMeter
+	gasConfig StoreConfig
 }
 
-func New(gc store.GasConfig) store.Writer {
+func New(gc StoreConfig) store.Writer {
 	return &Store{
 		gasConfig: gc,
 	}
 }
 
 func (s *Store) Get(key []byte) ([]byte, error) {
-	if err := s.gasMeter.ConsumeGas(s.gasConfig.ReadCostFlat(), GasDescReadCostFlat); err != nil {
+	if err := s.gasMeter.ConsumeGas(s.gasConfig.ReadCostFlat, DescReadCostFlat); err != nil {
 		return nil, err
 	}
 
 	value, err := s.parent.Get(key)
-	if err := s.gasMeter.ConsumeGas(s.gasConfig.ReadCostPerByte()*store.Gas(len(key)), GasDescReadPerByte); err != nil {
+	if err := s.gasMeter.ConsumeGas(s.gasConfig.ReadCostPerByte*stf.Gas(len(key)), DescReadPerByte); err != nil {
 		return nil, err
 	}
-	if err := s.gasMeter.ConsumeGas(s.gasConfig.ReadCostPerByte()*store.Gas(len(value)), GasDescReadPerByte); err != nil {
+	if err := s.gasMeter.ConsumeGas(s.gasConfig.ReadCostPerByte*stf.Gas(len(value)), DescReadPerByte); err != nil {
 		return nil, err
 	}
 
@@ -46,7 +53,7 @@ func (s *Store) Get(key []byte) ([]byte, error) {
 }
 
 func (s *Store) Has(key []byte) (bool, error) {
-	if err := s.gasMeter.ConsumeGas(s.gasConfig.HasCost(), GasDescHas); err != nil {
+	if err := s.gasMeter.ConsumeGas(s.gasConfig.HasCost, DescHas); err != nil {
 		return false, err
 	}
 
@@ -54,13 +61,13 @@ func (s *Store) Has(key []byte) (bool, error) {
 }
 
 func (s *Store) Set(key, value []byte) error {
-	if err := s.gasMeter.ConsumeGas(s.gasConfig.WriteCostFlat(), GasDescWriteCostFlat); err != nil {
+	if err := s.gasMeter.ConsumeGas(s.gasConfig.WriteCostFlat, DescWriteCostFlat); err != nil {
 		return err
 	}
-	if err := s.gasMeter.ConsumeGas(s.gasConfig.WriteCostPerByte()*store.Gas(len(key)), GasDescWritePerByte); err != nil {
+	if err := s.gasMeter.ConsumeGas(s.gasConfig.WriteCostPerByte*stf.Gas(len(key)), DescWritePerByte); err != nil {
 		return err
 	}
-	if err := s.gasMeter.ConsumeGas(s.gasConfig.WriteCostPerByte()*store.Gas(len(value)), GasDescWritePerByte); err != nil {
+	if err := s.gasMeter.ConsumeGas(s.gasConfig.WriteCostPerByte*stf.Gas(len(value)), DescWritePerByte); err != nil {
 		return err
 	}
 
@@ -68,19 +75,19 @@ func (s *Store) Set(key, value []byte) error {
 }
 
 func (s *Store) Delete(key []byte) error {
-	if err := s.gasMeter.ConsumeGas(s.gasConfig.DeleteCost(), GasDescDelete); err != nil {
+	if err := s.gasMeter.ConsumeGas(s.gasConfig.DeleteCostFlat, DescDelete); err != nil {
 		return err
 	}
 
 	return s.parent.Delete(key)
 }
 
-func (b *Store) ApplyChangeSets(changes []store.KVPair) error {
-	return b.parent.ApplyChangeSets(changes)
+func (s *Store) ApplyChangeSets(changes []store.KVPair) error {
+	return s.parent.ApplyChangeSets(changes)
 }
 
-func (b *Store) ChangeSets() ([]store.KVPair, error) {
-	return b.parent.ChangeSets()
+func (s *Store) ChangeSets() ([]store.KVPair, error) {
+	return s.parent.ChangeSets()
 }
 
 func (s *Store) Iterator(start, end []byte) (corestore.Iterator, error) {
@@ -104,12 +111,12 @@ func (s *Store) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 var _ corestore.Iterator = (*iterator)(nil)
 
 type iterator struct {
-	gasMeter  store.GasMeter
-	gasConfig store.GasConfig
+	gasMeter  stf.GasMeter
+	gasConfig StoreConfig
 	parent    corestore.Iterator
 }
 
-func newIterator(parent corestore.Iterator, gm store.GasMeter, gc store.GasConfig) corestore.Iterator {
+func newIterator(parent corestore.Iterator, gm stf.GasMeter, gc StoreConfig) corestore.Iterator {
 	return &iterator{
 		parent:    parent,
 		gasConfig: gc,
@@ -159,15 +166,15 @@ func (itr *iterator) consumeGasSeek() error {
 		key := itr.Key()
 		value := itr.Value()
 
-		if err := itr.gasMeter.ConsumeGas(itr.gasConfig.ReadCostPerByte()*store.Gas(len(key)), GasDescValuePerByte); err != nil {
+		if err := itr.gasMeter.ConsumeGas(itr.gasConfig.ReadCostPerByte*stf.Gas(len(key)), DescValuePerByte); err != nil {
 			return err
 		}
-		if err := itr.gasMeter.ConsumeGas(itr.gasConfig.ReadCostPerByte()*store.Gas(len(value)), GasDescValuePerByte); err != nil {
+		if err := itr.gasMeter.ConsumeGas(itr.gasConfig.ReadCostPerByte*stf.Gas(len(value)), DescValuePerByte); err != nil {
 			return err
 		}
 	}
 
-	if err := itr.gasMeter.ConsumeGas(itr.gasConfig.IterNextCostFlat(), GasDescIterNextCostFlat); err != nil {
+	if err := itr.gasMeter.ConsumeGas(itr.gasConfig.IterNextCostFlat, DescIterNextCostFlat); err != nil {
 		return err
 	}
 

@@ -141,6 +141,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	if err != nil {
 		return nil, err
 	}
+
 	maxValidators := params.MaxValidators
 	powerReduction := k.PowerReduction(ctx)
 	totalPower := math.ZeroInt()
@@ -161,10 +162,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	}
 	defer iterator.Close()
 
+	// Every validator that is iterated over in this loop is becoming or already
+	// is a part of the bonded validator set.
 	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
-		// everything that is iterated in this loop is becoming or already a
-		// part of the bonded validator set
 		valAddr := sdk.ValAddress(iterator.Value())
+
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
 			return nil, fmt.Errorf("validator record not found for address: %X", valAddr)
@@ -174,8 +176,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			return nil, fmt.Errorf("should never retrieve a jailed validator from the power store")
 		}
 
-		// if we get to a zero-power validator (which we don't bond),
-		// there are no more possible bonded validators
+		// If we get to a zero-power validator (which we don't bond), there are no
+		// more possible bonded validators.
 		if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
 			break
 		}
@@ -187,15 +189,20 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			if err != nil {
 				return nil, err
 			}
+
 			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+
 		case validator.IsUnbonding():
 			validator, err = k.unbondingToBonded(ctx, validator)
 			if err != nil {
 				return nil, err
 			}
+
 			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+
 		case validator.IsBonded():
 			// no state change
+
 		default:
 			return nil, fmt.Errorf("unexpected validator status")
 		}
@@ -205,6 +212,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if err != nil {
 			return nil, err
 		}
+
 		oldPowerBytes, found := last[valAddrStr]
 		newPower := validator.ConsensusPower(powerReduction)
 		newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
@@ -234,14 +242,17 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if err != nil {
 			return nil, fmt.Errorf("validator record not found for address: %X", sdk.ValAddress(valAddrBytes))
 		}
+
 		validator, err = k.bondedToUnbonding(ctx, validator)
 		if err != nil {
 			return nil, err
 		}
+
 		str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
 		if err != nil {
 			return nil, err
 		}
+
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
 		if err = k.DeleteLastValidatorPower(ctx, str); err != nil {
 			return nil, err

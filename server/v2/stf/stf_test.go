@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/stf/gas"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -75,14 +76,41 @@ func TestSTF(t *testing.T) {
 		require.Equal(t, mockTx.GasLimit, txResult.GasWanted)
 	})
 
+	t.Run("exec tx out of gas", func(t *testing.T) {
+		s := s.clone()
+
+		mockTx := mock.Tx{
+			Sender:   []byte("sender"),
+			Msg:      wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
+			GasLimit: 0,                     // NO GAS!
+		}
+
+		// this handler will propagate the storage error back, we expect
+		// out of gas immediately at tx validation level.
+		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error {
+			w, err := ctx.(*executionContext).state.GetWriter(actorName)
+			require.NoError(t, err)
+			err = w.Set([]byte("gas_failure"), []byte{})
+			require.Error(t, err)
+			return err
+		}
+
+		result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+			Txs: []mock.Tx{mockTx},
+		}, state)
+		require.NoError(t, err)
+		stateNotHas(t, newState, "gas_failure") // assert during out of gas no state changes leaked.
+		require.ErrorIs(t, result.TxResults[0].Error, stf.ErrOutOfGas)
+	})
+
 	t.Run("fail exec tx", func(t *testing.T) {
 		// update the stf to fail on the handler
-		stf := s.clone()
-		stf.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+		s := s.clone()
+		s.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
 			return nil, fmt.Errorf("failure")
 		}
 
-		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
@@ -95,11 +123,11 @@ func TestSTF(t *testing.T) {
 	})
 
 	t.Run("tx is success but post tx failed", func(t *testing.T) {
-		stf := s.clone()
-		stf.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error {
+		s := s.clone()
+		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error {
 			return fmt.Errorf("post tx failure")
 		}
-		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
@@ -112,12 +140,12 @@ func TestSTF(t *testing.T) {
 	})
 
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
-		stf := s.clone()
-		stf.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+		s := s.clone()
+		s.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
 			return nil, fmt.Errorf("exec failure")
 		}
-		stf.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
-		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
+		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
@@ -131,9 +159,9 @@ func TestSTF(t *testing.T) {
 
 	t.Run("fail validate tx", func(t *testing.T) {
 		// update stf to fail on the validation step
-		stf := s.clone()
-		stf.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return fmt.Errorf("failure") }
-		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		s := s.clone()
+		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return fmt.Errorf("failure") }
+		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)

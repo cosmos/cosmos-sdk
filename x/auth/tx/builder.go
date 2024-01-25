@@ -34,9 +34,7 @@ func newBuilder(addressCodec address.Codec, decoder *decode.Decoder, codec codec
 
 func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, codec codec.BinaryCodec, decoded *gogoTxWrapper) (*builder, error) {
 	signatures := make([][]byte, len(decoded.decodedTx.Tx.Signatures))
-	for i, sig := range decoded.decodedTx.Tx.Signatures {
-		signatures[i] = sig
-	}
+	copy(signatures, decoded.decodedTx.Tx.Signatures)
 
 	sigInfos := make([]*tx.SignerInfo, len(decoded.decodedTx.Tx.AuthInfo.SignerInfos))
 	for i, sigInfo := range decoded.decodedTx.Tx.AuthInfo.SignerInfos {

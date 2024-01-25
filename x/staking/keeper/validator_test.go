@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) TestGetLastValidators() {
 	require.NoError(err)
 
 	params.MaxValidators = 50
-	keeper.Params.Set(ctx, params)
+	require.NoError(keeper.Params.Set(ctx, params))
 
 	// construct 50 validators all with equal power of 100
 	var validators [50]stakingtypes.Validator
@@ -126,7 +126,7 @@ func (s *KeeperTestSuite) TestGetLastValidators() {
 
 	// reduce max validators to 30 and ensure we only get 30 back
 	params.MaxValidators = 30
-	keeper.Params.Set(ctx, params)
+	require.NoError(keeper.Params.Set(ctx, params))
 
 	res, err = keeper.GetLastValidators(ctx)
 	require.NoError(err)

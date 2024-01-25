@@ -1131,6 +1131,7 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
+	txBuilder.SetFeePayer(val.GetAddress())
 	signers, err := txBuilder.GetTx().GetSigners()
 	s.Require().NoError(err)
 	s.Require().Equal([][]byte{val.GetAddress()}, signers)

@@ -368,7 +368,7 @@ func (bva BaseVesting) Authenticate(ctx context.Context, msg *account_abstractio
 	// for payBundler message, this could lead to accounts keeper executes the messages
 	// directly without going through vesting account ExecuteMessages handler.
 	if len(msg.UserOperation.BundlerPaymentMessages) > 0 {
-		return nil, fmt.Errorf("all message should only be execute by vesting account ExecuteMessages handler")
+		return nil, fmt.Errorf("no payment messages should be included for vesting account")
 	}
 
 	return &account_abstractionv1.MsgAuthenticateResponse{}, nil

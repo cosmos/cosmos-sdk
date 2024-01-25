@@ -39,6 +39,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	"github.com/cosmos/cosmos-sdk/tests/integration/staking"
 )
 
 type SimTestSuite struct {
@@ -91,7 +93,7 @@ func (s *SimTestSuite) SetupTest() {
 	)
 
 	cfg := depinject.Configs(
-		testutil.AppConfig,
+		staking.AppConfig,
 		depinject.Supply(sdklog.NewNopLogger()),
 	)
 

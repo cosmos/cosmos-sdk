@@ -121,6 +121,7 @@ var (
 		authtypes.FeeCollectorName:     nil,
 		distrtypes.ModuleName:          nil,
 		pooltypes.ModuleName:           nil,
+		pooltypes.StreamAccount:        nil,
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -281,16 +282,18 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress(govtypes.ModuleName).String(), runtime.EventService{})
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
+	addressCodec := authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
+
 	// add keepers
 
-	app.AuthKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-
 	accountsKeeper, err := accounts.NewKeeper(
+		appCodec,
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		runtime.EventService{},
 		runtime.HeaderService{},
 		runtime.BranchService{},
-		app.AuthKeeper.AddressCodec(),
+		runtime.GasService{},
+		addressCodec,
 		appCodec,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
@@ -302,8 +305,9 @@ func NewSimApp(
 	if err != nil {
 		panic(err)
 	}
-
 	app.AccountsKeeper = accountsKeeper
+
+	app.AuthKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, addressCodec, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,

@@ -10,13 +10,23 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.3.0
 	cosmossdk.io/math v1.2.0
+	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/store v1.0.2
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
+	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.0
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v0.38.2
@@ -33,20 +43,7 @@ require (
 	google.golang.org/protobuf v1.32.0
 )
 
-require cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130
-
-require (
-	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
-	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-)
+require cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
 
 require (
 	cloud.google.com/go v0.111.0 // indirect
@@ -236,6 +233,8 @@ require (
 
 // server v2 integration
 replace (
+	cosmossdk.io/api => ../api
+	cosmossdk.io/core => ../core
 	cosmossdk.io/runtime/v2 => ../runtime/v2
 	cosmossdk.io/server/v2 => ../server/v2
 	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
@@ -245,7 +244,6 @@ replace (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/tools/confix => ../tools/confix
@@ -265,6 +263,7 @@ replace (
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/staking => ../x/staking
+	cosmossdk.io/x/tx => ../x/tx
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

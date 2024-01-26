@@ -8,10 +8,10 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	coreevent "cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 var runtimeIdentity transaction.Identity = []byte("runtime") // TODO: most likely should be moved to core somewhere.

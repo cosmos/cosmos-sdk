@@ -3,7 +3,7 @@ package mempool
 import (
 	"context"
 
-	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/core/transaction"
 )
 
 // Mempool defines the required methods of an application's mempool.

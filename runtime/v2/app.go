@@ -5,12 +5,12 @@ import (
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 

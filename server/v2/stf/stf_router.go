@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/core/transaction"
 )
 
 var ErrNoHandler = errors.New("no handler")

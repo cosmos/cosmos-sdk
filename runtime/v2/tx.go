@@ -4,7 +4,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/core/transaction"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

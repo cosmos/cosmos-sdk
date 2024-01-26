@@ -27,7 +27,6 @@ require (
 
 require (
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect

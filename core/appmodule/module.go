@@ -3,7 +3,7 @@ package appmodule
 import (
 	"context"
 
-	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/core/transaction"
 	"google.golang.org/grpc"
 )
 

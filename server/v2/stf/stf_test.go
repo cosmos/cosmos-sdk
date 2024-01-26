@@ -9,9 +9,9 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 )

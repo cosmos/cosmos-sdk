@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"

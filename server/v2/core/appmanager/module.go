@@ -3,7 +3,7 @@ package appmanager
 import (
 	"context"
 
-	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/core/transaction"
 )
 
 type Tx = transaction.Tx

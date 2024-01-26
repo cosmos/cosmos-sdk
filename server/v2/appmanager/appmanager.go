@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 // AppManager is a coordinator for all things related to an application

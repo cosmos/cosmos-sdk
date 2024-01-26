@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 // PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations

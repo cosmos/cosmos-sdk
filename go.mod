@@ -188,6 +188,7 @@ require (
 // TODO remove after all modules have their own go.mods
 replace (
 	cosmossdk.io/api => ./api
+	cosmossdk.io/core => ./core
 	cosmossdk.io/depinject => ./depinject
 	cosmossdk.io/runtime/v2 => ./runtime/v2
 	cosmossdk.io/server/v2 => ./server/v2
@@ -201,6 +202,7 @@ replace (
 	cosmossdk.io/x/protocolpool => ./x/protocolpool
 	cosmossdk.io/x/slashing => ./x/slashing
 	cosmossdk.io/x/staking => ./x/staking
+	cosmossdk.io/x/tx => ./x/tx
 )
 
 // Below are the long-lived replace of the Cosmos SDK

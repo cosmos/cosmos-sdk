@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/transaction"
 	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )

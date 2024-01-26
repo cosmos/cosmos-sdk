@@ -9,8 +9,8 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/runtime/v2"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"

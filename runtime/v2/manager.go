@@ -11,7 +11,7 @@ import (
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf"
 )
 

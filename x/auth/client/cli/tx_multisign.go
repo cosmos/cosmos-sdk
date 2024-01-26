@@ -73,6 +73,14 @@ The SIGN_MODE_DIRECT sign mode is not supported.'
 
 func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
+<<<<<<< HEAD
+=======
+		file := args[0]
+		name := args[1]
+		sigsRaw := args[2:]
+		_ = cmd.Flags().Set(flags.FlagFrom, args[1])
+
+>>>>>>> e65f392b9 (fix(x/auth): set from flag in multi-sign command (#19239))
 		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err

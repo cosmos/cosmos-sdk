@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/runtime/v2/protocompat"
 	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
@@ -14,7 +15,6 @@ import (
 	"cosmossdk.io/server/v2/stf"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	grpc1 "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -54,7 +54,7 @@ func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error {
 		appModule.RegisterInterfaces(a.app.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.app.amino)
 		// register msg + query
-		if services, ok := appModule.(module.HasServices); ok {
+		if services, ok := appModule.(appmodule.HasServices); ok {
 			err := registerServices(services, a.app, protoregistry.GlobalFiles)
 			if err != nil {
 				return err
@@ -151,22 +151,18 @@ func AppBuilderWithTxValidator(validator func(ctx context.Context, tx transactio
 	}
 }
 
-func registerServices(s module.HasServices, app *App, registry *protoregistry.Files) error {
-	c := configurator{
-		stfQueryRouter: app.queryRouterBuilder,
-		stfMsgRouter:   app.msgRouterBuilder,
-	}
-	s.RegisterServices(&configurator{
+func registerServices(s appmodule.HasServices, app *App, registry *protoregistry.Files) error {
+	c := &configurator{
 		cdc:            app.cdc,
 		stfQueryRouter: app.queryRouterBuilder,
 		stfMsgRouter:   app.msgRouterBuilder,
 		registry:       registry,
 		err:            nil,
-	})
-	return c.Error()
+	}
+	return s.RegisterServices(c)
 }
 
-var _ module.Configurator = (*configurator)(nil)
+var _ grpc.ServiceRegistrar = (*configurator)(nil)
 
 type configurator struct {
 	cdc            codec.BinaryCodec
@@ -195,23 +191,6 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 			c.err = err
 		}
 	}
-}
-
-func (c *configurator) Error() error {
-	return c.err
-}
-
-func (c *configurator) MsgServer() grpc1.Server {
-	panic("do not call me")
-}
-
-func (c *configurator) QueryServer() grpc1.Server {
-	panic("do not call me")
-}
-
-func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, handler module.MigrationHandler) error {
-	// TODO implement me
-	panic("implement me")
 }
 
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {

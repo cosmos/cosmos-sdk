@@ -108,7 +108,7 @@ func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate f
 		// get validator updates of legacy modules using HasABCIEndBlock
 		for i, v := range validatorUpdates {
 			valUpdates[i] = appmodule.ValidatorUpdate{
-				PubKey: v.PubKey.GetSecp256K1(),
+				PubKey: v.PubKey.GetEd25519(),
 				Power:  v.Power,
 			}
 		}

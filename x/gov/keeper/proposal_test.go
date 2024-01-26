@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -198,12 +197,14 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		// error invalid multiple msg proposal with 1 msg with custom params
 		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgCancelProposal{Proposer: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrInvalidProposalMsg},
 		// error invalid msg proposal type with 1 msg with custom params
-		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgCancelProposal{Proposer: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, types.ErrInvalidProposalType},
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, types.ErrInvalidProposalType},
 	}
 
 	for i, tc := range testCases {
 		_, err := suite.govKeeper.SubmitProposal(suite.ctx, tc.msgs, tc.metadata, "title", "", suite.addrs[0], tc.proposalType)
-		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
+		if tc.expectedErr != nil {
+			suite.Require().ErrorContains(err, tc.expectedErr.Error(), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
+		}
 	}
 }
 

@@ -419,10 +419,8 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			},
 			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
 			expInError: []string{
-				"pubKey does not match signer address",
+				"cannot be claimed by public key with address",
 				govAddr,
-				"with signer index: 0",
-				"invalid pubkey",
 			},
 		},
 		{

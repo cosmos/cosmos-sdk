@@ -40,7 +40,7 @@ func (s *PruningTestSuite) SetupTest() {
 	ss := storage.NewStorageStore(sqliteDB)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), log.NewNopLogger(), iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, logger)
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, dbm.NewMemDB(), logger)
 	s.Require().NoError(err)
 
 	s.manager = NewManager(logger, ss, sc)
@@ -72,7 +72,7 @@ func (s *PruningTestSuite) TestPruning() {
 		err := s.sc.WriteBatch(cs)
 		s.Require().NoError(err)
 
-		_, err = s.sc.Commit()
+		_, err = s.sc.Commit(version)
 		s.Require().NoError(err)
 
 		err = s.ss.ApplyChangeset(version, cs)
@@ -94,12 +94,12 @@ func (s *PruningTestSuite) TestPruning() {
 	s.Require().Nil(val)
 
 	// check the commitment for the version 96
-	proof, err := s.sc.GetProof(defaultStoreKey, latestVersion-4, []byte("key"))
+	proofOps, err := s.sc.GetProof(defaultStoreKey, latestVersion-4, []byte("key"))
 	s.Require().NoError(err)
-	s.Require().NotNil(proof.GetExist())
+	s.Require().Len(proofOps, 2)
 
 	// check the commitment for the version 95
-	proof, err = s.sc.GetProof(defaultStoreKey, latestVersion-5, []byte("key"))
+	proofOps, err = s.sc.GetProof(defaultStoreKey, latestVersion-5, []byte("key"))
 	s.Require().Error(err)
-	s.Require().Nil(proof)
+	s.Require().Nil(proofOps)
 }

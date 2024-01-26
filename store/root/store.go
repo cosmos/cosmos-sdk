@@ -105,13 +105,13 @@ func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
 }
 
 func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
-	// TODO(bez): Ensure the version <v> exists. We can utilize the GetCommitInfo()
-	// SC method once available.
+	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
+	// we should add a VersionExists() method to the VersionedDatabase interface.
 	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/pull/18736
-	// if err := s.stateCommitment.GetCommitInfo(v); err != nil {
-	// 	return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
-	// }
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/19091
+	if cInfo, err := s.stateCommitment.GetCommitInfo(v); err != nil || cInfo == nil {
+		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	}
 
 	return NewReadOnlyAdapter(v, s), nil
 }
@@ -174,8 +174,23 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	val, err := s.stateStore.Get(storeKey, version, key)
-	if err != nil {
-		return store.QueryResult{}, err
+	if err != nil || val == nil {
+		// fallback to querying SC backend if not found in SS backend
+		//
+		// Note, this should only used during migration, i.e. while SS and IAVL v2
+		// are being asynchronously synced.
+		if val == nil {
+			bz, scErr := s.stateCommitment.Get(storeKey, version, key)
+			if scErr != nil {
+				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", scErr)
+			}
+
+			val = bz
+		}
+
+		if err != nil {
+			return store.QueryResult{}, fmt.Errorf("failed to query SS store: %w", err)
+		}
 	}
 
 	result := store.QueryResult{
@@ -185,12 +200,10 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	if prove {
-		proof, err := s.stateCommitment.GetProof(storeKey, version, key)
+		result.ProofOps, err = s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
-			return store.QueryResult{}, err
+			return store.QueryResult{}, fmt.Errorf("failed to get SC store proof: %w", err)
 		}
-
-		result.Proof = store.NewIAVLCommitmentOp(key, proof)
 	}
 
 	return result, nil
@@ -331,10 +344,7 @@ func (s *Store) writeSC(cs *store.Changeset) error {
 		version = previousHeight + 1
 	}
 
-	s.lastCommitInfo = &store.CommitInfo{
-		Version:    version,
-		StoreInfos: s.stateCommitment.WorkingStoreInfos(version),
-	}
+	s.lastCommitInfo = s.stateCommitment.WorkingCommitInfo(version)
 
 	return nil
 }
@@ -344,15 +354,12 @@ func (s *Store) writeSC(cs *store.Changeset) error {
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
 func (s *Store) commitSC(cs *store.Changeset) error {
-	commitStoreInfos, err := s.stateCommitment.Commit()
+	cInfo, err := s.stateCommitment.Commit(s.lastCommitInfo.Version)
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
 
-	commitHash := (&store.CommitInfo{
-		Version:    s.lastCommitInfo.Version,
-		StoreInfos: commitStoreInfos,
-	}).Hash()
+	commitHash := cInfo.Hash()
 
 	workingHash, err := s.WorkingHash(cs)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	govtypes "cosmossdk.io/api/cosmos/gov/v1beta1"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
@@ -13,7 +14,6 @@ import (
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
-	govtypes "cosmossdk.io/x/gov/types/v1beta1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

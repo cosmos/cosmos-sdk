@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
@@ -41,9 +40,6 @@ type AppOptions struct {
 
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context
-
-	// TxConfigOptions are the transactions config options.
-	TxConfigOpts tx.ConfigOptions
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -71,8 +67,6 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			ValidatorAddressCodec: appOptions.ClientCtx.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ClientCtx.ConsensusAddressCodec,
 		},
-		ClientCtx:    appOptions.ClientCtx,
-		TxConfigOpts: appOptions.TxConfigOpts,
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
 		},
@@ -112,7 +106,7 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 			return err
 		}
 	} else {
-		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds)
+		queryCmd, err := builder.BuildQueryCommand(rootCmd.Context(), appOptions, customQueryCmds)
 		if err != nil {
 			return err
 		}
@@ -125,7 +119,7 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 			return err
 		}
 	} else {
-		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds)
+		subCmd, err := builder.BuildMsgCommand(rootCmd.Context(), appOptions, customMsgCmds)
 		if err != nil {
 			return err
 		}

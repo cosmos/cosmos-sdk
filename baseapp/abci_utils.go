@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type (
@@ -25,19 +26,17 @@ type (
 	// DefaultProposalHandler defines the default ABCI PrepareProposal and
 	// ProcessProposal handlers.
 	DefaultProposalHandler struct {
-		mempool          mempool.Mempool
-		txVerifier       ProposalTxVerifier
-		txSelector       TxSelector
-		signerExtAdapter mempool.SignerExtractionAdapter
+		mempool    mempool.Mempool
+		txVerifier ProposalTxVerifier
+		txSelector TxSelector
 	}
 )
 
 func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
 	return &DefaultProposalHandler{
-		mempool:          mp,
-		txVerifier:       txVerifier,
-		txSelector:       NewDefaultTxSelector(),
-		signerExtAdapter: mempool.NewDefaultSignerExtractionAdapter(),
+		mempool:    mp,
+		txVerifier: txVerifier,
+		txSelector: NewDefaultTxSelector(),
 	}
 }
 
@@ -99,19 +98,20 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		var selectedTxsNums int
 		for iterator != nil {
 			memTx := iterator.Tx()
-			signerData, err := h.signerExtAdapter.GetSigners(memTx)
+			sigs, err := memTx.(signing.SigVerifiableTx).GetSignaturesV2()
 			if err != nil {
-				return nil, err
+				panic(sigs)
 			}
 
 			// if the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
 			// so we add them and return true so this tx gets selected.
 			shouldAdd := true
 			txSignersSeqs := make(map[string]uint64)
-			for _, signer := range signerData {
-				seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
+			for _, sig := range sigs {
+				signer := sdk.AccAddress(sig.PubKey.Address()).String()
+				seq, ok := selectedTxsSignersSeqs[signer]
 				if !ok {
-					txSignersSeqs[signer.Signer.String()] = signer.Sequence
+					txSignersSeqs[signer] = sig.Sequence
 					continue
 				}
 
@@ -119,11 +119,11 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				// seq+1 and if it is we update the sequence and return true so this tx gets
 				// selected. If it isn't seq+1 we return false so this tx doesn't get
 				// selected (it could be the same sequence or seq+2 which are invalid).
-				if seq+1 != signer.Sequence {
+				if seq+1 != sig.Sequence {
 					shouldAdd = false
 					break
 				}
-				txSignersSeqs[signer.Signer.String()] = signer.Sequence
+				txSignersSeqs[signer] = sig.Sequence
 			}
 			if !shouldAdd {
 				iterator = iterator.Next()
@@ -146,7 +146,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 					break
 				}
 
-				txsLen := len(h.txSelector.SelectedTxs(ctx))
+				txsLen := len(h.txSelector.SelectedTxs())
 				for sender, seq := range txSignersSeqs {
 					if txsLen != selectedTxsNums {
 						selectedTxsSignersSeqs[sender] = seq

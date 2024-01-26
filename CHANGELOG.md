@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (gRPC) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) Add debug log prints for each gRPC request.
 * (query) [87d3a43](https://github.com/cosmos/cosmos-sdk/commit/87d3a432af95f4cf96aa02351ed5fcc51cca6e7b) Fix collection filtered pagination.
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20

@@ -216,6 +216,7 @@ func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, 
 
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
+		// TODO(tip): what if a query is not deterministic?
 		err := registerMethod(c.cdc, c.stfQueryRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)

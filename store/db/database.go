@@ -1,143 +1,110 @@
 package db
 
-import "errors"
+import (
+	"io"
 
-var (
-	// errBatchClosed is returned when a closed or written batch is used.
-	errBatchClosed = errors.New("batch has been written or closed")
-
-	// errKeyEmpty is returned when attempting to use an empty or nil key.
-	errKeyEmpty = errors.New("key cannot be empty")
-
-	// errValueNil is returned when attempting to set a nil value.
-	errValueNil = errors.New("value cannot be nil")
+	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/proof"
 )
 
-// DB is the main interface for all key-value database backends. DBs are concurrency-safe.
-// Callers must call Close on the database when done.
-//
-// Keys cannot be nil or empty, while values cannot be nil. Keys and values should be considered
-// read-only, both when returned and when given, and must be copied before they are modified.
-type DB interface {
-	// Get fetches the value of the given key, or nil if it does not exist.
-	// CONTRACT: key, value readonly []byte
-	Get([]byte) ([]byte, error)
+// Reader wraps the Has and Get method of a backing data store.
+type Reader interface {
+	// Has retrieves if a key is present in the key-value data store.
+	//
+	// Note: <key> is safe to modify and read after calling Has.
+	Has(storeKey string, key []byte) (bool, error)
 
-	// Has checks if a key exists.
-	// CONTRACT: key, value readonly []byte
-	Has(key []byte) (bool, error)
-
-	// Iterator returns an iterator over a domain of keys, in ascending order. The caller must call
-	// Close when done. End is exclusive, and start must be less than end. A nil start iterates
-	// from the first key, and a nil end iterates to the last key (inclusive). Empty keys are not
-	// valid.
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	// CONTRACT: start, end readonly []byte
-	Iterator(start, end []byte) (Iterator, error)
-
-	// ReverseIterator returns an iterator over a domain of keys, in descending order. The caller
-	// must call Close when done. End is exclusive, and start must be less than end. A nil end
-	// iterates from the last key (inclusive), and a nil start iterates to the first key (inclusive).
-	// Empty keys are not valid.
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	// CONTRACT: start, end readonly []byte
-	ReverseIterator(start, end []byte) (Iterator, error)
-
-	// Close closes the database connection.
-	Close() error
-
-	// NewBatch creates a batch for atomic updates. The caller must call Batch.Close.
-	NewBatch() Batch
-
-	// NewBatchWithSize create a new batch for atomic updates, but with pre-allocated size.
-	// This will does the same thing as NewBatch if the batch implementation doesn't support pre-allocation.
-	NewBatchWithSize(int) Batch
+	// Get retrieves the given key if it's present in the key-value data store.
+	//
+	// Note: <key> is safe to modify and read after calling Get.
+	// The returned byte slice is safe to read, but cannot be modified.
+	Get(storeKey string, key []byte) ([]byte, error)
 }
 
-// Iterator represents an iterator over a domain of keys. Callers must call Close when done.
-// No writes can happen to a domain while there exists an iterator over it, some backends may take
-// out database locks to ensure this will not happen.
-//
-// Callers must make sure the iterator is valid before calling any methods on it, otherwise
-// these methods will panic. This is in part caused by most backend databases using this convention.
-//
-// As with DB, keys and values should be considered read-only, and must be copied before they are
-// modified.
-//
-// Typical usage:
-//
-// var itr Iterator = ...
-// defer itr.Close()
-//
-//	for ; itr.Valid(); itr.Next() {
-//	  k, v := itr.Key(); itr.Value()
-//	  ...
-//	}
-//
-//	if err := itr.Error(); err != nil {
-//	  ...
-//	}
-type Iterator interface {
-	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
-	// CONTRACT: start, end readonly []byte
-	Domain() (start []byte, end []byte)
+// Writer wraps the Set method of a backing data store.
+type Writer interface {
+	// Set inserts the given value into the key-value data store.
+	//
+	// Note: <key, value> are safe to modify and read after calling Set.
+	Set(storeKey string, key, value []byte) error
 
-	// Valid returns whether the current iterator is valid. Once invalid, the Iterator remains
-	// invalid forever.
-	Valid() bool
-
-	// Next moves the iterator to the next key in the database, as defined by order of iteration.
-	// If Valid returns false, this method will panic.
-	Next()
-
-	// Key returns the key at the current position. Panics if the iterator is invalid.
-	// CONTRACT: key readonly []byte
-	Key() (key []byte)
-
-	// Value returns the value at the current position. Panics if the iterator is invalid.
-	// CONTRACT: value readonly []byte
-	Value() (value []byte)
-
-	// Error returns the last error encountered by the iterator, if any.
-	Error() error
-
-	// Close closes the iterator, relasing any allocated resources.
-	Close() error
+	// Delete removes the key from the backing key-value data store.
+	//
+	// Note: <key> is safe to modify and read after calling Delete.
+	Delete(storeKey string, key []byte) error
 }
 
-// Batch represents a group of writes. They may or may not be written atomically depending on the
-// backend. Callers must call Close on the batch when done.
-//
-// As with DB, given keys and values should be considered read-only, and must not be modified after
-// passing them to the batch.
-type Batch interface {
-	// Set sets a key/value pair.
-	// CONTRACT: key, value readonly []byte
-	Set(key, value []byte) error
-
-	// Delete deletes a key/value pair.
-	// CONTRACT: key readonly []byte
-	Delete(key []byte) error
-
-	// Write writes the batch, possibly without flushing to disk. Only Close() can be called after,
-	// other methods will error.
-	Write() error
-
-	// WriteSync writes the batch and flushes it to disk. Only Close() can be called after, other
-	// methods will error.
-	WriteSync() error
-
-	// Close closes the batch. It is idempotent, but calls to other methods afterwards will error.
-	Close() error
-
-	// GetByteSize that returns the current size of the batch in bytes. Depending on the implementation,
-	// this may return the size of the underlying LSM batch, including the size of additional metadata
-	// on top of the expected key and value total byte count.
-	GetByteSize() (int, error)
+// Database contains all the methods required to allow handling different
+// key-value data stores backing the database.
+type Database interface {
+	Reader
+	Writer
+	corestore.IteratorCreator
+	io.Closer
 }
 
-type (
-	Options interface {
-		Get(string) interface{}
-	}
-)
+// VersionedDatabase defines an API for a versioned database that allows reads,
+// writes, iteration and commitment over a series of versions.
+type VersionedDatabase interface {
+	Has(storeKey string, version uint64, key []byte) (bool, error)
+	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+	GetLatestVersion() (uint64, error)
+	SetLatestVersion(version uint64) error
+
+	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
+
+	ApplyChangeset(version uint64, cs *store.Changeset) error
+
+	// Prune attempts to prune all versions up to and including the provided
+	// version argument. The operation should be idempotent. An error should be
+	// returned upon failure.
+	Prune(version uint64) error
+
+	// Close releases associated resources. It should NOT be idempotent. It must
+	// only be called once and any call after may panic.
+	io.Closer
+}
+
+// Committer defines an API for committing state.
+type Committer interface {
+	// WriteBatch writes a batch of key-value pairs to the tree.
+	WriteBatch(cs *store.Changeset) error
+
+	// WorkingCommitInfo returns the CommitInfo for the working tree.
+	WorkingCommitInfo(version uint64) *proof.CommitInfo
+
+	// GetLatestVersion returns the latest version.
+	GetLatestVersion() (uint64, error)
+
+	// LoadVersion loads the tree at the given version.
+	LoadVersion(targetVersion uint64) error
+
+	// Commit commits the working tree to the database.
+	Commit(version uint64) (*proof.CommitInfo, error)
+
+	// GetProof returns the proof of existence or non-existence for the given key.
+	GetProof(storeKey string, version uint64, key []byte) ([]proof.CommitmentOp, error)
+
+	// Get returns the value for the given key at the given version.
+	//
+	// NOTE: This method only exists to support migration from IAVL v0/v1 to v2.
+	// Once migration is complete, this method should be removed and/or not used.
+	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+
+	// SetInitialVersion sets the initial version of the tree.
+	SetInitialVersion(version uint64) error
+
+	// GetCommitInfo returns the CommitInfo for the given version.
+	GetCommitInfo(version uint64) (*proof.CommitInfo, error)
+
+	// Prune attempts to prune all versions up to and including the provided
+	// version argument. The operation should be idempotent. An error should be
+	// returned upon failure.
+	Prune(version uint64) error
+
+	// Close releases associated resources. It should NOT be idempotent. It must
+	// only be called once and any call after may panic.
+	io.Closer
+}

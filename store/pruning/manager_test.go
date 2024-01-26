@@ -21,8 +21,8 @@ type PruningTestSuite struct {
 	suite.Suite
 
 	manager *Manager
-	ss      store.VersionedDatabase
-	sc      store.Committer
+	ss      dbm.VersionedDatabase
+	sc      dbm.Committer
 }
 
 func TestPruningTestSuite(t *testing.T) {

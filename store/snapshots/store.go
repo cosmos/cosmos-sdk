@@ -26,7 +26,7 @@ const (
 
 // Store is a snapshot store, containing snapshot metadata and binary chunks.
 type Store struct {
-	db  dbm.DB
+	db  dbm.RawDB
 	dir string
 
 	mtx    sync.Mutex
@@ -34,7 +34,7 @@ type Store struct {
 }
 
 // NewStore creates a new snapshot store.
-func NewStore(db dbm.DB, dir string) (*Store, error) {
+func NewStore(db dbm.RawDB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, errors.Wrap(store.ErrLogic, "snapshot directory not given")
 	}

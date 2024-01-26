@@ -2,20 +2,20 @@ package root
 
 import (
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
+	dbm "cosmossdk.io/store/v2/db"
 )
 
-var _ store.ReadOnlyRootStore = (*ReadOnlyAdapter)(nil)
+var _ dbm.ReadOnlyRootStore = (*ReadOnlyAdapter)(nil)
 
 // ReadOnlyAdapter defines an adapter around a RootStore that only exposes read-only
 // operations. This is useful for exposing a read-only view of the RootStore at
 // a specific version in history, which could also be the latest state.
 type ReadOnlyAdapter struct {
-	rootStore store.RootStore
+	rootStore dbm.RootStore
 	version   uint64
 }
 
-func NewReadOnlyAdapter(v uint64, rs store.RootStore) *ReadOnlyAdapter {
+func NewReadOnlyAdapter(v uint64, rs dbm.RootStore) *ReadOnlyAdapter {
 	return &ReadOnlyAdapter{
 		rootStore: rs,
 		version:   v,

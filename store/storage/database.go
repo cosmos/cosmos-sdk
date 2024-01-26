@@ -4,14 +4,14 @@ import (
 	"io"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
+	dbm "cosmossdk.io/store/v2/db"
 )
 
 // Database is an interface that wraps the storage database methods. A wrapper
 // is useful for instances where you want to perform logic that is identical for all SS
 // backends, such as restoring snapshots.
 type Database interface {
-	NewBatch(version uint64) (store.Batch, error)
+	NewBatch(version uint64) (dbm.Batch, error)
 	Has(storeKey string, version uint64, key []byte) (bool, error)
 	Get(storeKey string, version uint64, key []byte) ([]byte, error)
 	GetLatestVersion() (uint64, error)

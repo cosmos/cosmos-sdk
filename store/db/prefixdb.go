@@ -4,26 +4,28 @@ import (
 	"bytes"
 	"fmt"
 	"sync"
+
+	corestore "cosmossdk.io/core/store"
 )
 
 // PrefixDB wraps a namespace of another database as a logical database.
 type PrefixDB struct {
 	mtx    sync.Mutex
 	prefix []byte
-	db     DB
+	db     RawDB
 }
 
-var _ DB = (*PrefixDB)(nil)
+var _ RawDB = (*PrefixDB)(nil)
 
-// NewPrefixDB lets you namespace multiple DBs within a single DB.
-func NewPrefixDB(db DB, prefix []byte) *PrefixDB {
+// NewPrefixDB lets you namespace multiple RawDBs within a single RawDB.
+func NewPrefixDB(db RawDB, prefix []byte) *PrefixDB {
 	return &PrefixDB{
 		prefix: prefix,
 		db:     db,
 	}
 }
 
-// Get implements DB.
+// Get implements RawDB.
 func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
 		return nil, errKeyEmpty
@@ -37,7 +39,7 @@ func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 	return value, nil
 }
 
-// Has implements DB.
+// Has implements RawDB.
 func (pdb *PrefixDB) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
 		return false, errKeyEmpty
@@ -51,8 +53,8 @@ func (pdb *PrefixDB) Has(key []byte) (bool, error) {
 	return ok, nil
 }
 
-// Iterator implements DB.
-func (pdb *PrefixDB) Iterator(start, end []byte) (Iterator, error) {
+// Iterator implements RawDB.
+func (pdb *PrefixDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
@@ -72,8 +74,8 @@ func (pdb *PrefixDB) Iterator(start, end []byte) (Iterator, error) {
 	return newPrefixIterator(pdb.prefix, start, end, itr)
 }
 
-// ReverseIterator implements DB.
-func (pdb *PrefixDB) ReverseIterator(start, end []byte) (Iterator, error) {
+// ReverseIterator implements RawDB.
+func (pdb *PrefixDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
@@ -93,17 +95,17 @@ func (pdb *PrefixDB) ReverseIterator(start, end []byte) (Iterator, error) {
 	return newPrefixIterator(pdb.prefix, start, end, ritr)
 }
 
-// NewBatch implements DB.
-func (pdb *PrefixDB) NewBatch() Batch {
+// NewBatch implements RawDB.
+func (pdb *PrefixDB) NewBatch() RawBatch {
 	return newPrefixBatch(pdb.prefix, pdb.db.NewBatch())
 }
 
-// NewBatchWithSize implements DB.
-func (pdb *PrefixDB) NewBatchWithSize(size int) Batch {
+// NewBatchWithSize implements RawDB.
+func (pdb *PrefixDB) NewBatchWithSize(size int) RawBatch {
 	return newPrefixBatch(pdb.prefix, pdb.db.NewBatchWithSize(size))
 }
 
-// Close implements DB.
+// Close implements RawDB.
 func (pdb *PrefixDB) Close() error {
 	pdb.mtx.Lock()
 	defer pdb.mtx.Unlock()
@@ -111,7 +113,7 @@ func (pdb *PrefixDB) Close() error {
 	return pdb.db.Close()
 }
 
-// Print implements DB.
+// Print implements RawDB.
 func (pdb *PrefixDB) Print() error {
 	fmt.Printf("prefix: %X\n", pdb.prefix)
 
@@ -134,7 +136,7 @@ func (pdb *PrefixDB) prefixed(key []byte) []byte {
 
 // IteratePrefix is a convenience function for iterating over a key domain
 // restricted by prefix.
-func IteratePrefix(db DB, prefix []byte) (Iterator, error) {
+func IteratePrefix(db RawDB, prefix []byte) (corestore.Iterator, error) {
 	var start, end []byte
 	if len(prefix) == 0 {
 		start = nil
@@ -155,14 +157,14 @@ type prefixDBIterator struct {
 	prefix []byte
 	start  []byte
 	end    []byte
-	source Iterator
+	source corestore.Iterator
 	valid  bool
 	err    error
 }
 
-var _ Iterator = (*prefixDBIterator)(nil)
+var _ corestore.Iterator = (*prefixDBIterator)(nil)
 
-func newPrefixIterator(prefix, start, end []byte, source Iterator) (*prefixDBIterator, error) {
+func newPrefixIterator(prefix, start, end []byte, source corestore.Iterator) (*prefixDBIterator, error) {
 	pitrInvalid := &prefixDBIterator{
 		prefix: prefix,
 		start:  start,
@@ -259,19 +261,19 @@ func (itr *prefixDBIterator) assertIsValid() {
 
 type prefixDBBatch struct {
 	prefix []byte
-	source Batch
+	source RawBatch
 }
 
-var _ Batch = (*prefixDBBatch)(nil)
+var _ RawBatch = (*prefixDBBatch)(nil)
 
-func newPrefixBatch(prefix []byte, source Batch) prefixDBBatch {
+func newPrefixBatch(prefix []byte, source RawBatch) prefixDBBatch {
 	return prefixDBBatch{
 		prefix: prefix,
 		source: source,
 	}
 }
 
-// Set implements Batch.
+// Set implements RawBatch.
 func (pb prefixDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
 		return errKeyEmpty
@@ -283,7 +285,7 @@ func (pb prefixDBBatch) Set(key, value []byte) error {
 	return pb.source.Set(pkey, value)
 }
 
-// Delete implements Batch.
+// Delete implements RawBatch.
 func (pb prefixDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
 		return errKeyEmpty
@@ -292,22 +294,22 @@ func (pb prefixDBBatch) Delete(key []byte) error {
 	return pb.source.Delete(pkey)
 }
 
-// Write implements Batch.
+// Write implements RawBatch.
 func (pb prefixDBBatch) Write() error {
 	return pb.source.Write()
 }
 
-// WriteSync implements Batch.
+// WriteSync implements RawBatch.
 func (pb prefixDBBatch) WriteSync() error {
 	return pb.source.WriteSync()
 }
 
-// Close implements Batch.
+// Close implements RawBatch.
 func (pb prefixDBBatch) Close() error {
 	return pb.source.Close()
 }
 
-// GetByteSize implements Batch
+// GetByteSize implements RawBatch
 func (pb prefixDBBatch) GetByteSize() (int, error) {
 	if pb.source == nil {
 		return 0, errBatchClosed

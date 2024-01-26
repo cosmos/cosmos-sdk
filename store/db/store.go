@@ -1,11 +1,13 @@
-package store
+package db
 
 import (
 	"io"
 
 	coreheader "cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
+	"cosmossdk.io/store/v2/proof"
 )
 
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
@@ -54,7 +56,7 @@ type RootStore interface {
 	// is responsible for writing the Changeset to the SC backend and returning the
 	// resulting root hash. Then, Commit() would return this hash and flush writes
 	// to disk.
-	WorkingHash(cs *Changeset) ([]byte, error)
+	WorkingHash(cs *store.Changeset) ([]byte, error)
 
 	// Commit should be responsible for taking the provided changeset and flushing
 	// it to disk. Note, depending on the implementation, the changeset, at this
@@ -62,10 +64,10 @@ type RootStore interface {
 	// the changeset is committed to all SC and SC backends and flushed to disk.
 	// It must return a hash of the merkle-ized committed state. This hash should
 	// be the same as the hash returned by WorkingHash() prior to calling Commit().
-	Commit(cs *Changeset) ([]byte, error)
+	Commit(cs *store.Changeset) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
-	LastCommitID() (CommitID, error)
+	LastCommitID() (proof.CommitID, error)
 
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
@@ -84,7 +86,7 @@ type UpgradeableRootStore interface {
 	//
 	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
 	// implementation.
-	LoadVersionAndUpgrade(version uint64, upgrades *StoreUpgrades) error
+	LoadVersionAndUpgrade(version uint64, upgrades *store.StoreUpgrades) error
 }
 
 // ReadOnlyRootStore defines a read-only interface for a RootStore.
@@ -107,5 +109,5 @@ type QueryResult struct {
 	Key      []byte
 	Value    []byte
 	Version  uint64
-	ProofOps []CommitmentOp
+	ProofOps []proof.CommitmentOp
 }

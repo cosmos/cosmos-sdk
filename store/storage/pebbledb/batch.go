@@ -7,10 +7,10 @@ import (
 
 	"github.com/cockroachdb/pebble"
 
-	"cosmossdk.io/store/v2"
+	dbm "cosmossdk.io/store/v2/db"
 )
 
-var _ store.Batch = (*Batch)(nil)
+var _ dbm.Batch = (*Batch)(nil)
 
 type Batch struct {
 	storage *pebble.DB

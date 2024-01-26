@@ -11,7 +11,7 @@ import (
 type DBTestSuite struct {
 	suite.Suite
 
-	db DB
+	db RawDB
 }
 
 func (s *DBTestSuite) TestDBOperations() {

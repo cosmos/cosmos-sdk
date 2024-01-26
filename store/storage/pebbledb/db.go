@@ -12,6 +12,7 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/storage"
 )
 
@@ -94,7 +95,7 @@ func (db *Database) Close() error {
 	return err
 }
 
-func (db *Database) NewBatch(version uint64) (store.Batch, error) {
+func (db *Database) NewBatch(version uint64) (dbm.Batch, error) {
 	b, err := NewBatch(db.storage, version, db.sync)
 	if err != nil {
 		return nil, err

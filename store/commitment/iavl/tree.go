@@ -19,7 +19,7 @@ type IavlTree struct {
 }
 
 // NewIavlTree creates a new IavlTree instance.
-func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
+func NewIavlTree(db dbm.RawDB, logger log.Logger, cfg *Config) *IavlTree {
 	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger)
 	return &IavlTree{
 		tree: tree,

@@ -23,7 +23,7 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db dbm.DB, storeKeys []string, logger log.Logger) (*CommitStore, error)
+	NewStore func(db dbm.RawDB, storeKeys []string, logger log.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestSnapshotter() {

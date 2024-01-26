@@ -110,6 +110,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 }
 
 // Query queries the application at the provided version.
+// CONTRACT: Version must always be provided, if 0, get latest
 func (a AppManager[T]) Query(ctx context.Context, version uint64, request appmanager.Type) (response appmanager.Type, err error) {
 	// if version is provided attempt to do a height query.
 	if version != 0 {

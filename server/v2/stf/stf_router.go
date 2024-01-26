@@ -37,7 +37,7 @@ func NewMsgRouterBuilder() *MsgRouterBuilder {
 
 type MsgRouterBuilder struct {
 	handlers     map[string]MsgHandler
-	preHandlers  map[string][]PreMsgHandler // TODO document how to do ordering, if needed
+	preHandlers  map[string][]PreMsgHandler
 	postHandlers map[string][]PostMsgHandler
 }
 

@@ -64,7 +64,9 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	// that can be written to.
 	newState = s.branch(state)
 
-	// upgrade block is called separate from begin block in order to refresh state updates
+	// TODO: handle consensus messages
+
+	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(ctx, newState, block.Txs)
 	if err != nil {
 		return nil, nil, err
@@ -352,7 +354,7 @@ func (s STF[T]) makeContext(
 	}
 }
 
-func applyStateChanges(dst store.GetWriter, src store.GetWriter) error {
+func applyStateChanges(dst, src store.GetWriter) error {
 	changes, err := src.GetStateChanges()
 	if err != nil {
 		return err

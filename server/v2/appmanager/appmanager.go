@@ -5,17 +5,16 @@ import (
 	"fmt"
 	"io"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
-	//  TODO: add configs to config.go with toml annotations (mapstructure)
-	// configs
-	ValidateTxGasLimit uint64
+	// configs - begin
+	validateTxGasLimit uint64
 	queryGasLimit      uint64
 	simulationGasLimit uint64
 	// configs - end
@@ -97,7 +96,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
-	return a.stf.ValidateTx(ctx, latestState, a.ValidateTxGasLimit, tx), nil
+	return a.stf.ValidateTx(ctx, latestState, a.validateTxGasLimit, tx), nil
 }
 
 // Simulate runs validation and execution flow of a Tx.

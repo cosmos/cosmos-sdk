@@ -1,10 +1,10 @@
 package appmanager
 
 import (
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 type Builder[T transaction.Tx] struct {
@@ -19,7 +19,7 @@ type Builder[T transaction.Tx] struct {
 
 func (b Builder[T]) Build() (*AppManager[T], error) {
 	return &AppManager[T]{
-		ValidateTxGasLimit: b.ValidateTxGasLimit,
+		validateTxGasLimit: b.ValidateTxGasLimit,
 		queryGasLimit:      b.QueryGasLimit,
 		simulationGasLimit: b.SimulationGasLimit,
 		db:                 b.DB,

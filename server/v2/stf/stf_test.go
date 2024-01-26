@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 )
@@ -49,7 +50,7 @@ func TestSTF(t *testing.T) {
 				return branch.NewStore(readonlyState)
 			})
 		},
-		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
+		doValidatorUpdate: func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) { return nil, nil },
 	}
 
 	t.Run("begin and end block", func(t *testing.T) {

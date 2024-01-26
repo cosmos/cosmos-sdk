@@ -3,8 +3,8 @@ package mempool
 import (
 	"context"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/mempool"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 var _ mempool.Mempool[transaction.Tx] = NoOpMempool[transaction.Tx]{}

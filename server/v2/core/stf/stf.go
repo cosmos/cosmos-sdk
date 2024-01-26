@@ -3,9 +3,9 @@ package stf
 import (
 	"context"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 // STF defines the state transition handler used by AppManager to execute

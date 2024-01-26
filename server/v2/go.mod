@@ -31,6 +31,7 @@ require (
 
 require (
 	cosmossdk.io/core v0.11.0 // indirect
+	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

@@ -50,7 +50,7 @@ type Context struct {
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool // Deprecated: use execMode instead, will be removed after 0.51
-	recheckTx            bool // if recheckTx == true, then checkTx must also be true // Depreacted: use execMode instead, will be removed after 0.51
+	recheckTx            bool // if recheckTx == true, then checkTx must also be true // Deprecated: use execMode instead, will be removed after 0.51
 	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
 	execMode             ExecMode
 	minGasPrice          DecCoins

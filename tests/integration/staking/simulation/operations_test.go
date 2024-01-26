@@ -73,7 +73,7 @@ func (s *SimTestSuite) SetupTest() {
 
 	// create validator set with single validator
 	account := accounts[0]
-	cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.PubKey)
+	cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.ConsKey.PubKey())
 	require.NoError(s.T(), err)
 	validator := cmttypes.NewValidator(cmtPk, 1)
 
@@ -276,7 +276,7 @@ func (s *SimTestSuite) TestSimulateMsgDelegate() {
 	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
 	require.Equal("stake", msg.Amount.Denom)
 	require.Equal(sdk.MsgTypeURL(&types.MsgDelegate{}), sdk.MsgTypeURL(&msg))
-	require.Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
+	require.Equal("cosmosvaloper122js6qry7nlgp63gcse8muknspuxur77vj3kkr", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
 

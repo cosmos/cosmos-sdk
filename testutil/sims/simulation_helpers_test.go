@@ -12,17 +12,21 @@ import (
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+const (
+	authStoreKey           = "acc"
+	GlobalAccountNumberKey = 0x1
+)
+
 func TestGetSimulationLog(t *testing.T) {
 	legacyAmino := codec.NewLegacyAmino()
 	decoders := make(simulation.StoreDecoderRegistry)
-	decoders[authtypes.StoreKey] = func(kvAs, kvBs kv.Pair) string { return "10" }
+	decoders[authStoreKey] = func(kvAs, kvBs kv.Pair) string { return "10" }
 
 	tests := []struct {
 		store       string
@@ -35,8 +39,8 @@ func TestGetSimulationLog(t *testing.T) {
 			"",
 		},
 		{
-			authtypes.StoreKey,
-			[]kv.Pair{{Key: authtypes.GlobalAccountNumberKey, Value: legacyAmino.MustMarshal(uint64(10))}},
+			authStoreKey,
+			[]kv.Pair{{Key: []byte{GlobalAccountNumberKey}, Value: legacyAmino.MustMarshal(uint64(10))}},
 			"10",
 		},
 		{

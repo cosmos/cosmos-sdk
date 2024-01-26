@@ -2,8 +2,11 @@ package keeper
 
 import (
 	"context"
+	errorspkg "errors"
+	"fmt"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,11 +106,119 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 }
 
 func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
+	if err := k.validateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate the message fields
+	err = k.validateContinuousFund(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if total funds percentage exceeds 100%
+	// If exceeds, we should not setup continuous fund proposal.
+	totalStreamFundsPercentage := math.ZeroInt()
+	err = k.Keeper.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	percentage := msg.Percentage.MulInt64(100)
+	totalStreamFundsPercentage = totalStreamFundsPercentage.Add(percentage.TruncateInt())
+	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
+		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %v", totalStreamFundsPercentage.Sub(percentage.TruncateInt()))
+	}
+
+	// Create continuous fund proposal
+	cf := types.ContinuousFund{
+		Recipient:  msg.Recipient,
+		Percentage: msg.Percentage,
+		Expiry:     msg.Expiry,
+	}
+
+	// Set continuous fund to the state
+	err = k.ContinuousFund.Set(ctx, recipient, cf)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set recipient fund percentage & distribution
+	err = k.RecipientFundPercentage.Set(ctx, recipient, percentage.TruncateInt())
+	if err != nil {
+		return nil, err
+	}
+	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgCreateContinuousFundResponse{}, nil
 }
 
+func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWithdrawContinuousFund) (*types.MsgWithdrawContinuousFundResponse, error) {
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
+	amount, err := k.withdrawContinuousFund(ctx, recipient)
+	if err != nil {
+		return nil, err
+	}
+	if amount.IsNil() {
+		k.Logger(ctx).Info(fmt.Sprintf("no distribution amount found for recipient %s", msg.RecipientAddress))
+	}
+
+	return &types.MsgWithdrawContinuousFundResponse{Amount: amount}, nil
+}
+
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
-	return &types.MsgCancelContinuousFundResponse{}, nil
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err := k.validateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	canceledHeight := sdkCtx.BlockHeight()
+	canceledTime := sdkCtx.BlockTime()
+
+	found, err := k.ContinuousFund.Has(ctx, recipient)
+	if !found {
+		return nil, fmt.Errorf("no recipient found to cancel continuous fund: %s", msg.RecipientAddress)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// withdraw funds if any are allocated
+	withdrawnFunds, err := k.withdrawRecipientFunds(ctx, recipient)
+	if err != nil && !errorspkg.Is(err, types.ErrNoRecipientFund) {
+		return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %v", msg.RecipientAddress, err)
+	}
+
+	if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
+		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
+	}
+
+	return &types.MsgCancelContinuousFundResponse{
+		CanceledTime:           canceledTime,
+		CanceledHeight:         uint64(canceledHeight),
+		RecipientAddress:       msg.RecipientAddress,
+		WithdrawnAllocatedFund: withdrawnFunds,
+	}, nil
 }
 
 func (k *Keeper) validateAuthority(authority string) error {

@@ -82,7 +82,7 @@ for more details.
 
 ### Params
 
-* Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+* Params migrations were removed. It is required to migrate to 0.50 prior to upgrading to v0.51.
 
 ### SimApp
 
@@ -112,9 +112,18 @@ clientCtx = clientCtx.
 
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
 
+#### Dependency Injection 
+
+<!-- explain app_config.go changes -->
+
 ### Modules
 
 #### `**all**`
+
+##### Dependency Injection 
+
+Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appconfig`.
+All modules using dependency injection must update their imports.
 
 ##### Genesis Interface
 
@@ -272,7 +281,7 @@ is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
 ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
 methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
 allows an application to define handlers for these methods via `ExtendVoteHandler`
-and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/abci/03-vote-extensions)
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/building-apps/vote-extensions)
 for more info.
 
 #### Set PreBlocker

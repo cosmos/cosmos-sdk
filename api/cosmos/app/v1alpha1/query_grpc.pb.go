@@ -26,6 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueryClient interface {
+	// Deprecated: Do not use.
 	// Config returns the current app config.
 	Config(ctx context.Context, in *QueryConfigRequest, opts ...grpc.CallOption) (*QueryConfigResponse, error)
 }
@@ -38,6 +39,7 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 	return &queryClient{cc}
 }
 
+// Deprecated: Do not use.
 func (c *queryClient) Config(ctx context.Context, in *QueryConfigRequest, opts ...grpc.CallOption) (*QueryConfigResponse, error) {
 	out := new(QueryConfigResponse)
 	err := c.cc.Invoke(ctx, Query_Config_FullMethodName, in, out, opts...)
@@ -51,6 +53,7 @@ func (c *queryClient) Config(ctx context.Context, in *QueryConfigRequest, opts .
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
+	// Deprecated: Do not use.
 	// Config returns the current app config.
 	Config(context.Context, *QueryConfigRequest) (*QueryConfigResponse, error)
 	mustEmbedUnimplementedQueryServer()

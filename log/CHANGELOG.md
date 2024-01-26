@@ -22,6 +22,8 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+## [v1.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.3.0) - 2023-01-10
+
 * [#18916](https://github.com/cosmos/cosmos-sdk/pull/18916) Introduce an option for setting hooks.
 * [#18429](https://github.com/cosmos/cosmos-sdk/pull/18429) Support customization of log json marshal.
 * [#18898](https://github.com/cosmos/cosmos-sdk/pull/18898) Add `WARN` level. 

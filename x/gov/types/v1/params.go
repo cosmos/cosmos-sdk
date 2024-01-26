@@ -30,7 +30,7 @@ var (
 	DefaultProposalCancelDestAddress    = ""
 	DefaultProposalCancelMaxPeriod      = sdkmath.LegacyMustNewDecFromStr("0.5")
 	DefaultBurnProposalPrevote          = false // set to false to replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteQuorom               = false // set to false to  replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteQuorum               = false // set to false to  replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteVeto                 = true  // set to true to replicate behavior of when this change was made (0.47)
 	DefaultMinDepositRatio              = sdkmath.LegacyMustNewDecFromStr("0.01")
 	DefaultOptimisticRejectedThreshold  = sdkmath.LegacyMustNewDecFromStr("0.1")
@@ -107,7 +107,7 @@ func DefaultParams() Params {
 		DefaultProposalCancelDestAddress,
 		DefaultProposalCancelMaxPeriod.String(),
 		DefaultBurnProposalPrevote,
-		DefaultBurnVoteQuorom,
+		DefaultBurnVoteQuorum,
 		DefaultBurnVoteVeto,
 		DefaultMinDepositRatio.String(),
 		DefaultOptimisticRejectedThreshold.String(),
@@ -141,10 +141,10 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		return fmt.Errorf("invalid quorum string: %w", err)
 	}
 	if quorum.IsNegative() {
-		return fmt.Errorf("quorom cannot be negative: %s", quorum)
+		return fmt.Errorf("quorum cannot be negative: %s", quorum)
 	}
 	if quorum.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("quorom too large: %s", p.Quorum)
+		return fmt.Errorf("quorum too large: %s", p.Quorum)
 	}
 
 	threshold, err := sdkmath.LegacyNewDecFromStr(p.Threshold)
@@ -162,11 +162,11 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	if err != nil {
 		return fmt.Errorf("invalid expedited threshold string: %w", err)
 	}
-	if !threshold.IsPositive() {
-		return fmt.Errorf("expedited vote threshold must be positive: %s", threshold)
+	if !expeditedThreshold.IsPositive() {
+		return fmt.Errorf("expedited vote threshold must be positive: %s", expeditedThreshold)
 	}
-	if threshold.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("expedited vote threshold too large: %s", threshold)
+	if expeditedThreshold.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("expedited vote threshold too large: %s", expeditedThreshold)
 	}
 	if expeditedThreshold.LTE(threshold) {
 		return fmt.Errorf("expedited vote threshold %s, must be greater than the regular threshold %s", expeditedThreshold, threshold)

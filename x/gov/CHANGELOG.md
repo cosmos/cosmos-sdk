@@ -34,6 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#18976](https://github.com/cosmos/cosmos-sdk/pull/18976) Log and send an event when a proposal deposit refund or burn has failed.
 * [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` for modifying how long a proposal can be cancelled after it has been submitted.
 * [#18445](https://github.com/cosmos/cosmos-sdk/pull/18445) Extend gov config.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Repurpose `govcliutils.NormalizeProposalType` to work for gov v1 proposal types.

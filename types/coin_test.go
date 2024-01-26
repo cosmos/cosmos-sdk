@@ -318,7 +318,7 @@ func (s *coinTestSuite) TestIsGTCoin() {
 	for tcIndex, tc := range cases {
 		tc := tc
 		if tc.panics {
-			s.Require().Panics(func() { tc.inputOne.IsLTE(tc.inputTwo) })
+			s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.IsGT(tc.inputTwo)
 			s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)

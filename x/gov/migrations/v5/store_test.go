@@ -43,10 +43,13 @@ func TestMigrateStore(t *testing.T) {
 	bz = store.Get(v4.ParamsKey)
 	require.NoError(t, cdc.Unmarshal(bz, &params))
 	require.NotNil(t, params)
-	require.Equal(t, v1.DefaultParams().ExpeditedMinDeposit, params.ExpeditedMinDeposit)
-	require.Equal(t, v1.DefaultParams().ExpeditedThreshold, params.ExpeditedThreshold)
-	require.Equal(t, v1.DefaultParams().ExpeditedVotingPeriod, params.ExpeditedVotingPeriod)
-	require.Equal(t, v1.DefaultParams().MinDepositRatio, params.MinDepositRatio)
+	// After migration, expect `ExpeditedMinDeposit` to equal previous value of `MinDeposit`.
+	require.Equal(t, params.MinDeposit, params.ExpeditedMinDeposit)
+	require.Equal(t, "0.750000000000000000", params.ExpeditedThreshold)
+	require.Equal(t, "1.000000000000000000", params.ProposalCancelRatio)
+	require.Equal(t, "", params.ProposalCancelDest)
+	require.Equal(t, 24*time.Hour, *params.ExpeditedVotingPeriod)
+	require.Equal(t, "0.010000000000000000", params.MinDepositRatio)
 
 	// Check constitution
 	result, err := constitutionCollection.Get(ctx)

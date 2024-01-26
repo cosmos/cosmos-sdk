@@ -299,7 +299,7 @@ func (s STF[T]) ValidateTx(ctx context.Context, state store.ReadonlyState, gasLi
 // Query executes the query on the provided state with the provided gas limits.
 func (s STF[T]) Query(ctx context.Context, state store.ReadonlyState, gasLimit uint64, req transaction.Type) (transaction.Type, error) {
 	queryState := s.branch(state)
-	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit, corecontext.ExecModeQuery)
+	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit, corecontext.ExecModeSimulate)
 	return s.handleQuery(queryCtx, req)
 }
 

@@ -100,7 +100,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			memTx := iterator.Tx()
 			sigs, err := memTx.(signing.SigVerifiableTx).GetSignaturesV2()
 			if err != nil {
-				panic(sigs)
+				panic(fmt.Errorf("failed to get signatures: %w", err))
 			}
 
 			// if the signers aren't in selectedTxsSignersSeqs then we haven't seen them before

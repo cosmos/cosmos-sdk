@@ -2,7 +2,6 @@
 package accountsv1
 
 import (
-	v1 "cosmossdk.io/api/cosmos/accounts/v1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -4401,7 +4400,7 @@ func (x *fastReflection_SimulateUserOperationRequest) Set(fd protoreflect.FieldD
 	case "cosmos.accounts.v1.SimulateUserOperationRequest.bundler":
 		x.Bundler = value.Interface().(string)
 	case "cosmos.accounts.v1.SimulateUserOperationRequest.user_operation":
-		x.UserOperation = value.Message().Interface().(*v1.UserOperation)
+		x.UserOperation = value.Message().Interface().(*UserOperation)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.SimulateUserOperationRequest"))
@@ -4424,7 +4423,7 @@ func (x *fastReflection_SimulateUserOperationRequest) Mutable(fd protoreflect.Fi
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.SimulateUserOperationRequest.user_operation":
 		if x.UserOperation == nil {
-			x.UserOperation = new(v1.UserOperation)
+			x.UserOperation = new(UserOperation)
 		}
 		return protoreflect.ValueOfMessage(x.UserOperation.ProtoReflect())
 	case "cosmos.accounts.v1.SimulateUserOperationRequest.bundler":
@@ -4445,7 +4444,7 @@ func (x *fastReflection_SimulateUserOperationRequest) NewField(fd protoreflect.F
 	case "cosmos.accounts.v1.SimulateUserOperationRequest.bundler":
 		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.v1.SimulateUserOperationRequest.user_operation":
-		m := new(v1.UserOperation)
+		m := new(UserOperation)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -4685,7 +4684,7 @@ func (x *fastReflection_SimulateUserOperationRequest) ProtoMethods() *protoiface
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.UserOperation == nil {
-					x.UserOperation = &v1.UserOperation{}
+					x.UserOperation = &UserOperation{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.UserOperation); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -4883,7 +4882,7 @@ func (x *fastReflection_SimulateUserOperationResponse) Get(descriptor protorefle
 func (x *fastReflection_SimulateUserOperationResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.SimulateUserOperationResponse.user_operation_response":
-		x.UserOperationResponse = value.Message().Interface().(*v1.UserOperationResponse)
+		x.UserOperationResponse = value.Message().Interface().(*UserOperationResponse)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.SimulateUserOperationResponse"))
@@ -4906,7 +4905,7 @@ func (x *fastReflection_SimulateUserOperationResponse) Mutable(fd protoreflect.F
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.SimulateUserOperationResponse.user_operation_response":
 		if x.UserOperationResponse == nil {
-			x.UserOperationResponse = new(v1.UserOperationResponse)
+			x.UserOperationResponse = new(UserOperationResponse)
 		}
 		return protoreflect.ValueOfMessage(x.UserOperationResponse.ProtoReflect())
 	default:
@@ -4923,7 +4922,7 @@ func (x *fastReflection_SimulateUserOperationResponse) Mutable(fd protoreflect.F
 func (x *fastReflection_SimulateUserOperationResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.SimulateUserOperationResponse.user_operation_response":
-		m := new(v1.UserOperationResponse)
+		m := new(UserOperationResponse)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -5120,7 +5119,7 @@ func (x *fastReflection_SimulateUserOperationResponse) ProtoMethods() *protoifac
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.UserOperationResponse == nil {
-					x.UserOperationResponse = &v1.UserOperationResponse{}
+					x.UserOperationResponse = &UserOperationResponse{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.UserOperationResponse); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -5509,7 +5508,7 @@ type SimulateUserOperationRequest struct {
 	Bundler string `protobuf:"bytes,1,opt,name=bundler,proto3" json:"bundler,omitempty"`
 	// user_operation defines the user operation that we want to simulate.
 	// Gas limit fields are ignored.
-	UserOperation *v1.UserOperation `protobuf:"bytes,2,opt,name=user_operation,json=userOperation,proto3" json:"user_operation,omitempty"`
+	UserOperation *UserOperation `protobuf:"bytes,2,opt,name=user_operation,json=userOperation,proto3" json:"user_operation,omitempty"`
 }
 
 func (x *SimulateUserOperationRequest) Reset() {
@@ -5539,7 +5538,7 @@ func (x *SimulateUserOperationRequest) GetBundler() string {
 	return ""
 }
 
-func (x *SimulateUserOperationRequest) GetUserOperation() *v1.UserOperation {
+func (x *SimulateUserOperationRequest) GetUserOperation() *UserOperation {
 	if x != nil {
 		return x.UserOperation
 	}
@@ -5554,7 +5553,7 @@ type SimulateUserOperationResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// UserOperationResponse is the response of the simulation.
-	UserOperationResponse *v1.UserOperationResponse `protobuf:"bytes,1,opt,name=user_operation_response,json=userOperationResponse,proto3" json:"user_operation_response,omitempty"`
+	UserOperationResponse *UserOperationResponse `protobuf:"bytes,1,opt,name=user_operation_response,json=userOperationResponse,proto3" json:"user_operation_response,omitempty"`
 }
 
 func (x *SimulateUserOperationResponse) Reset() {
@@ -5577,7 +5576,7 @@ func (*SimulateUserOperationResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_v1_query_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *SimulateUserOperationResponse) GetUserOperationResponse() *v1.UserOperationResponse {
+func (x *SimulateUserOperationResponse) GetUserOperationResponse() *UserOperationResponse {
 	if x != nil {
 		return x.UserOperationResponse
 	}
@@ -5739,20 +5738,20 @@ var file_cosmos_accounts_v1_query_proto_rawDesc = []byte{
 	0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63,
 	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x69, 0x6d, 0x75, 0x6c, 0x61, 0x74,
 	0x65, 0x55, 0x73, 0x65, 0x72, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0xc5, 0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0xbe, 0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
 	0x2e, 0x76, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x35, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
-	0x78, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x61, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02,
-	0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
-	0x2e, 0x56, 0x31, 0xca, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x56, 0x31,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x76,
+	0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x12, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56,
+	0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -5781,8 +5780,8 @@ var file_cosmos_accounts_v1_query_proto_goTypes = []interface{}{
 	(*SimulateUserOperationResponse)(nil), // 9: cosmos.accounts.v1.SimulateUserOperationResponse
 	(*SchemaResponse_Handler)(nil),        // 10: cosmos.accounts.v1.SchemaResponse.Handler
 	(*anypb.Any)(nil),                     // 11: google.protobuf.Any
-	(*v1.UserOperation)(nil),              // 12: cosmos.accounts.v1.UserOperation
-	(*v1.UserOperationResponse)(nil),      // 13: cosmos.accounts.v1.UserOperationResponse
+	(*UserOperation)(nil),                 // 12: cosmos.accounts.v1.UserOperation
+	(*UserOperationResponse)(nil),         // 13: cosmos.accounts.v1.UserOperationResponse
 }
 var file_cosmos_accounts_v1_query_proto_depIdxs = []int32{
 	11, // 0: cosmos.accounts.v1.AccountQueryRequest.request:type_name -> google.protobuf.Any
@@ -5814,6 +5813,7 @@ func file_cosmos_accounts_v1_query_proto_init() {
 	if File_cosmos_accounts_v1_query_proto != nil {
 		return
 	}
+	file_cosmos_accounts_v1_account_abstraction_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_accounts_v1_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccountQueryRequest); i {

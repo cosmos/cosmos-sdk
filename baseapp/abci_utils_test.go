@@ -27,11 +27,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
-<<<<<<< HEAD
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-=======
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
->>>>>>> fe32bcc1d (fix: skip same-sender non-sequential sequence and then add others txs new solution (#19177))
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (

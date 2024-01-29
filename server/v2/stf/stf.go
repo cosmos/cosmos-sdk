@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 )
 
-var runtimeIdentity transaction.Identity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
+var runtimeIdentity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {

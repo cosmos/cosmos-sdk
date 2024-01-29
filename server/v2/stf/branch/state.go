@@ -7,28 +7,31 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 )
 
-func NewWritersMap(
+func NewWriterMap(
 	state store.ReaderMap,
 	branch func(readonlyState store.Reader) store.Writer) store.WriterMap {
 
-	return WritersMap{
+	return WriterMap{
 		state:               state,
 		branchedWriterState: make(map[string]store.Writer),
 		branch:              branch,
 	}
 }
 
-type WritersMap struct {
+// WriterMap implements a branched version of the store.WriterMap.
+// After the firs time the actor's branched Store is created, it is
+// memoized in the WriterMap.
+type WriterMap struct {
 	state               store.ReaderMap
 	branchedWriterState map[string]store.Writer
 	branch              func(state store.Reader) store.Writer
 }
 
-func (b WritersMap) GetReader(actor []byte) (store.Reader, error) {
+func (b WriterMap) GetReader(actor []byte) (store.Reader, error) {
 	return b.GetWriter(actor)
 }
 
-func (b WritersMap) GetWriter(actor []byte) (store.Writer, error) {
+func (b WriterMap) GetWriter(actor []byte) (store.Writer, error) {
 	actorState, ok := b.branchedWriterState[unsafeString(actor)]
 	if ok {
 		return actorState, nil
@@ -45,7 +48,7 @@ func (b WritersMap) GetWriter(actor []byte) (store.Writer, error) {
 	return actorState, nil
 }
 
-func (b WritersMap) ApplyStateChanges(stateChanges []store.StateChanges) error {
+func (b WriterMap) ApplyStateChanges(stateChanges []store.StateChanges) error {
 	for _, sc := range stateChanges {
 		err := b.applyStateChange(sc)
 		if err != nil {
@@ -55,7 +58,7 @@ func (b WritersMap) ApplyStateChanges(stateChanges []store.StateChanges) error {
 	return nil
 }
 
-func (b WritersMap) GetStateChanges() ([]store.StateChanges, error) {
+func (b WriterMap) GetStateChanges() ([]store.StateChanges, error) {
 	sc := make([]store.StateChanges, len(b.branchedWriterState))
 	for account, stateChange := range b.branchedWriterState {
 		kvChanges, err := stateChange.ChangeSets()
@@ -70,7 +73,7 @@ func (b WritersMap) GetStateChanges() ([]store.StateChanges, error) {
 	return sc, nil
 }
 
-func (b WritersMap) applyStateChange(sc store.StateChanges) error {
+func (b WriterMap) applyStateChange(sc store.StateChanges) error {
 	writableState, err := b.GetWriter(sc.Actor)
 	if err != nil {
 		return err

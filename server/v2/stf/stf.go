@@ -43,7 +43,7 @@ func NewSTF[T transaction.Tx](
 	doEndBlock func(ctx context.Context) error,
 	doTxValidation func(ctx context.Context, tx T) error,
 	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error),
-	branch func(store store.GetReader) store.GetWriter,
+	branch func(store store.ReaderMap) store.WriterMap,
 ) *STF[T] {
 	return &STF[T]{
 		handleMsg:         handleMsg,
@@ -259,8 +259,8 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlo
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.GetWriter) ([]event.Event, []appmodule.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
+func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodule.ValidatorUpdate, error) {
+	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, stf.NoGasLimit)
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
 		return nil, nil, err

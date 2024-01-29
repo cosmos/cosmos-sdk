@@ -41,7 +41,7 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "end-block")
 			return nil
 		},
-		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
+		doValidatorUpdate: func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) { return nil, nil },
 		doTxValidation: func(ctx context.Context, tx mock.Tx) error {
 			kvSet(t, ctx, "validate")
 			return nil

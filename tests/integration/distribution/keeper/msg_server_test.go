@@ -910,9 +910,12 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	require.NoError(t, err)
 	// send funds from module to addr to perform DepositValidatorRewardsPool
 	err = f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tokens)))
+	acc := f.accountKeeper.NewAccountWithAddress(f.sdkCtx, sdk.AccAddress(valAddr1))
+	f.accountKeeper.SetAccount(f.sdkCtx, acc)
 	require.NoError(t, err)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+
 	tstaking.CreateValidator(valAddr1, valConsPk0, math.NewInt(100), true)
 
 	// mint a non-staking token and send to an account

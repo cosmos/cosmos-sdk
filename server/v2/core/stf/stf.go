@@ -25,5 +25,5 @@ type STF[T transaction.Tx] interface {
 	// Query runs the provided query over the provided readonly state.
 	Query(ctx context.Context, state store.GetReader, gasLimit uint64, queryRequest appmanager.Type) (queryResponse appmanager.Type, err error)
 	// ValidateTx validates the TX.
-	ValidateTx(ctx context.Context, state store.Reader, gasLimit uint64, tx T, execMode corecontext.ExecMode) appmanager.TxResult
+	ValidateTx(ctx context.Context, state store.GetReader, gasLimit uint64, tx T, execMode corecontext.ExecMode) appmanager.TxResult
 }

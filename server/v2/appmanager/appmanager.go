@@ -5,12 +5,8 @@ import (
 	"fmt"
 	"io"
 
-<<<<<<< HEAD
 	corecontext "cosmossdk.io/core/context"
-||||||| be6720d7be
-=======
 	"cosmossdk.io/core/transaction"
->>>>>>> server_modular
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
@@ -18,22 +14,7 @@ import (
 
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
-<<<<<<< HEAD
 	config Config
-||||||| be6720d7be
-	//  TODO: add configs to config.go with toml annotations (mapstructure)
-	// configs
-	ValidateTxGasLimit uint64
-	queryGasLimit      uint64
-	simulationGasLimit uint64
-	// configs - end
-=======
-	// configs - begin
-	validateTxGasLimit uint64
-	queryGasLimit      uint64
-	simulationGasLimit uint64
-	// configs - end
->>>>>>> server_modular
 
 	db store.Store
 
@@ -121,7 +102,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 	if err != nil {
 		return appmanager.TxResult{}, nil, err
 	}
-	result, cs := a.stf.Simulate(ctx, state, a.config.simulationGasLimit, tx)
+	result, cs := a.stf.Simulate(ctx, state, a.config.SimulationGasLimit, tx)
 	return result, cs, nil
 }
 
@@ -134,7 +115,7 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 		if err != nil {
 			return nil, err
 		}
-		return a.stf.Query(ctx, queryState, a.config.queryGasLimit, request)
+		return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 	}
 
 	// otherwise rely on latest available state.
@@ -142,12 +123,12 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 	if err != nil {
 		return nil, err
 	}
-	return a.stf.Query(ctx, queryState, a.config.queryGasLimit, request)
+	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 }
 
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
 func (a AppManager[T]) QueryWithState(ctx context.Context, state store.GetReader, request appmanager.Type) (appmanager.Type, error) {
-	return a.stf.Query(ctx, state, a.queryGasLimit, request)
+	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

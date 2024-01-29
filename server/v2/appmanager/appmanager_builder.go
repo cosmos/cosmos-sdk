@@ -19,11 +19,10 @@ type Builder[T transaction.Tx] struct {
 
 func (b Builder[T]) Build() (*AppManager[T], error) {
 	return &AppManager[T]{
-<<<<<<< HEAD
 		config: Config{
 			ValidateTxGasLimit: b.ValidateTxGasLimit,
-			queryGasLimit:      b.QueryGasLimit,
-			simulationGasLimit: b.SimulationGasLimit,
+			QueryGasLimit:      b.QueryGasLimit,
+			SimulationGasLimit: b.SimulationGasLimit,
 		},
 		db:             b.DB,
 		exportState:    nil,
@@ -31,26 +30,5 @@ func (b Builder[T]) Build() (*AppManager[T], error) {
 		prepareHandler: b.PrepareBlockHandler,
 		processHandler: b.VerifyBlockHandler,
 		stf:            b.STF,
-||||||| be6720d7be
-		ValidateTxGasLimit: b.ValidateTxGasLimit,
-		queryGasLimit:      b.QueryGasLimit,
-		simulationGasLimit: b.SimulationGasLimit,
-		db:                 b.DB,
-		exportState:        nil,
-		importState:        nil,
-		prepareHandler:     b.PrepareBlockHandler,
-		processHandler:     b.VerifyBlockHandler,
-		stf:                b.STF,
-=======
-		validateTxGasLimit: b.ValidateTxGasLimit,
-		queryGasLimit:      b.QueryGasLimit,
-		simulationGasLimit: b.SimulationGasLimit,
-		db:                 b.DB,
-		exportState:        nil,
-		importState:        nil,
-		prepareHandler:     b.PrepareBlockHandler,
-		processHandler:     b.VerifyBlockHandler,
-		stf:                b.STF,
->>>>>>> server_modular
 	}, nil
 }

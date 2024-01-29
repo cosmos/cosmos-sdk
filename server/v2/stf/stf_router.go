@@ -24,6 +24,8 @@ type PostMsgHandler = func(ctx context.Context, msg, msgResp transaction.Type) (
 
 type QueryHandler = MsgHandler
 
+// TODO: make a case for *, listen to all messages
+
 // NewMsgRouterBuilder is a router that routes messages to their respective handlers.
 func NewMsgRouterBuilder() *MsgRouterBuilder {
 	return &MsgRouterBuilder{

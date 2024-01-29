@@ -144,13 +144,13 @@ func (iter *mergedIterator) Close() error {
 	return err1
 }
 
-var invalidIterator = errors.New("invalid merged iterator")
+var errInvalidIterator = errors.New("invalid merged iterator")
 
 // Error returns an error if the mergedIterator is invalid defined by the
 // Valid method.
 func (iter *mergedIterator) Error() error {
 	if !iter.Valid() {
-		return invalidIterator
+		return errInvalidIterator
 	}
 
 	return nil

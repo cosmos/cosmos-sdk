@@ -34,7 +34,6 @@ type App struct {
 	// app manager dependencies
 	stf                 *stf.STF[transaction.Tx]
 	msgRouterBuilder    *stf.MsgRouterBuilder
-	queryRouterBuilder  *stf.MsgRouterBuilder
 	mempool             mempool.Mempool[transaction.Tx]
 	prepareBlockHandler coreappmanager.PrepareHandler[transaction.Tx]
 	verifyBlockHandler  coreappmanager.ProcessHandler[transaction.Tx]

@@ -14,6 +14,9 @@ import (
 type AppModule interface {
 	// IsAppModule is a dummy method to tag a struct as implementing an AppModule.
 	IsAppModule()
+
+	// IsOnePerModuleType is a dummy method to help depinject resolve modules.
+	IsOnePerModuleType()
 }
 
 // HasServices is the extension interface that modules should implement to register

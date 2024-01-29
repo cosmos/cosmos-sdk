@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 )
@@ -27,7 +28,7 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "exec")
 			return nil, nil
 		},
-		doUpgradeBlock: func(ctx context.Context) (bool, error) { return false, nil },
+		doPreBlock: func(ctx context.Context, txs []mock.Tx) error { return nil },
 		doBeginBlock: func(ctx context.Context) error {
 			kvSet(t, ctx, "begin-block")
 			return nil
@@ -44,8 +45,12 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "post-tx-exec")
 			return nil
 		},
-		branch:            func(store store.ReadonlyState) store.WritableState { return branch.NewStore(store) },
-		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
+		branch: func(state store.GetReader) store.GetWriter {
+			return newBranchedAccountsState(state, func(readonlyState store.Reader) store.Writer {
+				return branch.NewStore(readonlyState)
+			})
+		},
+		doValidatorUpdate: func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) { return nil, nil },
 	}
 
 	t.Run("begin and end block", func(t *testing.T) {
@@ -135,20 +140,28 @@ func TestSTF(t *testing.T) {
 	})
 }
 
+var actorName = []byte("cookies")
+
 func kvSet(t *testing.T, ctx context.Context, v string) {
 	t.Helper()
-	require.NoError(t, ctx.(*executionContext).store.Set([]byte(v), []byte(v)))
+	state, err := ctx.(*executionContext).store.GetWriter(actorName)
+	require.NoError(t, err)
+	require.NoError(t, state.Set([]byte(v), []byte(v)))
 }
 
-func stateHas(t *testing.T, state store.ReadonlyState, key string) {
+func stateHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
+	state, err := accountState.GetReader(actorName)
+	require.NoError(t, err)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Truef(t, has, "state did not have key: %s", key)
 }
 
-func stateNotHas(t *testing.T, state store.ReadonlyState, key string) {
+func stateNotHas(t *testing.T, accountState store.GetReader, key string) {
 	t.Helper()
+	state, err := accountState.GetReader(actorName)
+	require.NoError(t, err)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Falsef(t, has, "state was not supposed to have key: %s", key)
@@ -158,7 +171,7 @@ func cloneSTF[T transaction.Tx](stf *STF[T]) *STF[T] {
 	return &STF[T]{
 		handleMsg:         stf.handleMsg,
 		handleQuery:       stf.handleQuery,
-		doUpgradeBlock:    stf.doUpgradeBlock,
+		doPreBlock:        stf.doPreBlock,
 		doBeginBlock:      stf.doBeginBlock,
 		doEndBlock:        stf.doEndBlock,
 		doValidatorUpdate: stf.doValidatorUpdate,

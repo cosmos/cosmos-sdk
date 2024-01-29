@@ -1,10 +1,10 @@
 package appmanager
 
 import (
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 type Builder[T transaction.Tx] struct {
@@ -19,6 +19,7 @@ type Builder[T transaction.Tx] struct {
 
 func (b Builder[T]) Build() (*AppManager[T], error) {
 	return &AppManager[T]{
+<<<<<<< HEAD
 		config: Config{
 			ValidateTxGasLimit: b.ValidateTxGasLimit,
 			queryGasLimit:      b.QueryGasLimit,
@@ -30,5 +31,26 @@ func (b Builder[T]) Build() (*AppManager[T], error) {
 		prepareHandler: b.PrepareBlockHandler,
 		processHandler: b.VerifyBlockHandler,
 		stf:            b.STF,
+||||||| be6720d7be
+		ValidateTxGasLimit: b.ValidateTxGasLimit,
+		queryGasLimit:      b.QueryGasLimit,
+		simulationGasLimit: b.SimulationGasLimit,
+		db:                 b.DB,
+		exportState:        nil,
+		importState:        nil,
+		prepareHandler:     b.PrepareBlockHandler,
+		processHandler:     b.VerifyBlockHandler,
+		stf:                b.STF,
+=======
+		validateTxGasLimit: b.ValidateTxGasLimit,
+		queryGasLimit:      b.QueryGasLimit,
+		simulationGasLimit: b.SimulationGasLimit,
+		db:                 b.DB,
+		exportState:        nil,
+		importState:        nil,
+		prepareHandler:     b.PrepareBlockHandler,
+		processHandler:     b.VerifyBlockHandler,
+		stf:                b.STF,
+>>>>>>> server_modular
 	}, nil
 }

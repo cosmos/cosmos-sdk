@@ -23,6 +23,7 @@ func StateCommitment(_ *testing.T) storev2.Committer {
 }
 
 func StateStorage(t *testing.T) storev2.VersionedDatabase {
+	t.Helper()
 	db, err := pebbledb.New(t.TempDir())
 	require.NoError(t, err)
 	return storage.NewStorageStore(db)

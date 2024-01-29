@@ -11,6 +11,7 @@ import (
 
 	corecomet "cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
@@ -20,7 +21,6 @@ import (
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 )
@@ -45,7 +45,7 @@ type Consensus[T transaction.Tx] struct {
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
-	// committed block.
+	// committed block. TODO(tip): check if concurrency is really needed
 	lastCommittedBlock atomic.Pointer[BlockData]
 }
 
@@ -67,9 +67,9 @@ func NewConsensus[T transaction.Tx](
 // we only use the height, the rest is not needed right now and might get removed
 // in the future.
 type BlockData struct {
-	Height    int64
-	Hash      []byte
-	ChangeSet []store.ChangeSet
+	Height       int64
+	Hash         []byte
+	StateChanges []store.StateChanges
 }
 
 // CheckTx implements types.Application.
@@ -114,13 +114,13 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 }
 
 // Info implements types.Application.
-func (c *Consensus[T]) Info(context.Context, *abci.RequestInfo) (*abci.ResponseInfo, error) {
+func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	version, _, err := c.store.StateLatest()
 	if err != nil {
 		return nil, err
 	}
 
-	cp, err := c.GetConsensusParams()
+	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -183,6 +183,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 
 // InitChain implements types.Application.
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+
 	// TODO: won't work for now
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
@@ -254,8 +255,7 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	// TODO: consensus has access query router, grpc or appmanger, to query consensuns param info
-	cp, err := c.GetConsensusParams()
+	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -342,48 +342,34 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 		ConsensusMessages: []proto.Message{cometInfo},
 	}
 
-	resp, changeSet, err := c.app.DeliverBlock(ctx, blockReq)
+	resp, newState, err := c.app.DeliverBlock(ctx, blockReq)
 	if err != nil {
 		return nil, err
 	}
 
 	// after we get the changeset we can produce the commit hash,
 	// from the store.
-	appHash, err := c.store.StateCommit(changeSet)
+	stateChanges, err := newState.GetStateChanges()
+	if err != nil {
+		return nil, err
+	}
+	appHash, err := c.store.StateCommit(stateChanges)
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}
 
 	events := []event.Event{}
+	events = append(events, resp.PreBlockEvents...)
 	events = append(events, resp.BeginBlockEvents...)
-	events = append(events, resp.UpgradeBlockEvents...)
 	for _, tx := range resp.TxResults {
 		events = append(events, tx.Events...)
 	}
 	events = append(events, resp.EndBlockEvents...)
 
 	// listen to state streaming changes in accordance with the block
-	for _, streamingListener := range c.streaming.Listeners {
-		if err := streamingListener.ListenDeliverBlock(ctx, streaming.ListenDeliverBlockRequest{
-			BlockHeight: req.Height,
-			// Txs:         req.Txs, TODO: see how to map txs
-			Events: streaming.IntoStreamingEvents(events),
-		}); err != nil {
-			c.logger.Error("ListenDeliverBlock listening hook failed", "height", req.Height, "err", err)
-		}
-
-		strChangeSet := make([]*streaming.StoreKVPair, len(changeSet))
-		for i, cs := range changeSet {
-			strChangeSet[i] = &streaming.StoreKVPair{
-				Key:    cs.Key,
-				Value:  cs.Value,
-				Delete: cs.Remove,
-			}
-		}
-
-		if err := streamingListener.ListenStateChanges(ctx, strChangeSet); err != nil {
-			c.logger.Error("ListenStateChanges listening hook failed", "height", req.Height, "err", err)
-		}
+	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, resp.TxResults, events, stateChanges)
+	if err != nil {
+		return nil, err
 	}
 
 	// remove txs from the mempool
@@ -393,12 +379,12 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	}
 
 	c.lastCommittedBlock.Store(&BlockData{
-		Height:    req.Height,
-		Hash:      appHash,
-		ChangeSet: changeSet,
+		Height:       req.Height,
+		Hash:         appHash,
+		StateChanges: stateChanges,
 	})
 
-	cp, err := c.GetConsensusParams()
+	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +399,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci
 
 	c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
 
-	cp, err := c.GetConsensusParams()
+	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
 		return nil, err
 	}

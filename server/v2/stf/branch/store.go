@@ -5,16 +5,16 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 )
 
-var _ store.WritableState = (*Store[store.ReadonlyState])(nil)
+var _ store.Writer = (*Store[store.Reader])(nil)
 
 // Store wraps an in-memory cache around an underlying types.KVStore.
-type Store[T store.ReadonlyState] struct {
+type Store[T store.Reader] struct {
 	changeSet changeSet // always ascending sorted
 	parent    T
 }
 
 // NewStore creates a new Store object
-func NewStore[T store.ReadonlyState](parent T) Store[T] {
+func NewStore[T store.Reader](parent T) Store[T] {
 	return Store[T]{
 		changeSet: newChangeSet(),
 		parent:    parent,
@@ -93,7 +93,7 @@ func (s Store[T]) iterator(start, end []byte, ascending bool) (corestore.Iterato
 	}
 }
 
-func (s Store[T]) ApplyChangeSets(changes []store.ChangeSet) error {
+func (s Store[T]) ApplyChangeSets(changes []store.KVPair) error {
 	for _, c := range changes {
 		if c.Remove {
 			err := s.Delete(c.Key)
@@ -110,7 +110,7 @@ func (s Store[T]) ApplyChangeSets(changes []store.ChangeSet) error {
 	return nil
 }
 
-func (s Store[T]) ChangeSets() (cs []store.ChangeSet, err error) {
+func (s Store[T]) ChangeSets() (cs []store.KVPair, err error) {
 	iter, err := s.changeSet.iterator(nil, nil)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (s Store[T]) ChangeSets() (cs []store.ChangeSet, err error) {
 
 	for ; iter.Valid(); iter.Next() {
 		k, v := iter.Key(), iter.Value()
-		cs = append(cs, store.ChangeSet{
+		cs = append(cs, store.KVPair{
 			Key:    k,
 			Value:  v,
 			Remove: v == nil, // maybe we can optimistically compute size.

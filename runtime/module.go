@@ -251,18 +251,8 @@ func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
 }
 
-func ProvideEnvironment(kvservice store.KVStoreService) appmodule.Environment {
-	env := appmodule.Environment{}
-
-	env.KVStoreService = kvservice
-
-	env.EventService = EventService{}
-	env.HeaderService = HeaderService{}
-	env.BranchService = BranchService{}
-	env.GasService = GasService{}
-
-	return env
-
+func ProvideEnvironment(kvService store.KVStoreService) appmodule.Environment {
+	return NewEnvironment(kvService)
 }
 
 type (

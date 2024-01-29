@@ -1,6 +1,8 @@
 package baseapp
 
 import (
+	"fmt"
+
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 

@@ -308,11 +308,13 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.GetWriter) ([]
 // Simulate simulates the execution of a tx on the provided state.
 func (s STF[T]) Simulate(ctx context.Context, state store.GetReader, gasLimit uint64, tx T) (appmanager.TxResult, []store.StateChanges) {
 	simulationState := s.branch(state)
+	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate)
+
 	cs, err := simulationState.GetStateChanges()
 	if err != nil {
 		return appmanager.TxResult{}, nil
 	}
-	return s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate), cs
+	return txr, cs
 }
 
 // ValidateTx will run only the validation steps required for a transaction.

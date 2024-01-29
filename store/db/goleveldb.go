@@ -18,7 +18,7 @@ import (
 )
 
 // GoLevelDB implements RawDB using github.com/syndtr/goleveldb/leveldb.
-// It is used for only store v2 migrations, since iavl v0/v1 used goleveldb.
+// It is used for only store v2 migration, since some clients use goleveldb as the iavl v0/v1 backend.
 type GoLevelDB struct {
 	db *leveldb.DB
 }

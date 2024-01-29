@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
@@ -152,4 +153,11 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return EndBlocker(ctx, am.keeper)
+}
+
+// TxValidator implements appmodule.HasTxValidation.
+// It replaces auth ante handlers for server/v2
+func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+	// TODO in follow-up
+	return nil
 }

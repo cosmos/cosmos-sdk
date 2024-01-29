@@ -10,9 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 )
@@ -194,6 +195,7 @@ func stateHas(t *testing.T, accountState store.ReaderMap, key string) {
 func stateNotHas(t *testing.T, accountState store.ReaderMap, key string) {
 	t.Helper()
 	state, err := accountState.GetReader(actorName)
+	require.NoError(t, err)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Falsef(t, has, "state was not supposed to have key: %s", key)

@@ -5,15 +5,16 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/appmodule"
 	coreevent "cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
-var runtimeIdentity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
+var runtimeIdentity transaction.Identity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
@@ -23,7 +24,7 @@ type STF[T transaction.Tx] struct {
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
 	doEndBlock        func(ctx context.Context) error
-	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
+	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)
 
 	doTxValidation func(ctx context.Context, tx T) error // TODO: rewrite antehandlers remove simulate
 	postTxExec     func(ctx context.Context, tx T, success bool) error
@@ -31,6 +32,30 @@ type STF[T transaction.Tx] struct {
 	branch           func(state store.ReaderMap) store.WriterMap // branch is a function that given a readonly state it returns a writable version of it.
 	getGasMeter      func(gasLimit uint64) stf.GasMeter
 	wrapWithGasMeter func(meter stf.GasMeter, store store.WriterMap) store.WriterMap
+}
+
+// NewSTF returns a new STF instance.
+func NewSTF[T transaction.Tx](
+	handleMsg func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error),
+	handleQuery func(ctx context.Context, req transaction.Type) (resp transaction.Type, err error),
+	doPreBlock func(ctx context.Context, txs []T) error,
+	doBeginBlock func(ctx context.Context) error,
+	doEndBlock func(ctx context.Context) error,
+	doTxValidation func(ctx context.Context, tx T) error,
+	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error),
+	branch func(store store.GetReader) store.GetWriter,
+) *STF[T] {
+	return &STF[T]{
+		handleMsg:         handleMsg,
+		handleQuery:       handleQuery,
+		doPreBlock:        doPreBlock,
+		doBeginBlock:      doBeginBlock,
+		doEndBlock:        doEndBlock,
+		doTxValidation:    doTxValidation,
+		doValidatorUpdate: doValidatorUpdate,
+		postTxExec:        nil, // TODO
+		branch:            branch,
+	}
 }
 
 // DeliverBlock is our state transition function.
@@ -41,7 +66,9 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	// that can be written to.
 	newState = s.branch(state)
 
-	// upgrade block is called separate from begin block in order to refresh state updates
+	// TODO: handle consensus messages
+
+	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(ctx, newState, block.Txs)
 	if err != nil {
 		return nil, nil, err
@@ -232,8 +259,8 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlo
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Event, []appmanager.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, stf.NoGasLimit)
+func (s STF[T]) endBlock(ctx context.Context, state store.GetWriter) ([]event.Event, []appmodule.ValidatorUpdate, error) {
+	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
 		return nil, nil, err
@@ -257,7 +284,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Ev
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]event.Event, []appmanager.ValidatorUpdate, error) {
+func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodule.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, stf.NoGasLimit)
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {
@@ -337,7 +364,7 @@ func (s STF[T]) makeContext(
 	}
 }
 
-func applyStateChanges(dst store.WriterMap, src store.WriterMap) error {
+func applyStateChanges(dst, src store.WriterMap) error {
 	changes, err := src.GetStateChanges()
 	if err != nil {
 		return err

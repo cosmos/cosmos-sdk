@@ -43,7 +43,7 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
+  build_tags += app_v1_manual
 endif
 
 # DB backend selection

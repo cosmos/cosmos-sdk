@@ -3,6 +3,7 @@ package appmodule
 import (
 	"context"
 
+	"cosmossdk.io/core/transaction"
 	"google.golang.org/grpc"
 )
 
@@ -13,6 +14,9 @@ import (
 type AppModule interface {
 	// IsAppModule is a dummy method to tag a struct as implementing an AppModule.
 	IsAppModule()
+
+	// IsOnePerModuleType is a dummy method to help depinject resolve modules.
+	IsOnePerModuleType()
 }
 
 // HasServices is the extension interface that modules should implement to register
@@ -33,19 +37,6 @@ type HasServices interface {
 	// implementing based on the presence (or absence) of protobuf options. You
 	// do not need to specify this in golang code.
 	RegisterServices(grpc.ServiceRegistrar) error
-}
-
-// HasPrepareCheckState is an extension interface that contains information about the AppModule
-// and PrepareCheckState.
-type HasPrepareCheckState interface {
-	AppModule
-	PrepareCheckState(context.Context) error
-}
-
-// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
-type HasPrecommit interface {
-	AppModule
-	Precommit(context.Context) error
 }
 
 // ResponsePreBlock represents the response from the PreBlock method.
@@ -82,4 +73,74 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
+}
+
+// HasTxValidation is the extension interface that modules should implement to run
+// custom logic for validating transactions.
+// It was previously known as AnteHandler/Decorator.
+type HasTxValidation[T transaction.Tx] interface {
+	AppModule
+
+	// TxValidator is a method that will be run on each transaction.
+	// If an error is returned:
+	// 	                          ,---.
+	//                           /    |
+	//                          /     |
+	//  You shall not pass!    /      |
+	//                        /       |
+	//           \       ___,'        |
+	//                 <  -'          :
+	//                  `-.__..--'``-,_\_
+	//                     |o/ <o>` :,.)_`>
+	//                     :/ `     ||/)
+	//                     (_.).__,-` |\
+	//                     /( `.``   `| :
+	//                     \'`-.)  `  ; ;
+	//                     | `       /-<
+	//                     |     `  /   `.
+	//     ,-_-..____     /|  `    :__..-'\
+	//    /,'-.__\\  ``-./ :`      ;       \
+	//    `\ `\  `\\  \ :  (   `  /  ,   `. \
+	//      \` \   \\   |  | `   :  :     .\ \
+	//       \ `\_  ))  :  ;     |  |      ): :
+	//      (`-.-'\ ||  |\ \   ` ;  ;       | |
+	//       \-_   `;;._   ( `  /  /_       | |
+	//        `-.-.// ,'`-._\__/_,'         ; |
+	//           \:: :     /     `     ,   /  |
+	//            || |    (        ,' /   /   |
+	//            ||                ,'   /    |
+	TxValidator(ctx context.Context, tx T) error
+}
+
+// HasUpdateValidators is an extension interface that contains information about the AppModule and UpdateValidators.
+// It can be seen as the alternative of the Cosmos SDK' HasABCIEndBlocker.
+// Both are still supported.
+type HasUpdateValidators interface {
+	AppModule
+
+	UpdateValidators(ctx context.Context) ([]ValidatorUpdate, error)
+}
+
+// ValidatorUpdate defines a validator update.
+type ValidatorUpdate struct {
+	PubKey     []byte
+	PubKeyType string
+	Power      int64 // updated power of the validtor
+}
+
+// **********************************************
+// The following interfaces are baseapp specific and will be deprecated in the future.
+// **********************************************
+
+// HasPrepareCheckState is an extension interface that contains information about the AppModule
+// and PrepareCheckState.
+type HasPrepareCheckState interface {
+	AppModule
+	PrepareCheckState(context.Context) error
+}
+
+// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
+type HasPrecommit interface {
+	AppModule
+	Precommit(context.Context) error
 }

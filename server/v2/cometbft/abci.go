@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
@@ -19,7 +20,6 @@ import (
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 )

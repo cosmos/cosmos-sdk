@@ -104,11 +104,8 @@ func TestEnsureMempoolFees(t *testing.T) {
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 
-	newCtx, err := antehandler(s.ctx, tx, false)
+	_, err = antehandler(s.ctx, tx, false)
 	require.Nil(t, err, "Decorator should not have errored on fee higher than local gasPrice")
-	// Priority is the smallest gas price amount in any denom. Since we have only 1 gas price
-	// of 10atom, the priority here is 10.
-	require.Equal(t, int64(10), newCtx.Priority())
 }
 
 func TestDeductFees(t *testing.T) {

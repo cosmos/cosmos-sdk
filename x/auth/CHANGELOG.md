@@ -42,7 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
+* [#19050](https://github.com/cosmos/cosmos-sdk/pull/19050) Remove priority from `TxFeeChecker` signature. Priority is a mempool concern and should not be part of the `TxFeeChecker` interface.
+* [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`.
 
 ### Consensus Breaking Changes
 

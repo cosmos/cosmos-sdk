@@ -1,10 +1,9 @@
-package db
+package store
 
 import (
 	"io"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/proof"
 )
 
@@ -55,7 +54,7 @@ type VersionedDatabase interface {
 	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 
-	ApplyChangeset(version uint64, cs *store.Changeset) error
+	ApplyChangeset(version uint64, cs *Changeset) error
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be
@@ -70,7 +69,7 @@ type VersionedDatabase interface {
 // Committer defines an API for committing state.
 type Committer interface {
 	// WriteBatch writes a batch of key-value pairs to the tree.
-	WriteBatch(cs *store.Changeset) error
+	WriteBatch(cs *Changeset) error
 
 	// WorkingCommitInfo returns the CommitInfo for the working tree.
 	WorkingCommitInfo(version uint64) *proof.CommitInfo

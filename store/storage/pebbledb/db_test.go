@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 )
 
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
-		NewDB: func(dir string) (dbm.VersionedDatabase, error) {
+		NewDB: func(dir string) (store.VersionedDatabase, error) {
 			db, err := New(dir)
 			if err == nil && db != nil {
 				// We set sync=false just to speed up CI tests. Operators should take

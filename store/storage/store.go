@@ -5,7 +5,6 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
-	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
 )
 
@@ -15,7 +14,7 @@ const (
 )
 
 var (
-	_ dbm.VersionedDatabase        = (*StorageStore)(nil)
+	_ store.VersionedDatabase      = (*StorageStore)(nil)
 	_ snapshots.StorageSnapshotter = (*StorageStore)(nil)
 )
 

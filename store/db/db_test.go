@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/store/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -11,7 +12,7 @@ import (
 type DBTestSuite struct {
 	suite.Suite
 
-	db RawDB
+	db store.RawDB
 }
 
 func (s *DBTestSuite) TestDBOperations() {

@@ -8,10 +8,10 @@ import (
 
 	"github.com/linxGnu/grocksdb"
 
-	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2"
 )
 
-var _ dbm.Batch = (*Batch)(nil)
+var _ store.Batch = (*Batch)(nil)
 
 type Batch struct {
 	version  uint64

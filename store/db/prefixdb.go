@@ -6,19 +6,20 @@ import (
 	"sync"
 
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/store/v2"
 )
 
 // PrefixDB wraps a namespace of another database as a logical database.
 type PrefixDB struct {
 	mtx    sync.Mutex
 	prefix []byte
-	db     RawDB
+	db     store.RawDB
 }
 
-var _ RawDB = (*PrefixDB)(nil)
+var _ store.RawDB = (*PrefixDB)(nil)
 
 // NewPrefixDB lets you namespace multiple RawDBs within a single RawDB.
-func NewPrefixDB(db RawDB, prefix []byte) *PrefixDB {
+func NewPrefixDB(db store.RawDB, prefix []byte) *PrefixDB {
 	return &PrefixDB{
 		prefix: prefix,
 		db:     db,
@@ -28,7 +29,7 @@ func NewPrefixDB(db RawDB, prefix []byte) *PrefixDB {
 // Get implements RawDB.
 func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, errKeyEmpty
+		return nil, store.ErrKeyEmpty
 	}
 
 	pkey := pdb.prefixed(key)
@@ -42,7 +43,7 @@ func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 // Has implements RawDB.
 func (pdb *PrefixDB) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
-		return false, errKeyEmpty
+		return false, store.ErrKeyEmpty
 	}
 
 	ok, err := pdb.db.Has(pdb.prefixed(key))
@@ -56,7 +57,7 @@ func (pdb *PrefixDB) Has(key []byte) (bool, error) {
 // Iterator implements RawDB.
 func (pdb *PrefixDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, errKeyEmpty
+		return nil, store.ErrKeyEmpty
 	}
 
 	var pstart, pend []byte
@@ -77,7 +78,7 @@ func (pdb *PrefixDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 // ReverseIterator implements RawDB.
 func (pdb *PrefixDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, errKeyEmpty
+		return nil, store.ErrKeyEmpty
 	}
 
 	var pstart, pend []byte
@@ -96,12 +97,12 @@ func (pdb *PrefixDB) ReverseIterator(start, end []byte) (corestore.Iterator, err
 }
 
 // NewBatch implements RawDB.
-func (pdb *PrefixDB) NewBatch() RawBatch {
+func (pdb *PrefixDB) NewBatch() store.RawBatch {
 	return newPrefixBatch(pdb.prefix, pdb.db.NewBatch())
 }
 
 // NewBatchWithSize implements RawDB.
-func (pdb *PrefixDB) NewBatchWithSize(size int) RawBatch {
+func (pdb *PrefixDB) NewBatchWithSize(size int) store.RawBatch {
 	return newPrefixBatch(pdb.prefix, pdb.db.NewBatchWithSize(size))
 }
 
@@ -136,7 +137,7 @@ func (pdb *PrefixDB) prefixed(key []byte) []byte {
 
 // IteratePrefix is a convenience function for iterating over a key domain
 // restricted by prefix.
-func IteratePrefix(db RawDB, prefix []byte) (corestore.Iterator, error) {
+func IteratePrefix(db store.RawDB, prefix []byte) (corestore.Iterator, error) {
 	var start, end []byte
 	if len(prefix) == 0 {
 		start = nil
@@ -261,12 +262,12 @@ func (itr *prefixDBIterator) assertIsValid() {
 
 type prefixDBBatch struct {
 	prefix []byte
-	source RawBatch
+	source store.RawBatch
 }
 
-var _ RawBatch = (*prefixDBBatch)(nil)
+var _ store.RawBatch = (*prefixDBBatch)(nil)
 
-func newPrefixBatch(prefix []byte, source RawBatch) prefixDBBatch {
+func newPrefixBatch(prefix []byte, source store.RawBatch) prefixDBBatch {
 	return prefixDBBatch{
 		prefix: prefix,
 		source: source,
@@ -276,10 +277,10 @@ func newPrefixBatch(prefix []byte, source RawBatch) prefixDBBatch {
 // Set implements RawBatch.
 func (pb prefixDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return errKeyEmpty
+		return store.ErrKeyEmpty
 	}
 	if value == nil {
-		return errValueNil
+		return store.ErrValueNil
 	}
 	pkey := append(cp(pb.prefix), key...)
 	return pb.source.Set(pkey, value)
@@ -288,7 +289,7 @@ func (pb prefixDBBatch) Set(key, value []byte) error {
 // Delete implements RawBatch.
 func (pb prefixDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return errKeyEmpty
+		return store.ErrKeyEmpty
 	}
 	pkey := append(cp(pb.prefix), key...)
 	return pb.source.Delete(pkey)
@@ -312,7 +313,7 @@ func (pb prefixDBBatch) Close() error {
 // GetByteSize implements RawBatch
 func (pb prefixDBBatch) GetByteSize() (int, error) {
 	if pb.source == nil {
-		return 0, errBatchClosed
+		return 0, store.ErrBatchClosed
 	}
 	return pb.source.GetByteSize()
 }

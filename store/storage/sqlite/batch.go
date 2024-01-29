@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 
-	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2"
 )
 
-var _ dbm.Batch = (*Batch)(nil)
+var _ store.Batch = (*Batch)(nil)
 
 type batchAction int
 

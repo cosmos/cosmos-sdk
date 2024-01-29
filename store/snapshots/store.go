@@ -15,7 +15,6 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/v2"
-	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
 
@@ -26,7 +25,7 @@ const (
 
 // Store is a snapshot store, containing snapshot metadata and binary chunks.
 type Store struct {
-	db  dbm.RawDB
+	db  store.RawDB
 	dir string
 
 	mtx    sync.Mutex
@@ -34,7 +33,7 @@ type Store struct {
 }
 
 // NewStore creates a new snapshot store.
-func NewStore(db dbm.RawDB, dir string) (*Store, error) {
+func NewStore(db store.RawDB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, errors.Wrap(store.ErrLogic, "snapshot directory not given")
 	}

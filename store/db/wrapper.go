@@ -1,16 +1,20 @@
 package db
 
-import idb "github.com/cosmos/iavl/db"
+import (
+	idb "github.com/cosmos/iavl/db"
+
+	"cosmossdk.io/store/v2"
+)
 
 // Wrapper wraps a RawDB to implement iavl.DB which is used by iavl.Tree.
 type Wrapper struct {
-	RawDB
+	store.RawDB
 }
 
 var _ idb.DB = (*Wrapper)(nil)
 
 // NewWrapper returns a new Wrapper.
-func NewWrapper(db RawDB) *Wrapper {
+func NewWrapper(db store.RawDB) *Wrapper {
 	return &Wrapper{RawDB: db}
 }
 

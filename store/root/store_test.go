@@ -26,7 +26,7 @@ const (
 type RootStoreTestSuite struct {
 	suite.Suite
 
-	rootStore dbm.RootStore
+	rootStore store.RootStore
 }
 
 func TestStorageTestSuite(t *testing.T) {

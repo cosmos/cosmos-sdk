@@ -9,6 +9,7 @@ import (
 	"github.com/google/btree"
 
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/store/v2"
 )
 
 const (
@@ -50,7 +51,7 @@ type MemDB struct {
 	btree *btree.BTree
 }
 
-var _ RawDB = (*MemDB)(nil)
+var _ store.RawDB = (*MemDB)(nil)
 
 // NewMemDB creates a new in-memory database.
 func NewMemDB() *MemDB {
@@ -63,7 +64,7 @@ func NewMemDB() *MemDB {
 // Get implements DB.
 func (db *MemDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, errKeyEmpty
+		return nil, store.ErrKeyEmpty
 	}
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
@@ -78,7 +79,7 @@ func (db *MemDB) Get(key []byte) ([]byte, error) {
 // Has implements DB.
 func (db *MemDB) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
-		return false, errKeyEmpty
+		return false, store.ErrKeyEmpty
 	}
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
@@ -89,10 +90,10 @@ func (db *MemDB) Has(key []byte) (bool, error) {
 // Set implements DB.
 func (db *MemDB) Set(key []byte, value []byte) error {
 	if len(key) == 0 {
-		return errKeyEmpty
+		return store.ErrKeyEmpty
 	}
 	if value == nil {
-		return errValueNil
+		return store.ErrValueNil
 	}
 	db.mtx.Lock()
 	defer db.mtx.Unlock()
@@ -114,7 +115,7 @@ func (db *MemDB) SetSync(key []byte, value []byte) error {
 // Delete implements DB.
 func (db *MemDB) Delete(key []byte) error {
 	if len(key) == 0 {
-		return errKeyEmpty
+		return store.ErrKeyEmpty
 	}
 	db.mtx.Lock()
 	defer db.mtx.Unlock()
@@ -166,13 +167,13 @@ func (db *MemDB) Stats() map[string]string {
 }
 
 // NewBatch implements DB.
-func (db *MemDB) NewBatch() RawBatch {
+func (db *MemDB) NewBatch() store.RawBatch {
 	return newMemDBBatch(db)
 }
 
 // NewBatchWithSize implements DB.
 // It does the same thing as NewBatch because we can't pre-allocate memDBBatch
-func (db *MemDB) NewBatchWithSize(size int) RawBatch {
+func (db *MemDB) NewBatchWithSize(size int) store.RawBatch {
 	return newMemDBBatch(db)
 }
 
@@ -180,7 +181,7 @@ func (db *MemDB) NewBatchWithSize(size int) RawBatch {
 // Takes out a read-lock on the database until the iterator is closed.
 func (db *MemDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, errKeyEmpty
+		return nil, store.ErrKeyEmpty
 	}
 	return newMemDBIterator(db, start, end, false), nil
 }
@@ -189,7 +190,7 @@ func (db *MemDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 // Takes out a read-lock on the database until the iterator is closed.
 func (db *MemDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, errKeyEmpty
+		return nil, store.ErrKeyEmpty
 	}
 	return newMemDBIterator(db, start, end, true), nil
 }
@@ -197,7 +198,7 @@ func (db *MemDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) 
 // IteratorNoMtx makes an iterator with no mutex.
 func (db *MemDB) IteratorNoMtx(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, errKeyEmpty
+		return nil, store.ErrKeyEmpty
 	}
 	return newMemDBIteratorMtxChoice(db, start, end, false, false), nil
 }
@@ -205,7 +206,7 @@ func (db *MemDB) IteratorNoMtx(start, end []byte) (corestore.Iterator, error) {
 // ReverseIteratorNoMtx makes an iterator with no mutex.
 func (db *MemDB) ReverseIteratorNoMtx(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, errKeyEmpty
+		return nil, store.ErrKeyEmpty
 	}
 	return newMemDBIteratorMtxChoice(db, start, end, true, false), nil
 }
@@ -380,7 +381,7 @@ type memDBBatch struct {
 	size int
 }
 
-var _ RawBatch = (*memDBBatch)(nil)
+var _ store.RawBatch = (*memDBBatch)(nil)
 
 // newMemDBBatch creates a new memDBBatch
 func newMemDBBatch(db *MemDB) *memDBBatch {
@@ -394,13 +395,13 @@ func newMemDBBatch(db *MemDB) *memDBBatch {
 // Set implements Batch.
 func (b *memDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return errKeyEmpty
+		return store.ErrKeyEmpty
 	}
 	if value == nil {
-		return errValueNil
+		return store.ErrValueNil
 	}
 	if b.ops == nil {
-		return errBatchClosed
+		return store.ErrBatchClosed
 	}
 	b.size += len(key) + len(value)
 	b.ops = append(b.ops, operation{opTypeSet, key, value})
@@ -410,10 +411,10 @@ func (b *memDBBatch) Set(key, value []byte) error {
 // Delete implements Batch.
 func (b *memDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return errKeyEmpty
+		return store.ErrKeyEmpty
 	}
 	if b.ops == nil {
-		return errBatchClosed
+		return store.ErrBatchClosed
 	}
 	b.size += len(key)
 	b.ops = append(b.ops, operation{opTypeDelete, key, nil})
@@ -423,7 +424,7 @@ func (b *memDBBatch) Delete(key []byte) error {
 // Write implements Batch.
 func (b *memDBBatch) Write() error {
 	if b.ops == nil {
-		return errBatchClosed
+		return store.ErrBatchClosed
 	}
 	b.db.mtx.Lock()
 	defer b.db.mtx.Unlock()
@@ -458,7 +459,7 @@ func (b *memDBBatch) Close() error {
 // GetByteSize implements Batch
 func (b *memDBBatch) GetByteSize() (int, error) {
 	if b.ops == nil {
-		return 0, errBatchClosed
+		return 0, store.ErrBatchClosed
 	}
 	return b.size, nil
 }

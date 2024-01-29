@@ -1,4 +1,4 @@
-package db
+package store
 
 // Batch is a write-only database that commits changes to the underlying database
 // when Write is called. A batch cannot be used concurrently.

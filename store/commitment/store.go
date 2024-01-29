@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
@@ -24,7 +23,7 @@ const (
 )
 
 var (
-	_ dbm.Committer               = (*CommitStore)(nil)
+	_ store.Committer             = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
 )
 
@@ -35,12 +34,12 @@ var (
 // and trees.
 type CommitStore struct {
 	logger     log.Logger
-	db         dbm.RawDB
+	db         store.RawDB
 	multiTrees map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(multiTrees map[string]Tree, db dbm.RawDB, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
 		db:         db,

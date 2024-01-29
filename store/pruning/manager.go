@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"cosmossdk.io/log"
-	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2"
 )
 
 // Manager is an abstraction to handle pruning of SS and SC backends.
@@ -12,8 +12,8 @@ type Manager struct {
 	mtx       sync.Mutex
 	isStarted bool
 
-	stateStorage    dbm.VersionedDatabase
-	stateCommitment dbm.Committer
+	stateStorage    store.VersionedDatabase
+	stateCommitment store.Committer
 
 	logger         log.Logger
 	storageOpts    Options
@@ -26,8 +26,8 @@ type Manager struct {
 // NewManager creates a new Manager instance.
 func NewManager(
 	logger log.Logger,
-	ss dbm.VersionedDatabase,
-	sc dbm.Committer,
+	ss store.VersionedDatabase,
+	sc store.Committer,
 ) *Manager {
 	return &Manager{
 		stateStorage:    ss,

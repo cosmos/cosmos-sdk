@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/store/v2"
-	dbm "cosmossdk.io/store/v2/db"
 )
 
 const (
@@ -20,7 +19,7 @@ const (
 type StorageTestSuite struct {
 	suite.Suite
 
-	NewDB          func(dir string) (dbm.VersionedDatabase, error)
+	NewDB          func(dir string) (store.VersionedDatabase, error)
 	EmptyBatchSize int
 	SkipTests      []string
 }
@@ -634,7 +633,7 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 
 func DBApplyChangeset(
 	t *testing.T,
-	db dbm.VersionedDatabase,
+	db store.VersionedDatabase,
 	version uint64,
 	storeKey string,
 	keys, vals [][]byte,

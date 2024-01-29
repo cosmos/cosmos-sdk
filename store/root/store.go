@@ -11,13 +11,12 @@ import (
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
 )
 
-var _ dbm.RootStore = (*Store)(nil)
+var _ store.RootStore = (*Store)(nil)
 
 // Store defines the SDK's default RootStore implementation. It contains a single
 // State Storage (SS) backend and a single State Commitment (SC) backend. The SC
@@ -28,10 +27,10 @@ type Store struct {
 	initialVersion uint64
 
 	// stateStore reflects the state storage backend
-	stateStore dbm.VersionedDatabase
+	stateStore store.VersionedDatabase
 
 	// stateCommitment reflects the state commitment (SC) backend
-	stateCommitment dbm.Committer
+	stateCommitment store.Committer
 
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
 	commitHeader *coreheader.Info
@@ -51,11 +50,11 @@ type Store struct {
 
 func New(
 	logger log.Logger,
-	ss dbm.VersionedDatabase,
-	sc dbm.Committer,
+	ss store.VersionedDatabase,
+	sc store.Committer,
 	ssOpts, scOpts pruning.Options,
 	m metrics.StoreMetrics,
-) (dbm.RootStore, error) {
+) (store.RootStore, error) {
 	pruningManager := pruning.NewManager(logger, ss, sc)
 	pruningManager.SetStorageOptions(ssOpts)
 	pruningManager.SetCommitmentOptions(scOpts)
@@ -97,7 +96,7 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
-func (s *Store) StateLatest() (uint64, dbm.ReadOnlyRootStore, error) {
+func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
 	v, err := s.GetLatestVersion()
 	if err != nil {
 		return 0, nil, err
@@ -106,7 +105,7 @@ func (s *Store) StateLatest() (uint64, dbm.ReadOnlyRootStore, error) {
 	return v, NewReadOnlyAdapter(v, s), nil
 }
 
-func (s *Store) StateAt(v uint64) (dbm.ReadOnlyRootStore, error) {
+func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
 	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
 	// we should add a VersionExists() method to the VersionedDatabase interface.
 	//
@@ -118,11 +117,11 @@ func (s *Store) StateAt(v uint64) (dbm.ReadOnlyRootStore, error) {
 	return NewReadOnlyAdapter(v, s), nil
 }
 
-func (s *Store) GetStateStorage() dbm.VersionedDatabase {
+func (s *Store) GetStateStorage() store.VersionedDatabase {
 	return s.stateStore
 }
 
-func (s *Store) GetStateCommitment() dbm.Committer {
+func (s *Store) GetStateCommitment() store.Committer {
 	return s.stateCommitment
 }
 
@@ -169,7 +168,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 	return lastCommitID.Version, nil
 }
 
-func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (dbm.QueryResult, error) {
+func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		s.telemetry.MeasureSince(now, "root_store", "query")
@@ -184,18 +183,18 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 		if val == nil {
 			bz, scErr := s.stateCommitment.Get(storeKey, version, key)
 			if scErr != nil {
-				return dbm.QueryResult{}, fmt.Errorf("failed to query SC store: %w", scErr)
+				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", scErr)
 			}
 
 			val = bz
 		}
 
 		if err != nil {
-			return dbm.QueryResult{}, fmt.Errorf("failed to query SS store: %w", err)
+			return store.QueryResult{}, fmt.Errorf("failed to query SS store: %w", err)
 		}
 	}
 
-	result := dbm.QueryResult{
+	result := store.QueryResult{
 		Key:     key,
 		Value:   val,
 		Version: version,
@@ -204,7 +203,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	if prove {
 		result.ProofOps, err = s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
-			return dbm.QueryResult{}, fmt.Errorf("failed to get SC store proof: %w", err)
+			return store.QueryResult{}, fmt.Errorf("failed to get SC store proof: %w", err)
 		}
 	}
 

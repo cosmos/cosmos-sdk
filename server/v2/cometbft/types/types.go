@@ -27,7 +27,6 @@ type ConsensusInfo struct { // TODO: this is a mock, we need a proper proto.Mess
 type Store interface {
 	store.Store
 	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
-	LastCommitID() (CommitID, error)
 }
 
 type QueryResult interface {
@@ -36,9 +35,4 @@ type QueryResult interface {
 	Version() uint64
 	Proof() *ics23.CommitmentProof
 	ProofType() string
-}
-
-type CommitID interface {
-	Version() int64
-	Hash() []byte
 }

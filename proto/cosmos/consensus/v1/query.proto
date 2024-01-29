@@ -4,8 +4,6 @@ package cosmos.consensus.v1;
 
 import "google/api/annotations.proto";
 import "tendermint/types/params.proto";
-import "tendermint/abci/types.proto";
-import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 
@@ -15,14 +13,6 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/consensus/v1/params";
   }
-
-  // these endpoints should be used in the corresponding ABCI methods
-  rpc ExtendVote(RequestExtendVote) returns (ResponseExtendVote);
-  rpc VerifyVoteExtension(RequestVerifyVoteExtension) returns (ResponseVerifyVoteExtension);
-
-  // ProcessVoteExtensions should be used in the PrepareProposal method by the proposer.
-  // TODO: find a better name, something that would evoke turning VEs into a consensus message.
-  rpc ProcessVoteExtensions(ProcessVoteExtensionsRequest) returns (ProcessVoteExtensionsResponse);
 }
 
 // QueryParamsRequest defines the request type for querying x/consensus parameters.
@@ -34,37 +24,4 @@ message QueryParamsResponse {
   // Please note that `params.version` is not populated in this response, it is
   // tracked separately in the x/upgrade module.
   tendermint.types.ConsensusParams params = 1;
-}
-
-message RequestExtendVote {
-  tendermint.abci.RequestExtendVote request = 1;
-}
-
-message ResponseExtendVote {
-  tendermint.abci.ResponseExtendVote response = 1;
-}
-
-message RequestVerifyVoteExtension {
-  tendermint.abci.RequestVerifyVoteExtension request = 1;
-}
-
-message ResponseVerifyVoteExtension {
-  tendermint.abci.ResponseVerifyVoteExtension response = 1;
-}
-
-message VoteExtension {
-  // the hash of the block that this received vote corresponds to
-  bytes hash = 1;
-  // the validator that signed the vote extension
-  bytes validator_address = 2;
-  int64 height            = 3;
-  bytes vote_extension    = 4;
-}
-
-message ProcessVoteExtensionsRequest {
-  repeated VoteExtension vote_extensions = 1;
-}
-
-message ProcessVoteExtensionsResponse {
-  repeated google.protobuf.Any messages = 1;
 }

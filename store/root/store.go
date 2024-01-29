@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
+	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
 )
 
@@ -35,7 +36,7 @@ type Store struct {
 	commitHeader *coreheader.Info
 
 	// lastCommitInfo reflects the last version/hash that has been committed
-	lastCommitInfo *store.CommitInfo
+	lastCommitInfo *proof.CommitInfo
 
 	// workingHash defines the current (yet to be committed) hash
 	workingHash []byte
@@ -127,7 +128,7 @@ func (s *Store) GetStateCommitment() store.Committer {
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
-func (s *Store) LastCommitID() (store.CommitID, error) {
+func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if s.lastCommitInfo != nil {
 		return s.lastCommitInfo.CommitID(), nil
 	}
@@ -139,20 +140,20 @@ func (s *Store) LastCommitID() (store.CommitID, error) {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 	latestVersion, err := s.stateStore.GetLatestVersion()
 	if err != nil {
-		return store.CommitID{}, err
+		return proof.CommitID{}, err
 	}
 
 	// sanity check: ensure integrity of latest version against SC
 	scVersion, err := s.stateCommitment.GetLatestVersion()
 	if err != nil {
-		return store.CommitID{}, err
+		return proof.CommitID{}, err
 	}
 
 	if scVersion != latestVersion {
-		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
+		return proof.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
 
-	return store.CommitID{Version: latestVersion}, nil
+	return proof.CommitID{Version: latestVersion}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -243,7 +244,7 @@ func (s *Store) loadVersion(v uint64) error {
 	s.commitHeader = nil
 
 	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
-	s.lastCommitInfo = &store.CommitInfo{Version: v}
+	s.lastCommitInfo = &proof.CommitInfo{Version: v}
 
 	return nil
 }

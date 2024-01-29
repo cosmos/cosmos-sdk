@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 //go:build !app_v2 && !app_v1_manual
 
 package simapp
@@ -8,7 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
+	govclient "cosmossdk.io/x/gov/client"
+	govtypes "cosmossdk.io/x/gov/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"

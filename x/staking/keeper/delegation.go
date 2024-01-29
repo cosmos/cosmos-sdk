@@ -338,7 +338,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 		}
 
 		if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-			k.Logger(ctx).Error("failed to call after unbonding initiated hook", "error", err)
+			return ubd, fmt.Errorf("failed to call after unbonding initiated hook: %v", err)
 		}
 	}
 	return ubd, nil
@@ -554,8 +554,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 	}
 
 	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-		k.Logger(ctx).Error("failed to call after unbonding initiated hook", "error", err)
-		// TODO (Facu): Should we return here? We are ignoring this error
+		return types.Redelegation{}, fmt.Errorf("failed to call after unbonding initiated hook: %v", err)
 	}
 
 	return red, nil

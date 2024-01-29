@@ -251,7 +251,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 	}
 
 	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, str); err != nil {
-		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
+		return fmt.Errorf("error in after validator removed hook: %v", err)
 	}
 
 	return nil

@@ -338,7 +338,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 		}
 
 		if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-			return ubd, fmt.Errorf("failed to call after unbonding initiated hook: %v", err)
+			return ubd, fmt.Errorf("failed to call after unbonding initiated hook: %w", err)
 		}
 	}
 	return ubd, nil
@@ -554,7 +554,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 	}
 
 	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-		return types.Redelegation{}, fmt.Errorf("failed to call after unbonding initiated hook: %v", err)
+		return types.Redelegation{}, fmt.Errorf("failed to call after unbonding initiated hook: %w", err)
 	}
 
 	return red, nil

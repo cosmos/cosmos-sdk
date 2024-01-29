@@ -16,6 +16,9 @@ func NewMeteredWriterMap(conf StoreConfig, meter stf.GasMeter, state store.Write
 	}
 }
 
+// MeteredWriterMap wraps store.Writer and returns a gas metered
+// version of it. Since the gas meter is shared across different
+// writers, the metered writers are memoized.
 type MeteredWriterMap struct {
 	config             StoreConfig
 	meter              stf.GasMeter
@@ -48,14 +51,6 @@ func (m MeteredWriterMap) ApplyStateChanges(stateChanges []store.StateChanges) e
 
 func (m MeteredWriterMap) GetStateChanges() ([]store.StateChanges, error) {
 	return m.state.GetStateChanges()
-}
-
-func newMeteredState(state store.WriterMap, meter stf.GasMeter) store.WriterMap {
-	return MeteredWriterMap{
-		meter:              meter,
-		state:              state,
-		cacheMeteredStores: make(map[string]*Store),
-	}
 }
 
 func unsafeString(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }

@@ -164,6 +164,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 
 			// Set suite.ctx with smaller simulated TxBytes manually
 			suite.ctx = suite.ctx.WithTxBytes(simTxBytes)
+			suite.ctx = suite.ctx.WithExecMode(sdk.ExecModeSimulate)
 
 			beforeSimGas := suite.ctx.GasMeter().GasConsumed()
 

@@ -4,17 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 
 	"cosmossdk.io/core/appmodule"
 	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
+	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
 )
 
-var runtimeIdentity transaction.Identity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
+var runtimeIdentity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
@@ -28,8 +28,10 @@ type STF[T transaction.Tx] struct {
 
 	doTxValidation func(ctx context.Context, tx T) error // TODO: rewrite antehandlers remove simulate
 	postTxExec     func(ctx context.Context, tx T, success bool) error
-	branch         func(state store.GetReader) store.GetWriter // branch is a function that given a readonly store it returns a writable version of it.
-	// TODO: add gas store
+
+	branch           func(state store.ReaderMap) store.WriterMap // branch is a function that given a readonly state it returns a writable version of it.
+	getGasMeter      func(gasLimit uint64) stf.GasMeter
+	wrapWithGasMeter func(meter stf.GasMeter, store store.WriterMap) store.WriterMap
 }
 
 // NewSTF returns a new STF instance.
@@ -41,7 +43,7 @@ func NewSTF[T transaction.Tx](
 	doEndBlock func(ctx context.Context) error,
 	doTxValidation func(ctx context.Context, tx T) error,
 	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error),
-	branch func(store store.GetReader) store.GetWriter,
+	branch func(store store.ReaderMap) store.WriterMap,
 ) *STF[T] {
 	return &STF[T]{
 		handleMsg:         handleMsg,
@@ -59,8 +61,8 @@ func NewSTF[T transaction.Tx](
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
-func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T], state store.GetReader) (blockResult *appmanager.BlockResponse, newState store.GetWriter, err error) {
-	// creates a new branch store, from the readonly view of the state
+func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T], state store.ReaderMap) (blockResult *appmanager.BlockResponse, newState store.WriterMap, err error) {
+	// creates a new branch state, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
 
@@ -72,12 +74,8 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 		return nil, nil, err
 	}
 
-	// check if we need to return early
-	select {
-	case <-ctx.Done():
-		return nil, nil, ctx.Err()
-	default:
-		// continue
+	if err = isCtxCancelled(ctx); err != nil {
+		return nil, nil, err
 	}
 
 	// begin block
@@ -87,11 +85,8 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	}
 
 	// check if we need to return early
-	select {
-	case <-ctx.Done():
-		return nil, nil, ctx.Err()
-	default:
-		// continue
+	if err = isCtxCancelled(ctx); err != nil {
+		return nil, nil, err
 	}
 
 	// execute txs
@@ -99,12 +94,10 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	// TODO: skip first tx if vote extensions are enabled (marko)
 	for i, txBytes := range block.Txs {
 		// check if we need to return early or continue delivering txs
-		select {
-		case <-ctx.Done():
-			return nil, nil, ctx.Err()
-		default:
-			txResults[i] = s.deliverTx(ctx, newState, txBytes)
+		if err = isCtxCancelled(ctx); err != nil {
+			return nil, nil, err
 		}
+		txResults[i] = s.deliverTx(ctx, newState, txBytes)
 	}
 	// end block
 	endBlockEvents, valset, err := s.endBlock(ctx, newState)
@@ -122,7 +115,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 }
 
 // deliverTx executes a TX and returns the result.
-func (s STF[T]) deliverTx(ctx context.Context, state store.GetWriter, tx T) appmanager.TxResult {
+func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T) appmanager.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
 	defer func() {
@@ -145,16 +138,17 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.GetWriter, tx T) appm
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, tx.GetGasLimit()-validateGas, tx)
 	return appmanager.TxResult{
-		Events:  append(validationEvents, execEvents...),
-		GasUsed: execGas + validateGas,
-		Resp:    execResp,
-		Error:   err,
+		Events:    append(validationEvents, execEvents...),
+		GasUsed:   execGas + validateGas,
+		GasWanted: tx.GetGasLimit(),
+		Resp:      execResp,
+		Error:     err,
 	}
 }
 
 // validateTx validates a transaction given the provided WritableState and gas limit.
 // If the validation is successful, state is committed
-func (s STF[T]) validateTx(ctx context.Context, state store.GetWriter, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
+func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branch(state)
 	validateCtx := s.makeContext(ctx, tx.GetSenders(), validateState, gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
@@ -162,11 +156,11 @@ func (s STF[T]) validateTx(ctx context.Context, state store.GetWriter, gasLimit 
 		return 0, nil, err
 	}
 
-	return validateCtx.gasUsed, validateCtx.events, applyStateChanges(state, validateState)
+	return validateCtx.meter.GasConsumed(), validateCtx.events, applyStateChanges(state, validateState)
 }
 
 // execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
-func (s STF[T]) execTx(ctx context.Context, state store.GetWriter, gasLimit uint64, tx T) ([]transaction.Type, uint64, []event.Event, error) {
+func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T) ([]transaction.Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
 
@@ -176,7 +170,7 @@ func (s STF[T]) execTx(ctx context.Context, state store.GetWriter, gasLimit uint
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branch from the initial state.
 		postTxState := s.branch(state)
-		postTxCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, postTxState, math.MaxUint64) // NO gas limit.
+		postTxCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, postTxState, stf.NoGasLimit)
 
 		// TODO: runtime sets a noop posttxexec if the app doesnt set anything (julien)
 
@@ -184,7 +178,7 @@ func (s STF[T]) execTx(ctx context.Context, state store.GetWriter, gasLimit uint
 		if postTxErr != nil {
 			// if the post tx handler fails, then we do not apply any state change to the initial state.
 			// we just return the exec gas used and a joined error from TX error and post TX error.
-			return nil, execCtx.gasUsed, nil, errors.Join(txErr, postTxErr)
+			return nil, execCtx.meter.GasConsumed(), nil, errors.Join(txErr, postTxErr)
 		}
 		// in case post tx is successful, then we commit the post tx state to the initial state,
 		// and we return post tx events alongside exec gas used and the error of the tx.
@@ -192,17 +186,17 @@ func (s STF[T]) execTx(ctx context.Context, state store.GetWriter, gasLimit uint
 		if applyErr != nil {
 			return nil, 0, nil, applyErr
 		}
-		return nil, execCtx.gasUsed, postTxCtx.events, txErr
+		return nil, execCtx.meter.GasConsumed(), postTxCtx.events, txErr
 	}
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
-	postTxCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, execState, math.MaxUint64) // NO gas limit.
+	postTxCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, execState, stf.NoGasLimit) // NO gas limit.
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
 		// if post tx fails, then we do not apply any state change, we return the post tx error,
 		// alongside the gas used.
-		return nil, execCtx.gasUsed, nil, postTxErr
+		return nil, execCtx.meter.GasConsumed(), nil, postTxErr
 	}
 	// both the execution and post tx execution step were successful, so we apply the state changes
 	// to the provided state, and we return responses, and events from exec tx and post tx exec.
@@ -211,12 +205,12 @@ func (s STF[T]) execTx(ctx context.Context, state store.GetWriter, gasLimit uint
 		return nil, 0, nil, applyErr
 	}
 
-	return msgsResp, execCtx.gasUsed, append(execCtx.events, postTxCtx.events...), nil
+	return msgsResp, execCtx.meter.GasConsumed(), append(execCtx.events, postTxCtx.events...), nil
 }
 
 // runTxMsgs will execute the messages contained in the TX with the provided state.
 // TODO: multimessage both atomic and non atomic
-func (s STF[T]) runTxMsgs(ctx context.Context, state store.GetWriter, gasLimit uint64, tx T) ([]transaction.Type, error) {
+func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T) ([]transaction.Type, error) {
 	execCtx := s.makeContext(ctx, tx.GetSenders(), state, gasLimit)
 	msgs := tx.GetMessages()
 	msgResps := make([]transaction.Type, len(msgs))
@@ -230,8 +224,8 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.GetWriter, gasLimit u
 	return msgResps, nil
 }
 
-func (s STF[T]) preBlock(ctx context.Context, state store.GetWriter, txs []T) ([]event.Event, error) {
-	pbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit
+func (s STF[T]) preBlock(ctx context.Context, state store.WriterMap, txs []T) ([]event.Event, error) {
+	pbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, stf.NoGasLimit)
 	err := s.doPreBlock(pbCtx, txs)
 	if err != nil {
 		return nil, err
@@ -248,8 +242,8 @@ func (s STF[T]) preBlock(ctx context.Context, state store.GetWriter, txs []T) ([
 	return pbCtx.events, nil
 }
 
-func (s STF[T]) beginBlock(ctx context.Context, state store.GetWriter) (beginBlockEvents []event.Event, err error) {
-	bbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
+func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlockEvents []event.Event, err error) {
+	bbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, stf.NoGasLimit)
 	err = s.doBeginBlock(bbCtx)
 	if err != nil {
 		return nil, err
@@ -265,8 +259,8 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.GetWriter) (beginBlo
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.GetWriter) ([]event.Event, []appmodule.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
+func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodule.ValidatorUpdate, error) {
+	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, stf.NoGasLimit)
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
 		return nil, nil, err
@@ -290,8 +284,8 @@ func (s STF[T]) endBlock(ctx context.Context, state store.GetWriter) ([]event.Ev
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.GetWriter) ([]event.Event, []appmodule.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, 0) // TODO: gas limit, math.MaxUint64, noop gas meter
+func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodule.ValidatorUpdate, error) {
+	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, stf.NoGasLimit)
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {
 		return nil, nil, err
@@ -300,14 +294,14 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.GetWriter) ([]
 }
 
 // Simulate simulates the execution of a tx on the provided state.
-func (s STF[T]) Simulate(ctx context.Context, state store.GetReader, gasLimit uint64, tx T) (appmanager.TxResult, store.GetWriter) {
+func (s STF[T]) Simulate(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) (appmanager.TxResult, store.WriterMap) {
 	simulationState := s.branch(state)
 	return s.deliverTx(ctx, simulationState, tx), simulationState
 }
 
 // ValidateTx will run only the validation steps required for a transaction.
 // Validations are run over the provided state, with the provided gas limit.
-func (s STF[T]) ValidateTx(ctx context.Context, state store.GetReader, gasLimit uint64, tx T) appmanager.TxResult {
+func (s STF[T]) ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) appmanager.TxResult {
 	validationState := s.branch(state)
 	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
 	return appmanager.TxResult{
@@ -318,46 +312,72 @@ func (s STF[T]) ValidateTx(ctx context.Context, state store.GetReader, gasLimit 
 }
 
 // Query executes the query on the provided state with the provided gas limits.
-func (s STF[T]) Query(ctx context.Context, state store.GetReader, gasLimit uint64, req transaction.Type) (transaction.Type, error) {
+func (s STF[T]) Query(ctx context.Context, state store.ReaderMap, gasLimit uint64, req transaction.Type) (transaction.Type, error) {
 	queryState := s.branch(state)
 	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit)
 	return s.handleQuery(queryCtx, req)
+}
+
+// clone clones STF.
+func (s STF[T]) clone() STF[T] {
+	return STF[T]{
+		handleMsg:         s.handleMsg,
+		handleQuery:       s.handleQuery,
+		doPreBlock:        s.doPreBlock,
+		doBeginBlock:      s.doBeginBlock,
+		doEndBlock:        s.doEndBlock,
+		doValidatorUpdate: s.doValidatorUpdate,
+		doTxValidation:    s.doTxValidation,
+		postTxExec:        s.postTxExec,
+		branch:            s.branch,
+		getGasMeter:       s.getGasMeter,
+		wrapWithGasMeter:  s.wrapWithGasMeter,
+	}
 }
 
 // executionContext is a struct that holds the context for the execution of a tx.
 // TODO: look if we are missing anything here
 type executionContext struct {
 	context.Context
-	store    store.GetWriter
-	gasUsed  uint64
-	gasLimit uint64
-	events   []event.Event
-	sender   []transaction.Identity
-	// TODO: add gas meter/kv
-	// TODO: add services
+
+	state  store.WriterMap
+	meter  stf.GasMeter
+	events []event.Event
+	sender []transaction.Identity
 }
 
 func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender []transaction.Identity,
-	store store.GetWriter,
+	store store.WriterMap,
 	gasLimit uint64,
 	// TODO add exec mode
 ) *executionContext {
+	meter := s.getGasMeter(gasLimit)
+	store = s.wrapWithGasMeter(meter, store)
 	return &executionContext{
-		Context:  ctx,
-		store:    store,
-		gasUsed:  0,
-		gasLimit: gasLimit,
-		events:   make([]event.Event, 0),
-		sender:   sender,
+		Context: ctx,
+		state:   store,
+		meter:   meter,
+		events:  make([]event.Event, 0),
+		sender:  sender,
 	}
 }
 
-func applyStateChanges(dst, src store.GetWriter) error {
+func applyStateChanges(dst, src store.WriterMap) error {
 	changes, err := src.GetStateChanges()
 	if err != nil {
 		return err
 	}
 	return dst.ApplyStateChanges(changes)
+}
+
+// isCtxCancelled reports if the context was cancelled.
+func isCtxCancelled(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		return nil
+	}
 }

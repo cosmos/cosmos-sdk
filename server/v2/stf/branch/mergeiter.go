@@ -12,8 +12,6 @@ import (
 // had been deleted (but not deleted in the parent).
 // If the cache iterator has the same key as the parent, the
 // cache shadows (overrides) the parent.
-//
-// TODO: Optimize by memoizing.
 type mergedIterator struct {
 	parent    corestore.Iterator
 	cache     corestore.Iterator
@@ -231,7 +229,6 @@ func (iter *mergedIterator) skipUntilExistsOrInvalid() bool {
 				continue
 			}
 			// Cache is not a delete.
-
 			return true // cache exists.
 		}
 	}

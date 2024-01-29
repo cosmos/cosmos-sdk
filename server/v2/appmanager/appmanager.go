@@ -70,7 +70,7 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 	return nil
 }
 
-func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T]) (*appmanager.BlockResponse, store.GetWriter, error) {
+func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T]) (*appmanager.BlockResponse, store.WriterMap, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -100,7 +100,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 }
 
 // Simulate runs validation and execution flow of a Tx.
-func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, store.GetWriter, error) {
+func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, store.WriterMap, error) {
 	_, state, err := a.db.StateLatest()
 	if err != nil {
 		return appmanager.TxResult{}, nil, err
@@ -132,6 +132,6 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(ctx context.Context, state store.GetReader, request appmanager.Type) (appmanager.Type, error) {
+func (a AppManager[T]) QueryWithState(ctx context.Context, state store.ReaderMap, request appmanager.Type) (appmanager.Type, error) {
 	return a.stf.Query(ctx, state, a.queryGasLimit, request)
 }

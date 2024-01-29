@@ -21,12 +21,12 @@ type Store[SS storev2.VersionedDatabase, SC storev2.Committer] struct {
 	latest *atomic.Uint64
 }
 
-func (s Store[SS, SC]) StateLatest() (uint64, store.GetReader, error) {
+func (s Store[SS, SC]) StateLatest() (uint64, store.ReaderMap, error) {
 	latest := s.latest.Load()
 	return latest, actorsState[SS]{latest, s.ss}, nil
 }
 
-func (s Store[SS, SC]) StateAt(version uint64) (store.GetReader, error) {
+func (s Store[SS, SC]) StateAt(version uint64) (store.ReaderMap, error) {
 	return actorsState[SS]{version, s.ss}, nil
 }
 

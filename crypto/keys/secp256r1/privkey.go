@@ -26,7 +26,7 @@ func (m *PrivKey) Type() string {
 	return name
 }
 
-// Sign hashes and signs the message usign ECDSA. Implements sdk.PrivKey interface.
+// Sign hashes and signs the message using ECDSA. Implements sdk.PrivKey interface.
 func (m *PrivKey) Sign(msg []byte) ([]byte, error) {
 	return m.Secret.Sign(msg)
 }

@@ -597,7 +597,7 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	}
 
 	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
-		app, err = testnetify(svrCtx, home, appCreator, db)
+		app, err = testnetify(svrCtx, home, appCreator, db, traceWriter)
 		if err != nil {
 			return app, traceCleanupFn, err
 		}
@@ -697,18 +697,12 @@ before stopping the daemon.
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, db dbm.DB) (types.Application, error) {
+func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
 	if !ok {
 		return nil, fmt.Errorf("expected string for key %s", KeyNewChainID)
-	}
-
-	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
-	traceWriter, err := openTraceWriter(traceWriterFile)
-	if err != nil {
-		return nil, err
 	}
 
 	genDocProvider := node.DefaultGenesisDocProviderFunc(config)

@@ -27,39 +27,39 @@ func TestSigVerify_setPubKey(t *testing.T) {
 
 	t.Run("on not sig verify tx - skip", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{}
-		ctx = ctx.WithExecMode(sdk.ExecModeSimulate)
-		err := svd.setPubKey(ctx, false, acc, nil)
+		ctx = ctx.WithExecMode(sdk.ExecModeSimulate).WithIsSigverifyTx(false)
+		err := svd.setPubKey(ctx, acc, nil)
 		require.NoError(t, err)
 	})
 
 	t.Run("on sim, populate with sim key, if pubkey is nil", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		ctx = ctx.WithExecMode(sdk.ExecModeSimulate)
-		err := svd.setPubKey(ctx, true, acc, nil)
+		ctx = ctx.WithExecMode(sdk.ExecModeSimulate).WithIsSigverifyTx(true)
+		err := svd.setPubKey(ctx, acc, nil)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), simSecp256k1Pubkey)
 	})
 
 	t.Run("on sim, populate with real pub key, if pubkey is not nil", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		ctx = ctx.WithExecMode(sdk.ExecModeSimulate)
-		err := svd.setPubKey(ctx, true, acc, alicePk)
+		ctx = ctx.WithExecMode(sdk.ExecModeSimulate).WithIsSigverifyTx(true)
+		err := svd.setPubKey(ctx, acc, alicePk)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), alicePk)
 	})
 
 	t.Run("not on sim, populate the address", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		ctx = ctx.WithExecMode(sdk.ExecModeFinalize)
-		err := svd.setPubKey(ctx, false, acc, alicePk)
+		ctx = ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(false)
+		err := svd.setPubKey(ctx, acc, alicePk)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), alicePk)
 	})
 
 	t.Run("not on sim, fail on invalid pubkey.address", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		ctx = ctx.WithExecMode(sdk.ExecModeFinalize)
-		err := svd.setPubKey(ctx, false, acc, bobPk)
+		ctx = ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(false)
+		err := svd.setPubKey(ctx, acc, bobPk)
 		require.ErrorContains(t, err, "cannot be claimed")
 	})
 }

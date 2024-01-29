@@ -218,7 +218,7 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 	// the account is without a pubkey, let's attempt to check if in the
 	// tx we were correctly provided a valid pubkey.
 	if acc.GetPubKey() == nil {
-		err = svd.setPubKey(ctx.IsSigverifyTx(), ctx.ExecMode() == sdk.ExecModeSimulate, acc, txPubKey)
+		err = svd.setPubKey(ctx, acc, txPubKey)
 		if err != nil {
 			return err
 		}
@@ -332,9 +332,9 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 
 // setPubKey will attempt to set the pubkey for the account given the list of available public keys.
 // This must be called only in case the account has not a pubkey set yet.
-func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, isSigVerifyTx bool, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
 	// if we're not in sig verify then we can just skip.
-	if !isSigVerifyTx {
+	if !ctx.IsSigverifyTx() {
 		return nil
 	}
 	// if the pubkey is nil then we don't have any pubkey to set

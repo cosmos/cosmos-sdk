@@ -8,7 +8,7 @@ package cometbft
 // 	"cosmossdk.io/server/v2/appmanager"
 // 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 // 	"cosmossdk.io/server/v2/cometbft/types"
-// 	"cosmossdk.io/server/v2/core/transaction"
+// 	"cosmossdk.io/core/transaction"
 // 	"cosmossdk.io/store/v2/snapshots"
 // 	abciserver "github.com/cometbft/cometbft/abci/server"
 // 	abci "github.com/cometbft/cometbft/abci/types"

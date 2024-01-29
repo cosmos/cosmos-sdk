@@ -140,7 +140,7 @@ func (mi *memIterator) Close() error {
 
 func (mi *memIterator) Error() error {
 	if !mi.Valid() {
-		return invalidIterator
+		return errInvalidIterator
 	}
 	return nil
 }

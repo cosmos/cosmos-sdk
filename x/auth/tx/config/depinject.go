@@ -57,7 +57,7 @@ type ModuleOutputs struct {
 
 	TxConfig        client.TxConfig
 	TxConfigOptions tx.ConfigOptions
-	BaseAppOption   runtime.BaseAppOption
+	BaseAppOption   runtime.BaseAppOption // TODO find alternative to this
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {

@@ -633,8 +633,8 @@ has already been modified by this command could result in unexpected behavior.
 
 Additionally, the first block may take up to one minute to be committed, depending
 on how old the block is. For instance, if a snapshot was taken weeks ago and we want
-to turn this into a testnet, it is possible lots of pending state needs to be commited
-(expiring locks, etc.). It is recommended that you should wait for this block to be commited
+to turn this into a testnet, it is possible lots of pending state needs to be committed
+(expiring locks, etc.). It is recommended that you should wait for this block to be committed
 before stopping the daemon.
 `,
 		Example: "in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
@@ -665,7 +665,7 @@ before stopping the daemon.
 			text, _ := reader.ReadString('\n')
 			response := strings.TrimSpace(strings.ToLower(text))
 			if response != "y" && response != "yes" {
-				fmt.Println("Operation cancelled.")
+				fmt.Println("Operation canceled.")
 				return nil
 			}
 
@@ -752,7 +752,7 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	}
 
 	// There are times when a user stops their node between commits, resulting in a mismatch between the
-	// blockStore and state. For convenience, we just discard the uncommited blockStore block and operate on
+	// blockStore and state. For convenience, we just discard the uncommitted blockStore block and operate on
 	// the lastBlockHeight in state.
 	if blockStore.Height() != state.LastBlockHeight {
 		err = blockStore.DeleteLatestBlock()

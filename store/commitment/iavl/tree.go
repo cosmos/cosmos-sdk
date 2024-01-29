@@ -3,12 +3,13 @@ package iavl
 import (
 	"fmt"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
 	log "cosmossdk.io/log"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
+	dbm "cosmossdk.io/store/v2/db"
 )
 
 var _ commitment.Tree = (*IavlTree)(nil)
@@ -19,8 +20,8 @@ type IavlTree struct {
 }
 
 // NewIavlTree creates a new IavlTree instance.
-func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
-	tree := iavl.NewMutableTree(db, cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger)
+func NewIavlTree(db store.RawDB, logger log.Logger, cfg *Config) *IavlTree {
+	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger)
 	return &IavlTree{
 		tree: tree,
 	}

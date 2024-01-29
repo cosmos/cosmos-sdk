@@ -50,7 +50,7 @@ func TestSigVerify_setPubKey(t *testing.T) {
 
 	t.Run("not on sim, populate the address", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		ctx = ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(false)
+		ctx = ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(true)
 		err := svd.setPubKey(ctx, acc, alicePk)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), alicePk)
@@ -58,7 +58,7 @@ func TestSigVerify_setPubKey(t *testing.T) {
 
 	t.Run("not on sim, fail on invalid pubkey.address", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
-		ctx = ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(false)
+		ctx = ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(true)
 		err := svd.setPubKey(ctx, acc, bobPk)
 		require.ErrorContains(t, err, "cannot be claimed")
 	})

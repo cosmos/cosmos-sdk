@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -169,6 +170,42 @@ func TestSanitizeBalances(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestSanitizeBalancesDuplicates(t *testing.T) {
+	// 1. Generate balances
+	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
+	coin := sdk.NewCoin("benchcoin", tokens)
+	coins := sdk.Coins{coin}
+	addrs, _ := makeRandomAddressesAndPublicKeys(13)
+
+	var balances []bank.Balance
+	for _, addr := range addrs {
+		balances = append(balances, bank.Balance{
+			Address: addr.String(),
+			Coins:   coins,
+		})
+	}
+
+	// 2. Add duplicate
+	balances = append(balances, balances[3])
+	expectedError := fmt.Sprintf("genesis state has a duplicate account: %q", balances[3].Address)
+
+	// 3. Add more balances
+	coin2 := sdk.NewCoin("coinbench", tokens)
+	coins2 := sdk.Coins{coin2, coin}
+	addrs2, _ := makeRandomAddressesAndPublicKeys(31)
+	for _, addr := range addrs2 {
+		balances = append(balances, bank.Balance{
+			Address: addr.String(),
+			Coins:   coins2,
+		})
+	}
+
+	// 4. Execute SanitizeGenesisBalances and expect an error
+	require.PanicsWithError(t, expectedError, func() {
+		bank.SanitizeGenesisBalances(balances)
+	}, "SanitizeGenesisBalances should panic with duplicate accounts")
 }
 
 func makeRandomAddressesAndPublicKeys(n int) (accL []sdk.AccAddress, pkL []*ed25519.PubKey) {

@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"sort"
 
 	"cosmossdk.io/x/bank/exported"
@@ -64,17 +65,18 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 
 	// 1. Retrieve the address equivalents for each Balance's address.
 	addresses := make([]sdk.AccAddress, len(balances))
-	existingAddresses := map[string]bool{}
+	// 2. Track any duplicate addresses to avoid false positives on invariant checks.
+	seen := make(map[string]struct{})
 	for i := range balances {
 		addr, _ := sdk.AccAddressFromBech32(balances[i].Address)
 		addresses[i] = addr
-		if _, exists := existingAddresses[string(addr)]; exists {
-			panic("duplicate account in genesis state")
+		if _, exists := seen[string(addr)]; exists {
+			panic(fmt.Errorf("genesis state has a duplicate account: %q", balances[i].Address))
 		}
-		existingAddresses[string(addr)] = true
+		seen[string(addr)] = struct{}{}
 	}
 
-	// 2. Sort balances.
+	// 3. Sort balances.
 	sort.Sort(balanceByAddress{addresses: addresses, balances: balances})
 
 	return balances

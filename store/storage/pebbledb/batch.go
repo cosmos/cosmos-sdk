@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/store/v2"
 	"github.com/cockroachdb/pebble"
+
+	"cosmossdk.io/store/v2"
 )
 
 var _ store.Batch = (*Batch)(nil)

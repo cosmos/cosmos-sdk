@@ -203,6 +203,7 @@ replace (
 	cosmossdk.io/x/slashing => ./x/slashing
 	cosmossdk.io/x/staking => ./x/staking
 	cosmossdk.io/x/tx => ./x/tx
+	cosmossdk.io/store/v2 => ./store
 )
 
 // Below are the long-lived replace of the Cosmos SDK

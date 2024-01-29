@@ -210,11 +210,15 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // authenticate the authentication of the TX for a specific tx signer.
 func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
+	// newlyCreated is a flag that indicates if the account was newly created
+	// this is only the case when the user is sending their first tx
+	newlyCreated := false
 	acc := GetSignerAcc(ctx, svd.ak, signer)
 	if acc == nil {
 		// if the account is nil, create the account with the address of the signer
 		// this is only the case when the user is sending their first tx
 		acc = svd.ak.NewAccountWithAddress(ctx, txPubKey.Address().Bytes())
+		newlyCreated = true
 	}
 
 	// the account is without a pubkey, let's attempt to check if in the
@@ -231,7 +235,7 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 		return err
 	}
 
-	err = svd.verifySig(ctx, tx, acc, sig)
+	err = svd.verifySig(ctx, tx, acc, sig, newlyCreated)
 	if err != nil {
 		return err
 	}
@@ -270,7 +274,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 }
 
 // verifySig will verify the signature of the provided signer account.
-func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
+func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2, newlyCreated bool) error {
 	if sig.Sequence != acc.GetSequence() {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
@@ -301,7 +305,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	}
 
 	// if the account number is 0 and the account is signing, the sign doc will not have an account number
-	if acc.GetSequence() == 0 {
+	if acc.GetSequence() == 0 && newlyCreated {
 		// if the account sequence is 0, and we're in genesis, then we're
 		// dealing with an account that has been generated but never used.
 		// in this case, we should not verify signatures.

@@ -11,6 +11,7 @@ COPY collections/go.mod collections/go.sum /work/collections/
 COPY store/go.mod store/go.sum /work/store/
 COPY depinject/go.mod depinject/go.sum /work/depinject/
 COPY x/tx/go.mod x/tx/go.sum /work/x/tx/
+COPY tests/go.mod tests/go.mod /work/tests/
 COPY x/protocolpool/go.mod x/protocolpool/go.sum /work/x/protocolpool/
 COPY x/gov/go.mod x/gov/go.sum /work/x/gov/
 COPY x/distribution/go.mod x/distribution/go.sum /work/x/distribution/

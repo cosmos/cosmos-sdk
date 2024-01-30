@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package cosmos.accountlink.interfaces;
+
+import "cosmos/accountlink/v1/account_link.proto";
+
+option go_package = "cosmossdk.io/x/accountlink/interfaces";
+
+// MsgConditionCheck defines the msg for execute certain condition checking process
+message MsgConditionCheck {
+  // sender defines the address of the sender that sent the checking operation.
+  string sender = 1;
+
+  // condition are set of checkup that need to be done before proceed
+  cosmos.accountlink.v1.Condition condition = 2;
+}
+
+// MsgConditionCheckResponse defines the MsgConditionCheck response type.
+message MsgConditionCheckResponse {}

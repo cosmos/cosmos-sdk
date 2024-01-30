@@ -1,0 +1,23 @@
+syntax = "proto3";
+package cosmos.accountlink.v1;
+
+option go_package = "cosmossdk.io/x/accountlink/types";
+
+// Query defines the Query service for the x/accountlink module.
+service Query {
+  // AccountsQuery runs set accounts of an account type query belong to an owner.
+  rpc AccountsQuery(AccountsQueryRequest) returns (AccountsQueryResponse) {}
+}
+
+// AccountQueryRequest is the request type for the Query/AccountsQuery RPC
+message AccountsQueryRequest {
+  // owner defines the owner to be queried.
+  string owner = 1;
+  // account_type defines the account type to be queried.
+  string account_type = 2;
+}
+
+// AccountQueryResponse is the response type for the Query/AccountsQuery RPC method.
+message AccountsQueryResponse {
+  repeated string addresses = 1;
+}

@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -87,7 +88,11 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.app.ValidateTx(ctx, decodedTx)
+	var execMode corecontext.ExecMode
+	if req.Type == abci.CheckTxType_Recheck {
+		execMode = corecontext.ExecModeReCheck
+	}
+	resp, err := c.app.ValidateTx(ctx, decodedTx, execMode)
 	if err != nil {
 		return nil, err
 	}

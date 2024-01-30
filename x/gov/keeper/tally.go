@@ -69,7 +69,8 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	quorumStr := params.Quorum
-	thresholdStr := params.GetThreshold()
+	yesQuorumStr := params.YesQuorum
+	thresholdStr := params.Threshold
 	vetoThresholdStr := params.VetoThreshold
 
 	if len(proposal.Messages) > 0 {
@@ -81,6 +82,7 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 			quorumStr = customMessageParams.GetQuorum()
 			thresholdStr = customMessageParams.GetThreshold()
 			vetoThresholdStr = customMessageParams.GetVetoThreshold()
+			yesQuorumStr = customMessageParams.GetYesQuorum()
 		}
 	}
 
@@ -96,6 +98,12 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 		return false, false, tallyResults, nil
 	}
 
+	// If yes quorum enabled and less than yes_quorum of voters vote Yes, proposal fails
+	yesQuorum, _ := math.LegacyNewDecFromStr(yesQuorumStr)
+	if yesQuorum.GT(math.LegacyZeroDec()) && results[v1.OptionYes].Quo(totalVoterPower).LT(yesQuorum) {
+		return false, false, tallyResults, nil
+	}
+
 	// If more than 1/3 of voters veto, proposal fails
 	vetoThreshold, _ := math.LegacyNewDecFromStr(vetoThresholdStr)
 	if results[v1.OptionNoWithVeto].Quo(totalVoterPower).GT(vetoThreshold) {
@@ -104,7 +112,6 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
 	threshold, _ := math.LegacyNewDecFromStr(thresholdStr)
-
 	if results[v1.OptionYes].Quo(totalVoterPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults, nil
 	}
@@ -132,6 +139,12 @@ func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.
 
 	// If no one votes (everyone abstains), proposal fails
 	if totalVoterPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
+		return false, false, tallyResults, nil
+	}
+
+	// If yes quorum enabled and less than yes_quorum of voters vote Yes, proposal fails
+	yesQuorum, _ := math.LegacyNewDecFromStr(params.YesQuorum)
+	if yesQuorum.GT(math.LegacyZeroDec()) && results[v1.OptionYes].Quo(totalVoterPower).LT(yesQuorum) {
 		return false, false, tallyResults, nil
 	}
 

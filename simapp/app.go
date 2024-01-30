@@ -24,6 +24,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
+	vestingv1 "cosmossdk.io/x/accounts/vesting"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
@@ -81,7 +82,6 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	vestingv1 "cosmossdk.io/x/vesting"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

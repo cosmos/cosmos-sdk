@@ -20,9 +20,9 @@ var (
 
 // NewDelayedVestingAccount creates a new DelayedVestingAccount object.
 func NewDelayedVestingAccount(d accountstd.Dependencies) (*DelayedVestingAccount, error) {
-	baseVestingAccount := NewBaseVesting(d)
+	baseVesting := NewBaseVesting(d)
 	return &DelayedVestingAccount{
-		baseVestingAccount,
+		baseVesting,
 	}, nil
 }
 

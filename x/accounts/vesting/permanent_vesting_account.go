@@ -19,9 +19,9 @@ var (
 
 // NewPermanentLockedAccount creates a new PermanentLockedAccount object.
 func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccount, error) {
-	baseVestingAccount := NewBaseVesting(d)
+	baseVesting := NewBaseVesting(d)
 
-	return &PermanentLockedAccount{baseVestingAccount}, nil
+	return &PermanentLockedAccount{baseVesting}, nil
 }
 
 type PermanentLockedAccount struct {

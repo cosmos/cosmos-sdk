@@ -22,10 +22,10 @@ var (
 
 // NewContinuousVestingAccount creates a new ContinuousVestingAccount object.
 func NewContinuousVestingAccount(d accountstd.Dependencies) (*ContinuousVestingAccount, error) {
-	baseVestingAccount := NewBaseVesting(d)
+	baseVesting := NewBaseVesting(d)
 
 	continuousVestingAccount := ContinuousVestingAccount{
-		BaseVesting: baseVestingAccount,
+		BaseVesting: baseVesting,
 		StartTime:   collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", sdk.IntValue),
 	}
 

@@ -5,6 +5,8 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/circuit/types"
 
@@ -15,6 +17,7 @@ import (
 type Keeper struct {
 	cdc          codec.BinaryCodec
 	storeService store.KVStoreService
+	eventService event.Service
 
 	authority []byte
 
@@ -28,17 +31,20 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a new Circuit Keeper instance
-func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, authority string, addressCodec address.Codec) Keeper {
+func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, authority string, addressCodec address.Codec) Keeper {
 	auth, err := addressCodec.StringToBytes(authority)
 	if err != nil {
 		panic(err)
 	}
+
+	storeService := env.KVStoreService
 
 	sb := collections.NewSchemaBuilder(storeService)
 
 	k := Keeper{
 		cdc:          cdc,
 		storeService: storeService,
+		eventService: env.EventService,
 		authority:    auth,
 		addressCodec: addressCodec,
 		Permissions: collections.NewMap(

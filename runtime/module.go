@@ -74,6 +74,7 @@ func init() {
 			ProvideBasicManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
+			ProvideEnvironment,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -249,6 +250,10 @@ func ProvideBasicManager(app *AppBuilder) module.BasicManager {
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
+}
+
+func ProvideEnvironment(kvService store.KVStoreService) appmodule.Environment {
+	return NewEnvironment(kvService)
 }
 
 type (

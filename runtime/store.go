@@ -28,6 +28,10 @@ type memStoreService struct {
 	key *storetypes.MemoryStoreKey
 }
 
+func NewMemStoreService(storeKey *storetypes.MemoryStoreKey) store.MemoryStoreService {
+	return &memStoreService{key: storeKey}
+}
+
 func (m memStoreService) OpenMemoryStore(ctx context.Context) store.KVStore {
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key))
 }

@@ -177,7 +177,7 @@ Once the transaction bytes are generated, there are currently three ways of broa
 
 Application developers create entry points to the application by creating a [command-line interface](./07-cli.md), [gRPC and/or REST interface](./06-grpc_rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line.
 
-For the [command-line interface](../../build/building-modules/09-module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. CLI commands actually bundle all the steps of transaction processing into one simple command: creating messages, generating transactions and broadcasting. For concrete examples, see the [Interacting with a Node](../../user/run-node/02-interact-node.md) section. An example transaction made using CLI looks like:
+For the [command-line interface](../../build/building-modules/09-module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. CLI commands actually bundle all the steps of transaction processing into one simple command: creating messages, generating transactions and broadcasting. For concrete examples, see the [Interacting with a Node](https://docs.cosmos.network/main/user/run-node/interact-node) section. An example transaction made using CLI looks like:
 
 ```bash
 simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake

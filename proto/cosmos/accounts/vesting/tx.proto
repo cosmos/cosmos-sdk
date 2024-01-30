@@ -34,7 +34,10 @@ message MsgInitVestingAccount {
 }
 
 // MsgInitVestingAccountResponse defines the Msg/InitVestingAccount response type.
-message MsgInitVestingAccountResponse {}
+message MsgInitVestingAccountResponse {
+  // address define the newly init vesting account address
+  string address = 1;
+}
 
 // MsgInitVestingAccount defines a message that enables creating a vesting
 // account.

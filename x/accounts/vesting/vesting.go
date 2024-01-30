@@ -114,7 +114,9 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 		return nil, err
 	}
 
-	return &vestingtypes.MsgInitVestingAccountResponse{}, nil
+	return &vestingtypes.MsgInitVestingAccountResponse{
+		Address: toAddress,
+	}, nil
 }
 
 // --------------- execute -----------------

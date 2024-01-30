@@ -19,7 +19,7 @@ This document describes `BaseApp`, the abstraction that implements the core func
 
 `BaseApp` is a base type that implements the core of a Cosmos SDK application, namely:
 
-* The [Application Blockchain Interface](#main-abci-2.0-messages), for the state-machine to communicate with the underlying consensus engine (e.g. CometBFT).
+* The [Application Blockchain Interface](#main-abci-20-messages), for the state-machine to communicate with the underlying consensus engine (e.g. CometBFT).
 * [Service Routers](#service-routers), to route messages and queries to the appropriate module.
 * Different [states](#state-updates), as the state-machine can have different volatile states updated based on the ABCI message received.
 
@@ -309,7 +309,7 @@ Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 `CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to
 make the checks **lightweight** because gas fees are not charged for the resources (CPU, data load...) used during the `CheckTx`. 
 
-In the Cosmos SDK, after [decoding transactions](https://docs.cosmos.network/main/learn/advanced/encoding.md), `CheckTx()` is implemented
+In the Cosmos SDK, after [decoding transactions](https://docs.cosmos.network/main/learn/advanced/encoding), `CheckTx()` is implemented
 to do the following checks:
 
 1. Extract the `sdk.Msg`s from the transaction.

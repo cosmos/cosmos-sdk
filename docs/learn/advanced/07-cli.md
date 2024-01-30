@@ -37,7 +37,7 @@ The `main.go` file needs to have a `main()` function that creates a root command
 
 * **setting configurations** by reading in configuration files (e.g. the Cosmos SDK config file).
 * **adding any flags** to it, such as `--chain-id`.
-* **instantiating the `codec`** by injecting the application codecs. The [`codec`](https://docs.cosmos.network/main/learn/advanced/encoding.md) is used to encode and decode data structures for the application - stores can only persist `[]byte`s so the developer must define a serialization format for their data structures or use the default, Protobuf.
+* **instantiating the `codec`** by injecting the application codecs. The [`codec`](https://docs.cosmos.network/main/learn/advanced/encoding) is used to encode and decode data structures for the application - stores can only persist `[]byte`s so the developer must define a serialization format for their data structures or use the default, Protobuf.
 * **adding subcommand** for all the possible user interactions, including [transaction commands](#transaction-commands) and [query commands](#query-commands).
 
 The `main()` function finally creates an executor and [execute](https://pkg.go.dev/github.com/spf13/cobra#Command.Execute) the root command. See an example of `main()` function from the `simapp` application:

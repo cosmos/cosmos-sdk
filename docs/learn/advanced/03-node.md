@@ -20,7 +20,7 @@ The full-node client of any Cosmos SDK application is built by running a `main` 
 
 In general, developers will implement the `main.go` function with the following structure:
 
-* First, an [`encodingCodec`](https://docs.cosmos.network/main/learn/advanced/encoding.md) is instantiated for the application.
+* First, an [`encodingCodec`](https://docs.cosmos.network/main/learn/advanced/encoding) is instantiated for the application.
 * Then, the `config` is retrieved and config parameters are set. This mainly involves setting the Bech32 prefixes for [addresses](../beginner/03-accounts.md#addresses).
 
 ```go reference

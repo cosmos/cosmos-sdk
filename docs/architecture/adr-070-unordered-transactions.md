@@ -3,7 +3,7 @@
 ## Changelog
 
 * Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
-* Jan 30, 2023: Include section on deterministic transaction encoding
+* Jan 30, 2024: Include section on deterministic transaction encoding
 
 ## Status
 

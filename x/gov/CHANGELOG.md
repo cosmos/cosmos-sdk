@@ -49,21 +49,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18620](https://github.com/cosmos/cosmos-sdk/pull/18620) Add optimistic proposals.
 * [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
 * [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` parameters.
-
-### Client Breaking Changes
-
-* [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Querying specific params types was deprecated in gov/v1 and has been removed. gov/v1beta1 rest unchanged.
-
-### State Machine Breaking
-
-* [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Add message based params configuration.
-* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote to proposals.
-* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals.
-* [#18620](https://github.com/cosmos/cosmos-sdk/pull/18620) Add optimistic proposals.
-* [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
-* [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` parameter.
 * [#19167](https://github.com/cosmos/cosmos-sdk/pull/19167) Add `YesQuorum` parameter.
- 
+
 ### Client Breaking Changes
 
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Querying specific params types was deprecated in gov/v1 and has been removed. gov/v1beta1 rest unchanged.

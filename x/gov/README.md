@@ -625,6 +625,23 @@ The governance module contains the following parameters:
 modules. If only a subset of parameters are desired to be changed, only they need
 to be included and not the entire parameter object structure.
 
+### Message Based Parameters
+
+In addition to the parameters above, the governance module can also be configured to have different parameters for a given proposal message.
+
+| Key                             | Type              | Example                                 |
+| ------------------------------- | ----------------- | --------------------------------------- |
+| voting_period                   | string (time ns)  | "172800000000000" (17280s)              |
+| quorum                          | string (dec)      | "0.334000000000000000"                  |
+| threshold                       | string (dec)      | "0.500000000000000000"                  |
+| veto                            | string (dec)      | "0.334000000000000000"                  |
+
+If configured, these params will take precedence over the global params for a specific proposal.
+
+:::warning
+Currently, messaged based parameters limits the number of messages that can be included in a proposal to 1 if a messaged based parameter is configured.
+:::
+
 ## Client
 
 ### CLI
@@ -691,26 +708,6 @@ pagination:
   total: "0"
 ```
 
-##### param
-
-The `param` command allows users to query a given parameter for the `gov` module.
-
-```bash
-simd query gov param [param-type] [flags]
-```
-
-Example:
-
-```bash
-simd query gov param voting
-```
-
-Example Output:
-
-```bash
-voting_period: "172800000000000"
-```
-
 ##### params
 
 The `params` command allows users to query all parameters for the `gov` module.
@@ -728,11 +725,6 @@ simd query gov params
 Example Output:
 
 ```bash
-deposit_params:
-  max_deposit_period: 172800s
-  min_deposit:
-  - amount: "10000000"
-    denom: stake
 params:
   expedited_min_deposit:
   - amount: "50000000"
@@ -748,12 +740,6 @@ params:
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"
-  voting_period: 172800s
-tally_params:
-  quorum: "0.334000000000000000"
-  threshold: "0.500000000000000000"
-  veto_threshold: "0.334000000000000000"
-voting_params:
   voting_period: 172800s
 ```
 
@@ -1513,8 +1499,6 @@ Example Output:
 #### Params
 
 The `Params` endpoint allows users to query all parameters for the `gov` module.
-
-<!-- TODO: #10197 Querying governance params outputs nil values -->
 
 Using legacy v1beta1:
 

@@ -898,85 +898,103 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	queryClient := suite.queryClient
-
-	params := v1.DefaultParams()
-
-	var (
-		req    *v1.QueryParamsRequest
-		expRes *v1.QueryParamsResponse
-	)
-
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg     string
+		req     v1.QueryParamsRequest
+		expPass bool
 	}{
 		{
 			"empty request (valid and returns all params)",
-			func() {
-				req = &v1.QueryParamsRequest{}
-			},
+			v1.QueryParamsRequest{},
 			true,
 		},
 		{
-			"deposit params request",
-			func() {
-				req = &v1.QueryParamsRequest{ParamsType: v1.ParamDeposit}
-				depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod) //nolint:staticcheck // SA1019: params.MinDeposit is deprecated: Use MinInitialDeposit instead.
-				expRes = &v1.QueryParamsResponse{
-					DepositParams: &depositParams,
-				}
-			},
+			"invalid request (but passes as params type is deprecated)",
+			v1.QueryParamsRequest{ParamsType: "wrongPath"},
 			true,
-		},
-		{
-			"voting params request",
-			func() {
-				req = &v1.QueryParamsRequest{ParamsType: v1.ParamVoting}
-				votingParams := v1.NewVotingParams(params.VotingPeriod) //nolint:staticcheck // SA1019: params.VotingPeriod is deprecated: Use VotingPeriod instead.
-				expRes = &v1.QueryParamsResponse{
-					VotingParams: &votingParams,
-				}
-			},
-			true,
-		},
-		{
-			"tally params request",
-			func() {
-				req = &v1.QueryParamsRequest{ParamsType: v1.ParamTallying}
-				tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold) //nolint:staticcheck // SA1019: params.Quorum is deprecated: Use Quorum instead.
-				expRes = &v1.QueryParamsResponse{
-					TallyParams: &tallyParams,
-				}
-			},
-			true,
-		},
-		{
-			"invalid request",
-			func() {
-				req = &v1.QueryParamsRequest{ParamsType: "wrongPath"}
-				expRes = &v1.QueryParamsResponse{}
-			},
-			false,
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			if tc.malleate != nil {
-				tc.malleate()
-			}
+		tc := tc
 
-			params, err := queryClient.Params(gocontext.Background(), req)
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			params, err := queryClient.Params(gocontext.Background(), &tc.req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams()) //nolint:staticcheck // SA1019: params.MinDeposit is deprecated: Use MinInitialDeposit instead.
-				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())   //nolint:staticcheck // SA1019: params.VotingPeriod is deprecated: Use VotingPeriod instead.
-				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())     //nolint:staticcheck // SA1019: params.Quorum is deprecated: Use Quorum instead.
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(params)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryMessagedBasedParams() {
+	// create custom message based params for x/gov/MsgUpdateParams
+	err := suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgUpdateParams{}), v1.MessageBasedParams{
+		VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+		Quorum:        "0.4",
+		Threshold:     "0.5",
+		VetoThreshold: "0.66",
+	})
+	suite.Require().NoError(err)
+
+	defaultGovParams := v1.DefaultParams()
+
+	queryClient := suite.queryClient
+	testCases := []struct {
+		msg       string
+		req       v1.QueryMessageBasedParamsRequest
+		expResp   *v1.QueryMessageBasedParamsResponse
+		expErrMsg string
+	}{
+		{
+			msg:       "empty request",
+			req:       v1.QueryMessageBasedParamsRequest{},
+			expErrMsg: "invalid request",
+		},
+		{
+			msg: "valid request (custom msg based params)",
+			req: v1.QueryMessageBasedParamsRequest{
+				MsgUrl: sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+			},
+			expResp: &v1.QueryMessageBasedParamsResponse{
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+					Quorum:        "0.4",
+					Threshold:     "0.5",
+					VetoThreshold: "0.66",
+				},
+			},
+		},
+		{
+			msg: "valid request (default msg based params)",
+			req: v1.QueryMessageBasedParamsRequest{
+				MsgUrl: sdk.MsgTypeURL(&v1.MsgSubmitProposal{}),
+			},
+			expResp: &v1.QueryMessageBasedParamsResponse{
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  defaultGovParams.VotingPeriod,
+					Quorum:        defaultGovParams.Quorum,
+					Threshold:     defaultGovParams.Threshold,
+					VetoThreshold: defaultGovParams.VetoThreshold,
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			params, err := queryClient.MessageBasedParams(suite.ctx, &tc.req)
+			if tc.expErrMsg != "" {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expResp, params)
 			}
 		})
 	}

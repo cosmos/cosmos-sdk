@@ -4,10 +4,10 @@ import (
 	"math/rand"
 	"time"
 
+	v1 "cosmossdk.io/api/cosmos/gov/v1"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
-	v1 "cosmossdk.io/x/gov/types/v1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

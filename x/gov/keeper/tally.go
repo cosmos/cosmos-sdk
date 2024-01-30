@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -53,7 +54,7 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 	case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
 		return k.tallyMultipleChoice(totalVoterPower, totalBonded, results, params)
 	default:
-		return k.tallyStandard(totalVoterPower, totalBonded, results, params)
+		return k.tallyStandard(ctx, proposal, totalVoterPower, totalBonded, results, params)
 	}
 }
 
@@ -64,12 +65,28 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 // If more than 1/2 of non-abstaining voters vote Yes, proposal passes
 // If more than 1/2 of non-abstaining voters vote No, proposal fails
 // Checking for spam votes is done before calling this function
-func (k Keeper) tallyStandard(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
+
+	quorumStr := params.Quorum
+	thresholdStr := params.GetThreshold()
+	vetoThresholdStr := params.VetoThreshold
+
+	if len(proposal.Messages) > 0 {
+		// check if any of the message has message based params
+		customMessageParams, err := k.MessageBasedParams.Get(ctx, sdk.MsgTypeURL(proposal.Messages[0]))
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
+			return false, false, tallyResults, err
+		} else if err == nil {
+			quorumStr = customMessageParams.GetQuorum()
+			thresholdStr = customMessageParams.GetThreshold()
+			vetoThresholdStr = customMessageParams.GetVetoThreshold()
+		}
+	}
 
 	// If there is not enough quorum of votes, the proposal fails
 	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
-	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
+	quorum, _ := math.LegacyNewDecFromStr(quorumStr)
 	if percentVoting.LT(quorum) {
 		return false, params.BurnVoteQuorum, tallyResults, nil
 	}
@@ -80,13 +97,13 @@ func (k Keeper) tallyStandard(totalVoterPower math.LegacyDec, totalBonded math.I
 	}
 
 	// If more than 1/3 of voters veto, proposal fails
-	vetoThreshold, _ := math.LegacyNewDecFromStr(params.VetoThreshold)
+	vetoThreshold, _ := math.LegacyNewDecFromStr(vetoThresholdStr)
 	if results[v1.OptionNoWithVeto].Quo(totalVoterPower).GT(vetoThreshold) {
 		return false, params.BurnVoteVeto, tallyResults, nil
 	}
 
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
-	threshold, _ := math.LegacyNewDecFromStr(params.GetThreshold())
+	threshold, _ := math.LegacyNewDecFromStr(thresholdStr)
 
 	if results[v1.OptionYes].Quo(totalVoterPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults, nil

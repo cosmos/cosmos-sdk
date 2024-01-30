@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Add message based params configuration.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote to proposals.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals.
 * [#18620](https://github.com/cosmos/cosmos-sdk/pull/18620) Add optimistic proposals.
@@ -38,12 +39,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` for modifying how long a proposal can be cancelled after it has been submitted.
 * [#18445](https://github.com/cosmos/cosmos-sdk/pull/18445) Extend gov config.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Repurpose `govcliutils.NormalizeProposalType` to work for gov v1 proposal types.
-* [#18707](https://github.com/cosmos/cosmos-sdk/pull/18707) Improve genesis validation.
+
+### State Machine Breaking
+
+* [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Add message based params configuration.
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote to proposals.
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals.
+* [#18620](https://github.com/cosmos/cosmos-sdk/pull/18620) Add optimistic proposals.
+* [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
+* [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` parameters.
+
+### Client Breaking Changes
+
+* [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Querying specific params types was deprecated in gov/v1 and has been removed. gov/v1beta1 rest unchanged.
 
 ### API Breaking Changes
 
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a `ProposalType` parameter instead.
 * [#17496](https://github.com/cosmos/cosmos-sdk/pull/17496) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type.
+* [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Move `QueryProposalVotesParams` and `QueryVoteParams` from the `types/v1` package to `utils` and remove unused `querier.go` file.
 
 ### Deprecated
 

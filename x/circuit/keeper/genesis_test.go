@@ -48,7 +48,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.addrBytes = bz
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(key), authority.String(), ac)
+	s.keeper = keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key)), s.cdc, authority.String(), ac)
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {

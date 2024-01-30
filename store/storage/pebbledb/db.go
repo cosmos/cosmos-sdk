@@ -128,6 +128,10 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), closer.Close()
 }
 
+func (db *Database) VersionExists(v uint64) (bool, error) {
+	panic("not implemented yet!")
+}
+
 func (db *Database) setPruneHeight(pruneVersion uint64) error {
 	db.earliestVersion = pruneVersion + 1
 

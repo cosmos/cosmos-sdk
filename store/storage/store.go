@@ -74,6 +74,10 @@ func (ss *StorageStore) SetLatestVersion(version uint64) error {
 	return ss.db.SetLatestVersion(version)
 }
 
+func (ss *StorageStore) VersionExists(v uint64) (bool, error) {
+	return ss.db.VersionExists(v)
+}
+
 // Iterator returns an iterator over the specified domain and prefix.
 func (ss *StorageStore) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.Iterator(storeKey, version, start, end)

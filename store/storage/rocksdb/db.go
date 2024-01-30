@@ -129,6 +129,10 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), nil
 }
 
+func (db *Database) VersionExists(v uint64) (bool, error) {
+	panic("not implemented yet!")
+}
+
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {

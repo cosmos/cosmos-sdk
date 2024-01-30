@@ -58,12 +58,6 @@ type VersionedDatabase interface {
 	// SetLatestVersion sets the latest version of the database.
 	SetLatestVersion(version uint64) error
 
-	// VersionExists returns if the given version exists in the database.
-	VersionExists(v uint64) (bool, error)
-
-	// LatestVersion returns the latest version of the database.
-	LatestVersion() (uint64, error)
-
 	// Iterator creates an iterator over the domain [start, end) at the specified
 	// version for the given store key. The iterator must be closed when done. An
 	// error should be returned upon failure.

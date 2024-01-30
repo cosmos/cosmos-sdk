@@ -328,7 +328,7 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.RequestFinalizeBloc
 // uncommitted store because we are committing before responding to FinalizeBlock.
 func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	cs := &cmtproto.ConsensusParams{}
-	latestVersion, err := c.store.LatestVerseion()
+	latestVersion, err := c.store.LatestVersion()
 
 	res, err := c.app.Query(ctx, latestVersion, &consensusv1.QueryParamsRequest{})
 	if err != nil {

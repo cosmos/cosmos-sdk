@@ -33,6 +33,11 @@ const (
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
+type (
+	VerifyVoteExtensionFunc func(context.Context, store.GetReader, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+	ExtendVoteFunc          func(context.Context, store.GetReader, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
+)
+
 type Consensus[T transaction.Tx] struct {
 	app             appmanager.AppManager[T]
 	cfg             Config
@@ -42,6 +47,9 @@ type Consensus[T transaction.Tx] struct {
 	streaming       streaming.Manager
 	snapshotManager *snapshots.Manager
 	mempool         mempool.Mempool[T]
+
+	verifyVoteExt VerifyVoteExtensionFunc
+	extendVote    ExtendVoteFunc
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -411,13 +419,73 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci
 
 // Vote extensions
 // VerifyVoteExtension implements types.Application.
-func (*Consensus[T]) VerifyVoteExtension(context.Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-	panic("unimplemented")
+func (c *Consensus[T]) VerifyVoteExtension(ctx context.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	// If vote extensions are not enabled, as a safety precaution, we return an
+	// error.
+	cp, err := c.GetConsensusParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Note: we verify votes extensions on VoteExtensionsEnableHeight+1. Check
+	// comment in ExtendVote and ValidateVoteExtensions for more details.
+	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	if !extsEnabled {
+		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
+	}
+
+	if c.verifyVoteExt == nil {
+		return nil, fmt.Errorf("vote extensions are enabled but no verify function was set")
+	}
+
+	_, latestStore, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.verifyVoteExt(ctx, latestStore, req)
+	if err != nil {
+		c.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+
+	return resp, err
 }
 
 // ExtendVote implements types.Application.
-func (*Consensus[T]) ExtendVote(context.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-	panic("unimplemented")
+func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	// If vote extensions are not enabled, as a safety precaution, we return an
+	// error.
+	cp, err := c.GetConsensusParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Note: In this case, we do want to extend vote if the height is equal or
+	// greater than VoteExtensionsEnableHeight. This defers from the check done
+	// in ValidateVoteExtensions and PrepareProposal in which we'll check for
+	// vote extensions on VoteExtensionsEnableHeight+1.
+	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	if !extsEnabled {
+		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
+	}
+
+	if c.verifyVoteExt == nil {
+		return nil, fmt.Errorf("vote extensions are enabled but no verify function was set")
+	}
+
+	_, latestStore, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.extendVote(ctx, latestStore, req)
+	if err != nil {
+		c.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
+		return &abci.ResponseExtendVote{}, nil
+	}
+
+	return resp, err
 }
 
 func decodeTxs[T transaction.Tx](rawTxs [][]byte, codec transaction.Codec[T]) ([]T, error) {

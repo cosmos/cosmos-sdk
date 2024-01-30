@@ -10,33 +10,33 @@ var _ store.KVStore = (Writer)(nil)
 
 // Store defines the underlying storage engine of an app.
 type Store interface {
-	LatestVerseion() (uint64, error)
+	LatestVersion() (uint64, error)
 	// StateLatest returns a readonly view over the latest
 	// committed state of the store. Alongside the version
 	// associated with it.
-	StateLatest() (uint64, GetReader, error)
+	StateLatest() (uint64, ReaderMap, error)
 
 	// StateAt returns a readonly view over the provided
 	// state. Must error when the version does not exist.
-	StateAt(version uint64) (GetReader, error)
+	StateAt(version uint64) (ReaderMap, error)
 
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
 	StateCommit(changes []StateChanges) (Hash, error)
 }
 
-// GetReader represents a readonly view over all the accounts state.
-type GetReader interface {
-	// GetReader must return the state for the provided actor.
+// ReaderMap represents a readonly view over all the accounts state.
+type ReaderMap interface {
+	// ReaderMap must return the state for the provided actor.
 	// Storage implements might treat this as a prefix store over an actor.
 	// Prefix safety is on the implementer.
 	GetReader(actor []byte) (Reader, error)
 }
 
-// GetWriter represents a writable actor state.
-type GetWriter interface {
-	GetReader
-	// GetWriter must the return a WritableState
+// WriterMap represents a writable actor state.
+type WriterMap interface {
+	ReaderMap
+	// WriterMap must the return a WritableState
 	// for the provided actor namespace.
 	GetWriter(actor []byte) (Writer, error)
 	// ApplyStateChanges applies all the state changes

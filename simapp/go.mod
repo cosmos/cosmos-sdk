@@ -234,6 +234,7 @@ require (
 replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/core => ../core
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
@@ -252,6 +253,7 @@ replace (
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/staking => ../x/staking
+	cosmossdk.io/x/tx => ../x/tx
 	cosmossdk.io/x/upgrade => ../x/upgrade
 	github.com/cosmos/cosmos-sdk/tests => ../tests
 )

@@ -85,21 +85,21 @@ It MUST be called before `InitialiseAndSeal`.
 
 ```go
 func (ck CapabilityKeeper) ScopeToModule(moduleName string) ScopedCapabilityKeeper {
-	if k.sealed {
+	if ck.sealed {
 		panic("cannot scope to module via a sealed capability keeper")
 	}
 
-	if _, ok := k.scopedModules[moduleName]; ok {
+	if _, ok := ck.scopedModules[moduleName]; ok {
 		panic(fmt.Sprintf("cannot create multiple scoped keepers for the same module name: %s", moduleName))
 	}
 
-	k.scopedModules[moduleName] = struct{}{}
+	ck.scopedModules[moduleName] = struct{}{}
 
 	return ScopedKeeper{
-		cdc:      k.cdc,
-		storeKey: k.storeKey,
-		memKey:   k.memKey,
-		capMap:   k.capMap,
+		cdc:      ck.cdc,
+		storeKey: ck.storeKey,
+		memKey:   ck.memKey,
+		capMap:   ck.capMap,
 		module:   moduleName,
 	}
 }

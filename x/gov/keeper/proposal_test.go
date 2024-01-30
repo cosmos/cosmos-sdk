@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -156,41 +155,56 @@ func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
 func (suite *KeeperTestSuite) TestSubmitProposal() {
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String()
 	_, _, randomAddr := testdata.KeyTestPubAddr()
+
 	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
+	legacyProposal := func(content v1beta1.Content, authority string) []sdk.Msg {
+		prop, err := v1.NewLegacyContent(content, authority)
+		suite.Require().NoError(err)
+		return []sdk.Msg{prop}
+	}
+
+	// create custom message based params for x/gov/MsgUpdateParams
+	err := suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgUpdateParams{}), v1.MessageBasedParams{
+		VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+		Quorum:        "0.4",
+		Threshold:     "0.5",
+		VetoThreshold: "0.66",
+	})
+	suite.Require().NoError(err)
 
 	testCases := []struct {
-		content      v1beta1.Content
-		authority    string
+		msgs         []sdk.Msg
 		metadata     string
 		proposalType v1.ProposalType
 		expectedErr  error
 	}{
-		{&tp, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
-		{&tp, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
-		{nil, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, nil},
+		{legacyProposal(&tp, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		// normal proposal with msg with custom params
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		{legacyProposal(&tp, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
+		{nil, "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, nil},
 		// Keeper does not check the validity of title and description, no error
-		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
-		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
-		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
-		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
+		{legacyProposal(&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		{legacyProposal(&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		{legacyProposal(&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		{legacyProposal(&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
 		// error when signer is not gov acct
-		{&tp, randomAddr.String(), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrInvalidSigner},
+		{legacyProposal(&tp, randomAddr.String()), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrInvalidSigner},
 		// error only when invalid route
-		{&invalidProposalRoute{}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrNoProposalHandlerExists},
+		{legacyProposal(&invalidProposalRoute{}, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrNoProposalHandlerExists},
 		// error invalid multiple choice proposal
-		{&tp, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, types.ErrInvalidProposalMsg},
+		{legacyProposal(&tp, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, types.ErrInvalidProposalMsg},
+		// error invalid multiple msg proposal with 1 msg with custom params
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgCancelProposal{Proposer: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrInvalidProposalMsg},
+		// error invalid msg proposal type with 1 msg with custom params
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, types.ErrInvalidProposalType},
 	}
 
 	for i, tc := range testCases {
-		msg := []sdk.Msg{}
-		if tc.content != nil {
-			prop, err := v1.NewLegacyContent(tc.content, tc.authority)
-			suite.Require().NoError(err)
-			msg = append(msg, prop)
+		_, err := suite.govKeeper.SubmitProposal(suite.ctx, tc.msgs, tc.metadata, "title", "", suite.addrs[0], tc.proposalType)
+		if tc.expectedErr != nil {
+			suite.Require().ErrorContains(err, tc.expectedErr.Error(), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 		}
-
-		_, err := suite.govKeeper.SubmitProposal(suite.ctx, msg, tc.metadata, "title", "", suite.addrs[0], tc.proposalType)
-		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }
 

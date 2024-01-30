@@ -7,7 +7,11 @@ import (
 	"encoding/binary"
 
 	"github.com/linxGnu/grocksdb"
+
+	"cosmossdk.io/store/v2"
 )
+
+var _ store.Batch = (*Batch)(nil)
 
 type Batch struct {
 	version  uint64

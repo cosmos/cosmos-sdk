@@ -11,31 +11,29 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/auth" // import as blank for app wiring
 	authkeeper "cosmossdk.io/x/auth/keeper"
+	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
 	"cosmossdk.io/x/authz"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
+	_ "cosmossdk.io/x/authz/module" // import as blank for app wiring
 	"cosmossdk.io/x/authz/simulation"
-
+	_ "cosmossdk.io/x/bank" // import as blank for app wiring
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/gov"     // import as blank for app wiring
+	_ "cosmossdk.io/x/mint"    // import as blank for app wiring
+	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 
-	_ "cosmossdk.io/x/auth"           // import as blank for app wiring
-	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
-	_ "cosmossdk.io/x/authz/module"   // import as blank for app wiring
-	_ "cosmossdk.io/x/bank"           // import as blank for app wiring
-	_ "cosmossdk.io/x/gov"            // import as blank for app wiring
-	_ "cosmossdk.io/x/mint"           // import as blank for app wiring
-	_ "cosmossdk.io/x/staking"        // import as blank for app wiring
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"   // import as blank for app wiring
 )

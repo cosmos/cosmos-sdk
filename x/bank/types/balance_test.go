@@ -188,8 +188,10 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 	}
 
 	// 2. Add duplicate
-	balances = append(balances, balances[3])
-	expectedError := fmt.Sprintf("genesis state has a duplicate account: %q", balances[3].Address)
+	dupIdx := 3
+	balances = append(balances, balances[dupIdx])
+	addr, _ := sdk.AccAddressFromBech32(balances[dupIdx].Address)
+	expectedError := fmt.Sprintf("genesis state has a duplicate account: %q aka %x", balances[dupIdx].Address, addr)
 
 	// 3. Add more balances
 	coin2 := sdk.NewCoin("coinbench", tokens)
@@ -203,7 +205,7 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 	}
 
 	// 4. Execute SanitizeGenesisBalances and expect an error
-	require.PanicsWithError(t, expectedError, func() {
+	require.PanicsWithValue(t, expectedError, func() {
 		bank.SanitizeGenesisBalances(balances)
 	}, "SanitizeGenesisBalances should panic with duplicate accounts")
 }

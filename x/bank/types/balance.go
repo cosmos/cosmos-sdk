@@ -71,7 +71,7 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 		addr, _ := sdk.AccAddressFromBech32(balances[i].Address)
 		addresses[i] = addr
 		if _, exists := seen[string(addr)]; exists {
-			panic(fmt.Errorf("genesis state has a duplicate account: %q", balances[i].Address))
+			panic(fmt.Sprintf("genesis state has a duplicate account: %q aka %x", balances[i].Address, addr))
 		}
 		seen[string(addr)] = struct{}{}
 	}

@@ -74,6 +74,7 @@ func init() {
 			ProvideBasicManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
+			ProvideEnvironment,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)

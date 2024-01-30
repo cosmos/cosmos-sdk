@@ -8,7 +8,7 @@ import "amino/amino.proto";
 
 // MsgSignArbitraryData defines an arbitrary, general-purpose, off-chain message
 message MsgSignArbitraryData {
-  option (amino.name) = "offchain/MsgSignArbitraryData";
+  option (amino.name)           = "offchain/MsgSignArbitraryData";
   option (cosmos.msg.v1.signer) = "signer";
   // AppDomain is the application requesting off-chain message signing
   string app_domain = 1;
@@ -17,4 +17,3 @@ message MsgSignArbitraryData {
   // Data represents the raw bytes of the content that is signed (text, json, etc)
   string data = 3;
 }
-

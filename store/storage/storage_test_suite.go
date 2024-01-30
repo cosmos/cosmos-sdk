@@ -631,6 +631,33 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	s.Require().Equal([]byte("val200"), bz)
 }
 
+func (s *StorageTestSuite) TestDatabase_VersionExists() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	// for versions 1-50, set all 10 keys
+	for v := uint64(1); v <= 50; v++ {
+		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+		}
+
+		s.Require().NoError(db.ApplyChangeset(v, cs))
+
+		ok, err := db.VersionExists(v)
+		s.Require().NoError(err)
+		s.Require().True(ok)
+	}
+
+	ok, err := db.VersionExists(51)
+	s.Require().NoError(err)
+	s.Require().False(ok)
+}
+
 func DBApplyChangeset(
 	t *testing.T,
 	db store.VersionedDatabase,

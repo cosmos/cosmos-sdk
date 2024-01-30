@@ -128,7 +128,19 @@ func (db *Database) SetLatestVersion(version uint64) error {
 }
 
 func (db *Database) VersionExists(v uint64) (bool, error) {
-	panic("not implemented yet!")
+	stmt, err := db.storage.Prepare("SELECT COUNT(*) FROM state_storage WHERE store_key != ? AND version = ?")
+	if err != nil {
+		return false, fmt.Errorf("failed to prepare SQL statement: %w", err)
+	}
+
+	defer stmt.Close()
+
+	var count uint64
+	if err := stmt.QueryRow(reservedStoreKey, v).Scan(&count); err != nil {
+		return false, fmt.Errorf("failed to query row: %w", err)
+	}
+
+	return count > 0, nil
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {

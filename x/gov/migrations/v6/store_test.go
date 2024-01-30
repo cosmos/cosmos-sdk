@@ -33,7 +33,8 @@ func TestMigrateStore(t *testing.T) {
 	previousParams.ProposalCancelMaxPeriod = ""
 	previousParams.OptimisticAuthorizedAddresses = nil
 	previousParams.OptimisticRejectedThreshold = ""
-	paramsCollection.Set(ctx, previousParams)
+	err := paramsCollection.Set(ctx, previousParams)
+	require.NoError(t, err)
 
 	// Run migrations.
 	err := v6.MigrateStore(ctx, paramsCollection, proposalCollection)

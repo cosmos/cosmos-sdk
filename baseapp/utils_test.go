@@ -27,8 +27,6 @@ import (
 	_ "cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/signing"
 	_ "cosmossdk.io/x/auth/tx/config"
-	_ "cosmossdk.io/x/bank"
-	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -41,7 +39,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 var ParamStoreKey = []byte("paramstore")

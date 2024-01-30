@@ -43,6 +43,19 @@ func (s *intTestSuite) TestFromUint64() {
 	}
 }
 
+func (s *intTestSuite) TestNewIntFromBigInt() {
+	i := math.NewIntFromBigInt(nil)
+	s.Require().True(i.IsNil())
+
+	r := big.NewInt(42)
+	i = math.NewIntFromBigInt(r)
+	s.Require().Equal(r, i.BigInt())
+
+	// modify r and ensure i doesn't change
+	r = r.SetInt64(100)
+	s.Require().NotEqual(r, i.BigInt())
+}
+
 func (s *intTestSuite) TestIntPanic() {
 	// Max Int = 2^256-1 = 1.1579209e+77
 	// Min Int = -(2^256-1) = -1.1579209e+77

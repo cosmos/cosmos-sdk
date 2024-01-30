@@ -1,8 +1,9 @@
-# ADR 070: Un-Ordered Transaction Inclusion
+# ADR 070: Unordered Transactions
 
 ## Changelog
 
 * Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
+* Jan 30, 2023: Include section on deterministic transaction encoding
 
 ## Status
 
@@ -49,7 +50,7 @@ and limit the size of the dictionary.
 message TxBody {
   ...
 
-  bool unordered = 4; 
+  bool unordered = 4;
 }
 ```
 
@@ -57,7 +58,7 @@ message TxBody {
 
 In order to provide replay protection, a user should ensure that the transaction's
 TTL value is relatively short-lived but long enough to provide enough time to be
-included in a block, e.g. ~H+50. 
+included in a block, e.g. ~H+50.
 
 We facilitate this by storing the transaction's hash in a durable map, `UnorderedTxManager`,
 to prevent duplicates, i.e. replay attacks. Upon transaction ingress during `CheckTx`,
@@ -107,7 +108,7 @@ func NewUnorderedTxManager() *UnorderedTxManager {
 		blockCh:  make(chan uint64, 16),
 		txHashes: make(map[TxHash]uint64),
   }
- 
+
  return m
 }
 
@@ -182,13 +183,13 @@ func (m *UnorderedTxManager) purgeLoop() error {
       // channel closed
       break
     }
-    
+
     latest := *blocks[len(blocks)-1]
     hashes := m.expired(latest)
     if len(hashes) > 0 {
       m.purge(hashes)
     }
-    
+
     // avoid burning cpu in catching up phase
     time.Sleep(PurgeLoopSleepMS * time.Millisecond)
   }

@@ -98,7 +98,7 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 		return false, false, tallyResults, nil
 	}
 
-	// If yes quprum enabled and less than yes_quorum of voters vote Yes, proposal fails
+	// If yes quorum enabled and less than yes_quorum of voters vote Yes, proposal fails
 	yesQuorum, _ := math.LegacyNewDecFromStr(yesQuorumStr)
 	if yesQuorum.GT(math.LegacyZeroDec()) && results[v1.OptionYes].Quo(totalVoterPower).LT(yesQuorum) {
 		return false, false, tallyResults, nil
@@ -142,7 +142,7 @@ func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.
 		return false, false, tallyResults, nil
 	}
 
-	// If yes quprum enabled and less than yes_quorum of voters vote Yes, proposal fails
+	// If yes quorum enabled and less than yes_quorum of voters vote Yes, proposal fails
 	yesQuorum, _ := math.LegacyNewDecFromStr(params.YesQuorum)
 	if yesQuorum.GT(math.LegacyZeroDec()) && results[v1.OptionYes].Quo(totalVoterPower).LT(yesQuorum) {
 		return false, false, tallyResults, nil

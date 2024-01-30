@@ -23,8 +23,6 @@ var (
 	_ accountstd.Interface = (*PeriodicVestingAccount)(nil)
 )
 
-// Periodic Vesting Account
-
 // NewPeriodicVestingAccount creates a new PeriodicVestingAccount object.
 func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccount, error) {
 	baseVestingAccount := NewBaseVesting(d)
@@ -43,8 +41,6 @@ type PeriodicVestingAccount struct {
 	StartTime      collections.Item[math.Int]
 	VestingPeriods collections.Map[string, vestingtypes.Period]
 }
-
-// --------------- Init -----------------
 
 func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitPeriodicVestingAccount) (*vestingtypes.MsgInitPeriodicVestingAccountResponse, error) {
 	sender := accountstd.Sender(ctx)
@@ -117,15 +113,11 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	return &vestingtypes.MsgInitPeriodicVestingAccountResponse{}, nil
 }
 
-// --------------- execute -----------------
-
 func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
 	return pva.BaseVesting.ExecuteMessages(ctx, msg, pva.GetVestingCoins)
 }
-
-// ----------------- Query --------------------
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (pva PeriodicVestingAccount) IteratePeriods(

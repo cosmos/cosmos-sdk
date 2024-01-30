@@ -18,8 +18,6 @@ var (
 	_ accountstd.Interface = (*DelayedVestingAccount)(nil)
 )
 
-// Delayed Vesting Account
-
 // NewDelayedVestingAccount creates a new DelayedVestingAccount object.
 func NewDelayedVestingAccount(d accountstd.Dependencies) (*DelayedVestingAccount, error) {
 	baseVestingAccount := NewBaseVesting(d)
@@ -32,8 +30,6 @@ type DelayedVestingAccount struct {
 	*BaseVesting
 }
 
-// --------------- Init -----------------
-
 func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
 	if msg.EndTime <= 0 {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid end time")
@@ -42,15 +38,11 @@ func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.Msg
 	return dva.BaseVesting.Init(ctx, msg)
 }
 
-// --------------- execute -----------------
-
 func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
 	return dva.BaseVesting.ExecuteMessages(ctx, msg, dva.GetVestingCoins)
 }
-
-// --------------- Query -----------------
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.

@@ -17,8 +17,6 @@ var (
 	_ accountstd.Interface = (*PermanentLockedAccount)(nil)
 )
 
-// Permanent Vesting Account
-
 // NewPermanentLockedAccount creates a new PermanentLockedAccount object.
 func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccount, error) {
 	baseVestingAccount := NewBaseVesting(d)
@@ -29,8 +27,6 @@ func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccou
 type PermanentLockedAccount struct {
 	*BaseVesting
 }
-
-// --------------- Init -----------------
 
 func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
 	resp, err := plva.BaseVesting.Init(ctx, msg)
@@ -45,8 +41,6 @@ func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.M
 	return resp, err
 }
 
-// --------------- execute -----------------
-
 func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
@@ -59,8 +53,6 @@ func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *ac
 		return originalVesting, nil
 	})
 }
-
-// --------------- Query -----------------
 
 func (plva PermanentLockedAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
 	*vestingtypes.QueryVestedCoinsResponse, error,

@@ -1891,11 +1891,27 @@ func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
 				Params: &v1.MessageBasedParams{
 					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
 					Quorum:        "-0.334",
+					YesQuorum:     "0.5",
 					Threshold:     "0.5",
 					VetoThreshold: "0.334",
 				},
 			},
 			expErrMsg: "quorum cannot be negative",
+		},
+		{
+			name: "invalid yes quorum",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "0.334",
+					YesQuorum:     "-0.5",
+					Threshold:     "0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+			expErrMsg: "yes_quorum cannot be negative",
 		},
 		{
 			name: "invalid threshold",
@@ -1905,6 +1921,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
 				Params: &v1.MessageBasedParams{
 					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
 					Quorum:        "0.334",
+					YesQuorum:     "0.5",
 					Threshold:     "-0.5",
 					VetoThreshold: "0.334",
 				},
@@ -1919,6 +1936,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
 				Params: &v1.MessageBasedParams{
 					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
 					Quorum:        "0.334",
+					YesQuorum:     "0.5",
 					Threshold:     "0.5",
 					VetoThreshold: "-0.334",
 				},
@@ -1933,6 +1951,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
 				Params: &v1.MessageBasedParams{
 					VotingPeriod:  func() *time.Duration { d := -time.Hour; return &d }(),
 					Quorum:        "0.334",
+					YesQuorum:     "0.5",
 					Threshold:     "0.5",
 					VetoThreshold: "0.334",
 				},
@@ -1947,6 +1966,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
 				Params: &v1.MessageBasedParams{
 					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
 					Quorum:        "0.334",
+					YesQuorum:     "0",
 					Threshold:     "0.5",
 					VetoThreshold: "0.334",
 				},

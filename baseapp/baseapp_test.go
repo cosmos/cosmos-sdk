@@ -5,7 +5,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 
@@ -49,7 +51,7 @@ type (
 		baseApp   *baseapp.BaseApp
 		cdc       *codec.ProtoCodec
 		txConfig  client.TxConfig
-		logBuffer *bytes.Buffer
+		logBuffer *SyncBuffer
 	}
 
 	SnapshotsConfig struct {
@@ -61,13 +63,33 @@ type (
 	}
 )
 
+var _ io.Writer = &SyncBuffer{}
+
+type SyncBuffer struct {
+	mtx    sync.Mutex
+	buffer bytes.Buffer
+}
+
+func (s *SyncBuffer) Write(p []byte) (n int, err error) {
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
+	return s.buffer.Write(p)
+}
+
+func (s *SyncBuffer) String() string {
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
+	return s.buffer.String()
+}
+
 func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
-	logBuffer := new(bytes.Buffer)
+	// Prevent race conditions during collection of logs in tests.
+	logBuffer := &SyncBuffer{}
 	logger := log.NewLogger(logBuffer, log.ColorOption(false))
 
 	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder(), opts...)
@@ -197,12 +219,14 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 func TestAnteHandlerGasMeter(t *testing.T) {
 	// run BeginBlock and assert that the gas meter passed into the first Txn is zeroed out
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			gasMeter := ctx.BlockGasMeter()
-			require.NotNil(t, gasMeter)
-			require.Equal(t, storetypes.Gas(0), gasMeter.GasConsumed())
-			return ctx, nil
-		})
+		bapp.SetAnteHandler(wrapWithLockAndCacheContextDecorator(
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				gasMeter := ctx.BlockGasMeter()
+				require.NotNil(t, gasMeter)
+				require.Equal(t, storetypes.Gas(0), gasMeter.GasConsumed())
+				return ctx, nil
+			}),
+		)
 	}
 	// set the beginBlocker to use some gas
 	beginBlockerOpt := func(bapp *baseapp.BaseApp) {
@@ -516,9 +540,11 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	customPanicMsg := "test panic"
 	anteErr := errorsmod.Register("fakeModule", 100500, "fakeError")
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			panic(errorsmod.Wrap(anteErr, "anteHandler"))
-		})
+		bapp.SetAnteHandler(wrapWithLockAndCacheContextDecorator(
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				panic(errorsmod.Wrap(anteErr, "anteHandler"))
+			}),
+		)
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt)

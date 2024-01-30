@@ -657,6 +657,13 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	}
 }
 
+func wrapWithLockAndCacheContextDecorator(handler sdk.AnteHandler) sdk.AnteHandler {
+	lockingHandler := baseapp.NewLockAndCacheContextAnteDecorator()
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		return lockingHandler.AnteHandle(ctx, tx, simulate, handler)
+	}
+}
+
 func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
@@ -735,10 +742,12 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 func TestABCI_Query_SimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
-			return
-		})
+		bapp.SetAnteHandler(wrapWithLockAndCacheContextDecorator(
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
+				return
+			}),
+		)
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
 
@@ -796,9 +805,11 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 
 func TestABCI_InvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			return
-		})
+		bapp.SetAnteHandler(wrapWithLockAndCacheContextDecorator(
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				return
+			}),
+		)
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -922,29 +933,31 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 func TestABCI_TxGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
+		bapp.SetAnteHandler(wrapWithLockAndCacheContextDecorator(
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
-			// AnteHandlers must have their own defer/recover in order for the BaseApp
-			// to know how much gas was used! This is because the GasMeter is created in
-			// the AnteHandler, but if it panics the context won't be set properly in
-			// runTx's recover call.
-			defer func() {
-				if r := recover(); r != nil {
-					switch rType := r.(type) {
-					case storetypes.ErrorOutOfGas:
-						err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
-					default:
-						panic(r)
+				// AnteHandlers must have their own defer/recover in order for the BaseApp
+				// to know how much gas was used! This is because the GasMeter is created in
+				// the AnteHandler, but if it panics the context won't be set properly in
+				// runTx's recover call.
+				defer func() {
+					if r := recover(); r != nil {
+						switch rType := r.(type) {
+						case storetypes.ErrorOutOfGas:
+							err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						default:
+							panic(r)
+						}
 					}
-				}
-			}()
+				}()
 
-			count, _ := parseTxMemo(t, tx)
-			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+				count, _ := parseTxMemo(t, tx)
+				newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
-			return newCtx, nil
-		})
+				return newCtx, nil
+			}),
+		)
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -1018,25 +1031,27 @@ func TestABCI_TxGasLimits(t *testing.T) {
 func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
+		bapp.SetAnteHandler(wrapWithLockAndCacheContextDecorator(
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
-			defer func() {
-				if r := recover(); r != nil {
-					switch rType := r.(type) {
-					case storetypes.ErrorOutOfGas:
-						err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
-					default:
-						panic(r)
+				defer func() {
+					if r := recover(); r != nil {
+						switch rType := r.(type) {
+						case storetypes.ErrorOutOfGas:
+							err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						default:
+							panic(r)
+						}
 					}
-				}
-			}()
+				}()
 
-			count, _ := parseTxMemo(t, tx)
-			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+				count, _ := parseTxMemo(t, tx)
+				newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
-			return
-		})
+				return
+			}),
+		)
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -1115,29 +1130,31 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	gasWanted := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasWanted))
+		bapp.SetAnteHandler(wrapWithLockAndCacheContextDecorator(
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasWanted))
 
-			defer func() {
-				if r := recover(); r != nil {
-					switch rType := r.(type) {
-					case storetypes.ErrorOutOfGas:
-						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
-					default:
-						panic(r)
+				defer func() {
+					if r := recover(); r != nil {
+						switch rType := r.(type) {
+						case storetypes.ErrorOutOfGas:
+							log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+							err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
+						default:
+							panic(r)
+						}
 					}
+				}()
+
+				counter, failOnAnte := parseTxMemo(t, tx)
+				newCtx.GasMeter().ConsumeGas(uint64(counter), "counter-ante")
+				if failOnAnte {
+					return newCtx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 				}
-			}()
 
-			counter, failOnAnte := parseTxMemo(t, tx)
-			newCtx.GasMeter().ConsumeGas(uint64(counter), "counter-ante")
-			if failOnAnte {
-				return newCtx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
-			}
-
-			return
-		})
+				return
+			}),
+		)
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -1172,11 +1189,13 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 func TestABCI_Query(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			store := ctx.KVStore(capKey1)
-			store.Set(key, value)
-			return
-		})
+		bapp.SetAnteHandler(wrapWithLockAndCacheContextDecorator(
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				store := ctx.KVStore(capKey1)
+				store.Set(key, value)
+				return
+			}),
+		)
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt)

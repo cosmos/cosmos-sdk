@@ -197,7 +197,7 @@ type BaseApp struct {
 	disableBlockGasMeter bool
 
 	// Used to synchronize the application when using an unsynchronized ABCI++ client.
-	mtx sync.Mutex
+	mtx sync.RWMutex
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -673,6 +673,11 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 		WithTxBytes(txBytes)
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
+	// Use a new gas meter since loading the consensus params below consumes gas and causes a race condition.
+	//
+	// TODO(STAB-35): See if this can be removed.
+	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
 	if mode == execModeReCheck {
@@ -688,7 +693,7 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
-func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
+func cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
@@ -862,8 +867,8 @@ func (app *BaseApp) runCheckTxConcurrently(mode execMode, txBytes []byte) (gInfo
 	// embedded here to ensure that the lifetime of the mutex is limited to only this function allowing
 	// for the return values to be computed without holding the lock.
 	func() {
-		app.mtx.Lock()
-		defer app.mtx.Unlock()
+		app.mtx.RLock()
+		defer app.mtx.RUnlock()
 
 		ctx := app.getContextForTx(mode, txBytes)
 		ms := ctx.MultiStore()
@@ -879,25 +884,17 @@ func (app *BaseApp) runCheckTxConcurrently(mode execMode, txBytes []byte) (gInfo
 		}()
 
 		if app.anteHandler != nil {
-			var (
-				anteCtx sdk.Context
-				msCache storetypes.CacheMultiStore
-				newCtx  sdk.Context
-			)
+			var newCtx sdk.Context
 
-			// Branch context before AnteHandler call in case it aborts.
-			// This is required for both CheckTx and DeliverTx.
-			// Ref: https://github.com/cosmos/cosmos-sdk/issues/2772
-			//
-			// NOTE: Alternatively, we could require that AnteHandler ensures that
-			// writes do not happen if aborted/failed.  This may have some
-			// performance benefits, but it'll be more difficult to get right.
-			anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
-			anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
-			newCtx, err = app.anteHandler(anteCtx, tx, mode == execModeSimulate)
+			// Typically the Cosmos SDK branches the context before passing it to the ante handler but here we
+			// allow the application's AnteHandler to control branching semantics for the context itself.
+			// We also guarantee that the passed in context is held with a read lock allowing for concurrent
+			// execution.
+			anteCtx := ctx.WithEventManager(sdk.NewEventManager())
+			newCtx, err = app.anteHandler(anteCtx, tx, false /* mode == execModeSimulate */)
 
 			if !newCtx.IsZero() {
-				// At this point, newCtx.MultiStore() is a store branch, or something else
+				// At this point, ctx.MultiStore() is a store branch, or something else
 				// replaced by the AnteHandler. We want the original multistore.
 				//
 				// Also, in the case of the tx aborting, we need to track gas consumed via
@@ -919,7 +916,6 @@ func (app *BaseApp) runCheckTxConcurrently(mode execMode, txBytes []byte) (gInfo
 				return
 			}
 
-			msCache.Write()
 			anteEvents = events.ToABCIEvents()
 		}
 
@@ -1042,7 +1038,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		// NOTE: Alternatively, we could require that AnteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
-		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
+		anteCtx, msCache = cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 
@@ -1085,7 +1081,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
-	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
+	runMsgCtx, msCache := cacheTxContext(ctx, txBytes)
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a

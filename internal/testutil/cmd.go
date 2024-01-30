@@ -17,7 +17,7 @@ import (
 //  2. the built-in implementations of pflag.SliceValue
 //  3. the custom implementations of pflag.SliceValue that are split by comma ","
 //
-// see https://github.com/spf13/cobra/issues/2079#issuecomment-1867991505 for more detail info
+// see https://github.com/spf13/cobra/issues/2079#issuecomment-1870115781 for more detail info
 func ResetArgs(cmd *cobra.Command) {
 	// if flags haven't been parsed yet, there is no need to reset the args
 	if !cmd.Flags().Parsed() {

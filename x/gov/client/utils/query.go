@@ -34,10 +34,17 @@ func (p Proposer) String() string {
 	return fmt.Sprintf("Proposal with ID %d was proposed by %s", p.ProposalID, p.Proposer)
 }
 
+// QueryProposalVotesParams is used to query 'custom/gov/votes'.
+type QueryProposalVotesParams struct {
+	ProposalID uint64
+	Page       int
+	Limit      int
+}
+
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
 // will fetch and build votes directly from the returned txs and returns a JSON
 // marshaled result or any error that occurred.
-func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesParams) ([]byte, error) {
+func QueryVotesByTxQuery(clientCtx client.Context, params QueryProposalVotesParams) ([]byte, error) {
 	var (
 		votes      []*v1.Vote
 		nextTxPage = defaultPage
@@ -105,8 +112,14 @@ func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesP
 	return bz, nil
 }
 
+// QueryVoteParams is used to query 'custom/gov/vote'
+type QueryVoteParams struct {
+	ProposalID uint64
+	Voter      sdk.AccAddress
+}
+
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
-func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]byte, error) {
+func QueryVoteByTxQuery(clientCtx client.Context, params QueryVoteParams) ([]byte, error) {
 	q1 := fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID)
 	q2 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter.String())
 	q3 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter)

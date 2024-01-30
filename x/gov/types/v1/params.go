@@ -37,30 +37,6 @@ var (
 	DefaultOptimisticAuthorizedAddreses = []string(nil)
 )
 
-// Deprecated: NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod *time.Duration) DepositParams {
-	return DepositParams{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: maxDepositPeriod,
-	}
-}
-
-// Deprecated: NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold string) TallyParams {
-	return TallyParams{
-		Quorum:        quorum,
-		Threshold:     threshold,
-		VetoThreshold: vetoThreshold,
-	}
-}
-
-// Deprecated: NewVotingParams creates a new VotingParams object
-func NewVotingParams(votingPeriod *time.Duration) VotingParams {
-	return VotingParams{
-		VotingPeriod: votingPeriod,
-	}
-}
-
 // NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
@@ -257,6 +233,51 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		if err != nil {
 			return fmt.Errorf("deposits destination address is invalid: %s", p.ProposalCancelDest)
 		}
+	}
+
+	return nil
+}
+
+// ValidateBasic performs basic validation on governance parameters.
+func (p MessageBasedParams) ValidateBasic() error {
+	if p.VotingPeriod == nil {
+		return fmt.Errorf("voting period must not be nil: %d", p.VotingPeriod)
+	}
+	if p.VotingPeriod.Seconds() <= 0 {
+		return fmt.Errorf("voting period must be positive: %s", p.VotingPeriod)
+	}
+
+	quorum, err := sdkmath.LegacyNewDecFromStr(p.Quorum)
+	if err != nil {
+		return fmt.Errorf("invalid quorum string: %w", err)
+	}
+	if quorum.IsNegative() {
+		return fmt.Errorf("quorum cannot be negative: %s", quorum)
+	}
+	if quorum.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("quorum too large: %s", p.Quorum)
+	}
+
+	vetoThreshold, err := sdkmath.LegacyNewDecFromStr(p.VetoThreshold)
+	if err != nil {
+		return fmt.Errorf("invalid vetoThreshold string: %w", err)
+	}
+	if !vetoThreshold.IsPositive() {
+		return fmt.Errorf("veto threshold must be positive: %s", vetoThreshold)
+	}
+	if vetoThreshold.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("veto threshold too large: %s", vetoThreshold)
+	}
+
+	threshold, err := sdkmath.LegacyNewDecFromStr(p.Threshold)
+	if err != nil {
+		return fmt.Errorf("invalid threshold string: %w", err)
+	}
+	if !threshold.IsPositive() {
+		return fmt.Errorf("vote threshold must be positive: %s", threshold)
+	}
+	if threshold.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("vote threshold too large: %s", threshold)
 	}
 
 	return nil

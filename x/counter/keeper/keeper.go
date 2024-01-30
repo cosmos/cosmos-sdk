@@ -68,10 +68,9 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter
 	}
 
 	if err := k.event.EventManager(ctx).EmitKV(
-		ctx,
 		"increase_counter",
-		event.Attribute{Key: "signer", Value: msg.Signer},
-		event.Attribute{Key: "new count", Value: fmt.Sprint(num + msg.Count)}); err != nil {
+		event.NewAttribute("signer", msg.Signer),
+		event.NewAttribute("new count", fmt.Sprint(num+msg.Count))); err != nil {
 		return nil, err
 	}
 

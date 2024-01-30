@@ -72,6 +72,7 @@ var (
 		{Account: authtypes.FeeCollectorName},
 		{Account: distrtypes.ModuleName},
 		{Account: pooltypes.ModuleName},
+		{Account: pooltypes.StreamAccount},
 		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},

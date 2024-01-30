@@ -275,9 +275,17 @@ func (d *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 }
 ```
 
-### `OnNewBlock`
+### Transaction Hashes
 
-Wire the `OnNewBlock` method of `UnorderedTxManager` into the BaseApp's ABCI `Commit` event.
+It is absolutely vital that transaction hashes are deterministic, i.e. transaction
+encoding is not malleable. If a given transaction, which is otherwise valid, can
+be encoded to produce different hashes, which reflect the same valid transaction,
+then a duplicate unordered transaction can be submitted and included in a block.
+
+In order to prevent this, transactions should be encoded in a deterministic manner.
+[ADR-027](./adr-027-deterministic-protobuf-serialization.md) provides such a mechanism.
+However, it is important to note that the way a transaction is signed should ensure
+ADR-027 is followed. E.g. we want to avoid Amino signing.
 
 ### State Management
 
@@ -304,7 +312,8 @@ Alternatively, we can write all the transactions to consensus state.
 
 ### Negative
 
-* Start up overhead to scan historical blocks.
+* Requires additional storage overhead and management of processed unordered
+  transactions that exist outside of consensus state.
 
 ## References
 

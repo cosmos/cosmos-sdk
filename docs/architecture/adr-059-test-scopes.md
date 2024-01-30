@@ -136,9 +136,9 @@ managing their life cycle.
 
 #### Limitations
 
-* [A success](https://github.com/cosmos/cosmos-sdk/runs/7606931983?check_suite_focus=true) may take a long time to run, 7-10 minutes per simulation in CI.
-* [Timeouts](https://github.com/cosmos/cosmos-sdk/runs/7606932295?check_suite_focus=true) sometimes occur on apparent successes without any indication why.
-* Useful error messages not provided on [failure](https://github.com/cosmos/cosmos-sdk/runs/7606932548?check_suite_focus=true) from CI, requiring a developer to run
+* May take a long time to run, 7-10 minutes per simulation in CI.
+* Timeouts sometimes occur on apparent successes without any indication why.
+* Useful error messages not provided on from CI, requiring a developer to run
   the simulation locally to reproduce.
 
 ### E2E tests

@@ -397,4 +397,4 @@ replacing `Keeper` interfaces altogether.
 * [ADR 031](./adr-031-msg-service.md)
 * [ADR 028](./adr-028-public-key-addresses.md)
 * [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
-* [Object-Capability Model](https://docs.network.com/main/core/ocap)
+* [Object-Capability Model](https://docs.cosmos.network/main/learn/advanced/ocap#ocaps-in-practice)

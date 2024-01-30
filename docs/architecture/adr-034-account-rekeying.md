@@ -73,4 +73,4 @@ Breaks the current assumed relationship between address and pubkeys as H(pubkey)
 
 ## References
 
-* https://algorand.com/resources/algorand-announcements/announcing-rekeying
+* https://algorandtechnologies.com/news/announcing-rekeying

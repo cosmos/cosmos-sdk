@@ -142,7 +142,7 @@ that you would like early feedback and tagging whoever you would like to receive
 Codeowners are marked automatically as the reviewers.
 
 All PRs require at least two review approvals before they can be merged (one review might be acceptable in
-the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) or [other](./.github/PULL_REQUEST_TEMPLATE/other.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
+the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) or [other](./.github/PULL_REQUEST_TEMPLATE.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
 for all checked items unless they have indicated otherwise by leaving their handle next to specific
 items. In addition, use the following review explanations:
 
@@ -171,8 +171,8 @@ When writing documentation, follow the [Documentation Writing Guidelines](./docs
 
 Within the Cosmos SDK we have two forms of documenting decisions, Request For Comment (RFC) & Architecture Design Record (ADR). They perform two different functions. The process for assessing if something needs an RFC is located in the respective folders: 
 
-* [RFC Process](./docs/rfc/process.md)
-* [ADR Process](./docs/adr/process.md) 
+* [RFC Process](./docs/rfc/PROCESS.md)
+* [ADR Process](./docs/architecture/PROCESS.md) 
 
 
 ## Dependencies
@@ -199,12 +199,12 @@ For consistency between our CI and the local tests, `GOWORK=off` is set in the `
 When extracting a package to its own go modules, some extra steps are required, for keeping our CI checks and Dev UX:
 
 * Add a CHANGELOG.md / README.md under the new package folder
-* Add the package in [`labeler.yml`](./.github/labeler.yml)
+* Add the package in [`labeler.yml`](./.github/pr_labeler.yml)
 * Add the package in [`go.work.example`](./go.work.example)
 * Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
 * Add tests to github workflow [test.yml](.github/workflows/test.yml) (under submodules)
 * Configure SonarCloud
-    * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
+    * Add `sonar-projects.properties` (see math [sonar-project.properties](./math/sonar-project.properties) for example)
     * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
     * Ask the team to add the project to SonarCloud
 * (optional) Configure a `cosmossdk.io` vanity url by submitting a PR to [cosmos/vanity](https://github.com/cosmos/vanity).

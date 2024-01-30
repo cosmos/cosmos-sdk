@@ -46,14 +46,31 @@ type Database interface {
 // VersionedDatabase defines an API for a versioned database that allows reads,
 // writes, iteration and commitment over a series of versions.
 type VersionedDatabase interface {
+	// Has retrieves if a key is present in the underlying storage engine.
 	Has(storeKey string, version uint64, key []byte) (bool, error)
+
+	// Get retrieves the given key if it's present in the underlying storage engine.
 	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+
+	// GetLatestVersion returns the latest version.
 	GetLatestVersion() (uint64, error)
+
+	// SetLatestVersion sets the latest version of the database.
 	SetLatestVersion(version uint64) error
 
+	// Iterator creates an iterator over the domain [start, end) at the specified
+	// version for the given store key. The iterator must be closed when done. An
+	// error should be returned upon failure.
 	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
+
+	// ReverseIterator creates a reverse iterator over the domain [start, end) at
+	// the specified version for the given store key. The iterator must be closed
+	// when done. An error should be returned upon failure.
 	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 
+	// ApplyChangeset applies a changeset, a batch of key-value pairs, to the
+	// underlying storage engine for the given version. It should return an error
+	// upon failure.
 	ApplyChangeset(version uint64, cs *Changeset) error
 
 	// Prune attempts to prune all versions up to and including the provided
@@ -149,9 +166,7 @@ type RawDB interface {
 	NewBatchWithSize(int) RawBatch
 }
 
-type (
-	// Options defines the interface of a database options.
-	Options interface {
-		Get(string) interface{}
-	}
-)
+// DBOption defines the interface of a database options.
+type DBOptions interface {
+	Get(string) any
+}

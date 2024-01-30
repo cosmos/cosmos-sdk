@@ -68,27 +68,21 @@ message QueryEndTimeResponse {
   int64 end_time = 1;
 }
 
-// QueryVestingCoinsRequest is used to query the account vesting coins.
-message QueryVestingCoinsRequest {}
+// QueryVestCoinsInfoRequest is used to query the account vesting and vested coins.
+message QueryVestCoinsInfoRequest {}
 
-// QueryVestingCoinsResponse returns the account vesting coins.
-message QueryVestingCoinsResponse {
-  // original_vesting defines the value of the account original vesting.
+// QueryVestingCoinsResponse returns the account vesting and vested coins.
+message QueryVestCoinsInfoResponse {
+  // vesting_coins defines the value of the account vesting coins.
   repeated cosmos.base.v1beta1.Coin vesting_coins = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
     (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-}
 
-// QueryVestedCoinsRequest is used to query the account vested coins.
-message QueryVestedCoinsRequest {}
-
-// QueryVestedCoinsResponse returns the account vested coins.
-message QueryVestedCoinsResponse {
-  // original_vesting defines the value of the account original vesting.
-  repeated cosmos.base.v1beta1.Coin vested_vesting = 1 [
+  // vested_vesting defines the value of the account vested coins.
+  repeated cosmos.base.v1beta1.Coin vested_vesting = 2 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
     (amino.encoding)         = "legacy_coins",

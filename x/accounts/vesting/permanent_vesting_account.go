@@ -54,24 +54,17 @@ func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *ac
 	})
 }
 
-func (plva PermanentLockedAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
-	*vestingtypes.QueryVestedCoinsResponse, error,
-) {
-	return &vestingtypes.QueryVestedCoinsResponse{
-		VestedVesting: sdk.Coins{},
-	}, nil
-}
-
-func (plva PermanentLockedAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
-	*vestingtypes.QueryVestingCoinsResponse, error,
+func (plva PermanentLockedAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
+	*vestingtypes.QueryVestCoinsInfoResponse, error,
 ) {
 	originalVesting := sdk.Coins{}
 	plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
-	return &vestingtypes.QueryVestingCoinsResponse{
-		VestingCoins: originalVesting,
+	return &vestingtypes.QueryVestCoinsInfoResponse{
+		VestingCoins:  originalVesting,
+		VestedVesting: sdk.Coins{},
 	}, nil
 }
 
@@ -86,7 +79,6 @@ func (plva PermanentLockedAccount) RegisterExecuteHandlers(builder *accountstd.E
 }
 
 func (plva PermanentLockedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, plva.QueryVestedCoins)
-	accountstd.RegisterQueryHandler(builder, plva.QueryVestingCoins)
+	accountstd.RegisterQueryHandler(builder, plva.QueryVestCoinsInfo)
 	plva.BaseVesting.RegisterQueryHandlers(builder)
 }

@@ -4086,23 +4086,23 @@ func (x *fastReflection_QueryEndTimeResponse) ProtoMethods() *protoiface.Methods
 }
 
 var (
-	md_QueryVestingCoinsRequest protoreflect.MessageDescriptor
+	md_QueryVestCoinsInfoRequest protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_vesting_query_proto_init()
-	md_QueryVestingCoinsRequest = File_cosmos_accounts_vesting_query_proto.Messages().ByName("QueryVestingCoinsRequest")
+	md_QueryVestCoinsInfoRequest = File_cosmos_accounts_vesting_query_proto.Messages().ByName("QueryVestCoinsInfoRequest")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryVestingCoinsRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryVestCoinsInfoRequest)(nil)
 
-type fastReflection_QueryVestingCoinsRequest QueryVestingCoinsRequest
+type fastReflection_QueryVestCoinsInfoRequest QueryVestCoinsInfoRequest
 
-func (x *QueryVestingCoinsRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryVestingCoinsRequest)(x)
+func (x *QueryVestCoinsInfoRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryVestCoinsInfoRequest)(x)
 }
 
-func (x *QueryVestingCoinsRequest) slowProtoReflect() protoreflect.Message {
+func (x *QueryVestCoinsInfoRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4114,43 +4114,43 @@ func (x *QueryVestingCoinsRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryVestingCoinsRequest_messageType fastReflection_QueryVestingCoinsRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryVestingCoinsRequest_messageType{}
+var _fastReflection_QueryVestCoinsInfoRequest_messageType fastReflection_QueryVestCoinsInfoRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryVestCoinsInfoRequest_messageType{}
 
-type fastReflection_QueryVestingCoinsRequest_messageType struct{}
+type fastReflection_QueryVestCoinsInfoRequest_messageType struct{}
 
-func (x fastReflection_QueryVestingCoinsRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryVestingCoinsRequest)(nil)
+func (x fastReflection_QueryVestCoinsInfoRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryVestCoinsInfoRequest)(nil)
 }
-func (x fastReflection_QueryVestingCoinsRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryVestingCoinsRequest)
+func (x fastReflection_QueryVestCoinsInfoRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryVestCoinsInfoRequest)
 }
-func (x fastReflection_QueryVestingCoinsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryVestingCoinsRequest
+func (x fastReflection_QueryVestCoinsInfoRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryVestCoinsInfoRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryVestingCoinsRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryVestingCoinsRequest
+func (x *fastReflection_QueryVestCoinsInfoRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryVestCoinsInfoRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryVestingCoinsRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryVestingCoinsRequest_messageType
+func (x *fastReflection_QueryVestCoinsInfoRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryVestCoinsInfoRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryVestingCoinsRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryVestingCoinsRequest)
+func (x *fastReflection_QueryVestCoinsInfoRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryVestCoinsInfoRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryVestingCoinsRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryVestingCoinsRequest)(x)
+func (x *fastReflection_QueryVestCoinsInfoRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryVestCoinsInfoRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -4158,7 +4158,7 @@ func (x *fastReflection_QueryVestingCoinsRequest) Interface() protoreflect.Proto
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryVestingCoinsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryVestCoinsInfoRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -4172,13 +4172,13 @@ func (x *fastReflection_QueryVestingCoinsRequest) Range(f func(protoreflect.Fiel
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryVestingCoinsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryVestCoinsInfoRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4188,13 +4188,13 @@ func (x *fastReflection_QueryVestingCoinsRequest) Has(fd protoreflect.FieldDescr
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestingCoinsRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryVestCoinsInfoRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4204,13 +4204,13 @@ func (x *fastReflection_QueryVestingCoinsRequest) Clear(fd protoreflect.FieldDes
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryVestingCoinsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryVestCoinsInfoRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -4224,13 +4224,13 @@ func (x *fastReflection_QueryVestingCoinsRequest) Get(descriptor protoreflect.Fi
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestingCoinsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryVestCoinsInfoRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4244,36 +4244,36 @@ func (x *fastReflection_QueryVestingCoinsRequest) Set(fd protoreflect.FieldDescr
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestingCoinsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryVestCoinsInfoRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryVestingCoinsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryVestCoinsInfoRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryVestingCoinsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryVestCoinsInfoRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.vesting.QueryVestingCoinsRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.vesting.QueryVestCoinsInfoRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -4281,7 +4281,7 @@ func (x *fastReflection_QueryVestingCoinsRequest) WhichOneof(d protoreflect.Oneo
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryVestingCoinsRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryVestCoinsInfoRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -4292,7 +4292,7 @@ func (x *fastReflection_QueryVestingCoinsRequest) GetUnknown() protoreflect.RawF
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestingCoinsRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryVestCoinsInfoRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -4304,7 +4304,7 @@ func (x *fastReflection_QueryVestingCoinsRequest) SetUnknown(fields protoreflect
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryVestingCoinsRequest) IsValid() bool {
+func (x *fastReflection_QueryVestCoinsInfoRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -4314,9 +4314,9 @@ func (x *fastReflection_QueryVestingCoinsRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryVestingCoinsRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryVestCoinsInfoRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryVestingCoinsRequest)
+		x := input.Message.Interface().(*QueryVestCoinsInfoRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4338,7 +4338,7 @@ func (x *fastReflection_QueryVestingCoinsRequest) ProtoMethods() *protoiface.Met
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryVestingCoinsRequest)
+		x := input.Message.Interface().(*QueryVestCoinsInfoRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4368,7 +4368,7 @@ func (x *fastReflection_QueryVestingCoinsRequest) ProtoMethods() *protoiface.Met
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryVestingCoinsRequest)
+		x := input.Message.Interface().(*QueryVestCoinsInfoRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4400,10 +4400,10 @@ func (x *fastReflection_QueryVestingCoinsRequest) ProtoMethods() *protoiface.Met
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestingCoinsRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestCoinsInfoRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestingCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestCoinsInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -4441,77 +4441,130 @@ func (x *fastReflection_QueryVestingCoinsRequest) ProtoMethods() *protoiface.Met
 	}
 }
 
-var _ protoreflect.List = (*_QueryVestingCoinsResponse_1_list)(nil)
+var _ protoreflect.List = (*_QueryVestCoinsInfoResponse_1_list)(nil)
 
-type _QueryVestingCoinsResponse_1_list struct {
+type _QueryVestCoinsInfoResponse_1_list struct {
 	list *[]*v1beta1.Coin
 }
 
-func (x *_QueryVestingCoinsResponse_1_list) Len() int {
+func (x *_QueryVestCoinsInfoResponse_1_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_QueryVestingCoinsResponse_1_list) Get(i int) protoreflect.Value {
+func (x *_QueryVestCoinsInfoResponse_1_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_QueryVestingCoinsResponse_1_list) Set(i int, value protoreflect.Value) {
+func (x *_QueryVestCoinsInfoResponse_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_QueryVestingCoinsResponse_1_list) Append(value protoreflect.Value) {
+func (x *_QueryVestCoinsInfoResponse_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_QueryVestingCoinsResponse_1_list) AppendMutable() protoreflect.Value {
+func (x *_QueryVestCoinsInfoResponse_1_list) AppendMutable() protoreflect.Value {
 	v := new(v1beta1.Coin)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_QueryVestingCoinsResponse_1_list) Truncate(n int) {
+func (x *_QueryVestCoinsInfoResponse_1_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_QueryVestingCoinsResponse_1_list) NewElement() protoreflect.Value {
+func (x *_QueryVestCoinsInfoResponse_1_list) NewElement() protoreflect.Value {
 	v := new(v1beta1.Coin)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_QueryVestingCoinsResponse_1_list) IsValid() bool {
+func (x *_QueryVestCoinsInfoResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_QueryVestCoinsInfoResponse_2_list)(nil)
+
+type _QueryVestCoinsInfoResponse_2_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_QueryVestCoinsInfoResponse_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryVestCoinsInfoResponse_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryVestCoinsInfoResponse_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryVestCoinsInfoResponse_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryVestCoinsInfoResponse_2_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryVestCoinsInfoResponse_2_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryVestCoinsInfoResponse_2_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryVestCoinsInfoResponse_2_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_QueryVestingCoinsResponse               protoreflect.MessageDescriptor
-	fd_QueryVestingCoinsResponse_vesting_coins protoreflect.FieldDescriptor
+	md_QueryVestCoinsInfoResponse                protoreflect.MessageDescriptor
+	fd_QueryVestCoinsInfoResponse_vesting_coins  protoreflect.FieldDescriptor
+	fd_QueryVestCoinsInfoResponse_vested_vesting protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_vesting_query_proto_init()
-	md_QueryVestingCoinsResponse = File_cosmos_accounts_vesting_query_proto.Messages().ByName("QueryVestingCoinsResponse")
-	fd_QueryVestingCoinsResponse_vesting_coins = md_QueryVestingCoinsResponse.Fields().ByName("vesting_coins")
+	md_QueryVestCoinsInfoResponse = File_cosmos_accounts_vesting_query_proto.Messages().ByName("QueryVestCoinsInfoResponse")
+	fd_QueryVestCoinsInfoResponse_vesting_coins = md_QueryVestCoinsInfoResponse.Fields().ByName("vesting_coins")
+	fd_QueryVestCoinsInfoResponse_vested_vesting = md_QueryVestCoinsInfoResponse.Fields().ByName("vested_vesting")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryVestingCoinsResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryVestCoinsInfoResponse)(nil)
 
-type fastReflection_QueryVestingCoinsResponse QueryVestingCoinsResponse
+type fastReflection_QueryVestCoinsInfoResponse QueryVestCoinsInfoResponse
 
-func (x *QueryVestingCoinsResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryVestingCoinsResponse)(x)
+func (x *QueryVestCoinsInfoResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryVestCoinsInfoResponse)(x)
 }
 
-func (x *QueryVestingCoinsResponse) slowProtoReflect() protoreflect.Message {
+func (x *QueryVestCoinsInfoResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4523,43 +4576,43 @@ func (x *QueryVestingCoinsResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryVestingCoinsResponse_messageType fastReflection_QueryVestingCoinsResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryVestingCoinsResponse_messageType{}
+var _fastReflection_QueryVestCoinsInfoResponse_messageType fastReflection_QueryVestCoinsInfoResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryVestCoinsInfoResponse_messageType{}
 
-type fastReflection_QueryVestingCoinsResponse_messageType struct{}
+type fastReflection_QueryVestCoinsInfoResponse_messageType struct{}
 
-func (x fastReflection_QueryVestingCoinsResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryVestingCoinsResponse)(nil)
+func (x fastReflection_QueryVestCoinsInfoResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryVestCoinsInfoResponse)(nil)
 }
-func (x fastReflection_QueryVestingCoinsResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryVestingCoinsResponse)
+func (x fastReflection_QueryVestCoinsInfoResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryVestCoinsInfoResponse)
 }
-func (x fastReflection_QueryVestingCoinsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryVestingCoinsResponse
+func (x fastReflection_QueryVestCoinsInfoResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryVestCoinsInfoResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryVestingCoinsResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryVestingCoinsResponse
+func (x *fastReflection_QueryVestCoinsInfoResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryVestCoinsInfoResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryVestingCoinsResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryVestingCoinsResponse_messageType
+func (x *fastReflection_QueryVestCoinsInfoResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryVestCoinsInfoResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryVestingCoinsResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryVestingCoinsResponse)
+func (x *fastReflection_QueryVestCoinsInfoResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryVestCoinsInfoResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryVestingCoinsResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryVestingCoinsResponse)(x)
+func (x *fastReflection_QueryVestCoinsInfoResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryVestCoinsInfoResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -4567,10 +4620,16 @@ func (x *fastReflection_QueryVestingCoinsResponse) Interface() protoreflect.Prot
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryVestingCoinsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryVestCoinsInfoResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.VestingCoins) != 0 {
-		value := protoreflect.ValueOfList(&_QueryVestingCoinsResponse_1_list{list: &x.VestingCoins})
-		if !f(fd_QueryVestingCoinsResponse_vesting_coins, value) {
+		value := protoreflect.ValueOfList(&_QueryVestCoinsInfoResponse_1_list{list: &x.VestingCoins})
+		if !f(fd_QueryVestCoinsInfoResponse_vesting_coins, value) {
+			return
+		}
+	}
+	if len(x.VestedVesting) != 0 {
+		value := protoreflect.ValueOfList(&_QueryVestCoinsInfoResponse_2_list{list: &x.VestedVesting})
+		if !f(fd_QueryVestCoinsInfoResponse_vested_vesting, value) {
 			return
 		}
 	}
@@ -4587,15 +4646,17 @@ func (x *fastReflection_QueryVestingCoinsResponse) Range(f func(protoreflect.Fie
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryVestingCoinsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryVestCoinsInfoResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestingCoinsResponse.vesting_coins":
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vesting_coins":
 		return len(x.VestingCoins) != 0
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vested_vesting":
+		return len(x.VestedVesting) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4605,15 +4666,17 @@ func (x *fastReflection_QueryVestingCoinsResponse) Has(fd protoreflect.FieldDesc
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestingCoinsResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryVestCoinsInfoResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestingCoinsResponse.vesting_coins":
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vesting_coins":
 		x.VestingCoins = nil
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vested_vesting":
+		x.VestedVesting = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4623,19 +4686,25 @@ func (x *fastReflection_QueryVestingCoinsResponse) Clear(fd protoreflect.FieldDe
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryVestingCoinsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryVestCoinsInfoResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.vesting.QueryVestingCoinsResponse.vesting_coins":
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vesting_coins":
 		if len(x.VestingCoins) == 0 {
-			return protoreflect.ValueOfList(&_QueryVestingCoinsResponse_1_list{})
+			return protoreflect.ValueOfList(&_QueryVestCoinsInfoResponse_1_list{})
 		}
-		listValue := &_QueryVestingCoinsResponse_1_list{list: &x.VestingCoins}
+		listValue := &_QueryVestCoinsInfoResponse_1_list{list: &x.VestingCoins}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vested_vesting":
+		if len(x.VestedVesting) == 0 {
+			return protoreflect.ValueOfList(&_QueryVestCoinsInfoResponse_2_list{})
+		}
+		listValue := &_QueryVestCoinsInfoResponse_2_list{list: &x.VestedVesting}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -4649,17 +4718,21 @@ func (x *fastReflection_QueryVestingCoinsResponse) Get(descriptor protoreflect.F
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestingCoinsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryVestCoinsInfoResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestingCoinsResponse.vesting_coins":
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vesting_coins":
 		lv := value.List()
-		clv := lv.(*_QueryVestingCoinsResponse_1_list)
+		clv := lv.(*_QueryVestCoinsInfoResponse_1_list)
 		x.VestingCoins = *clv.list
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vested_vesting":
+		lv := value.List()
+		clv := lv.(*_QueryVestCoinsInfoResponse_2_list)
+		x.VestedVesting = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4673,45 +4746,54 @@ func (x *fastReflection_QueryVestingCoinsResponse) Set(fd protoreflect.FieldDesc
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestingCoinsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryVestCoinsInfoResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestingCoinsResponse.vesting_coins":
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vesting_coins":
 		if x.VestingCoins == nil {
 			x.VestingCoins = []*v1beta1.Coin{}
 		}
-		value := &_QueryVestingCoinsResponse_1_list{list: &x.VestingCoins}
+		value := &_QueryVestCoinsInfoResponse_1_list{list: &x.VestingCoins}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vested_vesting":
+		if x.VestedVesting == nil {
+			x.VestedVesting = []*v1beta1.Coin{}
+		}
+		value := &_QueryVestCoinsInfoResponse_2_list{list: &x.VestedVesting}
 		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryVestingCoinsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryVestCoinsInfoResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestingCoinsResponse.vesting_coins":
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vesting_coins":
 		list := []*v1beta1.Coin{}
-		return protoreflect.ValueOfList(&_QueryVestingCoinsResponse_1_list{list: &list})
+		return protoreflect.ValueOfList(&_QueryVestCoinsInfoResponse_1_list{list: &list})
+	case "cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vested_vesting":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_QueryVestCoinsInfoResponse_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestingCoinsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestCoinsInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestingCoinsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestCoinsInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryVestingCoinsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryVestCoinsInfoResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.vesting.QueryVestingCoinsResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.vesting.QueryVestCoinsInfoResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -4719,7 +4801,7 @@ func (x *fastReflection_QueryVestingCoinsResponse) WhichOneof(d protoreflect.One
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryVestingCoinsResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryVestCoinsInfoResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -4730,7 +4812,7 @@ func (x *fastReflection_QueryVestingCoinsResponse) GetUnknown() protoreflect.Raw
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestingCoinsResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryVestCoinsInfoResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -4742,7 +4824,7 @@ func (x *fastReflection_QueryVestingCoinsResponse) SetUnknown(fields protoreflec
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryVestingCoinsResponse) IsValid() bool {
+func (x *fastReflection_QueryVestCoinsInfoResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -4752,9 +4834,9 @@ func (x *fastReflection_QueryVestingCoinsResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryVestingCoinsResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryVestCoinsInfoResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryVestingCoinsResponse)
+		x := input.Message.Interface().(*QueryVestCoinsInfoResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4772,6 +4854,12 @@ func (x *fastReflection_QueryVestingCoinsResponse) ProtoMethods() *protoiface.Me
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if len(x.VestedVesting) > 0 {
+			for _, e := range x.VestedVesting {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -4782,7 +4870,7 @@ func (x *fastReflection_QueryVestingCoinsResponse) ProtoMethods() *protoiface.Me
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryVestingCoinsResponse)
+		x := input.Message.Interface().(*QueryVestCoinsInfoResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4800,6 +4888,22 @@ func (x *fastReflection_QueryVestingCoinsResponse) ProtoMethods() *protoiface.Me
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.VestedVesting) > 0 {
+			for iNdEx := len(x.VestedVesting) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.VestedVesting[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
+			}
 		}
 		if len(x.VestingCoins) > 0 {
 			for iNdEx := len(x.VestingCoins) - 1; iNdEx >= 0; iNdEx-- {
@@ -4828,7 +4932,7 @@ func (x *fastReflection_QueryVestingCoinsResponse) ProtoMethods() *protoiface.Me
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryVestingCoinsResponse)
+		x := input.Message.Interface().(*QueryVestCoinsInfoResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4860,10 +4964,10 @@ func (x *fastReflection_QueryVestingCoinsResponse) ProtoMethods() *protoiface.Me
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestingCoinsResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestCoinsInfoResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestingCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestCoinsInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -4900,823 +5004,7 @@ func (x *fastReflection_QueryVestingCoinsResponse) ProtoMethods() *protoiface.Me
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_QueryVestedCoinsRequest protoreflect.MessageDescriptor
-)
-
-func init() {
-	file_cosmos_accounts_vesting_query_proto_init()
-	md_QueryVestedCoinsRequest = File_cosmos_accounts_vesting_query_proto.Messages().ByName("QueryVestedCoinsRequest")
-}
-
-var _ protoreflect.Message = (*fastReflection_QueryVestedCoinsRequest)(nil)
-
-type fastReflection_QueryVestedCoinsRequest QueryVestedCoinsRequest
-
-func (x *QueryVestedCoinsRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryVestedCoinsRequest)(x)
-}
-
-func (x *QueryVestedCoinsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[12]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_QueryVestedCoinsRequest_messageType fastReflection_QueryVestedCoinsRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryVestedCoinsRequest_messageType{}
-
-type fastReflection_QueryVestedCoinsRequest_messageType struct{}
-
-func (x fastReflection_QueryVestedCoinsRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryVestedCoinsRequest)(nil)
-}
-func (x fastReflection_QueryVestedCoinsRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryVestedCoinsRequest)
-}
-func (x fastReflection_QueryVestedCoinsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryVestedCoinsRequest
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_QueryVestedCoinsRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryVestedCoinsRequest
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryVestedCoinsRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryVestedCoinsRequest_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryVestedCoinsRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryVestedCoinsRequest)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryVestedCoinsRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryVestedCoinsRequest)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_QueryVestedCoinsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryVestedCoinsRequest) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsRequest"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestedCoinsRequest) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsRequest"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryVestedCoinsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsRequest"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsRequest does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestedCoinsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsRequest"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestedCoinsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsRequest"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryVestedCoinsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsRequest"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryVestedCoinsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.vesting.QueryVestedCoinsRequest", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryVestedCoinsRequest) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestedCoinsRequest) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_QueryVestedCoinsRequest) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryVestedCoinsRequest) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryVestedCoinsRequest)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryVestedCoinsRequest)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryVestedCoinsRequest)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestedCoinsRequest: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestedCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var _ protoreflect.List = (*_QueryVestedCoinsResponse_1_list)(nil)
-
-type _QueryVestedCoinsResponse_1_list struct {
-	list *[]*v1beta1.Coin
-}
-
-func (x *_QueryVestedCoinsResponse_1_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_QueryVestedCoinsResponse_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_QueryVestedCoinsResponse_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_QueryVestedCoinsResponse_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_QueryVestedCoinsResponse_1_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_QueryVestedCoinsResponse_1_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_QueryVestedCoinsResponse_1_list) NewElement() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_QueryVestedCoinsResponse_1_list) IsValid() bool {
-	return x.list != nil
-}
-
-var (
-	md_QueryVestedCoinsResponse                protoreflect.MessageDescriptor
-	fd_QueryVestedCoinsResponse_vested_vesting protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_cosmos_accounts_vesting_query_proto_init()
-	md_QueryVestedCoinsResponse = File_cosmos_accounts_vesting_query_proto.Messages().ByName("QueryVestedCoinsResponse")
-	fd_QueryVestedCoinsResponse_vested_vesting = md_QueryVestedCoinsResponse.Fields().ByName("vested_vesting")
-}
-
-var _ protoreflect.Message = (*fastReflection_QueryVestedCoinsResponse)(nil)
-
-type fastReflection_QueryVestedCoinsResponse QueryVestedCoinsResponse
-
-func (x *QueryVestedCoinsResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryVestedCoinsResponse)(x)
-}
-
-func (x *QueryVestedCoinsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[13]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_QueryVestedCoinsResponse_messageType fastReflection_QueryVestedCoinsResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryVestedCoinsResponse_messageType{}
-
-type fastReflection_QueryVestedCoinsResponse_messageType struct{}
-
-func (x fastReflection_QueryVestedCoinsResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryVestedCoinsResponse)(nil)
-}
-func (x fastReflection_QueryVestedCoinsResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryVestedCoinsResponse)
-}
-func (x fastReflection_QueryVestedCoinsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryVestedCoinsResponse
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_QueryVestedCoinsResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryVestedCoinsResponse
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryVestedCoinsResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryVestedCoinsResponse_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryVestedCoinsResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryVestedCoinsResponse)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryVestedCoinsResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryVestedCoinsResponse)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_QueryVestedCoinsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.VestedVesting) != 0 {
-		value := protoreflect.ValueOfList(&_QueryVestedCoinsResponse_1_list{list: &x.VestedVesting})
-		if !f(fd_QueryVestedCoinsResponse_vested_vesting, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryVestedCoinsResponse) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestedCoinsResponse.vested_vesting":
-		return len(x.VestedVesting) != 0
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestedCoinsResponse) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestedCoinsResponse.vested_vesting":
-		x.VestedVesting = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryVestedCoinsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "cosmos.accounts.vesting.QueryVestedCoinsResponse.vested_vesting":
-		if len(x.VestedVesting) == 0 {
-			return protoreflect.ValueOfList(&_QueryVestedCoinsResponse_1_list{})
-		}
-		listValue := &_QueryVestedCoinsResponse_1_list{list: &x.VestedVesting}
-		return protoreflect.ValueOfList(listValue)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsResponse does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestedCoinsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestedCoinsResponse.vested_vesting":
-		lv := value.List()
-		clv := lv.(*_QueryVestedCoinsResponse_1_list)
-		x.VestedVesting = *clv.list
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestedCoinsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestedCoinsResponse.vested_vesting":
-		if x.VestedVesting == nil {
-			x.VestedVesting = []*v1beta1.Coin{}
-		}
-		value := &_QueryVestedCoinsResponse_1_list{list: &x.VestedVesting}
-		return protoreflect.ValueOfList(value)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryVestedCoinsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.accounts.vesting.QueryVestedCoinsResponse.vested_vesting":
-		list := []*v1beta1.Coin{}
-		return protoreflect.ValueOfList(&_QueryVestedCoinsResponse_1_list{list: &list})
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.QueryVestedCoinsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.accounts.vesting.QueryVestedCoinsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryVestedCoinsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.vesting.QueryVestedCoinsResponse", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryVestedCoinsResponse) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryVestedCoinsResponse) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_QueryVestedCoinsResponse) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryVestedCoinsResponse) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryVestedCoinsResponse)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if len(x.VestedVesting) > 0 {
-			for _, e := range x.VestedVesting {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryVestedCoinsResponse)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.VestedVesting) > 0 {
-			for iNdEx := len(x.VestedVesting) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.VestedVesting[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0xa
-			}
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryVestedCoinsResponse)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestedCoinsResponse: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryVestedCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
+			case 2:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VestedVesting", wireType)
 				}
@@ -5803,7 +5091,7 @@ func (x *QueryVestingPeriodsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVestingPeriodsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[14]
+	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6212,7 +5500,7 @@ func (x *QueryVestingPeriodsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVestingPeriodsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[15]
+	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6653,7 +5941,7 @@ func (x *QueryOwnerRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryOwnerRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[16]
+	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7011,7 +6299,7 @@ func (x *QueryOwnerResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryOwnerResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[17]
+	mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7744,15 +7032,15 @@ func (x *QueryEndTimeResponse) GetEndTime() int64 {
 	return 0
 }
 
-// QueryVestingCoinsRequest is used to query the account vesting coins.
-type QueryVestingCoinsRequest struct {
+// QueryVestCoinsInfoRequest is used to query the account vesting and vested coins.
+type QueryVestCoinsInfoRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *QueryVestingCoinsRequest) Reset() {
-	*x = QueryVestingCoinsRequest{}
+func (x *QueryVestCoinsInfoRequest) Reset() {
+	*x = QueryVestCoinsInfoRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7760,29 +7048,31 @@ func (x *QueryVestingCoinsRequest) Reset() {
 	}
 }
 
-func (x *QueryVestingCoinsRequest) String() string {
+func (x *QueryVestCoinsInfoRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryVestingCoinsRequest) ProtoMessage() {}
+func (*QueryVestCoinsInfoRequest) ProtoMessage() {}
 
-// Deprecated: Use QueryVestingCoinsRequest.ProtoReflect.Descriptor instead.
-func (*QueryVestingCoinsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryVestCoinsInfoRequest.ProtoReflect.Descriptor instead.
+func (*QueryVestCoinsInfoRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{10}
 }
 
-// QueryVestingCoinsResponse returns the account vesting coins.
-type QueryVestingCoinsResponse struct {
+// QueryVestingCoinsResponse returns the account vesting and vested coins.
+type QueryVestCoinsInfoResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// original_vesting defines the value of the account original vesting.
+	// vesting_coins defines the value of the account vesting coins.
 	VestingCoins []*v1beta1.Coin `protobuf:"bytes,1,rep,name=vesting_coins,json=vestingCoins,proto3" json:"vesting_coins,omitempty"`
+	// vested_vesting defines the value of the account vested coins.
+	VestedVesting []*v1beta1.Coin `protobuf:"bytes,2,rep,name=vested_vesting,json=vestedVesting,proto3" json:"vested_vesting,omitempty"`
 }
 
-func (x *QueryVestingCoinsResponse) Reset() {
-	*x = QueryVestingCoinsResponse{}
+func (x *QueryVestCoinsInfoResponse) Reset() {
+	*x = QueryVestCoinsInfoResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7790,82 +7080,25 @@ func (x *QueryVestingCoinsResponse) Reset() {
 	}
 }
 
-func (x *QueryVestingCoinsResponse) String() string {
+func (x *QueryVestCoinsInfoResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryVestingCoinsResponse) ProtoMessage() {}
+func (*QueryVestCoinsInfoResponse) ProtoMessage() {}
 
-// Deprecated: Use QueryVestingCoinsResponse.ProtoReflect.Descriptor instead.
-func (*QueryVestingCoinsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryVestCoinsInfoResponse.ProtoReflect.Descriptor instead.
+func (*QueryVestCoinsInfoResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *QueryVestingCoinsResponse) GetVestingCoins() []*v1beta1.Coin {
+func (x *QueryVestCoinsInfoResponse) GetVestingCoins() []*v1beta1.Coin {
 	if x != nil {
 		return x.VestingCoins
 	}
 	return nil
 }
 
-// QueryVestedCoinsRequest is used to query the account vested coins.
-type QueryVestedCoinsRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *QueryVestedCoinsRequest) Reset() {
-	*x = QueryVestedCoinsRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[12]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QueryVestedCoinsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QueryVestedCoinsRequest) ProtoMessage() {}
-
-// Deprecated: Use QueryVestedCoinsRequest.ProtoReflect.Descriptor instead.
-func (*QueryVestedCoinsRequest) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{12}
-}
-
-// QueryVestedCoinsResponse returns the account vested coins.
-type QueryVestedCoinsResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// original_vesting defines the value of the account original vesting.
-	VestedVesting []*v1beta1.Coin `protobuf:"bytes,1,rep,name=vested_vesting,json=vestedVesting,proto3" json:"vested_vesting,omitempty"`
-}
-
-func (x *QueryVestedCoinsResponse) Reset() {
-	*x = QueryVestedCoinsResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[13]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QueryVestedCoinsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QueryVestedCoinsResponse) ProtoMessage() {}
-
-// Deprecated: Use QueryVestedCoinsResponse.ProtoReflect.Descriptor instead.
-func (*QueryVestedCoinsResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *QueryVestedCoinsResponse) GetVestedVesting() []*v1beta1.Coin {
+func (x *QueryVestCoinsInfoResponse) GetVestedVesting() []*v1beta1.Coin {
 	if x != nil {
 		return x.VestedVesting
 	}
@@ -7882,7 +7115,7 @@ type QueryVestingPeriodsRequest struct {
 func (x *QueryVestingPeriodsRequest) Reset() {
 	*x = QueryVestingPeriodsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[14]
+		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7896,7 +7129,7 @@ func (*QueryVestingPeriodsRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryVestingPeriodsRequest.ProtoReflect.Descriptor instead.
 func (*QueryVestingPeriodsRequest) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{14}
+	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{12}
 }
 
 // QueryVestingPeriodsResponse returns the periodic vesting account vesting periods.
@@ -7912,7 +7145,7 @@ type QueryVestingPeriodsResponse struct {
 func (x *QueryVestingPeriodsResponse) Reset() {
 	*x = QueryVestingPeriodsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[15]
+		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7926,7 +7159,7 @@ func (*QueryVestingPeriodsResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryVestingPeriodsResponse.ProtoReflect.Descriptor instead.
 func (*QueryVestingPeriodsResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{15}
+	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *QueryVestingPeriodsResponse) GetVestingPeriods() []*Period {
@@ -7946,7 +7179,7 @@ type QueryOwnerRequest struct {
 func (x *QueryOwnerRequest) Reset() {
 	*x = QueryOwnerRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[16]
+		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7960,7 +7193,7 @@ func (*QueryOwnerRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryOwnerRequest.ProtoReflect.Descriptor instead.
 func (*QueryOwnerRequest) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{16}
+	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{14}
 }
 
 // QueryOwnerResponse returns the owner of the vesting account.
@@ -7976,7 +7209,7 @@ type QueryOwnerResponse struct {
 func (x *QueryOwnerResponse) Reset() {
 	*x = QueryOwnerResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[17]
+		mi := &file_cosmos_accounts_vesting_query_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7990,7 +7223,7 @@ func (*QueryOwnerResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryOwnerResponse.ProtoReflect.Descriptor instead.
 func (*QueryOwnerResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{17}
+	return file_cosmos_accounts_vesting_query_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *QueryOwnerResponse) GetOwner() string {
@@ -8062,58 +7295,55 @@ var file_cosmos_accounts_vesting_query_proto_rawDesc = []byte{
 	0x22, 0x31, 0x0a, 0x14, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x6e, 0x64, 0x54, 0x69, 0x6d, 0x65,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x65, 0x6e, 0x64, 0x5f,
 	0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x65, 0x6e, 0x64, 0x54,
-	0x69, 0x6d, 0x65, 0x22, 0x1a, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x65, 0x73, 0x74,
-	0x69, 0x6e, 0x67, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22,
-	0xa4, 0x01, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67,
-	0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x86, 0x01,
-	0x0a, 0x0d, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0x18,
-	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
-	0x42, 0x46, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69,
-	0x6e, 0x73, 0x9a, 0xe7, 0xb0, 0x2a, 0x0c, 0x6c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x5f, 0x63, 0x6f,
-	0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0c, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e,
-	0x67, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x22, 0x19, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56,
-	0x65, 0x73, 0x74, 0x65, 0x64, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x22, 0xa5, 0x01, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x65, 0x73, 0x74, 0x65,
-	0x64, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x88,
-	0x01, 0x0a, 0x0e, 0x76, 0x65, 0x73, 0x74, 0x65, 0x64, 0x5f, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e,
-	0x67, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x69, 0x6d, 0x65, 0x22, 0x1b, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x65, 0x73, 0x74,
+	0x43, 0x6f, 0x69, 0x6e, 0x73, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x22, 0xb0, 0x02, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x65, 0x73, 0x74, 0x43, 0x6f,
+	0x69, 0x6e, 0x73, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x86, 0x01, 0x0a, 0x0d, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x63, 0x6f, 0x69, 0x6e,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f,
 	0x69, 0x6e, 0x42, 0x46, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68,
 	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43,
 	0x6f, 0x69, 0x6e, 0x73, 0x9a, 0xe7, 0xb0, 0x2a, 0x0c, 0x6c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x5f,
-	0x63, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0d, 0x76, 0x65, 0x73, 0x74,
-	0x65, 0x64, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x22, 0x1c, 0x0a, 0x1a, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x72, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x0f, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e,
-	0x67, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x1f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64,
-	0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0e, 0x76, 0x65, 0x73,
-	0x74, 0x69, 0x6e, 0x67, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x22, 0x13, 0x0a, 0x11, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x22, 0x2a, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x42, 0xd1, 0x01, 0x0a,
-	0x1b, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x42, 0x0a, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x28, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x65, 0x73,
-	0x74, 0x69, 0x6e, 0x67, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x56, 0xaa, 0x02, 0x17, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x56, 0x65, 0x73,
-	0x74, 0x69, 0x6e, 0x67, 0xca, 0x02, 0x17, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0xe2, 0x02,
-	0x23, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
-	0x5c, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x63, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0c, 0x76, 0x65, 0x73, 0x74,
+	0x69, 0x6e, 0x67, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x12, 0x88, 0x01, 0x0a, 0x0e, 0x76, 0x65, 0x73,
+	0x74, 0x65, 0x64, 0x5f, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x18, 0x02, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x46, 0xc8, 0xde,
+	0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73,
+	0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x9a, 0xe7,
+	0xb0, 0x2a, 0x0c, 0x6c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0xa8,
+	0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0d, 0x76, 0x65, 0x73, 0x74, 0x65, 0x64, 0x56, 0x65, 0x73, 0x74,
+	0x69, 0x6e, 0x67, 0x22, 0x1c, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x65, 0x73, 0x74,
+	0x69, 0x6e, 0x67, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x22, 0x72, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e,
+	0x67, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x53, 0x0a, 0x0f, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x70, 0x65, 0x72, 0x69,
+	0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74,
+	0x69, 0x6e, 0x67, 0x2e, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00,
+	0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x65,
+	0x72, 0x69, 0x6f, 0x64, 0x73, 0x22, 0x13, 0x0a, 0x11, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x77,
+	0x6e, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x2a, 0x0a, 0x12, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x42, 0xd1, 0x01, 0x0a, 0x1b, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76,
+	0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x28, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
+	0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0xa2, 0x02,
+	0x03, 0x43, 0x41, 0x56, 0xaa, 0x02, 0x17, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0xca, 0x02,
+	0x17, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
+	0x5c, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0xe2, 0x02, 0x23, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x65, 0x73, 0x74, 0x69,
+	0x6e, 0x67, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
+	0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x3a, 0x3a, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -8128,7 +7358,7 @@ func file_cosmos_accounts_vesting_query_proto_rawDescGZIP() []byte {
 	return file_cosmos_accounts_vesting_query_proto_rawDescData
 }
 
-var file_cosmos_accounts_vesting_query_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_cosmos_accounts_vesting_query_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_cosmos_accounts_vesting_query_proto_goTypes = []interface{}{
 	(*QueryOriginalVestingRequest)(nil),   // 0: cosmos.accounts.vesting.QueryOriginalVestingRequest
 	(*QueryOriginalVestingResponse)(nil),  // 1: cosmos.accounts.vesting.QueryOriginalVestingResponse
@@ -8140,24 +7370,22 @@ var file_cosmos_accounts_vesting_query_proto_goTypes = []interface{}{
 	(*QueryStartTimeResponse)(nil),        // 7: cosmos.accounts.vesting.QueryStartTimeResponse
 	(*QueryEndTimeRequest)(nil),           // 8: cosmos.accounts.vesting.QueryEndTimeRequest
 	(*QueryEndTimeResponse)(nil),          // 9: cosmos.accounts.vesting.QueryEndTimeResponse
-	(*QueryVestingCoinsRequest)(nil),      // 10: cosmos.accounts.vesting.QueryVestingCoinsRequest
-	(*QueryVestingCoinsResponse)(nil),     // 11: cosmos.accounts.vesting.QueryVestingCoinsResponse
-	(*QueryVestedCoinsRequest)(nil),       // 12: cosmos.accounts.vesting.QueryVestedCoinsRequest
-	(*QueryVestedCoinsResponse)(nil),      // 13: cosmos.accounts.vesting.QueryVestedCoinsResponse
-	(*QueryVestingPeriodsRequest)(nil),    // 14: cosmos.accounts.vesting.QueryVestingPeriodsRequest
-	(*QueryVestingPeriodsResponse)(nil),   // 15: cosmos.accounts.vesting.QueryVestingPeriodsResponse
-	(*QueryOwnerRequest)(nil),             // 16: cosmos.accounts.vesting.QueryOwnerRequest
-	(*QueryOwnerResponse)(nil),            // 17: cosmos.accounts.vesting.QueryOwnerResponse
-	(*v1beta1.Coin)(nil),                  // 18: cosmos.base.v1beta1.Coin
-	(*Period)(nil),                        // 19: cosmos.accounts.vesting.Period
+	(*QueryVestCoinsInfoRequest)(nil),     // 10: cosmos.accounts.vesting.QueryVestCoinsInfoRequest
+	(*QueryVestCoinsInfoResponse)(nil),    // 11: cosmos.accounts.vesting.QueryVestCoinsInfoResponse
+	(*QueryVestingPeriodsRequest)(nil),    // 12: cosmos.accounts.vesting.QueryVestingPeriodsRequest
+	(*QueryVestingPeriodsResponse)(nil),   // 13: cosmos.accounts.vesting.QueryVestingPeriodsResponse
+	(*QueryOwnerRequest)(nil),             // 14: cosmos.accounts.vesting.QueryOwnerRequest
+	(*QueryOwnerResponse)(nil),            // 15: cosmos.accounts.vesting.QueryOwnerResponse
+	(*v1beta1.Coin)(nil),                  // 16: cosmos.base.v1beta1.Coin
+	(*Period)(nil),                        // 17: cosmos.accounts.vesting.Period
 }
 var file_cosmos_accounts_vesting_query_proto_depIdxs = []int32{
-	18, // 0: cosmos.accounts.vesting.QueryOriginalVestingResponse.original_vesting:type_name -> cosmos.base.v1beta1.Coin
-	18, // 1: cosmos.accounts.vesting.QueryDelegatedFreeResponse.delegated_free:type_name -> cosmos.base.v1beta1.Coin
-	18, // 2: cosmos.accounts.vesting.QueryDelegatedVestingResponse.delegated_vesting:type_name -> cosmos.base.v1beta1.Coin
-	18, // 3: cosmos.accounts.vesting.QueryVestingCoinsResponse.vesting_coins:type_name -> cosmos.base.v1beta1.Coin
-	18, // 4: cosmos.accounts.vesting.QueryVestedCoinsResponse.vested_vesting:type_name -> cosmos.base.v1beta1.Coin
-	19, // 5: cosmos.accounts.vesting.QueryVestingPeriodsResponse.vesting_periods:type_name -> cosmos.accounts.vesting.Period
+	16, // 0: cosmos.accounts.vesting.QueryOriginalVestingResponse.original_vesting:type_name -> cosmos.base.v1beta1.Coin
+	16, // 1: cosmos.accounts.vesting.QueryDelegatedFreeResponse.delegated_free:type_name -> cosmos.base.v1beta1.Coin
+	16, // 2: cosmos.accounts.vesting.QueryDelegatedVestingResponse.delegated_vesting:type_name -> cosmos.base.v1beta1.Coin
+	16, // 3: cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vesting_coins:type_name -> cosmos.base.v1beta1.Coin
+	16, // 4: cosmos.accounts.vesting.QueryVestCoinsInfoResponse.vested_vesting:type_name -> cosmos.base.v1beta1.Coin
+	17, // 5: cosmos.accounts.vesting.QueryVestingPeriodsResponse.vesting_periods:type_name -> cosmos.accounts.vesting.Period
 	6,  // [6:6] is the sub-list for method output_type
 	6,  // [6:6] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
@@ -8293,7 +7521,7 @@ func file_cosmos_accounts_vesting_query_proto_init() {
 			}
 		}
 		file_cosmos_accounts_vesting_query_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryVestingCoinsRequest); i {
+			switch v := v.(*QueryVestCoinsInfoRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8305,7 +7533,7 @@ func file_cosmos_accounts_vesting_query_proto_init() {
 			}
 		}
 		file_cosmos_accounts_vesting_query_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryVestingCoinsResponse); i {
+			switch v := v.(*QueryVestCoinsInfoResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8317,30 +7545,6 @@ func file_cosmos_accounts_vesting_query_proto_init() {
 			}
 		}
 		file_cosmos_accounts_vesting_query_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryVestedCoinsRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cosmos_accounts_vesting_query_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryVestedCoinsResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cosmos_accounts_vesting_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryVestingPeriodsRequest); i {
 			case 0:
 				return &v.state
@@ -8352,7 +7556,7 @@ func file_cosmos_accounts_vesting_query_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_accounts_vesting_query_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_accounts_vesting_query_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryVestingPeriodsResponse); i {
 			case 0:
 				return &v.state
@@ -8364,7 +7568,7 @@ func file_cosmos_accounts_vesting_query_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_accounts_vesting_query_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_accounts_vesting_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryOwnerRequest); i {
 			case 0:
 				return &v.state
@@ -8376,7 +7580,7 @@ func file_cosmos_accounts_vesting_query_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_accounts_vesting_query_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_accounts_vesting_query_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryOwnerResponse); i {
 			case 0:
 				return &v.state
@@ -8395,7 +7599,7 @@ func file_cosmos_accounts_vesting_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_accounts_vesting_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

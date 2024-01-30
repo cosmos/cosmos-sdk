@@ -126,29 +126,21 @@ func (cva ContinuousVestingAccount) GetVestingCoins(ctx context.Context, blockTi
 	return originalVesting.Sub(vestedCoins...), nil
 }
 
-func (cva ContinuousVestingAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
-	*vestingtypes.QueryVestedCoinsResponse, error,
+func (cva ContinuousVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
+	*vestingtypes.QueryVestCoinsInfoResponse, error,
 ) {
 	hs := cva.headerService.GetHeaderInfo(ctx)
 	vestedCoins, err := cva.GetVestedCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-	return &vestingtypes.QueryVestedCoinsResponse{
-		VestedVesting: vestedCoins,
-	}, nil
-}
-
-func (cva ContinuousVestingAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
-	*vestingtypes.QueryVestingCoinsResponse, error,
-) {
-	hs := cva.headerService.GetHeaderInfo(ctx)
 	vestingCoins, err := cva.GetVestingCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-	return &vestingtypes.QueryVestingCoinsResponse{
-		VestingCoins: vestingCoins,
+	return &vestingtypes.QueryVestCoinsInfoResponse{
+		VestedVesting: vestedCoins,
+		VestingCoins:  vestingCoins,
 	}, nil
 }
 
@@ -176,7 +168,6 @@ func (cva ContinuousVestingAccount) RegisterExecuteHandlers(builder *accountstd.
 
 func (cva ContinuousVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, cva.QueryStartTime)
-	accountstd.RegisterQueryHandler(builder, cva.QueryVestedCoins)
-	accountstd.RegisterQueryHandler(builder, cva.QueryVestingCoins)
+	accountstd.RegisterQueryHandler(builder, cva.QueryVestCoinsInfo)
 	cva.BaseVesting.RegisterQueryHandlers(builder)
 }

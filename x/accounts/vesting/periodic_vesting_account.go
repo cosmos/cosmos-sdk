@@ -199,31 +199,22 @@ func (pva PeriodicVestingAccount) GetVestingCoins(ctx context.Context, blockTime
 	return originalVesting.Sub(vestedCoins...), nil
 }
 
-func (pva PeriodicVestingAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
-	*vestingtypes.QueryVestedCoinsResponse, error,
+func (pva PeriodicVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
+	*vestingtypes.QueryVestCoinsInfoResponse, error,
 ) {
 	hs := pva.headerService.GetHeaderInfo(ctx)
 	vestedCoins, err := pva.GetVestedCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-
-	return &vestingtypes.QueryVestedCoinsResponse{
-		VestedVesting: vestedCoins,
-	}, nil
-}
-
-func (pva PeriodicVestingAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
-	*vestingtypes.QueryVestingCoinsResponse, error,
-) {
-	hs := pva.headerService.GetHeaderInfo(ctx)
 	vestingCoins, err := pva.GetVestingCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
 
-	return &vestingtypes.QueryVestingCoinsResponse{
-		VestingCoins: vestingCoins,
+	return &vestingtypes.QueryVestCoinsInfoResponse{
+		VestedVesting: vestedCoins,
+		VestingCoins:  vestingCoins,
 	}, nil
 }
 
@@ -264,8 +255,7 @@ func (pva PeriodicVestingAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 
 func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, pva.QueryStartTime)
-	accountstd.RegisterQueryHandler(builder, pva.QueryVestedCoins)
-	accountstd.RegisterQueryHandler(builder, pva.QueryVestingCoins)
+	accountstd.RegisterQueryHandler(builder, pva.QueryVestCoinsInfo)
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestingPeriods)
 	pva.BaseVesting.RegisterQueryHandlers(builder)
 }

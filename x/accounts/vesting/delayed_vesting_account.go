@@ -78,31 +78,22 @@ func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime 
 	return originalVesting.Sub(vestedCoins...), nil
 }
 
-func (dva DelayedVestingAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
-	*vestingtypes.QueryVestedCoinsResponse, error,
+func (dva DelayedVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
+	*vestingtypes.QueryVestCoinsInfoResponse, error,
 ) {
 	hs := dva.headerService.GetHeaderInfo(ctx)
 	vestedCoins, err := dva.GetVestedCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-
-	return &vestingtypes.QueryVestedCoinsResponse{
-		VestedVesting: vestedCoins,
-	}, nil
-}
-
-func (dva DelayedVestingAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
-	*vestingtypes.QueryVestingCoinsResponse, error,
-) {
-	hs := dva.headerService.GetHeaderInfo(ctx)
 	vestingCoins, err := dva.GetVestingCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
 
-	return &vestingtypes.QueryVestingCoinsResponse{
-		VestingCoins: vestingCoins,
+	return &vestingtypes.QueryVestCoinsInfoResponse{
+		VestedVesting: vestedCoins,
+		VestingCoins:  vestingCoins,
 	}, nil
 }
 
@@ -117,7 +108,6 @@ func (dva DelayedVestingAccount) RegisterExecuteHandlers(builder *accountstd.Exe
 }
 
 func (dva DelayedVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, dva.QueryVestedCoins)
-	accountstd.RegisterQueryHandler(builder, dva.QueryVestingCoins)
+	accountstd.RegisterQueryHandler(builder, dva.QueryVestCoinsInfo)
 	dva.BaseVesting.RegisterQueryHandlers(builder)
 }

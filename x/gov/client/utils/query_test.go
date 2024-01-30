@@ -160,7 +160,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 				marshaled[i] = tx
 			}
 
-			params := v1.NewQueryProposalVotesParams(0, tc.page, tc.limit)
+			params := utils.QueryProposalVotesParams{0, tc.page, tc.limit}
 			votesData, err := utils.QueryVotesByTxQuery(clientCtx, params)
 			require.NoError(t, err)
 			votes := []v1.Vote{}

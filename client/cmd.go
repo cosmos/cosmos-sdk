@@ -359,6 +359,14 @@ func GetClientContextFromCmd(cmd *cobra.Command) Context {
 // SetCmdClientContext sets a command's Context value to the provided argument.
 // If the context has not been set, set the given context as the default.
 func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
-	cmd.SetContext(context.WithValue(cmd.Context(), ClientContextKey, &clientCtx))
+	var cmdCtx context.Context
+
+	if cmd.Context() == nil {
+		cmdCtx = context.Background()
+	} else {
+		cmdCtx = cmd.Context()
+	}
+
+	cmd.SetContext(context.WithValue(cmdCtx, ClientContextKey, &clientCtx))
 	return nil
 }

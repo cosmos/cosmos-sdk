@@ -201,4 +201,5 @@ If attacker spam with lower tier transactions, user can mitigate by sending high
 ## References
 
 * https://eips.ethereum.org/EIPS/eip-1559
-* https://iohk.io/en/blog/posts/2021/11/26/network-traffic-and-tiered-pricing/
+<!-- markdown-link-check-disable-next-line -->
+* https://iohk.io/en/blog/posts/2021/11/26/network-traffic-and-tiered-pricing

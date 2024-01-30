@@ -17,7 +17,7 @@ This document describes the lifecycle of a query in a Cosmos SDK application, fr
 
 A [**query**](../../build/building-modules/02-messages-and-queries.md#queries) is a request for information made by end-users of applications through an interface and processed by a full-node. Users can query information about the network, the application itself, and application state directly from the application's stores or modules. Note that queries are different from [transactions](../advanced/01-transactions.md) (view the lifecycle [here](./01-tx-lifecycle.md)), particularly in that they do not require consensus to be processed (as they do not trigger state-transitions); they can be fully handled by one full-node.
 
-For the purpose of explaining the query lifecycle, let's say the query, `MyQuery`, is requesting a list of delegations made by a certain delegator address in the application called `simapp`. As is to be expected, the [`staking`](../../build/modules/staking/README.md) module handles this query. But first, there are a few ways `MyQuery` can be created by users.
+For the purpose of explaining the query lifecycle, let's say the query, `MyQuery`, is requesting a list of delegations made by a certain delegator address in the application called `simapp`. As is to be expected, the [`staking`](../../../x/staking/README.md) module handles this query. But first, there are a few ways `MyQuery` can be created by users.
 
 ### CLI
 
@@ -27,7 +27,7 @@ The main interface for an application is the command-line interface. Users conne
 simd query staking delegations <delegatorAddress>
 ```
 
-This query command was defined by the [`staking`](../../build/modules/staking/README.md) module developer and added to the list of subcommands by the application developer when creating the CLI.
+This query command was defined by the [`staking`](../../../x/staking/README.md) module developer and added to the list of subcommands by the application developer when creating the CLI.
 
 Note that the general format is as follows:
 
@@ -35,7 +35,7 @@ Note that the general format is as follows:
 simd query [moduleName] [command] <arguments> --flag <flagArg>
 ```
 
-To provide values such as `--node` (the full-node the CLI connects to), the user can use the [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml) config file to set them or provide them as flags.
+To provide values such as `--node` (the full-node the CLI connects to), the user can use the [`app.toml`](https://docs.cosmos.network/main/user/run-node/run-node) config file to set them or provide them as flags.
 
 The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](../advanced/07-cli.md#root-command) (`simd`), the type of command (`Myquery`), the module that contains the command (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
 
@@ -74,7 +74,7 @@ The preceding examples show how an external user can interact with a node by que
 The first thing that is created in the execution of a CLI command is a `client.Context`. A `client.Context` is an object that stores all the data needed to process a request on the user side. In particular, a `client.Context` stores the following:
 
 * **Codec**: The [encoder/decoder](../advanced/05-encoding.md) used by the application, used to marshal the parameters and query before making the CometBFT RPC request and unmarshal the returned response into a JSON object. The default codec used by the CLI is Protobuf.
-* **Account Decoder**: The account decoder from the [`auth`](../../build/modules/auth/README.md) module, which translates `[]byte`s into accounts.
+* **Account Decoder**: The account decoder from the [`auth`](https://docs.cosmos.network/main/build/modules/auth) module, which translates `[]byte`s into accounts.
 * **RPC Client**: The CometBFT RPC Client, or node, to which requests are relayed.
 * **Keyring**: A [Key Manager](../beginner/03-accounts.md#keyring) used to sign transactions and handle other operations with keys.
 * **Output Writer**: A [Writer](https://pkg.go.dev/io/#Writer) used to output the response.

@@ -72,5 +72,5 @@ Breaks the current assumed relationship between address and pubkeys as H(pubkey)
 * Will require that PubKeys for an account are included in the genesis exports.
 
 ## References
-
+<!-- markdown-link-check-disable-next-line -->
 * https://algorandtechnologies.com/news/announcing-rekeying

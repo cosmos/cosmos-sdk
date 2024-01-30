@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/golang-lru/simplelru"
 	"sigs.k8s.io/yaml"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -166,18 +166,10 @@ func MustAccAddressFromBech32(address string) AccAddress {
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
-	if len(strings.TrimSpace(address)) == 0 {
-		return AccAddress{}, errors.New("empty address string is not allowed")
-	}
-
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
 
-	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	return AccAddress(bz), nil
+	addrCdc := addresscodec.NewBech32Codec(bech32PrefixAccAddr)
+	return addrCdc.StringToBytes(address)
 }
 
 // Returns boolean for whether two AccAddresses are Equal
@@ -313,18 +305,10 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
-	if len(strings.TrimSpace(address)) == 0 {
-		return ValAddress{}, errors.New("empty address string is not allowed")
-	}
-
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
 
-	bz, err := GetFromBech32(address, bech32PrefixValAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	return ValAddress(bz), nil
+	addrCdc := addresscodec.NewBech32Codec(bech32PrefixValAddr)
+	return addrCdc.StringToBytes(address)
 }
 
 // MustValAddressFromBech32 calls ValAddressFromBech32 and panics on error.
@@ -648,12 +632,6 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
-	if err != nil {
-		return nil, err
-	}
-
-	codec := address.NewBech32Codec(prefix)
-	_, err = codec.BytesToString(bz)
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
-	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
+	vestingtypes "cosmossdk.io/x/accounts/vesting/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 

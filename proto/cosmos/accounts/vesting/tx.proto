@@ -1,13 +1,13 @@
 syntax = "proto3";
-package cosmos.accounts.vesting.v1;
+package cosmos.accounts.vesting;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
-import "cosmos/accounts/vesting/v1/vesting.proto";
+import "cosmos/accounts/vesting/vesting.proto";
 import "amino/amino.proto";
 
-option go_package = "cosmossdk.io/x/vesting/types/v1";
+option go_package = "cosmossdk.io/x/accounts/vesting/types";
 
 //-------------------------------------- INIT --------------------------------------
 

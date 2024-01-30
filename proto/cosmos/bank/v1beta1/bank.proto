@@ -122,4 +122,14 @@ message Metadata {
   //
   // Since: cosmos-sdk 0.46
   string uri_hash = 8 [(gogoproto.customname) = "URIHash"];
+
+  // Used by Penumbra for the Penumbra asset ID.
+  // Reserved here to ensure cross-system compatibility.
+  reserved 1984;
+  reserved "penumbra_asset_id";
+
+  // Used by the cosmos asset registry to record images (logos), in json-schema extensions to this message.
+  // Reserved here to align with Penumbra's upstreaming of those extensions into its proto definitions.
+  reserved 1985;
+  reserved "images";
 }

@@ -352,6 +352,31 @@ func TestTally_Standard(t *testing.T) {
 				SpamCount:       "6000000",
 			},
 		},
+		{
+			name: "quorum reached, yes quorum not reached: prop fails/burn deposit",
+			setup: func(s tallyFixture) {
+				params, _ := s.keeper.Params.Get(s.ctx)
+				params.YesQuorum = "0.7"
+				_ = s.keeper.Params.Set(s.ctx, params)
+
+				setTotalBonded(s, 10000000)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_TWO)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_TWO)
+			},
+			expectedPass: false,
+			expectedBurn: false,
+			expectedTally: v1.TallyResult{
+				YesCount:        "3000000",
+				AbstainCount:    "2000000",
+				NoCount:         "1000000",
+				NoWithVetoCount: "0",
+				SpamCount:       "0",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -712,6 +737,31 @@ func TestTally_Expedited(t *testing.T) {
 				NoCount:         "0",
 				NoWithVetoCount: "0",
 				SpamCount:       "6000000",
+			},
+		},
+		{
+			name: "quorum reached, yes quorum not reached: prop fails/burn deposit",
+			setup: func(s tallyFixture) {
+				params, _ := s.keeper.Params.Get(s.ctx)
+				params.YesQuorum = "0.7"
+				_ = s.keeper.Params.Set(s.ctx, params)
+
+				setTotalBonded(s, 10000000)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_TWO)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_TWO)
+			},
+			expectedPass: false,
+			expectedBurn: false,
+			expectedTally: v1.TallyResult{
+				YesCount:        "3000000",
+				AbstainCount:    "2000000",
+				NoCount:         "1000000",
+				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 	}

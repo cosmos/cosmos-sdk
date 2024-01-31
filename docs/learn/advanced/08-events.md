@@ -49,7 +49,7 @@ Lastly, Events are returned to the underlying consensus engine in the response o
 * [`Transaction Execution`](./00-baseapp.md#transactionexecution)
 
 ### Examples
-
+<!-- markdown-link-check-disable -->
 The following examples show how to query Events using the Cosmos SDK.
 
 | Event                                            | Description                                                                                                                                              |
@@ -57,8 +57,8 @@ The following examples show how to query Events using the Cosmos SDK.
 | `tx.height=23`                                   | Query all transactions at height 23                                                                                                                      |
 | `message.action='/cosmos.bank.v1beta1.Msg/Send'` | Query all transactions containing a x/bank `Send` [Service `Msg`](../../build/building-modules/03-msg-services.md). Note the `'`s around the value.                  |
 | `message.module='bank'`                          | Query all transactions containing messages from the x/bank module. Note the `'`s around the value.                                                       |
-| `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../../../x/staking/README.md).                                                         |
-
+| `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../../build/modules/staking/README.md).                                                         |
+<!-- markdown-link-check-enable -->
 ## EventManager
 
 In Cosmos SDK applications, Events are managed by an abstraction called the `EventManager`.

@@ -44,8 +44,8 @@ The `grpc.Server` is a concrete gRPC server, which spawns and serves all gRPC qu
 :::tip
 `~/.simapp` is the directory where the node's configuration and databases are stored. By default, it's set to `~/.{app_name}`.
 :::
-
-Once the gRPC server is started, you can send requests to it using a gRPC client. Some examples are given in our [Interact with the Node](https://docs.cosmos.network/main/user/run-node/run-node) tutorial.
+<!-- markdown-link-check-disable-next-line -->
+Once the gRPC server is started, you can send requests to it using a gRPC client. Some examples are given in our [Interact with the Node](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml) tutorial.
 
 An overview of all available gRPC endpoints shipped with the Cosmos SDK is [Protobuf documentation](https://buf.build/cosmos/cosmos-sdk).
 

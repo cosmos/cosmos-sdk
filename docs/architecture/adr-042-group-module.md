@@ -26,7 +26,7 @@ It's meant to be used with other access control modules such as [`x/feegrant`](.
 
 ## Decision
 
-We propose merging the `x/group` module with its supporting ([#7098](https://github.com/cosmos/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
+We propose merging the `x/group` module with its supporting ORM/Table Store package ([#7098](https://github.com/cosmos/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
 
 ### Group
 

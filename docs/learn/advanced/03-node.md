@@ -92,5 +92,5 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/start.go#L350-L
 Upon starting, the node will bootstrap its RPC and P2P server and start dialing peers. During handshake with its peers, if the node realizes they are ahead, it will query all the blocks sequentially in order to catch up. Then, it will wait for new block proposals and block signatures from validators in order to make progress.
 
 ## Other commands
-
-To discover how to concretely run a node and interact with it, please refer to our [Running a Node, API and CLI](https://docs.cosmos.network/main/user/run-node/run-node) guide.
+<!-- markdown-link-check-disable-next-line -->
+To discover how to concretely run a node and interact with it, please refer to our [Running a Node, API and CLI](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml) guide.

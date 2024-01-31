@@ -51,7 +51,7 @@ appd tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --ga
 
 #### Other Transaction Creation Methods
 
-The command-line is an easy way to interact with an application, but `Tx` can also be created using a [gRPC or REST interface](../advanced/06-grpc_rest.md) or some other entry point defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Lunie.io](https://github.com/luniehq/lunie) and signing it with a Ledger Nano S).
+The command-line is an easy way to interact with an application, but `Tx` can also be created using a [gRPC or REST interface](../advanced/06-grpc_rest.md) or some other entry point defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Keplr](https://www.keplr.app/) and signing it with a Ledger Nano S).
 
 ## Addition to Mempool
 

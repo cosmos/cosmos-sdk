@@ -1198,7 +1198,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 ### Bug Fixes
 
 * Implement dragonberry security patch.
-    * For applying the patch please refer to the [RELEASE PROCESS](./RELEASE_PROCESS.md)
+    * For applying the patch please refer to the [RELEASE NOTES](https://github.com/cosmos/cosmos-sdk/releases)
 * (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
 * [#12548](https://github.com/cosmos/cosmos-sdk/pull/12548) Prevent signing from wrong key while using multisig.
 

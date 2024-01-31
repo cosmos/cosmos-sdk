@@ -13,6 +13,7 @@ replace (
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk => ../..
+	cosmossdk.io/store/v2 => ../../store
 )
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk

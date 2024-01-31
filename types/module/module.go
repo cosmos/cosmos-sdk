@@ -637,7 +637,7 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 }
 
 // MigrationHandler is the migration function that each module registers.
-type MigrationHandler func(sdk.Context) error
+type MigrationHandler func(ctx context.Context) error
 
 // VersionMap is a map of moduleName -> version
 type VersionMap map[string]uint64

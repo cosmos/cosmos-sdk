@@ -36,6 +36,7 @@ require (
 require cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130
 
 require (
+	cosmossdk.io/x/accounts/vesting v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
@@ -237,6 +238,7 @@ replace (
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
+	cosmossdk.io/x/accounts/vesting => ../x/accounts/vesting
 	cosmossdk.io/x/auth => ../x/auth
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank

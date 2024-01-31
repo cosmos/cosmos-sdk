@@ -21,27 +21,23 @@ type Manager interface {
 	// Callers SHOULD assume that these events may be included in consensus. These events
 	// MUST be emitted deterministically and adding, removing or changing these events SHOULD
 	// be considered state-machine breaking.
-	Emit(event protoiface.MessageV1) error
+	Emit(ctx context.Context, event protoiface.MessageV1) error
 
 	// EmitKV emits an event based on an event and kv-pair attributes.
 	//
 	// These events will not be part of consensus and adding, removing or changing these events is
 	// not a state-machine breaking change.
-	EmitKV(eventType string, attrs ...Attribute) error
+	EmitKV(ctx context.Context, eventType string, attrs ...Attribute) error
 
 	// EmitNonConsensus emits events represented as a protobuf message (as described in ADR 032), without
 	// including it in blockchain consensus.
 	//
 	// These events will not be part of consensus and adding, removing or changing events is
 	// not a state-machine breaking change.
-	EmitNonConsensus(event protoiface.MessageV1) error
+	EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error
 }
 
 // KVEventAttribute is a kv-pair event attribute.
 type Attribute struct {
 	Key, Value string
-}
-
-func NewAttribute(key, value string) Attribute {
-	return Attribute{Key: key, Value: value}
 }

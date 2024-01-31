@@ -3,10 +3,9 @@ package collections_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLookupMap(t *testing.T) {

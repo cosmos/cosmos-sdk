@@ -116,16 +116,6 @@ Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a l
 
 <!-- explain app_config.go changes -->
 
-### Core
-
-`appmodule.Environment` interface was introduced to fetch different services from the application. This can be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services. It needs to be passed into a module at instantiation. 
-
-Circuit Breaker is used as an example. 
-
-```go
-app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey]), nil), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
-```
-
 ### Modules
 
 #### `**all**`

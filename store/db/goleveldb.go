@@ -25,7 +25,7 @@ type GoLevelDB struct {
 
 var _ store.RawDB = (*GoLevelDB)(nil)
 
-func NewGoLevelDB(name, dir string, opts store.Options) (*GoLevelDB, error) {
+func NewGoLevelDB(name string, dir string, opts store.Options) (*GoLevelDB, error) {
 	defaultOpts := &opt.Options{
 		Filter: filter.NewBloomFilter(10), // by default, goleveldb doesn't use a bloom filter.
 	}
@@ -39,7 +39,7 @@ func NewGoLevelDB(name, dir string, opts store.Options) (*GoLevelDB, error) {
 	return NewGoLevelDBWithOpts(name, dir, defaultOpts)
 }
 
-func NewGoLevelDBWithOpts(name, dir string, o *opt.Options) (*GoLevelDB, error) {
+func NewGoLevelDBWithOpts(name string, dir string, o *opt.Options) (*GoLevelDB, error) {
 	dbPath := filepath.Join(dir, name+".db")
 	db, err := leveldb.OpenFile(dbPath, o)
 	if err != nil {
@@ -76,7 +76,7 @@ func (db *GoLevelDB) Has(key []byte) (bool, error) {
 }
 
 // Set implements RawDB.
-func (db *GoLevelDB) Set(key, value []byte) error {
+func (db *GoLevelDB) Set(key []byte, value []byte) error {
 	if len(key) == 0 {
 		return store.ErrKeyEmpty
 	}
@@ -90,7 +90,7 @@ func (db *GoLevelDB) Set(key, value []byte) error {
 }
 
 // SetSync implements RawDB.
-func (db *GoLevelDB) SetSync(key, value []byte) error {
+func (db *GoLevelDB) SetSync(key []byte, value []byte) error {
 	if len(key) == 0 {
 		return store.ErrKeyEmpty
 	}

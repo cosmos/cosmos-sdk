@@ -1,9 +1,8 @@
-# ADR 070: Unordered Transactions
+# ADR 070: Un-Ordered Transaction Inclusion
 
 ## Changelog
 
 * Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
-* Jan 30, 2024: Include section on deterministic transaction encoding
 
 ## Status
 
@@ -50,7 +49,7 @@ and limit the size of the dictionary.
 message TxBody {
   ...
 
-  bool unordered = 4;
+  bool unordered = 4; 
 }
 ```
 
@@ -58,7 +57,7 @@ message TxBody {
 
 In order to provide replay protection, a user should ensure that the transaction's
 TTL value is relatively short-lived but long enough to provide enough time to be
-included in a block, e.g. ~H+50.
+included in a block, e.g. ~H+50. 
 
 We facilitate this by storing the transaction's hash in a durable map, `UnorderedTxManager`,
 to prevent duplicates, i.e. replay attacks. Upon transaction ingress during `CheckTx`,
@@ -108,7 +107,7 @@ func NewUnorderedTxManager() *UnorderedTxManager {
 		blockCh:  make(chan uint64, 16),
 		txHashes: make(map[TxHash]uint64),
   }
-
+ 
  return m
 }
 
@@ -183,13 +182,13 @@ func (m *UnorderedTxManager) purgeLoop() error {
       // channel closed
       break
     }
-
+    
     latest := *blocks[len(blocks)-1]
     hashes := m.expired(latest)
     if len(hashes) > 0 {
       m.purge(hashes)
     }
-
+    
     // avoid burning cpu in catching up phase
     time.Sleep(PurgeLoopSleepMS * time.Millisecond)
   }
@@ -275,17 +274,9 @@ func (d *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 }
 ```
 
-### Transaction Hashes
+### `OnNewBlock`
 
-It is absolutely vital that transaction hashes are deterministic, i.e. transaction
-encoding is not malleable. If a given transaction, which is otherwise valid, can
-be encoded to produce different hashes, which reflect the same valid transaction,
-then a duplicate unordered transaction can be submitted and included in a block.
-
-In order to prevent this, transactions should be encoded in a deterministic manner.
-[ADR-027](./adr-027-deterministic-protobuf-serialization.md) provides such a mechanism.
-However, it is important to note that the way a transaction is signed should ensure
-ADR-027 is followed. E.g. we want to avoid Amino signing.
+Wire the `OnNewBlock` method of `UnorderedTxManager` into the BaseApp's ABCI `Commit` event.
 
 ### State Management
 
@@ -312,8 +303,7 @@ Alternatively, we can write all the transactions to consensus state.
 
 ### Negative
 
-* Requires additional storage overhead and management of processed unordered
-  transactions that exist outside of consensus state.
+* Start up overhead to scan historical blocks.
 
 ## References
 

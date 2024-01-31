@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 SIMD_BIN=${SIMD_BIN:=$(which simd 2>/dev/null)}
 

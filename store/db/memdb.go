@@ -88,7 +88,7 @@ func (db *MemDB) Has(key []byte) (bool, error) {
 }
 
 // Set implements DB.
-func (db *MemDB) Set(key, value []byte) error {
+func (db *MemDB) Set(key []byte, value []byte) error {
 	if len(key) == 0 {
 		return store.ErrKeyEmpty
 	}
@@ -103,12 +103,12 @@ func (db *MemDB) Set(key, value []byte) error {
 }
 
 // set sets a value without locking the mutex.
-func (db *MemDB) set(key, value []byte) {
+func (db *MemDB) set(key []byte, value []byte) {
 	db.btree.ReplaceOrInsert(newPair(key, value))
 }
 
 // SetSync implements DB.
-func (db *MemDB) SetSync(key, value []byte) error {
+func (db *MemDB) SetSync(key []byte, value []byte) error {
 	return db.Set(key, value)
 }
 
@@ -231,11 +231,11 @@ type memDBIterator struct {
 var _ corestore.Iterator = (*memDBIterator)(nil)
 
 // newMemDBIterator creates a new memDBIterator.
-func newMemDBIterator(db *MemDB, start, end []byte, reverse bool) *memDBIterator {
+func newMemDBIterator(db *MemDB, start []byte, end []byte, reverse bool) *memDBIterator {
 	return newMemDBIteratorMtxChoice(db, start, end, reverse, true)
 }
 
-func newMemDBIteratorMtxChoice(db *MemDB, start, end []byte, reverse, useMtx bool) *memDBIterator {
+func newMemDBIteratorMtxChoice(db *MemDB, start []byte, end []byte, reverse bool, useMtx bool) *memDBIterator {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch := make(chan *item, chBufferSize)
 	iter := &memDBIterator{

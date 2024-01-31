@@ -47,10 +47,9 @@ func TestRandomizedGenState(t *testing.T) {
 
 	const (
 		tallyQuorum             = "0.387000000000000000"
-		tallyYesQuorum          = "0.449000000000000000"
-		tallyThreshold          = "0.464000000000000000"
-		tallyExpeditedThreshold = "0.506000000000000000"
-		tallyVetoThreshold      = "0.309000000000000000"
+		tallyThreshold          = "0.452000000000000000"
+		tallyExpeditedThreshold = "0.537000000000000000"
+		tallyVetoThreshold      = "0.276000000000000000"
 		minInitialDepositDec    = "0.880000000000000000"
 		proposalCancelMaxPeriod = "0.110000000000000000"
 	)
@@ -61,7 +60,6 @@ func TestRandomizedGenState(t *testing.T) {
 	assert.Equal(t, float64(291928), govGenesis.Params.VotingPeriod.Seconds())
 	assert.Equal(t, float64(33502), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
 	assert.Equal(t, tallyQuorum, govGenesis.Params.Quorum)
-	assert.Equal(t, tallyYesQuorum, govGenesis.Params.YesQuorum)
 	assert.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
 	assert.Equal(t, tallyExpeditedThreshold, govGenesis.Params.ExpeditedThreshold)
 	assert.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)

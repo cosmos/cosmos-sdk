@@ -4,6 +4,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -29,9 +30,9 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *modulev1.Module
-	Cdc         codec.Codec
-	Environment appmodule.Environment
+	Config       *modulev1.Module
+	Cdc          codec.Codec
+	StoreService store.KVStoreService
 
 	AddressCodec address.Codec
 }
@@ -52,8 +53,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	circuitkeeper := keeper.NewKeeper(
-		in.Environment,
 		in.Cdc,
+		in.StoreService,
 		authority.String(),
 		in.AddressCodec,
 	)

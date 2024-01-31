@@ -22,7 +22,6 @@ var (
 	DefaultMinDepositTokens             = sdkmath.NewInt(10000000)
 	DefaultMinExpeditedDepositTokens    = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
 	DefaultQuorum                       = sdkmath.LegacyNewDecWithPrec(334, 3)
-	DefaultYesQuorum                    = sdkmath.LegacyNewDecWithPrec(0, 1)
 	DefaultThreshold                    = sdkmath.LegacyNewDecWithPrec(5, 1)
 	DefaultExpeditedThreshold           = sdkmath.LegacyNewDecWithPrec(667, 3)
 	DefaultVetoThreshold                = sdkmath.LegacyNewDecWithPrec(334, 3)
@@ -41,7 +40,7 @@ var (
 // NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
-	quorum, yesQuorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest, proposalMaxCancelVotingPeriod string,
+	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest, proposalMaxCancelVotingPeriod string,
 	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio, optimisticRejectedThreshold string, optimisticAuthorizedAddresses []string,
 ) Params {
 	return Params{
@@ -51,7 +50,6 @@ func NewParams(
 		VotingPeriod:                  &votingPeriod,
 		ExpeditedVotingPeriod:         &expeditedVotingPeriod,
 		Quorum:                        quorum,
-		YesQuorum:                     yesQuorum,
 		Threshold:                     threshold,
 		ExpeditedThreshold:            expeditedThreshold,
 		VetoThreshold:                 vetoThreshold,
@@ -77,7 +75,6 @@ func DefaultParams() Params {
 		DefaultPeriod,
 		DefaultExpeditedPeriod,
 		DefaultQuorum.String(),
-		DefaultYesQuorum.String(),
 		DefaultThreshold.String(),
 		DefaultExpeditedThreshold.String(),
 		DefaultVetoThreshold.String(),
@@ -124,17 +121,6 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	}
 	if quorum.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("quorum too large: %s", p.Quorum)
-	}
-
-	yesQuorum, err := sdkmath.LegacyNewDecFromStr(p.YesQuorum)
-	if err != nil {
-		return fmt.Errorf("invalid yes_quorum string: %w", err)
-	}
-	if yesQuorum.IsNegative() {
-		return fmt.Errorf("yes_quorum cannot be negative: %s", yesQuorum)
-	}
-	if yesQuorum.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("yes_quorum too large: %s", p.YesQuorum)
 	}
 
 	threshold, err := sdkmath.LegacyNewDecFromStr(p.Threshold)
@@ -270,17 +256,6 @@ func (p MessageBasedParams) ValidateBasic() error {
 	}
 	if quorum.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("quorum too large: %s", p.Quorum)
-	}
-
-	yesQuorum, err := sdkmath.LegacyNewDecFromStr(p.YesQuorum)
-	if err != nil {
-		return fmt.Errorf("invalid yes_quorum string: %w", err)
-	}
-	if yesQuorum.IsNegative() {
-		return fmt.Errorf("yes_quorum cannot be negative: %s", yesQuorum)
-	}
-	if yesQuorum.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("yes_quorum too large: %s", p.YesQuorum)
 	}
 
 	vetoThreshold, err := sdkmath.LegacyNewDecFromStr(p.VetoThreshold)

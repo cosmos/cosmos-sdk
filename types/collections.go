@@ -33,9 +33,6 @@ var (
 	// IntValue represents a collections.ValueCodec to work with Int.
 	IntValue collcodec.ValueCodec[math.Int] = intValueCodec{}
 
-	// UintValue represents a collections.ValueCodec to work with Uint.
-	UintValue collcodec.ValueCodec[math.Uint] = uintValueCodec{}
-
 	// TimeKey represents a collections.KeyCodec to work with time.Time
 	// Deprecated: exists only for state compatibility reasons, should not
 	// be used for new storage keys using time. Please use the time KeyCodec
@@ -53,11 +50,6 @@ var (
 	// used for new storage keys using []byte. Please use the BytesKey provided
 	// in the collections package.
 	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
-)
-
-const (
-	Int  string = "math.Int"
-	Uint string = "math.Uint"
 )
 
 type addressUnion interface {
@@ -206,43 +198,7 @@ func (i intValueCodec) Stringify(value math.Int) string {
 }
 
 func (i intValueCodec) ValueType() string {
-	return Int
-}
-
-type uintValueCodec struct{}
-
-func (i uintValueCodec) Encode(value math.Uint) ([]byte, error) {
-	return value.Marshal()
-}
-
-func (i uintValueCodec) Decode(b []byte) (math.Uint, error) {
-	v := new(math.Uint)
-	err := v.Unmarshal(b)
-	if err != nil {
-		return math.Uint{}, err
-	}
-	return *v, nil
-}
-
-func (i uintValueCodec) EncodeJSON(value math.Uint) ([]byte, error) {
-	return value.MarshalJSON()
-}
-
-func (i uintValueCodec) DecodeJSON(b []byte) (math.Uint, error) {
-	v := new(math.Uint)
-	err := v.UnmarshalJSON(b)
-	if err != nil {
-		return math.Uint{}, err
-	}
-	return *v, nil
-}
-
-func (i uintValueCodec) Stringify(value math.Uint) string {
-	return value.String()
-}
-
-func (i uintValueCodec) ValueType() string {
-	return Uint
+	return "math.Int"
 }
 
 type timeKeyCodec struct{}

@@ -17,7 +17,7 @@ reviews:
         - path: "**/*_test.go"
           instructions: |
               "Assess the unit test code assessing sufficient code coverage for the changes associated in the pull request"
-        - path: "docs/**/*.md"
+        - path: "**/*.md"
           instructions: |
               "Assess the documentation for misspellings, grammatical errors, missing documentation and correctness"
     auto_review:

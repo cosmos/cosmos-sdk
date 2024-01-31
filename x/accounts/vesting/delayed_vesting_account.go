@@ -46,10 +46,10 @@ func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *acco
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
-func (dva DelayedVestingAccount) GetVestedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
+func (dva DelayedVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTime time.Time) (sdk.Coins, sdk.Coins, error) {
 	endTime, err := dva.EndTime.Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	originalVesting := sdk.Coins{}
 	dva.IterateCoinEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
@@ -57,36 +57,27 @@ func (dva DelayedVestingAccount) GetVestedCoins(ctx context.Context, blockTime t
 		return false
 	})
 	if math.NewInt(blockTime.Unix()).GTE(endTime) {
-		return originalVesting, nil
+		return originalVesting, sdk.Coins{}, nil
 	}
 
-	return nil, nil
+	return sdk.Coins{}, originalVesting, nil
 }
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	originalVesting := sdk.Coins{}
-	dva.IterateCoinEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		return false
-	})
-	vestedCoins, err := dva.GetVestedCoins(ctx, blockTime)
+	_, vestingCoins, err := dva.GetVestCoinsInfo(ctx, blockTime)
 	if err != nil {
 		return nil, err
 	}
-	return originalVesting.Sub(vestedCoins...), nil
+	return vestingCoins, nil
 }
 
 func (dva DelayedVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
 	*vestingtypes.QueryVestCoinsInfoResponse, error,
 ) {
 	hs := dva.headerService.GetHeaderInfo(ctx)
-	vestedCoins, err := dva.GetVestedCoins(ctx, hs.Time)
-	if err != nil {
-		return nil, err
-	}
-	vestingCoins, err := dva.GetVestingCoins(ctx, hs.Time)
+	vestedCoins, vestingCoins, err := dva.GetVestCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}

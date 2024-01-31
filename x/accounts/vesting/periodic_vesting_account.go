@@ -134,19 +134,20 @@ func (pva PeriodicVestingAccount) IteratePeriods(
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
-func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	vestedCoins := sdk.Coins{}
+func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTime time.Time) (vestedCoins, vestingCoins sdk.Coins, err error) {
+	vestedCoins = sdk.Coins{}
+	vestingCoins = sdk.Coins{}
 
 	// We must handle the case where the start time for a vesting account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
 	startTime, err := pva.StartTime.Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	endTime, err := pva.EndTime.Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	originalVesting := sdk.Coins{}
 	pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
@@ -154,15 +155,15 @@ func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime 
 		return false
 	})
 	if math.NewInt(blockTime.Unix()).LTE(startTime) {
-		return vestedCoins, nil
+		return vestedCoins, originalVesting, nil
 	} else if math.NewInt(blockTime.Unix()).GTE(endTime) {
-		return originalVesting, nil
+		return originalVesting, vestingCoins, nil
 	}
 
 	// track the start time of the next period
 	currentPeriodStartTime, err := pva.StartTime.Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	pva.IteratePeriods(ctx, func(_ string, period vestingtypes.Period) (stop bool) {
@@ -181,33 +182,26 @@ func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime 
 		return false
 	})
 
-	return vestedCoins, err
+	vestingCoins = originalVesting.Sub(vestedCoins...)
+
+	return vestedCoins, vestingCoins, err
 }
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (pva PeriodicVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	originalVesting := sdk.Coins{}
-	pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		return false
-	})
-	vestedCoins, err := pva.GetVestedCoins(ctx, blockTime)
+	_, vestingCoins, err := pva.GetVestCoinsInfo(ctx, blockTime)
 	if err != nil {
 		return nil, err
 	}
-	return originalVesting.Sub(vestedCoins...), nil
+	return vestingCoins, nil
 }
 
 func (pva PeriodicVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
 	*vestingtypes.QueryVestCoinsInfoResponse, error,
 ) {
 	hs := pva.headerService.GetHeaderInfo(ctx)
-	vestedCoins, err := pva.GetVestedCoins(ctx, hs.Time)
-	if err != nil {
-		return nil, err
-	}
-	vestingCoins, err := pva.GetVestingCoins(ctx, hs.Time)
+	vestedCoins, vestingCoins, err := pva.GetVestCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}

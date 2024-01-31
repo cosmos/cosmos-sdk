@@ -73,19 +73,20 @@ func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *a
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
-func (cva ContinuousVestingAccount) GetVestedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	vestedCoins := sdk.Coins{}
+func (cva ContinuousVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTime time.Time) (vestedCoins, vestingCoins sdk.Coins, err error) {
+	vestedCoins = sdk.Coins{}
+	vestingCoins = sdk.Coins{}
 
 	// We must handle the case where the start time for a vesting account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
 	startTime, err := cva.StartTime.Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	endTime, err := cva.EndTime.Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var originalVesting sdk.Coins
 	cva.IterateCoinEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool) {
@@ -93,9 +94,9 @@ func (cva ContinuousVestingAccount) GetVestedCoins(ctx context.Context, blockTim
 		return false
 	})
 	if startTime.GTE(math.NewInt(blockTime.Unix())) {
-		return vestedCoins, nil
+		return vestedCoins, originalVesting, nil
 	} else if endTime.LTE(math.NewInt(blockTime.Unix())) {
-		return originalVesting, nil
+		return originalVesting, vestingCoins, nil
 	}
 
 	// calculate the vesting scalar
@@ -108,33 +109,26 @@ func (cva ContinuousVestingAccount) GetVestedCoins(ctx context.Context, blockTim
 		vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
 	}
 
-	return vestedCoins, nil
+	vestingCoins = originalVesting.Sub(vestedCoins...)
+
+	return vestedCoins, vestingCoins, nil
 }
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	originalVesting := sdk.Coins{}
-	cva.IterateCoinEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		return false
-	})
-	vestedCoins, err := cva.GetVestedCoins(ctx, blockTime)
+	_, vestingCoins, err := cva.GetVestCoinsInfo(ctx, blockTime)
 	if err != nil {
 		return nil, err
 	}
-	return originalVesting.Sub(vestedCoins...), nil
+	return vestingCoins, nil
 }
 
 func (cva ContinuousVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
 	*vestingtypes.QueryVestCoinsInfoResponse, error,
 ) {
 	hs := cva.headerService.GetHeaderInfo(ctx)
-	vestedCoins, err := cva.GetVestedCoins(ctx, hs.Time)
-	if err != nil {
-		return nil, err
-	}
-	vestingCoins, err := cva.GetVestingCoins(ctx, hs.Time)
+	vestedCoins, vestingCoins, err := cva.GetVestCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}

@@ -738,6 +738,8 @@ func (k Keeper) Unbond(
 		return amount, types.ErrNoValidatorFound
 	}
 
+	console.log("hi")
+
 	// subtract shares from delegation
 	delegation.Shares = delegation.Shares.Sub(shares)
 

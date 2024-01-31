@@ -354,15 +354,15 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 		accountStore.Set([]byte(balance.Denom), amount)
 
-		// NOTE: we are commenting this out since the index is not used anywhere
-		// and parts of x/bank v3 migration were skipped
+		// NOTE: parts of x/bank v3 migration were skipped
+		// but we will keep writing to the denom to account reverse index
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.
-		// denomAddrKey := address.MustLengthPrefix(addr)
-		// if !denomPrefixStore.Has(denomAddrKey) {
-		// 	denomPrefixStore.Set(denomAddrKey, []byte{0})
-		// }
+		denomAddrKey := address.MustLengthPrefix(addr)
+		if !denomPrefixStore.Has(denomAddrKey) {
+			denomPrefixStore.Set(denomAddrKey, []byte{0})
+		}
 	}
 
 	return nil

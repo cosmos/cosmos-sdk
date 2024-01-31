@@ -12,8 +12,8 @@ import (
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -87,7 +87,10 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 
 	sortedAmt := totalCoins.Sort()
 	for _, coin := range sortedAmt {
-		pva.OriginalVesting.Set(ctx, coin.Denom, coin.Amount)
+		err := pva.OriginalVesting.Set(ctx, coin.Denom, coin.Amount)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = pva.StartTime.Set(ctx, math.NewInt(msg.StartTime))
@@ -178,10 +181,7 @@ func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTim
 
 		// update the start time of the next period
 		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(math.NewInt(period.Length)))
-		if err != nil {
-			return true
-		}
-		return false
+		return err != nil
 	})
 
 	vestingCoins = originalVesting.Sub(vestedCoins...)

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 
@@ -21,6 +20,8 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (

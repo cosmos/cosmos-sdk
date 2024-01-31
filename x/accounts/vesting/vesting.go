@@ -253,7 +253,7 @@ func (bva *BaseVesting) ExecuteMessages(
 		case "/cosmos.staking.v1beta1.MsgDelegate":
 			msgDelegate, err := accountstd.UnpackAny[stakingtypes.MsgDelegate](m)
 			if err != nil {
-				return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
+				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 			}
 
 			// Query account balance for the delegated denom
@@ -279,7 +279,7 @@ func (bva *BaseVesting) ExecuteMessages(
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
 			msgUndelegate, err := accountstd.UnpackAny[stakingtypes.MsgUndelegate](m)
 			if err != nil {
-				return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
+				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 			}
 
 			err = bva.TrackUndelegation(ctx, sdk.Coins{msgUndelegate.Amount})
@@ -292,14 +292,14 @@ func (bva *BaseVesting) ExecuteMessages(
 			if typeUrl == "/cosmos.bank.v1beta1.MsgSend" {
 				msgSend, err := accountstd.UnpackAny[banktypes.MsgSend](m)
 				if err != nil {
-					return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
+					return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 				}
 				sender = msgSend.FromAddress
 				amount = msgSend.Amount
 			} else {
 				msgMultiSend, err := accountstd.UnpackAny[banktypes.MsgMultiSend](m)
 				if err != nil {
-					return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
+					return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 				}
 				sender = msgMultiSend.Inputs[0].Address
 				amount = msgMultiSend.Inputs[0].Coins

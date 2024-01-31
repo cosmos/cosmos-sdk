@@ -110,7 +110,9 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		return nil, err
 	}
 
-	return &vestingtypes.MsgInitPeriodicVestingAccountResponse{}, nil
+	return &vestingtypes.MsgInitPeriodicVestingAccountResponse{
+		Address: toAddress,
+	}, nil
 }
 
 func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (

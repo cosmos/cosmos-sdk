@@ -55,4 +55,7 @@ message MsgInitPeriodicVestingAccount {
 
 // MsgInitVestingAccountResponse defines the Msg/InitPeriodicVestingAccount
 // response type.
-message MsgInitPeriodicVestingAccountResponse {}
+message MsgInitPeriodicVestingAccountResponse {
+  // address define the newly init vesting account address
+  string address = 1;
+}

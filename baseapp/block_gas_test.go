@@ -110,7 +110,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				key:          bapp.UnsafeFindStoreKey(testutil.BankModuleName),
 			})
 
-			genState := baseapputil.GenesisStateWithSingleValidator(t, cdc, appBuilder)			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
+			genState := baseapputil.GenesisStateWithSingleValidator(t, cdc, appBuilder)
+			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
 			_, err = bapp.InitChain(&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},

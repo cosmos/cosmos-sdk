@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots"
 )
@@ -74,12 +75,12 @@ func (ss *StorageStore) SetLatestVersion(version uint64) error {
 }
 
 // Iterator returns an iterator over the specified domain and prefix.
-func (ss *StorageStore) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (ss *StorageStore) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.Iterator(storeKey, version, start, end)
 }
 
 // ReverseIterator returns an iterator over the specified domain and prefix in reverse.
-func (ss *StorageStore) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (ss *StorageStore) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.ReverseIterator(storeKey, version, start, end)
 }
 

@@ -46,13 +46,14 @@ type (
 )
 
 const (
-	execModeCheck           execMode = iota // Check a transaction
-	execModeReCheck                         // Recheck a (pending) transaction after a commit
-	execModeSimulate                        // Simulate a transaction
-	execModePrepareProposal                 // Prepare a block proposal
-	execModeProcessProposal                 // Process a block proposal
-	execModeVoteExtension                   // Extend or verify a pre-commit vote
-	execModeFinalize                        // Finalize a block proposal
+	execModeCheck               execMode = iota // Check a transaction
+	execModeReCheck                             // Recheck a (pending) transaction after a commit
+	execModeSimulate                            // Simulate a transaction
+	execModePrepareProposal                     // Prepare a block proposal
+	execModeProcessProposal                     // Process a block proposal
+	execModeVoteExtension                       // Extend or verify a pre-commit vote
+	execModeVerifyVoteExtension                 // Verify a vote extension
+	execModeFinalize                            // Finalize a block proposal
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -192,7 +193,7 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger,
+		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
 		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
@@ -883,6 +884,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
+		if mode == execModeSimulate {
+			anteCtx = anteCtx.WithExecMode(sdk.ExecMode(execModeSimulate))
+		}
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 
 		if !newCtx.IsZero() {
@@ -943,11 +947,15 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		// Note that the state is still preserved.
 		postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-		newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
-		if err != nil {
-			return gInfo, nil, anteEvents, err
+		newCtx, errPostHandler := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
+		if errPostHandler != nil {
+			return gInfo, nil, anteEvents, errors.Join(err, errPostHandler)
 		}
 
+		// we don't want runTx to panic if runMsgs has failed earlier
+		if result == nil {
+			result = &sdk.Result{}
+		}
 		result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
 	}
 

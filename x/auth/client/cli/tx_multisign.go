@@ -70,6 +70,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 		file := args[0]
 		name := args[1]
 		sigsRaw := args[2:]
+		_ = cmd.Flags().Set(flags.FlagFrom, args[1])
 
 		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {

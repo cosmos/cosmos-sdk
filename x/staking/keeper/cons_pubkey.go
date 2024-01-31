@@ -131,8 +131,8 @@ func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) 
 	return pk, nil
 }
 
-// exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
-func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) error {
+// ExceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
+func (k Keeper) ExceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) error {
 	count := 0
 	rng := collections.NewPrefixedPairRange[[]byte, time.Time](valAddr)
 

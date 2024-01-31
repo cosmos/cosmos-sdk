@@ -5,9 +5,84 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### Unordered Transactions
+
+The Cosmos SDK now supports unordered transactions. This means that transactions
+can be executed in any order and doesn't require the client to deal with or manage
+nonces. This also means the order of execution is not guaranteed. To enable unordered
+transactions in your application:
+
+* Update the `App` constructor to create, load, and save the unordered transaction
+  manager.
+
+	```go
+	func NewApp(...) *App {
+		// ...
+
+		// create, start, and load the unordered tx manager
+		utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
+		app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
+		app.UnorderedTxManager.Start()
+
+		if err := app.UnorderedTxManager.OnInit(); err != nil {
+			panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
+		}
+	}
+	```
+
+* Add the decorator to the existing AnteHandler chain, which should be as early
+  as possible.
+
+	```go
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewSetUpContextDecorator(),
+		// ...
+		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, app.UnorderedTxManager),
+		// ...
+	}
+
+	return sdk.ChainAnteDecorators(anteDecorators...), nil
+	```
+
+* If the App has a SnapshotManager defined, you must also register the extension
+  for the TxManager.
+
+	```go
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(unorderedtx.NewSnapshotter(app.UnorderedTxManager))
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+	```
+
+* Create or update the App's `Close()` method to close the unordered tx manager.
+  Note, this is critical as it ensures the manager's state is written to file
+  such that when the node restarts, it can recover the state to provide replay
+  protection.
+
+	```go
+	func (app *App) Close() error {
+		// ...
+
+		// close the unordered tx manager
+		if e := app.UnorderedTxManager.Close(); e != nil {
+			err = errors.Join(err, e)
+		}
+
+		return err
+	}
+	```
+
+To submit an unordered transaction, the client must set the `unordered` flag to
+`true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
+used as a TTL for the transaction and is used to provide replay protection. See
+[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-account.md)
+for more details.
+
 ### Params
 
-* Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+* Params migrations were removed. It is required to migrate to 0.50 prior to upgrading to v0.51.
 
 ### SimApp
 
@@ -37,9 +112,28 @@ clientCtx = clientCtx.
 
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
 
+#### Dependency Injection 
+
+<!-- explain app_config.go changes -->
+
+### Core
+
+`appmodule.Environment` interface was introduced to fetch different services from the application. This can be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services. It needs to be passed into a module at instantiation. 
+
+Circuit Breaker is used as an example. 
+
+```go
+app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey]), nil), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
+```
+
 ### Modules
 
 #### `**all**`
+
+##### Dependency Injection 
+
+Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appconfig`.
+All modules using dependency injection must update their imports.
 
 ##### Genesis Interface
 
@@ -59,7 +153,7 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 
 ##### Migration to Collections
 
-Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/packages/collections).
+Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/build/packages/collections).
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
@@ -197,7 +291,7 @@ is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
 ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
 methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
 allows an application to define handlers for these methods via `ExtendVoteHandler`
-and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/abci/03-vote-extensions)
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/building-apps/vote-extensions)
 for more info.
 
 #### Set PreBlocker
@@ -685,7 +779,7 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
+SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/build/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go).
 The previous behavior, without the dependency injection framework, is still present in [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go) and is not going anywhere.
 

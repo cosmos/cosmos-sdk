@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	internaltestutil "github.com/cosmos/cosmos-sdk/internal/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,10 +69,10 @@ func Test_runShowCmd(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-	internaltestutil.SetArgs(cmd, []string{"invalid"})
+	cmd.SetArgs([]string{"invalid"})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
 
-	internaltestutil.SetArgs(cmd, []string{"invalid1", "invalid2"})
+	cmd.SetArgs([]string{"invalid1", "invalid2"})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid1 is not a valid name or address: decoding bech32 failed: invalid separator index 7")
 
 	fakeKeyName1 := "runShowCmd_Key1"
@@ -93,7 +92,7 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now try single key
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=", FlagBechPrefix),
@@ -101,7 +100,7 @@ func Test_runShowCmd(t *testing.T) {
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid Bech32 prefix encoding provided: ")
 
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
@@ -116,7 +115,7 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, err)
 	addr, err := k.GetAddress()
 	require.NoError(t, err)
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		addr.String(),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
@@ -126,7 +125,7 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now try multisig key - set bech to acc
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
@@ -137,7 +136,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	// Now try multisig key duplicate
 	_, mockOut := testutil.ApplyMockIO(cmd)
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
@@ -147,7 +146,7 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 	require.Contains(t, mockOut.String(), fmt.Sprintf("WARNING: duplicate keys found: %s", fakeKeyName1))
 
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
@@ -157,7 +156,7 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now try multisig key - set bech to acc + threshold=2
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=acc", FlagBechPrefix),
@@ -167,7 +166,7 @@ func Test_runShowCmd(t *testing.T) {
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts stored in devices")
 
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=val", FlagBechPrefix),
@@ -177,7 +176,7 @@ func Test_runShowCmd(t *testing.T) {
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts")
 
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=val", FlagBechPrefix),
@@ -188,18 +187,22 @@ func Test_runShowCmd(t *testing.T) {
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for addresses not pubkeys")
 
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=true", FlagAddress),
 		fmt.Sprintf("--%s=true", flagQRCode),
+		// we have to reset following flags as they were set to true above, and won't be auto reset to false if we skip to specify these flags.
+		// Note: this maybe a bug about spf13/cobra as cmd.flags's value won't be reset by changing cmd.args with cmd.SetArgs.
+		fmt.Sprintf("--%s=false", FlagDevice),
+		fmt.Sprintf("--%s=false", FlagPublicKey),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
 	// try fetch by name
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
-	internaltestutil.SetArgs(cmd, []string{
+	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=true", FlagAddress),

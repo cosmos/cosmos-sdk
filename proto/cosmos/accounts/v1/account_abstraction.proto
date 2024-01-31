@@ -17,7 +17,7 @@ message UserOperation {
   string authentication_method = 2;
   // authentication_data defines the authentication data associated with the authentication method.
   // It is the account implementer duty to assess that the UserOperation is properly signed.
-  bytes authentication_data = 3;
+  google.protobuf.Any authentication_data = 3;
   // authentication_gas_limit expresses the gas limit to be used for the authentication part of the
   // UserOperation.
   uint64 authentication_gas_limit = 4;
@@ -42,6 +42,25 @@ message UserOperation {
   // execution_gas_limit defines the gas limit to be used for the execution of the UserOperation's
   // execution messages.
   uint64 execution_gas_limit = 8;
+
+  // tx_compat is populated only when the operation is composed from a raw tx.
+  // In fact if a TX comes and the sender of the TX is an abstracted account,
+  // we convert the TX into a user operation, and try to authenticate using the
+  // x/accounts authenticate method. If a bundler tries to send a UserOperation
+  // with a populated tx_compat, the operation will immediately yield a failure.
+  TxCompat tx_compat = 9;
+}
+
+// TxCompat provides compatibility for x/accounts abstracted account with the cosmos-sdk's Txs.
+// In fact TxCompat contains fields coming from the Tx in raw and decoded format. The Raw format
+// is mainly needed for proper sig verification.
+message TxCompat {
+  // auth_info_bytes contains the auth info bytes of the tx.
+  // Must not be modified.
+  bytes auth_info_bytes = 1;
+  // body_bytes contains the body bytes of the tx.
+  // must not be modified.
+  bytes body_bytes = 2;
 }
 
 // UserOperationResponse defines the response of a UserOperation.

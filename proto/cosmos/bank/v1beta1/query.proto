@@ -77,13 +77,13 @@ service Query {
     option (google.api.http).get               = "/cosmos/bank/v1beta1/params";
   }
 
-  // DenomsMetadata queries the client metadata of a given coin denomination.
+  // DenomMetadata queries the client metadata of a given coin denomination.
   rpc DenomMetadata(QueryDenomMetadataRequest) returns (QueryDenomMetadataResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
   }
 
-  // DenomsMetadata queries the client metadata of a given coin denomination.
+  // DenomMetadataByQueryString queries the client metadata of a given coin denomination.
   rpc DenomMetadataByQueryString(QueryDenomMetadataByQueryStringRequest)
       returns (QueryDenomMetadataByQueryStringResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
@@ -106,6 +106,15 @@ service Query {
   rpc DenomOwners(QueryDenomOwnersRequest) returns (QueryDenomOwnersResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/bank/v1beta1/denom_owners/{denom}";
+  }
+
+  // DenomOwnersByQuery queries for all account addresses that own a particular token
+  // denomination.
+  //
+  // Since: cosmos-sdk 0.50.3
+  rpc DenomOwnersByQuery(QueryDenomOwnersByQueryRequest) returns (QueryDenomOwnersByQueryResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/denom_owners_by_query";
   }
 
   // SendEnabled queries for SendEnabled entries.
@@ -348,6 +357,29 @@ message DenomOwner {
 //
 // Since: cosmos-sdk 0.46
 message QueryDenomOwnersResponse {
+  repeated DenomOwner denom_owners = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryDenomOwnersByQueryRequest defines the request type for the DenomOwnersByQuery RPC query,
+// which queries for a paginated set of all account holders of a particular
+// denomination.
+//
+// Since: cosmos-sdk 0.50.3
+message QueryDenomOwnersByQueryRequest {
+  // denom defines the coin denomination to query all account holders for.
+  string denom = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryDenomOwnersByQueryResponse defines the RPC response of a DenomOwnersByQuery RPC query.
+//
+// Since: cosmos-sdk 0.50.3
+message QueryDenomOwnersByQueryResponse {
   repeated DenomOwner denom_owners = 1;
 
   // pagination defines the pagination in the response.

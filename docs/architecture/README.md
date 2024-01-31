@@ -61,6 +61,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 060: ABCI 1.0 (Phase I)](adr-060-abci-1.0.md)
 * [ADR 061: Liquid Staking](./adr-061-liquid-staking.md)
 * [ADR 070: Un-Ordered Transaction Inclusion](./adr-070-unordered-account.md)
+* [ADR 065: Store v2](./adr-065-store-v2.md)
 
 ### Proposed
 
@@ -86,7 +87,6 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 059: Test Scopes](./adr-059-test-scopes.md)
 * [ADR 062: Collections State Layer](./adr-062-collections-state-layer.md)
 * [ADR 063: Core Module API](./adr-063-core-module-api.md)
-* [ADR 065: Store v2](./adr-065-store-v2.md)
 * [ADR 067: Simulator v2](./adr-067-simulator-v2.md)
 * [ADR 069: `x/gov` modularity, multiple choice and optimisic proposals](./adr-069-gov-improvements.md)
 

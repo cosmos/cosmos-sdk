@@ -64,6 +64,8 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(cmd)
+
 	// Test that config.toml is created
 	configTomlPath := path.Join(tempDir, "config", "config.toml")
 	s, err := os.Stat(configTomlPath)
@@ -142,6 +144,8 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(cmd)
+
 	if testDbBackend != serverCtx.Config.DBBackend {
 		t.Error("backend was not set from config.toml")
 	}
@@ -180,6 +184,8 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(cmd)
+
 	if testHaltTime != serverCtx.Viper.GetInt("halt-time") {
 		t.Error("Halt time was not set from app.toml")
 	}
@@ -207,6 +213,8 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	serverCtx = server.GetServerContextFromCmd(cmd)
 
 	if testAddr != serverCtx.Config.RPC.ListenAddress {
 		t.Error("RPCListenAddress was not set from command flags")
@@ -243,6 +251,8 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	serverCtx = server.GetServerContextFromCmd(cmd)
 
 	if testAddr != serverCtx.Config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not set from env. var. %q", envVarName)
@@ -351,6 +361,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceFlag(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+
 	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
 		t.Fatalf("RPCListenAddress was not set from flag %q", testCommon.flagName)
 	}
@@ -366,6 +378,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceEnvVar(t *testing.T) {
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
 
 	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not set from env. var. %q", testCommon.envVarName)
@@ -383,6 +397,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigFile(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+
 	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not read from file %q", testCommon.configTomlPath)
 	}
@@ -398,6 +414,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
 
 	if serverCtx.Config.RPC.ListenAddress != "tcp://127.0.0.1:26657" {
 		t.Error("RPCListenAddress is not using default")

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -457,18 +456,10 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
-	if len(strings.TrimSpace(address)) == 0 {
-		return ConsAddress{}, errors.New("empty address string is not allowed")
-	}
-
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
 
-	bz, err := GetFromBech32(address, bech32PrefixConsAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	return ConsAddress(bz), nil
+	addrCdc := addresscodec.NewBech32Codec(bech32PrefixConsAddr)
+	return addrCdc.StringToBytes(address)
 }
 
 // get ConsAddress from pubkey

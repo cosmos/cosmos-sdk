@@ -42,6 +42,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
+* (types) [#19164](https://github.com/cosmos/cosmos-sdk/pull/19164) Add a ValueCodec for the math.Uint type that can be used in collections maps.
+* (types) [#19281](https://github.com/cosmos/cosmos-sdk/pull/19281) Added a new method, `IsGT`, for `types.Coin`. This method is used to check if a `types.Coin` is greater than another `types.Coin`.
 * (client) [#18557](https://github.com/cosmos/cosmos-sdk/pull/18557) Add `--qrcode` flag to `keys show` command to support displaying keys address QR code.
 * (client) [#18101](https://github.com/cosmos/cosmos-sdk/pull/18101) Add a `keyring-default-keyname` in `client.toml` for specifying a default key name, and skip the need to use the `--from` flag when signing transactions.
 * (tests) [#17868](https://github.com/cosmos/cosmos-sdk/pull/17868) Added helper method `SubmitTestTx` in testutil to broadcast test txns to test e2e tests.
@@ -90,7 +92,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
 * (abci): [#19200](https://github.com/cosmos/cosmos-sdk/pull/19200) Ensure that sdk side ve math matches cometbft
-
+* (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
+ 
 ### API Breaking Changes
 
 * (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `x/genutil` now handles the application export. `server.AddCommands` does not take an `AppExporter` but instead `genutilcli.Commands` does.

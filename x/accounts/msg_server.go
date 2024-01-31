@@ -44,12 +44,8 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 
 	eventManager := m.k.eventService.EventManager(ctx)
 	err = eventManager.EmitKV(
-		ctx,
 		"account_creation",
-		event.Attribute{
-			Key:   "address",
-			Value: accAddrString,
-		},
+		event.NewAttribute("address", accAddrString),
 	)
 	if err != nil {
 		return nil, err

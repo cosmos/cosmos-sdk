@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/store/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/store/v2"
 )
 
 type DBTestSuite struct {

@@ -51,7 +51,7 @@ func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(store store.Store, opts ...AppBuilderOption) (*App, error) {
+func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -87,7 +87,7 @@ func (a *AppBuilder) Build(store store.Store, opts ...AppBuilderOption) (*App, e
 		valUpdate,
 		a.branch,
 	)
-	a.app.store = store
+	a.app.db = db
 
 	return a.app, nil
 }

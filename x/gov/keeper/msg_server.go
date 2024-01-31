@@ -29,7 +29,13 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 	initialDeposit := msg.GetInitialDeposit()
 
-	if err := k.validateInitialDeposit(ctx, initialDeposit); err != nil {
+	params := k.Keeper.GetParams(ctx)
+
+	if err := k.validateInitialDeposit(ctx, params, initialDeposit); err != nil {
+		return nil, err
+	}
+
+	if err := k.validateDepositDenom(ctx, params, initialDeposit); err != nil {
 		return nil, err
 	}
 

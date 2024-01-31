@@ -306,10 +306,22 @@ func (s *E2ETestSuite) TestNewCmdDeposit() {
 			false, 2,
 		},
 		{
+			"fail deposit on existing proposal",
+			[]string{
+				"1",
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake -> insufficient min deposit amount
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 16,
+		},
+		{
 			"deposit on existing proposal",
 			[]string{
 				"1",
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake
+				sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50))).String(), // slighty less than min initial deposit
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

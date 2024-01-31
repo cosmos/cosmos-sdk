@@ -122,7 +122,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	s.Require().Contains(err.Error(), fmt.Sprintf("proposal %s doesn't exist", proposalID))
 
 	// query deposits
-	deposits := s.queryDeposits(val, proposalID, true, "proposal 3 doesn't exist")
+	deposits := s.queryDeposits(val, proposalID, true, fmt.Sprintf("proposal %s doesn't exist", proposalID))
 	s.Require().Nil(deposits)
 }
 

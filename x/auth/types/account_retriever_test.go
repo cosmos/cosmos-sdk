@@ -13,10 +13,11 @@ func TestAccountRetriever(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
-	network := network.New(t, cfg)
+	network, err := network.New(t, t.TempDir(), cfg)
+	require.NoError(t, err)
 	defer network.Cleanup()
 
-	_, err := network.WaitForHeight(3)
+	_, err = network.WaitForHeight(3)
 	require.NoError(t, err)
 
 	val := network.Validators[0]

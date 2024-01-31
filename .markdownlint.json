@@ -1,17 +1,12 @@
 {
     "default": true,
-    "MD001": false,
-    "MD004": false,
+    "MD004": {"style": "asterisk"},
     "MD007": { "indent": 4 },
     "MD013": false,
     "MD024": { "siblings_only": true },
     "MD025": false,
-    "MD026": { "punctuation": ".,;:" },
-    "MD029": false,
     "MD033": false,
     "MD034": false,
-    "MD036": false,
-    "MD040": false,
-    "MD041": false,
-    "no-hard-tabs": false
+    "no-hard-tabs": false,
+    "whitespace": false
 }

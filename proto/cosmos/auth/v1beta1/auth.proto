@@ -17,11 +17,10 @@ message BaseAccount {
 
   option (cosmos_proto.implements_interface) = "AccountI";
 
-  string              address = 1;
-  google.protobuf.Any pub_key = 2
-      [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
-  uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
-  uint64 sequence       = 4;
+  string              address        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  google.protobuf.Any pub_key        = 2 [(gogoproto.jsontag) = "public_key,omitempty"];
+  uint64              account_number = 3;
+  uint64              sequence       = 4;
 }
 
 // ModuleAccount defines an account for modules that holds coins on a pool.
@@ -30,7 +29,7 @@ message ModuleAccount {
   option (gogoproto.goproto_stringer)        = false;
   option (cosmos_proto.implements_interface) = "ModuleAccountI";
 
-  BaseAccount     base_account = 1 [(gogoproto.embed) = true, (gogoproto.moretags) = "yaml:\"base_account\""];
+  BaseAccount     base_account = 1 [(gogoproto.embed) = true];
   string          name         = 2;
   repeated string permissions  = 3;
 }
@@ -40,11 +39,9 @@ message Params {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64 max_memo_characters     = 1 [(gogoproto.moretags) = "yaml:\"max_memo_characters\""];
-  uint64 tx_sig_limit            = 2 [(gogoproto.moretags) = "yaml:\"tx_sig_limit\""];
-  uint64 tx_size_cost_per_byte   = 3 [(gogoproto.moretags) = "yaml:\"tx_size_cost_per_byte\""];
-  uint64 sig_verify_cost_ed25519 = 4
-      [(gogoproto.customname) = "SigVerifyCostED25519", (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""];
-  uint64 sig_verify_cost_secp256k1 = 5
-      [(gogoproto.customname) = "SigVerifyCostSecp256k1", (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""];
+  uint64 max_memo_characters       = 1;
+  uint64 tx_sig_limit              = 2;
+  uint64 tx_size_cost_per_byte     = 3;
+  uint64 sig_verify_cost_ed25519   = 4 [(gogoproto.customname) = "SigVerifyCostED25519"];
+  uint64 sig_verify_cost_secp256k1 = 5 [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
 }

@@ -9,17 +9,21 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 func TestLogger(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 
 	ctx := app.NewContext(true, tmproto.Header{})
-	require.Equal(t, ctx.Logger(), app.CrisisKeeper.Logger(ctx))
+
+	require.Equal(t,
+		ctx.Logger().With("module", "x/"+types.ModuleName),
+		app.CrisisKeeper.Logger(ctx))
 }
 
 func TestInvariants(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	app.Commit()
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 
@@ -32,7 +36,7 @@ func TestInvariants(t *testing.T) {
 }
 
 func TestAssertInvariants(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	app.Commit()
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 

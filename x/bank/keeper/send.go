@@ -2,8 +2,11 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -35,7 +38,7 @@ type BaseSendKeeper struct {
 
 	cdc        codec.BinaryCodec
 	ak         types.AccountKeeper
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	paramSpace paramtypes.Subspace
 
 	// list of addresses that are restricted from receiving transactions
@@ -43,7 +46,7 @@ type BaseSendKeeper struct {
 }
 
 func NewBaseSendKeeper(
-	cdc codec.BinaryCodec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
+	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
 ) BaseSendKeeper {
 	return BaseSendKeeper{
 		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
@@ -150,16 +153,18 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 
+	// bech32 encoding is expensive! Only do it once for fromAddr
+	fromAddrString := fromAddr.String()
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 		),
 	})
 
@@ -181,7 +186,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
 		spendable := balance.Sub(locked)
 
-		_, hasNeg := sdk.Coins{spendable}.SafeSub(sdk.Coins{coin})
+		_, hasNeg := sdk.Coins{spendable}.SafeSub(coin)
 		if hasNeg {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
 		}
@@ -230,16 +235,34 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
 	accountStore := k.getAccountStore(ctx, addr)
+	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
+
 	for i := range balances {
 		balance := balances[i]
 		if !balance.IsValid() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 		}
 
-		// Bank invariants require to not store zero balances.
+		// x/bank invariants prohibit persistence of zero balances
 		if !balance.IsZero() {
-			bz := k.cdc.MustMarshal(&balance)
-			accountStore.Set([]byte(balance.Denom), bz)
+			amount, err := balance.Amount.Marshal()
+			if err != nil {
+				return err
+			}
+			accountStore.Set([]byte(balance.Denom), amount)
+
+			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
+			if !ok {
+				denomPrefixStore = k.getDenomAddressPrefixStore(ctx, balance.Denom)
+				denomPrefixStores[balance.Denom] = denomPrefixStore
+			}
+
+			// Store a reverse index from denomination to account address with a
+			// sentinel value.
+			denomAddrKey := address.MustLengthPrefix(addr)
+			if !denomPrefixStore.Has(denomAddrKey) {
+				denomPrefixStore.Set(denomAddrKey, []byte{0})
+			}
 		}
 	}
 
@@ -253,13 +276,25 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	}
 
 	accountStore := k.getAccountStore(ctx, addr)
+	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, balance.Denom)
 
-	// Bank invariants require to not store zero balances.
+	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
 		accountStore.Delete([]byte(balance.Denom))
+		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
 	} else {
-		bz := k.cdc.MustMarshal(&balance)
-		accountStore.Set([]byte(balance.Denom), bz)
+		amount, err := balance.Amount.Marshal()
+		if err != nil {
+			return err
+		}
+		accountStore.Set([]byte(balance.Denom), amount)
+
+		// Store a reverse index from denomination to account address with a
+		// sentinel value.
+		denomAddrKey := address.MustLengthPrefix(addr)
+		if !denomPrefixStore.Has(denomAddrKey) {
+			denomPrefixStore.Set(denomAddrKey, []byte{0})
+		}
 	}
 
 	return nil

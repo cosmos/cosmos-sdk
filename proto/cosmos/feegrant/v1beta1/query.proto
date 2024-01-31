@@ -5,6 +5,7 @@ package cosmos.feegrant.v1beta1;
 import "cosmos/feegrant/v1beta1/feegrant.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
 
@@ -22,7 +23,8 @@ service Query {
   }
 
   // AllowancesByGranter returns all the grants given by an address
-  // Since v0.46
+  //
+  // Since: cosmos-sdk 0.46
   rpc AllowancesByGranter(QueryAllowancesByGranterRequest) returns (QueryAllowancesByGranterResponse) {
     option (google.api.http).get = "/cosmos/feegrant/v1beta1/issued/{granter}";
   }
@@ -31,10 +33,10 @@ service Query {
 // QueryAllowanceRequest is the request type for the Query/Allowance RPC method.
 message QueryAllowanceRequest {
   // granter is the address of the user granting an allowance of their funds.
-  string granter = 1;
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // grantee is the address of the user being granted an allowance of another user's funds.
-  string grantee = 2;
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryAllowanceResponse is the response type for the Query/Allowance RPC method.
@@ -45,7 +47,7 @@ message QueryAllowanceResponse {
 
 // QueryAllowancesRequest is the request type for the Query/Allowances RPC method.
 message QueryAllowancesRequest {
-  string grantee = 1;
+  string grantee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -61,14 +63,18 @@ message QueryAllowancesResponse {
 }
 
 // QueryAllowancesByGranterRequest is the request type for the Query/AllowancesByGranter RPC method.
+//
+// Since: cosmos-sdk 0.46
 message QueryAllowancesByGranterRequest {
-  string granter = 1;
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryAllowancesByGranterResponse is the response type for the Query/AllowancesByGranter RPC method.
+//
+// Since: cosmos-sdk 0.46
 message QueryAllowancesByGranterResponse {
   // allowances that have been issued by the granter.
   repeated cosmos.feegrant.v1beta1.Grant allowances = 1;

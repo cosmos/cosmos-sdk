@@ -18,9 +18,7 @@ var commonArgs = []string{
 }
 
 // MsgRedelegateExec creates a redelegate message.
-func MsgRedelegateExec(clientCtx client.Context, from, src, dst, amount fmt.Stringer,
-	extraArgs ...string,
-) (testutil.BufferWriter, error) {
+func MsgRedelegateExec(clientCtx client.Context, from, src, dst, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
 		src.String(),
 		dst.String(),

@@ -17,15 +17,15 @@ import (
 func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
 
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
 			"send",
-			fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -95,15 +95,15 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 func (s *IntegrationTestSuite) TestQueryAuthorization() {
 	val := s.network.Validators[0]
 
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
 			"send",
-			fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -161,7 +161,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"steak","amount":"100"}]}`,
+			`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"100"}]}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -176,6 +176,78 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().Contains(strings.TrimSpace(out.String()), tc.expectedOutput)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryGranterGrants() {
+	val := s.network.Validators[0]
+	grantee := s.grantee[0]
+	require := s.Require()
+
+	testCases := []struct {
+		name        string
+		args        []string
+		expectErr   bool
+		expectedErr string
+		expItems    int
+	}{
+		{
+			"invalid address",
+			[]string{
+				"invalid-address",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			"decoding bech32 failed",
+			0,
+		},
+		{
+			"no authorization found",
+			[]string{
+				grantee.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			"",
+			0,
+		},
+		{
+			"valid case",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			"",
+			7,
+		},
+		{
+			"valid case with pagination",
+			[]string{
+				val.Address.String(),
+				"--limit=2",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			"",
+			2,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetQueryGranterGrants()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				require.Error(err)
+				require.Contains(out.String(), tc.expectedErr)
+			} else {
+				require.NoError(err)
+				var grants authz.QueryGranterGrantsResponse
+				require.NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &grants))
+				require.Len(grants.Grants, tc.expItems)
 			}
 		})
 	}

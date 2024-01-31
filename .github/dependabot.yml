@@ -5,17 +5,6 @@ updates:
   schedule:
     interval: daily
   open-pull-requests-limit: 10
-- package-ecosystem: gomod
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  reviewers:
-  - alexanderbez
-  - fedekunze
-  labels:
-  - automerge
-  - dependencies
 - package-ecosystem: npm
   directory: "/docs"
   schedule:
@@ -23,3 +12,51 @@ updates:
   open-pull-requests-limit: 10
   reviewers:
   - fadeev
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  labels:
+  - "A:automerge"
+  - dependencies
+- package-ecosystem: gomod
+  directory: "/db"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  labels:
+  - "A:automerge"
+  - dependencies
+- package-ecosystem: gomod
+  directory: "/api"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  labels:
+  - "A:automerge"
+  - dependencies
+- package-ecosystem: gomod
+  directory: "/orm"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  labels:
+  - "A:automerge"
+  - dependencies
+- package-ecosystem: gomod
+  directory: "/container"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  labels:
+  - "A:automerge"
+  - dependencies
+- package-ecosystem: gomod
+  directory: "/cosmovisor"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  labels:
+  - "A:automerge"
+  - dependencies

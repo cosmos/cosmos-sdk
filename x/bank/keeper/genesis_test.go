@@ -11,7 +11,13 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 	app, ctx := suite.app, suite.ctx
 
 	expectedMetadata := suite.getTestMetadata()
-	expectedBalances, totalSupply := suite.getTestBalancesAndSupply()
+	expectedBalances, expTotalSupply := suite.getTestBalancesAndSupply()
+
+	// Adding genesis supply to the expTotalSupply
+	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+	suite.Require().NoError(err)
+	expTotalSupply = expTotalSupply.Add(genesisSupply...)
+
 	for i := range []int{1, 2} {
 		app.BankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
 		accAddr, err1 := sdk.AccAddressFromBech32(expectedBalances[i].Address)
@@ -32,8 +38,8 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 
 	suite.Require().Len(exportGenesis.Params.SendEnabled, 0)
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
-	suite.Require().Equal(totalSupply, exportGenesis.Supply)
-	suite.Require().Equal(expectedBalances, exportGenesis.Balances)
+	suite.Require().Equal(expTotalSupply, exportGenesis.Supply)
+	suite.Require().Subset(exportGenesis.Balances, expectedBalances)
 	suite.Require().Equal(expectedMetadata, exportGenesis.DenomMetadata)
 }
 
@@ -74,6 +80,9 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 	}
 	totalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(11)), sdk.NewCoin("barcoin", sdk.NewInt(21)))
 
+	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+	suite.Require().NoError(err)
+
 	testcases := []struct {
 		name        string
 		genesis     *types.GenesisState
@@ -107,7 +116,10 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 				suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis)
 				totalSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expSupply, totalSupply)
+
+				// adding genesis supply to expected supply
+				expected := tc.expSupply.Add(genesisSupply...)
+				suite.Require().Equal(expected, totalSupply)
 			}
 		})
 	}

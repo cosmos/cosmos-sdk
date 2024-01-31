@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -13,7 +14,7 @@ import (
 )
 
 // IsValSetSorted reports whether valset is sorted.
-func IsValSetSorted(data []types.Validator, powerReduction sdk.Int) bool {
+func IsValSetSorted(data []types.Validator, powerReduction math.Int) bool {
 	n := len(data)
 	for i := n - 1; i > 0; i-- {
 		if types.ValidatorsByVotingPower(data).Less(i, i-1, powerReduction) {
@@ -24,7 +25,7 @@ func IsValSetSorted(data []types.Validator, powerReduction sdk.Int) bool {
 }
 
 func TestHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput()
+	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -51,7 +52,7 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestTrackHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput()
+	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -86,6 +87,10 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, hi5, recv)
 
+	// genesis validator
+	genesisVals := app.StakingKeeper.GetAllValidators(ctx)
+	require.Len(t, genesisVals, 1)
+
 	// Set bonded validators in keeper
 	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2])
 	val1.Status = types.Bonded // when not bonded, consensus power is Zero
@@ -98,8 +103,8 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
 
-	vals := []types.Validator{val1, val2}
-	IsValSetSorted(vals, app.StakingKeeper.PowerReduction(ctx))
+	vals := []types.Validator{val1, genesisVals[0], val2}
+	require.True(t, IsValSetSorted(vals, app.StakingKeeper.PowerReduction(ctx)))
 
 	// Set Header for BeginBlock context
 	header := tmproto.Header{
@@ -129,7 +134,11 @@ func TestTrackHistoricalInfo(t *testing.T) {
 }
 
 func TestGetAllHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput()
+	_, app, ctx := createTestInput(t)
+	// clear historical info
+	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
+	require.Len(t, infos, 1)
+	app.StakingKeeper.DeleteHistoricalInfo(ctx, infos[0].Header.Height)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -153,6 +162,6 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &hi)
 	}
 
-	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
+	infos = app.StakingKeeper.GetAllHistoricalInfo(ctx)
 	require.Equal(t, expHistInfos, infos)
 }

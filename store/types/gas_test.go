@@ -10,13 +10,16 @@ import (
 func TestInfiniteGasMeter(t *testing.T) {
 	t.Parallel()
 	meter := NewInfiniteGasMeter()
-	require.Equal(t, uint64(0), meter.Limit())
+	require.Equal(t, uint64(math.MaxUint64), meter.Limit())
+	require.Equal(t, uint64(math.MaxUint64), meter.GasRemaining())
 	require.Equal(t, uint64(0), meter.GasConsumed())
 	require.Equal(t, uint64(0), meter.GasConsumedToLimit())
 	meter.ConsumeGas(10, "consume 10")
+	require.Equal(t, uint64(math.MaxUint64), meter.GasRemaining())
 	require.Equal(t, uint64(10), meter.GasConsumed())
 	require.Equal(t, uint64(10), meter.GasConsumedToLimit())
 	meter.RefundGas(1, "refund 1")
+	require.Equal(t, uint64(math.MaxUint64), meter.GasRemaining())
 	require.Equal(t, uint64(9), meter.GasConsumed())
 	require.False(t, meter.IsPastLimit())
 	require.False(t, meter.IsOutOfGas())
@@ -48,6 +51,7 @@ func TestGasMeter(t *testing.T) {
 			used += usage
 			require.NotPanics(t, func() { meter.ConsumeGas(usage, "") }, "Not exceeded limit but panicked. tc #%d, usage #%d", tcnum, unum)
 			require.Equal(t, used, meter.GasConsumed(), "Gas consumption not match. tc #%d, usage #%d", tcnum, unum)
+			require.Equal(t, tc.limit-used, meter.GasRemaining(), "Gas left not match. tc #%d, usage #%d", tcnum, unum)
 			require.Equal(t, used, meter.GasConsumedToLimit(), "Gas consumption (to limit) not match. tc #%d, usage #%d", tcnum, unum)
 			require.False(t, meter.IsPastLimit(), "Not exceeded limit but got IsPastLimit() true")
 			if unum < len(tc.usage)-1 {
@@ -60,13 +64,20 @@ func TestGasMeter(t *testing.T) {
 		require.Panics(t, func() { meter.ConsumeGas(1, "") }, "Exceeded but not panicked. tc #%d", tcnum)
 		require.Equal(t, meter.GasConsumedToLimit(), meter.Limit(), "Gas consumption (to limit) not match limit")
 		require.Equal(t, meter.GasConsumed(), meter.Limit()+1, "Gas consumption not match limit+1")
+		require.Equal(t, uint64(0), meter.GasRemaining())
 
 		require.NotPanics(t, func() { meter.RefundGas(1, "refund 1") })
-		require.Equal(t, meter.GasConsumed(), meter.Limit(), "Gas consumption not match limit+1")
+		require.Equal(t, meter.GasConsumed(), meter.Limit(), "Gas consumption not match with limit")
+		require.Equal(t, uint64(0), meter.GasRemaining())
 		require.Panics(t, func() { meter.RefundGas(meter.GasConsumed()+1, "refund greater than consumed") })
 
+		require.NotPanics(t, func() { meter.RefundGas(meter.GasConsumed(), "refund consumed gas") })
+		require.Equal(t, meter.Limit(), meter.GasRemaining())
+
 		meter2 := NewGasMeter(math.MaxUint64)
+		require.Equal(t, uint64(math.MaxUint64), meter2.GasRemaining())
 		meter2.ConsumeGas(Gas(math.MaxUint64/2), "consume half max uint64")
+		require.Equal(t, Gas(math.MaxUint64-(math.MaxUint64/2)), meter2.GasRemaining())
 		require.Panics(t, func() { meter2.ConsumeGas(Gas(math.MaxUint64/2)+2, "panic") })
 	}
 }

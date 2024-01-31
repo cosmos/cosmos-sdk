@@ -2,20 +2,17 @@ package rpc
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/p2p"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // ValidatorInfo is info about the node's validator, same as Tendermint,
@@ -30,7 +27,7 @@ type validatorInfo struct {
 // PubKey.
 type resultStatus struct {
 	NodeInfo      p2p.DefaultNodeInfo
-	SyncInfo      ctypes.SyncInfo
+	SyncInfo      coretypes.SyncInfo
 	ValidatorInfo validatorInfo
 }
 
@@ -80,53 +77,11 @@ func StatusCommand() *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus(clientCtx client.Context) (*ctypes.ResultStatus, error) {
+func getNodeStatus(clientCtx client.Context) (*coretypes.ResultStatus, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
-		return &ctypes.ResultStatus{}, err
+		return &coretypes.ResultStatus{}, err
 	}
 
 	return node.Status(context.Background())
-}
-
-// NodeInfoResponse defines a response type that contains node status and version
-// information.
-type NodeInfoResponse struct {
-	p2p.DefaultNodeInfo `json:"node_info"`
-
-	ApplicationVersion version.Info `json:"application_version"`
-}
-
-// REST handler for node info
-func NodeInfoRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		status, err := getNodeStatus(clientCtx)
-		if rest.CheckInternalServerError(w, err) {
-			return
-		}
-
-		resp := NodeInfoResponse{
-			DefaultNodeInfo:    status.NodeInfo,
-			ApplicationVersion: version.NewInfo(),
-		}
-
-		rest.PostProcessResponseBare(w, clientCtx, resp)
-	}
-}
-
-// SyncingResponse defines a response type that contains node syncing information.
-type SyncingResponse struct {
-	Syncing bool `json:"syncing"`
-}
-
-// REST handler for node syncing
-func NodeSyncingRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		status, err := getNodeStatus(clientCtx)
-		if rest.CheckInternalServerError(w, err) {
-			return
-		}
-
-		rest.PostProcessResponseBare(w, clientCtx, SyncingResponse{Syncing: status.SyncInfo.CatchingUp})
-	}
 }

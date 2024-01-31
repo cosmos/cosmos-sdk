@@ -1,17 +1,11 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Cosmos SDK - Legacy REST and gRPC Gateway docs",
-    "description": "A REST interface for state queries, legacy transactions",
+    "title": "Cosmos SDK - gRPC Gateway docs",
+    "description": "A REST interface for state queries",
     "version": "1.0.0"
   },
   "apis": [
-    {
-      "url": "./client/docs/swagger_legacy.yaml",
-      "dereference": {
-        "circular": "ignore"
-      }
-    },
     {
       "url": "./tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
@@ -57,6 +51,21 @@
       "operationIds": {
         "rename": {
           "Params": "GovParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/gov/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GovV1Params",
+          "Proposal": "GovV1Proposal",
+          "Proposals": "GovV1Proposal",
+          "Vote": "GovV1Vote",
+          "Votes": "GovV1Votes",
+          "Deposit": "GovV1Deposit",
+          "Deposits": "GovV1Deposit",
+          "TallyResult": "GovV1TallyResult"
         }
       }
     },
@@ -120,6 +129,25 @@
       "operationIds": {
         "rename": {
           "Params": "FeegrantParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/nft/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "NftParams",
+          "Balance": "NftBalance"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/group/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GroupParams",
+          "Proposal": "GroupProposal",
+          "TallyResult": "GroupTallyResult"
         }
       }
     }

@@ -37,8 +37,8 @@ import (
 var _ crgtypes.Client = (*Client)(nil)
 
 const (
+	defaultNodeTimeout = time.Minute
 	tmWebsocketPath    = "/websocket"
-	defaultNodeTimeout = 15 * time.Second
 )
 
 // Client implements a single network client to interact with cosmos based chains
@@ -101,7 +101,7 @@ func NewClient(cfg *Config) (*Client, error) {
 
 // Bootstrap is gonna connect the client to the endpoints
 func (c *Client) Bootstrap() error {
-	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure())
+	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure()) //nolint:staticcheck
 	if err != nil {
 		return err
 	}
@@ -129,6 +129,14 @@ func (c *Client) Ready() error {
 	if err != nil {
 		return err
 	}
+
+	// to prevent timeout of reading genesis block
+	var height int64 = -1
+	_, err = c.BlockByHeight(ctx, &height)
+	if err != nil {
+		return err
+	}
+
 	_, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
 	if err != nil {
 		return err
@@ -404,6 +412,27 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 		return nil, err
 	}
 
+	// if default fees suggestion is enabled and gas limit or price is unset, use default
+	if c.config.EnableFeeSuggestion {
+		if constructionOptions.GasLimit <= 0 {
+			constructionOptions.GasLimit = uint64(c.config.GasToSuggest)
+		}
+		if constructionOptions.GasPrice == "" {
+			denom := c.config.DenomToSuggest
+			constructionOptions.GasPrice = c.config.GasPrices.AmountOf(denom).String() + denom
+		}
+	}
+
+	if constructionOptions.GasLimit > 0 && constructionOptions.GasPrice != "" {
+		gasPrice, err := sdk.ParseDecCoin(constructionOptions.GasPrice)
+		if err != nil {
+			return nil, err
+		}
+		if !gasPrice.IsPositive() {
+			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "gas price must be positive")
+		}
+	}
+
 	signersData := make([]*SignerData, len(constructionOptions.ExpectedSigners))
 
 	for i, signer := range constructionOptions.ExpectedSigners {
@@ -504,18 +533,15 @@ func (c *Client) getHeight(ctx context.Context, height *int64) (realHeight *int6
 	return
 }
 
+var initialHeightRE = regexp.MustCompile(`"initial_height":"(\d+)"`)
+
 func extractInitialHeightFromGenesisChunk(genesisChunk string) (int64, error) {
 	firstChunk, err := base64.StdEncoding.DecodeString(genesisChunk)
 	if err != nil {
 		return 0, err
 	}
 
-	re, err := regexp.Compile("\"initial_height\":\"(\\d+)\"") //nolint:gocritic
-	if err != nil {
-		return 0, err
-	}
-
-	matches := re.FindStringSubmatch(string(firstChunk))
+	matches := initialHeightRE.FindStringSubmatch(string(firstChunk))
 	if len(matches) != 2 {
 		return 0, errors.New("failed to fetch initial_height")
 	}

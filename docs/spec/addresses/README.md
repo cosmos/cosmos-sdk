@@ -1,3 +1,3 @@
 # Addresses spec
 
-- [Bech32](./bech32.md)
+* [Bech32](./bech32.md)

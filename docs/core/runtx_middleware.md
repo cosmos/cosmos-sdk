@@ -4,26 +4,22 @@ order: 12
 
 # RunTx recovery middleware
 
-`BaseApp.runTx()` function handles Golang panics that might occur during transactions execution, for example, keeper has faced an invalid state and paniced.
+`BaseApp.runTx()` function handles Go panics that might occur during transactions execution, for example, keeper has faced an invalid state and paniced.
 Depending on the panic type different handler is used, for instance the default one prints an error log message.
-Recovery middleware is used to add custom panic recovery for SDK application developers.
+Recovery middleware is used to add custom panic recovery for Cosmos SDK application developers.
 
-More context could be found in the corresponding [ADR-022](../architecture/adr-022-custom-panic-handling.md).
-
-Implementation could be found in the [recovery.go](../../baseapp/recovery.go) file.
+More context can found in the corresponding [ADR-022](../architecture/adr-022-custom-panic-handling.md) and the implementation in [recovery.go](https://github.com/cosmos/cosmos-sdk/tree/v0.46.0-rc1/baseapp/recovery.go).
 
 ## Interface
 
-```go
-type RecoveryHandler func(recoveryObj interface{}) error
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/baseapp/recovery.go#L11-L14
 
-`recoveryObj` is a return value for `recover()` function from the `buildin` Golang package.
+`recoveryObj` is a return value for `recover()` function from the `buildin` Go package.
 
 **Contract:**
 
-- RecoveryHandler returns `nil` if `recoveryObj` wasn't handled and should be passed to the next recovery middleware;
-- RecoveryHandler returns a non-nil `error` if `recoveryObj` was handled;
+* RecoveryHandler returns `nil` if `recoveryObj` wasn't handled and should be passed to the next recovery middleware;
+* RecoveryHandler returns a non-nil `error` if `recoveryObj` was handled;
 
 ## Custom RecoveryHandler register
 
@@ -50,7 +46,7 @@ func (k FooKeeper) Do(obj interface{}) {
 By default that panic would be recovered and an error message will be printed to log. To override that behaviour we should register a custom RecoveryHandler:
 
 ```go
-// SDK application constructor
+// Cosmos SDK application constructor
 customHandler := func(recoveryObj interface{}) error {
     err, ok := recoveryObj.(error)
     if !ok {

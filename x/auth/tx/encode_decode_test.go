@@ -24,7 +24,7 @@ func TestDefaultTxDecoderError(t *testing.T) {
 	encoder := DefaultTxEncoder()
 	decoder := DefaultTxDecoder(cdc)
 
-	builder := newBuilder()
+	builder := newBuilder(nil)
 	err := builder.SetMsgs(testdata.NewTestMsg())
 	require.NoError(t, err)
 

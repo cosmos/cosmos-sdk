@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -23,6 +24,8 @@ service Query {
 
   // SpendableBalances queries the spenable balance of all coins for a single
   // account.
+  //
+  // Since: cosmos-sdk 0.46
   rpc SpendableBalances(QuerySpendableBalancesRequest) returns (QuerySpendableBalancesResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/spendable_balances/{address}";
   }
@@ -34,7 +37,7 @@ service Query {
 
   // SupplyOf queries the supply of a single coin.
   rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/{denom}";
+    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/by_denom";
   }
 
   // Params queries the parameters of x/bank module.
@@ -47,9 +50,18 @@ service Query {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
   }
 
-  // DenomsMetadata queries the client metadata for all registered coin denominations.
+  // DenomsMetadata queries the client metadata for all registered coin
+  // denominations.
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
+  }
+
+  // DenomOwners queries for all account addresses that own a particular token
+  // denomination.
+  //
+  // Since: cosmos-sdk 0.46
+  rpc DenomOwners(QueryDenomOwnersRequest) returns (QueryDenomOwnersResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/denom_owners/{denom}";
   }
 }
 
@@ -59,7 +71,7 @@ message QueryBalanceRequest {
   option (gogoproto.goproto_getters) = false;
 
   // address is the address to query balances for.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // denom is the coin denom to query balances for.
   string denom = 2;
@@ -77,7 +89,7 @@ message QueryAllBalancesRequest {
   option (gogoproto.goproto_getters) = false;
 
   // address is the address to query balances for.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -96,12 +108,14 @@ message QueryAllBalancesResponse {
 
 // QuerySpendableBalancesRequest defines the gRPC request structure for querying
 // an account's spendable balances.
+//
+// Since: cosmos-sdk 0.46
 message QuerySpendableBalancesRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // address is the address to query spendable balances for.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -109,6 +123,8 @@ message QuerySpendableBalancesRequest {
 
 // QuerySpendableBalancesResponse defines the gRPC response structure for querying
 // an account's spendable balances.
+//
+// Since: cosmos-sdk 0.46
 message QuerySpendableBalancesResponse {
   // balances is the spendable balances of all the coins.
   repeated cosmos.base.v1beta1.Coin balances = 1
@@ -190,4 +206,38 @@ message QueryDenomMetadataRequest {
 message QueryDenomMetadataResponse {
   // metadata describes and provides all the client information for the requested token.
   Metadata metadata = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryDenomOwnersRequest defines the request type for the DenomOwners RPC query,
+// which queries for a paginated set of all account holders of a particular
+// denomination.
+message QueryDenomOwnersRequest {
+  // denom defines the coin denomination to query all account holders for.
+  string denom = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// DenomOwner defines structure representing an account that owns or holds a
+// particular denominated token. It contains the account address and account
+// balance of the denominated token.
+//
+// Since: cosmos-sdk 0.46
+message DenomOwner {
+  // address defines the address that owns a particular denomination.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // balance is the balance of the denominated coin for an account.
+  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
+}
+
+// QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
+//
+// Since: cosmos-sdk 0.46
+message QueryDenomOwnersResponse {
+  repeated DenomOwner denom_owners = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

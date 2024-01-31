@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -73,7 +73,7 @@ func (s *resultTestSuite) TestResponseResultTx() {
 		GasWanted: 100,
 		GasUsed:   90,
 	}
-	resultTx := &ctypes.ResultTx{
+	resultTx := &coretypes.ResultTx{
 		Hash:     bytes.HexBytes([]byte("test")),
 		Height:   10,
 		TxResult: deliverTxResult,
@@ -116,7 +116,7 @@ txhash: "74657374"
 	s.Require().True(sdk.TxResponse{}.Empty())
 	s.Require().False(want.Empty())
 
-	resultBroadcastTx := &ctypes.ResultBroadcastTx{
+	resultBroadcastTx := &coretypes.ResultBroadcastTx{
 		Code:      1,
 		Codespace: "codespace",
 		Data:      []byte("data"),
@@ -143,7 +143,7 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 	s.Require().NoError(err)
 
 	// test checkTx
-	checkTxResult := &ctypes.ResultBroadcastTxCommit{
+	checkTxResult := &coretypes.ResultBroadcastTxCommit{
 		Height: 10,
 		Hash:   bytes.HexBytes([]byte("test")),
 		CheckTx: abci.ResponseCheckTx{
@@ -168,7 +168,7 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 			},
 		},
 	}
-	deliverTxResult := &ctypes.ResultBroadcastTxCommit{
+	deliverTxResult := &coretypes.ResultBroadcastTxCommit{
 		Height: 10,
 		Hash:   bytes.HexBytes([]byte("test")),
 		DeliverTx: abci.ResponseDeliverTx{
@@ -229,14 +229,14 @@ func TestWrapServiceResult(t *testing.T) {
 	require.Nil(t, res)
 	require.NotNil(t, err)
 
-	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
 	require.NotNil(t, res)
 	require.Nil(t, err)
 	require.Empty(t, res.Events)
 
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	ctx.EventManager().EmitEvent(sdk.NewEvent("test"))
-	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
 	require.NotNil(t, res)
 	require.Nil(t, err)
 	require.Len(t, res.Events, 1)

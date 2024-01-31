@@ -1,16 +1,21 @@
 package types
 
 import (
+	"fmt"
+
 	ics23 "github.com/confio/ics23/go"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
+	sdkproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
 	ProofOpIAVLCommitment         = "ics23:iavl"
 	ProofOpSimpleMerkleCommitment = "ics23:simple"
+	ProofOpSMTCommitment          = "ics23:smt"
 )
 
 // CommitmentOp implements merkle.ProofOperator by wrapping an ics23 CommitmentProof
@@ -46,6 +51,15 @@ func NewSimpleMerkleCommitmentOp(key []byte, proof *ics23.CommitmentProof) Commi
 	}
 }
 
+func NewSmtCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
+	return CommitmentOp{
+		Type:  ProofOpSMTCommitment,
+		Spec:  ics23.SmtSpec,
+		Key:   key,
+		Proof: proof,
+	}
+}
+
 // CommitmentOpDecoder takes a merkle.ProofOp and attempts to decode it into a CommitmentOp ProofOperator
 // The proofOp.Data is just a marshalled CommitmentProof. The Key of the CommitmentOp is extracted
 // from the unmarshalled proof.
@@ -56,8 +70,10 @@ func CommitmentOpDecoder(pop tmmerkle.ProofOp) (merkle.ProofOperator, error) {
 		spec = ics23.IavlSpec
 	case ProofOpSimpleMerkleCommitment:
 		spec = ics23.TendermintSpec
+	case ProofOpSMTCommitment:
+		spec = ics23.SmtSpec
 	default:
-		return nil, sdkerrors.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %s, want supported ics23 subtypes 'ProofOpIAVLCommitment' or 'ProofOpSimpleMerkleCommitment'", pop.Type)
+		return nil, sdkerrors.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %s, want supported ics23 subtypes 'ProofOpSimpleMerkleCommitment', 'ProofOpIAVLCommitment', or 'ProofOpSMTCommitment'", pop.Type)
 	}
 
 	proof := &ics23.CommitmentProof{}
@@ -79,15 +95,15 @@ func (op CommitmentOp) GetKey() []byte {
 	return op.Key
 }
 
-// Run takes in a list of arguments and attempts to run the proof op against these arguments.
+// Run takes in a list of arguments and attempts to run the proof op against these arguments
 // Returns the root wrapped in [][]byte if the proof op succeeds with given args. If not,
 // it will return an error.
 //
 // CommitmentOp will accept args of length 1 or length 0
 // If length 1 args is passed in, then CommitmentOp will attempt to prove the existence of the key
-// with the value provided by args[0] using the embedded CommitmentProof and return the CommitmentRoot of the proof.
+// with the value provided by args[0] using the embedded CommitmentProof and return the CommitmentRoot of the proof
 // If length 0 args is passed in, then CommitmentOp will attempt to prove the absence of the key
-// in the CommitmentOp and return the CommitmentRoot of the proof.
+// in the CommitmentOp and return the CommitmentRoot of the proof
 func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	// calculate root from proof
 	root, err := op.Proof.Calculate()
@@ -128,4 +144,31 @@ func (op CommitmentOp) ProofOp() tmmerkle.ProofOp {
 		Key:  op.Key,
 		Data: bz,
 	}
+}
+
+// ProofOpFromMap generates a single proof from a map and converts it to a ProofOp.
+func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret tmmerkle.ProofOp, err error) {
+	_, proofs, _ := sdkmaps.ProofsFromMap(cmap)
+
+	proof := proofs[storeName]
+	if proof == nil {
+		err = fmt.Errorf("ProofOp for %s but not registered store name", storeName)
+		return
+	}
+
+	// convert merkle.SimpleProof to CommitmentProof
+	existProof, err := sdkproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
+	if err != nil {
+		err = fmt.Errorf("could not convert simple proof to existence proof: %w", err)
+		return
+	}
+
+	commitmentProof := &ics23.CommitmentProof{
+		Proof: &ics23.CommitmentProof_Exist{
+			Exist: existProof,
+		},
+	}
+
+	ret = NewSimpleMerkleCommitmentOp([]byte(storeName), commitmentProof).ProofOp()
+	return
 }

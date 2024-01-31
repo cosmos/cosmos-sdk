@@ -3,7 +3,7 @@ name: Atlas
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - "x/**/atlas/*"
   pull_request:
@@ -14,8 +14,8 @@ jobs:
   auth:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v4
+      - uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
           PATTERNS: |
@@ -29,8 +29,8 @@ jobs:
   bank:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v4
+      - uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
           PATTERNS: |
@@ -44,8 +44,8 @@ jobs:
   evidence:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v4
+      - uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
           PATTERNS: |

@@ -12,7 +12,7 @@ message GenesisOwners {
   uint64 index = 1;
 
   // index_owners are the owners at the given index.
-  CapabilityOwners index_owners = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"index_owners\""];
+  CapabilityOwners index_owners = 2 [(gogoproto.nullable) = false];
 }
 
 // GenesisState defines the capability module's genesis state.

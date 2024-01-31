@@ -5,6 +5,8 @@ option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 // Msg defines the slashing Msg service.
 service Msg {
@@ -16,10 +18,12 @@ service Msg {
 
 // MsgUnjail defines the Msg/Unjail request type
 message MsgUnjail {
+  option (cosmos.msg.v1.signer) = "validator_addr";
+
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = true;
 
-  string validator_addr = 1 [(gogoproto.moretags) = "yaml:\"address\"", (gogoproto.jsontag) = "address"];
+  string validator_addr = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.jsontag) = "address"];
 }
 
 // MsgUnjailResponse defines the Msg/Unjail response type

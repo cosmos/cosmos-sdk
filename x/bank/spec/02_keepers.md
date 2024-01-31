@@ -22,7 +22,7 @@ Typically, these addresses are module accounts. If these addresses receive funds
 outside the expected rules of the state machine, invariants are likely to be
 broken and could result in a halted network.
 
-By providing the `x/bank` module with a blocklisted set of addresses, an error occurs for the operation if a user or client attempts to directly or indirectly send funds to a blocklisted account, for example, by using [IBC](http://docs.cosmos.network/master/ibc/).
+By providing the `x/bank` module with a blocklisted set of addresses, an error occurs for the operation if a user or client attempts to directly or indirectly send funds to a blocklisted account, for example, by using [IBC](https://ibc.cosmos.network).
 
 ## Common Types
 
@@ -61,6 +61,7 @@ Restricted permission to mint per module could be achieved by using baseKeeper w
 // between accounts.
 type Keeper interface {
     SendKeeper
+    WithMintCoinsRestriction(NewRestrictionFn BankMintingRestrictionFn) BaseKeeper 
 
     InitGenesis(sdk.Context, *types.GenesisState)
     ExportGenesis(sdk.Context) *types.GenesisState

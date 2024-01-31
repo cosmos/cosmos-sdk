@@ -6,8 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -33,17 +35,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
 type MsgCreateVestingAccount struct {
-	// Address of the account providing the funds, which must also sign the request.
-	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
-	// Address of the vesting account to create.
-	ToAddress string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
-	// Amount to transfer to the new account.
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	// End time of the vesting duration.
-	EndTime int64 `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty" yaml:"end_time"`
-	// If true, creates a DelayedVestingAccount,
-	// otherwise creates a ContinuousVestingAccount.
-	Delayed bool `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
+	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	// end of vesting as unix time (in seconds).
+	EndTime int64 `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Delayed bool  `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
 }
 
 func (m *MsgCreateVestingAccount) Reset()         { *m = MsgCreateVestingAccount{} }
@@ -114,7 +111,7 @@ func (m *MsgCreateVestingAccount) GetDelayed() bool {
 	return false
 }
 
-// MsgCreateVestingAccountResponse defines the MsgCreateVestingAccount response type.
+// MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 type MsgCreateVestingAccountResponse struct {
 }
 
@@ -151,16 +148,120 @@ func (m *MsgCreateVestingAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateVestingAccountResponse proto.InternalMessageInfo
 
-// MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
+// MsgCreatePermanentLockedAccount defines a message that enables creating a permanent
+// locked account.
+//
+// Since: cosmos-sdk 0.46
+type MsgCreatePermanentLockedAccount struct {
+	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
+	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
+	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+}
+
+func (m *MsgCreatePermanentLockedAccount) Reset()         { *m = MsgCreatePermanentLockedAccount{} }
+func (m *MsgCreatePermanentLockedAccount) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePermanentLockedAccount) ProtoMessage()    {}
+func (*MsgCreatePermanentLockedAccount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5338ca97811f9792, []int{2}
+}
+func (m *MsgCreatePermanentLockedAccount) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePermanentLockedAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePermanentLockedAccount.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePermanentLockedAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePermanentLockedAccount.Merge(m, src)
+}
+func (m *MsgCreatePermanentLockedAccount) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePermanentLockedAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePermanentLockedAccount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePermanentLockedAccount proto.InternalMessageInfo
+
+func (m *MsgCreatePermanentLockedAccount) GetFromAddress() string {
+	if m != nil {
+		return m.FromAddress
+	}
+	return ""
+}
+
+func (m *MsgCreatePermanentLockedAccount) GetToAddress() string {
+	if m != nil {
+		return m.ToAddress
+	}
+	return ""
+}
+
+func (m *MsgCreatePermanentLockedAccount) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Amount
+	}
+	return nil
+}
+
+// MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
+//
+// Since: cosmos-sdk 0.46
+type MsgCreatePermanentLockedAccountResponse struct {
+}
+
+func (m *MsgCreatePermanentLockedAccountResponse) Reset() {
+	*m = MsgCreatePermanentLockedAccountResponse{}
+}
+func (m *MsgCreatePermanentLockedAccountResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePermanentLockedAccountResponse) ProtoMessage()    {}
+func (*MsgCreatePermanentLockedAccountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5338ca97811f9792, []int{3}
+}
+func (m *MsgCreatePermanentLockedAccountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePermanentLockedAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePermanentLockedAccountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePermanentLockedAccountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePermanentLockedAccountResponse.Merge(m, src)
+}
+func (m *MsgCreatePermanentLockedAccountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePermanentLockedAccountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePermanentLockedAccountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePermanentLockedAccountResponse proto.InternalMessageInfo
+
+// MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePeriodicVestingAccount struct {
-	// Address of the account providing the funds, which must also sign the request.
-	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
-	// Address of the account to receive the funds.
-	ToAddress string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
-	// Start time of the vesting. Periods start relative to this time.
-	StartTime int64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
-	// Vesting events as a sequence of durations and amounts, starting relative to start_time.
+	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress   string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	// start of vesting as unix time (in seconds).
+	StartTime      int64    `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	VestingPeriods []Period `protobuf:"bytes,4,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
 	// If true, merge this new grant into an existing PeriodicVestingAccount,
 	// or create it if it does not exist. If false, creates a new account,
@@ -172,7 +273,7 @@ func (m *MsgCreatePeriodicVestingAccount) Reset()         { *m = MsgCreatePeriod
 func (m *MsgCreatePeriodicVestingAccount) String() string { return proto.CompactTextString(m) }
 func (*MsgCreatePeriodicVestingAccount) ProtoMessage()    {}
 func (*MsgCreatePeriodicVestingAccount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5338ca97811f9792, []int{2}
+	return fileDescriptor_5338ca97811f9792, []int{4}
 }
 func (m *MsgCreatePeriodicVestingAccount) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -236,8 +337,10 @@ func (m *MsgCreatePeriodicVestingAccount) GetMerge() bool {
 	return false
 }
 
-// MsgCreatePeriodicVestingAccountResponse defines the MsgCreatePeriodicVestingAccount
+// MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePeriodicVestingAccountResponse struct {
 }
 
@@ -247,7 +350,7 @@ func (m *MsgCreatePeriodicVestingAccountResponse) Reset() {
 func (m *MsgCreatePeriodicVestingAccountResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgCreatePeriodicVestingAccountResponse) ProtoMessage()    {}
 func (*MsgCreatePeriodicVestingAccountResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5338ca97811f9792, []int{3}
+	return fileDescriptor_5338ca97811f9792, []int{5}
 }
 func (m *MsgCreatePeriodicVestingAccountResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -298,7 +401,7 @@ func (m *MsgCreateClawbackVestingAccount) Reset()         { *m = MsgCreateClawba
 func (m *MsgCreateClawbackVestingAccount) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateClawbackVestingAccount) ProtoMessage()    {}
 func (*MsgCreateClawbackVestingAccount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5338ca97811f9792, []int{4}
+	return fileDescriptor_5338ca97811f9792, []int{6}
 }
 func (m *MsgCreateClawbackVestingAccount) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -379,7 +482,7 @@ func (m *MsgCreateClawbackVestingAccountResponse) Reset() {
 func (m *MsgCreateClawbackVestingAccountResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateClawbackVestingAccountResponse) ProtoMessage()    {}
 func (*MsgCreateClawbackVestingAccountResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5338ca97811f9792, []int{5}
+	return fileDescriptor_5338ca97811f9792, []int{7}
 }
 func (m *MsgCreateClawbackVestingAccountResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -423,7 +526,7 @@ func (m *MsgClawback) Reset()         { *m = MsgClawback{} }
 func (m *MsgClawback) String() string { return proto.CompactTextString(m) }
 func (*MsgClawback) ProtoMessage()    {}
 func (*MsgClawback) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5338ca97811f9792, []int{6}
+	return fileDescriptor_5338ca97811f9792, []int{8}
 }
 func (m *MsgClawback) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -481,7 +584,7 @@ func (m *MsgClawbackResponse) Reset()         { *m = MsgClawbackResponse{} }
 func (m *MsgClawbackResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgClawbackResponse) ProtoMessage()    {}
 func (*MsgClawbackResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5338ca97811f9792, []int{7}
+	return fileDescriptor_5338ca97811f9792, []int{9}
 }
 func (m *MsgClawbackResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -510,8 +613,11 @@ func (m *MsgClawbackResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgClawbackResponse proto.InternalMessageInfo
 
-// MsgReturnGrants defines a message for a grantee to return the unvested portion of a
-// vesting grant to the funder. Currently only applies to ClawbackVesting accounts.
+// MsgReturnGrants defines a message for a grantee to return all granted assets,
+// including delegated, undelegated and unbonding, vested and unvested,
+// are transferred to the original funder of the account. Might not be complete if
+// some vested assets have been transferred out of the account. Currently only applies to
+// ClawbackVesting accounts.
 type MsgReturnGrants struct {
 	// address is the address of the grantee account returning the grant.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
@@ -521,7 +627,7 @@ func (m *MsgReturnGrants) Reset()         { *m = MsgReturnGrants{} }
 func (m *MsgReturnGrants) String() string { return proto.CompactTextString(m) }
 func (*MsgReturnGrants) ProtoMessage()    {}
 func (*MsgReturnGrants) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5338ca97811f9792, []int{8}
+	return fileDescriptor_5338ca97811f9792, []int{10}
 }
 func (m *MsgReturnGrants) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -565,7 +671,7 @@ func (m *MsgReturnGrantsResponse) Reset()         { *m = MsgReturnGrantsResponse
 func (m *MsgReturnGrantsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgReturnGrantsResponse) ProtoMessage()    {}
 func (*MsgReturnGrantsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5338ca97811f9792, []int{9}
+	return fileDescriptor_5338ca97811f9792, []int{11}
 }
 func (m *MsgReturnGrantsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -597,6 +703,8 @@ var xxx_messageInfo_MsgReturnGrantsResponse proto.InternalMessageInfo
 func init() {
 	proto.RegisterType((*MsgCreateVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreateVestingAccount")
 	proto.RegisterType((*MsgCreateVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse")
+	proto.RegisterType((*MsgCreatePermanentLockedAccount)(nil), "cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount")
+	proto.RegisterType((*MsgCreatePermanentLockedAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse")
 	proto.RegisterType((*MsgCreatePeriodicVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount")
 	proto.RegisterType((*MsgCreatePeriodicVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse")
 	proto.RegisterType((*MsgCreateClawbackVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount")
@@ -610,52 +718,58 @@ func init() {
 func init() { proto.RegisterFile("cosmos/vesting/v1beta1/tx.proto", fileDescriptor_5338ca97811f9792) }
 
 var fileDescriptor_5338ca97811f9792 = []byte{
-	// 708 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xbf, 0x6f, 0xd3, 0x4c,
-	0x18, 0x8e, 0xeb, 0xa4, 0x3f, 0xde, 0xf4, 0x87, 0x3e, 0xb7, 0xfd, 0xea, 0x46, 0x9f, 0xec, 0xd4,
-	0x1f, 0xa8, 0x41, 0x15, 0x36, 0x2d, 0x95, 0x90, 0xba, 0xa0, 0xa6, 0x03, 0x43, 0x15, 0x09, 0x59,
-	0x88, 0x01, 0x21, 0x55, 0x8e, 0x7d, 0x75, 0xad, 0xc6, 0xbe, 0xe0, 0xbb, 0x94, 0x76, 0x83, 0x85,
-	0x99, 0x91, 0x91, 0x99, 0x99, 0x3f, 0x80, 0xb1, 0x63, 0x47, 0xa6, 0x80, 0xda, 0x85, 0xb9, 0x7f,
-	0x01, 0xf2, 0xdd, 0xd9, 0x75, 0x24, 0x27, 0x2d, 0x15, 0x12, 0x62, 0x4a, 0xde, 0x7b, 0x9f, 0xe7,
-	0x7d, 0xdf, 0x7b, 0x9e, 0xf3, 0xd9, 0xa0, 0xbb, 0x98, 0x84, 0x98, 0x58, 0x47, 0x88, 0xd0, 0x20,
-	0xf2, 0xad, 0xa3, 0xf5, 0x36, 0xa2, 0xce, 0xba, 0x45, 0x8f, 0xcd, 0x6e, 0x8c, 0x29, 0x56, 0xfe,
-	0xe5, 0x00, 0x53, 0x00, 0x4c, 0x01, 0xa8, 0x2d, 0xf8, 0xd8, 0xc7, 0x0c, 0x62, 0x25, 0xff, 0x38,
-	0xba, 0xa6, 0x89, 0x72, 0x6d, 0x87, 0xa0, 0xac, 0x96, 0x8b, 0x83, 0x48, 0xe4, 0xef, 0x0c, 0x69,
-	0x97, 0x56, 0x67, 0x28, 0xe3, 0xcb, 0x18, 0x2c, 0xb5, 0x88, 0xbf, 0x13, 0x23, 0x87, 0xa2, 0xe7,
-	0x3c, 0xb5, 0xed, 0xba, 0xb8, 0x17, 0x51, 0x65, 0x0b, 0xa6, 0xf7, 0x63, 0x1c, 0xee, 0x39, 0x9e,
-	0x17, 0x23, 0x42, 0x54, 0xa9, 0x2e, 0x35, 0xa6, 0x9a, 0x4b, 0x97, 0x7d, 0x7d, 0xfe, 0xc4, 0x09,
-	0x3b, 0x5b, 0x46, 0x3e, 0x6b, 0xd8, 0xd5, 0x24, 0xdc, 0xe6, 0x91, 0xb2, 0x09, 0x40, 0x71, 0xc6,
-	0x1c, 0x63, 0xcc, 0xc5, 0xcb, 0xbe, 0xfe, 0x0f, 0x67, 0x5e, 0xe5, 0x0c, 0x7b, 0x8a, 0xe2, 0x94,
-	0xe5, 0xc2, 0xb8, 0x13, 0x26, 0xbd, 0x55, 0xb9, 0x2e, 0x37, 0xaa, 0x1b, 0xcb, 0xa6, 0x90, 0x24,
-	0xd9, 0x64, 0xaa, 0x87, 0xb9, 0x83, 0x83, 0xa8, 0xf9, 0xe0, 0xb4, 0xaf, 0x97, 0x3e, 0x7d, 0xd3,
-	0x1b, 0x7e, 0x40, 0x0f, 0x7a, 0x6d, 0xd3, 0xc5, 0xa1, 0x25, 0x76, 0xcc, 0x7f, 0xee, 0x13, 0xef,
-	0xd0, 0xa2, 0x27, 0x5d, 0x44, 0x18, 0x81, 0xd8, 0xa2, 0xb4, 0x62, 0xc2, 0x24, 0x8a, 0xbc, 0x3d,
-	0x1a, 0x84, 0x48, 0x2d, 0xd7, 0xa5, 0x86, 0xdc, 0x9c, 0xbf, 0xec, 0xeb, 0x73, 0x7c, 0xb0, 0x34,
-	0x63, 0xd8, 0x13, 0x28, 0xf2, 0x9e, 0x05, 0x21, 0x52, 0x54, 0x98, 0xf0, 0x50, 0xc7, 0x39, 0x41,
-	0x9e, 0x5a, 0xa9, 0x4b, 0x8d, 0x49, 0x3b, 0x0d, 0xb7, 0xca, 0x3f, 0x3e, 0xea, 0x92, 0xb1, 0x02,
-	0xfa, 0x10, 0x05, 0x6d, 0x44, 0xba, 0x38, 0x22, 0xc8, 0xf8, 0x3c, 0x96, 0xc3, 0x3c, 0x45, 0x71,
-	0x80, 0xbd, 0xc0, 0xfd, 0xe3, 0x6a, 0x6f, 0x02, 0x10, 0xea, 0xc4, 0x94, 0x4b, 0x21, 0x33, 0x29,
-	0x72, 0xac, 0xab, 0x9c, 0x61, 0x4f, 0xb1, 0x80, 0xc9, 0xd1, 0x82, 0x39, 0x71, 0x84, 0xf6, 0xba,
-	0x6c, 0x27, 0x44, 0x2d, 0x33, 0xb3, 0x34, 0xb3, 0xf8, 0xfc, 0x9a, 0x7c, 0xc3, 0xcd, 0x72, 0xe2,
-	0x98, 0x3d, 0x2b, 0xb2, 0x7c, 0x91, 0x28, 0x0b, 0x50, 0x09, 0x51, 0xec, 0x23, 0xa1, 0x2d, 0x0f,
-	0x98, 0xb2, 0x25, 0xe3, 0x1e, 0xac, 0x5e, 0xa3, 0x5a, 0xa6, 0xf0, 0x5b, 0x39, 0xa7, 0xf0, 0x4e,
-	0xc7, 0x79, 0xdd, 0x76, 0xdc, 0xc3, 0xbf, 0x54, 0xe1, 0x5d, 0x98, 0xed, 0x60, 0xf7, 0xb0, 0xd7,
-	0xbd, 0x95, 0xc0, 0x33, 0x9c, 0x9b, 0xea, 0x5b, 0x60, 0x57, 0xe5, 0x77, 0xd8, 0x35, 0x3e, 0xda,
-	0xae, 0x62, 0x0b, 0x32, 0xbb, 0x5e, 0x41, 0x35, 0x81, 0x0a, 0x90, 0x72, 0x17, 0x66, 0xf7, 0x7b,
-	0x91, 0x87, 0xe2, 0x41, 0x6f, 0xec, 0x19, 0xbe, 0x9a, 0xca, 0xa9, 0xc2, 0xc4, 0x80, 0x03, 0x76,
-	0x1a, 0x2a, 0x2b, 0x30, 0xed, 0x21, 0x42, 0x33, 0xba, 0xcc, 0xd2, 0xd5, 0x64, 0x4d, 0x90, 0x8d,
-	0x45, 0x98, 0xcf, 0xb5, 0xcc, 0x26, 0x59, 0x83, 0xb9, 0x16, 0xf1, 0x6d, 0x44, 0x7b, 0x71, 0xf4,
-	0x24, 0x76, 0x22, 0x3a, 0xd0, 0x46, 0x1a, 0x68, 0x63, 0x2c, 0xb3, 0xcb, 0x32, 0x0f, 0x4e, 0xeb,
-	0x6c, 0xbc, 0xab, 0x80, 0xdc, 0x22, 0xbe, 0xf2, 0x46, 0x82, 0x85, 0xc2, 0xdb, 0xd4, 0x1a, 0xa6,
-	0xf7, 0x90, 0xcb, 0xa3, 0xf6, 0xe8, 0x17, 0x09, 0xe9, 0x28, 0xca, 0x07, 0x09, 0xfe, 0x1b, 0x79,
-	0xd5, 0x5c, 0x5f, 0xb9, 0x98, 0x58, 0x7b, 0x7c, 0x4b, 0x62, 0xc1, 0x68, 0x43, 0x9e, 0xd1, 0xeb,
-	0x47, 0x2b, 0x26, 0xde, 0x60, 0xb4, 0xd1, 0x47, 0x52, 0x79, 0x09, 0x93, 0xd9, 0x79, 0xfc, 0x7f,
-	0x54, 0x31, 0x01, 0xaa, 0xad, 0xdd, 0x00, 0x94, 0x55, 0x3f, 0x80, 0xe9, 0x81, 0x33, 0xb6, 0x3a,
-	0x82, 0x9c, 0x07, 0xd6, 0xac, 0x1b, 0x02, 0xd3, 0x4e, 0xcd, 0xdd, 0xd3, 0x73, 0x4d, 0x3a, 0x3b,
-	0xd7, 0xa4, 0xef, 0xe7, 0x9a, 0xf4, 0xfe, 0x42, 0x2b, 0x9d, 0x5d, 0x68, 0xa5, 0xaf, 0x17, 0x5a,
-	0xe9, 0xc5, 0xfa, 0xc8, 0x57, 0xe5, 0xb1, 0xe5, 0xf4, 0xe8, 0x41, 0xf6, 0xb9, 0xc0, 0xde, 0x9c,
-	0xed, 0x71, 0xf6, 0x95, 0xf0, 0xf0, 0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0x54, 0xee, 0x65, 0x6b,
-	0xbc, 0x08, 0x00, 0x00,
+	// 812 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x96, 0xcd, 0x6e, 0xd3, 0x4a,
+	0x14, 0xc7, 0xe3, 0x26, 0x4d, 0xdb, 0xe9, 0x97, 0xae, 0x9b, 0xde, 0x3a, 0xd1, 0xad, 0x93, 0xfa,
+	0xde, 0xab, 0x06, 0xaa, 0xda, 0xb4, 0x54, 0xaa, 0x14, 0x16, 0xa8, 0xe9, 0x82, 0x45, 0x89, 0x84,
+	0x0c, 0x62, 0x81, 0x90, 0x22, 0xc7, 0x9e, 0xba, 0x56, 0x62, 0x4f, 0xf0, 0x4c, 0x4a, 0xbb, 0x03,
+	0x9e, 0x80, 0x25, 0x4b, 0xd8, 0xb2, 0x62, 0xc1, 0x03, 0xb0, 0xec, 0xb2, 0x62, 0xc5, 0xaa, 0xa0,
+	0x76, 0x01, 0xeb, 0x3e, 0x00, 0x42, 0xf6, 0x8c, 0x5d, 0x3b, 0x75, 0x3e, 0xa8, 0x50, 0x57, 0x89,
+	0xe7, 0xfc, 0xff, 0x67, 0x8e, 0x7f, 0x73, 0x66, 0xc6, 0xa0, 0xa8, 0x23, 0x6c, 0x23, 0xac, 0xec,
+	0x43, 0x4c, 0x2c, 0xc7, 0x54, 0xf6, 0xd7, 0x1a, 0x90, 0x68, 0x6b, 0x0a, 0x39, 0x90, 0xdb, 0x2e,
+	0x22, 0x88, 0xff, 0x9b, 0x0a, 0x64, 0x26, 0x90, 0x99, 0xa0, 0x90, 0x33, 0x91, 0x89, 0x7c, 0x89,
+	0xe2, 0xfd, 0xa3, 0xea, 0x82, 0xc8, 0xd2, 0x35, 0x34, 0x0c, 0xc3, 0x5c, 0x3a, 0xb2, 0x1c, 0x16,
+	0xcf, 0xd3, 0x78, 0x9d, 0x1a, 0x59, 0x6a, 0x1a, 0xfa, 0xaf, 0x47, 0x25, 0xc1, 0xc4, 0x54, 0xb5,
+	0xc0, 0x54, 0x36, 0xf6, 0x14, 0xde, 0x0f, 0x0d, 0x48, 0x9f, 0x46, 0xc0, 0x42, 0x0d, 0x9b, 0xdb,
+	0x2e, 0xd4, 0x08, 0x7c, 0x4c, 0x3d, 0x5b, 0xba, 0x8e, 0x3a, 0x0e, 0xe1, 0xef, 0x80, 0xa9, 0x5d,
+	0x17, 0xd9, 0x75, 0xcd, 0x30, 0x5c, 0x88, 0xb1, 0xc0, 0x95, 0xb8, 0xf2, 0x44, 0x55, 0xf8, 0xfc,
+	0x71, 0x35, 0xc7, 0x4a, 0xd8, 0xa2, 0x91, 0x87, 0xc4, 0xb5, 0x1c, 0x53, 0x9d, 0xf4, 0xd4, 0x6c,
+	0x88, 0xdf, 0x04, 0x80, 0xa0, 0xd0, 0x3a, 0x32, 0xc0, 0x3a, 0x41, 0x50, 0x60, 0xd4, 0x41, 0x56,
+	0xb3, 0xbd, 0xf9, 0x85, 0x74, 0x29, 0x5d, 0x9e, 0x5c, 0xcf, 0xcb, 0xcc, 0xe1, 0xc1, 0x09, 0x38,
+	0xca, 0xdb, 0xc8, 0x72, 0xaa, 0xb7, 0x8e, 0x4e, 0x8a, 0xa9, 0xf7, 0x5f, 0x8b, 0x65, 0xd3, 0x22,
+	0x7b, 0x9d, 0x86, 0xac, 0x23, 0x9b, 0xc1, 0x61, 0x3f, 0xab, 0xd8, 0x68, 0x2a, 0xe4, 0xb0, 0x0d,
+	0xb1, 0x6f, 0xc0, 0x2a, 0x4b, 0xcd, 0xe7, 0xc1, 0x38, 0x74, 0x8c, 0x3a, 0xb1, 0x6c, 0x28, 0x64,
+	0x4a, 0x5c, 0x39, 0xad, 0x8e, 0x41, 0xc7, 0x78, 0x64, 0xd9, 0x90, 0x17, 0xc0, 0x98, 0x01, 0x5b,
+	0xda, 0x21, 0x34, 0x84, 0xd1, 0x12, 0x57, 0x1e, 0x57, 0x83, 0xc7, 0xca, 0xfc, 0x8f, 0xb7, 0x45,
+	0xee, 0xd5, 0xf7, 0x0f, 0x37, 0x63, 0x58, 0xa4, 0x25, 0x50, 0xec, 0x41, 0x50, 0x85, 0xb8, 0x8d,
+	0x1c, 0x0c, 0xa5, 0x9f, 0x5c, 0x44, 0xf3, 0x00, 0xba, 0xb6, 0xe6, 0x40, 0x87, 0xdc, 0x47, 0x7a,
+	0x13, 0x1a, 0x01, 0xed, 0x4a, 0x22, 0xed, 0x85, 0xf3, 0x93, 0xe2, 0xdc, 0xa1, 0x66, 0xb7, 0x2a,
+	0x52, 0x6c, 0xd2, 0x38, 0xec, 0x8d, 0x04, 0xd8, 0xf3, 0xe7, 0x27, 0xc5, 0xbf, 0xa8, 0xf3, 0x22,
+	0x26, 0x5d, 0x37, 0xe9, 0x4a, 0xc6, 0x83, 0x26, 0xdd, 0x00, 0xcb, 0x03, 0xde, 0xbf, 0x27, 0x2b,
+	0x0b, 0x19, 0x96, 0xde, 0xd5, 0x99, 0x4b, 0x49, 0xac, 0xe2, 0x48, 0x16, 0x2f, 0x23, 0x89, 0xbe,
+	0xfb, 0x22, 0x00, 0x98, 0x68, 0x2e, 0xa1, 0x2d, 0x90, 0xf6, 0x5b, 0x60, 0xc2, 0x1f, 0xf1, 0x9b,
+	0xa0, 0x06, 0x66, 0xd9, 0x06, 0xaa, 0xb7, 0xfd, 0x12, 0xb0, 0x90, 0xf1, 0x19, 0x89, 0x72, 0xf2,
+	0xc6, 0x96, 0x69, 0xa5, 0xd5, 0x8c, 0x07, 0x4a, 0x9d, 0x61, 0x51, 0x3a, 0x88, 0xf9, 0x1c, 0x18,
+	0xb5, 0xa1, 0x6b, 0x42, 0xd6, 0x51, 0xf4, 0xc1, 0xef, 0xa7, 0xd4, 0xe5, 0x7e, 0xea, 0x62, 0x95,
+	0xf0, 0xfe, 0x21, 0xab, 0x97, 0xe9, 0x08, 0xab, 0xed, 0x96, 0xf6, 0xbc, 0xa1, 0xe9, 0xcd, 0x2e,
+	0x56, 0xd7, 0xdf, 0x57, 0x1b, 0x97, 0xd9, 0x46, 0x5d, 0x17, 0x31, 0x29, 0x8a, 0x7c, 0x07, 0xcc,
+	0xb4, 0x90, 0xde, 0xec, 0xb4, 0xaf, 0x44, 0x7c, 0x9a, 0x7a, 0x03, 0xe0, 0x09, 0xeb, 0x37, 0xfa,
+	0x27, 0xd6, 0x2f, 0x1b, 0x5d, 0x3f, 0xaf, 0xb5, 0x53, 0xb1, 0xe5, 0x4a, 0x5e, 0x82, 0x70, 0xb9,
+	0x9e, 0x81, 0x49, 0x4f, 0xca, 0x44, 0xfc, 0xff, 0x60, 0x66, 0xb7, 0xe3, 0x18, 0xd0, 0xed, 0xea,
+	0xe3, 0x69, 0x3a, 0x1a, 0xe0, 0x14, 0xc0, 0x58, 0xbc, 0x8d, 0x83, 0x47, 0x6f, 0x1b, 0x18, 0x10,
+	0x93, 0xd0, 0x9e, 0xa6, 0xdb, 0xc0, 0x1b, 0x63, 0x66, 0x69, 0x1e, 0xcc, 0x45, 0xa6, 0x0c, 0x2b,
+	0x59, 0x01, 0xb3, 0x35, 0x6c, 0xaa, 0x90, 0x74, 0x5c, 0xe7, 0x9e, 0xab, 0x39, 0x24, 0x36, 0x0d,
+	0x17, 0x9b, 0x46, 0xca, 0xfb, 0x57, 0x44, 0x54, 0x1c, 0xe4, 0x59, 0x7f, 0x97, 0x05, 0xe9, 0x1a,
+	0x36, 0xf9, 0x17, 0x1c, 0xc8, 0x25, 0xde, 0x21, 0x4a, 0x2f, 0xde, 0x3d, 0x8e, 0xcc, 0xc2, 0xe6,
+	0x6f, 0x1a, 0x82, 0x52, 0xf8, 0x37, 0x1c, 0xf8, 0xa7, 0xef, 0x01, 0x3b, 0x38, 0x73, 0xb2, 0xb1,
+	0x70, 0xf7, 0x8a, 0xc6, 0xe4, 0xd2, 0x92, 0xce, 0xb3, 0xa1, 0x4a, 0x4b, 0x30, 0x0e, 0x57, 0x5a,
+	0x9f, 0x13, 0x24, 0x52, 0x5a, 0x8f, 0xe3, 0x63, 0x70, 0x69, 0xc9, 0xc6, 0x21, 0x4a, 0xeb, 0xbf,
+	0x5b, 0xf8, 0xa7, 0x60, 0x3c, 0xdc, 0x2a, 0xff, 0xf6, 0x4b, 0xc6, 0x44, 0x85, 0x95, 0x21, 0x44,
+	0x61, 0xf6, 0x3d, 0x30, 0x15, 0x6b, 0xff, 0xe5, 0x3e, 0xe6, 0xa8, 0xb0, 0xa0, 0x0c, 0x29, 0x0c,
+	0x66, 0xaa, 0xee, 0x1c, 0x9d, 0x8a, 0xdc, 0xf1, 0xa9, 0xc8, 0x7d, 0x3b, 0x15, 0xb9, 0xd7, 0x67,
+	0x62, 0xea, 0xf8, 0x4c, 0x4c, 0x7d, 0x39, 0x13, 0x53, 0x4f, 0xd6, 0xfa, 0xde, 0xa6, 0x07, 0x8a,
+	0xd6, 0x21, 0x7b, 0xe1, 0x87, 0x9d, 0x7f, 0xb9, 0x36, 0xb2, 0xfe, 0x67, 0xdb, 0xed, 0x5f, 0x01,
+	0x00, 0x00, 0xff, 0xff, 0xa2, 0x69, 0x07, 0x2e, 0x81, 0x0a, 0x00, 0x00,
 }
 
 func (this *MsgCreateVestingAccount) Equal(that interface{}) bool {
@@ -699,6 +813,41 @@ func (this *MsgCreateVestingAccount) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *MsgCreatePermanentLockedAccount) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgCreatePermanentLockedAccount)
+	if !ok {
+		that2, ok := that.(MsgCreatePermanentLockedAccount)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.FromAddress != that1.FromAddress {
+		return false
+	}
+	if this.ToAddress != that1.ToAddress {
+		return false
+	}
+	if len(this.Amount) != len(that1.Amount) {
+		return false
+	}
+	for i := range this.Amount {
+		if !this.Amount[i].Equal(&that1.Amount[i]) {
+			return false
+		}
+	}
+	return true
+}
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
@@ -715,8 +864,15 @@ type MsgClient interface {
 	// CreateVestingAccount defines a method that enables creating a vesting
 	// account.
 	CreateVestingAccount(ctx context.Context, in *MsgCreateVestingAccount, opts ...grpc.CallOption) (*MsgCreateVestingAccountResponse, error)
+	// CreatePermanentLockedAccount defines a method that enables creating a permanent
+	// locked account.
+	//
+	// Since: cosmos-sdk 0.46
+	CreatePermanentLockedAccount(ctx context.Context, in *MsgCreatePermanentLockedAccount, opts ...grpc.CallOption) (*MsgCreatePermanentLockedAccountResponse, error)
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(ctx context.Context, in *MsgCreatePeriodicVestingAccount, opts ...grpc.CallOption) (*MsgCreatePeriodicVestingAccountResponse, error)
 	// CreateClawbackVestingAccount defines a method that enables creating a
 	// vesting account that is subject to clawback.
@@ -738,6 +894,15 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 func (c *msgClient) CreateVestingAccount(ctx context.Context, in *MsgCreateVestingAccount, opts ...grpc.CallOption) (*MsgCreateVestingAccountResponse, error) {
 	out := new(MsgCreateVestingAccountResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/CreateVestingAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreatePermanentLockedAccount(ctx context.Context, in *MsgCreatePermanentLockedAccount, opts ...grpc.CallOption) (*MsgCreatePermanentLockedAccountResponse, error) {
+	out := new(MsgCreatePermanentLockedAccountResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/CreatePermanentLockedAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -785,8 +950,15 @@ type MsgServer interface {
 	// CreateVestingAccount defines a method that enables creating a vesting
 	// account.
 	CreateVestingAccount(context.Context, *MsgCreateVestingAccount) (*MsgCreateVestingAccountResponse, error)
+	// CreatePermanentLockedAccount defines a method that enables creating a permanent
+	// locked account.
+	//
+	// Since: cosmos-sdk 0.46
+	CreatePermanentLockedAccount(context.Context, *MsgCreatePermanentLockedAccount) (*MsgCreatePermanentLockedAccountResponse, error)
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error)
 	// CreateClawbackVestingAccount defines a method that enables creating a
 	// vesting account that is subject to clawback.
@@ -803,6 +975,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) CreateVestingAccount(ctx context.Context, req *MsgCreateVestingAccount) (*MsgCreateVestingAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVestingAccount not implemented")
+}
+func (*UnimplementedMsgServer) CreatePermanentLockedAccount(ctx context.Context, req *MsgCreatePermanentLockedAccount) (*MsgCreatePermanentLockedAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePermanentLockedAccount not implemented")
 }
 func (*UnimplementedMsgServer) CreatePeriodicVestingAccount(ctx context.Context, req *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePeriodicVestingAccount not implemented")
@@ -835,6 +1010,24 @@ func _Msg_CreateVestingAccount_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateVestingAccount(ctx, req.(*MsgCreateVestingAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreatePermanentLockedAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreatePermanentLockedAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreatePermanentLockedAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.vesting.v1beta1.Msg/CreatePermanentLockedAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreatePermanentLockedAccount(ctx, req.(*MsgCreatePermanentLockedAccount))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -918,6 +1111,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateVestingAccount",
 			Handler:    _Msg_CreateVestingAccount_Handler,
+		},
+		{
+			MethodName: "CreatePermanentLockedAccount",
+			Handler:    _Msg_CreatePermanentLockedAccount_Handler,
 		},
 		{
 			MethodName: "CreatePeriodicVestingAccount",
@@ -1022,6 +1219,80 @@ func (m *MsgCreateVestingAccountResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgCreateVestingAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreatePermanentLockedAccount) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePermanentLockedAccount) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePermanentLockedAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.ToAddress) > 0 {
+		i -= len(m.ToAddress)
+		copy(dAtA[i:], m.ToAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ToAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.FromAddress) > 0 {
+		i -= len(m.FromAddress)
+		copy(dAtA[i:], m.FromAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.FromAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreatePermanentLockedAccountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePermanentLockedAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePermanentLockedAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1390,6 +1661,38 @@ func (m *MsgCreateVestingAccountResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgCreatePermanentLockedAccount) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.FromAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ToAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgCreatePermanentLockedAccountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgCreatePeriodicVestingAccount) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1744,6 +2047,204 @@ func (m *MsgCreateVestingAccountResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCreateVestingAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreatePermanentLockedAccount) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePermanentLockedAccount: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePermanentLockedAccount: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ToAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ToAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreatePermanentLockedAccountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePermanentLockedAccountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePermanentLockedAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

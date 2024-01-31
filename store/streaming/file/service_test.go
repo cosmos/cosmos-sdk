@@ -24,8 +24,7 @@ var (
 	testMarshaller               = codec.NewProtoCodec(interfaceRegistry)
 	testStreamingService         *StreamingService
 	testListener1, testListener2 types.WriteListener
-	emptyContext                 = sdk.NewContext(nil, types1.Header{}, false, nil)
-	emptyContextWrap             = sdk.WrapSDKContext(emptyContext)
+	emptyContext                 = sdk.Context{}
 
 	// test abci message types
 	mockHash          = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
@@ -178,7 +177,7 @@ func testListenBlock(t *testing.T) {
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenBeginBlock(emptyContextWrap, testBeginBlockReq, testBeginBlockRes)
+	err = testStreamingService.ListenBeginBlock(emptyContext, testBeginBlockReq, testBeginBlockRes)
 	require.Nil(t, err)
 
 	// write state changes
@@ -215,7 +214,7 @@ func testListenBlock(t *testing.T) {
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2, expectedKVPair3)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenDeliverTx(emptyContextWrap, testDeliverTxReq1, testDeliverTxRes1)
+	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq1, testDeliverTxRes1)
 	require.Nil(t, err)
 
 	// write state changes
@@ -252,7 +251,7 @@ func testListenBlock(t *testing.T) {
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair1, expectedKVPair3)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenDeliverTx(emptyContextWrap, testDeliverTxReq2, testDeliverTxRes2)
+	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq2, testDeliverTxRes2)
 	require.Nil(t, err)
 
 	// write state changes
@@ -289,10 +288,10 @@ func testListenBlock(t *testing.T) {
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair3)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenEndBlock(emptyContextWrap, testEndBlockReq, testEndBlockRes)
+	err = testStreamingService.ListenEndBlock(emptyContext, testEndBlockReq, testEndBlockRes)
 	require.Nil(t, err)
 
-	err = testStreamingService.ListenCommit(emptyContextWrap, testCommitRes)
+	err = testStreamingService.ListenCommit(emptyContext, testCommitRes)
 	require.Nil(t, err)
 
 	// load the file, checking that it was created with the expected name

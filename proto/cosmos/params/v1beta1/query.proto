@@ -14,6 +14,13 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/params/v1beta1/params";
   }
+
+  // Subspaces queries for all registered subspaces and all keys for a subspace.
+  //
+  // Since: cosmos-sdk 0.46
+  rpc Subspaces(QuerySubspacesRequest) returns (QuerySubspacesResponse) {
+    option (google.api.http).get = "/cosmos/params/v1beta1/subspaces";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -29,4 +36,27 @@ message QueryParamsRequest {
 message QueryParamsResponse {
   // param defines the queried parameter.
   ParamChange param = 1 [(gogoproto.nullable) = false];
+}
+
+// QuerySubspacesRequest defines a request type for querying for all registered
+// subspaces and all keys for a subspace.
+//
+// Since: cosmos-sdk 0.46
+message QuerySubspacesRequest {}
+
+// QuerySubspacesResponse defines the response types for querying for all
+// registered subspaces and all keys for a subspace.
+//
+// Since: cosmos-sdk 0.46
+message QuerySubspacesResponse {
+  repeated Subspace subspaces = 1;
+}
+
+// Subspace defines a parameter subspace name and all the keys that exist for
+// the subspace.
+//
+// Since: cosmos-sdk 0.46
+message Subspace {
+  string          subspace = 1;
+  repeated string keys     = 2;
 }

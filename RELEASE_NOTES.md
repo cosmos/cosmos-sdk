@@ -1,18 +1,23 @@
-# Cosmos SDK v0.45.16 Release Notes
+# Cosmos SDK v0.46.16 Release Notes
 
-The Cosmos SDK v0.45.x line has reached end-of-life since v0.45.15. This is an exceptional security release according to our [release policy](https://github.com/cosmos/cosmos-sdk/blob/2262199/RELEASE_PROCESS.md#major-release-maintenance).
+This patch release introduces one dependency bump in the v0.46.x line of the Cosmos SDK.
 
-It fixes an issue in the `x/feegrant` module on version <= v0.45.15. Cosmos SDK v0.46.x+ is not affected.
+Ensure you have the following replaces in the `go.mod` of your application:
 
-Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.45.x/CHANGELOG.md) for an exhaustive list of changes.
+```go
+// use cometbft
+replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
+// replace broken goleveldb
+replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+```
 
-**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.45.15...v0.45.16
+Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/v0.46.16/CHANGELOG.md) for an exhaustive list of changes.
+
+**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.46.15...v0.46.16
 
 ## End-of-Life Notice
 
-`v0.45.15` is the last release of the `v0.45.x` line. Per this version, the v0.45.x line reached its end-of-life.
-The SDK team maintains the two latest major versions of the SDK. This means no features, improvements or bug fixes will be backported to the `v0.45.x` line. Per our policy, the `v0.45.x` line will receive security patches only.
+`v0.46.16` is the last release of the `v0.46.x` line. Per this version, the v0.46.x line reached its end-of-life.
+The SDK team maintains the [latest two major versions of the SDK](https://github.com/cosmos/cosmos-sdk/blob/main/RELEASE_PROCESS.md#major-release-maintenance). This means no features, improvements or bug fixes will be backported to the `v0.46.x` line. Per our policy, the `v0.46.x` line will receive security patches only.
 
-We encourage all chains to upgrade to the latest release of the SDK, or the `v0.46.x` line.
-
-Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md) for how to upgrade a chain to the latest release.
+We encourage all chains to upgrade to Cosmos SDK Eden (`v0.50.0`), or the `v0.47.x` line.

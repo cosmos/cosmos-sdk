@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // Simulation parameter constants
@@ -94,11 +95,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { veto = GenTallyParamsVeto(r) },
 	)
 
-	govGenesis := types.NewGenesisState(
+	govGenesis := v1.NewGenesisState(
 		startingProposalID,
-		types.NewDepositParams(minDeposit, depositPeriod),
-		types.NewVotingParams(votingPeriod),
-		types.NewTallyParams(quorum, threshold, veto),
+		v1.NewDepositParams(minDeposit, depositPeriod),
+		v1.NewVotingParams(votingPeriod),
+		v1.NewTallyParams(quorum, threshold, veto),
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")

@@ -13,8 +13,8 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 
 	totalSupply := sdk.Coins{}
-
 	genState.Balances = types.SanitizeGenesisBalances(genState.Balances)
+
 	for _, balance := range genState.Balances {
 		addr := balance.GetAddress()
 

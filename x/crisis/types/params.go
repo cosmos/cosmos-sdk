@@ -7,7 +7,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// ParamStoreKeyConstantFee sets the key for constant fee parameter
+// ParamStoreKeyConstantFee is the key for constant fee parameter
 var ParamStoreKeyConstantFee = []byte("ConstantFee")
 
 // type declaration for parameters

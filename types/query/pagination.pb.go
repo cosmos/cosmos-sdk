@@ -129,7 +129,8 @@ func (m *PageRequest) GetReverse() bool {
 //  }
 type PageResponse struct {
 	// next_key is the key to be passed to PageRequest.key to
-	// query the next page most efficiently
+	// query the next page most efficiently. It will be empty if
+	// there are no more results.
 	NextKey []byte `protobuf:"bytes,1,opt,name=next_key,json=nextKey,proto3" json:"next_key,omitempty"`
 	// total is total number of results available if PageRequest.count_total
 	// was set, its value is undefined otherwise

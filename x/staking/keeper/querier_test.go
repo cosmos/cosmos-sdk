@@ -17,7 +17,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
 	_, addrAcc2 := addrs[0], addrs[1]
@@ -109,7 +109,7 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQueryParametersPool(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -135,7 +135,7 @@ func TestQueryParametersPool(t *testing.T) {
 }
 
 func TestQueryValidators(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	params := app.StakingKeeper.GetParams(ctx)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
@@ -143,9 +143,9 @@ func TestQueryValidators(t *testing.T) {
 	addrs := simapp.AddTestAddrs(app, ctx, 500, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	status := []types.BondStatus{types.Bonded, types.Unbonded, types.Unbonding}
-	var validators [3]types.Validator
+	amts := []sdk.Int{sdk.NewInt(8), sdk.NewInt(7)}
+	status := []types.BondStatus{types.Unbonded, types.Unbonding}
+	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
@@ -154,7 +154,6 @@ func TestQueryValidators(t *testing.T) {
 
 	app.StakingKeeper.SetValidator(ctx, validators[0])
 	app.StakingKeeper.SetValidator(ctx, validators[1])
-	app.StakingKeeper.SetValidator(ctx, validators[2])
 
 	// Query Validators
 	queriedValidators := app.StakingKeeper.GetValidators(ctx, params.MaxValidators)
@@ -203,7 +202,7 @@ func TestQueryValidators(t *testing.T) {
 }
 
 func TestQueryDelegation(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	params := app.StakingKeeper.GetParams(ctx)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
@@ -305,6 +304,9 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationRes.Balance)
 
 	// Query Delegator Delegations
+	bz, errRes = cdc.MarshalJSON(queryParams)
+	require.NoError(t, errRes)
+
 	query = abci.RequestQuery{
 		Path: "/custom/staking/delegatorDelegations",
 		Data: bz,
@@ -349,7 +351,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query unbonding delegation
 	unbondingTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.GetOperator(), unbondingTokens.ToDec())
+	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.GetOperator(), sdk.NewDecFromInt(unbondingTokens))
 	require.NoError(t, err)
 
 	queryBondParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal1.String()}
@@ -402,8 +404,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query redelegation
 	redelegationTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(),
-		val2.GetOperator(), redelegationTokens.ToDec())
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(redelegationTokens))
 	require.NoError(t, err)
 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator())
 	require.True(t, found)
@@ -452,7 +453,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 		},
 	}
 
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -507,7 +508,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	// Undelegate
 	for _, addr := range addrs {
 		delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
-		_, err := app.StakingKeeper.Undelegate(ctx, addr, val1.GetOperator(), delTokens.ToDec())
+		_, err := app.StakingKeeper.Undelegate(ctx, addr, val1.GetOperator(), sdk.NewDecFromInt(delTokens))
 		require.NoError(t, err)
 	}
 
@@ -537,7 +538,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 }
 
 func TestQueryRedelegations(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -557,7 +558,7 @@ func TestQueryRedelegations(t *testing.T) {
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
 	rdAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
 	require.NoError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
@@ -609,7 +610,7 @@ func TestQueryRedelegations(t *testing.T) {
 }
 
 func TestQueryUnbondingDelegation(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -629,7 +630,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 
 	// undelegate
 	undelAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
+	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), sdk.NewDecFromInt(undelAmount))
 	require.NoError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
@@ -705,7 +706,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 }
 
 func TestQueryHistoricalInfo(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(cdc)
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 

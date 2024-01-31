@@ -2,12 +2,12 @@
 
 ## Changelog
 
-- 2020 Feb 15: Initial Draft
-- 2020 Feb 24: Updates to handle messages with interface fields
-- 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
-- 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
-- 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Codec` interface.
-- 2021 Feb 24: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/cosmos/cosmos-sdk/pull/6843).
+* 2020 Feb 15: Initial Draft
+* 2020 Feb 24: Updates to handle messages with interface fields
+* 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
+* 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
+* 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Codec` interface.
+* 2021 Feb 24: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/cosmos/cosmos-sdk/pull/6843).
 
 ## Status
 
@@ -28,9 +28,9 @@ From the Amino docs:
 
 Amino also aims to have the following goals (not a complete list):
 
-- Binary bytes must be decode-able with a schema.
-- Schema must be upgradeable.
-- The encoder and decoder logic must be reasonably simple.
+* Binary bytes must be decode-able with a schema.
+* Schema must be upgradeable.
+* The encoder and decoder logic must be reasonably simple.
 
 However, we believe that Amino does not fulfill these goals completely and does not fully meet the
 needs of a truly flexible cross-language and multi-client compatible encoding protocol in the Cosmos SDK.
@@ -42,13 +42,13 @@ largely reflected in the performance of simulations and application transaction 
 
 Thus, we need to adopt an encoding protocol that meets the following criteria for state serialization:
 
-- Language agnostic
-- Platform agnostic
-- Rich client support and thriving ecosystem
-- High performance
-- Minimal encoded message size
-- Codegen-based over reflection-based
-- Supports backward and forward compatibility
+* Language agnostic
+* Platform agnostic
+* Rich client support and thriving ecosystem
+* High performance
+* Minimal encoded message size
+* Codegen-based over reflection-based
+* Supports backward and forward compatibility
 
 Note, migrating away from Amino should be viewed as a two-pronged approach, state and client encoding.
 This ADR focuses on state serialization in the Cosmos SDK state machine. A corresponding ADR will be
@@ -62,16 +62,16 @@ applications wishing to continue to use Amino. We will provide this mechanism by
 accept a codec interface, `Marshaler`, instead of a concrete Amino codec. Furthermore, the Cosmos SDK
 will provide two concrete implementations of the `Marshaler` interface: `AminoCodec` and `ProtoCodec`.
 
-- `AminoCodec`: Uses Amino for both binary and JSON encoding.
-- `ProtoCodec`: Uses Protobuf for both binary and JSON encoding.
+* `AminoCodec`: Uses Amino for both binary and JSON encoding.
+* `ProtoCodec`: Uses Protobuf for both binary and JSON encoding.
 
-Modules will use whichever codec that is instantiated in the app. By default, the SDK's `simapp`
+Modules will use whichever codec that is instantiated in the app. By default, the Cosmos SDK's `simapp`
 instantiates a `ProtoCodec` as the concrete implementation of `Marshaler`, inside the `MakeTestEncodingConfig`
 function. This can be easily overwritten by app developers if they so desire.
 
 The ultimate goal will be to replace Amino JSON encoding with Protobuf encoding and thus have
 modules accept and/or extend `ProtoCodec`. Until then, Amino JSON is still provided for legacy use-cases.
-A handful of places in the SDK still have Amino JSON hardcoded, such as the Legacy API REST endpoints
+A handful of places in the Cosmos SDK still have Amino JSON hardcoded, such as the Legacy API REST endpoints
 and the `x/params` store. They are planned to be converted to Protobuf in a gradual manner.
 
 ### Module Codecs
@@ -139,7 +139,7 @@ compression at the persistence layer in the future and the performance impact
 is likely to be small. Thus, not using `Any` is seem as a pre-mature optimization,
 with user experience as the higher order concern.
 
-Note, that given the SDK's decision to adopt the `Codec` interfaces described
+Note, that given the Cosmos SDK's decision to adopt the `Codec` interfaces described
 above, apps can still choose to use `oneof` to encode state and transactions
 but it is not the recommended approach. If apps do choose to use `oneof`s
 instead of `Any` they will likely lose compatibility with client apps that
@@ -149,11 +149,11 @@ and client developer UX.
 
 ### Safe usage of `Any`
 
-By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types)
+By default, the [gogo protobuf implementation of `Any`](https://pkg.go.dev/github.com/gogo/protobuf/types)
 uses [global type registration]( https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540)
 to decode values packed in `Any` into concrete
 go types. This introduces a vulnerability where any malicious module
-in the dependency tree could registry a type with the global protobuf registry
+in the dependency tree could register a type with the global protobuf registry
 and cause it to be loaded and unmarshaled by a transaction that referenced
 it in the `type_url` field.
 
@@ -226,7 +226,7 @@ every module that implements it in order to populate the `InterfaceRegistry`.
 
 ### Using `Any` to encode state
 
-The SDK will provide support methods `MarshalInterface` and `UnmarshalInterface` to hide a complexity of wrapping interface types into `Any` and allow easy serialization.
+The Cosmos SDK will provide support methods `MarshalInterface` and `UnmarshalInterface` to hide a complexity of wrapping interface types into `Any` and allow easy serialization.
 
 ```go
 import "github.com/cosmos/cosmos-sdk/codec"
@@ -320,11 +320,11 @@ have been registered properly with Amino).
 
 In order for this functionality to work:
 
-- **all legacy code must use `*codec.LegacyAmino` instead of `*amino.Codec` which is
+* **all legacy code must use `*codec.LegacyAmino` instead of `*amino.Codec` which is
   now a wrapper which properly handles `Any`**
-- **all new code should use `Marshaler` which is compatible with both amino and
+* **all new code should use `Marshaler` which is compatible with both amino and
   protobuf**
-- Also, before v0.39, `codec.LegacyAmino` will be renamed to `codec.LegacyAmino`.
+* Also, before v0.39, `codec.LegacyAmino` will be renamed to `codec.LegacyAmino`.
 
 ### Why Wasn't X Chosen Instead
 
@@ -361,14 +361,14 @@ seamless.
 
 ### Positive
 
-- Significant performance gains.
-- Supports backward and forward type compatibility.
-- Better support for cross-language clients.
+* Significant performance gains.
+* Supports backward and forward type compatibility.
+* Better support for cross-language clients.
 
 ### Negative
 
-- Learning curve required to understand and implement Protobuf messages.
-- Slightly larger message size due to use of `Any`, although this could be offset
+* Learning curve required to understand and implement Protobuf messages.
+* Slightly larger message size due to use of `Any`, although this could be offset
   by a compression layer in the future
 
 ### Neutral

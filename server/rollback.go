@@ -18,7 +18,7 @@ func NewRollbackCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.
 A state rollback is performed to recover from an incorrect application state transition,
 when Tendermint has persisted an incorrect app hash and is thus unable to make
 progress. Rollback overwrites a state at height n with the state at height n - 1.
-The application also roll back to height n - 1. No blocks are removed, so upon
+The application also rolls back to height n - 1. No blocks are removed, so upon
 restarting Tendermint the transactions in block n will be re-executed against the
 application.
 `,
@@ -26,7 +26,7 @@ application.
 			ctx := GetServerContextFromCmd(cmd)
 			cfg := ctx.Config
 			home := cfg.RootDir
-			db, err := openDB(home)
+			db, err := openDB(home, GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err
 			}

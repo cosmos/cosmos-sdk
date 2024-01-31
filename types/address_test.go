@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -105,13 +105,13 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.Require().Equal(acc, res)
 
 		str = hex.EncodeToString(acc)
-		res, err = types.AccAddressFromHex(str)
+		res, err = types.AccAddressFromHexUnsafe(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 	}
 
 	for _, str := range invalidStrs {
-		_, err := types.AccAddressFromHex(str)
+		_, err := types.AccAddressFromHexUnsafe(str)
 		s.Require().NotNil(err)
 
 		_, err = types.AccAddressFromBech32(str)
@@ -121,8 +121,79 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.Require().NotNil(err)
 	}
 
-	_, err := types.AccAddressFromHex("")
-	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
+	_, err := types.AccAddressFromHexUnsafe("")
+	s.Require().Equal(types.ErrEmptyHexAddress, err)
+}
+
+// Test that the account address cache ignores the bech32 prefix setting, retrieving bech32 addresses from the cache.
+// This will cause the AccAddress.String() to print out unexpected prefixes if the config was changed between bech32 lookups.
+// See https://github.com/cosmos/cosmos-sdk/issues/15317.
+func (s *addressTestSuite) TestAddrCache() {
+	// Use a random key
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
+	rand.Read(pub.Key)
+
+	// Set SDK bech32 prefixes to 'osmo'
+	prefix := "osmo"
+	conf := types.GetConfig()
+	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
+	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
+	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
+
+	acc := types.AccAddress(pub.Address())
+	osmoAddrBech32 := acc.String()
+
+	// Set SDK bech32 to 'cosmos'
+	prefix = "cosmos"
+	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
+	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
+	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
+
+	// We name this 'addrCosmos' to prove a point, but the bech32 address will still begin with 'osmo' due to the cache behavior.
+	addrCosmos := types.AccAddress(pub.Address())
+	cosmosAddrBech32 := addrCosmos.String()
+
+	// The default behavior will retrieve the bech32 address from the cache, ignoring the bech32 prefix change.
+	s.Require().Equal(osmoAddrBech32, cosmosAddrBech32)
+	s.Require().True(strings.HasPrefix(osmoAddrBech32, "osmo"))
+	s.Require().True(strings.HasPrefix(cosmosAddrBech32, "osmo"))
+}
+
+// Test that the bech32 prefix is respected when the address cache is disabled.
+// This causes AccAddress.String() to print out the expected prefixes if the config is changed between bech32 lookups.
+// See https://github.com/cosmos/cosmos-sdk/issues/15317.
+func (s *addressTestSuite) TestAddrCacheDisabled() {
+	types.SetAddrCacheEnabled(false)
+
+	// Use a random key
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
+	rand.Read(pub.Key)
+
+	// Set SDK bech32 prefixes to 'osmo'
+	prefix := "osmo"
+	conf := types.GetConfig()
+	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
+	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
+	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
+
+	acc := types.AccAddress(pub.Address())
+	osmoAddrBech32 := acc.String()
+
+	// Set SDK bech32 to 'cosmos'
+	prefix = "cosmos"
+	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
+	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
+	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
+
+	addrCosmos := types.AccAddress(pub.Address())
+	cosmosAddrBech32 := addrCosmos.String()
+
+	// retrieve the bech32 address from the cache, respecting the bech32 prefix change.
+	s.Require().NotEqual(osmoAddrBech32, cosmosAddrBech32)
+	s.Require().True(strings.HasPrefix(osmoAddrBech32, "osmo"))
+	s.Require().True(strings.HasPrefix(cosmosAddrBech32, "cosmos"))
 }
 
 func (s *addressTestSuite) TestValAddr() {
@@ -163,7 +234,7 @@ func (s *addressTestSuite) TestValAddr() {
 
 	// test empty string
 	_, err := types.ValAddressFromHex("")
-	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
+	s.Require().Equal(types.ErrEmptyHexAddress, err)
 }
 
 func (s *addressTestSuite) TestConsAddress() {
@@ -203,7 +274,7 @@ func (s *addressTestSuite) TestConsAddress() {
 
 	// test empty string
 	_, err := types.ConsAddressFromHex("")
-	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
+	s.Require().Equal(types.ErrEmptyHexAddress, err)
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyz"

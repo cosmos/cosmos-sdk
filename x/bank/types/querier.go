@@ -29,8 +29,7 @@ func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *Qu
 
 // NewQuerySpendableBalancesRequest creates a new instance of a
 // QuerySpendableBalancesRequest.
-//
-//nolint:interfacer
+// nolint:interfacer
 func NewQuerySpendableBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QuerySpendableBalancesRequest {
 	return &QuerySpendableBalancesRequest{Address: addr.String(), Pagination: req}
 }

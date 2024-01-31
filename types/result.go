@@ -8,7 +8,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -59,7 +59,7 @@ func (logs ABCIMessageLogs) String() (str string) {
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
-func NewResponseResultTx(res *ctypes.ResultTx, anyTx *codectypes.Any, timestamp string) *TxResponse {
+func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timestamp string) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -85,7 +85,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, anyTx *codectypes.Any, timestamp 
 
 // NewResponseFormatBroadcastTxCommit returns a TxResponse given a
 // ResultBroadcastTxCommit from tendermint.
-func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
+func NewResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -97,7 +97,7 @@ func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) *Tx
 	return newTxResponseDeliverTx(res)
 }
 
-func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
+func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -124,7 +124,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
 	}
 }
 
-func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
+func newTxResponseDeliverTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -152,7 +152,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
 }
 
 // NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
-func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) *TxResponse {
+func NewResponseFormatBroadcastTx(res *coretypes.ResultBroadcastTx) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -230,10 +230,15 @@ func (r TxResponse) GetTx() Tx {
 	return nil
 }
 
-// WrapServiceResult wraps a result from a protobuf RPC service method call in
-// a Result object or error. This method takes care of marshaling the res param to
+// WrapServiceResult wraps a result from a protobuf RPC service method call (res proto.Message, err error)
+// in a Result object or error. This method takes care of marshaling the res param to
 // protobuf and attaching any events on the ctx.EventManager() to the Result.
 func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	any, err := codectypes.NewAnyWithValue(res)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +257,8 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 	}
 
 	return &Result{
-		Data:   data,
-		Events: events,
+		Data:         data,
+		Events:       events,
+		MsgResponses: []*codectypes.Any{any},
 	}, nil
 }

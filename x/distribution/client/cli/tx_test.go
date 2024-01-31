@@ -77,7 +77,7 @@ func TestParseProposal(t *testing.T) {
 }
 `)
 
-	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Marshaler, okJSON.Name())
+	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Codec, okJSON.Name())
 	require.NoError(t, err)
 
 	require.Equal(t, "Community Pool Spend", proposal.Title)

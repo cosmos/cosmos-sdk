@@ -1,44 +1,73 @@
 package msgservice
 
 import (
-	"context"
+	"bytes"
+	"compress/gzip"
 	"fmt"
+	"io"
+	"reflect"
 
+	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
+	proto2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/descriptorpb"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described
 // in `sd` into the registry.
 func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc) {
-	// Adds a top-level type_url based on the Msg service name.
-	for _, method := range sd.Methods {
-		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
-		methodHandler := method.Handler
+	fdBytesUnzipped := unzip(proto.FileDescriptor(sd.Metadata.(string)))
+	if fdBytesUnzipped == nil {
+		panic(fmt.Errorf("error unzipping file description for MsgService %s", sd.ServiceName))
+	}
 
-		// NOTE: This is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
-		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
-		// We use a no-op interceptor to avoid actually calling into the handler itself.
-		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
-			msg, ok := i.(sdk.Msg)
-			if !ok {
-				// We panic here because there is no other alternative and the app cannot be initialized correctly
-				// this should only happen if there is a problem with code generation in which case the app won't
-				// work correctly anyway.
-				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
-			}
+	fdRaw := &descriptorpb.FileDescriptorProto{}
+	err := proto2.Unmarshal(fdBytesUnzipped, fdRaw)
+	if err != nil {
+		panic(err)
+	}
 
-			registry.RegisterImplementations((*sdk.Msg)(nil), msg)
+	fd, err := protodesc.FileOptions{
+		AllowUnresolvable: true,
+	}.New(fdRaw, nil)
+	if err != nil {
+		panic(err)
+	}
 
-			return nil
-		}, noopInterceptor)
+	prefSd := fd.Services().ByName(protoreflect.FullName(sd.ServiceName).Name())
+	for i := 0; i < prefSd.Methods().Len(); i++ {
+		md := prefSd.Methods().Get(i)
+		requestDesc := md.Input()
+		responseDesc := md.Output()
 
+		reqTyp := proto.MessageType(string(requestDesc.FullName()))
+		respTyp := proto.MessageType(string(responseDesc.FullName()))
+
+		// Register sdk.Msg and sdk.MsgResponse to the registry.
+		registry.RegisterImplementations((*sdk.Msg)(nil), reflect.New(reqTyp).Elem().Interface().(proto.Message))
+		registry.RegisterImplementations((*tx.MsgResponse)(nil), reflect.New(respTyp).Elem().Interface().(proto.Message))
 	}
 }
 
-// gRPC NOOP interceptor
-func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
-	return nil, nil
+func unzip(b []byte) []byte {
+	if b == nil {
+		return nil
+	}
+	r, err := gzip.NewReader(bytes.NewReader(b))
+	if err != nil {
+		panic(err)
+	}
+
+	unzipped, err := io.ReadAll(r)
+	if err != nil {
+		panic(err)
+	}
+
+	return unzipped
 }

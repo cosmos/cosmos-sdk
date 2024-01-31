@@ -4,14 +4,15 @@ package cosmos.bank.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Params defines the parameters for the bank module.
 message Params {
   option (gogoproto.goproto_stringer)       = false;
-  repeated SendEnabled send_enabled         = 1 [(gogoproto.moretags) = "yaml:\"send_enabled,omitempty\""];
-  bool                 default_send_enabled = 2 [(gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\""];
+  repeated SendEnabled send_enabled         = 1;
+  bool                 default_send_enabled = 2;
 }
 
 // SendEnabled maps coin denom to a send_enabled status (whether a denom is
@@ -25,10 +26,12 @@ message SendEnabled {
 
 // Input models transaction input.
 message Input {
+  option (cosmos.msg.v1.signer) = "address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string   address                        = 1;
+  string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -38,7 +41,7 @@ message Output {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string   address                        = 1;
+  string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -52,7 +55,7 @@ message Supply {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  option (cosmos_proto.implements_interface) = "*github.com/cosmos/cosmos-sdk/x/bank/legacy/v040.SupplyI";
+  option (cosmos_proto.implements_interface) = "*github.com/cosmos/cosmos-sdk/x/bank/migrations/v040.SupplyI";
 
   repeated cosmos.base.v1beta1.Coin total = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
@@ -65,7 +68,7 @@ message DenomUnit {
   string denom = 1;
   // exponent represents power of 10 exponent that one must
   // raise the base_denom to in order to equal the given DenomUnit's denom
-  // 1 denom = 1^exponent base_denom
+  // 1 denom = 10^exponent base_denom
   // (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with
   // exponent = 6, thus: 1 atom = 10^6 uatom).
   uint32 exponent = 2;
@@ -93,4 +96,13 @@ message Metadata {
   //
   // Since: cosmos-sdk 0.43
   string symbol = 6;
+  // URI to a document (on or off-chain) that contains additional information. Optional.
+  //
+  // Since: cosmos-sdk 0.46
+  string uri = 7 [(gogoproto.customname) = "URI"];
+  // URIHash is a sha256 hash of a document pointed by URI. It's used to verify that
+  // the document didn't change. Optional.
+  //
+  // Since: cosmos-sdk 0.46
+  string uri_hash = 8 [(gogoproto.customname) = "URIHash"];
 }

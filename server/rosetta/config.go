@@ -10,8 +10,10 @@ import (
 
 	crg "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 
+	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // configuration defaults constants
@@ -30,17 +32,27 @@ const (
 	DefaultNetwork = "network"
 	// DefaultOffline defines the default offline value
 	DefaultOffline = false
+	// DefaultEnableFeeSuggestion indicates to use fee suggestion if `construction/metadata` is called without gas limit and price
+	DefaultEnableFeeSuggestion = false
+	// DenomToSuggest defines the default denom for fee suggestion
+	DenomToSuggest = "uatom"
+	// DefaultPrices defines the default list of prices to suggest
+	DefaultPrices = "1uatom,1stake"
 )
 
 // configuration flags
 const (
-	FlagBlockchain         = "blockchain"
-	FlagNetwork            = "network"
-	FlagTendermintEndpoint = "tendermint"
-	FlagGRPCEndpoint       = "grpc"
-	FlagAddr               = "addr"
-	FlagRetries            = "retries"
-	FlagOffline            = "offline"
+	FlagBlockchain          = "blockchain"
+	FlagNetwork             = "network"
+	FlagTendermintEndpoint  = "tendermint"
+	FlagGRPCEndpoint        = "grpc"
+	FlagAddr                = "addr"
+	FlagRetries             = "retries"
+	FlagOffline             = "offline"
+	FlagEnableFeeSuggestion = "enable-fee-suggestion"
+	FlagGasToSuggest        = "gas-to-suggest"
+	FlagDenomToSuggest      = "denom-to-suggest"
+	FlagPricesToSuggest     = "prices-to-suggest"
 )
 
 // Config defines the configuration of the rosetta server
@@ -65,6 +77,14 @@ type Config struct {
 	Retries int
 	// Offline defines if the server must be run in offline mode
 	Offline bool
+	// EnableFeeSuggestion indicates to use fee suggestion when `construction/metadata` is called without gas limit and price
+	EnableFeeSuggestion bool
+	// GasToSuggest defines the gas limit for fee suggestion
+	GasToSuggest int
+	// DenomToSuggest defines the default denom for fee suggestion
+	DenomToSuggest string
+	// GasPrices defines the gas prices for fee suggestion
+	GasPrices sdk.DecCoins
 	// Codec overrides the default data and construction api client codecs
 	Codec *codec.ProtoCodec
 	// InterfaceRegistry overrides the default data and construction api interface registry
@@ -99,8 +119,20 @@ func (c *Config) validate() error {
 	if c.Network == "" {
 		return fmt.Errorf("network not provided")
 	}
-	if c.Offline {
-		return fmt.Errorf("offline mode is not supported for stargate implementation due to how sigv2 works")
+	if c.GasToSuggest <= 0 {
+		return fmt.Errorf("gas to suggest must be positive")
+	}
+	if c.EnableFeeSuggestion {
+		found := false
+		for i := 0; i < c.GasPrices.Len(); i++ {
+			if c.GasPrices.GetDenomByIndex(i) == c.DenomToSuggest {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("default suggest denom is not found in prices to suggest")
+		}
 	}
 
 	// these are optional but it must be online
@@ -153,14 +185,43 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	enableDefaultFeeSuggestion, err := flags.GetBool(FlagEnableFeeSuggestion)
+	if err != nil {
+		return nil, err
+	}
+	gasToSuggest, err := flags.GetInt(FlagGasToSuggest)
+	if err != nil {
+		return nil, err
+	}
+	denomToSuggest, err := flags.GetString(FlagDenomToSuggest)
+	if err != nil {
+		return nil, err
+	}
+
+	var prices sdk.DecCoins
+	if enableDefaultFeeSuggestion {
+		pricesToSuggest, err := flags.GetString(FlagPricesToSuggest)
+		if err != nil {
+			return nil, err
+		}
+		prices, err = sdk.ParseDecCoins(pricesToSuggest)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	conf := &Config{
-		Blockchain:    blockchain,
-		Network:       network,
-		TendermintRPC: tendermintRPC,
-		GRPCEndpoint:  gRPCEndpoint,
-		Addr:          addr,
-		Retries:       retries,
-		Offline:       offline,
+		Blockchain:          blockchain,
+		Network:             network,
+		TendermintRPC:       tendermintRPC,
+		GRPCEndpoint:        gRPCEndpoint,
+		Addr:                addr,
+		Retries:             retries,
+		Offline:             offline,
+		EnableFeeSuggestion: enableDefaultFeeSuggestion,
+		GasToSuggest:        gasToSuggest,
+		DenomToSuggest:      denomToSuggest,
+		GasPrices:           prices,
 	}
 	err = conf.validate()
 	if err != nil {
@@ -201,4 +262,8 @@ func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
 	flags.Bool(FlagOffline, DefaultOffline, "run rosetta only with construction API")
+	flags.Bool(FlagEnableFeeSuggestion, DefaultEnableFeeSuggestion, "enable default fee suggestion")
+	flags.Int(FlagGasToSuggest, clientflags.DefaultGasLimit, "default gas for fee suggestion")
+	flags.String(FlagDenomToSuggest, DenomToSuggest, "default denom for fee suggestion")
+	flags.String(FlagPricesToSuggest, DefaultPrices, "default prices for fee suggestion")
 }

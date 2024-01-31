@@ -21,10 +21,6 @@ func TestEventsTestSuite(t *testing.T) {
 	suite.Run(t, new(eventsTestSuite))
 }
 
-func (s *eventsTestSuite) SetupSuite() {
-	s.T().Parallel()
-}
-
 func (s *eventsTestSuite) TestAppendEvents() {
 	e1 := sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))
 	e2 := sdk.NewEvent("transfer", sdk.NewAttribute("sender", "bar"))
@@ -118,20 +114,43 @@ func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 }
 
 func (s *eventsTestSuite) TestStringifyEvents() {
-	e := sdk.Events{
-		sdk.NewEvent("message", sdk.NewAttribute("sender", "foo")),
-		sdk.NewEvent("message", sdk.NewAttribute("module", "bank")),
+	cases := []struct {
+		name       string
+		events     sdk.Events
+		expTxtStr  string
+		expJSONStr string
+	}{
+		{
+			name: "default",
+			events: sdk.Events{
+				sdk.NewEvent("message", sdk.NewAttribute(sdk.AttributeKeySender, "foo")),
+				sdk.NewEvent("message", sdk.NewAttribute(sdk.AttributeKeyModule, "bank")),
+			},
+			expTxtStr:  "\t\t- message\n\t\t\t- sender: foo\n\t\t\t- module: bank",
+			expJSONStr: "[{\"type\":\"message\",\"attributes\":[{\"key\":\"sender\",\"value\":\"foo\"},{\"key\":\"module\",\"value\":\"bank\"}]}]",
+		},
+		{
+			name: "multiple events with same attributes",
+			events: sdk.Events{
+				sdk.NewEvent(
+					"message",
+					sdk.NewAttribute(sdk.AttributeKeyModule, "staking"),
+					sdk.NewAttribute(sdk.AttributeKeySender, "cosmos1foo"),
+				),
+				sdk.NewEvent("message", sdk.NewAttribute(sdk.AttributeKeySender, "foo")),
+			},
+			expTxtStr:  "\t\t- message\n\t\t\t- module: staking\n\t\t\t- sender: cosmos1foo\n\t\t\t- sender: foo",
+			expJSONStr: `[{"type":"message","attributes":[{"key":"module","value":"staking"},{"key":"sender","value":"cosmos1foo"},{"key":"sender","value":"foo"}]}]`,
+		},
 	}
-	se := sdk.StringifyEvents(e.ToABCIEvents())
 
-	expectedTxtStr := "\t\t- message\n\t\t\t- sender: foo\n\t\t\t- module: bank"
-	s.Require().Equal(expectedTxtStr, se.String())
-
-	bz, err := json.Marshal(se)
-	s.Require().NoError(err)
-
-	expectedJSONStr := "[{\"type\":\"message\",\"attributes\":[{\"key\":\"sender\",\"value\":\"foo\"},{\"key\":\"module\",\"value\":\"bank\"}]}]"
-	s.Require().Equal(expectedJSONStr, string(bz))
+	for _, test := range cases {
+		se := sdk.StringifyEvents(test.events.ToABCIEvents())
+		s.Require().Equal(test.expTxtStr, se.String())
+		bz, err := json.Marshal(se)
+		s.Require().NoError(err)
+		s.Require().Equal(test.expJSONStr, string(bz))
+	}
 }
 
 func (s *eventsTestSuite) TestMarkEventsToIndex() {

@@ -8,7 +8,7 @@ order: 11
 
 When thinking about security, it is good to start with a specific threat model. Our threat model is the following:
 
-> We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
+> We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
 The Cosmos SDK is designed to address this threat by being the
 foundation of an object capability system.
@@ -65,10 +65,9 @@ value. The preferred method signature should take a copy instead.
 sumValue := externalModule.ComputeSumValue(*account)
 ```
 
-In the Cosmos SDK, you can see the application of this principle in the
-gaia app.
+In the Cosmos SDK, you can see the application of this principle in simapp.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.4/simapp/app.go#L249-L273
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L258-L283
 
 The following diagram shows the current dependencies between keepers.
 

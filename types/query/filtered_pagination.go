@@ -102,7 +102,9 @@ func FilteredPaginate(
 		}
 
 		if numHits == end+1 {
-			nextKey = iterator.Key()
+			if nextKey == nil {
+				nextKey = iterator.Key()
+			}
 
 			if !countTotal {
 				break

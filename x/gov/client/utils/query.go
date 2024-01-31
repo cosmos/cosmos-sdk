@@ -8,6 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -32,13 +34,13 @@ func (p Proposer) String() string {
 }
 
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
-// will fetch and build deposits directly from the returned txs and return a
+// will fetch and build deposits directly from the returned txs and returns a
 // JSON marshalled result or any error that occurred.
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
-func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposalParams) ([]byte, error) {
-	var deposits []types.Deposit
+func QueryDepositsByTxQuery(clientCtx client.Context, params v1.QueryProposalParams) ([]byte, error) {
+	var deposits []v1.Deposit
 
 	// initial deposit was submitted with proposal, so must be queried separately
 	initialDeposit, err := queryInitialDepositByTxQuery(clientCtx, params.ProposalID)
@@ -46,7 +48,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 		return nil, err
 	}
 
-	if !initialDeposit.Amount.IsZero() {
+	if !sdk.Coins(initialDeposit.Amount).IsZero() {
 		deposits = append(deposits, initialDeposit)
 	}
 
@@ -54,13 +56,18 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 		clientCtx, defaultPage,
 		// Query legacy Msgs event action
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgDeposit),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, params.ProposalID),
 		},
-		// Query proto Msgs event action
+		// Query proto Msgs event action v1beta1
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgDeposit{})),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgDeposit{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, params.ProposalID),
+		},
+		// Query proto Msgs event action v1
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgDeposit{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, params.ProposalID),
 		},
 	)
 	if err != nil {
@@ -69,8 +76,16 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
-			if depMsg, ok := msg.(*types.MsgDeposit); ok {
-				deposits = append(deposits, types.Deposit{
+			if depMsg, ok := msg.(*v1beta1.MsgDeposit); ok {
+				deposits = append(deposits, v1.Deposit{
+					Depositor:  depMsg.Depositor,
+					ProposalId: params.ProposalID,
+					Amount:     depMsg.Amount,
+				})
+			}
+
+			if depMsg, ok := msg.(*v1.MsgDeposit); ok {
+				deposits = append(deposits, v1.Deposit{
 					Depositor:  depMsg.Depositor,
 					ProposalId: params.ProposalID,
 					Amount:     depMsg.Amount,
@@ -88,11 +103,11 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 }
 
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
-// will fetch and build votes directly from the returned txs and return a JSON
+// will fetch and build votes directly from the returned txs and returns a JSON
 // marshalled result or any error that occurred.
-func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVotesParams) ([]byte, error) {
+func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesParams) ([]byte, error) {
 	var (
-		votes      []types.Vote
+		votes      []*v1.Vote
 		nextTxPage = defaultPage
 		totalLimit = params.Limit * params.Page
 	)
@@ -104,23 +119,33 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 			clientCtx, nextTxPage,
 			// Query legacy Vote Msgs
 			[]string{
-				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
-				fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgVote),
+				fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
 			},
-			// Query Vote proto Msgs
+			// Query Vote proto Msgs v1beta1
 			[]string{
-				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgVote{})),
-				fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgVote{})),
+				fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
+			},
+			// Query Vote proto Msgs v1
+			[]string{
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgVote{})),
+				fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
 			},
 			// Query legacy VoteWeighted Msgs
 			[]string{
-				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVoteWeighted),
-				fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgVoteWeighted),
+				fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
 			},
-			// Query VoteWeighted proto Msgs
+			// Query VoteWeighted proto Msgs v1beta1
 			[]string{
-				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgVoteWeighted{})),
-				fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgVoteWeighted{})),
+				fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
+			},
+			// Query VoteWeighted proto Msgs v1
+			[]string{
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgVoteWeighted{})),
+				fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
 			},
 		)
 		if err != nil {
@@ -129,16 +154,28 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 
 		for _, info := range searchResult.Txs {
 			for _, msg := range info.GetTx().GetMsgs() {
-				if voteMsg, ok := msg.(*types.MsgVote); ok {
-					votes = append(votes, types.Vote{
+				if voteMsg, ok := msg.(*v1beta1.MsgVote); ok {
+					votes = append(votes, &v1.Vote{
 						Voter:      voteMsg.Voter,
 						ProposalId: params.ProposalID,
-						Options:    types.NewNonSplitVoteOption(voteMsg.Option),
+						Options:    v1.NewNonSplitVoteOption(v1.VoteOption(voteMsg.Option)),
 					})
 				}
 
-				if voteWeightedMsg, ok := msg.(*types.MsgVoteWeighted); ok {
-					votes = append(votes, types.Vote{
+				if voteMsg, ok := msg.(*v1.MsgVote); ok {
+					votes = append(votes, &v1.Vote{
+						Voter:      voteMsg.Voter,
+						ProposalId: params.ProposalID,
+						Options:    v1.NewNonSplitVoteOption(voteMsg.Option),
+					})
+				}
+
+				if voteWeightedMsg, ok := msg.(*v1beta1.MsgVoteWeighted); ok {
+					votes = append(votes, convertVote(voteWeightedMsg))
+				}
+
+				if voteWeightedMsg, ok := msg.(*v1.MsgVoteWeighted); ok {
+					votes = append(votes, &v1.Vote{
 						Voter:      voteWeightedMsg.Voter,
 						ProposalId: params.ProposalID,
 						Options:    voteWeightedMsg.Options,
@@ -154,7 +191,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 	}
 	start, end := client.Paginate(len(votes), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		votes = []types.Vote{}
+		votes = []*v1.Vote{}
 	} else {
 		votes = votes[start:end]
 	}
@@ -168,32 +205,44 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 }
 
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
-func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) ([]byte, error) {
+func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]byte, error) {
 	searchResult, err := combineEvents(
 		clientCtx, defaultPage,
 		// Query legacy Vote Msgs
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgVote),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter),
 		},
-		// Query Vote proto Msgs
+		// Query Vote proto Msgs v1beta1
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgVote{})),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgVote{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter.String()),
+		},
+		// Query Vote proto Msgs v1
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgVote{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter.String()),
 		},
 		// Query legacy VoteWeighted Msgs
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVoteWeighted),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgVoteWeighted),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter.String()),
 		},
-		// Query VoteWeighted proto Msgs
+		// Query VoteWeighted proto Msgs v1beta1
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgVoteWeighted{})),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgVoteWeighted{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter),
+		},
+		// Query VoteWeighted proto Msgs v1
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgVoteWeighted{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter),
 		},
 	)
 	if err != nil {
@@ -203,17 +252,29 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single vote under the given conditions
-			var vote *types.Vote
-			if voteMsg, ok := msg.(*types.MsgVote); ok {
-				vote = &types.Vote{
+			var vote *v1.Vote
+			if voteMsg, ok := msg.(*v1beta1.MsgVote); ok {
+				vote = &v1.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalId: params.ProposalID,
-					Options:    types.NewNonSplitVoteOption(voteMsg.Option),
+					Options:    v1.NewNonSplitVoteOption(v1.VoteOption(voteMsg.Option)),
 				}
 			}
 
-			if voteWeightedMsg, ok := msg.(*types.MsgVoteWeighted); ok {
-				vote = &types.Vote{
+			if voteMsg, ok := msg.(*v1.MsgVote); ok {
+				vote = &v1.Vote{
+					Voter:      voteMsg.Voter,
+					ProposalId: params.ProposalID,
+					Options:    v1.NewNonSplitVoteOption(voteMsg.Option),
+				}
+			}
+
+			if voteWeightedMsg, ok := msg.(*v1beta1.MsgVoteWeighted); ok {
+				vote = convertVote(voteWeightedMsg)
+			}
+
+			if voteWeightedMsg, ok := msg.(*v1.MsgVoteWeighted); ok {
+				vote = &v1.Vote{
 					Voter:      voteWeightedMsg.Voter,
 					ProposalId: params.ProposalID,
 					Options:    voteWeightedMsg.Options,
@@ -236,14 +297,14 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 
 // QueryDepositByTxQuery will query for a single deposit via a direct txs tags
 // query.
-func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositParams) ([]byte, error) {
+func QueryDepositByTxQuery(clientCtx client.Context, params v1.QueryDepositParams) ([]byte, error) {
 	// initial deposit was submitted with proposal, so must be queried separately
 	initialDeposit, err := queryInitialDepositByTxQuery(clientCtx, params.ProposalID)
 	if err != nil {
 		return nil, err
 	}
 
-	if !initialDeposit.Amount.IsZero() {
+	if !sdk.Coins(initialDeposit.Amount).IsZero() {
 		bz, err := clientCtx.Codec.MarshalJSON(&initialDeposit)
 		if err != nil {
 			return nil, err
@@ -256,15 +317,21 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 		clientCtx, defaultPage,
 		// Query legacy Msgs event action
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Depositor.String())),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgDeposit),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Depositor.String()),
 		},
-		// Query proto Msgs event action
+		// Query proto Msgs event action v1beta1
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgDeposit{})),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Depositor.String())),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgDeposit{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Depositor.String()),
+		},
+		// Query proto Msgs event action v1
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgDeposit{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, params.ProposalID),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Depositor.String()),
 		},
 	)
 	if err != nil {
@@ -274,8 +341,23 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single deposit under the given conditions
-			if depMsg, ok := msg.(*types.MsgDeposit); ok {
-				deposit := types.Deposit{
+			if depMsg, ok := msg.(*v1beta1.MsgDeposit); ok {
+				deposit := v1.Deposit{
+					Depositor:  depMsg.Depositor,
+					ProposalId: params.ProposalID,
+					Amount:     depMsg.Amount,
+				}
+
+				bz, err := clientCtx.Codec.MarshalJSON(&deposit)
+				if err != nil {
+					return nil, err
+				}
+
+				return bz, nil
+			}
+
+			if depMsg, ok := msg.(*v1.MsgDeposit); ok {
+				deposit := v1.Deposit{
 					Depositor:  depMsg.Depositor,
 					ProposalId: params.ProposalID,
 					Amount:     depMsg.Amount,
@@ -302,13 +384,18 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 		defaultPage,
 		// Query legacy Msgs event action
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgSubmitProposal),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgSubmitProposal),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
 		},
-		// Query proto Msgs event action
+		// Query proto Msgs event action v1beta1
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgSubmitProposal{})),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
+		},
+		// Query proto Msgs event action v1
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgSubmitProposal{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
 		},
 	)
 	if err != nil {
@@ -318,7 +405,10 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
-			if subMsg, ok := msg.(*types.MsgSubmitProposal); ok {
+			if subMsg, ok := msg.(*v1beta1.MsgSubmitProposal); ok {
+				return NewProposer(proposalID, subMsg.Proposer), nil
+			}
+			if subMsg, ok := msg.(*v1.MsgSubmitProposal); ok {
 				return NewProposer(proposalID, subMsg.Proposer), nil
 			}
 		}
@@ -329,7 +419,7 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 
 // QueryProposalByID takes a proposalID and returns a proposal
 func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute string) ([]byte, error) {
-	params := types.NewQueryProposalParams(proposalID)
+	params := v1.NewQueryProposalParams(proposalID)
 	bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 	if err != nil {
 		return nil, err
@@ -367,29 +457,42 @@ func combineEvents(clientCtx client.Context, page int, eventGroups ...[]string) 
 
 // queryInitialDepositByTxQuery will query for a initial deposit of a governance proposal by
 // ID.
-func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (types.Deposit, error) {
+func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (v1.Deposit, error) {
 	searchResult, err := combineEvents(
 		clientCtx, defaultPage,
 		// Query legacy Msgs event action
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgSubmitProposal),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, v1beta1.TypeMsgSubmitProposal),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
 		},
-		// Query proto Msgs event action
+		// Query proto Msgs event action v1beta1
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgSubmitProposal{})),
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
+		},
+		// Query proto Msgs event action v1
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&v1.MsgSubmitProposal{})),
+			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
 		},
 	)
 	if err != nil {
-		return types.Deposit{}, err
+		return v1.Deposit{}, err
 	}
 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
-			if subMsg, ok := msg.(*types.MsgSubmitProposal); ok {
-				return types.Deposit{
+			if subMsg, ok := msg.(*v1beta1.MsgSubmitProposal); ok {
+				return v1.Deposit{
+					ProposalId: proposalID,
+					Depositor:  subMsg.Proposer,
+					Amount:     subMsg.InitialDeposit,
+				}, nil
+			}
+
+			if subMsg, ok := msg.(*v1.MsgSubmitProposal); ok {
+				return v1.Deposit{
 					ProposalId: proposalID,
 					Depositor:  subMsg.Proposer,
 					Amount:     subMsg.InitialDeposit,
@@ -398,5 +501,21 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 		}
 	}
 
-	return types.Deposit{}, sdkerrors.ErrNotFound.Wrapf("failed to find the initial deposit for proposalID %d", proposalID)
+	return v1.Deposit{}, sdkerrors.ErrNotFound.Wrapf("failed to find the initial deposit for proposalID %d", proposalID)
+}
+
+// convertVote converts a MsgVoteWeighted into a *v1.Vote.
+func convertVote(v *v1beta1.MsgVoteWeighted) *v1.Vote {
+	opts := make([]*v1.WeightedVoteOption, len(v.Options))
+	for i, o := range v.Options {
+		opts[i] = &v1.WeightedVoteOption{
+			Option: v1.VoteOption(o.Option),
+			Weight: o.Weight.String(),
+		}
+	}
+	return &v1.Vote{
+		Voter:      v.Voter,
+		ProposalId: v.ProposalId,
+		Options:    opts,
+	}
 }

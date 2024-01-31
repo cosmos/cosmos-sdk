@@ -56,3 +56,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (snapshots) [#304](https://github.com/agoric-labs/cosmos-sdk/pull/304) raise the per snapshot item limit. Fixes [Agoric/agoric-sdk#8325](https://github.com/Agoric/agoric-sdk/issues/8325)
 * (baseapp) [#305](https://github.com/agoric-labs/cosmos-sdk/pull/305) Make sure we don't execute blocks beyond the halt height. Port of [cosmos/cosmos-sdk#16639](https://github.com/cosmos/cosmos-sdk/pull/16639)
+
+## `v0.45.11-alpha.agoric.2` - 2023-03-23
+
+### Improvements
+
+* (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19.
+
+### API Breaking Changes
+
+* (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use, renamed the util function `WriteExtensionItem` to `WriteExtensionPayload`.

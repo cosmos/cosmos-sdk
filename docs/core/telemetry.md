@@ -7,16 +7,17 @@ order: 10
 Gather relevant insights about your application and modules with custom metrics and telemetry. {synopsis}
 
 The Cosmos SDK enables operators and developers to gain insight into the performance and behavior of
-their application through the use of the `telemetry` package. The Cosmos SDK currently supports
-enabling in-memory and prometheus as telemetry sinks. This allows the ability to query for and scrape
-metrics from a single exposed API endpoint -- `/metrics?format={text|prometheus}`, the default being
-`text`.
+their application through the use of the `telemetry` package. To enable telemetrics, set `telemetry.enabled = true` in the app.toml config file.
+
+The Cosmos SDK currently supports enabling in-memory and prometheus as telemetry sinks. In-memory sink is always attached (when the telemetry is enabled) with 10 second interval and 1 minute retention. This means that metrics will be aggregated over 10 seconds, and metrics will be kept alive for 1 minute.
+
+To query active metrics (see retention note above) you have to enable API server (`api.enabled = true` in the app.toml). Single API endpoint is exposed: `http://localhost:1317/metrics?format={text|prometheus}`, the default being `text`.
+
+## Emitting metrics
 
 If telemetry is enabled via configuration, a single global metrics collector is registered via the
 [go-metrics](https://github.com/armon/go-metrics) library. This allows emitting and collecting
-metrics through simple API calls.
-
-Example:
+metrics through simple [API](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/telemetry/wrapper.go). Example:
 
 ```go
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
@@ -117,28 +118,12 @@ The following examples expose too much cardinality and may not even prove to be 
 | `tx_msg_ibc_recv_packet`        | Total number of IBC packets received                                                      | packet          | counter |
 | `tx_msg_ibc_acknowledge_packet` | Total number of IBC packets acknowledged                                                  | acknowledgement | counter |
 | `ibc_timeout_packet`            | Total number of IBC timeout packets                                                       | timeout         | counter |
-| `abci_check_tx`                 | Duration of ABCI `CheckTx`                                                                | ms              | summary |
-| `abci_deliver_tx`               | Duration of ABCI `DeliverTx`                                                              | ms              | summary |
-| `abci_commit`                   | Duration of ABCI `Commit`                                                                 | ms              | summary |
-| `abci_query`                    | Duration of ABCI `Query`                                                                  | ms              | summary |
-| `abci_begin_block`              | Duration of ABCI `BeginBlock`                                                             | ms              | summary |
-| `abci_end_block`                | Duration of ABCI `EndBlock`                                                               | ms              | summary |
-| `begin_blocker`                 | Duration of `BeginBlock` for a given module                                               | ms              | summary |
-| `end_blocker`                   | Duration of `EndBlock` for a given module                                                 | ms              | summary |
 | `store_iavl_get`                | Duration of an IAVL `Store#Get` call                                                      | ms              | summary |
 | `store_iavl_set`                | Duration of an IAVL `Store#Set` call                                                      | ms              | summary |
 | `store_iavl_has`                | Duration of an IAVL `Store#Has` call                                                      | ms              | summary |
 | `store_iavl_delete`             | Duration of an IAVL `Store#Delete` call                                                   | ms              | summary |
 | `store_iavl_commit`             | Duration of an IAVL `Store#Commit` call                                                   | ms              | summary |
 | `store_iavl_query`              | Duration of an IAVL `Store#Query` call                                                    | ms              | summary |
-| `store_gaskv_get`               | Duration of a GasKV `Store#Get` call                                                      | ms              | summary |
-| `store_gaskv_set`               | Duration of a GasKV `Store#Set` call                                                      | ms              | summary |
-| `store_gaskv_has`               | Duration of a GasKV `Store#Has` call                                                      | ms              | summary |
-| `store_gaskv_delete`            | Duration of a GasKV `Store#Delete` call                                                   | ms              | summary |
-| `store_cachekv_get`             | Duration of a CacheKV `Store#Get` call                                                    | ms              | summary |
-| `store_cachekv_set`             | Duration of a CacheKV `Store#Set` call                                                    | ms              | summary |
-| `store_cachekv_write`           | Duration of a CacheKV `Store#Write` call                                                  | ms              | summary |
-| `store_cachekv_delete`          | Duration of a CacheKV `Store#Delete` call                                                 | ms              | summary |
 
 ## Next {hide}
 

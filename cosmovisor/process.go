@@ -1,57 +1,58 @@
 package cosmovisor
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
+	"strconv"
 	"strings"
-	"sync"
 	"syscall"
+	"time"
+
+	"github.com/otiai10/copy"
+	"github.com/rs/zerolog"
+
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// LaunchProcess runs a subprocess and returns when the subprocess exits,
-// either when it dies, or *after* a successful upgrade.
-func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, error) {
-	bin, err := cfg.CurrentBin()
+type Launcher struct {
+	logger *zerolog.Logger
+	cfg    *Config
+	fw     *fileWatcher
+}
+
+func NewLauncher(logger *zerolog.Logger, cfg *Config) (Launcher, error) {
+	fw, err := newUpgradeFileWatcher(logger, cfg.UpgradeInfoFilePath(), cfg.PollInterval)
+	if err != nil {
+		return Launcher{}, err
+	}
+
+	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
+}
+
+// Run launches the app in a subprocess and returns when the subprocess (app)
+// exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
+// Returns true if the upgrade request was detected and the upgrade process started.
+func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
+	bin, err := l.cfg.CurrentBin()
 	if err != nil {
 		return false, fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
 
 	if err := EnsureBinary(bin); err != nil {
-		return false, fmt.Errorf("current binary invalid: %w", err)
+		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
 
+	l.logger.Info().Str("path", bin).Strs("args", args).Msg("running app")
 	cmd := exec.Command(bin, args...)
-	outpipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return false, err
-	}
-
-	errpipe, err := cmd.StderrPipe()
-	if err != nil {
-		return false, err
-	}
-
-	scanOut := bufio.NewScanner(io.TeeReader(outpipe, stdout))
-	scanErr := bufio.NewScanner(io.TeeReader(errpipe, stderr))
-	// set scanner's buffer size to cfg.LogBufferSize, and ensure larger than bufio.MaxScanTokenSize otherwise fallback to bufio.MaxScanTokenSize
-	var maxCapacity int
-	if cfg.LogBufferSize < bufio.MaxScanTokenSize {
-		maxCapacity = bufio.MaxScanTokenSize
-	} else {
-		maxCapacity = cfg.LogBufferSize
-	}
-	bufOut := make([]byte, maxCapacity)
-	bufErr := make([]byte, maxCapacity)
-	scanOut.Buffer(bufOut, maxCapacity)
-	scanErr.Buffer(bufErr, maxCapacity)
-
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 	if err := cmd.Start(); err != nil {
-		return false, fmt.Errorf("launching process %s %s: %w", bin, strings.Join(args, " "), err)
+		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
 
 	sigs := make(chan os.Signal, 1)
@@ -59,95 +60,185 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	go func() {
 		sig := <-sigs
 		if err := cmd.Process.Signal(sig); err != nil {
-			log.Fatal(err)
+			l.logger.Fatal().Err(err).Str("bin", bin).Msg("terminated")
 		}
 	}()
 
-	// three ways to exit - command ends, find regexp in scanOut, find regexp in scanErr
-	upgradeInfo, err := WaitForUpgradeOrExit(cmd, scanOut, scanErr)
-	if err != nil {
+	needsUpdate, err := l.WaitForUpgradeOrExit(cmd)
+	if err != nil || !needsUpdate {
 		return false, err
 	}
 
-	if upgradeInfo != nil {
-		return true, DoUpgrade(cfg, upgradeInfo)
-	}
+	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
+		if err := l.doBackup(); err != nil {
+			return false, err
+		}
 
-	return false, nil
-}
-
-// WaitResult is used to wrap feedback on cmd state with some mutex logic.
-// This is needed as multiple go-routines can affect this - two read pipes that can trigger upgrade
-// As well as the command, which can fail
-type WaitResult struct {
-	// both err and info may be updated from several go-routines
-	// access is wrapped by mutex and should only be done through methods
-	err   error
-	info  *UpgradeInfo
-	mutex sync.Mutex
-}
-
-// AsResult reads the data protected by mutex to avoid race conditions
-func (u *WaitResult) AsResult() (*UpgradeInfo, error) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
-	return u.info, u.err
-}
-
-// SetError will set with the first error using a mutex
-// don't set it once info is set, that means we chose to kill the process
-func (u *WaitResult) SetError(myErr error) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
-	if u.info == nil && myErr != nil {
-		u.err = myErr
-	}
-}
-
-// SetUpgrade sets first non-nil upgrade info, ensure error is then nil
-// pass in a command to shutdown on successful upgrade
-func (u *WaitResult) SetUpgrade(up *UpgradeInfo) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
-	if u.info == nil && up != nil {
-		u.info = up
-		u.err = nil
-	}
-}
-
-// WaitForUpgradeOrExit listens to both output streams of the process, as well as the process state itself
-// When it returns, the process is finished and all streams have closed.
-//
-// It returns (info, nil) if an upgrade should be initiated (and we killed the process)
-// It returns (nil, err) if the process died by itself, or there was an issue reading the pipes
-// It returns (nil, nil) if the process exited normally without triggering an upgrade. This is very unlikely
-// to happened with "start" but may happened with short-lived commands like `gaiad export ...`
-func WaitForUpgradeOrExit(cmd *exec.Cmd, scanOut, scanErr *bufio.Scanner) (*UpgradeInfo, error) {
-	var res WaitResult
-
-	waitScan := func(scan *bufio.Scanner) {
-		upgrade, err := WaitForUpdate(scan)
-		if err != nil {
-			res.SetError(err)
-		} else if upgrade != nil {
-			res.SetUpgrade(upgrade)
-			// now we need to kill the process
-			_ = cmd.Process.Kill()
+		if err = l.doPreUpgrade(); err != nil {
+			return false, err
 		}
 	}
 
-	// wait for the scanners, which can trigger upgrade and kill cmd
-	go waitScan(scanOut)
-	go waitScan(scanErr)
+	return true, DoUpgrade(l.logger, l.cfg, l.fw.currentInfo)
+}
 
-	// if the command exits normally (eg. short command like `gaiad version`), just return (nil, nil)
-	// we often get broken read pipes if it runs too fast.
-	// if we had upgrade info, we would have killed it, and thus got a non-nil error code
-	err := cmd.Wait()
-	if err == nil {
-		return nil, nil
+// WaitForUpgradeOrExit checks upgrade plan file created by the app.
+// When it returns, the process (app) is finished.
+//
+// It returns (true, nil) if an upgrade should be initiated (and we killed the process)
+// It returns (false, err) if the process died by itself, or there was an issue reading the upgrade-info file.
+// It returns (false, nil) if the process exited normally without triggering an upgrade. This is very unlikely
+// to happened with "start" but may happened with short-lived commands like `gaiad export ...`
+func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
+	currentUpgrade, err := l.cfg.UpgradeInfo()
+	if err != nil {
+		l.logger.Error().Err(err)
 	}
-	// this will set the error code if it wasn't killed due to upgrade
-	res.SetError(err)
-	return res.AsResult()
+
+	cmdDone := make(chan error)
+	go func() {
+		cmdDone <- cmd.Wait()
+	}()
+
+	select {
+	case <-l.fw.MonitorUpdate(currentUpgrade):
+		// upgrade - kill the process and restart
+		l.logger.Info().Msg("daemon shutting down in an attempt to restart")
+		_ = cmd.Process.Kill()
+	case err := <-cmdDone:
+		l.fw.Stop()
+		// no error -> command exits normally (eg. short command like `gaiad version`)
+		if err == nil {
+			return false, nil
+		}
+		// the app x/upgrade causes a panic and the app can die before the filwatcher finds the
+		// update, so we need to recheck update-info file.
+		if !l.fw.CheckUpdate(currentUpgrade) {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+func (l Launcher) doBackup() error {
+	// take backup if `UNSAFE_SKIP_BACKUP` is not set.
+	if !l.cfg.UnsafeSkipBackup {
+		// check if upgrade-info.json is not empty.
+		var uInfo upgradetypes.Plan
+		upgradeInfoFile, err := os.ReadFile(filepath.Join(l.cfg.Home, "data", "upgrade-info.json"))
+		if err != nil {
+			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
+		}
+
+		err = json.Unmarshal(upgradeInfoFile, &uInfo)
+		if err != nil {
+			return err
+		}
+
+		if uInfo.Name == "" {
+			return fmt.Errorf("upgrade-info.json is empty")
+		}
+
+		// a destination directory, Format YYYY-MM-DD
+		st := time.Now()
+		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
+		dst := filepath.Join(l.cfg.DataBackupPath, fmt.Sprintf("data"+"-backup-%s", stStr))
+
+		l.logger.Info().Time("backup start time", st).Msg("starting to take backup of data directory")
+
+		// copy the $DAEMON_HOME/data to a backup dir
+		err = copy.Copy(filepath.Join(l.cfg.Home, "data"), dst)
+
+		if err != nil {
+			return fmt.Errorf("error while taking data backup: %w", err)
+		}
+
+		// backup is done, lets check endtime to calculate total time taken for backup process
+		et := time.Now()
+		l.logger.Info().Str("backup saved at", dst).Time("backup completion time", et).TimeDiff("time taken to complete backup", et, st).Msg("backup completed")
+	}
+
+	return nil
+}
+
+// doPreUpgrade runs the pre-upgrade command defined by the application and handles respective error codes
+// cfg contains the cosmovisor config from env var
+func (l *Launcher) doPreUpgrade() error {
+	counter := 0
+	for {
+		if counter > l.cfg.PreupgradeMaxRetries {
+			return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries - %d", l.cfg.PreupgradeMaxRetries)
+		}
+
+		err := l.executePreUpgradeCmd()
+		counter += 1
+
+		if err != nil {
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
+				l.logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
+				return nil
+			}
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
+				return fmt.Errorf("pre-upgrade command failed : %w", err)
+			}
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
+				l.logger.Error().Err(err).Int("attempt", counter).Msg("pre-upgrade command failed. retrying")
+				continue
+			}
+		}
+
+		l.logger.Info().Msg("pre-upgrade successful. continuing the upgrade.")
+		return nil
+	}
+}
+
+// executePreUpgradeCmd runs the pre-upgrade command defined by the application
+// cfg contains the cosmosvisor config from the env vars
+func (l *Launcher) executePreUpgradeCmd() error {
+	bin, err := l.cfg.CurrentBin()
+	if err != nil {
+		return err
+	}
+
+	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
+	_, err = preUpgradeCmd.Output()
+	return err
+}
+
+// IsSkipUpgradeHeight checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
+func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
+	skipUpgradeHeights := UpgradeSkipHeights(args)
+	for _, h := range skipUpgradeHeights {
+		if h == int(upgradeInfo.Height) {
+			return true
+		}
+	}
+	return false
+}
+
+// UpgradeSkipHeights gets all the heights provided when
+//
+//	simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
+func UpgradeSkipHeights(args []string) []int {
+	var heights []int
+	for i, arg := range args {
+		if arg == "--unsafe-skip-upgrades" {
+			j := i + 1
+
+			for j < len(args) {
+				tArg := args[j]
+				if strings.HasPrefix(tArg, "-") {
+					break
+				}
+				h, err := strconv.Atoi(tArg)
+				if err == nil {
+					heights = append(heights, h)
+				}
+				j++
+			}
+
+			break
+		}
+	}
+	return heights
 }

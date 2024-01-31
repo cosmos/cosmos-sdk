@@ -41,7 +41,7 @@ message TxResponse {
   string timestamp = 12;
   // Events defines all the events emitted by processing a transaction. Note,
   // these events include those emitted by processing all the messages and those
-  // emitted from the ante handler. Whereas Logs contains the events, with
+  // emitted from the ante. Whereas Logs contains the events, with
   // additional metadata, emitted only by processing the messages.
   //
   // Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
@@ -52,7 +52,7 @@ message TxResponse {
 message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
-  uint32 msg_index = 1;
+  uint32 msg_index = 1 [(gogoproto.jsontag) = "msg_index"];
   string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
@@ -79,10 +79,10 @@ message Attribute {
 // GasInfo defines tx execution gas context.
 message GasInfo {
   // GasWanted is the maximum units of work we allow this tx to perform.
-  uint64 gas_wanted = 1 [(gogoproto.moretags) = "yaml:\"gas_wanted\""];
+  uint64 gas_wanted = 1;
 
   // GasUsed is the amount of gas actually consumed.
-  uint64 gas_used = 2 [(gogoproto.moretags) = "yaml:\"gas_used\""];
+  uint64 gas_used = 2;
 }
 
 // Result is the union of ResponseFormat and ResponseCheckTx.
@@ -91,7 +91,9 @@ message Result {
 
   // Data is any data returned from message or handler execution. It MUST be
   // length prefixed in order to separate data from multiple message executions.
-  bytes data = 1;
+  // Deprecated. This field is still populated, but prefer msg_response instead
+  // because it also contains the Msg response typeURL.
+  bytes data = 1 [deprecated = true];
 
   // Log contains the log information from message or handler execution.
   string log = 2;
@@ -99,6 +101,11 @@ message Result {
   // Events contains a slice of Event objects that were emitted during message
   // or handler execution.
   repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
+
+  // msg_responses contains the Msg handler responses type packed in Anys.
+  //
+  // Since: cosmos-sdk 0.46
+  repeated google.protobuf.Any msg_responses = 4;
 }
 
 // SimulationResponse defines the response generated when a transaction is
@@ -111,6 +118,7 @@ message SimulationResponse {
 // MsgData defines the data returned in a Result object during message
 // execution.
 message MsgData {
+  option deprecated           = true;
   option (gogoproto.stringer) = true;
 
   string msg_type = 1;
@@ -122,7 +130,13 @@ message MsgData {
 message TxMsgData {
   option (gogoproto.stringer) = true;
 
-  repeated MsgData data = 1;
+  // data field is deprecated and not populated.
+  repeated MsgData data = 1 [deprecated = true];
+
+  // msg_responses contains the Msg handler responses packed into Anys.
+  //
+  // Since: cosmos-sdk 0.46
+  repeated google.protobuf.Any msg_responses = 2;
 }
 
 // SearchTxsResult defines a structure for querying txs pageable
@@ -130,13 +144,13 @@ message SearchTxsResult {
   option (gogoproto.stringer) = true;
 
   // Count of all txs
-  uint64 total_count = 1 [(gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
+  uint64 total_count = 1;
   // Count of txs in current page
   uint64 count = 2;
   // Index of current page, start from 1
-  uint64 page_number = 3 [(gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
+  uint64 page_number = 3;
   // Count of total pages
-  uint64 page_total = 4 [(gogoproto.moretags) = "yaml:\"page_total\"", (gogoproto.jsontag) = "page_total"];
+  uint64 page_total = 4;
   // Max count txs per page
   uint64 limit = 5;
   // List of txs in current page

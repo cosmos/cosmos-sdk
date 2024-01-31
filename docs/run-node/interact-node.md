@@ -8,8 +8,8 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 
 ## Pre-requisite Readings
 
-- [gRPC, REST and Tendermint Endpoints](../core/grpc_rest.md) {prereq}
-- [Running a Node](./run-node.md) {prereq}
+* [gRPC, REST and Tendermint Endpoints](../core/grpc_rest.md) {prereq}
+* [Running a Node](./run-node.md) {prereq}
 
 ## Using the CLI
 
@@ -54,9 +54,9 @@ The Protobuf ecosystem developed tools for different use cases, including code-g
 
 Since the code generation library largely depends on your own tech stack, we will only present three alternatives:
 
-- `grpcurl` for generic debugging and testing,
-- programmatically via Go,
-- CosmJS for JavaScript/TypeScript developers.
+* `grpcurl` for generic debugging and testing,
+* programmatically via Go,
+* CosmJS for JavaScript/TypeScript developers.
 
 ### grpcurl
 
@@ -109,15 +109,28 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 The following snippet shows how to query the state using gRPC inside a Go program. The idea is to create a gRPC connection, and use the Protobuf-generated client code to query the gRPC server.
 
+#### Install Cosmos SDK
+
+Add below line to `go.mod` to replace protobuf, read more [#8469](https://github.com/cosmos/cosmos-sdk/issues/8469)
+
+```go
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+```
+
+```bash
+go get github.com/cosmos/cosmos-sdk@main
+```
+
 ```go
 import (
     "context"
     "fmt"
 
-	"google.golang.org/grpc"
+    "google.golang.org/grpc"
 
+    "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+    banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func queryState() error {
@@ -127,17 +140,23 @@ func queryState() error {
     }
 
     // Create a connection to the gRPC server.
-    grpcConn := grpc.Dial(
+    grpcConn, err := grpc.Dial(
         "127.0.0.1:9090", // your gRPC server address.
-        grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
-    )
+        grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism. 
+        // This instantiates a general gRPC codec which handles proto bytes. We pass in a nil interface registry
+        // if the request/response types contain interface instead of 'nil' you should pass the application specific codec.
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())),
+	)
+    if err != nil {
+        return err
+    }
     defer grpcConn.Close()
 
     // This creates a gRPC client to query the x/bank service.
     bankClient := banktypes.NewQueryClient(grpcConn)
     bankRes, err := bankClient.Balance(
         context.Background(),
-        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: "atom"},
+        &banktypes.QueryBalanceRequest{Address: myAddress.String(), Denom: "atom"},
     )
     if err != nil {
         return err
@@ -163,8 +182,10 @@ import (
     "google.golang.org/grpc"
     "google.golang.org/grpc/metadata"
 
+    "github.com/cosmos/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
     grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+    banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func queryState() error {
@@ -173,13 +194,13 @@ func queryState() error {
     var header metadata.MD
     bankRes, err = bankClient.Balance(
         metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // Add metadata to request
-        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: denom},
+        &banktypes.QueryBalanceRequest{Address: myAddress.String(), Denom: "atom"},
         grpc.Header(&header), // Retrieve header from response
     )
     if err != nil {
         return err
     }
-    blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
+    blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
 
     fmt.Println(blockHeight) // Prints the block height (12)
 

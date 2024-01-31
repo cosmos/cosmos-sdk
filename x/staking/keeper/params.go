@@ -3,6 +3,7 @@ package keeper
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -43,11 +44,17 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 // Currently, this returns a global variable that the app developer can tweak.
 // TODO: we might turn this into an on-chain param:
 // https://github.com/cosmos/cosmos-sdk/issues/8365
-func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
+func (k Keeper) PowerReduction(ctx sdk.Context) math.Int {
 	return sdk.DefaultPowerReduction
 }
 
-// Get all parameteras as types.Params
+// MinCommissionRate - Minimum validator commission rate
+func (k Keeper) MinCommissionRate(ctx sdk.Context) (res sdk.Dec) {
+	k.paramstore.Get(ctx, types.KeyMinCommissionRate, &res)
+	return
+}
+
+// Get all parameters as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
 		k.UnbondingTime(ctx),
@@ -55,6 +62,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.MaxEntries(ctx),
 		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
+		k.MinCommissionRate(ctx),
 	)
 }
 

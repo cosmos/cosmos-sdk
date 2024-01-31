@@ -1,41 +1,18 @@
 # Updating the docs
 
-If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md#updating-documentation).
-
-## Internationalization
-
-- Translations for documentation live in a `docs/<locale>/` folder, where `<locale>` is the language code for a specific language. For example, `zh` for Chinese, `ko` for Korean, `ru` for Russian, etc.
-- Each `docs/<locale>/` folder must follow the same folder structure within `docs/`, but only content in the following folders needs to be translated and included in the respective `docs/<locale>/` folder:
-    - `docs/basics/`
-    - `docs/building-modules/`
-    - `docs/core/`
-    - `docs/ibc/`
-    - `docs/intro/`
-    - `docs/migrations/`
-    - `docs/run-node/`
-- Each `docs/<locale>/` folder must also have a `README.md` that includes a translated version of both the layout and content within the root-level [`README.md`](https://github.com/cosmos/cosmos-sdk/tree/master/docs/README.md). The layout defined in the `README.md` is used to build the homepage.
-- Always translate content living on `master` unless you are revising documentation for a specific release. Translated documentation like the root-level documentation is semantically versioned.
-- For additional configuration options, please see [VuePress Internationalization](https://vuepress.vuejs.org/guide/i18n.html).
+If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/main/CONTRIBUTING.md#updating-documentation).
 
 ## Docs Build Workflow
 
-The documentation for the Cosmos SDK is hosted at https://cosmos.network/docs/
-
-built from the files in this (`/docs`) directory for
-[master](https://github.com/cosmos/cosmos-sdk/tree/master/docs).
+The documentation for Cosmos SDK is hosted at https://docs.cosmos.network and built from the files in the `/docs` directory.
 
 ### How It Works
 
-There is a CircleCI job listening for changes in the `/docs` directory, on
-the `master` branch. Any updates to files in this directory
-on that branch will automatically trigger a website deployment. Under the hood,
-the private website repository has a `make build-docs` target consumed by a CircleCI job in that repo.
+There is a GitHub Action listening for changes in the `/docs` directory for the `main` branch and each supported version branch (e.g. `release/v0.46.x`). Any updates to files in the `/docs` directory will automatically trigger a website deployment. Under the hood, the private website repository has a `make build-docs` target consumed by a Github Action within that repository.
 
 ## README
 
-The [README.md](./README.md) is also the landing page for the documentation
-on the website. During the Jenkins build, the current commit is added to the bottom
-of the README.
+The [README.md](./README.md) is both the README for the repository and the configuration for the layout of the landing page.
 
 ## Config.js
 
@@ -55,17 +32,17 @@ Relative links should be used nearly everywhere, having discovered and weighed t
 
 Where is the other file, relative to the current one?
 
-- works both on GitHub and for the VuePress build
-- confusing / annoying to have things like: `../../../../myfile.md`
-- requires more updates when files are re-shuffled
+* works both on GitHub and for the VuePress build
+* confusing / annoying to have things like: `../../../../myfile.md`
+* requires more updates when files are re-shuffled
 
 ### Absolute
 
 Where is the other file, given the root of the repo?
 
-- works on GitHub, doesn't work for the VuePress build
-- this is much nicer: `/docs/hereitis/myfile.md`
-- if you move that file around, the links inside it are preserved (but not to it, of course)
+* works on GitHub, doesn't work for the VuePress build
+* this is much nicer: `/docs/hereitis/myfile.md`
+* if you move that file around, the links inside it are preserved (but not to it, of course)
 
 ### Full
 
@@ -100,7 +77,7 @@ To build documentation as a static website run `npm run build`. You will find th
 
 First, run `make tools` from the root of repo, to install the swagger-ui tool.
 
-Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/lcd/swagger-ui/swagger.yaml)
+Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/main/client/lcd/swagger-ui/swagger.yaml)
 
 Finally, run `make update_gaia_lite_docs` from the root of the repo.
 
@@ -111,7 +88,7 @@ We are using [Algolia](https://www.algolia.com) to power full-text search. This 
 ## Consistency
 
 Because the build processes are identical (as is the information contained herein), this file should be kept in sync as
-much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/v0.34.0/docs/DOCS_README.md).
+much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/master/docs/DOCS_README.md).
 
 ### Update and Build the RPC docs
 

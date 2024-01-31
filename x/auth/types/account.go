@@ -9,7 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -204,7 +204,7 @@ func (ma ModuleAccount) HasPermission(permission string) bool {
 	return false
 }
 
-// GetName returns the the name of the holder's module
+// GetName returns the name of the holder's module
 func (ma ModuleAccount) GetName() string {
 	return ma.Name
 }
@@ -225,6 +225,10 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("module account name cannot be blank")
 	}
 
+	if ma.BaseAccount == nil {
+		return errors.New("uninitialized ModuleAccount: BaseAccount is nil")
+	}
+
 	if ma.Address != sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))).String() {
 		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
 	}
@@ -233,12 +237,12 @@ func (ma ModuleAccount) Validate() error {
 }
 
 type moduleAccountPretty struct {
-	Address       sdk.AccAddress `json:"address" yaml:"address"`
-	PubKey        string         `json:"public_key" yaml:"public_key"`
-	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
-	Sequence      uint64         `json:"sequence" yaml:"sequence"`
-	Name          string         `json:"name" yaml:"name"`
-	Permissions   []string       `json:"permissions" yaml:"permissions"`
+	Address       sdk.AccAddress `json:"address"`
+	PubKey        string         `json:"public_key"`
+	AccountNumber uint64         `json:"account_number"`
+	Sequence      uint64         `json:"sequence"`
+	Name          string         `json:"name"`
+	Permissions   []string       `json:"permissions"`
 }
 
 func (ma ModuleAccount) String() string {

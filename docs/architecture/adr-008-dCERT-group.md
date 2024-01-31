@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 2019 Jul 31: Initial Draft
+* 2019 Jul 31: Initial Draft
 
 ## Context
 
@@ -35,22 +35,22 @@ The dCERT group is proposed to include an implementation of a `SpecializationGro
 as defined in [ADR 007](./adr-007-specialization-groups.md). This will include the
 implementation of:
 
-- continuous voting
-- slashing due to breach of soft contract
-- revoking a member due to breach of soft contract
-- emergency disband of the entire dCERT group (ex. for colluding maliciously)
-- compensation stipend from the community pool or other means decided by
+* continuous voting
+* slashing due to breach of soft contract
+* revoking a member due to breach of soft contract
+* emergency disband of the entire dCERT group (ex. for colluding maliciously)
+* compensation stipend from the community pool or other means decided by
    governance
 
 This system necessitates the following new parameters:
 
-- blockly stipend allowance per dCERT member
-- maximum number of dCERT members
-- required staked slashable tokens for each dCERT member
-- quorum for suspending a particular member
-- proposal wager for disbanding the dCERT group
-- stabilization period for dCERT member transition
-- circuit break dCERT privileges enabled
+* blockly stipend allowance per dCERT member
+* maximum number of dCERT members
+* required staked slashable tokens for each dCERT member
+* quorum for suspending a particular member
+* proposal wager for disbanding the dCERT group
+* stabilization period for dCERT member transition
+* circuit break dCERT privileges enabled
 
 These parameters are expected to be implemented through the param keeper such
 that governance may change them at any given point.
@@ -60,27 +60,27 @@ that governance may change them at any given point.
 An `Electionator` object is to be implemented as continuous voting and with the
 following specifications:
 
-- All delegation addresses may submit votes at any point which updates their
+* All delegation addresses may submit votes at any point which updates their
    preferred representation on the dCERT group.
-- Preferred representation may be arbitrarily split between addresses (ex. 50%
+* Preferred representation may be arbitrarily split between addresses (ex. 50%
    to John, 25% to Sally, 25% to Carol)
-- In order for a new member to be added to the dCERT group they must
+* In order for a new member to be added to the dCERT group they must
    send a transaction accepting their admission at which point the validity of
    their admission is to be confirmed.
-    - A sequence number is assigned when a member is added to dCERT group.
+    * A sequence number is assigned when a member is added to dCERT group.
      If a member leaves the dCERT group and then enters back, a new sequence number
      is assigned.  
-- Addresses which control the greatest amount of preferred-representation are
+* Addresses which control the greatest amount of preferred-representation are
    eligible to join the dCERT group (up the _maximum number of dCERT members_).
    If the dCERT group is already full and new member is admitted, the existing
    dCERT member with the lowest amount of votes is kicked from the dCERT group.
-    - In the split situation where the dCERT group is full but a vying candidate
+    * In the split situation where the dCERT group is full but a vying candidate
      has the same amount of vote as an existing dCERT member, the existing
      member should maintain its position.
-    - In the split situation where somebody must be kicked out but the two
+    * In the split situation where somebody must be kicked out but the two
      addresses with the smallest number of votes have the same number of votes,
      the address with the smallest sequence number maintains its position.  
-- A stabilization period can be optionally included to reduce the
+* A stabilization period can be optionally included to reduce the
    "flip-flopping" of the dCERT membership tail members. If a stabilization
    period is provided which is greater than 0, when members are kicked due to
    insufficient support, a queue entry is created which documents which member is
@@ -128,9 +128,9 @@ capable of shutting down the exploitable message routes.
 
 Active dCERT members
 
-- change of the description of the dCERT group
-- circuit break a message route
-- vote to suspend a dCERT member.
+* change of the description of the dCERT group
+* circuit break a message route
+* vote to suspend a dCERT member.
 
 Here circuit-breaking refers to the capability to disable a groups of messages,
 This could for instance mean: "disable all staking-delegation messages", or
@@ -157,12 +157,12 @@ they should all be severely slashed.
 
 ### Positive
 
-- Potential to reduces the number of parties to coordinate with during an emergency
-- Reduction in possibility of disclosing sensitive information to malicious parties
+* Potential to reduces the number of parties to coordinate with during an emergency
+* Reduction in possibility of disclosing sensitive information to malicious parties
 
 ### Negative
 
-- Centralization risks
+* Centralization risks
 
 ### Neutral
 

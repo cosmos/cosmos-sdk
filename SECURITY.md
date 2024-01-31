@@ -1,65 +1,63 @@
 # Security
 
-> **IMPORTANT**: If you find a security issue, you can contact our team directly at
-security@tendermint.com, or report it to our [bug bounty program](https://hackerone.com/tendermint) on HackerOne. *DO NOT* open a public issue on the repository.
+> **IMPORTANT**: If you find a security issue, you can
+report it to our [bug bounty program](https://hackerone.com/cosmos) on HackerOne. *DO NOT* open a public issue on the repository.
 
 ## Bug Bounty
 
 As part of our [Coordinated Vulnerability Disclosure Policy](https://tendermint.com/security), we operate a
-[bug bounty program](https://hackerone.com/tendermint) with Hacker One.
+[bug bounty program](https://hackerone.com/cosmos) with Hacker One.
 
 See the policy linked above for more details on submissions and rewards and read
 this [blog post](https://blog.cosmos.network/bug-bounty-program-for-tendermint-cosmos-833c67693586) for the program scope.
 
 The following is a list of examples of the kinds of bugs we're most interested
 in for the Cosmos SDK. See [here](https://github.com/tendermint/tendermint/blob/master/SECURITY.md) for vulnerabilities we are interested
-in for Tendermint and other lower-level libraries (eg. [IAVL](https://github.com/tendermint/iavl)).
+in for Tendermint and other lower-level libraries (eg. [IAVL](https://github.com/cosmos/iavl)).
 
 ### Core packages
 
-- [`/baseapp`](https://github.com/cosmos/cosmos-sdk/tree/master/baseapp)
-- [`/crypto`](https://github.com/cosmos/cosmos-sdk/tree/master/crypto)
-- [`/types`](https://github.com/cosmos/cosmos-sdk/tree/master/types)
-- [`/store`](https://github.com/cosmos/cosmos-sdk/tree/master/store)
+* [`/baseapp`](https://github.com/cosmos/cosmos-sdk/tree/main/baseapp)
+* [`/crypto`](https://github.com/cosmos/cosmos-sdk/tree/main/crypto)
+* [`/types`](https://github.com/cosmos/cosmos-sdk/tree/main/types)
+* [`/store`](https://github.com/cosmos/cosmos-sdk/tree/main/store)
 
 ### Modules
 
-- [`x/auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth)
-- [`x/bank`](https://github.com/cosmos/cosmos-sdk/tree/master/x/bank)
-- [`x/capability`](https://github.com/cosmos/cosmos-sdk/tree/master/x/capability)
-- [`x/staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking)
-- [`x/slashing`](https://github.com/cosmos/cosmos-sdk/tree/master/x/slashing)
-- [`x/evidence`](https://github.com/cosmos/cosmos-sdk/tree/master/x/evidence)
-- [`x/distribution`](https://github.com/cosmos/cosmos-sdk/tree/master/x/distribution)
-- [`x/ibc`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc)
-- [`x/ibc-transfer`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc-transfer)
-- [`x/mint`](https://github.com/cosmos/cosmos-sdk/tree/master/x/mint)
+* [`x/auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth)
+* [`x/bank`](https://github.com/cosmos/cosmos-sdk/tree/main/x/bank)
+* [`x/capability`](https://github.com/cosmos/cosmos-sdk/tree/main/x/capability)
+* [`x/staking`](https://github.com/cosmos/cosmos-sdk/tree/main/x/staking)
+* [`x/slashing`](https://github.com/cosmos/cosmos-sdk/tree/main/x/slashing)
+* [`x/evidence`](https://github.com/cosmos/cosmos-sdk/tree/main/x/evidence)
+* [`x/distribution`](https://github.com/cosmos/cosmos-sdk/tree/main/x/distribution)
+* [`x/mint`](https://github.com/cosmos/cosmos-sdk/tree/main/x/mint)
 
 We are interested in bugs in other modules, however the above are most likely to
 have significant vulnerabilities, due to the complexity / nuance involved. We
-also recommend you to read the [specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/README.md) of each module before digging into
+also recommend you to read the [specification](https://github.com/cosmos/cosmos-sdk/blob/main/docs/building-modules/README.md) of each module before digging into
 the code.
 
 ### How we process Tx parameters
 
-- Integer operations on tx parameters, especially `sdk.Int` / `sdk.Dec`
-- Gas calculation & parameter choices
-- Tx signature verification (see [`x/auth/ante`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/ante))
-- Possible Node DoS vectors (perhaps due to gas weighting / non constant timing)
+* Integer operations on tx parameters, especially `sdk.Int` / `sdk.Dec`
+* Gas calculation & parameter choices
+* Tx signature verification (see [`x/auth/ante`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/ante))
+* Possible Node DoS vectors (perhaps due to gas weighting / non constant timing)
 
 ### Handling private keys
 
-- HD key derivation, local and Ledger, and all key-management functionality
-- Side-channel attack vectors with our implementations
-    - e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
-  
+* HD key derivation, local and Ledger, and all key-management functionality
+* Side-channel attack vectors with our implementations
+    * e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
+
 ## Disclosure Process
 
 The Cosmos SDK team uses the following disclosure process:
 
 1. After a security report is received, the Cosmos SDK team works to verify the issue and confirm its severity level using Common Vulnerability Scoring System (CVSS).
 1. The Cosmos SDK team collaborates with the Tendermint and Gaia teams to determine the vulnerability’s potential impact on the Cosmos Hub and partners.
-1. Patches are prepared in private repositories for eligible releases of Cosmos SDK. See [Stable Releases](https://github.com/cosmos/cosmos-sdk/blob/master/STABLE_RELEASES.md) for a list of eligible releases.
+1. Patches are prepared in private repositories for eligible releases of Cosmos SDK. See [Stable Release Policy](https://github.com/cosmos/cosmos-sdk/blob/main/RELEASE_PROCESS.md#stable-release-policy) for a list of eligible releases.
 1. If it is determined that a CVE-ID is required, we request a CVE through a CVE Numbering Authority.
 1. We notify the community that a security release is coming to give users time to prepare their systems for the update. Notifications can include forum posts, tweets, and emails to partners and validators.
 1. 24 hours after the notification, fixes are applied publicly and new releases are issued.
@@ -83,7 +81,7 @@ Communications to partners usually include the following details:
 
 An example notice looks like:
 
-```
+```text
 Dear Cosmos SDK partners,
 
 A critical security vulnerability has been identified in Cosmos SDK vX.X.X.

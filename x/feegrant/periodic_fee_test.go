@@ -14,7 +14,7 @@ import (
 )
 
 func TestPeriodicFeeValidAllow(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{
 		Time: time.Now(),
 	})
@@ -131,8 +131,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			blockTime:     oneHour,
 			accept:        true,
 			remove:        false,
-			remainsPeriod: smallAtom.Sub(oneAtom),
-			remains:       smallAtom.Sub(oneAtom),
+			remainsPeriod: smallAtom.Sub(oneAtom...),
+			remains:       smallAtom.Sub(oneAtom...),
 			periodReset:   oneHour.Add(tenMinutes), // one step from last reset, not now
 		},
 		"period reset no spend limit": {

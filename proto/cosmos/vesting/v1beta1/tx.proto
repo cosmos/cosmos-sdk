@@ -3,7 +3,10 @@ package cosmos.vesting.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "cosmos/vesting/v1beta1/vesting.proto";
+
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
@@ -12,8 +15,15 @@ service Msg {
   // CreateVestingAccount defines a method that enables creating a vesting
   // account.
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
+  // CreatePermanentLockedAccount defines a method that enables creating a permanent
+  // locked account.
+  //
+  // Since: cosmos-sdk 0.46
+  rpc CreatePermanentLockedAccount(MsgCreatePermanentLockedAccount) returns (MsgCreatePermanentLockedAccountResponse);
   // CreatePeriodicVestingAccount defines a method that enables creating a
   // periodic vesting account.
+  //
+  // Since: cosmos-sdk 0.46
   rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
   // CreateClawbackVestingAccount defines a method that enables creating a
   // vesting account that is subject to clawback.
@@ -27,37 +37,54 @@ service Msg {
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
 message MsgCreateVestingAccount {
+  option (cosmos.msg.v1.signer) = "from_address";
+
   option (gogoproto.equal) = true;
 
-  // Address of the account providing the funds, which must also sign the request.
-  string from_address = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  // Address of the vesting account to create.
-  string to_address = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
-  // Amount to transfer to the new account.
+  string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   to_address                      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // End time of the vesting duration.
-  int64 end_time = 4 [(gogoproto.moretags) = "yaml:\"end_time\""];
-  // If true, creates a DelayedVestingAccount,
-  // otherwise creates a ContinuousVestingAccount.
-  bool delayed = 5;
+
+  // end of vesting as unix time (in seconds).
+  int64 end_time = 4;
+  bool  delayed  = 5;
 }
 
-// MsgCreateVestingAccountResponse defines the MsgCreateVestingAccount response type.
+// MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
 
-// MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
+// MsgCreatePermanentLockedAccount defines a message that enables creating a permanent
+// locked account.
+//
+// Since: cosmos-sdk 0.46
+message MsgCreatePermanentLockedAccount {
+  option (gogoproto.equal) = true;
+
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
+//
+// Since: cosmos-sdk 0.46
+message MsgCreatePermanentLockedAccountResponse {}
+
+// MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
+//
+// Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccount {
+  option (cosmos.msg.v1.signer) = "from_address";
+
   option (gogoproto.equal) = false;
 
-  // Address of the account providing the funds, which must also sign the request.
-  string from_address = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  // Address of the account to receive the funds.
-  string to_address = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
-  // Start time of the vesting. Periods start relative to this time.
-  int64 start_time = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
-  // Vesting events as a sequence of durations and amounts, starting relative to start_time.
+  string          from_address    = 1;
+  string          to_address      = 2;
+  // start of vesting as unix time (in seconds).
+  int64           start_time      = 3;
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false];
   // If true, merge this new grant into an existing PeriodicVestingAccount,
   // or create it if it does not exist. If false, creates a new account,
@@ -65,8 +92,10 @@ message MsgCreatePeriodicVestingAccount {
   bool merge = 5;
 }
 
-// MsgCreatePeriodicVestingAccountResponse defines the MsgCreatePeriodicVestingAccount
+// MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
+//
+// Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccountResponse {}
 
 // MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.

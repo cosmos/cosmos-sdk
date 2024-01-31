@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -18,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -60,7 +62,7 @@ func (s *paginationTestSuite) TestParsePagination() {
 }
 
 func (s *paginationTestSuite) TestPagination() {
-	app, ctx, _ := setupTest()
+	app, ctx, _ := setupTest(s.T())
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
@@ -76,7 +78,7 @@ func (s *paginationTestSuite) TestPagination() {
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	s.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
+	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr1, balances))
 
 	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}
@@ -169,7 +171,7 @@ func (s *paginationTestSuite) TestPagination() {
 }
 
 func (s *paginationTestSuite) TestReversePagination() {
-	app, ctx, _ := setupTest()
+	app, ctx, _ := setupTest(s.T())
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
@@ -185,7 +187,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	s.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
+	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr1, balances))
 
 	s.T().Log("verify paginate with custom limit and countTotal, Reverse false")
 	pageReq := &query.PageRequest{Limit: 2, CountTotal: true, Reverse: true, Key: nil}
@@ -292,8 +294,8 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().Nil(res.Pagination.NextKey)
 }
 
-func ExamplePaginate() {
-	app, ctx, _ := setupTest()
+func ExamplePaginate(t *testing.T) {
+	app, ctx, _ := setupTest(t)
 
 	var balances sdk.Coins
 
@@ -306,7 +308,7 @@ func ExamplePaginate() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	err := simapp.FundAccount(app.BankKeeper, ctx, addr1, balances)
+	err := testutil.FundAccount(app.BankKeeper, ctx, addr1, balances)
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}
@@ -318,12 +320,12 @@ func ExamplePaginate() {
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
-		var tempRes sdk.Coin
-		err := app.AppCodec().Unmarshal(value, &tempRes)
+		var amount math.Int
+		err := amount.Unmarshal(value)
 		if err != nil {
 			return err
 		}
-		balResult = append(balResult, tempRes)
+		balResult = append(balResult, sdk.NewCoin(string(key), amount))
 		return nil
 	})
 	if err != nil { // should return no error
@@ -334,8 +336,8 @@ func ExamplePaginate() {
 	// balances:<denom:"foo0denom" amount:"100" > pagination:<next_key:"foo1denom" total:2 >
 }
 
-func setupTest() (*simapp.SimApp, sdk.Context, codec.Codec) {
-	app := simapp.Setup(false)
+func setupTest(t *testing.T) (*simapp.SimApp, sdk.Context, codec.Codec) {
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 	appCodec := app.AppCodec()
 

@@ -7,13 +7,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -25,17 +26,21 @@ const (
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
+	chainId := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
-		WithViper("")
+		WithViper("").
+		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
+		WithChainID(chainId)
 
-	clientCtx.Viper.BindEnv(nodeEnv)
+	require.NoError(t, clientCtx.Viper.BindEnv(nodeEnv))
 	if envVar != "" {
-		os.Setenv(nodeEnv, envVar)
+		require.NoError(t, os.Setenv(nodeEnv, envVar))
 	}
 
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	require.NoError(t, err)
+	require.Equal(t, clientCtx.ChainID, chainId)
 
 	return clientCtx, func() { _ = os.RemoveAll(home) }
 }
@@ -43,7 +48,7 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 func TestConfigCmd(t *testing.T) {
 	clientCtx, cleanup := initClientContext(t, testNode1)
 	defer func() {
-		os.Unsetenv(nodeEnv)
+		_ = os.Unsetenv(nodeEnv)
 		cleanup()
 	}()
 
@@ -57,7 +62,7 @@ func TestConfigCmd(t *testing.T) {
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"node"})
-	cmd.Execute()
+	require.NoError(t, cmd.Execute())
 	out, err := io.ReadAll(b)
 	require.NoError(t, err)
 	require.Equal(t, string(out), testNode1+"\n")
@@ -86,7 +91,7 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 			clientCtx, cleanup := initClientContext(t, tc.envVar)
 			defer func() {
 				if tc.envVar != "" {
-					os.Unsetenv(nodeEnv)
+					_ = os.Unsetenv(nodeEnv)
 				}
 				cleanup()
 			}()

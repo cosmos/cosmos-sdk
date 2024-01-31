@@ -8,40 +8,42 @@ order: 9
 
 ## Pre-requisite Readings
 
-- [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
-- [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+* [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events) {prereq}
 
-## Events
+## Typed Events
 
 Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type and
 take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
-+++ https://github.com/tendermint/tendermint/blob/v0.34.8/proto/tendermint/abci/types.proto#L304-L313
++++ https://github.com/tendermint/tendermint/blob/v0.35.4/proto/tendermint/abci/types.proto#L273-L279
 
 An Event contains:
 
-- A `type` to categorize the Event at a high-level; for example, the SDK uses the `"message"` type to filter Events by `Msg`s.
-- A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
+* A `type` to categorize the Event at a high-level; for example, the Cosmos SDK uses the `"message"` type to filter Events by `Msg`s.
+* A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
 
 ::: tip
 To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.
 :::
 
-Events, the `type` and `attributes` are defined on a **per-module basis** in the module's
-`/types/events.go` file, and triggered from the module's Protobuf [`Msg` service](../building-modules/msg-services.md)
-by using the [`EventManager`](#eventmanager). In addition, each module documents its Events under
-`spec/xx_events.md`.
+_Typed Events_ are Protobuf-defined [messages](../architecture/adr-032-typed-events.md) used by the Cosmos SDK
+for emitting and querying Events. They are defined in a `event.proto` file, on a **per-module basis**.
+They are triggered from the module's Protobuf [`Msg` service](../building-modules/msg-services.md)
+by using the [`EventManager`](#eventmanager), where they are read as `proto.Message`.
 
-Events are returned to the underlying consensus engine in the response of the following ABCI messages:
+In addition, each module documents its Events under `spec/xx_events.md`.
 
-- [`BeginBlock`](./baseapp.md#beginblock)
-- [`EndBlock`](./baseapp.md#endblock)
-- [`CheckTx`](./baseapp.md#checktx)
-- [`DeliverTx`](./baseapp.md#delivertx)
+Lastly, Events are returned to the underlying consensus engine in the response of the following ABCI messages:
+
+* [`BeginBlock`](./baseapp.md#beginblock)
+* [`EndBlock`](./baseapp.md#endblock)
+* [`CheckTx`](./baseapp.md#checktx)
+* [`DeliverTx`](./baseapp.md#delivertx)
 
 ### Examples
 
-The following examples show how to query Events using the SDK.
+The following examples show how to query Events using the Cosmos SDK.
 
 | Event                                            | Description                                                                                                                                              |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -57,23 +59,19 @@ In Cosmos SDK applications, Events are managed by an abstraction called the `Eve
 Internally, the `EventManager` tracks a list of Events for the entire execution flow of a
 transaction or `BeginBlock`/`EndBlock`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L17-L25
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/events.go#L17-L25
 
 The `EventManager` comes with a set of useful methods to manage Events. The method
-that is used most by module and application developers is `EmitEvent` that tracks
+that is used most by module and application developers is `EmitTypedEvent` that tracks
 an Event in the `EventManager`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L33-L37
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/events.go#L50-L59
 
-Module developers should handle Event emission via the `EventManager#EmitEvent` in each message
+Module developers should handle Event emission via the `EventManager#EmitTypedEvent` in each message
 `Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via
-the [`Context`](./context.md), where Event emission generally follows this pattern:
+the [`Context`](./context.md), where Event should be already registered, and emitted like this:
 
-```go
-ctx.EventManager().EmitEvent(
-    sdk.NewEvent(eventType, sdk.NewAttribute(attributeKey, attributeValue)),
-)
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/group/keeper/msg_server.go#L89-L92
 
 Module's `handler` function should also set a new `EventManager` to the `context` to isolate emitted Events per `message`:
 
@@ -104,14 +102,16 @@ You can use Tendermint's [Websocket](https://docs.tendermint.com/master/tendermi
 
 The main `eventCategory` you can subscribe to are:
 
-- `NewBlock`: Contains Events triggered during `BeginBlock` and `EndBlock`.
-- `Tx`: Contains Events triggered during `DeliverTx` (i.e. transaction processing).
-- `ValidatorSetUpdates`: Contains validator set updates for the block.
+* `NewBlock`: Contains Events triggered during `BeginBlock` and `EndBlock`.
+* `Tx`: Contains Events triggered during `DeliverTx` (i.e. transaction processing).
+* `ValidatorSetUpdates`: Contains validator set updates for the block.
 
 These Events are triggered from the `state` package after a block is committed. You can get the
-full list of Event categories [on the Tendermint Godoc page](https://godoc.org/github.com/tendermint/tendermint/types#pkg-constants).
+full list of Event categories [on the Tendermint Go documentation](https://pkg.go.dev/github.com/tendermint/tendermint/types#pkg-constants).
 
-The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `transfer` transaction triggers an Event of type `Transfer` and has `Recipient` and `Sender` as `attributes` (as defined in the [`events.go` file of the `bank` module](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/bank/types/events.go)). Subscribing to this Event would be done like so:
+The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `Mint` transaction triggers an Event of type `EventMint` and has an `Id` and an `Owner` as `attributes` (as defined in the [`events.proto` file of the `NFT` module](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/nft/v1beta1/event.proto#L14-L19)).
+
+Subscribing to this Event would be done like so:
 
 ```json
 {
@@ -119,19 +119,21 @@ The `type` and `attribute` value of the `query` allow you to filter the specific
   "method": "subscribe",
   "id": "0",
   "params": {
-    "query": "tm.event='Tx' AND transfer.sender='senderAddress'"
+    "query": "tm.event='Tx' AND mint.owner='ownerAddress'"
   }
 }
 ```
 
-where `senderAddress` is an address following the [`AccAddress`](../basics/accounts.md#addresses) format.
+where `ownerAddress` is an address following the [`AccAddress`](../basics/accounts.md#addresses) format.
 
-## Typed Events (coming soon)
+## Events (Deprecated)
 
-As previously described, Events are defined on a per-module basis. It is the responsibility of the module developer to define Event types and Event attributes. Except in the `spec/XX_events.md` file, these Event types and attributes are unfortunately not easily discoverable, so the SDK proposes to use Protobuf-defined [Typed Events](../architecture/adr-032-typed-events.md) for emitting and querying Events.
+Previously, the Cosmos SDK supported emitting Events that were defined in `types/events.go`. It is the responsibility of the module developer to define Event types and Event attributes. Except in the `spec/XX_events.md` file, these Event types and attributes are unfortunately not easily discoverable, 
 
-The Typed Events proposal has not yet been fully implemented. Documentation is not yet available.
+This is why this methods as been deprecated, and replaced by _[Typed Events](#typed-events).
+
+To learn more about the previous way of defining events, please refer to the [previous SDK documentation](https://docs.cosmos.network/v0.45/core/events.html#events-2).
 
 ## Next {hide}
 
-Learn about SDK [telemetry](./telemetry.md) {hide}
+Learn about Cosmos SDK [telemetry](./telemetry.md) {hide}

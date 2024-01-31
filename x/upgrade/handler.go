@@ -3,7 +3,7 @@ package upgrade
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -14,10 +14,10 @@ import (
 func NewSoftwareUpgradeProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case *types.SoftwareUpgradeProposal:
+		case *types.SoftwareUpgradeProposal: //nolint:staticcheck
 			return handleSoftwareUpgradeProposal(ctx, k, c)
 
-		case *types.CancelSoftwareUpgradeProposal:
+		case *types.CancelSoftwareUpgradeProposal: //nolint:staticcheck
 			return handleCancelSoftwareUpgradeProposal(ctx, k, c)
 
 		default:
@@ -26,11 +26,11 @@ func NewSoftwareUpgradeProposalHandler(k keeper.Keeper) govtypes.Handler {
 	}
 }
 
-func handleSoftwareUpgradeProposal(ctx sdk.Context, k keeper.Keeper, p *types.SoftwareUpgradeProposal) error {
+func handleSoftwareUpgradeProposal(ctx sdk.Context, k keeper.Keeper, p *types.SoftwareUpgradeProposal) error { //nolint:staticcheck
 	return k.ScheduleUpgrade(ctx, p.Plan)
 }
 
-func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k keeper.Keeper, _ *types.CancelSoftwareUpgradeProposal) error {
+func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k keeper.Keeper, _ *types.CancelSoftwareUpgradeProposal) error { //nolint:staticcheck
 	k.ClearUpgradePlan(ctx)
 	return nil
 }

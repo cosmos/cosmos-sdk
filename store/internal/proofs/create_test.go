@@ -36,12 +36,12 @@ func TestCreateMembership(t *testing.T) {
 			}
 
 			root := CalcRoot(data)
-			err = proof.GetExist().Verify(TendermintSpec, root, []byte(key), val)
+			err = proof.GetExist().Verify(ics23.TendermintSpec, root, []byte(key), val)
 			if err != nil {
 				t.Fatalf("Verifying Proof: %+v", err)
 			}
 
-			valid := ics23.VerifyMembership(TendermintSpec, root, proof, []byte(key), val)
+			valid := ics23.VerifyMembership(ics23.TendermintSpec, root, proof, []byte(key), val)
 			if !valid {
 				t.Fatalf("Membership Proof Invalid")
 			}
@@ -77,12 +77,12 @@ func TestCreateNonMembership(t *testing.T) {
 			}
 
 			root := CalcRoot(data)
-			err = proof.GetNonexist().Verify(TendermintSpec, root, []byte(key))
+			err = proof.GetNonexist().Verify(ics23.TendermintSpec, root, []byte(key))
 			if err != nil {
 				t.Fatalf("Verifying Proof: %+v", err)
 			}
 
-			valid := ics23.VerifyNonMembership(TendermintSpec, root, proof, []byte(key))
+			valid := ics23.VerifyNonMembership(ics23.TendermintSpec, root, proof, []byte(key))
 			if !valid {
 				t.Fatalf("Non Membership Proof Invalid")
 			}

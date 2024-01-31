@@ -1,33 +1,41 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const (
-	// TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
-	TypeMsgCreateVestingAccount = "msg_create_vesting_account"
+// TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
+const TypeMsgCreateVestingAccount = "msg_create_vesting_account"
 
-	// TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
-	TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
+// TypeMsgCreatePermanentLockedAccount defines the type value for a MsgCreatePermanentLockedAccount.
+const TypeMsgCreatePermanentLockedAccount = "msg_create_permanent_locked_account"
 
-	// TypeMsgCreateClawbackVestingAccount defines the type value for a MsgCreateClawbackVestingAcount.
-	TypeMsgCreateClawbackVestingAccount = "msg_create_clawback_vesting_account"
+// TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
+const TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
 
-	// TypeMsgClawback defines the type value for a MsgClawback.
-	TypeMsgClawback = "msg_clawback"
+// TypeMsgCreateClawbackVestingAccount defines the type value for a MsgCreateClawbackVestingAcount.
+const TypeMsgCreateClawbackVestingAccount = "msg_create_clawback_vesting_account"
 
-	// TypeMsgReturnGrants defines the type value for a MsgReturnGrants.
-	TypeMsgReturnGrants = "msg_return_grants"
-)
+// TypeMsgClawback defines the type value for a MsgClawback.
+const TypeMsgClawback = "msg_clawback"
 
-var (
-	_ sdk.Msg = &MsgCreateVestingAccount{}
-	_ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
-	_ sdk.Msg = &MsgCreateClawbackVestingAccount{}
-	_ sdk.Msg = &MsgClawback{}
-)
+// TypeMsgReturnGrants defines the type value for a MsgReturnGrants.
+const TypeMsgReturnGrants = "msg_return_grants"
+
+var _ sdk.Msg = &MsgCreateVestingAccount{}
+
+var _ sdk.Msg = &MsgCreatePermanentLockedAccount{}
+
+var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
+
+var _ sdk.Msg = &MsgCreateClawbackVestingAccount{}
+
+var _ sdk.Msg = &MsgClawback{}
+
+var _ sdk.Msg = &MsgReturnGrants{}
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
 //
@@ -50,20 +58,11 @@ func (msg MsgCreateVestingAccount) Type() string { return TypeMsgCreateVestingAc
 
 // ValidateBasic Implements Msg.
 func (msg MsgCreateVestingAccount) ValidateBasic() error {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return err
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
 	}
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return err
-	}
-	if err := sdk.VerifyAddressFormat(from); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
-	}
-
-	if err := sdk.VerifyAddressFormat(to); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
+	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
 
 	if !msg.Amount.IsValid() {
@@ -84,15 +83,61 @@ func (msg MsgCreateVestingAccount) ValidateBasic() error {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreateVestingAccount.
 func (msg MsgCreateVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for a MsgCreateVestingAccount.
 func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
+	addr, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{addr}
+}
+
+// NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
+//
+//nolint:interfacer
+func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
+	return &MsgCreatePermanentLockedAccount{
+		FromAddress: fromAddr.String(),
+		ToAddress:   toAddr.String(),
+		Amount:      amount,
 	}
+}
+
+// Route returns the message route for a MsgCreatePermanentLockedAccount.
+func (msg MsgCreatePermanentLockedAccount) Route() string { return RouterKey }
+
+// Type returns the message type for a MsgCreatePermanentLockedAccount.
+func (msg MsgCreatePermanentLockedAccount) Type() string { return TypeMsgCreatePermanentLockedAccount }
+
+// ValidateBasic Implements Msg.
+func (msg MsgCreatePermanentLockedAccount) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() {
+		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
+	}
+
+	if !msg.Amount.IsAllPositive() {
+		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
+	}
+
+	return nil
+}
+
+// GetSignBytes returns the bytes all expected signers must sign over for a
+// MsgCreatePermanentLockedAccount.
+func (msg MsgCreatePermanentLockedAccount) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners returns the expected signers for a MsgCreatePermanentLockedAccount.
+func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
+	from, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{from}
 }
 
@@ -105,7 +150,7 @@ func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTi
 		ToAddress:      toAddr.String(),
 		StartTime:      startTime,
 		VestingPeriods: periods,
-		Merge:          merge,
+		Merge:		merge,
 	}
 }
 
@@ -127,7 +172,7 @@ func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic Implements Msg.
@@ -148,12 +193,21 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
 	}
 
+	if msg.StartTime < 1 {
+		return fmt.Errorf("invalid start time of %d, length must be greater than 0", msg.StartTime)
+	}
+
 	for i, period := range msg.VestingPeriods {
-		if period.Length < 1 {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
-		}
 		if !period.Amount.IsValid() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period amount in period %d: %s", i, err)
+			return sdkerrors.ErrInvalidCoins.Wrap(period.Amount.String())
+		}
+
+		if !period.Amount.IsAllPositive() {
+			return sdkerrors.ErrInvalidCoins.Wrap(period.Amount.String())
+		}
+
+		if period.Length < 1 {
+			return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 	}
 
@@ -326,7 +380,7 @@ func NewMsgReturnGrants(addr sdk.AccAddress) *MsgReturnGrants {
 func (msg MsgReturnGrants) Route() string { return RouterKey }
 
 // Type returns the message type for a MsgReturnGrants.
-func (msg MsgReturnGrants) Type() string { return TypeMsgClawback }
+func (msg MsgReturnGrants) Type() string { return TypeMsgReturnGrants }
 
 // GetSigners returns the expected signers for a MsgReturnGrants.
 func (msg MsgReturnGrants) GetSigners() []sdk.AccAddress {

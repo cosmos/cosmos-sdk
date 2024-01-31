@@ -8,7 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -90,31 +92,44 @@ type AccountKeeper interface {
 
 	// SetParams sets the auth module's parameters.
 	SetParams(sdk.Context, types.Params)
+
+	// HasAccountAddressByID checks account address exists by id.
+	HasAccountAddressByID(ctx sdk.Context, id uint64) bool
+
+	// GetAccountAddressById returns account address by id.
+	GetAccountAddressByID(ctx sdk.Context, id uint64) string
+
+	// InitGenesis - Init store state from genesis data
+	InitGenesis(ctx sdk.Context, data types.GenesisState)
+
+	// ExportGenesis returns a GenesisState for a given context and keeper
+	ExportGenesis(ctx sdk.Context) *types.GenesisState
 }
 
 // accountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type accountKeeper struct {
-	key           sdk.StoreKey
+	key           storetypes.StoreKey
 	cdc           codec.BinaryCodec
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
 	// The prototypical AccountI constructor.
-	proto func() types.AccountI
+	proto      func() types.AccountI
+	addressCdc address.Codec
 }
 
 var _ AccountKeeper = &accountKeeper{}
 
-// NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
+// NewAccountKeeper returns a new AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 // `maccPerms` is a map that takes accounts' addresses as keys, and their respective permissions as values. This map is used to construct
 // types.PermissionsForAddress and is used in keeper.ValidatePermissions. Permissions are plain strings,
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
-	maccPerms map[string][]string,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
+	maccPerms map[string][]string, bech32Prefix string,
 ) AccountKeeper {
 	// set KeyTable if it has not already been set
 	if !paramstore.HasKeyTable() {
@@ -126,12 +141,15 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
+	bech32Codec := newBech32Codec(bech32Prefix)
+
 	return accountKeeper{
 		key:           key,
 		proto:         proto,
 		cdc:           cdc,
 		paramSubspace: paramstore,
 		permAddrs:     permAddrs,
+		addressCdc:    bech32Codec,
 	}
 }
 
@@ -267,7 +285,7 @@ func (ak accountKeeper) decodeAccount(bz []byte) types.AccountI {
 }
 
 // MarshalAccount protobuf serializes an Account interface
-func (ak accountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) { //nolint:interfacer
+func (ak accountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) { // nolint:interfacer
 	return ak.cdc.MarshalInterface(accountI)
 }
 
@@ -280,3 +298,13 @@ func (ak accountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 
 // GetCodec return codec.Codec object used by the keeper
 func (ak accountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
+
+// add getter for bech32Prefix
+func (ak accountKeeper) getBech32Prefix() (string, error) {
+	bech32Codec, ok := ak.addressCdc.(bech32Codec)
+	if !ok {
+		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.addressCdc)
+	}
+
+	return bech32Codec.bech32Prefix, nil
+}

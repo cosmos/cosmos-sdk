@@ -5,7 +5,7 @@ reviews:
     high_level_summary: true
     poem: false
     review_status: true
-    collapse_walkthrough: 
+    collapse_walkthrough: true
     path_filters:
         - "!api/"
     path_instructions:

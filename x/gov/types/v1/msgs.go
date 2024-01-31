@@ -2,6 +2,7 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/x/gov/types/v1beta1"
 
@@ -130,4 +131,18 @@ func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal
 		ProposalId: proposalID,
 		Proposer:   proposer,
 	}
+}
+
+// GetSudoedMsg returns the cache values from the MsgSudoExec.Msg if present.
+func (msg MsgSudoExec) GetSudoedMsg() (sdk.Msg, error) {
+	if msg.Msg == nil {
+		return nil, errors.New("message is empty")
+	}
+
+	msgAny, ok := msg.Msg.GetCachedValue().(sdk.Msg)
+	if !ok {
+		return nil, fmt.Errorf("messages contains %T which is not a sdk.MsgRequest", msgAny)
+	}
+
+	return msgAny, nil
 }

@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#](https://github.com/cosmos/cosmos-sdk/pull/) Add `MsgSudoExec` for allowing executing any message as a sudo.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Add message based params configuration.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote to proposals.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals.

@@ -176,7 +176,7 @@ import (
 )
 
 type QueryHandlerRouter interface {
-	RegisterQueryHandler(msgName string, handler func(ctx context.Context, msg protoiface.MessageV1) (msgResp protoiface.MessageV1, err error), aliases ...string)
+	RegisterQueryHandler(msgName string, handler func(ctx context.Context, req protoiface.MessageV1) (resp protoiface.MessageV1, err error))
 }
 
 type HasQueryHandler interface {
@@ -194,27 +194,20 @@ The difference between gRPC handlers and query handlers is that we expect query 
 in consensus by other modules. Non consensus queries should be registered outside of the state machine itself, and we will
 provide guidelines on how to do so with serverv2.
 
+As a consequence queries would be now mapped by their message name. 
 
-### Consensus Message Handlers
+We can provide JSON exposure of the Query APIs following this rest API format:
+
+```
+method: POST
+path: /msg_name
+ReqBody: protojson.Marshal(msg)
+----
+RespBody: protojson.Marshal(msgResp)
+```
 
 
-## Abandoned Ideas (Optional)
-
-> As RFCs evolve, it is common that there are ideas that are abandoned. Rather than simply deleting them from the 
-> document, you should try to organize them into sections that make it clear they're abandoned while explaining why they 
-> were abandoned.
-> 
-> When sharing your RFC with others or having someone look back on your RFC in the future, it is common to walk the same 
-> path and fall into the same pitfalls that we've since matured from. Abandoned ideas are a way to recognize that path 
-> and explain the pitfalls and why they were abandoned.
-
-## Decision
-
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through. 
-
-## Consequences (optional)
+## Consequences
 
 > This section describes the resulting context, after applying the decision. All
 > consequences should be listed here, not just the "positive" ones. A particular
@@ -223,24 +216,23 @@ provide guidelines on how to do so with serverv2.
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section
-> describing these incompatibilities and their severity. The ADR must explain
-> how the author proposes to deal with these incompatibilities. ADR submissions
-> without a sufficient backwards compatibility treatise may be rejected outright.
+Backwards compatibility is guaranteed: adopting this API will not cause breakages at client level, the developer can still
+use gRPC servers.
 
 ### Positive
 
-> {positive consequences}
+- Allows modules to be compiled to tinyGO. 
+- Reduces the cosmos-sdk's learning curve, since understanding gRPC semantics is not a must anymore.
+- Allows other modules to extend existing modules behaviour using pre and post msg handlers, without forking.
+- The system becomes overall more simple as gRPC is not anymore a hard dependency and requirement for the state machine.
 
 ### Negative
 
-> {negative consequences}
+- Pre and Post msg handlers are a new concept that module developers need to learn (although not immediately).
 
 ### Neutral
 
 > {neutral consequences}
-
-
 
 ### References
 

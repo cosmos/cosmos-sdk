@@ -77,7 +77,7 @@ transactions in your application:
 To submit an unordered transaction, the client must set the `unordered` flag to
 `true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
 used as a TTL for the transaction and is used to provide replay protection. See
-[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-account.md)
+[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md)
 for more details.
 
 ### Params

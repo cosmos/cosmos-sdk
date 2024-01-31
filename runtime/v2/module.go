@@ -206,17 +206,17 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 
 func ProvideKVStoreService(config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
 	storeKey := ProvideKVStoreKey(config, key, app)
-	return kvStoreService{key: storeKey}
+	return stf.NewKVStoreService([]byte(storeKey.Name()))
 }
 
 func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {
 	storeKey := ProvideMemoryStoreKey(key, app)
-	return memStoreService{key: storeKey}
+	return stf.NewMemoryStoreService([]byte(storeKey.Name()))
 }
 
 func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
 	storeKey := ProvideTransientStoreKey(key, app)
-	return transientStoreService{key: storeKey}
+	return stf.NewTransientStoreService([]byte(storeKey.Name()))
 }
 
 func ProvideEventService() event.Service {

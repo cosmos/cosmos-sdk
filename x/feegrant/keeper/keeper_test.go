@@ -33,7 +33,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.addrs = simtestutil.CreateIncrementalAccounts(4)
+	suite.addrs = simtestutil.CreateIncrementalAccounts(20)
 	key := sdk.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
@@ -41,10 +41,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
+	for i := 0; i < len(suite.addrs); i++ {
+		suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[i])).AnyTimes()
+	}
 
 	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper)
 	suite.ctx = testCtx.Ctx
@@ -447,7 +446,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 			}
 			err := suite.feegrantKeeper.GrantAllowance(suite.ctx, tc.granter, tc.grantee, tc.allowance)
 			suite.NoError(err)
-			suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx)
+			suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx, 5)
 			grant, err := suite.feegrantKeeper.GetAllowance(tc.ctx, tc.granter, tc.grantee)
 			if tc.expErrMsg != "" {
 				suite.Error(err)

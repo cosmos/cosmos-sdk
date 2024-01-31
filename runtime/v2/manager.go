@@ -6,12 +6,20 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 	"golang.org/x/exp/maps"
+	"google.golang.org/grpc"
+	protobuf "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
+	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -50,8 +58,6 @@ func NewMMv2(config *runtimev2.Module, modules map[string]appmodule.AppModule) *
 
 // BeginBlock runs the begin-block logic of all modules
 func (m *MMv2) BeginBlock() func(ctx context.Context) error {
-	// TODO rewrap the context into sdk.Context
-
 	return func(ctx context.Context) error {
 		for _, moduleName := range m.config.BeginBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasBeginBlocker); ok {
@@ -67,8 +73,6 @@ func (m *MMv2) BeginBlock() func(ctx context.Context) error {
 
 // EndBlock runs the end-block logic of all modules and tx validator updates
 func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)) {
-	// TODO rewrap the context into sdk.Context
-
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	endBlock := func(ctx context.Context) error {
@@ -133,8 +137,6 @@ func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate f
 
 // PreBlocker runs the pre-block logic of all modules
 func (m *MMv2) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error {
-	// TODO rewrap the context into sdk.Context
-
 	return func(ctx context.Context, txs []transaction.Tx) error {
 		for _, moduleName := range m.config.PreBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasPreBlocker); ok {
@@ -150,8 +152,6 @@ func (m *MMv2) PreBlocker() func(ctx context.Context, txs []transaction.Tx) erro
 
 // TxValidators validates incoming transactions
 func (m *MMv2) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
-	// TODO rewrap the context into sdk.Context
-
 	return func(ctx context.Context, tx transaction.Tx) error {
 		for _, moduleName := range m.config.TxValidation {
 			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[transaction.Tx]); ok {
@@ -165,14 +165,108 @@ func (m *MMv2) TxValidation() func(ctx context.Context, tx transaction.Tx) error
 	}
 }
 
-// TODO refactor
-func (m *MMv2) RegisterMsgs(builder *stf.MsgRouterBuilder) error { // most important part of the PR to finish
+// RegisterServices registers all module services.
+func (m *MMv2) RegisterServices(app *App) error {
 	for _, module := range m.modules {
-		_ = module
-		// 	builder.RegisterHandler()
-		// 	builder.RegisterPostHandler()
-		// 	builder.RegisterPreHandler()
+		// register msg + query
+		if services, ok := module.(appmodule.HasServices); ok {
+			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
+				return err
+			}
+		}
+
+		// TODO: register pre and post msg
 	}
 
 	return nil
+}
+func registerServices(s appmodule.HasServices, app *App, registry *protoregistry.Files) error {
+	c := &configurator{
+		cdc:            app.cdc,
+		stfQueryRouter: app.queryRouterBuilder,
+		stfMsgRouter:   app.msgRouterBuilder,
+		registry:       registry,
+		err:            nil,
+	}
+	return s.RegisterServices(c)
+}
+
+var _ grpc.ServiceRegistrar = (*configurator)(nil)
+
+type configurator struct {
+	cdc            codec.BinaryCodec
+	stfQueryRouter *stf.MsgRouterBuilder
+	stfMsgRouter   *stf.MsgRouterBuilder
+	registry       *protoregistry.Files
+	err            error
+}
+
+func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
+	// first we check if it's a msg server
+	prefSd, err := c.registry.FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
+	if err != nil {
+		c.err = fmt.Errorf("register service: unable to find protov2 service descriptor: please make sure protov2 API counterparty is imported: %s", sd.ServiceName)
+		return
+	}
+
+	if !protobuf.HasExtension(prefSd.(protoreflect.ServiceDescriptor).Options(), cosmosmsg.E_Service) {
+		err = c.registerQueryHandlers(sd, ss)
+		if err != nil {
+			c.err = err
+		}
+	} else {
+		err = c.registerMsgHandlers(sd, ss)
+		if err != nil {
+			c.err = err
+		}
+	}
+}
+
+func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
+	for _, md := range sd.Methods {
+		// TODO(tip): what if a query is not deterministic?
+		err := registerMethod(c.cdc, c.stfQueryRouter, sd, md, ss)
+		if err != nil {
+			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
+		}
+	}
+	return nil
+}
+
+func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
+	for _, md := range sd.Methods {
+		err := registerMethod(c.cdc, c.stfMsgRouter, sd, md, ss)
+		if err != nil {
+			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
+		}
+	}
+	return nil
+}
+
+func registerMethod(cdc codec.BinaryCodec, stfRouter *stf.MsgRouterBuilder, sd *grpc.ServiceDesc, md grpc.MethodDesc, ss interface{}) error {
+	requestName, err := protocompat.RequestFullNameFromMethodDesc(sd, md)
+	if err != nil {
+		return err
+	}
+
+	responseName, err := protocompat.ResponseFullNameFromMethodDesc(sd, md)
+	if err != nil {
+		return err
+	}
+
+	// now we create the hybrid handler
+	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, md, ss)
+	if err != nil {
+		return err
+	}
+
+	responseV2Type, err := protoregistry.GlobalTypes.FindMessageByName(responseName)
+	if err != nil {
+		return err
+	}
+
+	return stfRouter.RegisterHandler(string(requestName), func(ctx context.Context, msg transaction.Type) (resp transaction.Type, err error) {
+		resp = responseV2Type.New().Interface()
+		return resp, hybridHandler(ctx, msg.(protoiface.MessageV1), resp.(protoiface.MessageV1))
+	})
 }

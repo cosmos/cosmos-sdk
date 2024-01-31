@@ -119,8 +119,6 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 	}, nil
 }
 
-// --------------- execute -----------------
-
 // TrackDelegation tracks a delegation amount for any given vesting account type
 // given the amount of coins currently vesting and the current account balance
 // of the delegation denominations.
@@ -375,8 +373,6 @@ func (bva BaseVesting) Authenticate(ctx context.Context, msg *account_abstractio
 
 	return &account_abstractionv1.MsgAuthenticateResponse{}, nil
 }
-
-// --------------- Query -----------------
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (bva BaseVesting) IterateCoinEntries(

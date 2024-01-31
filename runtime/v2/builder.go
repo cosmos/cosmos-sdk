@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
+	"cosmossdk.io/server/v2/stf/branch"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"google.golang.org/grpc"
@@ -22,7 +23,7 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 )
 
-type branchFunc func(state store.GetReader) store.GetWriter
+type branchFunc func(state store.ReaderMap) store.WriterMap
 
 // AppBuilder is a type that is injected into a container by the runtime module
 // (as *AppBuilder) which can be used to create an app which is compatible with
@@ -159,16 +160,14 @@ func registerMethod(cdc codec.BinaryCodec, stfRouter *stf.MsgRouterBuilder, sd *
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(store store.Store, opts ...AppBuilderOption) (*App, error) {
+func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
 		opt(a)
 	}
 
 	// default branch
 	if a.branch == nil {
-		// a.branch = func(state store.GetReader) store.GetWriter {
-		// 	return branch.NewStore(state)
-		// }
+		a.branch = branch.DefaultNewWriterMap
 	}
 
 	// default tx validator
@@ -197,7 +196,7 @@ func (a *AppBuilder) Build(store store.Store, opts ...AppBuilderOption) (*App, e
 		valUpdate,
 		a.branch,
 	)
-	a.app.store = store
+	a.app.db = db
 
 	return a.app, nil
 }

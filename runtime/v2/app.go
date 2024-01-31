@@ -38,7 +38,7 @@ type App struct {
 	mempool             mempool.Mempool[transaction.Tx]
 	prepareBlockHandler coreappmanager.PrepareHandler[transaction.Tx]
 	verifyBlockHandler  coreappmanager.ProcessHandler[transaction.Tx]
-	store               store.Store
+	db                  store.Store
 
 	// app configuration
 	logger    log.Logger
@@ -82,7 +82,7 @@ func (a *App) Load() error {
 
 	appManagerBuilder := appmanager.Builder[transaction.Tx]{
 		STF:                 a.stf,
-		DB:                  a.store,
+		DB:                  a.db,
 		ValidateTxGasLimit:  a.config.GasConfig.ValidateTxGasLimit,
 		QueryGasLimit:       a.config.GasConfig.QueryGasLimit,
 		SimulationGasLimit:  a.config.GasConfig.SimulationGasLimit,

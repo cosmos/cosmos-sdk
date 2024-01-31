@@ -2,14 +2,14 @@
 
 `ProcessProposal` handles the validation of a proposal from `PrepareProposal`,
 which also includes a block header. Meaning, that after a block has been proposed
-the other validators have the right to vote on a block. The validator in the
+the other validators have the right to accept or reject that block. The validator in the
 default implementation of `PrepareProposal` runs basic validity checks on each
 transaction.
 
 Note, `ProcessProposal` MAY NOT be non-deterministic, i.e. it must be deterministic.
 This means if `ProcessProposal` panics or fails and we reject, all honest validator
-processes will prevote nil and the CometBFT round will proceed again until a valid
-proposal is proposed.
+processes should reject (i.e., prevote nil). If so, then CometBFT will start a new round with a new block proposal, and the same cycle will happen with `PrepareProposal`
+and `ProcessProposal` for the new proposal.
 
 Here is the implementation of the default implementation:
 
@@ -24,8 +24,8 @@ provided in the proposal DO NOT exceed the maximum block gas and `maxtxbytes` (i
 
 ```go
 processOpt := func(app *baseapp.BaseApp) {
-abciPropHandler := baseapp.NewDefaultProposalHandler(mempool, app)
-app.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
+    abciPropHandler := baseapp.NewDefaultProposalHandler(mempool, app)
+    app.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
 }
 
 baseAppOptions = append(baseAppOptions, processOpt)

@@ -71,11 +71,11 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 ) {
 	sender := accountstd.Sender(ctx)
 	if sender == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find sender address from context")
+		return nil, sdkerrors.ErrInvalidAddress.Wrap("Cannot find sender address from context")
 	}
 	to := accountstd.Whoami(ctx)
 	if to == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
+		return nil, sdkerrors.ErrInvalidAddress.Wrap("Cannot find account address from context")
 	}
 
 	toAddress, err := bva.addressCodec.BytesToString(to)
@@ -140,10 +140,10 @@ func (bva *BaseVesting) TrackDelegation(
 			return err
 		}
 
-		// Panic if the delegation amount is zero or if the base coins does not
+		// return error if the delegation amount is zero or if the base coins does not
 		// exceed the desired delegation amount.
 		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
-			sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
+			return sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
 		}
 
 		// compute x and y per the specification, where:
@@ -188,7 +188,7 @@ func (bva *BaseVesting) TrackDelegation(
 // CONTRACT: The account's coins and undelegation coins must be sorted.
 func (bva *BaseVesting) TrackUndelegation(ctx context.Context, amount sdk.Coins) error {
 	for _, coin := range amount {
-		// panic if the undelegation amount is zero
+		// return error if the undelegation amount is zero
 		if coin.Amount.IsZero() {
 			return sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins")
 		}

@@ -34,8 +34,8 @@ const (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type (
-	VerifyVoteExtensionFunc func(context.Context, store.GetReader, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
-	ExtendVoteFunc          func(context.Context, store.GetReader, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
+	VerifyVoteExtensionFunc func(context.Context, store.Reader, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+	ExtendVoteFunc          func(context.Context, store.Reader, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
 )
 
 type Consensus[T transaction.Tx] struct {
@@ -443,7 +443,12 @@ func (c *Consensus[T]) VerifyVoteExtension(ctx context.Context, req *abci.Reques
 		return nil, err
 	}
 
-	resp, err := c.verifyVoteExt(ctx, latestStore, req)
+	reader, err := latestStore.GetReader([]byte("TODO"))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.verifyVoteExt(ctx, reader, req)
 	if err != nil {
 		c.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
@@ -479,7 +484,12 @@ func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abci.RequestExtendVo
 		return nil, err
 	}
 
-	resp, err := c.extendVote(ctx, latestStore, req)
+	reader, err := latestStore.GetReader([]byte("TODO"))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.extendVote(ctx, reader, req)
 	if err != nil {
 		c.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
 		return &abci.ResponseExtendVote{}, nil

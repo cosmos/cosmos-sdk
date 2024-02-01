@@ -134,7 +134,7 @@ func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal
 }
 
 // GetSudoedMsg returns the cache values from the MsgSudoExec.Msg if present.
-func (msg MsgSudoExec) GetSudoedMsg() (sdk.Msg, error) {
+func (msg *MsgSudoExec) GetSudoedMsg() (sdk.Msg, error) {
 	if msg.Msg == nil {
 		return nil, errors.New("message is empty")
 	}
@@ -145,4 +145,15 @@ func (msg MsgSudoExec) GetSudoedMsg() (sdk.Msg, error) {
 	}
 
 	return msgAny, nil
+}
+
+// SetSudoedMsg sets a sdk.Msg into the MsgSudoExec.Msg.
+func (msg *MsgSudoExec) SetSudoedMsg(input sdk.Msg) (*MsgSudoExec, error) {
+	any, err := sdktx.SetMsg(input)
+	if err != nil {
+		return nil, err
+	}
+	msg.Msg = any
+
+	return msg, nil
 }

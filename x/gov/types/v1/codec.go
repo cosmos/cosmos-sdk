@@ -19,7 +19,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgExecLegacyContent{}, "cosmos-sdk/v1/MsgExecLegacyContent")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/gov/v1/MsgUpdateParams")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateMessageParams{}, "x/gov/v1/MsgUpdateMessageParams")
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateMessageParams{}, "cosmos-sdk/x/gov/v1/MsgSudoExec")
+	legacy.RegisterAminoMsg(cdc, &MsgSudoExec{}, "cosmos-sdk/x/gov/v1/MsgSudoExec")
 }
 
 // RegisterInterfaces registers the interfaces types with the Interface Registry.

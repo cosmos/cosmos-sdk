@@ -11,7 +11,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/client/cli"
-
 	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"

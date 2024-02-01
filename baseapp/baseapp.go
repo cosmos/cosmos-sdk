@@ -83,7 +83,7 @@ type BaseApp struct {
 	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
 	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
 	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal
+	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal handler
 	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
 	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
 	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
@@ -111,8 +111,8 @@ type BaseApp struct {
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
 	// - processProposalState: Used for ProcessProposal, which is set based on the
-	// the previous block's state. This state is never committed. In case of
-	// multiple rounds, the state is always reset to the previous block's state.
+	// previous block's state. This state is never committed. In case of multiple
+	// consensus rounds, the state is always reset to the previous block's state.
 	//
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
 	// previous block's state. This state is committed.
@@ -727,7 +727,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 			return resp, err
 		}
 
-		// append BeginBlock attributes to all events in the EndBlock response
+		// append BeginBlock attributes to all events in the BeginBlock response
 		for i, event := range resp.Events {
 			resp.Events[i].Attributes = append(
 				event.Attributes,

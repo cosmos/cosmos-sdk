@@ -114,9 +114,11 @@ func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDepen
 	chainID := a.hs.GetHeaderInfo(ctx).ChainID
 
 	// test gas meter
-	gasBefore := a.gs.GetGasMeter(ctx).GasConsumedToLimit()
-	a.gs.GetGasMeter(ctx).ConsumeGas(10, "test")
-	gasAfter := a.gs.GetGasMeter(ctx).GasConsumedToLimit()
+	gasBefore := a.gs.GetGasMeter(ctx).Limit()
+	a.gs.GetGasMeter(ctx).Consume(gasBefore, "before")
+	a.gs.GetGasMeter(ctx).Consume(10, "test")
+	gasAfter := a.gs.GetGasMeter(ctx).Limit()
+	a.gs.GetGasMeter(ctx).Consume(gasBefore, "After")
 
 	return &counterv1.MsgTestDependenciesResponse{
 		ChainId:   chainID,

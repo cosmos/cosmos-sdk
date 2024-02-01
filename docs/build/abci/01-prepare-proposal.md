@@ -37,8 +37,8 @@ favor of a custom implementation in [`app.go`](./01-app-go-v2.md):
 
 ```go
 prepareOpt := func(app *baseapp.BaseApp) {
-abciPropHandler := baseapp.NewDefaultProposalHandler(mempool, app)
-app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
+    abciPropHandler := baseapp.NewDefaultProposalHandler(mempool, app)
+    app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler()))
 }
 
 baseAppOptions = append(baseAppOptions, prepareOpt)

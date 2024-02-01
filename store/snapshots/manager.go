@@ -233,6 +233,30 @@ func (m *Manager) createSnapshot(height uint64, ch chan<- io.ReadCloser) {
 	}
 }
 
+// CreateMigration creates a migration snapshot and writes it to the given writer.
+// It is used to migrate the state from the original store to the store/v2.
+func (m *Manager) CreateMigration(height uint64, protoWriter WriteCloser) error {
+	if m == nil {
+		return errorsmod.Wrap(store.ErrLogic, "Snapshot Manager is nil")
+	}
+
+	err := m.begin(opSnapshot)
+	if err != nil {
+		return err
+	}
+	defer m.end()
+
+	go func() {
+		if err := m.commitSnapshotter.Snapshot(height, protoWriter); err != nil {
+			protoWriter.CloseWithError(err)
+			return
+		}
+		protoWriter.Close()
+	}()
+
+	return nil
+}
+
 // List lists snapshots, mirroring ABCI ListSnapshots. It can be concurrent with other operations.
 func (m *Manager) List() ([]*types.Snapshot, error) {
 	return m.store.List()

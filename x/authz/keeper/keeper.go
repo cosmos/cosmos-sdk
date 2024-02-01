@@ -384,6 +384,11 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context, limit int) error 
 
 	count := 0
 	for ; iterator.Valid(); iterator.Next() {
+		// limit the amount of iterations to avoid taking too much time
+		if count >= limit {
+			return nil
+		}
+
 		var queueItem authz.GrantQueueItem
 		if err := k.cdc.Unmarshal(iterator.Value(), &queueItem); err != nil {
 			return err
@@ -400,11 +405,7 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context, limit int) error 
 			store.Delete(grantStoreKey(grantee, granter, typeURL))
 		}
 
-		// limit the amount of iterations to avoid taking too much time
 		count++
-		if count == limit {
-			return nil
-		}
 	}
 
 	return nil

@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
 
@@ -617,8 +616,10 @@ func marshalYaml(i interface{}) (interface{}, error) {
 
 // Clawback Vesting Account
 
-var _ vestexported.VestingAccount = (*ClawbackVestingAccount)(nil)
-var _ authtypes.GenesisAccount = (*ClawbackVestingAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*ClawbackVestingAccount)(nil)
+	_ authtypes.GenesisAccount    = (*ClawbackVestingAccount)(nil)
+)
 
 // NewClawbackVestingAccount returns a new ClawbackVestingAccount
 func NewClawbackVestingAccount(
@@ -702,7 +703,6 @@ func CoinEq(a, b sdk.Coins) bool {
 func (va ClawbackVestingAccount) Validate() error {
 	if va.GetStartTime() >= va.GetEndTime() {
 		return errors.New("vesting start-time must be before end-time")
-
 	}
 
 	lockupEnd := va.GetStartTime()
@@ -754,7 +754,7 @@ func NewClawbackGrantAction(
 	grantStartTime int64,
 	grantLockupPeriods, grantVestingPeriods []Period,
 	grantCoins sdk.Coins,
-) exported.AddGrantAction {
+) vestexported.AddGrantAction {
 	return clawbackGrantAction{
 		funderAddress:       funderAddress,
 		grantStartTime:      grantStartTime,
@@ -764,7 +764,7 @@ func NewClawbackGrantAction(
 	}
 }
 
-func (cga clawbackGrantAction) AddToAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
+func (cga clawbackGrantAction) AddToAccount(ctx sdk.Context, rawAccount vestexported.VestingAccount) error {
 	cva, ok := rawAccount.(*ClawbackVestingAccount)
 	if !ok {
 		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
@@ -778,10 +778,9 @@ func (cga clawbackGrantAction) AddToAccount(ctx sdk.Context, rawAccount exported
 	}
 	cva.addGrant(ctx, cga.grantStartTime, cga.grantLockupPeriods, cga.grantVestingPeriods, cga.grantCoins)
 	return nil
-
 }
 
-func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, action exported.AddGrantAction) error {
+func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, action vestexported.AddGrantAction) error {
 	return action.AddToAccount(ctx, va)
 }
 
@@ -865,7 +864,7 @@ type clawbackAction struct {
 	bk        BankKeeper
 }
 
-func NewClawbackAction(requestor, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper) exported.ClawbackAction {
+func NewClawbackAction(requestor, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper) vestexported.ClawbackAction {
 	return clawbackAction{
 		requestor: requestor,
 		dest:      dest,
@@ -874,7 +873,7 @@ func NewClawbackAction(requestor, dest sdk.AccAddress, ak AccountKeeper, bk Bank
 	}
 }
 
-func (ca clawbackAction) TakeFromAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
+func (ca clawbackAction) TakeFromAccount(ctx sdk.Context, rawAccount vestexported.VestingAccount) error {
 	cva, ok := rawAccount.(*ClawbackVestingAccount)
 	if !ok {
 		return fmt.Errorf("clawback expects *ClawbackVestingAccount, got %T", rawAccount)
@@ -885,7 +884,7 @@ func (ca clawbackAction) TakeFromAccount(ctx sdk.Context, rawAccount exported.Ve
 	return cva.clawback(ctx, ca.dest, ca.ak, ca.bk)
 }
 
-func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, action exported.ClawbackAction) error {
+func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, action vestexported.ClawbackAction) error {
 	return action.TakeFromAccount(ctx, va)
 }
 

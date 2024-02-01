@@ -3,6 +3,7 @@ package server
 // DONTCOVER
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
@@ -23,8 +24,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"encoding/hex"
 
 	"cosmossdk.io/tools/rosetta"
 	crgserver "cosmossdk.io/tools/rosetta/lib/server"

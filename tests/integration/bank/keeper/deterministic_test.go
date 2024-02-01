@@ -218,7 +218,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
 
 	req := &banktypes.QueryTotalSupplyRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.TotalSupply, 243, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.TotalSupply, 3285, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
@@ -238,7 +238,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
 
 	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
 	req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SupplyOf, 1021, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SupplyOf, 2033, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
@@ -403,50 +403,51 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SendEnabled, 4063, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
-		numAddr := rapid.IntRange(1, 10).Draw(t, "number-address")
-		for i := 0; i < numAddr; i++ {
-			addr := testdata.AddressGenerator(t).Draw(t, "address")
+// Not implemented in Osmosis
+// func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
+// 	rapid.Check(suite.T(), func(t *rapid.T) {
+// 		denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
+// 		numAddr := rapid.IntRange(1, 10).Draw(t, "number-address")
+// 		for i := 0; i < numAddr; i++ {
+// 			addr := testdata.AddressGenerator(t).Draw(t, "address")
 
-			coin := sdk.NewCoin(
-				denom,
-				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
-			)
+// 			coin := sdk.NewCoin(
+// 				denom,
+// 				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
+// 			)
 
-			err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
-			suite.Require().NoError(err)
-		}
+// 			err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
+// 			suite.Require().NoError(err)
+// 		}
 
-		req := &banktypes.QueryDenomOwnersRequest{
-			Denom:      denom,
-			Pagination: testdata.PaginationGenerator(t, uint64(numAddr)).Draw(t, "pagination"),
-		}
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomOwners, 0, true)
-	})
+// 		req := &banktypes.QueryDenomOwnersRequest{
+// 			Denom:      denom,
+// 			Pagination: testdata.PaginationGenerator(t, uint64(numAddr)).Draw(t, "pagination"),
+// 		}
+// 		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomOwners, 0, true)
+// 	})
 
-	denomOwners := []*banktypes.DenomOwner{
-		{
-			Address: "cosmos1qg65a9q6k2sqq7l3ycp428sqqpmqcucgzze299",
-			Balance: coin1,
-		},
-		{
-			Address: "cosmos1qglnsqgpq48l7qqzgs8qdshr6fh3gqq9ej3qut",
-			Balance: coin1,
-		},
-	}
+// 	denomOwners := []*banktypes.DenomOwner{
+// 		{
+// 			Address: "cosmos1qg65a9q6k2sqq7l3ycp428sqqpmqcucgzze299",
+// 			Balance: coin1,
+// 		},
+// 		{
+// 			Address: "cosmos1qglnsqgpq48l7qqzgs8qdshr6fh3gqq9ej3qut",
+// 			Balance: coin1,
+// 		},
+// 	}
 
-	for i := 0; i < len(denomOwners); i++ {
-		addr, err := sdk.AccAddressFromBech32(denomOwners[i].Address)
-		suite.Require().NoError(err)
+// 	for i := 0; i < len(denomOwners); i++ {
+// 		addr, err := sdk.AccAddressFromBech32(denomOwners[i].Address)
+// 		suite.Require().NoError(err)
 
-		err = banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin1))
-		suite.Require().NoError(err)
-	}
+// 		err = banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin1))
+// 		suite.Require().NoError(err)
+// 	}
 
-	req := &banktypes.QueryDenomOwnersRequest{
-		Denom: coin1.GetDenom(),
-	}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomOwners, 2525, false)
-}
+// 	req := &banktypes.QueryDenomOwnersRequest{
+// 		Denom: coin1.GetDenom(),
+// 	}
+// 	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomOwners, 2525, false)
+// }

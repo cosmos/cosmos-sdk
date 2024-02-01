@@ -3,11 +3,11 @@
     "periods": [
         {
             "coins": "10stake",
-            "length": 2592000
+            "length_seconds": 2592000
         },
         {
             "coins": "10stake",
-            "length":2592000
+            "length_seconds":2592000
         }
     ]
 }

@@ -440,8 +440,8 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 	return nil
 }
 
-// 2 blocks after osmosis first epoch
-var osmosisFirstEpochHeight = int64(12834361)
+// // 2 blocks after osmosis first epoch
+// var osmosisFirstEpochHeight = int64(12834361)
 
 // setBalance sets the coin balance for an account by address.
 func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {

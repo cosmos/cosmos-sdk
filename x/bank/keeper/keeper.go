@@ -31,8 +31,8 @@ type Keeper interface {
 	HasSupply(ctx sdk.Context, denom string) bool
 	GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
-	GetSupplyOffset(ctx sdk.Context, denom string) sdk.Int
-	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
+	GetSupplyOffset(ctx sdk.Context, denom string) math.Int
+	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount math.Int)
 	GetSupplyWithOffset(ctx sdk.Context, denom string) sdk.Coin
 	GetPaginatedTotalSupplyWithOffsets(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupplyWithOffsets(ctx sdk.Context, cb func(sdk.Coin) bool)

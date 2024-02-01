@@ -6,5 +6,5 @@ import (
 )
 
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	k.RemoveExpiredAllowances(ctx)
+	k.RemoveExpiredAllowances(ctx, 200)
 }

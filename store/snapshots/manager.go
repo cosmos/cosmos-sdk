@@ -3,7 +3,6 @@ package snapshots
 import (
 	"bytes"
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -71,8 +70,6 @@ const (
 
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
-
-var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
 
 // NewManager creates a new manager.
 func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger log.Logger) *Manager {

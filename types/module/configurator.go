@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cosmos/gogoproto/grpc"
@@ -45,6 +46,8 @@ type Configurator interface {
 	// will panic. If the ConsensusVersion bump does not introduce any store
 	// changes, then a no-op function must be registered here.
 	RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error
+
+	Register(moduleName string, fromVersion uint64, handler func(context.Context) error) error
 }
 
 type configurator struct {
@@ -117,6 +120,13 @@ func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, 
 	c.migrations[moduleName][fromVersion] = handler
 
 	return nil
+}
+
+// Register implements the Configurator.Register method
+func (c *configurator) Register(moduleName string, fromVersion uint64, handler func(context.Context) error) error {
+	return c.RegisterMigration(moduleName, fromVersion, func(sdkCtx sdk.Context) error {
+		return handler(sdkCtx)
+	})
 }
 
 // runModuleMigrations runs all in-place store migrations for one given module from a

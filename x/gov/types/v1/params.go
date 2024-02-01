@@ -21,9 +21,11 @@ var (
 	DefaultThreshold              = sdk.NewDecWithPrec(5, 1)
 	DefaultVetoThreshold          = sdk.NewDecWithPrec(334, 3)
 	DefaultMinInitialDepositRatio = sdk.ZeroDec()
-	DefaultBurnProposalPrevote    = false // set to false to replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteQuorom         = false // set to false to  replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteVeto           = true  // set to true to replicate behavior of when this change was made (0.47)
+	DefaultBurnProposalPrevote    = false                         // set to false to replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteQuorom         = false                         // set to false to  replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteVeto           = true                          // set to true to replicate behavior of when this change was made (0.47)
+	DefaultMinDepositRatio        = sdk.MustNewDecFromStr("0.01") // NOTE: backport from v50
+
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -53,7 +55,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 // NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod, votingPeriod time.Duration,
-	quorum, threshold, vetoThreshold, minInitialDepositRatio string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
+	quorum, threshold, vetoThreshold, minInitialDepositRatio string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio string,
 ) Params {
 	return Params{
 		MinDeposit:                 minDeposit,
@@ -66,6 +68,7 @@ func NewParams(
 		BurnProposalDepositPrevote: burnProposalDeposit,
 		BurnVoteQuorum:             burnVoteQuorum,
 		BurnVoteVeto:               burnVoteVeto,
+		MinDepositRatio:            minDepositRatio,
 	}
 }
 
@@ -82,6 +85,7 @@ func DefaultParams() Params {
 		DefaultBurnProposalPrevote,
 		DefaultBurnVoteQuorom,
 		DefaultBurnVoteVeto,
+		DefaultMinDepositRatio.String(),
 	)
 }
 

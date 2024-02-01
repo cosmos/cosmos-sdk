@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -147,6 +148,11 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	if err != nil {
 		return nil, err
 	}
+
+	if err := validateDeposit(msg.Amount); err != nil {
+		return nil, err
+	}
+
 	votingStarted, err := k.Keeper.AddDeposit(ctx, msg.ProposalId, accAddr, msg.Amount)
 	if err != nil {
 		return nil, err
@@ -162,6 +168,15 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	}
 
 	return &v1.MsgDepositResponse{}, nil
+}
+
+// validateDeposit validates the deposit amount, do not use for initial deposit.
+func validateDeposit(amount sdk.Coins) error {
+	if !amount.IsValid() || !amount.IsAllPositive() {
+		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
+	}
+
+	return nil
 }
 
 // UpdateParams implements the MsgServer.UpdateParams method.

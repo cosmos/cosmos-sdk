@@ -3,7 +3,6 @@ package db
 import (
 	"bytes"
 	"fmt"
-	"sync"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -11,7 +10,6 @@ import (
 
 // PrefixDB wraps a namespace of another database as a logical database.
 type PrefixDB struct {
-	mtx    sync.Mutex
 	prefix []byte
 	db     store.RawDB
 }
@@ -108,8 +106,6 @@ func (pdb *PrefixDB) NewBatchWithSize(size int) store.RawBatch {
 
 // Close implements RawDB.
 func (pdb *PrefixDB) Close() error {
-	pdb.mtx.Lock()
-	defer pdb.mtx.Unlock()
 
 	return pdb.db.Close()
 }

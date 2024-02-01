@@ -842,6 +842,12 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	// fails. Hence, it's execution is deferred.
 	consumeBlockGas := func() {
 		if !blockGasConsumed {
+			defer func() {
+				// log and ignore, see: https://github.com/cosmos/cosmos-sdk/issues/19317
+				if err := recover(); err != nil {
+					ctx.Logger().Error("block gas limit exceeded", "err", err)
+				}
+			}()
 			blockGasConsumed = true
 			ctx.BlockGasMeter().ConsumeGas(
 				ctx.GasMeter().GasConsumedToLimit(), "block gas meter",

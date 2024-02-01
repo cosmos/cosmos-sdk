@@ -214,31 +214,38 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 
 	params, err := q.k.Params.Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
-	response := &v1.QueryParamsResponse{}
 
-	//nolint:staticcheck // needed for legacy parameters
-	switch req.ParamsType {
-	case v1.ParamDeposit:
-		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
-		response.DepositParams = &depositParams
+	return &v1.QueryParamsResponse{Params: &params}, nil
+}
 
-	case v1.ParamVoting:
-		votingParams := v1.NewVotingParams(params.VotingPeriod)
-		response.VotingParams = &votingParams
+// MessageBasedParams queries params for a specific message
+func (q queryServer) MessageBasedParams(ctx context.Context, req *v1.QueryMessageBasedParamsRequest) (*v1.QueryMessageBasedParamsResponse, error) {
+	if req == nil || req.MsgUrl == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
 
-	case v1.ParamTallying:
-		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
-		response.TallyParams = &tallyParams
-	default:
-		if len(req.ParamsType) > 0 {
-			return nil, status.Errorf(codes.InvalidArgument, "unknown params type: %s", req.ParamsType)
+	params, err := q.k.MessageBasedParams.Get(ctx, req.MsgUrl)
+	if err == nil {
+		return &v1.QueryMessageBasedParamsResponse{Params: &params}, nil
+	}
+
+	if errors.IsOf(err, collections.ErrNotFound) {
+		resp, err := q.Params(ctx, &v1.QueryParamsRequest{})
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-	}
-	response.Params = &params
 
-	return response, nil
+		return &v1.QueryMessageBasedParamsResponse{Params: &v1.MessageBasedParams{
+			VotingPeriod:  resp.Params.VotingPeriod,
+			Quorum:        resp.Params.Quorum,
+			Threshold:     resp.Params.Threshold,
+			VetoThreshold: resp.Params.VetoThreshold,
+		}}, nil
+	}
+
+	return nil, status.Error(codes.Internal, err.Error())
 }
 
 // Deposit queries single deposit information based on proposalID, depositAddr.
@@ -417,8 +424,11 @@ func (q legacyQueryServer) Votes(ctx context.Context, req *v1beta1.QueryVotesReq
 	}, nil
 }
 
-//nolint:staticcheck // this is needed for legacy param support
 func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
 	resp, err := q.qs.Params(ctx, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,
 	})
@@ -427,35 +437,29 @@ func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsR
 	}
 
 	response := &v1beta1.QueryParamsResponse{}
-
-	if resp.DepositParams == nil && resp.VotingParams == nil && resp.TallyParams == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid parameter type", req.ParamsType)
-	}
-
-	if resp.DepositParams != nil {
-		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
-		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
-	}
-
-	if resp.VotingParams != nil {
-		response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod)
-	}
-
-	if resp.TallyParams != nil {
-		quorum, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Quorum)
+	switch req.ParamsType {
+	case v1beta1.ParamDeposit:
+		minDeposit := sdk.NewCoins(resp.Params.MinDeposit...)
+		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.Params.MaxDepositPeriod)
+	case v1beta1.ParamVoting:
+		response.VotingParams = v1beta1.NewVotingParams(*resp.Params.VotingPeriod)
+	case v1beta1.ParamTallying:
+		quorum, err := sdkmath.LegacyNewDecFromStr(resp.Params.Quorum)
 		if err != nil {
 			return nil, err
 		}
-		threshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Threshold)
+		threshold, err := sdkmath.LegacyNewDecFromStr(resp.Params.Threshold)
 		if err != nil {
 			return nil, err
 		}
-		vetoThreshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.VetoThreshold)
+		vetoThreshold, err := sdkmath.LegacyNewDecFromStr(resp.Params.VetoThreshold)
 		if err != nil {
 			return nil, err
 		}
 
 		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, vetoThreshold)
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid parameter type", req.ParamsType)
 	}
 
 	return response, nil

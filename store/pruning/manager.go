@@ -1,7 +1,7 @@
 package pruning
 
 import (
-	"sync"
+	"sync/atomic"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
@@ -9,18 +9,10 @@ import (
 
 // Manager is an abstraction to handle pruning of SS and SC backends.
 type Manager struct {
-	mtx       sync.Mutex
-	isStarted bool
+	isStarted *atomic.Bool
 
-	stateStorage    store.VersionedDatabase
-	stateCommitment store.Committer
-
-	logger         log.Logger
-	storageOpts    Options
-	commitmentOpts Options
-
-	chStorage    chan struct{}
-	chCommitment chan struct{}
+	scPruner *pruner
+	ssPruner *pruner
 }
 
 // NewManager creates a new Manager instance.
@@ -29,138 +21,119 @@ func NewManager(
 	ss store.VersionedDatabase,
 	sc store.Committer,
 ) *Manager {
-	return &Manager{
-		stateStorage:    ss,
-		stateCommitment: sc,
-		logger:          logger,
-		storageOpts:     DefaultOptions(),
-		commitmentOpts:  DefaultOptions(),
+	m := &Manager{
+		isStarted: new(atomic.Bool),
+		scPruner:  newPruner(logger, DefaultOptions(), sc, "commitment"),
+		ssPruner:  newPruner(logger, DefaultOptions(), ss, "storage"),
 	}
+
+	return m
 }
 
 // SetStorageOptions sets the state storage options.
-func (m *Manager) SetStorageOptions(opts Options) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	m.storageOpts = opts
-}
+func (m *Manager) SetStorageOptions(opts Options) { m.ssPruner.setOptions(opts) }
 
 // SetCommitmentOptions sets the state commitment options.
-func (m *Manager) SetCommitmentOptions(opts Options) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	m.commitmentOpts = opts
-}
+func (m *Manager) SetCommitmentOptions(opts Options) { m.scPruner.setOptions(opts) }
 
 // Start starts the manager.
 func (m *Manager) Start() {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	if m.isStarted {
+	// if the CAS returns true then it means that the manager already started.
+	if !m.isStarted.CompareAndSwap(false, true) {
 		return
-	}
-	m.isStarted = true
-
-	if !m.storageOpts.Sync {
-		m.chStorage = make(chan struct{}, 1)
-		m.chStorage <- struct{}{}
-	}
-	if !m.commitmentOpts.Sync {
-		m.chCommitment = make(chan struct{}, 1)
-		m.chCommitment <- struct{}{}
 	}
 }
 
 // Stop stops the manager and waits for all goroutines to finish.
 func (m *Manager) Stop() {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	if !m.isStarted {
+	// if the CAS returns false then it means the manager did never start.
+	if !m.isStarted.CompareAndSwap(true, false) {
 		return
 	}
-	m.isStarted = false
-
-	if !m.storageOpts.Sync {
-		<-m.chStorage
-		close(m.chStorage)
-	}
-	if !m.commitmentOpts.Sync {
-		<-m.chCommitment
-		close(m.chCommitment)
+	for {
+		if m.ssPruner.donePruning() && m.scPruner.donePruning() {
+			return
+		}
 	}
 }
 
 // Prune prunes the state storage and state commitment.
 // It will check the pruning conditions and prune if necessary.
 func (m *Manager) Prune(height uint64) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
+	if !m.isStarted.Load() {
+		return
+	}
+	m.ssPruner.maybePrune(height)
+	m.scPruner.maybePrune(height)
+}
 
-	if !m.isStarted {
+func newPruner(
+	log log.Logger,
+	opts Options,
+	state interface{ Prune(height uint64) error },
+	name string,
+) *pruner {
+	pruner := &pruner{
+		logger:    log,
+		opts:      atomic.Pointer[Options]{},
+		isPruning: atomic.Bool{},
+		state:     state,
+		name:      name,
+	}
+	pruner.opts.Store(&opts)
+
+	return pruner
+}
+
+type pruner struct {
+	logger log.Logger
+
+	opts      atomic.Pointer[Options]
+	isPruning atomic.Bool
+
+	state interface{ Prune(height uint64) error }
+
+	name string // the name of the component being pruned (eg: state storage, commitment)
+}
+
+func (p *pruner) setOptions(opt Options) {
+	p.opts.Store(&opt)
+}
+
+func (p *pruner) maybePrune(currentHeight uint64) {
+	opts := p.opts.Load()
+	if !opts.ShouldPrune(currentHeight) {
 		return
 	}
 
-	// storage pruning
-	if m.storageOpts.Interval > 0 && height > m.storageOpts.KeepRecent && height%m.storageOpts.Interval == 0 {
-		pruneHeight := height - m.storageOpts.KeepRecent - 1
-		if m.storageOpts.Sync {
-			m.pruneStorage(pruneHeight)
-		} else {
-			// it will not block if the previous pruning is still running
-			select {
-			case _, stillOpen := <-m.chStorage:
-				if stillOpen {
-					go func() {
-						m.pruneStorage(pruneHeight)
-						m.chStorage <- struct{}{}
-					}()
-				}
-
-			default:
-				m.logger.Debug("storage pruning is still running; skipping", "version", pruneHeight)
-			}
-		}
+	heightToPrune := currentHeight - opts.KeepRecent - 1
+	// check if we can prune in sync or not
+	if opts.Sync {
+		p.prune(heightToPrune)
+		return
 	}
 
-	// commitment pruning
-	if m.commitmentOpts.Interval > 0 && height > m.commitmentOpts.KeepRecent && height%m.commitmentOpts.Interval == 0 {
-		pruneHeight := height - m.commitmentOpts.KeepRecent - 1
-		if m.commitmentOpts.Sync {
-			m.pruneCommitment(pruneHeight)
-		} else {
-			// it will not block if the previous pruning is still running
-			select {
-			case _, stillOpen := <-m.chCommitment:
-				if stillOpen {
-					go func() {
-						m.pruneCommitment(pruneHeight)
-						m.chCommitment <- struct{}{}
-					}()
-				}
+	// if we cannot prune in sync we'll prune async, if  the sync goroutine is done pruning. This will attempt
+	// to set isPruning from false to true, if it can't (because it's still true, hence blocked) then it will exit.
+	if !p.isPruning.CompareAndSwap(false, true) {
+		p.logger.Debug("storage pruning is still running; skipping", "name", p.name, "height", heightToPrune)
+		return
+	}
 
-			default:
-				m.logger.Debug("commitment pruning is still running; skipping", "version", pruneHeight)
-			}
-		}
+	go func() {
+		p.prune(heightToPrune)
+		p.isPruning.Store(false)
+	}()
+}
+
+func (p *pruner) prune(height uint64) {
+	p.logger.Debug("pruning state", "name", p.name, "height", height)
+	err := p.state.Prune(height)
+	if err != nil {
+		p.logger.Error("pruning state", "name", p.name, "height", height, "err", err)
 	}
 }
 
-func (m *Manager) pruneStorage(height uint64) {
-	m.logger.Debug("pruning state storage", "height", height)
-
-	if err := m.stateStorage.Prune(height); err != nil {
-		m.logger.Error("failed to prune state storage", "err", err)
-	}
-}
-
-func (m *Manager) pruneCommitment(height uint64) {
-	m.logger.Debug("pruning state commitment", "height", height)
-
-	if err := m.stateCommitment.Prune(height); err != nil {
-		m.logger.Error("failed to prune state commitment", "err", err)
-	}
+func (p *pruner) donePruning() bool {
+	return p.isPruning.Load() == false
 }

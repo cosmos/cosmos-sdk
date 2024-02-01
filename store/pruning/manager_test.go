@@ -76,6 +76,7 @@ func (s *PruningTestSuite) TestPruning() {
 		s.Require().NoError(err)
 
 		err = s.ss.ApplyChangeset(version, cs)
+		s.T().Log("stored version", version)
 		s.Require().NoError(err)
 		s.manager.Prune(version)
 	}

@@ -10,9 +10,9 @@ import (
 
 const (
 	// defaultChannelBufferSize is the default buffer size for the migration stream.
-	defaultChannelBufferSize = 1024 // TODO: need to be tuned.
+	defaultChannelBufferSize = 1024
 	// defaultStorageBufferSize is the default buffer size for the storage snapshotter.
-	defaultStorageBufferSize = 1024 // TODO: need to be tuned.
+	defaultStorageBufferSize = 1024
 )
 
 // Manager manages the migration of the whole state from store/v1 to store/v2.

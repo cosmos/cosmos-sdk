@@ -382,7 +382,7 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	msgResp, err := handler(sdkCtx, sudoedMsg)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to execute message; message %v", msg)
+		return nil, errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
 	}
 
 	// emit the events from the executed message

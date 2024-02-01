@@ -141,7 +141,7 @@ func (msg *MsgSudoExec) GetSudoedMsg() (sdk.Msg, error) {
 
 	msgAny, ok := msg.Msg.GetCachedValue().(sdk.Msg)
 	if !ok {
-		return nil, fmt.Errorf("messages contains %T which is not a sdk.MsgRequest", msgAny)
+		return nil, fmt.Errorf("messages contains %T which is not a sdk.Msg", msgAny)
 	}
 
 	return msgAny, nil

@@ -65,8 +65,8 @@ type MsgClient interface {
 	//
 	// Since: x/gov 1.0.0
 	UpdateMessageParams(ctx context.Context, in *MsgUpdateMessageParams, opts ...grpc.CallOption) (*MsgUpdateMessageParamsResponse, error)
-	// SudoExec defines a method to execute an inner message as the governance moduke.
-	// It permits to exectute any message from a proposal, even if they weren't meant to be governance proposals.
+	// SudoExec defines a method to execute an inner message as the governance module.
+	// It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
 	//
 	// Since: x/gov 1.0.0
 	SudoExec(ctx context.Context, in *MsgSudoExec, opts ...grpc.CallOption) (*MsgSudoExecResponse, error)
@@ -202,8 +202,8 @@ type MsgServer interface {
 	//
 	// Since: x/gov 1.0.0
 	UpdateMessageParams(context.Context, *MsgUpdateMessageParams) (*MsgUpdateMessageParamsResponse, error)
-	// SudoExec defines a method to execute an inner message as the governance moduke.
-	// It permits to exectute any message from a proposal, even if they weren't meant to be governance proposals.
+	// SudoExec defines a method to execute an inner message as the governance module.
+	// It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
 	//
 	// Since: x/gov 1.0.0
 	SudoExec(context.Context, *MsgSudoExec) (*MsgSudoExecResponse, error)

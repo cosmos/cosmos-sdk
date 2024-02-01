@@ -54,8 +54,8 @@ service Msg {
   // Since: x/gov 1.0.0
   rpc UpdateMessageParams(MsgUpdateMessageParams) returns (MsgUpdateMessageParamsResponse);
 
-  // SudoExec defines a method to execute an inner message as the governance moduke.
-  // It permits to exectute any message from a proposal, even if they weren't meant to be governance proposals.
+  // SudoExec defines a method to execute an inner message as the governance module.
+  // It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
   //
   // Since: x/gov 1.0.0
   rpc SudoExec(MsgSudoExec) returns (MsgSudoExecResponse);

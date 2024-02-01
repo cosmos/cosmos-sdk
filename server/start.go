@@ -99,11 +99,12 @@ const (
 	FlagMempoolMaxTxs = "mempool.max-txs"
 
 	// testnet keys
-	KeyIsTestnet  = "is-testnet"
-	KeyNewChainID = "new-chain-ID"
-	KeyNewOpAddr  = "new-operator-addr"
-	KeyNewValAddr = "new-validator-addr"
-	KeyUserPubKey = "user-pub-key"
+	KeyIsTestnet             = "is-testnet"
+	KeyNewChainID            = "new-chain-ID"
+	KeyNewOpAddr             = "new-operator-addr"
+	KeyNewValAddr            = "new-validator-addr"
+	KeyUserPubKey            = "user-pub-key"
+	KeyTriggerTestnetUpgrade = "trigger-testnet-upgrade"
 )
 
 // StartCmdOptions defines options that can be customized in `StartCmdWithOptions`,
@@ -636,6 +637,13 @@ on how old the block is. For instance, if a snapshot was taken weeks ago and we 
 to turn this into a testnet, it is possible lots of pending state needs to be committed
 (expiring locks, etc.). It is recommended that you should wait for this block to be committed
 before stopping the daemon.
+
+If the --trigger-testnet-upgrade flag is set, the upgrade handler specified by the flag will be run
+on the first block of the testnet.
+
+Regardless of whether the flag is set or not, if any new stores are introduced in the daemon being run,
+those stores will be registered in order to prevent panics. Therefore, you only need to set the flag if
+you want to test the upgrade handler itself.
 `,
 		Example: "in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
 		Args:    cobra.ExactArgs(2),
@@ -692,6 +700,7 @@ before stopping the daemon.
 	}
 
 	addStartNodeFlags(cmd, opts)
+	cmd.Flags().String(KeyTriggerTestnetUpgrade, "", "If set (example: \"v21\"), triggers the v21 upgrade handler to run on the first block of the testnet")
 	return cmd
 }
 

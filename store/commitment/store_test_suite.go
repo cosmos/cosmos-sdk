@@ -5,11 +5,11 @@ import (
 	"io"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -23,7 +23,7 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db dbm.DB, storeKeys []string, logger log.Logger) (*CommitStore, error)
+	NewStore func(db store.RawDB, storeKeys []string, logger log.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestSnapshotter() {

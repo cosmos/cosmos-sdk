@@ -1,12 +1,16 @@
-package store
+package proof
 
 import (
 	"crypto/sha256"
 
 	ics23 "github.com/cosmos/ics23/go"
 
+	"cosmossdk.io/errors"
 	errorsmod "cosmossdk.io/errors"
 )
+
+// ErrInvalidProof is returned when a proof is invalid
+var ErrInvalidProof = errors.Register("store", 2, "invalid proof")
 
 // Proof operation types
 const (

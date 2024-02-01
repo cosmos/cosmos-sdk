@@ -473,11 +473,16 @@ func DefaultSigVerificationGasConsumer(meter storetypes.GasMeter, sig signing.Si
 	}
 }
 
-// ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
+// ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubKey signature.
 func ConsumeMultisignatureVerificationGas(
-	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey,
+	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
+	// if BitArray is nil, it means tx has been built for simulation.
+	if sig.BitArray == nil {
+		return multisignatureSimulationVerificationGas(meter, sig, pubKey, params, accSeq)
+	}
+
 	size := sig.BitArray.Count()
 	sigIndex := 0
 
@@ -486,7 +491,7 @@ func ConsumeMultisignatureVerificationGas(
 			continue
 		}
 		sigV2 := signing.SignatureV2{
-			PubKey:   pubkey.GetPubKeys()[i],
+			PubKey:   pubKey.GetPubKeys()[i],
 			Data:     sig.Signatures[sigIndex],
 			Sequence: accSeq,
 		}
@@ -497,6 +502,28 @@ func ConsumeMultisignatureVerificationGas(
 		}
 
 		sigIndex++
+	}
+
+	return nil
+}
+
+// multisignatureSimulationVerificationGas consume gas for verifying a simulation multisig pubKey signature. As it's
+// a simulation tx the number of signatures its equal to the multisig threshold.
+func multisignatureSimulationVerificationGas(
+	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
+	params types.Params, accSeq uint64,
+) error {
+	for i := 0; i < len(sig.Signatures); i++ {
+		sigV2 := signing.SignatureV2{
+			PubKey:   pubKey.GetPubKeys()[i],
+			Data:     sig.Signatures[i],
+			Sequence: accSeq,
+		}
+
+		err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

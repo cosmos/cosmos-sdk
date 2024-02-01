@@ -389,8 +389,7 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 	events := msgResp.Events
 	sdkEvents := make([]sdk.Event, 0, len(events))
 	for _, event := range events {
-		e := event
-		sdkEvents = append(sdkEvents, sdk.Event(e))
+		sdkEvents = append(sdkEvents, sdk.Event(event))
 	}
 	sdkCtx.EventManager().EmitEvents(sdkEvents)
 

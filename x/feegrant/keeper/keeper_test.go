@@ -460,3 +460,38 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestPruneGrantsEdgecases() {
+	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+	now := suite.ctx.BlockTime()
+	oneYearExpiry := now.AddDate(1, 0, 0)
+
+	granter := suite.addrs[1]
+	grantee1 := suite.addrs[2]
+	err := suite.feegrantKeeper.GrantAllowance(suite.ctx, granter, grantee1, &feegrant.BasicAllowance{
+		SpendLimit: eth,
+		Expiration: &oneYearExpiry,
+	})
+	suite.NoError(err)
+
+	grantee2 := suite.addrs[3]
+	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, granter, grantee2, &feegrant.BasicAllowance{
+		SpendLimit: eth,
+		Expiration: &now,
+	})
+	suite.NoError(err)
+
+	// expect 2 active grants
+	grantsBeforePrune, err := suite.feegrantKeeper.AllowancesByGranter(suite.ctx, &feegrant.QueryAllowancesByGranterRequest{Granter: granter.String()})
+	suite.NoError(err)
+	suite.Len(grantsBeforePrune.Allowances, 2)
+
+	// use blocktime that would result in both grants being expired
+	expireCtx := suite.ctx.WithBlockTime(now.AddDate(1, 0, 1))
+
+	// expect 1 grant to be removed due to the imposed limit
+	suite.feegrantKeeper.RemoveExpiredAllowances(expireCtx, 1)
+	grantsAfterPrune, err := suite.feegrantKeeper.AllowancesByGranter(suite.ctx, &feegrant.QueryAllowancesByGranterRequest{Granter: granter.String()})
+	suite.NoError(err)
+	suite.Len(grantsAfterPrune.Allowances, 1)
+}

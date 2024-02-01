@@ -168,4 +168,6 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/core => ../../core
+	cosmossdk.io/x/tx => ../tx
 )

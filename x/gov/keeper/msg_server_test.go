@@ -2074,11 +2074,11 @@ func (suite *KeeperTestSuite) TestMsgSudoExec() {
 	// normally it isn't possible as governance isn't the signer.
 	// governance needs to sudo the vote.
 	validMsg := &v1.MsgSudoExec{Authority: suite.govKeeper.GetAuthority()}
-	err = validMsg.SetSudoedMsg(v1.NewMsgVote(suite.addrs[0], proposalResp.ProposalId, v1.OptionYes, ""))
+	_, err = validMsg.SetSudoedMsg(v1.NewMsgVote(suite.addrs[0], proposalResp.ProposalId, v1.OptionYes, ""))
 	suite.Require().NoError(err)
 
 	invalidMsg := &v1.MsgSudoExec{Authority: suite.govKeeper.GetAuthority()}
-	err = invalidMsg.SetSudoedMsg(&types.Any{TypeUrl: "invalid"})
+	_, err = invalidMsg.SetSudoedMsg(&types.Any{TypeUrl: "invalid"})
 	suite.Require().NoError(err)
 
 	testCases := []struct {

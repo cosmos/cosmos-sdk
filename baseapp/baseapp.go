@@ -83,7 +83,7 @@ type BaseApp struct {
 	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
 	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
 	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposa handler
+	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal handler
 	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
 	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
 	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState

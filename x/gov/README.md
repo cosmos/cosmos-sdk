@@ -35,37 +35,35 @@ can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the nat
 staking token of the chain.
 
 * [Concepts](#concepts)
-  * [Proposal submission](#proposal-submission)
-  * [Deposit](#deposit)
-  * [Vote](#vote)
+    * [Proposal submission](#proposal-submission)
+    * [Deposit](#deposit)
+    * [Vote](#vote)
 * [State](#state)
-  * [Proposals](#proposals)
-  * [Parameters and base types](#parameters-and-base-types)
-  * [Deposit](#deposit-1)
-  * [ValidatorGovInfo](#validatorgovinfo)
-  * [Stores](#stores)
-  * [Proposal Processing Queue](#proposal-processing-queue)
-  * [Legacy Proposal](#legacy-proposal)
+    * [Proposals](#proposals)
+    * [Parameters and base types](#parameters-and-base-types)
+    * [Deposit](#deposit-1)
+    * [ValidatorGovInfo](#validatorgovinfo)
+    * [Stores](#stores)
+    * [Proposal Processing Queue](#proposal-processing-queue)
+    * [Legacy Proposal](#legacy-proposal)
 * [Messages](#messages)
-  * [Proposal Submission](#proposal-submission-1)
-  * [Deposit](#deposit-2)
-  * [Vote](#vote-1)
+    * [Proposal Submission](#proposal-submission-1)
+    * [Deposit](#deposit-2)
+    * [Vote](#vote-1)
 * [Events](#events)
-  * [EndBlocker](#endblocker)
-  * [Handlers](#handlers)
+    * [EndBlocker](#endblocker)
+    * [Handlers](#handlers)
 * [Parameters](#parameters)
 * [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 * [Metadata](#metadata)
-  * [Proposal](#proposal-3)
-  * [Vote](#vote-5)
+    * [Proposal](#proposal-3)
+    * [Vote](#vote-5)
 * [Future Improvements](#future-improvements)
 
 ## Concepts
-
-*Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
 
 The governance process is divided in a few steps that are outlined below:
 
@@ -93,6 +91,11 @@ only should add a whitelist within the respective msg server, granting the gover
 module the right to execute the message once a quorum has been reached. The governance
 module uses the `MsgServiceRouter` to check that these messages are correctly constructed
 and have a respective path to execute on but do not perform a full validity check.
+
+:::warning
+Ultimately, governance is able to execute any proposal, even if they weren't meant to be executed by governance (ie. no authority present).
+Messages without authority are message meant to be executed by users. Using the `MsgSudoExec` message in a proposal, let governance can execute any message, effectively acting as super user.
+:::
 
 ### Deposit
 
@@ -152,10 +155,11 @@ choose from when casting its vote.
 
 The initial option set includes the following options:
 
-* `Yes`
-* `No`
-* `NoWithVeto`
-* `Abstain`
+* `Yes` / `Option 1`
+* `Abstain` / `Option 2`
+* `No` / `Option 3`
+* `NoWithVeto` / `Option 4`
+* `Spam` / `Option Spam`
 
 `NoWithVeto` counts as `No` but also adds a `Veto` vote. `Abstain` option
 allows voters to signal that they do not intend to vote in favor or against the
@@ -202,6 +206,9 @@ A proposal can be expedited, making the proposal use shorter voting duration and
 
 An optimistic proposal is a proposal that passes unless a threshold a NO votes is reached.
 Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a standard proposal.
+
+That threshold is defined by the `optimistic_rejected_threshold` governance parameter.
+A chain can optionally set a list of authorized addresses that can submit optimistic proposals using the `optimistic_authorized_addresses` governance parameter.
 
 #### Multiple Choice Proposals
 
@@ -280,12 +287,12 @@ There are three parameters that define if the deposit of a proposal should be bu
 Since this is more of a social feature than a technical feature, we'll now get into some items that may have been useful to have in a genesis constitution:
 
 * What limitations on governance exist, if any?
-  * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
-  * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
-  * In the event of an economic emergency, what should validators do?
-    * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
+    * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
+    * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
+    * In the event of an economic emergency, what should validators do?
+        * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
 * What is the purpose of the chain, specifically?
-  * best example of this is the Cosmos hub, where different founding groups, have different interpretations of the purpose of the network.
+    * best example of this is the Cosmos hub, where different founding groups, have different interpretations of the purpose of the network.
 
 This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
@@ -382,16 +389,6 @@ Parameters are stored in a global `GlobalParams` KVStore.
 Additionally, we introduce some basic types:
 
 ```go
-type Vote byte
-
-const (
-    VoteYes         = 0x1
-    VoteNo          = 0x2
-    VoteNoWithVeto  = 0x3
-    VoteAbstain     = 0x4
-    VoteSpam        = 0x5
-)
-
 type ProposalStatus byte
 
 
@@ -500,7 +497,7 @@ The `initialDeposit` must be strictly positive and conform to the accepted denom
 * Initialise `Proposal`'s attributes
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
-  * Push `proposalID` in `ProposalProcessingQueue`
+    * Push `proposalID` in `ProposalProcessingQueue`
 * Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 ### Deposit
@@ -524,7 +521,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.pro
 * Add `deposit` of sender in `proposal.Deposits`
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
-  * Push `proposalID` in `ProposalProcessingQueueEnd`
+    * Push `proposalID` in `ProposalProcessingQueueEnd`
 * Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 ### Vote
@@ -652,7 +649,7 @@ In addition to the parameters above, the governance module can also be configure
 If configured, these params will take precedence over the global params for a specific proposal.
 
 :::warning
-Currently, messaged based parameters limits the number of messages that can be included in a proposal to 1 if a messaged based parameter is configured.
+Currently, messaged based parameters limit the number of messages that can be included in a proposal to 1 if a messaged based parameter is configured.
 :::
 
 ## Client
@@ -1071,7 +1068,7 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 }
 ```
 
-#### cancel-proposal
+##### cancel-proposal
 
 Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
 
@@ -2481,30 +2478,3 @@ Location: on-chain as json within 255 character limit (mirrors [group vote](../g
   "justification": "",
 }
 ```
-
-## Future Improvements
-
-The current documentation only describes the minimum viable product for the
-governance module. Future improvements may include:
-
-* **`BountyProposals`:** If accepted, a `BountyProposal` creates an open
-  bounty. The `BountyProposal` specifies how many Atoms will be given upon
-  completion. These Atoms will be taken from the `reserve pool`. After a
-  `BountyProposal` is accepted by governance, anybody can submit a
-  `SoftwareUpgradeProposal` with the code to claim the bounty. Note that once a
-  `BountyProposal` is accepted, the corresponding funds in the `reserve pool`
-  are locked so that payment can always be honored. In order to link a
-  `SoftwareUpgradeProposal` to an open bounty, the submitter of the
-  `SoftwareUpgradeProposal` will use the `Proposal.LinkedProposal` attribute.
-  If a `SoftwareUpgradeProposal` linked to an open bounty is accepted by
-  governance, the funds that were reserved are automatically transferred to the
-  submitter.
-* **Complex delegation:** Delegators could choose other representatives than
-  their validators. Ultimately, the chain of representatives would always end
-  up to a validator, but delegators could inherit the vote of their chosen
-  representative before they inherit the vote of their validator. In other
-  words, they would only inherit the vote of their validator if their other
-  appointed representative did not vote.
-* **Better process for proposal review:** There would be two parts to
-  `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
-  reward third party auditors.

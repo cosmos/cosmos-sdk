@@ -71,13 +71,6 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
-	// // create the account if it is not in account state
-	// granteeAcc := k.authKeeper.GetAccount(ctx, grantee) // TODO: identify flow and remove
-	// if granteeAcc == nil {
-	// 	granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
-	// 	k.authKeeper.SetAccount(ctx, granteeAcc)
-	// }
-
 	exp, err := feeAllowance.ExpiresAt()
 	if err != nil {
 		return err

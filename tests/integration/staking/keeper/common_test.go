@@ -83,7 +83,7 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val2))
 
 	for _, addr := range addrs {
-		acc := f.accountKeeper.NewAccountWithAddress(f.sdkCtx, sdk.AccAddress(addr))
+		acc := f.accountKeeper.NewAccountWithAddress(f.sdkCtx, addr)
 		f.accountKeeper.SetAccount(f.sdkCtx, acc)
 	}
 

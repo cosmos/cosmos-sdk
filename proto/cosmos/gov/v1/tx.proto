@@ -53,6 +53,12 @@ service Msg {
   //
   // Since: x/gov 1.0.0
   rpc UpdateMessageParams(MsgUpdateMessageParams) returns (MsgUpdateMessageParamsResponse);
+
+  // SudoExec defines a method to execute an inner message as the governance module.
+  // It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
+  //
+  // Since: x/gov 1.0.0
+  rpc SudoExec(MsgSudoExec) returns (MsgSudoExecResponse);
 }
 
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
@@ -275,12 +281,38 @@ message MsgSubmitMultipleChoiceProposalResponse {
 message MsgUpdateMessageParams {
   option (cosmos.msg.v1.signer) = "authority";
 
-  string             authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string             msg_url   = 2;
-  MessageBasedParams params    = 3;
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // msg_url is the url of the message to be updated.
+  string msg_url = 2;
+
+  // params are the new params to be set for the message.
+  MessageBasedParams params = 3;
 }
 
 // MsgUpdateMessageParamsResponse defines the Msg/UpdateMessageParams response type.
 //
 // Since: x/gov 1.0.0
 message MsgUpdateMessageParamsResponse {}
+
+// MsgSudoExec defines a message to execute an inner message as the governance module.
+//
+// Since: x/gov 1.0.0
+message MsgSudoExec {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // msg is the arbitrary message to be executed.
+  google.protobuf.Any msg = 2 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];
+}
+
+// MsgSudoExecResponse defines the Msg/SudoExec response type.
+//
+// Since: x/gov 1.0.0
+message MsgSudoExecResponse {
+  // result is the response data from the executed message.
+  bytes result = 1;
+}

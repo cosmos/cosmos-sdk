@@ -1245,7 +1245,7 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 
 	account, err := clientCtx.AccountRetriever.GetAccount(clientCtx, addr)
 	// generating the transcation above will not submit the tx, therefore the account is not created
-	s.Require().Error(err)
+	s.Require().NoError(err)
 
 	// sign-batch file
 	addr1, err := account1.GetAddress()

@@ -386,7 +386,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	return nil
 }
 
-// BurnCoins burns coins deletes coins from the balance of the module account.
+// BurnCoins burns coins deletes coins from the balance of an account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, address)

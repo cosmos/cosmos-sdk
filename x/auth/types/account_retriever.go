@@ -73,7 +73,8 @@ func (ar AccountRetriever) EnsureExists(clientCtx client.Context, addr sdk.AccAd
 func (ar AccountRetriever) GetAccountNumberSequence(clientCtx client.Context, addr sdk.AccAddress) (uint64, uint64, error) {
 	acc, err := ar.GetAccount(clientCtx, addr)
 	if err != nil {
-		return 0, 0, err
+		// if there is an error here it either means its the users first tx. In this case if the user does not have funds the tx will fail anyways
+		return 0, 0, nil
 	}
 
 	return acc.GetAccountNumber(), acc.GetSequence(), nil

@@ -29,7 +29,6 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 	if err != nil {
 		return err
 	}
-
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 

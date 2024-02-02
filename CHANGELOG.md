@@ -1198,7 +1198,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 ### Bug Fixes
 
 * Implement dragonberry security patch.
-    * For applying the patch please refer to the [RELEASE NOTES](https://github.com/cosmos/cosmos-sdk/releases)
+    * For applying the patch please refer to the [RELEASE NOTES](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3)
 * (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
 * [#12548](https://github.com/cosmos/cosmos-sdk/pull/12548) Prevent signing from wrong key while using multisig.
 
@@ -1556,7 +1556,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 ### Improvements
 
-* (deps) Migrate to [CometBFT](https://github.com/cometbft/cometbft). Follow the instructions in the [release process](./RELEASE_PROCESS.md).
+* (deps) Migrate to [CometBFT](https://github.com/cometbft/cometbft). Follow the instructions in the [release process](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.15).
 * (deps) [#15127](https://github.com/cosmos/cosmos-sdk/pull/15127) Bump btcd.
 * (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
 
@@ -1670,7 +1670,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 ### Bug Fixes
 
 * Implement dragonberry security patch.
-    * For applying the patch please refer to the [RELEASE PROCESS](./RELEASE_PROCESS.md)
+* For applying the patch please refer to the [RELEASE PROCESS](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.9)
 * (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
 
 ### Notes

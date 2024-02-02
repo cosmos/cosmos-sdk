@@ -188,8 +188,6 @@ cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a h1:Zr++x1RCJWi+K8bTZsQKdjt
 cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a/go.mod h1:7B/5XWh1HYwJk3DzWeNoxOSI+nGx1m5UyYfHLFuKzkw=
 cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
 cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
-cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7 h1:hOzi4yo2Fc7h3mod+xX4m4QA4+Uq+PkFRjY/yalZ0B8=
-cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7/go.mod h1:3v0JJNNd8ye0cOvJ+wUUvE7Ke0d2qxnNIDcXd5mziHk=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=
 cosmossdk.io/errors v1.0.1/go.mod h1:MeelVSZThMi4bEakzhhhE/CKqVv3nOJDA25bIqRDu/U=
 cosmossdk.io/log v1.3.0 h1:L0Z0XstClo2kOU4h3V1iDoE5Ji64sg5HLOogzGg67Oo=
@@ -200,8 +198,6 @@ cosmossdk.io/store v1.0.2 h1:lSg5BTvJBHUDwswNNyeh4K/CbqiHER73VU4nDNb8uk0=
 cosmossdk.io/store v1.0.2/go.mod h1:EFtENTqVTuWwitGW1VwaBct+yDagk7oG/axBMPH+FXs=
 cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 h1:XQJj9Dv9Gtze0l2TF79BU5lkP6MkUveTUuKICmxoz+o=
 cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190/go.mod h1:7WUGupOvmlHJoIMBz1JbObQxeo6/TDiuDBxmtod8HRg=
-cosmossdk.io/x/tx v0.13.0 h1:8lzyOh3zONPpZv2uTcUmsv0WTXy6T1/aCVDCqShmpzU=
-cosmossdk.io/x/tx v0.13.0/go.mod h1:CpNQtmoqbXa33/DVxWQNx5Dcnbkv2xGUhL7tYQ5wUsY=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=

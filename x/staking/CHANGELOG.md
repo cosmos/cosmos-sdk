@@ -29,6 +29,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#19277](https://github.com/cosmos/cosmos-sdk/pull/19277) Hooks calls on `SetUnbondingDelegationEntry`, `SetRedelegationEntry`, `Slash` and `RemoveValidator` returns errors instead of logging just like other hooks calls.
 * [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `IterateBondedValidatorsByPower`, `GetDelegatorBonded`, `Delegate`, `Unbond`, `Slash`, `Jail`, `SlashRedelegation`, `ApplyAndReturnValidatorSetUpdates` methods no longer panics on any kind of errors but instead returns appropriate errors.
 * [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
 

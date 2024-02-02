@@ -1244,7 +1244,6 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
 
 	account, err := clientCtx.AccountRetriever.GetAccount(clientCtx, addr)
-	// generating the transcation above will not submit the tx, therefore the account is not created
 	s.Require().NoError(err)
 
 	// sign-batch file

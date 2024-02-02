@@ -28,7 +28,7 @@ to consider the size of the vote extensions as they could increase latency in bl
 production. See [here](https://github.com/cometbft/cometbft/blob/v0.38.0-rc1/docs/qa/CometBFT-QA-38.md#vote-extensions-testbed)
 for more details.
 
-Click [here](https://docs.cosmos.network/main/user/tutorials/vote-extensions) if you would like a walkthrough of how to implement vote extensions.
+Click [here](https://docs.cosmos.network/main/build/abci/vote-extensions) if you would like a walkthrough of how to implement vote extensions.
 
 
 ## Verify Vote Extension

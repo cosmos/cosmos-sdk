@@ -2,7 +2,7 @@
 
 Welcome to the Cosmos SDK's team roadmap. 
 
-> This document is meant to help the team get feedback on the proposed work and for others to follow where we stand in our process. This will be a living document updated on a regular basis. If you'd like to participate in any workscope or would like to suggest another feature please reach out to [Marko](marko@binary.builders) or [Sam](sam@binary.builders) and we will schedule a call to discuss the feature request. 
+> This document is meant to help the team get feedback on the proposed work and for others to follow where we stand in our process. This will be a living document updated on a regular basis. If you'd like to participate in any workscope or would like to suggest another feature please reach out to [Marko](mailto:marko@binary.builders) or [Sam](mailto:sam@binary.builders) and we will schedule a call to discuss the feature request. 
 
 
 ## Q1

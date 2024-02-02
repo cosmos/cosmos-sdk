@@ -9,7 +9,7 @@ These tests have different goals and are used at different stages of the develop
 We advice, as a general rule, to use tests at all stages of the development cycle.
 It is advised, as a chain developer, to test your application and modules in a similar way than the SDK.
 
-The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
+The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes.html).
 
 ## Unit Tests
 
@@ -116,9 +116,9 @@ Here are some examples:
 * Osmosis E2E tests: <https://github.com/osmosis-labs/osmosis/tree/main/tests/e2e>.
 
 :::note warning
-The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html). This page will eventually be updated with better examples.
+The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes). This page will eventually be updated with better examples.
 :::
 
 ## Learn More
 
-Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
+Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes.html).

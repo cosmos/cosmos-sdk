@@ -93,18 +93,6 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-<<<<<<< HEAD
-	ctrl := gomock.NewController(s.T())
-	app := mock.NewMockProposalTxVerifier(ctrl)
-	mp1 := mempool.NewPriorityMempool()
-	mp2 := mempool.NewPriorityMempool()
-	ph1 := baseapp.NewDefaultProposalHandler(mp1, app)
-	handler1 := ph1.PrepareProposalHandler()
-	ph2 := baseapp.NewDefaultProposalHandler(mp2, app)
-	handler2 := ph2.PrepareProposalHandler()
-=======
-
->>>>>>> a86a83f76 (test(baseapp): Refactor tx selector tests + better comments  (#19284))
 	var (
 		secret1 = []byte("secret1")
 		secret2 = []byte("secret2")
@@ -162,39 +150,23 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 
 	testCases := map[string]struct {
 		ctx         sdk.Context
-<<<<<<< HEAD
-		req         abci.RequestPrepareProposal
-=======
 		txInputs    []testTx
-		req         *abci.RequestPrepareProposal
->>>>>>> a86a83f76 (test(baseapp): Refactor tx selector tests + better comments  (#19284))
+		req         abci.RequestPrepareProposal
 		handler     sdk.PrepareProposalHandler
 		expectedTxs []int
 	}{
 		"skip same-sender non-sequential sequence and then add others txs": {
-<<<<<<< HEAD
-			ctx: s.ctx,
-			req: abci.RequestPrepareProposal{
-				Txs:        [][]byte{txBz1, txBz2, txBz3, txBz4},
-=======
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[0], testTxs[1], testTxs[2], testTxs[3]},
-			req: &abci.RequestPrepareProposal{
->>>>>>> a86a83f76 (test(baseapp): Refactor tx selector tests + better comments  (#19284))
+			req: abci.RequestPrepareProposal{
 				MaxTxBytes: 111 + 112,
 			},
 			expectedTxs: []int{0, 3},
 		},
 		"skip multi-signers msg non-sequential sequence": {
-<<<<<<< HEAD
-			ctx: s.ctx,
-			req: abci.RequestPrepareProposal{
-				Txs:        [][]byte{txBz5, txBz6, txBz7, txBz8, txBz9},
-=======
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[4], testTxs[5], testTxs[6], testTxs[7], testTxs[8]},
-			req: &abci.RequestPrepareProposal{
->>>>>>> a86a83f76 (test(baseapp): Refactor tx selector tests + better comments  (#19284))
+			req: abci.RequestPrepareProposal{
 				MaxTxBytes: 195 + 196,
 			},
 			expectedTxs: []int{4, 8},
@@ -203,7 +175,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			// Because tx 10 is valid, tx 11 can't be valid as they have higher sequence numbers.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[9], testTxs[10], testTxs[11]},
-			req: &abci.RequestPrepareProposal{
+			req: abci.RequestPrepareProposal{
 				MaxTxBytes: 195 + 196,
 			},
 			expectedTxs: []int{9},
@@ -213,7 +185,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			// the rest of the txs fail because they have a seq of 4.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[12], testTxs[13], testTxs[14]},
-			req: &abci.RequestPrepareProposal{
+			req: abci.RequestPrepareProposal{
 				MaxTxBytes: 112,
 			},
 			expectedTxs: []int{},
@@ -222,21 +194,10 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-<<<<<<< HEAD
-			resp := tc.handler(tc.ctx, tc.req)
-			s.Require().EqualValues(toHumanReadable(mapTxs, resp.Txs), toHumanReadable(mapTxs, tc.expectedTxs))
-=======
 			ctrl := gomock.NewController(s.T())
 			app := mock.NewMockProposalTxVerifier(ctrl)
-			mp := mempool.NewPriorityMempool(
-				mempool.PriorityNonceMempoolConfig[int64]{
-					TxPriority:      mempool.NewDefaultTxPriority(),
-					MaxTx:           0,
-					SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
-				},
-			)
-
-			ph := baseapp.NewDefaultProposalHandler(mp, app)
+			mp := mempool.NewPriorityMempool()
+			ph := baseapp.NewDefaultProposalHandler(mp, app).PrepareProposalHandler()
 
 			for _, v := range tc.txInputs {
 				app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()
@@ -244,8 +205,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 				tc.req.Txs = append(tc.req.Txs, v.bz)
 			}
 
-			resp, err := ph.PrepareProposalHandler()(tc.ctx, tc.req)
-			s.Require().NoError(err)
+			resp := ph(tc.ctx, tc.req)
 			respTxIndexes := []int{}
 			for _, tx := range resp.Txs {
 				for i, v := range testTxs {
@@ -256,7 +216,6 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			}
 
 			s.Require().EqualValues(tc.expectedTxs, respTxIndexes)
->>>>>>> a86a83f76 (test(baseapp): Refactor tx selector tests + better comments  (#19284))
 		})
 	}
 }

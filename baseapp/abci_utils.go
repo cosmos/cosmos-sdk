@@ -117,18 +117,10 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 					continue
 				}
 
-<<<<<<< HEAD
-				// if we have seen this signer before we check if the sequence we just got is
-				// seq+1 and if it is we update the sequence and return true so this tx gets
-				// selected. If it isn't seq+1 we return false so this tx doesn't get
-				// selected (it could be the same sequence or seq+2 which are invalid).
-				if seq+1 != sig.Sequence {
-=======
 				// If we have seen this signer before in this block, we must make
 				// sure that the current sequence is seq+1; otherwise is invalid
 				// and we skip it.
-				if seq+1 != signer.Sequence {
->>>>>>> a86a83f76 (test(baseapp): Refactor tx selector tests + better comments  (#19284))
+				if seq+1 != sig.Sequence {
 					shouldAdd = false
 					break
 				}

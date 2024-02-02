@@ -9198,6 +9198,927 @@ func (x *fastReflection_MsgUpdateMessageParamsResponse) ProtoMethods() *protoifa
 	}
 }
 
+var (
+	md_MsgSudoExec           protoreflect.MessageDescriptor
+	fd_MsgSudoExec_authority protoreflect.FieldDescriptor
+	fd_MsgSudoExec_msg       protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_gov_v1_tx_proto_init()
+	md_MsgSudoExec = File_cosmos_gov_v1_tx_proto.Messages().ByName("MsgSudoExec")
+	fd_MsgSudoExec_authority = md_MsgSudoExec.Fields().ByName("authority")
+	fd_MsgSudoExec_msg = md_MsgSudoExec.Fields().ByName("msg")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgSudoExec)(nil)
+
+type fastReflection_MsgSudoExec MsgSudoExec
+
+func (x *MsgSudoExec) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSudoExec)(x)
+}
+
+func (x *MsgSudoExec) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_gov_v1_tx_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgSudoExec_messageType fastReflection_MsgSudoExec_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSudoExec_messageType{}
+
+type fastReflection_MsgSudoExec_messageType struct{}
+
+func (x fastReflection_MsgSudoExec_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSudoExec)(nil)
+}
+func (x fastReflection_MsgSudoExec_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSudoExec)
+}
+func (x fastReflection_MsgSudoExec_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSudoExec
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgSudoExec) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSudoExec
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgSudoExec) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSudoExec_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgSudoExec) New() protoreflect.Message {
+	return new(fastReflection_MsgSudoExec)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgSudoExec) Interface() protoreflect.ProtoMessage {
+	return (*MsgSudoExec)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgSudoExec) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_MsgSudoExec_authority, value) {
+			return
+		}
+	}
+	if x.Msg != nil {
+		value := protoreflect.ValueOfMessage(x.Msg.ProtoReflect())
+		if !f(fd_MsgSudoExec_msg, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgSudoExec) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExec.authority":
+		return x.Authority != ""
+	case "cosmos.gov.v1.MsgSudoExec.msg":
+		return x.Msg != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExec"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExec does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSudoExec) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExec.authority":
+		x.Authority = ""
+	case "cosmos.gov.v1.MsgSudoExec.msg":
+		x.Msg = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExec"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExec does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgSudoExec) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.gov.v1.MsgSudoExec.authority":
+		value := x.Authority
+		return protoreflect.ValueOfString(value)
+	case "cosmos.gov.v1.MsgSudoExec.msg":
+		value := x.Msg
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExec"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExec does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSudoExec) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExec.authority":
+		x.Authority = value.Interface().(string)
+	case "cosmos.gov.v1.MsgSudoExec.msg":
+		x.Msg = value.Message().Interface().(*anypb.Any)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExec"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExec does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSudoExec) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExec.msg":
+		if x.Msg == nil {
+			x.Msg = new(anypb.Any)
+		}
+		return protoreflect.ValueOfMessage(x.Msg.ProtoReflect())
+	case "cosmos.gov.v1.MsgSudoExec.authority":
+		panic(fmt.Errorf("field authority of message cosmos.gov.v1.MsgSudoExec is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExec"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExec does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgSudoExec) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExec.authority":
+		return protoreflect.ValueOfString("")
+	case "cosmos.gov.v1.MsgSudoExec.msg":
+		m := new(anypb.Any)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExec"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExec does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgSudoExec) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.gov.v1.MsgSudoExec", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgSudoExec) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSudoExec) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgSudoExec) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgSudoExec) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgSudoExec)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Authority)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Msg != nil {
+			l = options.Size(x.Msg)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSudoExec)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Msg != nil {
+			encoded, err := options.Marshal(x.Msg)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSudoExec)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSudoExec: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSudoExec: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Authority = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Msg == nil {
+					x.Msg = &anypb.Any{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Msg); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgSudoExecResponse        protoreflect.MessageDescriptor
+	fd_MsgSudoExecResponse_result protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_gov_v1_tx_proto_init()
+	md_MsgSudoExecResponse = File_cosmos_gov_v1_tx_proto.Messages().ByName("MsgSudoExecResponse")
+	fd_MsgSudoExecResponse_result = md_MsgSudoExecResponse.Fields().ByName("result")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgSudoExecResponse)(nil)
+
+type fastReflection_MsgSudoExecResponse MsgSudoExecResponse
+
+func (x *MsgSudoExecResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSudoExecResponse)(x)
+}
+
+func (x *MsgSudoExecResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_gov_v1_tx_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgSudoExecResponse_messageType fastReflection_MsgSudoExecResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSudoExecResponse_messageType{}
+
+type fastReflection_MsgSudoExecResponse_messageType struct{}
+
+func (x fastReflection_MsgSudoExecResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSudoExecResponse)(nil)
+}
+func (x fastReflection_MsgSudoExecResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSudoExecResponse)
+}
+func (x fastReflection_MsgSudoExecResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSudoExecResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgSudoExecResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSudoExecResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgSudoExecResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSudoExecResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgSudoExecResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgSudoExecResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgSudoExecResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgSudoExecResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgSudoExecResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Result) != 0 {
+		value := protoreflect.ValueOfBytes(x.Result)
+		if !f(fd_MsgSudoExecResponse_result, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgSudoExecResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExecResponse.result":
+		return len(x.Result) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExecResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExecResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSudoExecResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExecResponse.result":
+		x.Result = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExecResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExecResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgSudoExecResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.gov.v1.MsgSudoExecResponse.result":
+		value := x.Result
+		return protoreflect.ValueOfBytes(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExecResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExecResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSudoExecResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExecResponse.result":
+		x.Result = value.Bytes()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExecResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExecResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSudoExecResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExecResponse.result":
+		panic(fmt.Errorf("field result of message cosmos.gov.v1.MsgSudoExecResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExecResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExecResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgSudoExecResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.gov.v1.MsgSudoExecResponse.result":
+		return protoreflect.ValueOfBytes(nil)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSudoExecResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.gov.v1.MsgSudoExecResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgSudoExecResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.gov.v1.MsgSudoExecResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgSudoExecResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSudoExecResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgSudoExecResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgSudoExecResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgSudoExecResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Result)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSudoExecResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Result) > 0 {
+			i -= len(x.Result)
+			copy(dAtA[i:], x.Result)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Result)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSudoExecResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSudoExecResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSudoExecResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Result = append(x.Result[:0], dAtA[iNdEx:postIndex]...)
+				if x.Result == nil {
+					x.Result = []byte{}
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Since: cosmos-sdk 0.46
 
 // Code generated by protoc-gen-go. DO NOT EDIT.
@@ -10021,9 +10942,12 @@ type MsgUpdateMessageParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Authority string              `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	MsgUrl    string              `protobuf:"bytes,2,opt,name=msg_url,json=msgUrl,proto3" json:"msg_url,omitempty"`
-	Params    *MessageBasedParams `protobuf:"bytes,3,opt,name=params,proto3" json:"params,omitempty"`
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// msg_url is the url of the message to be updated.
+	MsgUrl string `protobuf:"bytes,2,opt,name=msg_url,json=msgUrl,proto3" json:"msg_url,omitempty"`
+	// params are the new params to be set for the message.
+	Params *MessageBasedParams `protobuf:"bytes,3,opt,name=params,proto3" json:"params,omitempty"`
 }
 
 func (x *MsgUpdateMessageParams) Reset() {
@@ -10094,6 +11018,93 @@ func (*MsgUpdateMessageParamsResponse) ProtoMessage() {}
 // Deprecated: Use MsgUpdateMessageParamsResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMessageParamsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_gov_v1_tx_proto_rawDescGZIP(), []int{17}
+}
+
+// MsgSudoExec defines a message to execute an inner message as the governance module.
+//
+// Since: x/gov 1.0.0
+type MsgSudoExec struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// msg is the arbitrary message to be executed.
+	Msg *anypb.Any `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+}
+
+func (x *MsgSudoExec) Reset() {
+	*x = MsgSudoExec{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_gov_v1_tx_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgSudoExec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgSudoExec) ProtoMessage() {}
+
+// Deprecated: Use MsgSudoExec.ProtoReflect.Descriptor instead.
+func (*MsgSudoExec) Descriptor() ([]byte, []int) {
+	return file_cosmos_gov_v1_tx_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *MsgSudoExec) GetAuthority() string {
+	if x != nil {
+		return x.Authority
+	}
+	return ""
+}
+
+func (x *MsgSudoExec) GetMsg() *anypb.Any {
+	if x != nil {
+		return x.Msg
+	}
+	return nil
+}
+
+// MsgSudoExecResponse defines the Msg/SudoExec response type.
+//
+// Since: x/gov 1.0.0
+type MsgSudoExecResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// result is the response data from the executed message.
+	Result []byte `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+}
+
+func (x *MsgSudoExecResponse) Reset() {
+	*x = MsgSudoExecResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_gov_v1_tx_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgSudoExecResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgSudoExecResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgSudoExecResponse.ProtoReflect.Descriptor instead.
+func (*MsgSudoExecResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_gov_v1_tx_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *MsgSudoExecResponse) GetResult() []byte {
+	if x != nil {
+		return x.Result
+	}
+	return nil
 }
 
 var File_cosmos_gov_v1_tx_proto protoreflect.FileDescriptor
@@ -10290,71 +11301,88 @@ var file_cosmos_gov_v1_tx_proto_rawDesc = []byte{
 	0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79,
 	0x22, 0x20, 0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x73,
 	0x73, 0x61, 0x67, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x32, 0xde, 0x06, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x5c, 0x0a, 0x0e, 0x53, 0x75,
-	0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x20, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x28,
+	0x73, 0x65, 0x22, 0x9a, 0x01, 0x0a, 0x0b, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x64, 0x6f, 0x45, 0x78,
+	0x65, 0x63, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x43, 0x0a, 0x03, 0x6d, 0x73,
+	0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x1b, 0xca,
+	0xb4, 0x2d, 0x17, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x03, 0x6d, 0x73, 0x67, 0x3a,
+	0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22,
+	0x2d, 0x0a, 0x13, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x64, 0x6f, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x32, 0xaa,
+	0x07, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x5c, 0x0a, 0x0e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74,
+	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d,
+	0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75,
+	0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x11, 0x45, 0x78, 0x65, 0x63, 0x4c, 0x65, 0x67, 0x61,
+	0x63, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x12, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65,
+	0x63, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x1a, 0x2b,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x11, 0x45, 0x78, 0x65, 0x63,
-	0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x12, 0x23, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x45, 0x78, 0x65, 0x63, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x65,
-	0x6e, 0x74, 0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e,
-	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79,
-	0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x3e, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x16, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x1a,
-	0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x56, 0x0a, 0x0c, 0x56, 0x6f, 0x74, 0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x12,
-	0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x1a,
-	0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x47, 0x0a, 0x07, 0x44, 0x65, 0x70, 0x6f, 0x73,
-	0x69, 0x74, 0x12, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e,
-	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x1a, 0x21, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x56, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x12, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x1a, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x0e, 0x43, 0x61, 0x6e, 0x63,
-	0x65, 0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x20, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61,
-	0x6e, 0x63, 0x65, 0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x28, 0x2e, 0x63,
+	0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x43, 0x6f, 0x6e, 0x74,
+	0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3e, 0x0a, 0x04, 0x56,
+	0x6f, 0x74, 0x65, 0x12, 0x16, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x1a, 0x1e, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56,
+	0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x56, 0x0a, 0x0c, 0x56,
+	0x6f, 0x74, 0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x12, 0x1e, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56,
+	0x6f, 0x74, 0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x1a, 0x26, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56,
+	0x6f, 0x74, 0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x47, 0x0a, 0x07, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x12, 0x19,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x1a, 0x21, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70,
+	0x6f, 0x73, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x56, 0x0a, 0x0c,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x1e, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x86, 0x01, 0x0a, 0x1c, 0x53, 0x75, 0x62, 0x6d, 0x69,
-	0x74, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x70, 0x6c, 0x65, 0x43, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69,
-	0x74, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x70, 0x6c, 0x65, 0x43, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69,
-	0x74, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x70, 0x6c, 0x65, 0x43, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x6b, 0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x2d, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7,
-	0xb0, 0x2a, 0x01, 0x42, 0x98, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x24, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
-	0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x6f,
-	0x76, 0x2f, 0x76, 0x31, 0x3b, 0x67, 0x6f, 0x76, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58,
-	0xaa, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x6f, 0x76, 0x2e, 0x56, 0x31,
-	0xca, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c, 0x56, 0x31,
-	0xe2, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c, 0x56, 0x31,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x6f, 0x76, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x26, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x0e, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x50, 0x72,
+	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c,
+	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63,
+	0x65, 0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x86, 0x01, 0x0a, 0x1c, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x4d, 0x75, 0x6c,
+	0x74, 0x69, 0x70, 0x6c, 0x65, 0x43, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f,
+	0x73, 0x61, 0x6c, 0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x4d, 0x75, 0x6c,
+	0x74, 0x69, 0x70, 0x6c, 0x65, 0x43, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f,
+	0x73, 0x61, 0x6c, 0x1a, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x4d, 0x75, 0x6c,
+	0x74, 0x69, 0x70, 0x6c, 0x65, 0x43, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f,
+	0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6b, 0x0a, 0x13, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x12, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4a, 0x0a, 0x08, 0x53, 0x75, 0x64, 0x6f,
+	0x45, 0x78, 0x65, 0x63, 0x12, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f,
+	0x76, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x64, 0x6f, 0x45, 0x78, 0x65, 0x63,
+	0x1a, 0x22, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x64, 0x6f, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x98, 0x01, 0x0a, 0x11,
+	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76,
+	0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x24, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x6f, 0x76, 0x2f, 0x76, 0x31, 0x3b, 0x67, 0x6f, 0x76,
+	0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58, 0xaa, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x47, 0x6f, 0x76, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47,
+	0x6f, 0x76, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -10369,7 +11397,7 @@ func file_cosmos_gov_v1_tx_proto_rawDescGZIP() []byte {
 	return file_cosmos_gov_v1_tx_proto_rawDescData
 }
 
-var file_cosmos_gov_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_cosmos_gov_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_cosmos_gov_v1_tx_proto_goTypes = []interface{}{
 	(*MsgSubmitProposal)(nil),                       // 0: cosmos.gov.v1.MsgSubmitProposal
 	(*MsgSubmitProposalResponse)(nil),               // 1: cosmos.gov.v1.MsgSubmitProposalResponse
@@ -10389,52 +11417,57 @@ var file_cosmos_gov_v1_tx_proto_goTypes = []interface{}{
 	(*MsgSubmitMultipleChoiceProposalResponse)(nil), // 15: cosmos.gov.v1.MsgSubmitMultipleChoiceProposalResponse
 	(*MsgUpdateMessageParams)(nil),                  // 16: cosmos.gov.v1.MsgUpdateMessageParams
 	(*MsgUpdateMessageParamsResponse)(nil),          // 17: cosmos.gov.v1.MsgUpdateMessageParamsResponse
-	(*anypb.Any)(nil),                               // 18: google.protobuf.Any
-	(*v1beta1.Coin)(nil),                            // 19: cosmos.base.v1beta1.Coin
-	(ProposalType)(0),                               // 20: cosmos.gov.v1.ProposalType
-	(VoteOption)(0),                                 // 21: cosmos.gov.v1.VoteOption
-	(*WeightedVoteOption)(nil),                      // 22: cosmos.gov.v1.WeightedVoteOption
-	(*Params)(nil),                                  // 23: cosmos.gov.v1.Params
-	(*timestamppb.Timestamp)(nil),                   // 24: google.protobuf.Timestamp
-	(*ProposalVoteOptions)(nil),                     // 25: cosmos.gov.v1.ProposalVoteOptions
-	(*MessageBasedParams)(nil),                      // 26: cosmos.gov.v1.MessageBasedParams
+	(*MsgSudoExec)(nil),                             // 18: cosmos.gov.v1.MsgSudoExec
+	(*MsgSudoExecResponse)(nil),                     // 19: cosmos.gov.v1.MsgSudoExecResponse
+	(*anypb.Any)(nil),                               // 20: google.protobuf.Any
+	(*v1beta1.Coin)(nil),                            // 21: cosmos.base.v1beta1.Coin
+	(ProposalType)(0),                               // 22: cosmos.gov.v1.ProposalType
+	(VoteOption)(0),                                 // 23: cosmos.gov.v1.VoteOption
+	(*WeightedVoteOption)(nil),                      // 24: cosmos.gov.v1.WeightedVoteOption
+	(*Params)(nil),                                  // 25: cosmos.gov.v1.Params
+	(*timestamppb.Timestamp)(nil),                   // 26: google.protobuf.Timestamp
+	(*ProposalVoteOptions)(nil),                     // 27: cosmos.gov.v1.ProposalVoteOptions
+	(*MessageBasedParams)(nil),                      // 28: cosmos.gov.v1.MessageBasedParams
 }
 var file_cosmos_gov_v1_tx_proto_depIdxs = []int32{
-	18, // 0: cosmos.gov.v1.MsgSubmitProposal.messages:type_name -> google.protobuf.Any
-	19, // 1: cosmos.gov.v1.MsgSubmitProposal.initial_deposit:type_name -> cosmos.base.v1beta1.Coin
-	20, // 2: cosmos.gov.v1.MsgSubmitProposal.proposal_type:type_name -> cosmos.gov.v1.ProposalType
-	18, // 3: cosmos.gov.v1.MsgExecLegacyContent.content:type_name -> google.protobuf.Any
-	21, // 4: cosmos.gov.v1.MsgVote.option:type_name -> cosmos.gov.v1.VoteOption
-	22, // 5: cosmos.gov.v1.MsgVoteWeighted.options:type_name -> cosmos.gov.v1.WeightedVoteOption
-	19, // 6: cosmos.gov.v1.MsgDeposit.amount:type_name -> cosmos.base.v1beta1.Coin
-	23, // 7: cosmos.gov.v1.MsgUpdateParams.params:type_name -> cosmos.gov.v1.Params
-	24, // 8: cosmos.gov.v1.MsgCancelProposalResponse.canceled_time:type_name -> google.protobuf.Timestamp
-	19, // 9: cosmos.gov.v1.MsgSubmitMultipleChoiceProposal.initial_deposit:type_name -> cosmos.base.v1beta1.Coin
-	25, // 10: cosmos.gov.v1.MsgSubmitMultipleChoiceProposal.vote_options:type_name -> cosmos.gov.v1.ProposalVoteOptions
-	26, // 11: cosmos.gov.v1.MsgUpdateMessageParams.params:type_name -> cosmos.gov.v1.MessageBasedParams
-	0,  // 12: cosmos.gov.v1.Msg.SubmitProposal:input_type -> cosmos.gov.v1.MsgSubmitProposal
-	2,  // 13: cosmos.gov.v1.Msg.ExecLegacyContent:input_type -> cosmos.gov.v1.MsgExecLegacyContent
-	4,  // 14: cosmos.gov.v1.Msg.Vote:input_type -> cosmos.gov.v1.MsgVote
-	6,  // 15: cosmos.gov.v1.Msg.VoteWeighted:input_type -> cosmos.gov.v1.MsgVoteWeighted
-	8,  // 16: cosmos.gov.v1.Msg.Deposit:input_type -> cosmos.gov.v1.MsgDeposit
-	10, // 17: cosmos.gov.v1.Msg.UpdateParams:input_type -> cosmos.gov.v1.MsgUpdateParams
-	12, // 18: cosmos.gov.v1.Msg.CancelProposal:input_type -> cosmos.gov.v1.MsgCancelProposal
-	14, // 19: cosmos.gov.v1.Msg.SubmitMultipleChoiceProposal:input_type -> cosmos.gov.v1.MsgSubmitMultipleChoiceProposal
-	16, // 20: cosmos.gov.v1.Msg.UpdateMessageParams:input_type -> cosmos.gov.v1.MsgUpdateMessageParams
-	1,  // 21: cosmos.gov.v1.Msg.SubmitProposal:output_type -> cosmos.gov.v1.MsgSubmitProposalResponse
-	3,  // 22: cosmos.gov.v1.Msg.ExecLegacyContent:output_type -> cosmos.gov.v1.MsgExecLegacyContentResponse
-	5,  // 23: cosmos.gov.v1.Msg.Vote:output_type -> cosmos.gov.v1.MsgVoteResponse
-	7,  // 24: cosmos.gov.v1.Msg.VoteWeighted:output_type -> cosmos.gov.v1.MsgVoteWeightedResponse
-	9,  // 25: cosmos.gov.v1.Msg.Deposit:output_type -> cosmos.gov.v1.MsgDepositResponse
-	11, // 26: cosmos.gov.v1.Msg.UpdateParams:output_type -> cosmos.gov.v1.MsgUpdateParamsResponse
-	13, // 27: cosmos.gov.v1.Msg.CancelProposal:output_type -> cosmos.gov.v1.MsgCancelProposalResponse
-	15, // 28: cosmos.gov.v1.Msg.SubmitMultipleChoiceProposal:output_type -> cosmos.gov.v1.MsgSubmitMultipleChoiceProposalResponse
-	17, // 29: cosmos.gov.v1.Msg.UpdateMessageParams:output_type -> cosmos.gov.v1.MsgUpdateMessageParamsResponse
-	21, // [21:30] is the sub-list for method output_type
-	12, // [12:21] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	20, // 0: cosmos.gov.v1.MsgSubmitProposal.messages:type_name -> google.protobuf.Any
+	21, // 1: cosmos.gov.v1.MsgSubmitProposal.initial_deposit:type_name -> cosmos.base.v1beta1.Coin
+	22, // 2: cosmos.gov.v1.MsgSubmitProposal.proposal_type:type_name -> cosmos.gov.v1.ProposalType
+	20, // 3: cosmos.gov.v1.MsgExecLegacyContent.content:type_name -> google.protobuf.Any
+	23, // 4: cosmos.gov.v1.MsgVote.option:type_name -> cosmos.gov.v1.VoteOption
+	24, // 5: cosmos.gov.v1.MsgVoteWeighted.options:type_name -> cosmos.gov.v1.WeightedVoteOption
+	21, // 6: cosmos.gov.v1.MsgDeposit.amount:type_name -> cosmos.base.v1beta1.Coin
+	25, // 7: cosmos.gov.v1.MsgUpdateParams.params:type_name -> cosmos.gov.v1.Params
+	26, // 8: cosmos.gov.v1.MsgCancelProposalResponse.canceled_time:type_name -> google.protobuf.Timestamp
+	21, // 9: cosmos.gov.v1.MsgSubmitMultipleChoiceProposal.initial_deposit:type_name -> cosmos.base.v1beta1.Coin
+	27, // 10: cosmos.gov.v1.MsgSubmitMultipleChoiceProposal.vote_options:type_name -> cosmos.gov.v1.ProposalVoteOptions
+	28, // 11: cosmos.gov.v1.MsgUpdateMessageParams.params:type_name -> cosmos.gov.v1.MessageBasedParams
+	20, // 12: cosmos.gov.v1.MsgSudoExec.msg:type_name -> google.protobuf.Any
+	0,  // 13: cosmos.gov.v1.Msg.SubmitProposal:input_type -> cosmos.gov.v1.MsgSubmitProposal
+	2,  // 14: cosmos.gov.v1.Msg.ExecLegacyContent:input_type -> cosmos.gov.v1.MsgExecLegacyContent
+	4,  // 15: cosmos.gov.v1.Msg.Vote:input_type -> cosmos.gov.v1.MsgVote
+	6,  // 16: cosmos.gov.v1.Msg.VoteWeighted:input_type -> cosmos.gov.v1.MsgVoteWeighted
+	8,  // 17: cosmos.gov.v1.Msg.Deposit:input_type -> cosmos.gov.v1.MsgDeposit
+	10, // 18: cosmos.gov.v1.Msg.UpdateParams:input_type -> cosmos.gov.v1.MsgUpdateParams
+	12, // 19: cosmos.gov.v1.Msg.CancelProposal:input_type -> cosmos.gov.v1.MsgCancelProposal
+	14, // 20: cosmos.gov.v1.Msg.SubmitMultipleChoiceProposal:input_type -> cosmos.gov.v1.MsgSubmitMultipleChoiceProposal
+	16, // 21: cosmos.gov.v1.Msg.UpdateMessageParams:input_type -> cosmos.gov.v1.MsgUpdateMessageParams
+	18, // 22: cosmos.gov.v1.Msg.SudoExec:input_type -> cosmos.gov.v1.MsgSudoExec
+	1,  // 23: cosmos.gov.v1.Msg.SubmitProposal:output_type -> cosmos.gov.v1.MsgSubmitProposalResponse
+	3,  // 24: cosmos.gov.v1.Msg.ExecLegacyContent:output_type -> cosmos.gov.v1.MsgExecLegacyContentResponse
+	5,  // 25: cosmos.gov.v1.Msg.Vote:output_type -> cosmos.gov.v1.MsgVoteResponse
+	7,  // 26: cosmos.gov.v1.Msg.VoteWeighted:output_type -> cosmos.gov.v1.MsgVoteWeightedResponse
+	9,  // 27: cosmos.gov.v1.Msg.Deposit:output_type -> cosmos.gov.v1.MsgDepositResponse
+	11, // 28: cosmos.gov.v1.Msg.UpdateParams:output_type -> cosmos.gov.v1.MsgUpdateParamsResponse
+	13, // 29: cosmos.gov.v1.Msg.CancelProposal:output_type -> cosmos.gov.v1.MsgCancelProposalResponse
+	15, // 30: cosmos.gov.v1.Msg.SubmitMultipleChoiceProposal:output_type -> cosmos.gov.v1.MsgSubmitMultipleChoiceProposalResponse
+	17, // 31: cosmos.gov.v1.Msg.UpdateMessageParams:output_type -> cosmos.gov.v1.MsgUpdateMessageParamsResponse
+	19, // 32: cosmos.gov.v1.Msg.SudoExec:output_type -> cosmos.gov.v1.MsgSudoExecResponse
+	23, // [23:33] is the sub-list for method output_type
+	13, // [13:23] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_gov_v1_tx_proto_init() }
@@ -10660,6 +11693,30 @@ func file_cosmos_gov_v1_tx_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_gov_v1_tx_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSudoExec); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_gov_v1_tx_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSudoExecResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -10667,7 +11724,7 @@ func file_cosmos_gov_v1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_gov_v1_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

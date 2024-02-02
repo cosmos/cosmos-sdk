@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
@@ -298,14 +299,28 @@ func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
-	// commit SS
-	if err := s.stateStore.ApplyChangeset(version, cs); err != nil {
-		return nil, fmt.Errorf("failed to commit SS: %w", err)
-	}
+	eg := new(errgroup.Group)
 
-	// commit SC
-	if err := s.commitSC(cs); err != nil {
-		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
+	// commit SS async
+	eg.Go(func() error {
+		if err := s.stateStore.ApplyChangeset(version, cs); err != nil {
+			return fmt.Errorf("failed to commit SS: %w", err)
+		}
+
+		return nil
+	})
+
+	// commit SC async
+	eg.Go(func() error {
+		if err := s.commitSC(cs); err != nil {
+			return fmt.Errorf("failed to commit SC: %w", err)
+		}
+
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
 	}
 
 	if s.commitHeader != nil {

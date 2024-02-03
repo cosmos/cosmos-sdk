@@ -215,8 +215,9 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 	newlyCreated := false
 	acc := GetSignerAcc(ctx, svd.ak, signer)
 	if acc == nil {
-		// if the account is nil, create the account with the address of the signer
-		// this is only the case when the user is sending their first tx
+		// if the account is nil, we assume this is the accounts first tx. in this case the account needs to be created, but
+		// the sign doc should keep account number 0. This is because the account number is not known until the account is created
+		// when the tx was signed, the account number was unknown and 0 was set.
 		acc = svd.ak.NewAccountWithAddress(ctx, txPubKey.Address().Bytes())
 		newlyCreated = true
 	}

@@ -2,6 +2,8 @@ package collections
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 
 	"cosmossdk.io/collections/codec"
 )
@@ -32,9 +34,50 @@ type Index[PrimaryKey, Value any] interface {
 // Internally IndexedMap can be seen as a partitioned collection, one partition
 // is a Map[PrimaryKey, Value], that maintains the object, the second
 // are the Indexes.
-type IndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]] struct {
-	Indexes Idx
-	m       Map[PrimaryKey, Value]
+type IndexedMap[PrimaryKey, Value, Idx any] struct {
+	Indexes         Idx
+	computedIndexes []Index[PrimaryKey, Value]
+	m               Map[PrimaryKey, Value]
+}
+
+// NewIndexedMap2 will attempt to compute the IndexesList API by itself.
+// NOTE: the passed object I must only contain indexes fields, if this
+// is not possible use the NewIndexedMap API with explicit Indexes
+// definition.
+func NewIndexedMap2[K, V, I any](
+	schema *SchemaBuilder,
+	prefix Prefix,
+	name string,
+	pkCodec codec.KeyCodec[K],
+	valueCodec codec.ValueCodec[V],
+	indexes I,
+) (*IndexedMap[K, V, I], error) {
+	typ := reflect.TypeOf(indexes)
+	v := reflect.ValueOf(indexes)
+	if typ.Kind() != reflect.Pointer && typ.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("unable to infer indexed map indexes: %v is not struct or pointer", typ)
+	}
+	if typ.Kind() == reflect.Pointer && typ.Elem().Kind() != reflect.Struct {
+		return nil, fmt.Errorf("unable to infer indexed map indexes: %v is a pointer but does not point to a struct", typ)
+	}
+	if typ.Kind() == reflect.Pointer {
+		v = v.Elem()
+	}
+	indexesImpl := make([]Index[K, V], v.NumField())
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		index, ok := field.Interface().(Index[K, V])
+		if !ok {
+			return nil, fmt.Errorf("unable to infer indexed map indexes: field %d does not implement index", i)
+		}
+		indexesImpl[i] = index
+	}
+
+	return &IndexedMap[K, V, I]{
+		computedIndexes: indexesImpl,
+		Indexes:         indexes,
+		m:               NewMap(schema, prefix, name, pkCodec, valueCodec),
+	}, nil
 }
 
 // NewIndexedMap instantiates a new IndexedMap. Accepts a SchemaBuilder, a Prefix,
@@ -51,8 +94,9 @@ func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
 	indexes Idx,
 ) *IndexedMap[PrimaryKey, Value, Idx] {
 	return &IndexedMap[PrimaryKey, Value, Idx]{
-		Indexes: indexes,
-		m:       NewMap(schema, prefix, name, pkCodec, valueCodec),
+		computedIndexes: indexes.IndexesList(),
+		Indexes:         indexes,
+		m:               NewMap(schema, prefix, name, pkCodec, valueCodec),
 	}
 }
 
@@ -111,7 +155,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value
 }
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value) error {
-	for _, index := range m.Indexes.IndexesList() {
+	for _, index := range m.computedIndexes {
 		err := index.Reference(ctx, pk, value, cachedGet[PrimaryKey, Value](ctx, m, pk))
 		if err != nil {
 			return err
@@ -121,7 +165,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk Primary
 }
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) unref(ctx context.Context, pk PrimaryKey) error {
-	for _, index := range m.Indexes.IndexesList() {
+	for _, index := range m.computedIndexes {
 		err := index.Unreference(ctx, pk, cachedGet[PrimaryKey, Value](ctx, m, pk))
 		if err != nil {
 			return err

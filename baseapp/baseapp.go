@@ -16,6 +16,7 @@ import (
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -468,11 +469,25 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // setState sets the BaseApp's state for the corresponding mode with a branched
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
 // multi-store branch, and provided header.
-func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
+func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
+	headerInfo := header.Info{
+		Height:  h.Height,
+		Time:    h.Time,
+		ChainID: h.ChainID,
+		AppHash: h.AppHash,
+	}
 	baseState := &state{
+<<<<<<< HEAD
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger).WithStreamingManager(app.streamingManager),
+=======
+		ms: ms,
+		ctx: sdk.NewContext(ms, false, app.logger).
+			WithStreamingManager(app.streamingManager).
+			WithBlockHeader(h).
+			WithHeaderInfo(headerInfo),
+>>>>>>> d353f11b9 (fix: Set headerInfo in context on setState (#19338))
 	}
 
 	switch mode {

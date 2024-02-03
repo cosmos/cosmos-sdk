@@ -15,7 +15,7 @@ jobs:
         run: |
           sudo apt-get install codespell -y
           codespell -w --skip="*.pulsar.go,*.pb.go,*.pb.gw.go,*.cosmos_orm.go,*.json,*.git,*.js,crypto/keys,fuzz,*.h,proto/tendermint,*.bin" --ignore-words=.github/.codespellignore
-      - uses: peter-evans/create-pull-request@v5
+      - uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.PRBOT_PAT }}
           commit-message: "chore: spelling errors fixes"

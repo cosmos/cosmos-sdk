@@ -8,6 +8,25 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
+
+	cverrors "github.com/agoric-labs/cosmos-sdk/cosmovisor/errors"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/rs/zerolog"
+)
+
+// environment variable names
+const (
+	EnvHome                 = "DAEMON_HOME"
+	EnvName                 = "DAEMON_NAME"
+	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
+	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
+	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
+	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
+	EnvInterval             = "DAEMON_POLL_INTERVAL"
+	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )
 
 const (

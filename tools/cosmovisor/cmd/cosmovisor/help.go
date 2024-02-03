@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"cosmossdk.io/tools/cosmovisor"
+	"github.com/agoric-labs/cosmos-sdk/cosmovisor"
 )
 
 // GetHelpText creates the help text multi-line string.
@@ -18,7 +18,7 @@ the proposal. Cosmovisor interprets that data to perform an update: switch a cur
 and restart the App.
 
 Configuration of Cosmovisor is done through environment variables, which are
-documented in: https://docs.cosmos.network/main/tooling/cosmovisor`,
+documented in: https://github.com/agoric-labs/cosmos-sdk/tree/main/cosmovisor/README.md`,
 		cosmovisor.EnvName, cosmovisor.EnvHome,
 	)
 }

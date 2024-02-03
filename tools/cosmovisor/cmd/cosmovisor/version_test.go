@@ -5,6 +5,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/agoric-labs/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"

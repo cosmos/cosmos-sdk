@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/agoric-labs/cosmos-sdk/cosmovisor"
+	cverrors "github.com/agoric-labs/cosmos-sdk/cosmovisor/errors"
 )
 
 func main() {

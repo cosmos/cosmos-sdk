@@ -28,10 +28,9 @@ require (
 	gotest.tools/v3 v3.5.1
 )
 
-require cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-
 require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -106,7 +105,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.11 // indirect
+	github.com/linxGnu/grocksdb v1.8.12 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -168,9 +167,11 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking
+	cosmossdk.io/x/tx => ../tx
 )

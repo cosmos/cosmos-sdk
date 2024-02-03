@@ -447,7 +447,7 @@ languages, possibly executed within a WASM VM.
 ### Minor API Revisions
 
 To declare minor API revisions of proto files, we propose the following guidelines (which were already documented
-in [cosmos.app.v1alpha module options](../../proto/cosmos/app/v1alpha1/module.proto)):
+in [cosmos.app.v1alpha module options](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/app/v1alpha1/module.proto):
 
 * proto packages which are revised from their initial version (considered revision `0`) should include a `package`
 * comment in some .proto file containing the test `Revision N` at the start of a comment line where `N` is the current

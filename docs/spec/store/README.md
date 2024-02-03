@@ -10,7 +10,7 @@ abstractions.
 
 ### `Store`
 
-The bulk of the store interfaces are defined [here](https://github.com/cosmos/cosmos-sdk/blob/main/store/types/store.go),
+The bulk of the store interfaces are defined [here](https://github.com/cosmos/cosmos-sdk/blob/main/store/store.go),
 where the base primitive interface, for which other interfaces build off of, is
 the `Store` type. The `Store` interface defines the ability to tell the type of
 the implementing store and the ability to cache wrap via the `CacheWrapper` interface.

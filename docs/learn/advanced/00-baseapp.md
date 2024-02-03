@@ -19,7 +19,7 @@ This document describes `BaseApp`, the abstraction that implements the core func
 
 `BaseApp` is a base type that implements the core of a Cosmos SDK application, namely:
 
-* The [Application Blockchain Interface](#main-abci-2.0-messages), for the state-machine to communicate with the underlying consensus engine (e.g. CometBFT).
+* The [Application Blockchain Interface](#main-abci-20-messages), for the state-machine to communicate with the underlying consensus engine (e.g. CometBFT).
 * [Service Routers](#service-routers), to route messages and queries to the appropriate module.
 * Different [states](#state-updates), as the state-machine can have different volatile states updated based on the ABCI message received.
 
@@ -166,7 +166,7 @@ which encodes and validates each transaction and from there the `AnteHandler` is
 If successful, valid transactions are returned inclusive of the events, tags, and data generated 
 during the execution of the proposal. 
 The described behavior is that of the default handler, applications have the flexibility to define their own 
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+[custom mempool handlers](https://docs.cosmos.network/main/build/building-apps/app-mempool).
 
 ![ProcessProposal](./baseapp_state-prepareproposal.png)
 
@@ -177,7 +177,7 @@ from the root store and is used to process a signed proposal received from a val
 In this state, `runTx` is called and the `AnteHandler` is executed and the context used in this state is built with information 
 from the header and the main state, including the minimum gas prices, which are also set. 
 Again we want to highlight that the described behavior is that of the default handler and applications have the flexibility to define their own
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+[custom mempool handlers](https://docs.cosmos.network/main/build/building-apps/app-mempool).
 
 ![ProcessProposal](./baseapp_state-processproposal.png)
 
@@ -309,7 +309,7 @@ Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 `CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to
 make the checks **lightweight** because gas fees are not charged for the resources (CPU, data load...) used during the `CheckTx`. 
 
-In the Cosmos SDK, after [decoding transactions](./05-encoding.md), `CheckTx()` is implemented
+In the Cosmos SDK, after [decoding transactions](https://docs.cosmos.network/main/learn/advanced/encoding), `CheckTx()` is implemented
 to do the following checks:
 
 1. Extract the `sdk.Msg`s from the transaction.
@@ -326,7 +326,7 @@ to do the following checks:
 
 `CheckTx` does **not** process `sdk.Msg`s -  they only need to be processed when the canonical state needs to be updated, which happens during `FinalizeBlock`.
 
-Steps 2. and 3. are performed by the [`AnteHandler`](../beginner/04-gas-fees.md#antehandler) in the [`RunTx()`](#runtx-antehandler-and-runmsgs)
+Steps 2. and 3. are performed by the [`AnteHandler`](../beginner/04-gas-fees.md#antehandler) in the [`RunTx()`](#runtx)
 function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a
 special [volatile state](#state-updates) called `checkState` is updated. This state is used to keep
 track of the temporary changes triggered by the `CheckTx()` calls of each transaction without modifying

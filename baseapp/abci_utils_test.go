@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -94,14 +93,6 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-	ctrl := gomock.NewController(s.T())
-	app := mock.NewMockProposalTxVerifier(ctrl)
-	mp1 := mempool.NewPriorityMempool()
-	mp2 := mempool.NewPriorityMempool()
-	ph1 := baseapp.NewDefaultProposalHandler(mp1, app)
-	handler1 := ph1.PrepareProposalHandler()
-	ph2 := baseapp.NewDefaultProposalHandler(mp2, app)
-	handler2 := ph2.PrepareProposalHandler()
 	var (
 		secret1 = []byte("secret1")
 		secret2 = []byte("secret2")
@@ -109,126 +100,122 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 		secret4 = []byte("secret4")
 		secret5 = []byte("secret5")
 		secret6 = []byte("secret6")
-		ctx1    = s.ctx.WithPriority(10)
-		ctx2    = s.ctx.WithPriority(8)
 	)
 
-	tx1 := buildMsg(s.T(), txConfig, []byte(`1`), [][]byte{secret1}, []uint64{1})
-	tx2 := buildMsg(s.T(), txConfig, []byte(`12345678910`), [][]byte{secret1}, []uint64{2})
-	tx3 := buildMsg(s.T(), txConfig, []byte(`12`), [][]byte{secret1}, []uint64{3})
-	tx4 := buildMsg(s.T(), txConfig, []byte(`12`), [][]byte{secret2}, []uint64{1})
-	err := mp1.Insert(ctx1, tx1)
-	s.Require().NoError(err)
-	err = mp1.Insert(ctx1, tx2)
-	s.Require().NoError(err)
-	err = mp1.Insert(ctx1, tx3)
-	s.Require().NoError(err)
-	err = mp1.Insert(ctx2, tx4)
-	s.Require().NoError(err)
-	txBz1, err := txConfig.TxEncoder()(tx1)
-	s.Require().NoError(err)
-	txBz2, err := txConfig.TxEncoder()(tx2)
-	s.Require().NoError(err)
-	txBz3, err := txConfig.TxEncoder()(tx3)
-	s.Require().NoError(err)
-	txBz4, err := txConfig.TxEncoder()(tx4)
-	s.Require().NoError(err)
-	app.EXPECT().PrepareProposalVerifyTx(tx1).Return(txBz1, nil).AnyTimes()
-	app.EXPECT().PrepareProposalVerifyTx(tx2).Return(txBz2, nil).AnyTimes()
-	app.EXPECT().PrepareProposalVerifyTx(tx3).Return(txBz3, nil).AnyTimes()
-	app.EXPECT().PrepareProposalVerifyTx(tx4).Return(txBz4, nil).AnyTimes()
-	txDataSize1 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz1}))
-	txDataSize2 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz2}))
-	txDataSize3 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz3}))
-	txDataSize4 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz4}))
-	s.Require().Equal(txDataSize1, 111)
-	s.Require().Equal(txDataSize2, 121)
-	s.Require().Equal(txDataSize3, 112)
-	s.Require().Equal(txDataSize4, 112)
-
-	tx5 := buildMsg(s.T(), txConfig, []byte(`1`), [][]byte{secret1, secret2}, []uint64{1, 1})
-	tx6 := buildMsg(s.T(), txConfig, []byte(`12345678910`), [][]byte{secret1, secret3}, []uint64{2, 1})
-	tx7 := buildMsg(s.T(), txConfig, []byte(`12`), [][]byte{secret1, secret4}, []uint64{3, 1})
-	tx8 := buildMsg(s.T(), txConfig, []byte(`12`), [][]byte{secret3, secret5}, []uint64{2, 1})
-	tx9 := buildMsg(s.T(), txConfig, []byte(`12`), [][]byte{secret2, secret6}, []uint64{2, 1})
-
-	err = mp2.Insert(ctx1, tx5)
-	s.Require().NoError(err)
-	err = mp2.Insert(ctx1, tx6)
-	s.Require().NoError(err)
-	err = mp2.Insert(ctx2, tx7)
-	s.Require().NoError(err)
-	err = mp2.Insert(ctx2, tx8)
-	s.Require().NoError(err)
-	err = mp2.Insert(ctx2, tx9)
-	s.Require().NoError(err)
-	txBz5, err := txConfig.TxEncoder()(tx5)
-	s.Require().NoError(err)
-	txBz6, err := txConfig.TxEncoder()(tx6)
-	s.Require().NoError(err)
-	txBz7, err := txConfig.TxEncoder()(tx7)
-	s.Require().NoError(err)
-	txBz8, err := txConfig.TxEncoder()(tx8)
-	s.Require().NoError(err)
-	txBz9, err := txConfig.TxEncoder()(tx9)
-	s.Require().NoError(err)
-	app.EXPECT().PrepareProposalVerifyTx(tx5).Return(txBz5, nil).AnyTimes()
-	app.EXPECT().PrepareProposalVerifyTx(tx6).Return(txBz6, nil).AnyTimes()
-	app.EXPECT().PrepareProposalVerifyTx(tx7).Return(txBz7, nil).AnyTimes()
-	app.EXPECT().PrepareProposalVerifyTx(tx8).Return(txBz8, nil).AnyTimes()
-	app.EXPECT().PrepareProposalVerifyTx(tx9).Return(txBz9, nil).AnyTimes()
-	txDataSize5 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz5}))
-	txDataSize6 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz6}))
-	txDataSize7 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz7}))
-	txDataSize8 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz8}))
-	txDataSize9 := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz9}))
-	s.Require().Equal(txDataSize5, 195)
-	s.Require().Equal(txDataSize6, 205)
-	s.Require().Equal(txDataSize7, 196)
-	s.Require().Equal(txDataSize8, 196)
-	s.Require().Equal(txDataSize9, 196)
-
-	mapTxs := map[string]string{
-		string(txBz1): "1",
-		string(txBz2): "2",
-		string(txBz3): "3",
-		string(txBz4): "4",
-		string(txBz5): "5",
-		string(txBz6): "6",
-		string(txBz7): "7",
-		string(txBz8): "8",
-		string(txBz9): "9",
+	type testTx struct {
+		tx       sdk.Tx
+		priority int64
+		bz       []byte
+		size     int
 	}
+
+	testTxs := []testTx{
+		// test 1
+		{tx: buildMsg(s.T(), txConfig, []byte(`0`), [][]byte{secret1}, []uint64{1}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`12345678910`), [][]byte{secret1}, []uint64{2}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`22`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`32`), [][]byte{secret2}, []uint64{1}), priority: 8},
+		// test 2
+		{tx: buildMsg(s.T(), txConfig, []byte(`4`), [][]byte{secret1, secret2}, []uint64{3, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`52345678910`), [][]byte{secret1, secret3}, []uint64{4, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`62`), [][]byte{secret1, secret4}, []uint64{5, 3}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`72`), [][]byte{secret3, secret5}, []uint64{4, 3}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`82`), [][]byte{secret2, secret6}, []uint64{4, 3}), priority: 8},
+		// test 3
+		{tx: buildMsg(s.T(), txConfig, []byte(`9`), [][]byte{secret3, secret4}, []uint64{3, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`1052345678910`), [][]byte{secret1, secret2}, []uint64{4, 4}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`11`), [][]byte{secret1, secret2}, []uint64{5, 5}), priority: 8},
+		// test 4
+		{tx: buildMsg(s.T(), txConfig, []byte(`1252345678910`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`13`), [][]byte{secret1}, []uint64{5}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`14`), [][]byte{secret1}, []uint64{6}), priority: 8},
+	}
+
+	for i := range testTxs {
+		bz, err := txConfig.TxEncoder()(testTxs[i].tx)
+		s.Require().NoError(err)
+		testTxs[i].bz = bz
+		testTxs[i].size = int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{bz}))
+	}
+
+	s.Require().Equal(testTxs[0].size, 111)
+	s.Require().Equal(testTxs[1].size, 121)
+	s.Require().Equal(testTxs[2].size, 112)
+	s.Require().Equal(testTxs[3].size, 112)
+	s.Require().Equal(testTxs[4].size, 195)
+	s.Require().Equal(testTxs[5].size, 205)
+	s.Require().Equal(testTxs[6].size, 196)
+	s.Require().Equal(testTxs[7].size, 196)
+	s.Require().Equal(testTxs[8].size, 196)
+
 	testCases := map[string]struct {
 		ctx         sdk.Context
+		txInputs    []testTx
 		req         abci.RequestPrepareProposal
 		handler     sdk.PrepareProposalHandler
-		expectedTxs [][]byte
+		expectedTxs []int
 	}{
 		"skip same-sender non-sequential sequence and then add others txs": {
-			ctx: s.ctx,
+			ctx:      s.ctx,
+			txInputs: []testTx{testTxs[0], testTxs[1], testTxs[2], testTxs[3]},
 			req: abci.RequestPrepareProposal{
-				Txs:        [][]byte{txBz1, txBz2, txBz3, txBz4},
 				MaxTxBytes: 111 + 112,
 			},
-			handler:     handler1,
-			expectedTxs: [][]byte{txBz1, txBz4},
+			expectedTxs: []int{0, 3},
 		},
 		"skip multi-signers msg non-sequential sequence": {
-			ctx: s.ctx,
+			ctx:      s.ctx,
+			txInputs: []testTx{testTxs[4], testTxs[5], testTxs[6], testTxs[7], testTxs[8]},
 			req: abci.RequestPrepareProposal{
-				Txs:        [][]byte{txBz5, txBz6, txBz7, txBz8, txBz9},
 				MaxTxBytes: 195 + 196,
 			},
-			handler:     handler2,
-			expectedTxs: [][]byte{txBz5, txBz9},
+			expectedTxs: []int{4, 8},
+		},
+		"only the first tx is added": {
+			// Because tx 10 is valid, tx 11 can't be valid as they have higher sequence numbers.
+			ctx:      s.ctx,
+			txInputs: []testTx{testTxs[9], testTxs[10], testTxs[11]},
+			req: abci.RequestPrepareProposal{
+				MaxTxBytes: 195 + 196,
+			},
+			expectedTxs: []int{9},
+		},
+		"no txs added": {
+			// Becasuse the first tx was deemed valid but too big, the next expected valid sequence is tx[0].seq (3), so
+			// the rest of the txs fail because they have a seq of 4.
+			ctx:      s.ctx,
+			txInputs: []testTx{testTxs[12], testTxs[13], testTxs[14]},
+			req: abci.RequestPrepareProposal{
+				MaxTxBytes: 112,
+			},
+			expectedTxs: []int{},
 		},
 	}
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-			resp := tc.handler(tc.ctx, tc.req)
-			s.Require().EqualValues(toHumanReadable(mapTxs, resp.Txs), toHumanReadable(mapTxs, tc.expectedTxs))
+			ctrl := gomock.NewController(s.T())
+			app := mock.NewMockProposalTxVerifier(ctrl)
+			mp := mempool.NewPriorityMempool()
+			ph := baseapp.NewDefaultProposalHandler(mp, app).PrepareProposalHandler()
+
+			for _, v := range tc.txInputs {
+				app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()
+				s.NoError(mp.Insert(s.ctx.WithPriority(v.priority), v.tx))
+				tc.req.Txs = append(tc.req.Txs, v.bz)
+			}
+
+			resp := ph(tc.ctx, tc.req)
+			respTxIndexes := []int{}
+			for _, tx := range resp.Txs {
+				for i, v := range testTxs {
+					if bytes.Equal(tx, v.bz) {
+						respTxIndexes = append(respTxIndexes, i)
+					}
+				}
+			}
+
+			s.Require().EqualValues(tc.expectedTxs, respTxIndexes)
 		})
 	}
 }
@@ -262,14 +249,6 @@ func buildMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]
 	}
 	setTxSignatureWithSecret(t, builder, signatures...)
 	return builder.GetTx()
-}
-
-func toHumanReadable(mapTxs map[string]string, txs [][]byte) string {
-	strs := []string{}
-	for _, v := range txs {
-		strs = append(strs, mapTxs[string(v)])
-	}
-	return strings.Join(strs, ",")
 }
 
 func setTxSignatureWithSecret(t *testing.T, builder client.TxBuilder, signatures ...signingtypes.SignatureV2) {

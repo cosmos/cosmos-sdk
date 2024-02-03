@@ -18,5 +18,8 @@ To install this fork of `cosmovisor`, run the following command:
 go install github.com/agoric-sdk/cosmos-sdk/cosmovisor/cmd/cosmovisor@Agoric
 ```
 
+Note that cosmovisor does not use the the version of cosmos-sdk that it is
+contiained in. This is true of both the Cosmos and Agoric versions.
+
 Have fun,
 The team at [Agoric](https://github.com/Agoric).

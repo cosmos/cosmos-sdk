@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/agoric-labs/cosmos-sdk/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"

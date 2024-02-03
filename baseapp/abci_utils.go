@@ -105,8 +105,8 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				panic(fmt.Errorf("failed to get signatures: %w", err))
 			}
 
-			// if the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
-			// so we add them and return true so this tx gets selected.
+			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
+			// so we add them and continue given that we don't need to check the sequence.
 			shouldAdd := true
 			txSignersSeqs := make(map[string]uint64)
 			for _, sig := range sigs {
@@ -117,10 +117,9 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 					continue
 				}
 
-				// if we have seen this signer before we check if the sequence we just got is
-				// seq+1 and if it is we update the sequence and return true so this tx gets
-				// selected. If it isn't seq+1 we return false so this tx doesn't get
-				// selected (it could be the same sequence or seq+2 which are invalid).
+				// If we have seen this signer before in this block, we must make
+				// sure that the current sequence is seq+1; otherwise is invalid
+				// and we skip it.
 				if seq+1 != sig.Sequence {
 					shouldAdd = false
 					break
@@ -150,9 +149,16 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 
 				txsLen := len(h.txSelector.SelectedTxs())
 				for sender, seq := range txSignersSeqs {
+					// If txsLen != selectedTxsNums is true, it means that we've
+					// added a new tx to the selected txs, so we need to update
+					// the sequence of the sender.
 					if txsLen != selectedTxsNums {
 						selectedTxsSignersSeqs[sender] = seq
 					} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
+						// The transaction hasn't been added but it passed the
+						// verification, so we know that the sequence is correct.
+						// So we set this sender's sequence to seq-1, in order
+						// to avoid unnecessary calls to PrepareProposalVerifyTx.
 						selectedTxsSignersSeqs[sender] = seq - 1
 					}
 				}

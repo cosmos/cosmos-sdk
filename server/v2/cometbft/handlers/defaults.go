@@ -15,38 +15,20 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// TODO: I suppose this will be STF or AppManager?
-type AppQuerier[T transaction.Tx] interface {
-	ValidateTx(ctx context.Context, tx T, execMode corecontext.ExecMode) (appmanager.TxResult, error)
-	QueryWithState(ctx context.Context, state store.ReaderMap, request appmanager.Type) (appmanager.Type, error)
-}
-
 type DefaultProposalHandler[T transaction.Tx] struct {
-	appQuerier AppQuerier[T]
 	mempool    mempool.Mempool[T]
 	txSelector TxSelector[T]
 }
 
-// TxSelector defines a helper type that assists in selecting transactions during
-// mempool transaction selection in PrepareProposal. It keeps track of the total
-// number of bytes and total gas of the selected transactions. It also keeps
-// track of the selected transactions themselves.
-type TxSelector[T transaction.Tx] interface {
-	// SelectedTxs should return a copy of the selected transactions.
-	SelectedTxs(ctx context.Context) []T
-
-	// Clear should clear the TxSelector, nulling out all relevant fields.
-	Clear()
-
-	// SelectTxForProposal should attempt to select a transaction for inclusion in
-	// a proposal based on inclusion criteria defined by the TxSelector. It must
-	// return <true> if the caller should halt the transaction selection loop
-	// (typically over a mempool) or <false> otherwise.
-	SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx T) bool
+func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *DefaultProposalHandler[T] {
+	return &DefaultProposalHandler[T]{
+		mempool:    mp,
+		txSelector: NewDefaultTxSelector[T](),
+	}
 }
 
 func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T] {
-	return func(ctx context.Context, rm store.ReaderMap, txs []T, req proto.Message) ([]T, error) {
+	return func(ctx context.Context, app appmanager.AppManager[T], rm store.ReaderMap, txs []T, req proto.Message) ([]T, error) {
 
 		abciReq, ok := req.(*abci.RequestPrepareProposal)
 		if !ok {
@@ -55,7 +37,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T
 
 		var maxBlockGas uint64
 
-		res, err := h.appQuerier.QueryWithState(ctx, rm, &consensusv1.QueryParamsRequest{})
+		res, err := app.QueryWithState(ctx, rm, &consensusv1.QueryParamsRequest{})
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +77,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T
 			// which calls mempool.Insert, in theory everything in the pool should be
 			// valid. But some mempool implementations may insert invalid txs, so we
 			// check again.
-			_, err := h.appQuerier.ValidateTx(ctx, memTx, corecontext.ExecModePrepareProposal)
+			_, err := app.ValidateTx(ctx, memTx, corecontext.ExecModePrepareProposal)
 
 			if err != nil {
 				err := h.mempool.Remove(memTx)
@@ -118,8 +100,8 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T
 }
 
 func (h *DefaultProposalHandler[T]) ProcessHandler() appmanager.ProcessHandler[T] {
-	return func(ctx context.Context, txs []T, rm store.ReaderMap, req proto.Message) error {
-		// If the mempool is nil or NoOp we simply return ACCEPT,
+	return func(ctx context.Context, app appmanager.AppManager[T], txs []T, rm store.ReaderMap, req proto.Message) error {
+		// If the mempool is nil we simply return ACCEPT,
 		// because PrepareProposal may have included txs that could fail verification.
 		if h.mempool == nil {
 			return nil
@@ -131,7 +113,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() appmanager.ProcessHandler[T
 			return fmt.Errorf("invalid request type: %T", req)
 		}
 
-		res, err := h.appQuerier.QueryWithState(ctx, rm, &consensusv1.QueryParamsRequest{})
+		res, err := app.QueryWithState(ctx, rm, &consensusv1.QueryParamsRequest{})
 		if err != nil {
 			return err
 		}
@@ -148,7 +130,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() appmanager.ProcessHandler[T
 
 		var totalTxGas uint64
 		for _, tx := range txs {
-			_, err := h.appQuerier.ValidateTx(ctx, tx, corecontext.ExecModePrepareProposal)
+			_, err := app.ValidateTx(ctx, tx, corecontext.ExecModePrepareProposal)
 			if err != nil {
 				return fmt.Errorf("failed to validate tx: %w", err)
 			}

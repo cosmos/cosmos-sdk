@@ -81,7 +81,7 @@ func (s queryServer) Account(ctx context.Context, req *types.QueryAccountRequest
 	}
 	account := s.k.GetAccount(ctx, addr)
 	if account == nil {
-		return nil, status.Errorf(codes.NotFound, "11account %s not found", req.Address)
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
 	any, err := codectypes.NewAnyWithValue(account)

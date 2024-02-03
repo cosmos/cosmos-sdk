@@ -424,7 +424,9 @@ func (ts *defaultTxSelector) Clear() {
 }
 
 func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool {
-	txSize := uint64(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz}))
+	// compute the total size of the selected transactions + the prospective transaction
+	allTxs := append(ts.selectedTxs, txBz)
+	allTxsSize := computeTxsSize(allTxs)
 
 	var txGasLimit uint64
 	if memTx != nil {
@@ -434,21 +436,30 @@ func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, 
 	}
 
 	// only add the transaction to the proposal if we have enough capacity
-	if (txSize + ts.totalTxBytes) <= maxTxBytes {
+	if allTxsSize <= maxTxBytes {
 		// If there is a max block gas limit, add the tx only if the limit has
 		// not been met.
 		if maxBlockGas > 0 {
 			if (txGasLimit + ts.totalTxGas) <= maxBlockGas {
 				ts.totalTxGas += txGasLimit
-				ts.totalTxBytes += txSize
-				ts.selectedTxs = append(ts.selectedTxs, txBz)
+				ts.totalTxBytes = allTxsSize
+				ts.selectedTxs = allTxs
 			}
 		} else {
-			ts.totalTxBytes += txSize
-			ts.selectedTxs = append(ts.selectedTxs, txBz)
+			ts.totalTxBytes = allTxsSize
+			ts.selectedTxs = allTxs
 		}
 	}
 
 	// check if we've reached capacity; if so, we cannot select any more transactions
 	return ts.totalTxBytes >= maxTxBytes || (maxBlockGas > 0 && (ts.totalTxGas >= maxBlockGas))
+}
+
+func computeTxsSize(bz [][]byte) uint64 {
+	txs := make([]cmttypes.Tx, len(bz))
+	for i, txBz := range bz {
+		txs[i] = txBz
+	}
+
+	return uint64(cmttypes.ComputeProtoSizeForTxs(txs))
 }

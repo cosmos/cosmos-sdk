@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -82,7 +81,7 @@ func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRev
 
 // Exec implements the MsgServer.Exec method.
 func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
-	fmt.Println("hereer")
+
 	if msg.Grantee == "" {
 		return nil, errors.New("empty address string is not allowed")
 	}

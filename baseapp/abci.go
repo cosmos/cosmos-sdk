@@ -352,6 +352,22 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() abci.ResponseCommit {
+	// Upstream cosmos-sdk unconditionally calls SnapshotIfApplicable, like:
+	//    go app.snapshotManager.SnapshotIfApplicable(header.Height)
+	// We separate that into determination in CommitWithoutSnapshot
+	// and initiation (if applicable) here.
+	res, snapshotHeight := app.CommitWithoutSnapshot()
+	if snapshotHeight > 0 {
+		go app.snapshotManager.Snapshot(snapshotHeight)
+	}
+
+	return res
+}
+
+// CommitWithoutSnapshot is like Commit but instead of starting the snapshot goroutine
+// it returns a positive height to indicate that a snapshot is warranted.
+// It can be used by apps to synchronously manage snapshot logic, especially initiation.
+func (app *BaseApp) CommitWithoutSnapshot() (_res abci.ResponseCommit, snapshotHeight int64) {
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 

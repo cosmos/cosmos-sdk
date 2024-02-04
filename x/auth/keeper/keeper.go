@@ -95,6 +95,18 @@ type AccountKeeper interface {
 
 	// SetParams sets the auth module's parameters.
 	SetParams(sdk.Context, types.Params)
+
+	// HasAccountAddressByID checks account address exists by id.
+	HasAccountAddressByID(ctx sdk.Context, id uint64) bool
+
+	// GetAccountAddressByID returns account address by id.
+	GetAccountAddressByID(ctx sdk.Context, id uint64) string
+
+	// InitGenesis - Init store state from genesis data
+	InitGenesis(ctx sdk.Context, data types.GenesisState)
+
+	// ExportGenesis returns a GenesisState for a given context and keeper
+	ExportGenesis(ctx sdk.Context) *types.GenesisState
 }
 
 // accountKeeper encodes/decodes accounts using the go-amino (binary)

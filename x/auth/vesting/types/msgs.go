@@ -150,7 +150,7 @@ func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTi
 		ToAddress:      toAddr.String(),
 		StartTime:      startTime,
 		VestingPeriods: periods,
-		Merge:		merge,
+		Merge:          merge,
 	}
 }
 

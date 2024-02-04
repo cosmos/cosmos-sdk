@@ -58,7 +58,7 @@ func NewIndexedMapSafe[K, V, I any](
 		// if does not implement Indexes, then we try to infer using reflection
 		indexesList, err = tryInferIndexes[I, K, V](indexes)
 		if err != nil {
-			return nil, fmt.Errorf("unable to infer indexes using rellection, consider implementing Indexes interface: %w", err)
+			return nil, fmt.Errorf("unable to infer indexes using reflection, consider implementing Indexes interface: %w", err)
 		}
 	}
 

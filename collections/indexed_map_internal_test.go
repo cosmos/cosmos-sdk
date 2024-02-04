@@ -27,5 +27,4 @@ func TestTryInferIndex(t *testing.T) {
 		_, err := tryInferIndexes[invalidIndex, string, string](invalidIndex{})
 		require.ErrorIs(t, err, errNotIndex)
 	})
-
 }

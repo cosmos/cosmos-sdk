@@ -210,8 +210,8 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // authenticate the authentication of the TX for a specific tx signer.
 func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
-	// newlyCreated is a flag that indicates if the account was newly created
-	// this is only the case when the user is sending their first tx
+	// newlyCreated is a flag that indicates if the account was newly created.
+	// This is only the case when the user is sending their first tx.
 	newlyCreated := false
 	acc := GetSignerAcc(ctx, svd.ak, signer)
 	if acc == nil {

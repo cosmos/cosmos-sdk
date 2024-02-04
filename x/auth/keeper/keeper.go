@@ -96,7 +96,7 @@ type AccountKeeper interface {
 	// HasAccountAddressByID checks account address exists by id.
 	HasAccountAddressByID(ctx sdk.Context, id uint64) bool
 
-	// GetAccountAddressById returns account address by id.
+	// GetAccountAddressByID returns account address by id.
 	GetAccountAddressByID(ctx sdk.Context, id uint64) string
 
 	// InitGenesis - Init store state from genesis data

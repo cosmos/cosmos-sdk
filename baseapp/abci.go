@@ -309,12 +309,11 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() abci.ResponseCommit {
-	res, snapshotHeight := app.CommitWithoutSnapshot()
-
-	// Upstream cosmos-sdk unconditionally calls SnapshotIfApplicable,
-	// but we separate that into determination in CommitWithoutSnapshot
+	// Upstream cosmos-sdk unconditionally calls SnapshotIfApplicable, like:
+	//    go app.snapshotManager.SnapshotIfApplicable(header.Height)
+	// We separate that into determination in CommitWithoutSnapshot
 	// and initiation (if applicable) here.
-	// go app.snapshotManager.SnapshotIfApplicable(header.Height)
+	res, snapshotHeight := app.CommitWithoutSnapshot()
 	if snapshotHeight > 0 {
 		go app.snapshotManager.Snapshot(snapshotHeight)
 	}

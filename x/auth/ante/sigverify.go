@@ -307,7 +307,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 
 	// if the account number is 0 and the account is signing, the sign doc will not have an account number
 	if acc.GetSequence() == 0 && newlyCreated {
-		// if the account sequence is 0, and we're in genesis, then we're
+		// If the account sequence is 0, and we're in genesis, then we're
 		// dealing with an account that has been generated but never used.
 		// in this case, we should not verify signatures.
 		accNum = 0

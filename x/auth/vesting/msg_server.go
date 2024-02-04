@@ -312,3 +312,83 @@ func (s msgServer) ReturnGrants(goCtx context.Context, msg *types.MsgReturnGrant
 
 	return &types.MsgReturnGrantsResponse{}, nil
 }
+
+func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreatePeriodicVestingAccountResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	ak := s.AccountKeeper
+	bk := s.BankKeeper
+
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if bk.BlockedAddr(to) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+	}
+
+	var totalCoins sdk.Coins
+	for _, period := range msg.VestingPeriods {
+		totalCoins = totalCoins.Add(period.Amount...)
+	}
+
+	madeNewAcc := false
+	acc := ak.GetAccount(ctx, to)
+
+	if acc != nil {
+		pva, isPeriodic := acc.(exported.GrantAccount)
+		switch {
+		case !msg.Merge && isPeriodic:
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
+		case !msg.Merge && !isPeriodic:
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+		case msg.Merge && !isPeriodic:
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a periodic vesting account", msg.ToAddress)
+		}
+		grantAction := types.NewPeriodicGrantAction(s.StakingKeeper, msg.GetStartTime(), msg.GetVestingPeriods(), totalCoins)
+		err := pva.AddGrant(ctx, grantAction)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		baseAccount := authtypes.NewBaseAccountWithAddress(to)
+		baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+		acc = types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+		madeNewAcc = true
+	}
+
+	ak.SetAccount(ctx, acc)
+
+	if madeNewAcc {
+		defer func() {
+			telemetry.IncrCounter(1, "new", "account")
+
+			for _, a := range totalCoins {
+				if a.Amount.IsInt64() {
+					telemetry.SetGaugeWithLabels(
+						[]string{"tx", "msg", "create_periodic_vesting_account"},
+						float32(a.Amount.Int64()),
+						[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					)
+				}
+			}
+		}()
+	}
+
+	if err = bk.SendCoins(ctx, from, to, totalCoins); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+	return &types.MsgCreatePeriodicVestingAccountResponse{}, nil
+}

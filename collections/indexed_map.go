@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -40,26 +41,48 @@ type IndexedMap[PrimaryKey, Value, Idx any] struct {
 	m               Map[PrimaryKey, Value]
 }
 
-// NewIndexedMap2 will attempt to compute the IndexesList API by itself.
-// NOTE: the passed object I must only contain indexes fields, if this
-// is not possible use the NewIndexedMap API with explicit Indexes
-// definition.
-func NewIndexedMap2[K, V, I any](
+// NewIndexedMapSafe behaves like NewIndexedMap but returns errors.
+func NewIndexedMapSafe[K, V, I any](
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
 	pkCodec codec.KeyCodec[K],
 	valueCodec codec.ValueCodec[V],
 	indexes I,
-) (*IndexedMap[K, V, I], error) {
+) (im *IndexedMap[K, V, I], err error) {
+	var indexesList []Index[K, V]
+	indexesImpl, ok := any(indexes).(Indexes[K, V])
+	if ok {
+		indexesList = indexesImpl.IndexesList()
+	} else {
+		// if does not implement Indexes, then we try to infer using reflection
+		indexesList, err = tryInferIndexes[I, K, V](indexes)
+		if err != nil {
+			return nil, fmt.Errorf("unable to infer indexes using rellection, consider implementing Indexes interface: %w", err)
+		}
+	}
+
+	return &IndexedMap[K, V, I]{
+		computedIndexes: indexesList,
+		Indexes:         indexes,
+		m:               NewMap(schema, prefix, name, pkCodec, valueCodec),
+	}, nil
+}
+
+var (
+	// testing sentinel errors
+	errNotStruct = errors.New("wanted struct or pointer to a struct")
+	errNotIndex  = errors.New("field is not an index implementation")
+)
+
+func tryInferIndexes[I, K, V any](indexes I) ([]Index[K, V], error) {
 	typ := reflect.TypeOf(indexes)
 	v := reflect.ValueOf(indexes)
-	if typ.Kind() != reflect.Pointer && typ.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("unable to infer indexed map indexes: %v is not struct or pointer", typ)
+	// check if struct or pointer to a struct
+	if typ.Kind() != reflect.Struct && (typ.Kind() != reflect.Pointer || typ.Elem().Kind() != reflect.Struct) {
+		return nil, fmt.Errorf("%w: type %v", errNotStruct, typ)
 	}
-	if typ.Kind() == reflect.Pointer && typ.Elem().Kind() != reflect.Struct {
-		return nil, fmt.Errorf("unable to infer indexed map indexes: %v is a pointer but does not point to a struct", typ)
-	}
+	// dereference
 	if typ.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
@@ -68,24 +91,21 @@ func NewIndexedMap2[K, V, I any](
 		field := v.Field(i)
 		index, ok := field.Interface().(Index[K, V])
 		if !ok {
-			return nil, fmt.Errorf("unable to infer indexed map indexes: field %d does not implement index", i)
+			return nil, fmt.Errorf("%w: field number %d", errNotIndex, i)
 		}
 		indexesImpl[i] = index
 	}
-
-	return &IndexedMap[K, V, I]{
-		computedIndexes: indexesImpl,
-		Indexes:         indexes,
-		m:               NewMap(schema, prefix, name, pkCodec, valueCodec),
-	}, nil
+	return indexesImpl, nil
 }
 
 // NewIndexedMap instantiates a new IndexedMap. Accepts a SchemaBuilder, a Prefix,
 // a humanized name that defines the name of the collection, the primary key codec
 // which is basically what IndexedMap uses to encode the primary key to bytes,
 // the value codec which is what the IndexedMap uses to encode the value.
-// Then it expects the initialized indexes.
-func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
+// Then it expects the initialized indexes. Reflection is used to infer the
+// indexes, Indexes can optionally be implemented to be explicit. Panics
+// on failure to create indexes. If you want an erroring API use NewIndexedMapSafe.
+func NewIndexedMap[PrimaryKey, Value, Idx any](
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
@@ -93,11 +113,11 @@ func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
 	valueCodec codec.ValueCodec[Value],
 	indexes Idx,
 ) *IndexedMap[PrimaryKey, Value, Idx] {
-	return &IndexedMap[PrimaryKey, Value, Idx]{
-		computedIndexes: indexes.IndexesList(),
-		Indexes:         indexes,
-		m:               NewMap(schema, prefix, name, pkCodec, valueCodec),
+	im, err := NewIndexedMapSafe(schema, prefix, name, pkCodec, valueCodec, indexes)
+	if err != nil {
+		panic(err)
 	}
+	return im
 }
 
 // Get gets the object given its primary key.

@@ -122,12 +122,9 @@ func newInferIndex(schema *collections.SchemaBuilder) *inferIndex {
 }
 
 func TestIndexedMapInfer(t *testing.T) {
-	sk, ctx := colltest.MockStore()
+	sk, _ := colltest.MockStore()
 	schema := collections.NewSchemaBuilder(sk)
 
-	im, err := collections.NewIndexedMap2(schema, collections.NewPrefix(0), "im", collections.StringKey, colltest.MockValueCodec[company](), newInferIndex(schema))
+	_, err := collections.NewIndexedMapSafe(schema, collections.NewPrefix(0), "im", collections.StringKey, colltest.MockValueCodec[company](), newInferIndex(schema))
 	require.NoError(t, err)
-
-	_ = im
-	_ = ctx
 }

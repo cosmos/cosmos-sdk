@@ -17,15 +17,15 @@ design and enables new use cases we are seeing today.
 
 Taking a step back, we have seen the emergence of rollups and proving technologies.
 These technologies enable new use cases and new methods of achieving various goals.
-When we look at things like proving we look to [Tinygo](https://tinygo.org/). When
-we have attempted to use Tinygo with existing modules we have run into a hiccup,
-the use of [gRPC](https://github.com/tinygo-org/tinygo/issues/2814) within modules.
-This has led us to look at a design which would allow the usage of Tinygo and
+When we look at things like proving we look to [TinyGo](https://TinyGo.org/). When
+we have attempted to use TinyGo with existing modules we have run into a hiccup,
+the use of [gRPC](https://github.com/TinyGo-org/TinyGo/issues/2814) within modules.
+This has led us to look at a design which would allow the usage of TinyGo and
 other technologies.
 
-We looked at Tinygo for our first target in order to compile down down to a 32 bit environment which could be used with
+We looked at TinyGo for our first target in order to compile down down to a 32 bit environment which could be used with
 things like [Risc-0](https://www.risczero.com/), [Fluent](https://fluentlabs.xyz/) and other technologies. When speaking with the teams behind these technologies
-we found that they were interested in using the Cosmos SDK but were unable to due to being unable to use Tinygo or the
+we found that they were interested in using the Cosmos SDK but were unable to due to being unable to use TinyGo or the
 Cosmos SDK go code in a 32 bit environment.
 
 The Cosmos SDK team has been hard at work over the last few months designing and implementing a modular core layer, with
@@ -36,7 +36,7 @@ layer will be able to be used in conjunction with proving technologies without t
 
 ## Proposal
 
-This proposal is around enabling modules to be compiled to an environment in which they can be used with Tinygo and/or
+This proposal is around enabling modules to be compiled to an environment in which they can be used with TinyGo and/or
 different proving technologies.
 
 > Note the usage of handlers in modules is optional, modules can still use the existing design. This design is meant to
@@ -126,8 +126,8 @@ We note the following behaviors:
 
 ### Message and Query Handlers
 
-Similar to the above design, message handlers will allow the application developer to replace existing Grpc based services
-with handlers. This enables the module to be compiled down to tinygo, and abandon the gRPC dependency. As mentioned
+Similar to the above design, message handlers will allow the application developer to replace existing gRPC based services
+with handlers. This enables the module to be compiled down to TinyGo, and abandon the gRPC dependency. As mentioned
 upgrading the modules immediately is not mandatory, module developers can do so in a gradual way. Application developers have the option to use the existing gRPC services or the new handlers.
 
 For message handlers we propose the introduction of the following core/appmodule interfaces and functions:
@@ -240,7 +240,7 @@ func (b CircuitModule) RegisterConsensusHandlers(router core_appmodule.MsgHandle
 
 ## Consequences
 
-* REST endpoints for message and queries change due to lack of services and grpc gatway annotations.
+* REST endpoints for message and queries change due to lack of services and gRPC gatway annotations.
 * When using gRPC directly, one must query a schema endpoint in order to see all possible messages and queries.
 
 ### Backwards Compatibility
@@ -249,7 +249,7 @@ The way to interact with modules changes, REST and gRPC will still be available.
 
 ### Positive
 
-* Allows modules to be compiled to tinyGO.
+* Allows modules to be compiled to TinyGo.
 * Reduces the cosmos-sdk's learning curve, since understanding gRPC semantics is not a must anymore.
 * Allows other modules to extend existing modules behaviour using pre and post msg handlers, without forking.
 * The system becomes overall more simple as gRPC is not anymore a hard dependency and requirement for the state machine.

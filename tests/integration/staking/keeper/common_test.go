@@ -24,6 +24,7 @@ import (
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -115,12 +116,16 @@ func initFixture(tb testing.TB) *fixture {
 		types.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
 
+	router := baseapp.NewMsgServiceRouter()
+	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)

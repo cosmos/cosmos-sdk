@@ -17,6 +17,7 @@ import (
 	mintkeeper "cosmossdk.io/x/mint/keeper"
 	minttypes "cosmossdk.io/x/mint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
@@ -39,12 +40,16 @@ func Example() {
 	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, true, logger)
 
+	router := baseapp.NewMsgServiceRouter()
+	router.SetInterfaceRegistry(encodingCfg.Codec.InterfaceRegistry())
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
+		router,
 		"cosmos",
 		authority,
 	)
@@ -128,12 +133,16 @@ func Example_oneModule() {
 	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, true, logger)
 
+	router := baseapp.NewMsgServiceRouter()
+	router.SetInterfaceRegistry(encodingCfg.Codec.InterfaceRegistry())
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
+		router,
 		"cosmos",
 		authority,
 	)

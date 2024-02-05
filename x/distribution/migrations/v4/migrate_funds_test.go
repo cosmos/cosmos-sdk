@@ -21,6 +21,7 @@ import (
 	disttypes "cosmossdk.io/x/distribution/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
@@ -44,6 +45,9 @@ func TestFundsMigration(t *testing.T) {
 
 	authority := authtypes.NewModuleAddress("gov")
 
+	router := baseapp.NewMsgServiceRouter()
+	router.SetInterfaceRegistry(encCfg.Codec.InterfaceRegistry())
+
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encCfg.Codec,
@@ -51,6 +55,7 @@ func TestFundsMigration(t *testing.T) {
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)

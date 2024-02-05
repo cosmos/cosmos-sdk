@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
@@ -34,6 +35,7 @@ type DeterministicTestSuite struct {
 	key           *storetypes.KVStoreKey
 	storeService  corestore.KVStoreService
 	ctx           sdk.Context
+	baseApp       *baseapp.BaseApp
 	queryClient   types.QueryClient
 	accountKeeper keeper.AccountKeeper
 	encCfg        moduletestutil.TestEncodingConfig
@@ -68,12 +70,23 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		randomPerm:               {"random"},
 	}
 
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		suite.encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
+	suite.baseApp = baseApp
+
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
 		storeService,
 		types.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
+		baseApp.MsgServiceRouter(),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
 	)
@@ -294,6 +307,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			types.ProtoBaseAccount,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
+			suite.baseApp.MsgServiceRouter(),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)
@@ -341,6 +355,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			types.ProtoBaseAccount,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
+			suite.baseApp.MsgServiceRouter(),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)

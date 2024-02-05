@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -29,9 +30,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
+	Config           *modulev1.Module
+	StoreService     store.KVStoreService
+	Cdc              codec.Codec
+	MsgServiceRouter baseapp.MessageRouter
 
 	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
@@ -70,7 +72,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.MsgServiceRouter, in.Config.Bech32Prefix, auth)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

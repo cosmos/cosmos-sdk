@@ -18,6 +18,7 @@ import (
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -77,17 +78,29 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 	}
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(&testing.T{}, key, storetypes.NewTransientStoreKey("transient_test"))
 	storeService := runtime.NewKVStoreService(key)
 
 	maccPerms := map[string][]string{}
 
 	encCfg := moduletestutil.MakeTestEncodingConfig()
+
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encCfg.Codec,
 		storeService,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		address.NewBech32Codec("cosmos"),
+		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)

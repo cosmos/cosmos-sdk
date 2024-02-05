@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -89,6 +90,7 @@ type AccountKeeper struct {
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
+	router       baseapp.MessageRouter
 
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
@@ -115,7 +117,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
-	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
+	maccPerms map[string][]string, ac address.Codec, router baseapp.MessageRouter, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -130,6 +132,7 @@ func NewAccountKeeper(
 		storeService:  storeService,
 		proto:         proto,
 		cdc:           cdc,
+		router:        router,
 		permAddrs:     permAddrs,
 		authority:     authority,
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -277,4 +280,31 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 		panic(err)
 	}
 	return params
+}
+
+func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
+	results := make([][]byte, len(msgs))
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	for i, msg := range msgs {
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := m.ValidateBasic(); err != nil {
+				return nil, err
+			}
+		}
+
+		handler := ak.router.Handler(msg)
+		if handler == nil {
+			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
+		}
+
+		msgResp, err := handler(sdkCtx, msg)
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "failed to execute message; message %v", msg)
+		}
+
+		results[i] = msgResp.Data
+	}
+
+	return results, nil
 }

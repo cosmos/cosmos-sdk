@@ -69,12 +69,18 @@ func initFixture(tb testing.TB) *fixture {
 		types.ModuleName:               {authtypes.Burner},
 	}
 
+	// Create MsgServiceRouter, but don't populate it before creating the gov
+	// keeper.
+	router := baseapp.NewMsgServiceRouter()
+	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -98,11 +104,6 @@ func initFixture(tb testing.TB) *fixture {
 	// set default staking params
 	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
 	assert.NilError(tb, err)
-
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
 	govKeeper := keeper.NewKeeper(
 		cdc,

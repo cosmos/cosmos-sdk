@@ -6,6 +6,7 @@ import (
 	coreheader "cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/metrics"
+	"cosmossdk.io/store/v2/proof"
 )
 
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
@@ -65,7 +66,7 @@ type RootStore interface {
 	Commit(cs *Changeset) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
-	LastCommitID() (CommitID, error)
+	LastCommitID() (proof.CommitID, error)
 
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
@@ -107,5 +108,5 @@ type QueryResult struct {
 	Key      []byte
 	Value    []byte
 	Version  uint64
-	ProofOps []CommitmentOp
+	ProofOps []proof.CommitmentOp
 }

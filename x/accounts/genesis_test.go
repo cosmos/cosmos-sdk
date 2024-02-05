@@ -20,13 +20,13 @@ func TestGenesis(t *testing.T) {
 	// we init two accounts of the same type
 
 	// we set counter to 10
-	_, addr1, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{})
+	_, addr1, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{}, nil)
 	require.NoError(t, err)
 	_, err = k.Execute(ctx, addr1, []byte("sender"), &types.UInt64Value{Value: 10})
 	require.NoError(t, err)
 
 	// we set counter to 20
-	_, addr2, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{})
+	_, addr2, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{}, nil)
 	require.NoError(t, err)
 	_, err = k.Execute(ctx, addr2, []byte("sender"), &types.UInt64Value{Value: 20})
 	require.NoError(t, err)

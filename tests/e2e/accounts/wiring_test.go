@@ -24,7 +24,7 @@ func TestDependencies(t *testing.T) {
 
 	_, counterAddr, err := ak.Init(ctx, "counter", accCreator, &counterv1.MsgInit{
 		InitialValue: 0,
-	})
+	}, nil)
 	require.NoError(t, err)
 	// test dependencies
 	r, err := ak.Execute(ctx, counterAddr, []byte("test"), &counterv1.MsgTestDependencies{})

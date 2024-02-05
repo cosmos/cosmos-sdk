@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -76,6 +77,10 @@ func Sender(ctx context.Context) []byte {
 func SenderIsAccountsModule(ctx context.Context) bool {
 	return bytes.Equal(Sender(ctx), accountsModuleAddress)
 }
+
+// Funds returns if any funds were sent during the execute or init request. In queries this
+// returns nil.
+func Funds(ctx context.Context) sdk.Coins { return implementation.Funds(ctx) }
 
 // ExecModule can be used to execute a message towards a module.
 func ExecModule[Resp any, RespProto implementation.ProtoMsgG[Resp], Req any, ReqProto implementation.ProtoMsgG[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {

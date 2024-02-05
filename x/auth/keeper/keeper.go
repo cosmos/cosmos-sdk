@@ -282,29 +282,34 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	return params
 }
 
-func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
+func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([][]byte, []error) {
 	results := make([][]byte, len(msgs))
+	errors := make([]error, len(msgs))
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	for i, msg := range msgs {
 		if m, ok := msg.(sdk.HasValidateBasic); ok {
 			if err := m.ValidateBasic(); err != nil {
-				return nil, err
+				errors[i] = err
+				continue
 			}
 		}
 
 		handler := ak.router.Handler(msg)
 		if handler == nil {
-			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
+			errors[i] = sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
+			continue
 		}
 
 		msgResp, err := handler(sdkCtx, msg)
 		if err != nil {
-			return nil, errorsmod.Wrapf(err, "failed to execute message; message %v", msg)
+			wrappedErr := errorsmod.Wrapf(err, "failed to execute message; message index: %d; message %v", i, msg)
+			errors = append(errors, wrappedErr)
+			continue
 		}
 
 		results[i] = msgResp.Data
 	}
 
-	return results, nil
+	return results, errors
 }

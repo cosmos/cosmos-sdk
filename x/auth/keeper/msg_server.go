@@ -48,13 +48,20 @@ func (ms msgServer) AsyncMultiMsgExec(goCtx context.Context, msg *types.MsgAsync
 		return nil, err
 	}
 
-	results, err := ms.ak.AsyncMsgsExec(goCtx, signer, msgs)
+	results, errors := ms.ak.AsyncMsgsExec(goCtx, signer, msgs)
 	if err != nil {
 		return nil, err
 	}
 
+	errorStrings := make([]string, len(errors))
+	for i, err := range errors {
+		if err != nil {
+			errorStrings[i] = err.Error()
+		}
+	}
+
 	return &types.MsgAsyncMultiMsgExecResponse{
-		Error:   []string{},
+		Error:   errorStrings,
 		Results: results,
 	}, nil
 }

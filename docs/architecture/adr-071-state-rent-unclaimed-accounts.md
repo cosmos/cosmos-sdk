@@ -40,17 +40,9 @@ Thus, we propose a mechanism for charging state rent on yet-to-be-claimed accoun
 This mechanism can further be extended and adapted to charge state rent for existing
 objects on-chain.
 
-## Alternatives
-
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through.
-
 ## Decision
 
-> This section describes our response to these forces. It is stated in full
-> sentences, with active voice. "We will ..."
-> {decision body}
+We propose to adopt a similar mechanism to Solana's [state rent algorithm](https://docs.solanalabs.com/implemented-proposals/rent).
 
 ## Consequences
 
@@ -65,6 +57,12 @@ objects on-chain.
 > describing these incompatibilities and their severity. The ADR must explain
 > how the author proposes to deal with these incompatibilities. ADR submissions
 > without a sufficient backwards compatibility treatise may be rejected outright.
+
+## Alternatives
+
+> This section describes alternative designs to the chosen design. This section
+> is important and if an adr does not have any alternatives then it should be
+> considered that the ADR was not thought through.
 
 ### Positive
 
@@ -90,3 +88,4 @@ objects on-chain.
 ## References
 
 * https://github.com/cosmos/cosmos-sdk/pull/19188
+* https://docs.solanalabs.com/implemented-proposals/rent

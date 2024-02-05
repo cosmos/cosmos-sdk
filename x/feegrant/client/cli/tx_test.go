@@ -13,14 +13,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
-	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
+	v1 "cosmossdk.io/api/cosmos/gov/v1"
+	v1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"
 	govcli "cosmossdk.io/x/gov/client/cli"
-	govv1 "cosmossdk.io/x/gov/types/v1"
-	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -512,7 +511,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
 			err := s.msgSubmitLegacyProposal(s.baseCtx, tc.from,
-				"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
+				"Text Proposal", "No desc", "text",
 				tc.flags...,
 			)
 			s.Require().NoError(err)
@@ -564,7 +563,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 	}
 	spendLimit := sdk.NewCoin("stake", sdkmath.NewInt(1000))
-	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
+	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&v1.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string
@@ -641,7 +640,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 			"valid proposal tx",
 			func() error {
 				return s.msgSubmitLegacyProposal(s.baseCtx, grantee.String(),
-					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
+					"Text Proposal", "No desc", "Text",
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 				)

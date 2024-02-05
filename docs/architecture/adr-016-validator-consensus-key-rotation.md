@@ -34,11 +34,11 @@ Also, it should be noted that this ADR includes only the simplest form of consen
     * In current Tendermint design, consensus key rotations are seen as power changes from LCD or IBC perspective
     * Therefore, to minimize unnecessary frequent key rotation behavior, we limited maximum number of rotation in recent unbonding period and also applied exponentially increasing rotation fee
 * limits
-    * a validator cannot rotate its consensus key more than `MaxConsPubKeyRotations` time for any unbonding period, to prevent spam.
+    * rotations are limited to 1 time in an unbonding window. In future rewrites of the staking module it could be made to happen more times than 1
     * parameters can be decided by governance and stored in genesis file.
 * key rotation fee
     * a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
-    * `KeyRotationFee` = (max(`VotingPowerPercentage` *100, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
+    * `KeyRotationFee` = (max(`VotingPowerPercentage`, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
 * evidence module
     * evidence module can search corresponding consensus key for any height from slashing keeper so that it can decide which consensus key is supposed to be used for given height.
 * abci.ValidatorUpdate
@@ -109,7 +109,7 @@ Proposed
 ### Positive
 
 * Validators can immediately or periodically rotate their consensus key to have better security policy
-* improved security against Long-Range attacks (https://nearprotocol.com/blog/long-range-attacks-and-a-new-fork-choice-rule) given a validator throws away the old consensus key(s)
+* improved security against Long-Range attacks (https://near.org/blog/long-range-attacks-and-a-new-fork-choice-rule) given a validator throws away the old consensus key(s)
 
 ### Negative
 

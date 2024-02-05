@@ -497,9 +497,9 @@ func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureDat
 // they will be queried for and set on the provided Factory.
 // A new Factory with the updated fields will be returned.
 // Note: When in offline mode, the Prepare does nothing and returns the original factory.
-func (f Factory) Prepare(clientCtx client.Context) Factory {
+func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	if clientCtx.Offline {
-		return f
+		return f, nil
 	}
 
 	fc := f
@@ -510,7 +510,7 @@ func (f Factory) Prepare(clientCtx client.Context) Factory {
 		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(clientCtx, from)
 		if err != nil {
 			// return early since account does not exist here.
-			return fc
+			return fc, nil
 		}
 
 		if initNum == 0 {
@@ -522,5 +522,5 @@ func (f Factory) Prepare(clientCtx client.Context) Factory {
 		}
 	}
 
-	return fc
+	return fc, nil
 }

@@ -71,17 +71,6 @@ type BaseVesting struct {
 func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (
 	*vestingtypes.MsgInitVestingAccountResponse, error,
 ) {
-	sender := accountstd.Sender(ctx)
-	to := accountstd.Whoami(ctx)
-
-	toAddress, err := bva.addressCodec.BytesToString(to)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
-	}
-	fromAddress, err := bva.addressCodec.BytesToString(sender)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'sender' address: %s", err)
-	}
 	owner, err := bva.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
@@ -105,12 +94,6 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 
 	err = bva.EndTime.Set(ctx, msg.EndTime)
 	if err != nil {
-		return nil, err
-	}
-
-	// Send token to new vesting account
-	sendMsg := banktypes.NewMsgSend(fromAddress, toAddress, msg.Amount)
-	if _, err = accountstd.ExecModule[banktypes.MsgSendResponse](ctx, sendMsg); err != nil {
 		return nil, err
 	}
 

@@ -56,6 +56,8 @@ register a pre message handler. If the message is called by a user the pre messa
 logic. If the sender is not allowed to send funds the premessage handler can return an error and the message will not be
 executed.
 
+> Note: This is different from the antehandler and posthandler we have today. These will still exist in the same form. 
+
 A module can register handlers for any or all message(s), this allows for modules to be extended without the need to fork.
 
 A module will implement the below for a premessage hook:
@@ -164,7 +166,7 @@ func (b BankModule) RegisterMsgHandlers(router core_appmodule.MsgHandlerRouter) 
 
 ```
 
-This change is fully client API compatible, and state machine compatible as, even if we were using gRPC, messages were
+This change is fully state machine compatible as, even if we were using gRPC, messages were
 routed using the message type name and not the gRCP method name.
 
 We apply the same principles of MsgHandlers to QueryHandlers, by introducing a new core/appmodule interface:

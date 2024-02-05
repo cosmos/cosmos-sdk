@@ -33,7 +33,7 @@ type MsgClient interface {
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// AsyncMultiMsgExec allows users to submit multiple messages.
-	AsyncMultiMsgExec(ctx context.Context, in *MsgAsyncMultiMsgExecRequest, opts ...grpc.CallOption) (*MsgAsyncMultiMsgExecResponse, error)
+	AsyncMultiMsgExec(ctx context.Context, in *MsgAsyncMultiMsgExec, opts ...grpc.CallOption) (*MsgAsyncMultiMsgExecResponse, error)
 }
 
 type msgClient struct {
@@ -53,7 +53,7 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
-func (c *msgClient) AsyncMultiMsgExec(ctx context.Context, in *MsgAsyncMultiMsgExecRequest, opts ...grpc.CallOption) (*MsgAsyncMultiMsgExecResponse, error) {
+func (c *msgClient) AsyncMultiMsgExec(ctx context.Context, in *MsgAsyncMultiMsgExec, opts ...grpc.CallOption) (*MsgAsyncMultiMsgExecResponse, error) {
 	out := new(MsgAsyncMultiMsgExecResponse)
 	err := c.cc.Invoke(ctx, Msg_AsyncMultiMsgExec_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -72,7 +72,7 @@ type MsgServer interface {
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// AsyncMultiMsgExec allows users to submit multiple messages.
-	AsyncMultiMsgExec(context.Context, *MsgAsyncMultiMsgExecRequest) (*MsgAsyncMultiMsgExecResponse, error)
+	AsyncMultiMsgExec(context.Context, *MsgAsyncMultiMsgExec) (*MsgAsyncMultiMsgExecResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -83,7 +83,7 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
-func (UnimplementedMsgServer) AsyncMultiMsgExec(context.Context, *MsgAsyncMultiMsgExecRequest) (*MsgAsyncMultiMsgExecResponse, error) {
+func (UnimplementedMsgServer) AsyncMultiMsgExec(context.Context, *MsgAsyncMultiMsgExec) (*MsgAsyncMultiMsgExecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AsyncMultiMsgExec not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
@@ -118,7 +118,7 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Msg_AsyncMultiMsgExec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAsyncMultiMsgExecRequest)
+	in := new(MsgAsyncMultiMsgExec)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func _Msg_AsyncMultiMsgExec_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: Msg_AsyncMultiMsgExec_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AsyncMultiMsgExec(ctx, req.(*MsgAsyncMultiMsgExecRequest))
+		return srv.(MsgServer).AsyncMultiMsgExec(ctx, req.(*MsgAsyncMultiMsgExec))
 	}
 	return interceptor(ctx, in, info, handler)
 }

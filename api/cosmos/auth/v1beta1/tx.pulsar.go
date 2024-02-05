@@ -872,79 +872,79 @@ func (x *fastReflection_MsgUpdateParamsResponse) ProtoMethods() *protoiface.Meth
 	}
 }
 
-var _ protoreflect.List = (*_MsgAsyncMultiMsgExecRequest_2_list)(nil)
+var _ protoreflect.List = (*_MsgAsyncMultiMsgExec_2_list)(nil)
 
-type _MsgAsyncMultiMsgExecRequest_2_list struct {
+type _MsgAsyncMultiMsgExec_2_list struct {
 	list *[]*anypb.Any
 }
 
-func (x *_MsgAsyncMultiMsgExecRequest_2_list) Len() int {
+func (x *_MsgAsyncMultiMsgExec_2_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_MsgAsyncMultiMsgExecRequest_2_list) Get(i int) protoreflect.Value {
+func (x *_MsgAsyncMultiMsgExec_2_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_MsgAsyncMultiMsgExecRequest_2_list) Set(i int, value protoreflect.Value) {
+func (x *_MsgAsyncMultiMsgExec_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_MsgAsyncMultiMsgExecRequest_2_list) Append(value protoreflect.Value) {
+func (x *_MsgAsyncMultiMsgExec_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_MsgAsyncMultiMsgExecRequest_2_list) AppendMutable() protoreflect.Value {
+func (x *_MsgAsyncMultiMsgExec_2_list) AppendMutable() protoreflect.Value {
 	v := new(anypb.Any)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgAsyncMultiMsgExecRequest_2_list) Truncate(n int) {
+func (x *_MsgAsyncMultiMsgExec_2_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_MsgAsyncMultiMsgExecRequest_2_list) NewElement() protoreflect.Value {
+func (x *_MsgAsyncMultiMsgExec_2_list) NewElement() protoreflect.Value {
 	v := new(anypb.Any)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgAsyncMultiMsgExecRequest_2_list) IsValid() bool {
+func (x *_MsgAsyncMultiMsgExec_2_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_MsgAsyncMultiMsgExecRequest        protoreflect.MessageDescriptor
-	fd_MsgAsyncMultiMsgExecRequest_signer protoreflect.FieldDescriptor
-	fd_MsgAsyncMultiMsgExecRequest_msgs   protoreflect.FieldDescriptor
+	md_MsgAsyncMultiMsgExec        protoreflect.MessageDescriptor
+	fd_MsgAsyncMultiMsgExec_signer protoreflect.FieldDescriptor
+	fd_MsgAsyncMultiMsgExec_msgs   protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_auth_v1beta1_tx_proto_init()
-	md_MsgAsyncMultiMsgExecRequest = File_cosmos_auth_v1beta1_tx_proto.Messages().ByName("MsgAsyncMultiMsgExecRequest")
-	fd_MsgAsyncMultiMsgExecRequest_signer = md_MsgAsyncMultiMsgExecRequest.Fields().ByName("signer")
-	fd_MsgAsyncMultiMsgExecRequest_msgs = md_MsgAsyncMultiMsgExecRequest.Fields().ByName("msgs")
+	md_MsgAsyncMultiMsgExec = File_cosmos_auth_v1beta1_tx_proto.Messages().ByName("MsgAsyncMultiMsgExec")
+	fd_MsgAsyncMultiMsgExec_signer = md_MsgAsyncMultiMsgExec.Fields().ByName("signer")
+	fd_MsgAsyncMultiMsgExec_msgs = md_MsgAsyncMultiMsgExec.Fields().ByName("msgs")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgAsyncMultiMsgExecRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgAsyncMultiMsgExec)(nil)
 
-type fastReflection_MsgAsyncMultiMsgExecRequest MsgAsyncMultiMsgExecRequest
+type fastReflection_MsgAsyncMultiMsgExec MsgAsyncMultiMsgExec
 
-func (x *MsgAsyncMultiMsgExecRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgAsyncMultiMsgExecRequest)(x)
+func (x *MsgAsyncMultiMsgExec) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgAsyncMultiMsgExec)(x)
 }
 
-func (x *MsgAsyncMultiMsgExecRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgAsyncMultiMsgExec) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_auth_v1beta1_tx_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -956,43 +956,43 @@ func (x *MsgAsyncMultiMsgExecRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgAsyncMultiMsgExecRequest_messageType fastReflection_MsgAsyncMultiMsgExecRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgAsyncMultiMsgExecRequest_messageType{}
+var _fastReflection_MsgAsyncMultiMsgExec_messageType fastReflection_MsgAsyncMultiMsgExec_messageType
+var _ protoreflect.MessageType = fastReflection_MsgAsyncMultiMsgExec_messageType{}
 
-type fastReflection_MsgAsyncMultiMsgExecRequest_messageType struct{}
+type fastReflection_MsgAsyncMultiMsgExec_messageType struct{}
 
-func (x fastReflection_MsgAsyncMultiMsgExecRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgAsyncMultiMsgExecRequest)(nil)
+func (x fastReflection_MsgAsyncMultiMsgExec_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgAsyncMultiMsgExec)(nil)
 }
-func (x fastReflection_MsgAsyncMultiMsgExecRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgAsyncMultiMsgExecRequest)
+func (x fastReflection_MsgAsyncMultiMsgExec_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgAsyncMultiMsgExec)
 }
-func (x fastReflection_MsgAsyncMultiMsgExecRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgAsyncMultiMsgExecRequest
+func (x fastReflection_MsgAsyncMultiMsgExec_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAsyncMultiMsgExec
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgAsyncMultiMsgExecRequest
+func (x *fastReflection_MsgAsyncMultiMsgExec) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAsyncMultiMsgExec
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgAsyncMultiMsgExecRequest_messageType
+func (x *fastReflection_MsgAsyncMultiMsgExec) Type() protoreflect.MessageType {
+	return _fastReflection_MsgAsyncMultiMsgExec_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgAsyncMultiMsgExecRequest)
+func (x *fastReflection_MsgAsyncMultiMsgExec) New() protoreflect.Message {
+	return new(fastReflection_MsgAsyncMultiMsgExec)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgAsyncMultiMsgExecRequest)(x)
+func (x *fastReflection_MsgAsyncMultiMsgExec) Interface() protoreflect.ProtoMessage {
+	return (*MsgAsyncMultiMsgExec)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1000,16 +1000,16 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Interface() protoreflect.Pr
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgAsyncMultiMsgExec) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Signer != "" {
 		value := protoreflect.ValueOfString(x.Signer)
-		if !f(fd_MsgAsyncMultiMsgExecRequest_signer, value) {
+		if !f(fd_MsgAsyncMultiMsgExec_signer, value) {
 			return
 		}
 	}
 	if len(x.Msgs) != 0 {
-		value := protoreflect.ValueOfList(&_MsgAsyncMultiMsgExecRequest_2_list{list: &x.Msgs})
-		if !f(fd_MsgAsyncMultiMsgExecRequest_msgs, value) {
+		value := protoreflect.ValueOfList(&_MsgAsyncMultiMsgExec_2_list{list: &x.Msgs})
+		if !f(fd_MsgAsyncMultiMsgExec_msgs, value) {
 			return
 		}
 	}
@@ -1026,17 +1026,17 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Range(f func(protoreflect.F
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgAsyncMultiMsgExec) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.signer":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.signer":
 		return x.Signer != ""
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.msgs":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.msgs":
 		return len(x.Msgs) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1046,17 +1046,17 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Has(fd protoreflect.FieldDe
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgAsyncMultiMsgExec) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.signer":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.signer":
 		x.Signer = ""
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.msgs":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.msgs":
 		x.Msgs = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1066,22 +1066,22 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Clear(fd protoreflect.Field
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgAsyncMultiMsgExec) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.signer":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.signer":
 		value := x.Signer
 		return protoreflect.ValueOfString(value)
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.msgs":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.msgs":
 		if len(x.Msgs) == 0 {
-			return protoreflect.ValueOfList(&_MsgAsyncMultiMsgExecRequest_2_list{})
+			return protoreflect.ValueOfList(&_MsgAsyncMultiMsgExec_2_list{})
 		}
-		listValue := &_MsgAsyncMultiMsgExecRequest_2_list{list: &x.Msgs}
+		listValue := &_MsgAsyncMultiMsgExec_2_list{list: &x.Msgs}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExec does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1095,19 +1095,19 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Get(descriptor protoreflect
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgAsyncMultiMsgExec) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.signer":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.signer":
 		x.Signer = value.Interface().(string)
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.msgs":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.msgs":
 		lv := value.List()
-		clv := lv.(*_MsgAsyncMultiMsgExecRequest_2_list)
+		clv := lv.(*_MsgAsyncMultiMsgExec_2_list)
 		x.Msgs = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1121,49 +1121,49 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Set(fd protoreflect.FieldDe
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgAsyncMultiMsgExec) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.msgs":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.msgs":
 		if x.Msgs == nil {
 			x.Msgs = []*anypb.Any{}
 		}
-		value := &_MsgAsyncMultiMsgExecRequest_2_list{list: &x.Msgs}
+		value := &_MsgAsyncMultiMsgExec_2_list{list: &x.Msgs}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.signer":
-		panic(fmt.Errorf("field signer of message cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest is not mutable"))
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.signer":
+		panic(fmt.Errorf("field signer of message cosmos.auth.v1beta1.MsgAsyncMultiMsgExec is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgAsyncMultiMsgExec) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.signer":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.signer":
 		return protoreflect.ValueOfString("")
-	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.msgs":
+	case "cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.msgs":
 		list := []*anypb.Any{}
-		return protoreflect.ValueOfList(&_MsgAsyncMultiMsgExecRequest_2_list{list: &list})
+		return protoreflect.ValueOfList(&_MsgAsyncMultiMsgExec_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.MsgAsyncMultiMsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.MsgAsyncMultiMsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgAsyncMultiMsgExec) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.MsgAsyncMultiMsgExec", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1171,7 +1171,7 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) WhichOneof(d protoreflect.O
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgAsyncMultiMsgExec) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1182,7 +1182,7 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) GetUnknown() protoreflect.R
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgAsyncMultiMsgExec) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1194,7 +1194,7 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) SetUnknown(fields protorefl
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) IsValid() bool {
+func (x *fastReflection_MsgAsyncMultiMsgExec) IsValid() bool {
 	return x != nil
 }
 
@@ -1204,9 +1204,9 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgAsyncMultiMsgExecRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgAsyncMultiMsgExec) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgAsyncMultiMsgExecRequest)
+		x := input.Message.Interface().(*MsgAsyncMultiMsgExec)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1238,7 +1238,7 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) ProtoMethods() *protoiface.
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgAsyncMultiMsgExecRequest)
+		x := input.Message.Interface().(*MsgAsyncMultiMsgExec)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1291,7 +1291,7 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) ProtoMethods() *protoiface.
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgAsyncMultiMsgExecRequest)
+		x := input.Message.Interface().(*MsgAsyncMultiMsgExec)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1323,10 +1323,10 @@ func (x *fastReflection_MsgAsyncMultiMsgExecRequest) ProtoMethods() *protoiface.
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAsyncMultiMsgExecRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAsyncMultiMsgExec: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAsyncMultiMsgExecRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAsyncMultiMsgExec: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2127,8 +2127,8 @@ func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_tx_proto_rawDescGZIP(), []int{1}
 }
 
-// MsgAsyncMultiMsgExecRequest defines the Msg/AsyncMultiMsgExec request type.
-type MsgAsyncMultiMsgExecRequest struct {
+// MsgAsyncMultiMsgExec defines the Msg/AsyncMultiMsgExec request type.
+type MsgAsyncMultiMsgExec struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -2137,8 +2137,8 @@ type MsgAsyncMultiMsgExecRequest struct {
 	Msgs   []*anypb.Any `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
 }
 
-func (x *MsgAsyncMultiMsgExecRequest) Reset() {
-	*x = MsgAsyncMultiMsgExecRequest{}
+func (x *MsgAsyncMultiMsgExec) Reset() {
+	*x = MsgAsyncMultiMsgExec{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_auth_v1beta1_tx_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2146,25 +2146,25 @@ func (x *MsgAsyncMultiMsgExecRequest) Reset() {
 	}
 }
 
-func (x *MsgAsyncMultiMsgExecRequest) String() string {
+func (x *MsgAsyncMultiMsgExec) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgAsyncMultiMsgExecRequest) ProtoMessage() {}
+func (*MsgAsyncMultiMsgExec) ProtoMessage() {}
 
-// Deprecated: Use MsgAsyncMultiMsgExecRequest.ProtoReflect.Descriptor instead.
-func (*MsgAsyncMultiMsgExecRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgAsyncMultiMsgExec.ProtoReflect.Descriptor instead.
+func (*MsgAsyncMultiMsgExec) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_tx_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *MsgAsyncMultiMsgExecRequest) GetSigner() string {
+func (x *MsgAsyncMultiMsgExec) GetSigner() string {
 	if x != nil {
 		return x.Signer
 	}
 	return ""
 }
 
-func (x *MsgAsyncMultiMsgExecRequest) GetMsgs() []*anypb.Any {
+func (x *MsgAsyncMultiMsgExec) GetMsgs() []*anypb.Any {
 	if x != nil {
 		return x.Msgs
 	}
@@ -2245,50 +2245,49 @@ var file_cosmos_auth_v1beta1_tx_proto_rawDesc = []byte{
 	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x4d, 0x73,
 	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x19, 0x0a,
 	0x17, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xa3, 0x01, 0x0a, 0x1b, 0x4d, 0x73, 0x67,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x9c, 0x01, 0x0a, 0x14, 0x4d, 0x73, 0x67,
 	0x41, 0x73, 0x79, 0x6e, 0x63, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65,
-	0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e,
-	0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x45, 0x0a, 0x04, 0x6d, 0x73,
-	0x67, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
-	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x1b,
-	0xca, 0xb4, 0x2d, 0x17, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x04, 0x6d, 0x73, 0x67,
-	0x73, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x4e,
-	0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x41, 0x73, 0x79, 0x6e, 0x63, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x4d,
-	0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14,
-	0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x65,
-	0x72, 0x72, 0x6f, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x18,
-	0x02, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x07, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x32, 0xea,
-	0x01, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x62, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x2c, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x78, 0x0a, 0x11, 0x41, 0x73,
-	0x79, 0x6e, 0x63, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x12,
-	0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x73, 0x79, 0x6e, 0x63, 0x4d, 0x75,
-	0x6c, 0x74, 0x69, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x73, 0x79, 0x6e, 0x63,
-	0x4d, 0x75, 0x6c, 0x74, 0x69, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xc2, 0x01, 0x0a, 0x17,
-	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68,
-	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x61, 0x75, 0x74, 0x68, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
-	0x41, 0x75, 0x74, 0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x3a, 0x3a, 0x41, 0x75, 0x74, 0x68, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x63, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67,
+	0x6e, 0x65, 0x72, 0x12, 0x45, 0x0a, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x1b, 0xca, 0xb4, 0x2d, 0x17, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x52, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a,
+	0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x4e, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x41, 0x73,
+	0x79, 0x6e, 0x63, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x12, 0x18, 0x0a,
+	0x07, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x07,
+	0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x32, 0xe3, 0x01, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12,
+	0x62, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12,
+	0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
+	0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x11, 0x41, 0x73, 0x79, 0x6e, 0x63, 0x4d, 0x75, 0x6c, 0x74,
+	0x69, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x41, 0x73, 0x79, 0x6e, 0x63, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x4d, 0x73, 0x67, 0x45,
+	0x78, 0x65, 0x63, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74,
+	0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x73, 0x79,
+	0x6e, 0x63, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xc2, 0x01,
+	0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74,
+	0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
+	0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75,
+	0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x61, 0x75, 0x74, 0x68, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68,
+	0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47,
+	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x75, 0x74, 0x68, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2307,16 +2306,16 @@ var file_cosmos_auth_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 4
 var file_cosmos_auth_v1beta1_tx_proto_goTypes = []interface{}{
 	(*MsgUpdateParams)(nil),              // 0: cosmos.auth.v1beta1.MsgUpdateParams
 	(*MsgUpdateParamsResponse)(nil),      // 1: cosmos.auth.v1beta1.MsgUpdateParamsResponse
-	(*MsgAsyncMultiMsgExecRequest)(nil),  // 2: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest
+	(*MsgAsyncMultiMsgExec)(nil),         // 2: cosmos.auth.v1beta1.MsgAsyncMultiMsgExec
 	(*MsgAsyncMultiMsgExecResponse)(nil), // 3: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecResponse
 	(*Params)(nil),                       // 4: cosmos.auth.v1beta1.Params
 	(*anypb.Any)(nil),                    // 5: google.protobuf.Any
 }
 var file_cosmos_auth_v1beta1_tx_proto_depIdxs = []int32{
 	4, // 0: cosmos.auth.v1beta1.MsgUpdateParams.params:type_name -> cosmos.auth.v1beta1.Params
-	5, // 1: cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest.msgs:type_name -> google.protobuf.Any
+	5, // 1: cosmos.auth.v1beta1.MsgAsyncMultiMsgExec.msgs:type_name -> google.protobuf.Any
 	0, // 2: cosmos.auth.v1beta1.Msg.UpdateParams:input_type -> cosmos.auth.v1beta1.MsgUpdateParams
-	2, // 3: cosmos.auth.v1beta1.Msg.AsyncMultiMsgExec:input_type -> cosmos.auth.v1beta1.MsgAsyncMultiMsgExecRequest
+	2, // 3: cosmos.auth.v1beta1.Msg.AsyncMultiMsgExec:input_type -> cosmos.auth.v1beta1.MsgAsyncMultiMsgExec
 	1, // 4: cosmos.auth.v1beta1.Msg.UpdateParams:output_type -> cosmos.auth.v1beta1.MsgUpdateParamsResponse
 	3, // 5: cosmos.auth.v1beta1.Msg.AsyncMultiMsgExec:output_type -> cosmos.auth.v1beta1.MsgAsyncMultiMsgExecResponse
 	4, // [4:6] is the sub-list for method output_type
@@ -2358,7 +2357,7 @@ func file_cosmos_auth_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_auth_v1beta1_tx_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgAsyncMultiMsgExecRequest); i {
+			switch v := v.(*MsgAsyncMultiMsgExec); i {
 			case 0:
 				return &v.state
 			case 1:

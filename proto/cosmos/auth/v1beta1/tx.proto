@@ -21,7 +21,7 @@ service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 
   // AsyncMultiMsgExec allows users to submit multiple messages.
-  rpc AsyncMultiMsgExec(MsgAsyncMultiMsgExecRequest) returns (MsgAsyncMultiMsgExecResponse);
+  rpc AsyncMultiMsgExec(MsgAsyncMultiMsgExec) returns (MsgAsyncMultiMsgExecResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -46,8 +46,8 @@ message MsgUpdateParams {
 // Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {}
 
-// MsgAsyncMultiMsgExecRequest defines the Msg/AsyncMultiMsgExec request type.
-message MsgAsyncMultiMsgExecRequest {
+// MsgAsyncMultiMsgExec defines the Msg/AsyncMultiMsgExec request type.
+message MsgAsyncMultiMsgExec {
   option (cosmos.msg.v1.signer) = "signer";
 
   string   signer                   = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

@@ -10,18 +10,35 @@ DRAFT
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide
-> a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+We propose a mechanism for state rent to be applied to unclaimed accounts/balances.
+This mechanism can be extended to existing accounts/balances as well with some minor
+revisions.
 
 ## Context
 
-> This section describes the forces at play, including technological, political,
-> social, and project local. These forces are probably in tension, and should be
-> called out as such. The language in this section is value-neutral. It is simply
-> describing facts. It should clearly explain the problem and motivation that the
-> proposal aims to resolve.
-> {context body}
+As of SDK 0.50.x (Eden), including all previous versions, when an existing account
+sends tokens to a new account, i.e. an account that does not exist on-chain yet,
+the new account is created automatically via `SetAccount` as a byproduct of sending
+tokens.
+
+This might seem inconsequential, but it has a few major implications. The primary
+being that users can frontrun account creation by possibly knowing the address
+ahead of time and creating the account before the sender sends tokens. Another
+implication is that this can drastically bloat state depending on the parameters
+of the chain (e.g. min fees).
+
+With the advent of [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188), the
+execution flow is changed such that the account is not created automatically. Instead,
+the balance is set on the recipient's address. Then as soon as the recipient sends
+their first transaction, the account is created.
+
+However, even with this improvement in execution flow, there are still DoS and
+state bloat implications. E.g. iterating over a large balance array can drastically
+degrade the performance of a chain in `BeginBlock` and `EndBlock`.
+
+Thus, we propose a mechanism for charging state rent on yet-to-be-claimed accounts/balances.
+This mechanism can further be extended and adapted to charge state rent for existing
+objects on-chain.
 
 ## Alternatives
 
@@ -70,11 +87,6 @@ DRAFT
 > Later, this section can optionally list ideas or improvements the author or
 > reviewers found during the analysis of this ADR.
 
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus
-changes. Other ADRs can choose to include links to test cases if applicable.
-
 ## References
 
-* {reference link}
+* https://github.com/cosmos/cosmos-sdk/pull/19188

@@ -251,7 +251,7 @@ func (m *Manager) CreateMigration(height uint64, protoWriter WriteCloser) error 
 			protoWriter.CloseWithError(err)
 			return
 		}
-		protoWriter.Close()
+		_ = protoWriter.Close() // always return nil
 	}()
 
 	return nil

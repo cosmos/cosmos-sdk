@@ -36,7 +36,8 @@ func NewManager(sm *snapshots.Manager, ss snapshots.StorageSnapshotter, cs snaps
 
 // Migrate migrates the whole state at the given height to the new store/v2.
 func (m *Manager) Migrate(height uint64) error {
-	// create the migration stream and snapshot
+	// create the migration stream and snapshot,
+	// which acts as protoio.Reader and snapshots.WriteCloser.
 	ms := NewMigrationStream(defaultChannelBufferSize)
 
 	if err := m.snapshotsManager.CreateMigration(height, ms); err != nil {

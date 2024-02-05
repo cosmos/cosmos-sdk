@@ -12,18 +12,18 @@ import (
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
-// MigrationStream is a stream for migrating the whole state as a snapshot.
+var (
+	_ snapshots.WriteCloser = (*MigrationStream)(nil)
+	_ protoio.ReadCloser    = (*MigrationStream)(nil)
+)
+
+// MigrationStream is a stream for migrating the whole IAVL state as a snapshot.
 // It's used to sync the whole state from the store/v1 to store/v2.
 // The main idea is to use the same snapshotter interface without writing to disk.
 type MigrationStream struct {
 	chBuffer chan proto.Message
 	err      atomic.Value // atomic error
 }
-
-var (
-	_ snapshots.WriteCloser = (*MigrationStream)(nil)
-	_ protoio.ReadCloser    = (*MigrationStream)(nil)
-)
 
 // NewMigrationStream returns a new MigrationStream.
 func NewMigrationStream(chBufferSize int) *MigrationStream {
@@ -46,16 +46,20 @@ func (ms *MigrationStream) CloseWithError(err error) {
 
 // ReadMsg implements protoio.Read interface.
 func (ms *MigrationStream) ReadMsg(msg proto.Message) error {
+	// `msg` should be a pointer to the same type as the one written to the stream.
 	snapshotsItem, ok := msg.(*snapshotstypes.SnapshotItem)
 	if !ok {
 		return fmt.Errorf("unexpected message type: %T", msg)
 	}
+
+	// It doesn't require any deserialization, just a type assertion.
 	item := <-ms.chBuffer
 	if item == nil {
 		return io.EOF
 	}
 	*snapshotsItem = *(item.(*snapshotstypes.SnapshotItem))
 
+	// check if there is an error from the writer.
 	err := ms.err.Load()
 	if err != nil {
 		return err.(error)

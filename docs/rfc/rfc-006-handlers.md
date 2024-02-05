@@ -37,6 +37,8 @@ different proving technologies.
 > Note the usage of handlers in modules is optional, modules can still use the existing design. This design is meant to
 > be a new way to write modules, with proving in mind, and is not meant to replace the existing design.
 
+This proposal is for server/v2, Baseapp will continue to work in the same way as it does today.
+
 ### Pre and Post Message Handlers 
 
 In the Cosmos SDK, there exists hooks on messages and execution of function calls. Separating the two we will focus on
@@ -108,17 +110,18 @@ type HasPostMsgHandler interface {
 }
 ```
 
-We note the following behaviours:
-- A pre msg handler returning an error will yield to a state transition revert.
-- A post msg handler returning an error will yield to a state transition revert.
-- A post msg handler will not be called if the execution handler (message handler) fails.
-- A post msg handler will be called only if the execution handler succeeds alongside the response provided by the execution handler.
+We note the following behaviors:
+
+* A pre msg handler returning an error will yield to a state transition revert.
+* A post msg handler returning an error will yield to a state transition revert.
+* A post msg handler will not be called if the execution handler (message handler) fails.
+* A post msg handler will be called only if the execution handler succeeds alongside the response provided by the execution handler.
 
 ### Message and Query Handlers
 
 Similar to the above design, message handlers will allow the application developer to replace existing Grpc based services 
 with handlers. This enables the module to be compiled down to tinygo, and abandon the gRPC dependency. As mentioned
-upgrading the modules immediately is not mandatory, module developers can do so in a gradual way.
+upgrading the modules immediately is not mandatory, module developers can do so in a gradual way. Application developers have the option to use the existing gRPC services or the new handlers.
 
 For message handlers we propose the introduction of the following core/appmodule interfaces and functions:
 
@@ -206,29 +209,50 @@ ReqBody: protojson.Marshal(msg)
 RespBody: protojson.Marshal(msgResp)
 ```
 
+### Consensus Messages 
+
+Similar to the above design, consensus messages will allow the underlying consensus engine to speak to the modules. Today we get consensus related information from `SDKContext`. In server/v2 we are unable to continue with this design due to the forced dependency leakage of comet throughout the repo. Secondly, while we already have `cometInfo` if we were to put this on the new execution client we would be tieing cometbft to the application manager and STF.
+
+In the case of CometBFT, slashing, evidence and consensus would register handlers for consensus messages. This would allow the consensus engine to speak to the modules.
+
+
+```go
+package consensus
+
+func (b ConsensusKeeper) ConsensusParams(ctx context.Context, msg bank.MsgConsensusParams) (bank.MsgConsensusParamsResponse, error) {
+	// logic
+}
+
+func (b CircuitModule) RegisterConsensusHandlers(router core_appmodule.MsgHandlerRouter) {
+	// the RegisterMsgHandler function takes care of doing type casting and conversions, ensuring we retain type safety
+	core_appmodule.RegisterMsgHandler(router, b.Send) 
+}
+
+```
+
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All
-> consequences should be listed here, not just the "positive" ones. A particular
-> decision may have positive, negative, and neutral consequences, but all of them
-> affect the team and project in the future.
+* REST endpoints for message and queries change due to lack of services and grpc gatway annotations. 
+* When using gRPC directly, one must query a schema endpoint in order to see all possible messages and queries.
 
 ### Backwards Compatibility
 
-Backwards compatibility is guaranteed: adopting this API will not cause breakages at client level, the developer can still
-use gRPC servers.
+The way to interact with modules changes, REST and gRPC will still be available. 
 
 ### Positive
 
-- Allows modules to be compiled to tinyGO. 
-- Reduces the cosmos-sdk's learning curve, since understanding gRPC semantics is not a must anymore.
-- Allows other modules to extend existing modules behaviour using pre and post msg handlers, without forking.
-- The system becomes overall more simple as gRPC is not anymore a hard dependency and requirement for the state machine.
+* Allows modules to be compiled to tinyGO. 
+* Reduces the cosmos-sdk's learning curve, since understanding gRPC semantics is not a must anymore.
+* Allows other modules to extend existing modules behaviour using pre and post msg handlers, without forking.
+* The system becomes overall more simple as gRPC is not anymore a hard dependency and requirement for the state machine.
+* Reduces the need on sdk.Context
+* Concurrently safe 
+* Reduces public interface of modules
 
 ### Negative
 
-- Pre and Post msg handlers are a new concept that module developers need to learn (although not immediately).
+* Pre, Post and Consensus msg handlers are a new concept that module developers need to learn (although not immediately).
 
 ### Neutral
 

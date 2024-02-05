@@ -64,9 +64,6 @@ func (ar AccountRetriever) GetAccountWithHeight(clientCtx client.Context, addr s
 // EnsureExists returns an error if no account exists for the given address else nil.
 func (ar AccountRetriever) EnsureExists(clientCtx client.Context, addr sdk.AccAddress) error {
 	if _, err := ar.GetAccount(clientCtx, addr); err != nil {
-		if status.Code(err) == codes.NotFound {
-			return nil
-		}
 		return err
 	}
 

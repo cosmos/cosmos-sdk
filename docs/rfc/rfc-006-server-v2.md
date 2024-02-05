@@ -1,4 +1,4 @@
-# RFC 006: Server
+# RFC 006: Server v2
 
 ## Changelog
 
@@ -19,11 +19,11 @@ This proposal is centered around modularity and simplicity of the Cosmos SDK. Th
 
 ### Server
 
-The server is the workhorse of the state machine. It is where all the components are initialized, combined and started. The server is where the consensus engine lives, meaning that every server will be custom to a consensus engine or logic for the application. The default server will be using comet with its async client to enable better concurrency. 
+The server is the workhorse of the state machine. It is where all the services are initialized, combined and started. The server is where the consensus engine lives, meaning that every server will be custom to a consensus engine or logic for the application. The default server will be using comet with its async client to enable better concurrency. 
 
 #### Services 
 
-All components should be treated as services and have `Start` `Stop` and `Refresh` methods. If a service needs to be started and stopped due to handling of different concurrent processes the Service interface is what would be needed. If a service does not have the need to be started and stopped, it will be treated as a component of another service. 
+All services should be treated as services and have `Start` `Stop` and `Refresh` methods. If a service needs to be started and stopped due to handling of different concurrent processes the Service interface is what would be needed. If a service does not have the need to be started and stopped, it will be treated as a component of another service. 
 
 #### Consensus
 

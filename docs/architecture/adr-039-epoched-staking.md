@@ -65,7 +65,7 @@ With pipeline length 2, if I redelegate during epoch N, then my redelegation is 
 
 Even though all staking updates are applied at epoch boundaries, rewards can still be distributed immediately when they are claimed. This is because they do not affect the current stake weights, as we do not implement auto-bonding of rewards. If such a feature were to be implemented, it would have to be setup so that rewards are auto-bonded at the epoch boundary.
 
-### Parameterizing the epoch length
+### Parameterising the epoch length
 
 When choosing the epoch length, there is a trade-off queued state/computation buildup, and countering the previously discussed limitations of immediate execution if they apply to a given chain.
 

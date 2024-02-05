@@ -1,4 +1,4 @@
-# RFC 006: Server v2
+# RFC 007: Server v2
 
 ## Changelog
 

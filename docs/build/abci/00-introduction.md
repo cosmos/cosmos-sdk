@@ -21,7 +21,7 @@ Based on validator voting power, CometBFT chooses a block proposer and calls `Pr
 
 To perform this manipulation on the application side, a custom handler must be implemented. By default, the Cosmos SDK provides `PrepareProposalHandler`, used in conjunction with an application specific mempool. A custom handler can be written by application developer, if a noop handler provided, all transactions are considered valid. Please see [this](https://github.com/fatal-fruit/abci-workshop) tutorial for more information on custom handlers.
 
-Please note that vote extensions will only be available on the following height in which vote extensions are enabled. More information about vote extensions can be found [here](https://docs.cosmos.network/main/build/abci/03-vote-extensions.md).
+Please note that vote extensions will only be available on the following height in which vote extensions are enabled. More information about vote extensions can be found [here](https://docs.cosmos.network/main/build/abci/vote-extensions).
 
 After creating the proposal, the proposer returns it to CometBFT.
 

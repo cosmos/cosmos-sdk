@@ -68,7 +68,7 @@ func (t TestAccountRetriever) GetAccountWithHeight(clientCtx Context, addr sdk.A
 func (t TestAccountRetriever) EnsureExists(_ Context, addr sdk.AccAddress) error {
 	_, ok := t.Accounts[addr.String()]
 	if !ok {
-		return fmt.Errorf("ensureExists:account %s not found", addr)
+		return fmt.Errorf("ensureExists: account %s not found", addr)
 	}
 	return nil
 }

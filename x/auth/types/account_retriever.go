@@ -6,7 +6,9 @@ import (
 	"strconv"
 
 	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,8 +64,10 @@ func (ar AccountRetriever) GetAccountWithHeight(clientCtx client.Context, addr s
 // EnsureExists returns an error if no account exists for the given address else nil.
 func (ar AccountRetriever) EnsureExists(clientCtx client.Context, addr sdk.AccAddress) error {
 	if _, err := ar.GetAccount(clientCtx, addr); err != nil {
-		// 		if there is an error here it either means its the users first tx. In this case if the user does not have funds the tx will fail anyways
-		return nil
+		if status.Code(err) == codes.NotFound {
+			return nil
+		}
+		return err
 	}
 
 	return nil
@@ -74,8 +78,10 @@ func (ar AccountRetriever) EnsureExists(clientCtx client.Context, addr sdk.AccAd
 func (ar AccountRetriever) GetAccountNumberSequence(clientCtx client.Context, addr sdk.AccAddress) (uint64, uint64, error) {
 	acc, err := ar.GetAccount(clientCtx, addr)
 	if err != nil {
-		// if there is an error here it either means its the users first tx. In this case if the user does not have funds the tx will fail anyways
-		return 0, 0, nil
+		if status.Code(err) == codes.NotFound {
+			return 0, 0, nil
+		}
+		return 0, 0, err
 	}
 
 	return acc.GetAccountNumber(), acc.GetSequence(), nil

@@ -6,17 +6,22 @@
 
 ## Background
 
-The Cosmos SDK has a very powerful and flexible module system, it has been tested and proven to be very good in production.
-The design of how messages are handled is built around proto buf services and Grpc. This design was proposed and 
-implemented during the time we migrated from amino to protocol buffers. This design has fullfilled the needs of users
-today. While this design is useful it has caused a elevated learning curve to be adopted by users. Today, these services 
-are the only way to write a module. This RFC proposes a new design that simplifies the design and enables new use cases
-we are seeing today. 
+The Cosmos SDK has a very powerful and flexible module system that has been tested
+and proven to be very good in production. The design of how messages are handled
+is built around Protobuf services and gRPC. This design was proposed and implemented
+during a time when we migrated from Amino to Protocol Buffers. This design has
+fulfilled the needs of users today. While this design is useful it has caused a
+elevated learning curve to be adopted by users. Today, these services are the
+only way to write a module. This RFC proposes a new design that simplifies the
+design and enables new use cases we are seeing today.
 
-Taking a step back we have seen the emergence of rollups and proving technologies. These technologies enable new use cases
-and new methods of achieveing various goals. When we look at things like proving we look to [Tinygo](https://tinygo.org/). When we have
-attempted to use tinygo with existing modules we have run into a hiccup, the use of [Grpc](https://github.com/tinygo-org/tinygo/issues/2814) within modules. This has
-led us to look at a design which would allow the usage of tinygo and other technologies.
+Taking a step back, we have seen the emergence of rollups and proving technologies.
+These technologies enable new use cases and new methods of achieving various goals.
+When we look at things like proving we look to [Tinygo](https://tinygo.org/). When
+we have attempted to use Tinygo with existing modules we have run into a hiccup,
+the use of [gRPC](https://github.com/tinygo-org/tinygo/issues/2814) within modules.
+This has led us to look at a design which would allow the usage of Tinygo and
+other technologies.
 
 We looked at Tinygo for our first target in order to compile down down to a 32 bit environment which could be used with
 things like [Risc-0](https://www.risczero.com/), [Fluent](https://fluentlabs.xyz/) and other technologies. When speaking with the teams behind these technologies
@@ -26,7 +31,7 @@ Cosmos SDK go code in a 32 bit environment.
 The Cosmos SDK team has been hard at work over the last few months designing and implementing a modular core layer, with
 the idea that proving can be enabled later on. This design allows us to push the design of what can be done with the
 Cosmos SDK to the next level. In the future when we have proving tools and technologies integrated parts of the new core
-layer will be able to be used in conjunction with proving technologies without the need to rewrite the stack. 
+layer will be able to be used in conjunction with proving technologies without the need to rewrite the stack.
 
 
 ## Proposal
@@ -39,11 +44,11 @@ different proving technologies.
 
 This proposal is for server/v2, Baseapp will continue to work in the same way as it does today.
 
-### Pre and Post Message Handlers 
+### Pre and Post Message Handlers
 
 In the Cosmos SDK, there exists hooks on messages and execution of function calls. Separating the two we will focus on
 message hooks. When a message is implemented it can be unknown if others will use the module and if a message will need
-hooks. When hooks are needed before or after a message, users are required to fork the module. This is not ideal as it 
+hooks. When hooks are needed before or after a message, users are required to fork the module. This is not ideal as it
 leads to a lot of forks of modules and a lot of code duplication.
 
 Pre and Post message handlers solve this issue. Where we allow modules to register listeners for messages in order to
@@ -56,7 +61,7 @@ register a pre message handler. If the message is called by a user the pre messa
 logic. If the sender is not allowed to send funds the premessage handler can return an error and the message will not be
 executed.
 
-> Note: This is different from the antehandler and posthandler we have today. These will still exist in the same form. 
+> Note: This is different from the antehandler and posthandler we have today. These will still exist in the same form.
 
 A module can register handlers for any or all message(s), this allows for modules to be extended without the need to fork.
 
@@ -121,7 +126,7 @@ We note the following behaviors:
 
 ### Message and Query Handlers
 
-Similar to the above design, message handlers will allow the application developer to replace existing Grpc based services 
+Similar to the above design, message handlers will allow the application developer to replace existing Grpc based services
 with handlers. This enables the module to be compiled down to tinygo, and abandon the gRPC dependency. As mentioned
 upgrading the modules immediately is not mandatory, module developers can do so in a gradual way. Application developers have the option to use the existing gRPC services or the new handlers.
 
@@ -153,7 +158,7 @@ func RegisterMsgHandler[Req, Resp protoiface.MessageV1](router MsgHandlerRouter,
 Example
 
 ```go
-package bank 
+package bank
 
 func (b BankKeeper) Send(ctx context.Context, msg bank.MsgSend) (bank.MsgSendResponse, error) {
 	// logic
@@ -161,7 +166,7 @@ func (b BankKeeper) Send(ctx context.Context, msg bank.MsgSend) (bank.MsgSendRes
 
 func (b BankModule) RegisterMsgHandlers(router core_appmodule.MsgHandlerRouter) {
 	// the RegisterMsgHandler function takes care of doing type casting and conversions, ensuring we retain type safety
-	core_appmodule.RegisterMsgHandler(router, b.Send) 
+	core_appmodule.RegisterMsgHandler(router, b.Send)
 }
 
 ```
@@ -199,7 +204,7 @@ The difference between gRPC handlers and query handlers is that we expect query 
 in consensus by other modules. Non consensus queries should be registered outside of the state machine itself, and we will
 provide guidelines on how to do so with serverv2.
 
-As a consequence queries would be now mapped by their message name. 
+As a consequence queries would be now mapped by their message name.
 
 We can provide JSON exposure of the Query APIs following this rest API format:
 
@@ -211,7 +216,7 @@ ReqBody: protojson.Marshal(msg)
 RespBody: protojson.Marshal(msgResp)
 ```
 
-### Consensus Messages 
+### Consensus Messages
 
 Similar to the above design, consensus messages will allow the underlying consensus engine to speak to the modules. Today we get consensus related information from `SDKContext`. In server/v2 we are unable to continue with this design due to the forced dependency leakage of comet throughout the repo. Secondly, while we already have `cometInfo` if we were to put this on the new execution client we would be tieing cometbft to the application manager and STF.
 
@@ -227,7 +232,7 @@ func (b ConsensusKeeper) ConsensusParams(ctx context.Context, msg bank.MsgConsen
 
 func (b CircuitModule) RegisterConsensusHandlers(router core_appmodule.MsgHandlerRouter) {
 	// the RegisterConsensusHandler function takes care of doing type casting and conversions, ensuring we retain type safety
-	core_appmodule.RegisterConsensusHandler(router, b.Send) 
+	core_appmodule.RegisterConsensusHandler(router, b.Send)
 }
 
 ```
@@ -235,21 +240,21 @@ func (b CircuitModule) RegisterConsensusHandlers(router core_appmodule.MsgHandle
 
 ## Consequences
 
-* REST endpoints for message and queries change due to lack of services and grpc gatway annotations. 
+* REST endpoints for message and queries change due to lack of services and grpc gatway annotations.
 * When using gRPC directly, one must query a schema endpoint in order to see all possible messages and queries.
 
 ### Backwards Compatibility
 
-The way to interact with modules changes, REST and gRPC will still be available. 
+The way to interact with modules changes, REST and gRPC will still be available.
 
 ### Positive
 
-* Allows modules to be compiled to tinyGO. 
+* Allows modules to be compiled to tinyGO.
 * Reduces the cosmos-sdk's learning curve, since understanding gRPC semantics is not a must anymore.
 * Allows other modules to extend existing modules behaviour using pre and post msg handlers, without forking.
 * The system becomes overall more simple as gRPC is not anymore a hard dependency and requirement for the state machine.
 * Reduces the need on sdk.Context
-* Concurrently safe 
+* Concurrently safe
 * Reduces public interface of modules
 
 ### Negative

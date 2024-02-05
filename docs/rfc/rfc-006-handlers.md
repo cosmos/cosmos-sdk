@@ -226,8 +226,8 @@ func (b ConsensusKeeper) ConsensusParams(ctx context.Context, msg bank.MsgConsen
 }
 
 func (b CircuitModule) RegisterConsensusHandlers(router core_appmodule.MsgHandlerRouter) {
-	// the RegisterMsgHandler function takes care of doing type casting and conversions, ensuring we retain type safety
-	core_appmodule.RegisterMsgHandler(router, b.Send) 
+	// the RegisterConsensusHandler function takes care of doing type casting and conversions, ensuring we retain type safety
+	core_appmodule.RegisterConsensusHandler(router, b.Send) 
 }
 
 ```

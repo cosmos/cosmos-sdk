@@ -10,8 +10,6 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "cosmossdk.io/x/accounts/vesting/types";
 
-//-------------------------------------- INIT --------------------------------------
-
 // MsgInitVestingAccount defines a message that enables creating a vesting
 // account.
 message MsgInitVestingAccount {
@@ -20,20 +18,31 @@ message MsgInitVestingAccount {
   option (gogoproto.equal) = true;
 
   // owner of the vesting account
-  string   owner                           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 2 [
-    (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (amino.encoding) = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
   // end of vesting
-  google.protobuf.Timestamp end_time = 3
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp end_time = 3 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (gogoproto.stdtime) = true
+  ];
   // start of vesting
-  google.protobuf.Timestamp start_time = 4
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp start_time = 4 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (gogoproto.stdtime) = true
+  ];
+
+  repeated Period vesting_periods = 5 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }
 
 // MsgInitVestingAccountResponse defines the Msg/InitVestingAccount response type.
@@ -49,11 +58,26 @@ message MsgInitPeriodicVestingAccount {
   // owner of the vesting account
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // start of vesting
-  google.protobuf.Timestamp start_time = 2
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-  repeated Period vesting_periods = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  google.protobuf.Timestamp start_time = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (gogoproto.stdtime) = true
+  ];
+  repeated Period vesting_periods = 3 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }
 
 // MsgInitVestingAccountResponse defines the Msg/InitPeriodicVestingAccount
 // response type.
 message MsgInitPeriodicVestingAccountResponse {}
+
+message MsgInitOperation {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender is the address of the sender of this message.
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  
+}

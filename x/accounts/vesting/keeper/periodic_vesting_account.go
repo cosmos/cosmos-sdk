@@ -1,4 +1,4 @@
-package vesting
+package keeper
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types"
-	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,17 +42,6 @@ type PeriodicVestingAccount struct {
 }
 
 func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitPeriodicVestingAccount) (*vestingtypes.MsgInitPeriodicVestingAccountResponse, error) {
-	sender := accountstd.Sender(ctx)
-	to := accountstd.Whoami(ctx)
-
-	toAddress, err := pva.addressCodec.BytesToString(to)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
-	}
-	fromAddress, err := pva.addressCodec.BytesToString(sender)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
-	}
 	owner, err := pva.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
@@ -101,13 +89,6 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	}
 	err = pva.Owner.Set(ctx, owner)
 	if err != nil {
-		return nil, err
-	}
-
-	// Send token to new vesting account
-	sendMsg := banktypes.NewMsgSend(fromAddress, toAddress, totalCoins)
-
-	if _, err = accountstd.ExecModule[banktypes.MsgSendResponse](ctx, sendMsg); err != nil {
 		return nil, err
 	}
 

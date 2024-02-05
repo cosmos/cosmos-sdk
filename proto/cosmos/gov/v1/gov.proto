@@ -195,8 +195,19 @@ message TallyResult {
   string no_count = 3 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 3
   // no_with_veto_count is the number of no with veto votes on a proposal.
   string no_with_veto_count = 4 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 4
+  // option_one_count corresponds to the number of votes for option one (= yes_count for non multiple choice proposals).
+  string option_one_count = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  // option_two_count corresponds to the number of votes for option two (= abstain_count for non multiple choice
+  // proposals).
+  string option_two_count = 6 [(cosmos_proto.scalar) = "cosmos.Int"];
+  // option_three_count corresponds to the number of votes for option three (= no_count for non multiple choice
+  // proposals).
+  string option_three_count = 7 [(cosmos_proto.scalar) = "cosmos.Int"];
+  // option_four_count corresponds to the number of votes for option four (= no_with_veto_count for non multiple choice
+  // proposals).
+  string option_four_count = 8 [(cosmos_proto.scalar) = "cosmos.Int"];
   // spam_count is the number of spam votes on a proposal.
-  string spam_count = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string spam_count = 9 [(cosmos_proto.scalar) = "cosmos.Int"];
 }
 
 // Vote defines a vote on a governance proposal.

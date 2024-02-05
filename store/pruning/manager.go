@@ -1,166 +1,89 @@
 package pruning
 
 import (
-	"sync"
+	"sync/atomic"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 )
 
 // Manager is an abstraction to handle pruning of SS and SC backends.
 type Manager struct {
-	mtx       sync.Mutex
-	isStarted bool
+	logger            log.Logger
+	storageOpts       Options
+	commitmentOpts    Options
+	storageVersion    atomic.Uint64 // the pruning version of the storage in progress
+	commitmentVersion atomic.Uint64 // the pruning version of the commitment in progress
 
-	stateStorage    store.VersionedDatabase
-	stateCommitment store.Committer
-
-	logger         log.Logger
-	storageOpts    Options
-	commitmentOpts Options
-
-	chStorage    chan struct{}
-	chCommitment chan struct{}
+	stateStorage    PruningStore
+	stateCommitment PruningStore
 }
 
 // NewManager creates a new Manager instance.
 func NewManager(
 	logger log.Logger,
-	ss store.VersionedDatabase,
-	sc store.Committer,
+	ss PruningStore,
+	sc PruningStore,
+	storageOpts, commitmentOpts Options,
 ) *Manager {
 	return &Manager{
 		stateStorage:    ss,
 		stateCommitment: sc,
 		logger:          logger,
-		storageOpts:     DefaultOptions(),
-		commitmentOpts:  DefaultOptions(),
-	}
-}
-
-// SetStorageOptions sets the state storage options.
-func (m *Manager) SetStorageOptions(opts Options) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	m.storageOpts = opts
-}
-
-// SetCommitmentOptions sets the state commitment options.
-func (m *Manager) SetCommitmentOptions(opts Options) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	m.commitmentOpts = opts
-}
-
-// Start starts the manager.
-func (m *Manager) Start() {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	if m.isStarted {
-		return
-	}
-	m.isStarted = true
-
-	if !m.storageOpts.Sync {
-		m.chStorage = make(chan struct{}, 1)
-		m.chStorage <- struct{}{}
-	}
-	if !m.commitmentOpts.Sync {
-		m.chCommitment = make(chan struct{}, 1)
-		m.chCommitment <- struct{}{}
-	}
-}
-
-// Stop stops the manager and waits for all goroutines to finish.
-func (m *Manager) Stop() {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	if !m.isStarted {
-		return
-	}
-	m.isStarted = false
-
-	if !m.storageOpts.Sync {
-		<-m.chStorage
-		close(m.chStorage)
-	}
-	if !m.commitmentOpts.Sync {
-		<-m.chCommitment
-		close(m.chCommitment)
+		storageOpts:     storageOpts,
+		commitmentOpts:  commitmentOpts,
 	}
 }
 
 // Prune prunes the state storage and state commitment.
 // It will check the pruning conditions and prune if necessary.
-func (m *Manager) Prune(height uint64) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	if !m.isStarted {
-		return
-	}
-
+func (m *Manager) Prune(version uint64) {
 	// storage pruning
-	if m.storageOpts.Interval > 0 && height > m.storageOpts.KeepRecent && height%m.storageOpts.Interval == 0 {
-		pruneHeight := height - m.storageOpts.KeepRecent - 1
-		if m.storageOpts.Sync {
-			m.pruneStorage(pruneHeight)
-		} else {
-			// it will not block if the previous pruning is still running
-			select {
-			case _, stillOpen := <-m.chStorage:
-				if stillOpen {
-					go func() {
-						m.pruneStorage(pruneHeight)
-						m.chStorage <- struct{}{}
-					}()
-				}
-
-			default:
-				m.logger.Debug("storage pruning is still running; skipping", "version", pruneHeight)
-			}
-		}
+	if m.storageOpts.Interval > 0 && version > m.storageOpts.KeepRecent && version%m.storageOpts.Interval == 0 {
+		pruneVersion := version - m.storageOpts.KeepRecent - 1
+		m.pruneStorage(pruneVersion)
 	}
 
 	// commitment pruning
-	if m.commitmentOpts.Interval > 0 && height > m.commitmentOpts.KeepRecent && height%m.commitmentOpts.Interval == 0 {
-		pruneHeight := height - m.commitmentOpts.KeepRecent - 1
-		if m.commitmentOpts.Sync {
-			m.pruneCommitment(pruneHeight)
-		} else {
-			// it will not block if the previous pruning is still running
-			select {
-			case _, stillOpen := <-m.chCommitment:
-				if stillOpen {
-					go func() {
-						m.pruneCommitment(pruneHeight)
-						m.chCommitment <- struct{}{}
-					}()
-				}
+	if m.commitmentOpts.Interval > 0 && version > m.commitmentOpts.KeepRecent && version%m.commitmentOpts.Interval == 0 {
+		pruneVersion := version - m.commitmentOpts.KeepRecent - 1
+		m.pruneCommitment(pruneVersion)
+	}
+}
 
-			default:
-				m.logger.Debug("commitment pruning is still running; skipping", "version", pruneHeight)
-			}
+func (m *Manager) pruneStorage(version uint64) {
+	currentVersion := m.storageVersion.Load()
+	if 0 < currentVersion {
+		// pruning is already in progress
+		m.logger.Info("pruning storage already in progress", "version", currentVersion)
+		return
+	}
+
+	m.storageVersion.Store(version)
+	m.logger.Debug("pruning storage store", "version", version)
+
+	go func() {
+		defer m.storageVersion.Store(0)
+		if err := m.stateStorage.Prune(version); err != nil {
+			m.logger.Error("failed to prune storage store", "err", err)
 		}
-	}
+	}()
 }
 
-func (m *Manager) pruneStorage(height uint64) {
-	m.logger.Debug("pruning state storage", "height", height)
-
-	if err := m.stateStorage.Prune(height); err != nil {
-		m.logger.Error("failed to prune state storage", "err", err)
+func (m *Manager) pruneCommitment(version uint64) {
+	currentVersion := m.commitmentVersion.Load()
+	if 0 < currentVersion {
+		// pruning is already in progress
+		m.logger.Info("pruning commitment already in progress", "version", currentVersion)
+		return
 	}
-}
 
-func (m *Manager) pruneCommitment(height uint64) {
-	m.logger.Debug("pruning state commitment", "height", height)
+	m.commitmentVersion.Store(version)
+	m.logger.Debug("pruning commitment store", "version", version)
 
-	if err := m.stateCommitment.Prune(height); err != nil {
-		m.logger.Error("failed to prune state commitment", "err", err)
-	}
+	go func() {
+		defer m.commitmentVersion.Store(0)
+		if err := m.stateCommitment.Prune(version); err != nil {
+			m.logger.Error("failed to prune commitment store", "err", err)
+		}
+	}()
 }

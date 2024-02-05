@@ -1,32 +1,20 @@
 package pruning
 
 import (
-	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment"
-	"cosmossdk.io/store/v2/commitment/iavl"
-	dbm "cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
 )
-
-const defaultStoreKey = "default"
 
 type PruningTestSuite struct {
 	suite.Suite
 
 	manager *Manager
-	ss      store.VersionedDatabase
-	sc      store.Committer
-}
-
-func TestPruningTestSuite(t *testing.T) {
-	suite.Run(t, &PruningTestSuite{})
+	ss      *busyPruningStore
+	sc      *busyPruningStore
 }
 
 func (s *PruningTestSuite) SetupTest() {
@@ -35,71 +23,59 @@ func (s *PruningTestSuite) SetupTest() {
 		logger = log.NewTestLogger(s.T())
 	}
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB)
-
-	tree := iavl.NewIavlTree(dbm.NewMemDB(), log.NewNopLogger(), iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, dbm.NewMemDB(), logger)
-	s.Require().NoError(err)
-
-	s.manager = NewManager(logger, ss, sc)
-	s.ss = ss
-	s.sc = sc
+	s.ss = newBusyPruningStore()
+	s.sc = newBusyPruningStore()
+	s.manager = NewManager(logger, s.ss, s.sc, Options{3, 3}, Options{4, 2})
 }
 
-func (s *PruningTestSuite) TearDownTest() {
-	s.manager.Start()
-	s.manager.Stop()
+// waitForPruning waits for the pruning to finish, test only.
+// It returns true if the pruning is finished, false otherwise.
+func waitForPruning(m *Manager) bool {
+	for i := 0; i < 10; i++ {
+		if m.storageVersion.Load() == 0 && m.commitmentVersion.Load() == 0 {
+			return true
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return false
 }
 
 func (s *PruningTestSuite) TestPruning() {
-	s.manager.SetCommitmentOptions(Options{4, 2, true})
-	s.manager.SetStorageOptions(Options{3, 3, true})
-	s.manager.Start()
+	// Prune at version 7, nothing should happen because the version 7 is not a multiple of 3 or 2.
+	s.manager.Prune(7)
+	s.Require().True(waitForPruning(s.manager), "pruning did not finish")
+	s.Equal(s.ss.count, 0)
+	s.Equal(s.sc.count, 0)
 
-	latestVersion := uint64(100)
+	// Prune at version 8, only the commitment should be pruned.
+	s.manager.Prune(8)
+	// The pruning is not finished yet, so the count should be 0.
+	s.Require().False(waitForPruning(s.manager))
+	s.Equal(s.sc.count, 0)
+	// Finish the pruning and check the count.
+	s.sc.finishPruning()
+	s.Require().True(waitForPruning(s.manager))
+	s.Equal(s.ss.count, 0)
+	s.Equal(s.sc.count, 1)
 
-	// write batches
-	for i := uint64(0); i < latestVersion; i++ {
-		version := i + 1
+	// Prune at version 9, only the storage should be pruned.
+	s.manager.Prune(9)
+	s.Require().False(waitForPruning(s.manager))
+	s.Equal(s.ss.count, 0)
+	s.ss.finishPruning()
+	s.Require().True(waitForPruning(s.manager))
+	s.Equal(s.ss.count, 1)
+	s.Equal(s.sc.count, 1)
 
-		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{defaultStoreKey: {}})
-		cs.AddKVPair(defaultStoreKey, store.KVPair{
-			Key:   []byte("key"),
-			Value: []byte(fmt.Sprintf("value%d", version)),
-		})
-		err := s.sc.WriteBatch(cs)
-		s.Require().NoError(err)
+	// Prune at version 12, both the storage and the commitment should be pruned.
+	s.manager.Prune(12)
+	s.ss.finishPruning()
+	s.sc.finishPruning()
+	s.Require().True(waitForPruning(s.manager))
+	s.Equal(s.ss.count, 2)
+	s.Equal(s.sc.count, 2)
+}
 
-		_, err = s.sc.Commit(version)
-		s.Require().NoError(err)
-
-		err = s.ss.ApplyChangeset(version, cs)
-		s.Require().NoError(err)
-		s.manager.Prune(version)
-	}
-
-	// wait for pruning to finish
-	s.manager.Stop()
-
-	// check the store for the version 96
-	val, err := s.ss.Get(defaultStoreKey, latestVersion-4, []byte("key"))
-	s.Require().NoError(err)
-	s.Require().Equal([]byte("value96"), val)
-
-	// check the store for the version 50
-	val, err = s.ss.Get(defaultStoreKey, 50, []byte("key"))
-	s.Require().Error(err)
-	s.Require().Nil(val)
-
-	// check the commitment for the version 96
-	proofOps, err := s.sc.GetProof(defaultStoreKey, latestVersion-4, []byte("key"))
-	s.Require().NoError(err)
-	s.Require().Len(proofOps, 2)
-
-	// check the commitment for the version 95
-	proofOps, err = s.sc.GetProof(defaultStoreKey, latestVersion-5, []byte("key"))
-	s.Require().Error(err)
-	s.Require().Nil(proofOps)
+func TestPruningTestSuite(t *testing.T) {
+	suite.Run(t, &PruningTestSuite{})
 }

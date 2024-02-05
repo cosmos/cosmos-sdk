@@ -56,10 +56,7 @@ func New(
 	ssOpts, scOpts pruning.Options,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
-	pruningManager := pruning.NewManager(logger, ss, sc)
-	pruningManager.SetStorageOptions(ssOpts)
-	pruningManager.SetCommitmentOptions(scOpts)
-	pruningManager.Start()
+	pruningManager := pruning.NewManager(logger, ss, sc, ssOpts, scOpts)
 
 	return &Store{
 		logger:          logger.With("module", "root_store"),
@@ -81,8 +78,6 @@ func (s *Store) Close() (err error) {
 	s.stateCommitment = nil
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
-
-	s.pruningManager.Stop()
 
 	return err
 }

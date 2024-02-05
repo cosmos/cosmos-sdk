@@ -1,6 +1,7 @@
 package vesting
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -43,7 +44,7 @@ type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, erro
 // NewBaseVesting creates a new BaseVesting object.
 func NewBaseVesting(d accountstd.Dependencies) *BaseVesting {
 	baseVesting := &BaseVesting{
-		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.StringValue),
+		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		OriginalVesting:  collections.NewMap(d.SchemaBuilder, OriginalVestingPrefix, "original_vesting", collections.StringKey, sdk.IntValue),
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
 		DelegatedVesting: collections.NewMap(d.SchemaBuilder, DelegatedVestingPrefix, "delegated_vesting", collections.StringKey, sdk.IntValue),
@@ -57,7 +58,7 @@ func NewBaseVesting(d accountstd.Dependencies) *BaseVesting {
 
 type BaseVesting struct {
 	// Owner is the address of the account owner.
-	Owner            collections.Item[string]
+	Owner            collections.Item[[]byte]
 	OriginalVesting  collections.Map[string, math.Int]
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedVesting collections.Map[string, math.Int]
@@ -81,7 +82,11 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'sender' address: %s", err)
 	}
-	err = bva.Owner.Set(ctx, msg.Owner)
+	owner, err := bva.addressCodec.StringToBytes(msg.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
+	}
+	err = bva.Owner.Set(ctx, owner)
 	if err != nil {
 		return nil, err
 	}
@@ -350,9 +355,13 @@ func (bva *BaseVesting) ExecuteMessages(
 func (bva BaseVesting) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err)
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())
 	}
-	if owner != msg.Bundler {
+	bundler, err := bva.addressCodec.StringToBytes(msg.Bundler)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid bundler address: %s", err.Error())
+	}
+	if !bytes.Equal(owner, bundler) {
 		return nil, fmt.Errorf("bundler is not the owner of this vesting account")
 	}
 
@@ -408,6 +417,10 @@ func (bva BaseVesting) QueryVestingAccountBaseInfo(ctx context.Context, _ *vesti
 	if err != nil {
 		return nil, err
 	}
+	ownerAddress, err := bva.addressCodec.BytesToString(owner)
+	if err != nil {
+		return nil, err
+	}
 	endTime, err := bva.EndTime.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -428,7 +441,7 @@ func (bva BaseVesting) QueryVestingAccountBaseInfo(ctx context.Context, _ *vesti
 		return false
 	})
 	return &vestingtypes.QueryVestingAccountInfoResponse{
-		Owner:            owner,
+		Owner:            ownerAddress,
 		OriginalVesting:  originalVesting,
 		DelegatedVesting: delegatedVesting,
 		DelegatedFree:    delegatedFree,

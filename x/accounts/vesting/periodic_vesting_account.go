@@ -54,6 +54,10 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
+	owner, err := pva.addressCodec.StringToBytes(msg.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
+	}
 
 	if msg.StartTime.IsZero() {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %s", msg.StartTime.String())
@@ -95,7 +99,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	if err != nil {
 		return nil, err
 	}
-	err = pva.Owner.Set(ctx, msg.Owner)
+	err = pva.Owner.Set(ctx, owner)
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.8.4 // indirect
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3 // indirect
 	google.golang.org/grpc v1.61.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.32.0
 )
 
 require (

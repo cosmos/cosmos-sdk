@@ -104,7 +104,7 @@ func (store *Store) Write() {
 	defer store.mtx.Unlock()
 
 	if len(store.cache) == 0 && len(store.unsortedCache) == 0 {
-		store.resetSortedCache()
+		store.sortedCache = nil
 		return
 	}
 
@@ -145,7 +145,7 @@ func (store *Store) Write() {
 	for key := range store.unsortedCache {
 		delete(store.unsortedCache, key)
 	}
-	store.resetSortedCache()
+	store.sortedCache = nil
 }
 
 // CacheWrap implements CacheWrapper.

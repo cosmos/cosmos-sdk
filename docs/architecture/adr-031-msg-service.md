@@ -197,6 +197,5 @@ Finally, closing a module to client API opens desirable OCAP patterns discussed 
 
 * [Initial Github Issue \#7122](https://github.com/cosmos/cosmos-sdk/issues/7122)
 * [proto 3 Language Guide: Defining Services](https://developers.google.com/protocol-buffers/docs/proto3#services)
-* [Initial pre-`Any` `Msg` designs](https://docs.google.com/document/d/1eEgYgvgZqLE45vETjhwIw4VOqK-5hwQtZtjVbiXnIGc)
 * [ADR 020](./adr-020-protobuf-transaction-encoding.md)
 * [ADR 021](./adr-021-protobuf-query-encoding.md)

@@ -1,3 +1,6 @@
+//go:build e2e
+// +build e2e
+
 package baseapp_test
 
 import (
@@ -24,6 +27,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	baseapputil "github.com/cosmos/cosmos-sdk/tests/e2e/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -109,7 +113,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				key:          bapp.UnsafeFindStoreKey(testutil.BankModuleName),
 			})
 
-			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
+			genState := baseapputil.GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
 			_, err = bapp.InitChain(&abci.RequestInitChain{

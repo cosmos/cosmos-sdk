@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	"fmt"
 	"strings"
+	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -17,8 +17,9 @@ import (
 //  2. the built-in implementations of pflag.SliceValue
 //  3. the custom implementations of pflag.SliceValue that are split by comma ","
 //
-// see https://github.com/spf13/cobra/issues/2079#issuecomment-1867991505 for more detail info
-func ResetArgs(cmd *cobra.Command) {
+// see https://github.com/spf13/cobra/issues/2079#issuecomment-1870115781 for more detail info
+func ResetArgs(t *testing.T, cmd *cobra.Command) {
+	t.Helper()
 	// if flags haven't been parsed yet, there is no need to reset the args
 	if !cmd.Flags().Parsed() {
 		return
@@ -37,13 +38,13 @@ func ResetArgs(cmd *cobra.Command) {
 				defSliceVal = strings.Split(defVal, ",")
 			}
 			if err := v.Replace(defSliceVal); err != nil {
-				panic(fmt.Errorf("error resetting argument <%s> with default value <%+v>: %v", pf.Name, defSliceVal, err))
+				t.Errorf("error resetting argument <%s> with default value <%+v>: %v", pf.Name, defSliceVal, err)
 			}
 			return
 		}
 		// handle pflag.Value
 		if err := pf.Value.Set(pf.DefValue); err != nil {
-			panic(fmt.Errorf("error resetting argument <%s> with default value <%s>: %v", pf.Name, pf.DefValue, err))
+			t.Errorf("error resetting argument <%s> with default value <%s>: %v", pf.Name, pf.DefValue, err)
 		}
 	})
 }

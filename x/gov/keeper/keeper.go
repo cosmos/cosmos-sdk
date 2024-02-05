@@ -53,6 +53,9 @@ type Keeper struct {
 	Constitution collections.Item[string]
 	// Params stores the governance parameters
 	Params collections.Item[v1.Params]
+	// MessageBasedParams store message-based governance parameters
+	// key:proposal-msg-url | value MessageBasedParams
+	MessageBasedParams collections.Map[string, v1.MessageBasedParams]
 	// Deposits key: proposalID+depositorAddr | value: Deposit
 	Deposits collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
 	// Votes key: proposalID+voterAddr | value: Vote
@@ -125,6 +128,7 @@ func NewKeeper(
 		authority:              authority,
 		Constitution:           collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                 collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
+		MessageBasedParams:     collections.NewMap(sb, types.MessageBasedParamsKey, "proposal_messaged_based_params", collections.StringKey, codec.CollValue[v1.MessageBasedParams](cdc)),
 		Deposits:               collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		Votes:                  collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		ProposalID:             collections.NewSequence(sb, types.ProposalIDKey, "proposal_id"),

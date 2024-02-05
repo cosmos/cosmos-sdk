@@ -327,5 +327,10 @@
   {"text":"", "error": true},
   {"text":"1COSM", "error": true},
   {"text":"1  COSM", "error": true},
-  {"text":" 1  COSM", "error": true}
+  {"text":" 1  COSM", "error": true},
+  {
+    "proto": {"amount": "10000000", "denom": "point, 222222 point"},
+    "metadata": {"display": "POINT", "base": "point", "denom_units": [{"denom": "point", "exponent": 0}, {"denom": "POINT", "exponent": 0}]},
+    "error": true
+  }
 ]

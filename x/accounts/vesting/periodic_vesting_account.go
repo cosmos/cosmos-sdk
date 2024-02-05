@@ -153,10 +153,13 @@ func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTim
 		return nil, nil, err
 	}
 	originalVesting := sdk.Coins{}
-	pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	err = pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, nil, err
+	}
 	if blockTime.Before(startTime) {
 		return vestedCoins, originalVesting, nil
 	} else if blockTime.After(endTime) {

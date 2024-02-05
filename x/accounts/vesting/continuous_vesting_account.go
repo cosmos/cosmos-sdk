@@ -85,10 +85,13 @@ func (cva ContinuousVestingAccount) GetVestCoinsInfo(ctx context.Context, blockT
 		return nil, nil, err
 	}
 	var originalVesting sdk.Coins
-	cva.IterateCoinEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	err = cva.IterateCoinEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, nil, err
+	}
 	if startTime.After(blockTime) {
 		return vestedCoins, originalVesting, nil
 	} else if endTime.Before(blockTime) {

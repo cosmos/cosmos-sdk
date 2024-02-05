@@ -52,10 +52,13 @@ func (dva DelayedVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTime
 		return nil, nil, err
 	}
 	originalVesting := sdk.Coins{}
-	dva.IterateCoinEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	err = dva.IterateCoinEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, nil, err
+	}
 	if blockTime.After(endTime) {
 		return originalVesting, sdk.Coins{}, nil
 	}

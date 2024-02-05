@@ -380,14 +380,16 @@ func (bva BaseVesting) Authenticate(ctx context.Context, msg *account_abstractio
 func (bva BaseVesting) IterateCoinEntries(
 	ctx context.Context,
 	entries collections.Map[string, math.Int],
-	cb func(denom string, value math.Int) bool,
-) {
+	cb func(denom string, value math.Int) (bool, error),
+) error {
 	err := entries.Walk(ctx, nil, func(key string, value math.Int) (stop bool, err error) {
-		return cb(key, value), nil
+		return cb(key, value)
 	})
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
 // LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)
@@ -397,9 +399,9 @@ func (bva BaseVesting) IterateCoinEntries(
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
 func (bva BaseVesting) LockedCoinsFromVesting(ctx context.Context, vestingCoins sdk.Coins) sdk.Coins {
 	delegatedVestingCoins := sdk.Coins{}
-	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
+	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool, err error) {
 		delegatedVestingCoins = append(delegatedVestingCoins, sdk.NewCoin(key, value))
-		return false
+		return false, nil
 	})
 
 	lockedCoins := vestingCoins.Sub(vestingCoins.Min(delegatedVestingCoins)...)
@@ -417,29 +419,44 @@ func (bva BaseVesting) QueryVestingAccountBaseInfo(ctx context.Context, _ *vesti
 	if err != nil {
 		return nil, err
 	}
+
 	ownerAddress, err := bva.addressCodec.BytesToString(owner)
 	if err != nil {
 		return nil, err
 	}
+
 	endTime, err := bva.EndTime.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	originalVesting := sdk.Coins{}
-	bva.IterateCoinEntries(ctx, bva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	err = bva.IterateCoinEntries(ctx, bva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	delegatedVesting := sdk.Coins{}
-	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
+	err = bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool, err error) {
 		delegatedVesting = append(delegatedVesting, sdk.NewCoin(key, value))
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	delegatedFree := sdk.Coins{}
-	bva.IterateCoinEntries(ctx, bva.DelegatedFree, func(key string, value math.Int) (stop bool) {
+	err = bva.IterateCoinEntries(ctx, bva.DelegatedFree, func(key string, value math.Int) (stop bool, err error) {
 		delegatedFree = append(delegatedFree, sdk.NewCoin(key, value))
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &vestingtypes.QueryVestingAccountInfoResponse{
 		Owner:            ownerAddress,
 		OriginalVesting:  originalVesting,

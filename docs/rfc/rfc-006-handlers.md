@@ -42,7 +42,7 @@ different proving technologies.
 > Note the usage of handlers in modules is optional, modules can still use the existing design. This design is meant to
 > be a new way to write modules, with proving in mind, and is not meant to replace the existing design.
 
-This proposal is for server/v2, Baseapp will continue to work in the same way as it does today.
+This proposal is for server/v2. Baseapp will continue to work in the same way as it does today.
 
 ### Pre and Post Message Handlers
 
@@ -58,14 +58,14 @@ assume that the bypass surface of hooks will reduce to zero.
 
 If an application developer would like to check the sender of funds before the message is executed they can
 register a pre message handler. If the message is called by a user the pre message handler will be called with the custom
-logic. If the sender is not allowed to send funds the premessage handler can return an error and the message will not be
+logic. If the sender is not allowed to send funds the pre-message handler can return an error and the message will not be
 executed.
 
-> Note: This is different from the antehandler and posthandler we have today. These will still exist in the same form.
+> Note: This is different from the ante-handler and post-handler we have today. These will still exist in the same form.
 
 A module can register handlers for any or all message(s), this allows for modules to be extended without the need to fork.
 
-A module will implement the below for a premessage hook:
+A module will implement the below for a pre-message hook:
 
 ```golang
 package core_appmodule

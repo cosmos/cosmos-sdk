@@ -81,7 +81,6 @@ func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRev
 
 // Exec implements the MsgServer.Exec method.
 func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
-
 	if msg.Grantee == "" {
 		return nil, errors.New("empty address string is not allowed")
 	}

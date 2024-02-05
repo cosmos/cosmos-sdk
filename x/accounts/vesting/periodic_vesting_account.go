@@ -2,10 +2,10 @@ package vesting
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
@@ -29,8 +29,8 @@ func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccou
 
 	periodicsVestingAccount := PeriodicVestingAccount{
 		BaseVesting:    baseVesting,
-		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", sdk.IntValue),
-		VestingPeriods: collections.NewMap(d.SchemaBuilder, VestingPeriodsPrefix, "vesting_periods", collections.StringKey, codec.CollValue[vestingtypes.Period](d.LegacyStateCodec)),
+		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		VestingPeriods: collections.NewVec(d.SchemaBuilder, VestingPeriodsPrefix, "vesting_periods", codec.CollValue[vestingtypes.Period](d.LegacyStateCodec)),
 	}
 
 	return &periodicsVestingAccount, nil
@@ -38,19 +38,13 @@ func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccou
 
 type PeriodicVestingAccount struct {
 	*BaseVesting
-	StartTime      collections.Item[math.Int]
-	VestingPeriods collections.Map[string, vestingtypes.Period]
+	StartTime      collections.Item[time.Time]
+	VestingPeriods collections.Vec[vestingtypes.Period]
 }
 
 func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitPeriodicVestingAccount) (*vestingtypes.MsgInitPeriodicVestingAccountResponse, error) {
 	sender := accountstd.Sender(ctx)
-	if sender == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find sender address from context")
-	}
 	to := accountstd.Whoami(ctx)
-	if to == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
-	}
 
 	toAddress, err := pva.addressCodec.BytesToString(to)
 	if err != nil {
@@ -61,15 +55,15 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
 
-	if msg.StartTime < 1 {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %d, length must be greater than 0", msg.StartTime)
+	if msg.StartTime.IsZero() {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %d", msg.StartTime)
 	}
 
 	totalCoins := sdk.Coins{}
 	endTime := msg.StartTime
-	for i, period := range msg.VestingPeriods {
-		if period.Length < 1 {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+	for _, period := range msg.VestingPeriods {
+		if period.Length.Seconds() <= 0 {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period duration length %d", period.Length)
 		}
 
 		if err := validateAmount(period.Amount); err != nil {
@@ -78,8 +72,8 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 
 		totalCoins = totalCoins.Add(period.Amount...)
 		// Calculate end time
-		endTime += period.Length
-		err = pva.VestingPeriods.Set(ctx, fmt.Sprint(i), period)
+		endTime = endTime.Add(period.Length)
+		err = pva.VestingPeriods.Push(ctx, period)
 		if err != nil {
 			return nil, err
 		}
@@ -93,11 +87,11 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		}
 	}
 
-	err = pva.StartTime.Set(ctx, math.NewInt(msg.StartTime))
+	err = pva.StartTime.Set(ctx, msg.StartTime)
 	if err != nil {
 		return nil, err
 	}
-	err = pva.EndTime.Set(ctx, math.NewInt(endTime))
+	err = pva.EndTime.Set(ctx, endTime)
 	if err != nil {
 		return nil, err
 	}
@@ -113,9 +107,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		return nil, err
 	}
 
-	return &vestingtypes.MsgInitPeriodicVestingAccountResponse{
-		Address: toAddress,
-	}, nil
+	return &vestingtypes.MsgInitPeriodicVestingAccountResponse{}, nil
 }
 
 func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
@@ -127,10 +119,10 @@ func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *acc
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (pva PeriodicVestingAccount) IteratePeriods(
 	ctx context.Context,
-	cb func(_ string, value vestingtypes.Period) bool,
+	cb func(value vestingtypes.Period) bool,
 ) {
-	err := pva.VestingPeriods.Walk(ctx, nil, func(key string, value vestingtypes.Period) (stop bool, err error) {
-		return cb(key, value), nil
+	err := pva.VestingPeriods.Walk(ctx, nil, func(_ uint64, value vestingtypes.Period) (stop bool, err error) {
+		return cb(value), nil
 	})
 	if err != nil {
 		panic(err)
@@ -159,9 +151,9 @@ func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTim
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
-	if math.NewInt(blockTime.Unix()).LTE(startTime) {
+	if blockTime.Before(startTime) {
 		return vestedCoins, originalVesting, nil
-	} else if math.NewInt(blockTime.Unix()).GTE(endTime) {
+	} else if blockTime.After(endTime) {
 		return originalVesting, vestingCoins, nil
 	}
 
@@ -171,16 +163,16 @@ func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTim
 		return nil, nil, err
 	}
 
-	pva.IteratePeriods(ctx, func(_ string, period vestingtypes.Period) (stop bool) {
-		x := math.NewInt(blockTime.Unix()).Sub(currentPeriodStartTime).Int64()
-		if x < period.Length {
+	pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool) {
+		x := blockTime.Sub(currentPeriodStartTime)
+		if x.Seconds() < period.Length.Seconds() {
 			return true
 		}
 
 		vestedCoins = vestedCoins.Add(period.Amount...)
 
 		// update the start time of the next period
-		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(math.NewInt(period.Length)))
+		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
 		return err != nil
 	})
 
@@ -199,39 +191,35 @@ func (pva PeriodicVestingAccount) GetVestingCoins(ctx context.Context, blockTime
 	return vestingCoins, nil
 }
 
-func (pva PeriodicVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
-	*vestingtypes.QueryVestCoinsInfoResponse, error,
+func (pva PeriodicVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
+	*vestingtypes.QueryVestingAccountInfoResponse, error,
 ) {
+	resp, err := pva.BaseVesting.QueryVestingAccountBaseInfo(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	startTime, err := pva.StartTime.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
 	hs := pva.headerService.GetHeaderInfo(ctx)
 	vestedCoins, vestingCoins, err := pva.GetVestCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-
-	return &vestingtypes.QueryVestCoinsInfoResponse{
-		VestedVesting: vestedCoins,
-		VestingCoins:  vestingCoins,
-	}, nil
-}
-
-func (pva PeriodicVestingAccount) QueryStartTime(ctx context.Context, msg *vestingtypes.QueryStartTimeRequest) (
-	*vestingtypes.QueryStartTimeResponse, error,
-) {
-	startTime, err := pva.StartTime.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &vestingtypes.QueryStartTimeResponse{
-		StartTime: startTime.Int64(),
-	}, nil
+	resp.VestedVesting = sdk.Coins{}
+	resp.StartTime = &startTime
+	resp.VestingCoins = vestingCoins
+	resp.VestedVesting = vestedCoins
+	return resp, nil
 }
 
 func (pva PeriodicVestingAccount) QueryVestingPeriods(ctx context.Context, msg *vestingtypes.QueryVestingPeriodsRequest) (
 	*vestingtypes.QueryVestingPeriodsResponse, error,
 ) {
-	vestingPeriods := []vestingtypes.Period{}
-	pva.IteratePeriods(ctx, func(_ string, period vestingtypes.Period) (stop bool) {
-		vestingPeriods = append(vestingPeriods, period)
+	vestingPeriods := []*vestingtypes.Period{}
+	pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool) {
+		vestingPeriods = append(vestingPeriods, &period)
 		return false
 	})
 	return &vestingtypes.QueryVestingPeriodsResponse{
@@ -250,8 +238,6 @@ func (pva PeriodicVestingAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 }
 
 func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, pva.QueryStartTime)
-	accountstd.RegisterQueryHandler(builder, pva.QueryVestCoinsInfo)
+	accountstd.RegisterQueryHandler(builder, pva.QueryVestingAccountInfo)
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestingPeriods)
-	pva.BaseVesting.RegisterQueryHandlers(builder)
 }

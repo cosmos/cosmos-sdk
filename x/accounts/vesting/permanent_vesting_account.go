@@ -33,7 +33,7 @@ func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.M
 	if err != nil {
 		return nil, err
 	}
-	err = plva.EndTime.Set(ctx, math.ZeroInt())
+	err = plva.EndTime.Set(ctx, time.Time{})
 	if err != nil {
 		return nil, err
 	}
@@ -54,18 +54,21 @@ func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *ac
 	})
 }
 
-func (plva PermanentLockedAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
-	*vestingtypes.QueryVestCoinsInfoResponse, error,
+func (plva PermanentLockedAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
+	*vestingtypes.QueryVestingAccountInfoResponse, error,
 ) {
+	resp, err := plva.BaseVesting.QueryVestingAccountBaseInfo(ctx, req)
+	if err != nil {
+		return nil, err
+	}
 	originalVesting := sdk.Coins{}
 	plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
-	return &vestingtypes.QueryVestCoinsInfoResponse{
-		VestingCoins:  originalVesting,
-		VestedVesting: sdk.Coins{},
-	}, nil
+	resp.VestingCoins = originalVesting
+	resp.VestedVesting = sdk.Coins{}
+	return resp, nil
 }
 
 // Implement smart account interface
@@ -79,6 +82,5 @@ func (plva PermanentLockedAccount) RegisterExecuteHandlers(builder *accountstd.E
 }
 
 func (plva PermanentLockedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, plva.QueryVestCoinsInfo)
-	plva.BaseVesting.RegisterQueryHandlers(builder)
+	accountstd.RegisterQueryHandler(builder, plva.QueryVestingAccountInfo)
 }

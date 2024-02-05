@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
@@ -48,7 +49,7 @@ func NewBaseVesting(d accountstd.Dependencies) *BaseVesting {
 		DelegatedVesting: collections.NewMap(d.SchemaBuilder, DelegatedVestingPrefix, "delegated_vesting", collections.StringKey, sdk.IntValue),
 		addressCodec:     d.AddressCodec,
 		headerService:    d.HeaderService,
-		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", sdk.IntValue),
+		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 	}
 
 	return baseVesting
@@ -63,20 +64,14 @@ type BaseVesting struct {
 	addressCodec     address.Codec
 	headerService    header.Service
 	// Vesting end time, as unix timestamp (in seconds).
-	EndTime collections.Item[math.Int]
+	EndTime collections.Item[time.Time]
 }
 
 func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (
 	*vestingtypes.MsgInitVestingAccountResponse, error,
 ) {
 	sender := accountstd.Sender(ctx)
-	if sender == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrap("Cannot find sender address from context")
-	}
 	to := accountstd.Whoami(ctx)
-	if to == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrap("Cannot find account address from context")
-	}
 
 	toAddress, err := bva.addressCodec.BytesToString(to)
 	if err != nil {
@@ -103,7 +98,7 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 		}
 	}
 
-	err = bva.EndTime.Set(ctx, math.NewInt(msg.EndTime))
+	err = bva.EndTime.Set(ctx, msg.EndTime)
 	if err != nil {
 		return nil, err
 	}
@@ -114,9 +109,7 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 		return nil, err
 	}
 
-	return &vestingtypes.MsgInitVestingAccountResponse{
-		Address: toAddress,
-	}, nil
+	return &vestingtypes.MsgInitVestingAccountResponse{}, nil
 }
 
 // TrackDelegation tracks a delegation amount for any given vesting account type
@@ -407,84 +400,42 @@ func (bva BaseVesting) LockedCoinsFromVesting(ctx context.Context, vestingCoins 
 	return lockedCoins
 }
 
-// QueryOriginalVesting returns a vesting account's original vesting amount
-func (bva BaseVesting) QueryOriginalVesting(ctx context.Context, _ *vestingtypes.QueryOriginalVestingRequest) (
-	*vestingtypes.QueryOriginalVestingResponse, error,
-) {
-	originalVesting := sdk.Coins{}
-	bva.IterateCoinEntries(ctx, bva.OriginalVesting, func(key string, value math.Int) (stop bool) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		return false
-	})
-	return &vestingtypes.QueryOriginalVestingResponse{
-		OriginalVesting: originalVesting,
-	}, nil
-}
-
-// QueryDelegatedFree returns a vesting account's delegation amount that is not
-// vesting.
-func (bva BaseVesting) QueryDelegatedFree(ctx context.Context, _ *vestingtypes.QueryDelegatedFreeRequest) (
-	*vestingtypes.QueryDelegatedFreeResponse, error,
-) {
-	delegatedFree := sdk.Coins{}
-	bva.IterateCoinEntries(ctx, bva.DelegatedFree, func(key string, value math.Int) (stop bool) {
-		delegatedFree = append(delegatedFree, sdk.NewCoin(key, value))
-		return false
-	})
-	return &vestingtypes.QueryDelegatedFreeResponse{
-		DelegatedFree: delegatedFree,
-	}, nil
-}
-
-// QueryDelegatedVesting returns a vesting account's delegation amount that is
-// still vesting.
-func (bva BaseVesting) QueryDelegatedVesting(ctx context.Context, _ *vestingtypes.QueryDelegatedVestingRequest) (
-	*vestingtypes.QueryDelegatedVestingResponse, error,
-) {
-	delegatedVesting := sdk.Coins{}
-	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
-		delegatedVesting = append(delegatedVesting, sdk.NewCoin(key, value))
-		return false
-	})
-	return &vestingtypes.QueryDelegatedVestingResponse{
-		DelegatedVesting: delegatedVesting,
-	}, nil
-}
-
-// QueryEndTime returns a vesting account's end time
-func (bva BaseVesting) QueryEndTime(ctx context.Context, _ *vestingtypes.QueryEndTimeRequest) (
-	*vestingtypes.QueryEndTimeResponse, error,
-) {
-	endTime, err := bva.EndTime.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &vestingtypes.QueryEndTimeResponse{
-		EndTime: endTime.Int64(),
-	}, nil
-}
-
-// QueryOwner returns a vesting account's owner
-func (bva BaseVesting) QueryOwner(ctx context.Context, _ *vestingtypes.QueryOwnerRequest) (
-	*vestingtypes.QueryOwnerResponse, error,
+// QueryVestingAccountInfo returns a vesting account's info
+func (bva BaseVesting) QueryVestingAccountBaseInfo(ctx context.Context, _ *vestingtypes.QueryVestingAccountInfoRequest) (
+	*vestingtypes.QueryVestingAccountInfoResponse, error,
 ) {
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &vestingtypes.QueryOwnerResponse{
-		Owner: owner,
+	endTime, err := bva.EndTime.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	originalVesting := sdk.Coins{}
+	bva.IterateCoinEntries(ctx, bva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+		return false
+	})
+	delegatedVesting := sdk.Coins{}
+	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
+		delegatedVesting = append(delegatedVesting, sdk.NewCoin(key, value))
+		return false
+	})
+	delegatedFree := sdk.Coins{}
+	bva.IterateCoinEntries(ctx, bva.DelegatedFree, func(key string, value math.Int) (stop bool) {
+		delegatedFree = append(delegatedFree, sdk.NewCoin(key, value))
+		return false
+	})
+	return &vestingtypes.QueryVestingAccountInfoResponse{
+		Owner:            owner,
+		OriginalVesting:  originalVesting,
+		DelegatedVesting: delegatedVesting,
+		DelegatedFree:    delegatedFree,
+		EndTime:          &endTime,
 	}, nil
 }
 
 func (bva BaseVesting) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, bva.Authenticate)
-}
-
-func (bva BaseVesting) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, bva.QueryOriginalVesting)
-	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedFree)
-	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedVesting)
-	accountstd.RegisterQueryHandler(builder, bva.QueryEndTime)
-	accountstd.RegisterQueryHandler(builder, bva.QueryOwner)
 }

@@ -31,8 +31,8 @@ type DelayedVestingAccount struct {
 }
 
 func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
-	if msg.EndTime <= 0 {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid end time")
+	if msg.EndTime.IsZero() {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
 
 	return dva.BaseVesting.Init(ctx, msg)
@@ -56,7 +56,7 @@ func (dva DelayedVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTime
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
-	if math.NewInt(blockTime.Unix()).GTE(endTime) {
+	if blockTime.After(endTime) {
 		return originalVesting, sdk.Coins{}, nil
 	}
 
@@ -73,19 +73,22 @@ func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime 
 	return vestingCoins, nil
 }
 
-func (dva DelayedVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
-	*vestingtypes.QueryVestCoinsInfoResponse, error,
+func (dva DelayedVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
+	*vestingtypes.QueryVestingAccountInfoResponse, error,
 ) {
+	resp, err := dva.BaseVesting.QueryVestingAccountBaseInfo(ctx, req)
+	if err != nil {
+		return nil, err
+	}
 	hs := dva.headerService.GetHeaderInfo(ctx)
 	vestedCoins, vestingCoins, err := dva.GetVestCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-
-	return &vestingtypes.QueryVestCoinsInfoResponse{
-		VestedVesting: vestedCoins,
-		VestingCoins:  vestingCoins,
-	}, nil
+	resp.VestedVesting = sdk.Coins{}
+	resp.VestingCoins = vestingCoins
+	resp.VestedVesting = vestedCoins
+	return resp, nil
 }
 
 // Implement smart account interface
@@ -99,6 +102,5 @@ func (dva DelayedVestingAccount) RegisterExecuteHandlers(builder *accountstd.Exe
 }
 
 func (dva DelayedVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, dva.QueryVestCoinsInfo)
-	dva.BaseVesting.RegisterQueryHandlers(builder)
+	accountstd.RegisterQueryHandler(builder, dva.QueryVestingAccountInfo)
 }

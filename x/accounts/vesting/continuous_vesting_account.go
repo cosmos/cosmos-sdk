@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	errorsmod "cosmossdk.io/errors"
+	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
@@ -26,7 +26,7 @@ func NewContinuousVestingAccount(d accountstd.Dependencies) (*ContinuousVestingA
 
 	continuousVestingAccount := ContinuousVestingAccount{
 		BaseVesting: baseVesting,
-		StartTime:   collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", sdk.IntValue),
+		StartTime:   collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 	}
 
 	return &continuousVestingAccount, nil
@@ -34,30 +34,26 @@ func NewContinuousVestingAccount(d accountstd.Dependencies) (*ContinuousVestingA
 
 type ContinuousVestingAccount struct {
 	*BaseVesting
-	StartTime collections.Item[math.Int]
+	StartTime collections.Item[time.Time]
 }
 
 func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
-	if msg.StartTime < 0 {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %d, length must be greater than 0", msg.StartTime)
+	if msg.EndTime.IsZero() {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
 
-	if msg.EndTime <= 0 {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid end time")
-	}
-
-	if msg.EndTime <= msg.StartTime {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start < end)")
+	if msg.EndTime.Before(msg.StartTime) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start before end)")
 	}
 
 	hs := cva.headerService.GetHeaderInfo(ctx)
 
 	start := msg.StartTime
-	if msg.StartTime == 0 {
-		start = hs.Time.Unix()
+	if msg.StartTime.IsZero() {
+		start = hs.Time
 	}
 
-	err := cva.StartTime.Set(ctx, math.NewInt(start))
+	err := cva.StartTime.Set(ctx, start)
 	if err != nil {
 		return nil, err
 	}
@@ -93,15 +89,15 @@ func (cva ContinuousVestingAccount) GetVestCoinsInfo(ctx context.Context, blockT
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
-	if startTime.GTE(math.NewInt(blockTime.Unix())) {
+	if startTime.After(blockTime) {
 		return vestedCoins, originalVesting, nil
-	} else if endTime.LTE(math.NewInt(blockTime.Unix())) {
+	} else if endTime.Before(blockTime) {
 		return originalVesting, vestingCoins, nil
 	}
 
 	// calculate the vesting scalar
-	x := math.NewInt(blockTime.Unix()).Sub(startTime).Int64()
-	y := endTime.Sub(startTime).Int64()
+	x := blockTime.Unix() - startTime.Unix()
+	y := endTime.Unix() - startTime.Unix()
 	s := math.LegacyNewDec(x).Quo(math.LegacyNewDec(y))
 
 	for _, ovc := range originalVesting {
@@ -124,30 +120,27 @@ func (cva ContinuousVestingAccount) GetVestingCoins(ctx context.Context, blockTi
 	return vestingCoins, nil
 }
 
-func (cva ContinuousVestingAccount) QueryVestCoinsInfo(ctx context.Context, msg *vestingtypes.QueryVestCoinsInfoRequest) (
-	*vestingtypes.QueryVestCoinsInfoResponse, error,
+func (cva ContinuousVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
+	*vestingtypes.QueryVestingAccountInfoResponse, error,
 ) {
+	resp, err := cva.BaseVesting.QueryVestingAccountBaseInfo(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	startTime, err := cva.StartTime.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
 	hs := cva.headerService.GetHeaderInfo(ctx)
 	vestedCoins, vestingCoins, err := cva.GetVestCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-	return &vestingtypes.QueryVestCoinsInfoResponse{
-		VestedVesting: vestedCoins,
-		VestingCoins:  vestingCoins,
-	}, nil
-}
-
-func (cva ContinuousVestingAccount) QueryStartTime(ctx context.Context, msg *vestingtypes.QueryStartTimeRequest) (
-	*vestingtypes.QueryStartTimeResponse, error,
-) {
-	startTime, err := cva.StartTime.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &vestingtypes.QueryStartTimeResponse{
-		StartTime: startTime.Int64(),
-	}, nil
+	resp.VestedVesting = sdk.Coins{}
+	resp.StartTime = &startTime
+	resp.VestingCoins = vestingCoins
+	resp.VestedVesting = vestedCoins
+	return resp, nil
 }
 
 // Implement smart account interface
@@ -161,7 +154,5 @@ func (cva ContinuousVestingAccount) RegisterExecuteHandlers(builder *accountstd.
 }
 
 func (cva ContinuousVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, cva.QueryStartTime)
-	accountstd.RegisterQueryHandler(builder, cva.QueryVestCoinsInfo)
-	cva.BaseVesting.RegisterQueryHandlers(builder)
+	accountstd.RegisterQueryHandler(builder, cva.QueryVestingAccountInfo)
 }

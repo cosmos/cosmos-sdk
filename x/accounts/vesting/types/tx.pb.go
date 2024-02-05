@@ -11,15 +11,19 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -33,10 +37,10 @@ type MsgInitVestingAccount struct {
 	// owner of the vesting account
 	Owner  string                                   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	// end of vesting as unix time (in seconds).
-	EndTime int64 `protobuf:"varint,3,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	// start of vesting as unix time (in seconds).
-	StartTime int64 `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	// end of vesting
+	EndTime time.Time `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
+	// start of vesting
+	StartTime time.Time `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
 }
 
 func (m *MsgInitVestingAccount) Reset()         { *m = MsgInitVestingAccount{} }
@@ -86,24 +90,22 @@ func (m *MsgInitVestingAccount) GetAmount() github_com_cosmos_cosmos_sdk_types.C
 	return nil
 }
 
-func (m *MsgInitVestingAccount) GetEndTime() int64 {
+func (m *MsgInitVestingAccount) GetEndTime() time.Time {
 	if m != nil {
 		return m.EndTime
 	}
-	return 0
+	return time.Time{}
 }
 
-func (m *MsgInitVestingAccount) GetStartTime() int64 {
+func (m *MsgInitVestingAccount) GetStartTime() time.Time {
 	if m != nil {
 		return m.StartTime
 	}
-	return 0
+	return time.Time{}
 }
 
 // MsgInitVestingAccountResponse defines the Msg/InitVestingAccount response type.
 type MsgInitVestingAccountResponse struct {
-	// address define the newly init vesting account address
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
 func (m *MsgInitVestingAccountResponse) Reset()         { *m = MsgInitVestingAccountResponse{} }
@@ -139,21 +141,14 @@ func (m *MsgInitVestingAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgInitVestingAccountResponse proto.InternalMessageInfo
 
-func (m *MsgInitVestingAccountResponse) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
 // MsgInitVestingAccount defines a message that enables creating a vesting
 // account.
 type MsgInitPeriodicVestingAccount struct {
 	// owner of the vesting account
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// start of vesting as unix time (in seconds).
-	StartTime      int64    `protobuf:"varint,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	VestingPeriods []Period `protobuf:"bytes,3,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
+	// start of vesting
+	StartTime      time.Time `protobuf:"bytes,2,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
+	VestingPeriods []Period  `protobuf:"bytes,3,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
 }
 
 func (m *MsgInitPeriodicVestingAccount) Reset()         { *m = MsgInitPeriodicVestingAccount{} }
@@ -196,11 +191,11 @@ func (m *MsgInitPeriodicVestingAccount) GetOwner() string {
 	return ""
 }
 
-func (m *MsgInitPeriodicVestingAccount) GetStartTime() int64 {
+func (m *MsgInitPeriodicVestingAccount) GetStartTime() time.Time {
 	if m != nil {
 		return m.StartTime
 	}
-	return 0
+	return time.Time{}
 }
 
 func (m *MsgInitPeriodicVestingAccount) GetVestingPeriods() []Period {
@@ -213,8 +208,6 @@ func (m *MsgInitPeriodicVestingAccount) GetVestingPeriods() []Period {
 // MsgInitVestingAccountResponse defines the Msg/InitPeriodicVestingAccount
 // response type.
 type MsgInitPeriodicVestingAccountResponse struct {
-	// address define the newly init vesting account address
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
 func (m *MsgInitPeriodicVestingAccountResponse) Reset()         { *m = MsgInitPeriodicVestingAccountResponse{} }
@@ -250,13 +243,6 @@ func (m *MsgInitPeriodicVestingAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgInitPeriodicVestingAccountResponse proto.InternalMessageInfo
 
-func (m *MsgInitPeriodicVestingAccountResponse) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
 func init() {
 	proto.RegisterType((*MsgInitVestingAccount)(nil), "cosmos.accounts.vesting.MsgInitVestingAccount")
 	proto.RegisterType((*MsgInitVestingAccountResponse)(nil), "cosmos.accounts.vesting.MsgInitVestingAccountResponse")
@@ -267,38 +253,40 @@ func init() {
 func init() { proto.RegisterFile("cosmos/accounts/vesting/tx.proto", fileDescriptor_23cd51cba8ef41af) }
 
 var fileDescriptor_23cd51cba8ef41af = []byte{
-	// 492 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0x3d, 0x6f, 0xd3, 0x40,
-	0x18, 0xf6, 0x25, 0xd0, 0x92, 0x03, 0x81, 0xb0, 0x8a, 0x70, 0x2a, 0xd5, 0xb6, 0x82, 0x2a, 0x85,
-	0x88, 0xde, 0xa9, 0x30, 0xd1, 0x05, 0x25, 0x48, 0x48, 0x0c, 0x48, 0xc8, 0x45, 0x0c, 0x2c, 0x91,
-	0x63, 0x9f, 0xcc, 0xa9, 0xf8, 0xce, 0xf2, 0x7b, 0x2d, 0xcd, 0x5f, 0x60, 0x62, 0x66, 0xea, 0x06,
-	0x62, 0xca, 0xc0, 0x8f, 0xe8, 0x58, 0x31, 0x31, 0x01, 0x4a, 0x86, 0x74, 0xe5, 0x1f, 0xa0, 0xfb,
-	0x08, 0xe2, 0x23, 0x85, 0x81, 0xc5, 0x67, 0xdf, 0xf3, 0xbc, 0x1f, 0xcf, 0xf3, 0xbe, 0xc6, 0x71,
-	0x26, 0xa1, 0x94, 0x40, 0xd3, 0x2c, 0x93, 0xfb, 0x42, 0x01, 0x3d, 0x60, 0xa0, 0xb8, 0x28, 0xa8,
-	0x3a, 0x24, 0x55, 0x2d, 0x95, 0xf4, 0xaf, 0x5b, 0x06, 0x59, 0x30, 0x88, 0x63, 0xac, 0xaf, 0x15,
-	0xb2, 0x90, 0x86, 0x43, 0xf5, 0x9b, 0xa5, 0xaf, 0x87, 0x2e, 0xe1, 0x28, 0x05, 0x46, 0x0f, 0xb6,
-	0x47, 0x4c, 0xa5, 0xdb, 0x34, 0x93, 0x5c, 0x38, 0xbc, 0x6d, 0xf1, 0xa1, 0x0d, 0x74, 0xb9, 0x2d,
-	0xb4, 0x79, 0x56, 0x2f, 0xee, 0x74, 0xb4, 0xab, 0x69, 0xc9, 0x85, 0xa4, 0xe6, 0x69, 0xaf, 0x3a,
-	0x6f, 0x1b, 0xf8, 0xda, 0x23, 0x28, 0x1e, 0x0a, 0xae, 0x9e, 0x5a, 0x6e, 0xdf, 0xe6, 0xf0, 0x09,
-	0x3e, 0x2f, 0x5f, 0x0a, 0x56, 0x07, 0x28, 0x46, 0xdd, 0xd6, 0x20, 0xf8, 0xf8, 0x61, 0x6b, 0xcd,
-	0x15, 0xed, 0xe7, 0x79, 0xcd, 0x00, 0x76, 0x55, 0xcd, 0x45, 0x91, 0x58, 0x9a, 0x3f, 0xc6, 0x2b,
-	0x69, 0xa9, 0x23, 0x83, 0x46, 0xdc, 0xec, 0x5e, 0xbc, 0xdd, 0x26, 0x8e, 0xad, 0xf5, 0x10, 0xa7,
-	0x87, 0xdc, 0x97, 0x5c, 0x0c, 0x1e, 0x1c, 0x7f, 0x8e, 0xbc, 0xf7, 0x5f, 0xa2, 0x6e, 0xc1, 0xd5,
-	0xf3, 0xfd, 0x11, 0xc9, 0x64, 0xe9, 0xf4, 0xb8, 0x63, 0x0b, 0xf2, 0x3d, 0xaa, 0xc6, 0x15, 0x03,
-	0x13, 0x00, 0x6f, 0xe6, 0x93, 0xde, 0xa5, 0x17, 0xac, 0x48, 0xb3, 0xf1, 0x50, 0x3b, 0x02, 0xef,
-	0xe6, 0x93, 0x1e, 0x4a, 0x5c, 0x41, 0xbf, 0x8d, 0x2f, 0x30, 0x91, 0x0f, 0x15, 0x2f, 0x59, 0xd0,
-	0x8c, 0x51, 0xb7, 0x99, 0xac, 0x32, 0x91, 0x3f, 0xe1, 0x25, 0xf3, 0x37, 0x30, 0x06, 0x95, 0xd6,
-	0xca, 0x82, 0xe7, 0x0c, 0xd8, 0x32, 0x37, 0x1a, 0xde, 0xb9, 0x79, 0x7a, 0x14, 0xa1, 0x57, 0xf3,
-	0x49, 0x2f, 0xfe, 0xa9, 0xf0, 0x52, 0x3f, 0x3a, 0x77, 0xf1, 0xc6, 0x52, 0x20, 0x61, 0x50, 0x49,
-	0x01, 0xcc, 0x0f, 0xf0, 0x6a, 0x6a, 0x8d, 0xb1, 0x96, 0x25, 0x8b, 0xcf, 0xce, 0x37, 0xf4, 0x23,
-	0xf6, 0x31, 0xab, 0xb9, 0xcc, 0x79, 0xf6, 0x9f, 0x66, 0xff, 0x2a, 0xab, 0xf1, 0x9b, 0x2c, 0x7f,
-	0x17, 0x5f, 0x71, 0x93, 0x1f, 0x56, 0xa6, 0x20, 0x04, 0x4d, 0x33, 0x94, 0x88, 0x9c, 0xb1, 0x93,
-	0xc4, 0x36, 0x36, 0x68, 0xe9, 0xd1, 0x58, 0x77, 0x2f, 0x3b, 0xc8, 0x22, 0xb0, 0x73, 0xeb, 0xf4,
-	0x28, 0xf2, 0xb4, 0x57, 0x37, 0xfe, 0xf4, 0xca, 0x72, 0xb4, 0xa8, 0x85, 0x5d, 0x7d, 0xbc, 0xf9,
-	0x57, 0xc9, 0xff, 0xb6, 0x6d, 0x70, 0xef, 0x78, 0x1a, 0xa2, 0x93, 0x69, 0x88, 0xbe, 0x4e, 0x43,
-	0xf4, 0x7a, 0x16, 0x7a, 0x27, 0xb3, 0xd0, 0xfb, 0x34, 0x0b, 0xbd, 0x67, 0x6e, 0xdf, 0x21, 0xdf,
-	0x23, 0x5c, 0xd2, 0xc3, 0x25, 0xff, 0xa0, 0xde, 0x9d, 0xd1, 0x8a, 0xd9, 0xf1, 0x3b, 0xdf, 0x03,
-	0x00, 0x00, 0xff, 0xff, 0xf4, 0x85, 0xbd, 0x43, 0xab, 0x03, 0x00, 0x00,
+	// 519 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0x3f, 0x6f, 0xd4, 0x30,
+	0x1c, 0x4d, 0xee, 0xa0, 0x70, 0x2e, 0x7f, 0x44, 0x54, 0x44, 0x7a, 0x12, 0x49, 0x74, 0xa8, 0xe2,
+	0x38, 0x51, 0x5b, 0x2d, 0x5b, 0x17, 0xd4, 0x80, 0x10, 0x0c, 0x48, 0xe8, 0x8a, 0x18, 0x58, 0x4e,
+	0xf9, 0x63, 0x82, 0xd5, 0xc6, 0x8e, 0xf2, 0xf3, 0x95, 0xde, 0x57, 0x60, 0xea, 0x8c, 0x18, 0x3a,
+	0x22, 0xa6, 0x1b, 0xf8, 0x10, 0x1d, 0x2b, 0x26, 0x26, 0x8a, 0xee, 0x86, 0xeb, 0x97, 0x40, 0x42,
+	0x8e, 0x1d, 0x04, 0xe2, 0x8a, 0x04, 0x5d, 0xe2, 0xd8, 0xef, 0xf9, 0xfd, 0xfc, 0x9e, 0xfd, 0x43,
+	0x41, 0x22, 0x20, 0x17, 0x40, 0xa2, 0x24, 0x11, 0x43, 0x2e, 0x81, 0xec, 0x52, 0x90, 0x8c, 0x67,
+	0x44, 0xee, 0xe1, 0xa2, 0x14, 0x52, 0x38, 0x37, 0x34, 0x03, 0xd7, 0x0c, 0x6c, 0x18, 0xed, 0x6b,
+	0x51, 0xce, 0xb8, 0x20, 0xd5, 0x57, 0x73, 0xdb, 0x2b, 0xa7, 0xa9, 0x99, 0xd1, 0xd0, 0x3c, 0x43,
+	0x8b, 0x23, 0xa0, 0x64, 0x77, 0x2d, 0xa6, 0x32, 0x5a, 0x23, 0x89, 0x60, 0xdc, 0xe0, 0xcb, 0x1a,
+	0x1f, 0x54, 0x33, 0x62, 0xea, 0x6b, 0x68, 0x29, 0x13, 0x99, 0xd0, 0xeb, 0xea, 0xcf, 0xac, 0xfa,
+	0x99, 0x10, 0xd9, 0x0e, 0x25, 0xd5, 0x2c, 0x1e, 0xbe, 0x22, 0x92, 0xe5, 0x14, 0x64, 0x94, 0x17,
+	0x9a, 0xd0, 0xf9, 0xde, 0x40, 0xd7, 0x9f, 0x42, 0xf6, 0x84, 0x33, 0xf9, 0x42, 0x1f, 0x65, 0x53,
+	0x1f, 0xd1, 0xc1, 0xe8, 0xbc, 0x78, 0xc3, 0x69, 0xe9, 0xda, 0x81, 0xdd, 0x6d, 0x85, 0xee, 0xe7,
+	0x4f, 0xab, 0x4b, 0xa6, 0xe2, 0x66, 0x9a, 0x96, 0x14, 0x60, 0x4b, 0x96, 0x8c, 0x67, 0x7d, 0x4d,
+	0x73, 0x46, 0x68, 0x21, 0xca, 0xd5, 0x4e, 0xb7, 0x11, 0x34, 0xbb, 0x8b, 0xeb, 0xcb, 0xd8, 0xb0,
+	0x95, 0x19, 0x6c, 0xcc, 0xe0, 0x07, 0x82, 0xf1, 0xf0, 0xd1, 0xe1, 0x57, 0xdf, 0xfa, 0x78, 0xec,
+	0x77, 0x33, 0x26, 0x5f, 0x0f, 0x63, 0x9c, 0x88, 0xdc, 0x98, 0x31, 0xc3, 0x2a, 0xa4, 0xdb, 0x44,
+	0x8e, 0x0a, 0x0a, 0xd5, 0x06, 0x78, 0x37, 0x1b, 0xf7, 0x2e, 0xed, 0xd0, 0x2c, 0x4a, 0x46, 0x03,
+	0x15, 0x07, 0x7c, 0x98, 0x8d, 0x7b, 0x76, 0xdf, 0x14, 0x74, 0x1e, 0xa2, 0x8b, 0x94, 0xa7, 0x03,
+	0xe5, 0xcd, 0x6d, 0x06, 0x76, 0x77, 0x71, 0xbd, 0x8d, 0xb5, 0x71, 0x5c, 0x1b, 0xc7, 0xcf, 0x6b,
+	0xe3, 0xe1, 0x65, 0x55, 0x7d, 0xff, 0xd8, 0xb7, 0xb5, 0xc8, 0x05, 0xca, 0x53, 0x05, 0x3a, 0x8f,
+	0x11, 0x02, 0x19, 0x95, 0x52, 0xeb, 0x9c, 0xfb, 0x57, 0x9d, 0x56, 0xb5, 0x59, 0xc1, 0x1b, 0x77,
+	0x4e, 0x0e, 0x7c, 0xfb, 0xed, 0x6c, 0xdc, 0x0b, 0x7e, 0xb1, 0x33, 0x37, 0xe5, 0x8e, 0x8f, 0x6e,
+	0xce, 0x05, 0xfa, 0x14, 0x0a, 0xc1, 0x81, 0x76, 0xde, 0x37, 0x7e, 0x32, 0x9e, 0xd1, 0x92, 0x89,
+	0x94, 0x25, 0x67, 0xbc, 0xa8, 0xdf, 0x7d, 0x36, 0xfe, 0xdf, 0xa7, 0xb3, 0x85, 0xae, 0x9a, 0xf7,
+	0x3b, 0x28, 0xaa, 0xb3, 0x81, 0xdb, 0xac, 0xee, 0xde, 0xc7, 0xa7, 0xf4, 0x06, 0xd6, 0x1e, 0xc2,
+	0x96, 0xd2, 0xd4, 0x7a, 0x57, 0x0c, 0xa4, 0x11, 0xd8, 0xb8, 0x7b, 0x72, 0xe0, 0x5b, 0x2a, 0xbc,
+	0x5b, 0x7f, 0x86, 0xa7, 0x39, 0xca, 0x7f, 0x9d, 0xdf, 0x6d, 0xb4, 0xf2, 0xd7, 0x74, 0xea, 0x1c,
+	0xc3, 0xfb, 0x87, 0x13, 0xcf, 0x3e, 0x9a, 0x78, 0xf6, 0xb7, 0x89, 0x67, 0xef, 0x4f, 0x3d, 0xeb,
+	0x68, 0xea, 0x59, 0x5f, 0xa6, 0x9e, 0xf5, 0xd2, 0xf4, 0x26, 0xa4, 0xdb, 0x98, 0x09, 0xb2, 0x37,
+	0xa7, 0xe3, 0xd5, 0x43, 0x8c, 0x17, 0xaa, 0x68, 0xee, 0xfd, 0x08, 0x00, 0x00, 0xff, 0xff, 0xfe,
+	0x80, 0x65, 0xa8, 0x19, 0x04, 0x00, 0x00,
 }
 
 func (this *MsgInitVestingAccount) Equal(that interface{}) bool {
@@ -331,10 +319,10 @@ func (this *MsgInitVestingAccount) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if this.EndTime != that1.EndTime {
+	if !this.EndTime.Equal(that1.EndTime) {
 		return false
 	}
-	if this.StartTime != that1.StartTime {
+	if !this.StartTime.Equal(that1.StartTime) {
 		return false
 	}
 	return true
@@ -359,16 +347,22 @@ func (m *MsgInitVestingAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.StartTime != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.StartTime))
-		i--
-		dAtA[i] = 0x20
+	n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
+	if err1 != nil {
+		return 0, err1
 	}
-	if m.EndTime != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.EndTime))
-		i--
-		dAtA[i] = 0x18
+	i -= n1
+	i = encodeVarintTx(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x22
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.EndTime):])
+	if err2 != nil {
+		return 0, err2
 	}
+	i -= n2
+	i = encodeVarintTx(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x1a
 	if len(m.Amount) > 0 {
 		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -413,13 +407,6 @@ func (m *MsgInitVestingAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	_ = i
 	var l int
 	_ = l
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
-		i--
-		dAtA[i] = 0xa
-	}
 	return len(dAtA) - i, nil
 }
 
@@ -457,11 +444,14 @@ func (m *MsgInitPeriodicVestingAccount) MarshalToSizedBuffer(dAtA []byte) (int, 
 			dAtA[i] = 0x1a
 		}
 	}
-	if m.StartTime != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.StartTime))
-		i--
-		dAtA[i] = 0x10
+	n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
+	if err3 != nil {
+		return 0, err3
 	}
+	i -= n3
+	i = encodeVarintTx(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x12
 	if len(m.Owner) > 0 {
 		i -= len(m.Owner)
 		copy(dAtA[i:], m.Owner)
@@ -492,13 +482,6 @@ func (m *MsgInitPeriodicVestingAccountResponse) MarshalToSizedBuffer(dAtA []byte
 	_ = i
 	var l int
 	_ = l
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
-		i--
-		dAtA[i] = 0xa
-	}
 	return len(dAtA) - i, nil
 }
 
@@ -529,12 +512,10 @@ func (m *MsgInitVestingAccount) Size() (n int) {
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if m.EndTime != 0 {
-		n += 1 + sovTx(uint64(m.EndTime))
-	}
-	if m.StartTime != 0 {
-		n += 1 + sovTx(uint64(m.StartTime))
-	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.EndTime)
+	n += 1 + l + sovTx(uint64(l))
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -544,10 +525,6 @@ func (m *MsgInitVestingAccountResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
 	return n
 }
 
@@ -561,9 +538,8 @@ func (m *MsgInitPeriodicVestingAccount) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.StartTime != 0 {
-		n += 1 + sovTx(uint64(m.StartTime))
-	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovTx(uint64(l))
 	if len(m.VestingPeriods) > 0 {
 		for _, e := range m.VestingPeriods {
 			l = e.Size()
@@ -579,10 +555,6 @@ func (m *MsgInitPeriodicVestingAccountResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
 	return n
 }
 
@@ -688,10 +660,10 @@ func (m *MsgInitVestingAccount) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
 			}
-			m.EndTime = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -701,16 +673,30 @@ func (m *MsgInitVestingAccount) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.EndTime |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 			}
-			m.StartTime = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -720,11 +706,25 @@ func (m *MsgInitVestingAccount) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.StartTime |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -775,38 +775,6 @@ func (m *MsgInitVestingAccountResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgInitVestingAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -890,10 +858,10 @@ func (m *MsgInitPeriodicVestingAccount) Unmarshal(dAtA []byte) error {
 			m.Owner = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 			}
-			m.StartTime = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -903,11 +871,25 @@ func (m *MsgInitPeriodicVestingAccount) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.StartTime |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VestingPeriods", wireType)
@@ -992,38 +974,6 @@ func (m *MsgInitPeriodicVestingAccountResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgInitPeriodicVestingAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

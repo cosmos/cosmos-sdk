@@ -213,7 +213,7 @@ RespBody: protojson.Marshal(msgResp)
 
 Similar to the above design, consensus messages will allow the underlying consensus engine to speak to the modules. Today we get consensus related information from `SDKContext`. In server/v2 we are unable to continue with this design due to the forced dependency leakage of comet throughout the repo. Secondly, while we already have `cometInfo` if we were to put this on the new execution client we would be tieing cometbft to the application manager and STF.
 
-In the case of CometBFT, slashing, evidence and consensus would register handlers for consensus messages. This would allow the consensus engine to speak to the modules.
+In the case of CometBFT, consensus would register handlers for consensus messages for evidence, voteinfo and consensus params. This would allow the consensus engine to speak to the modules.
 
 
 ```go

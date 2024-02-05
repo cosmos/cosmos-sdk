@@ -509,8 +509,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	if initNum == 0 || initSeq == 0 {
 		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(clientCtx, from)
 		if err != nil {
-			// return early since account does not exist here.
-			return fc, nil
+			return fc, err
 		}
 
 		if initNum == 0 {

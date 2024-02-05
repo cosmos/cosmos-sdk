@@ -16,8 +16,8 @@ require (
 require (
 	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/spf13/cobra v1.8.0
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
+	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3 // indirect
 	google.golang.org/grpc v1.61.0 // indirect

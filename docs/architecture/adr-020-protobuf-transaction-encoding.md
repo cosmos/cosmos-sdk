@@ -15,6 +15,7 @@
 * 2021 Feb 24: The Cosmos SDK does not use Tendermint's `PubKey` interface anymore, but its own `cryptotypes.PubKey`. Updates to reflect this.
 * 2021 May 3: Rename `clientCtx.JSONMarshaler` to `clientCtx.JSONCodec`.
 * 2021 June 10: Add `clientCtx.Codec: codec.Codec`.
+* 2024 February 5: Account creation step
 
 ## Status
 
@@ -316,6 +317,8 @@ in the client can be interfaces, similar to how we described in [ADR 019](./adr-
 the client logic will now need to take a codec interface that knows not only how
 to handle all the types, but also knows how to generate transactions, signatures,
 and messages.
+
+If the account is sending its first transaction, the account number must be set to 0. This is due to the account not being created yet. 
 
 ```go
 type AccountRetriever interface {

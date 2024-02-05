@@ -56,7 +56,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	}
 
 	if msg.StartTime.IsZero() {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %d", msg.StartTime)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %s", msg.StartTime.String())
 	}
 
 	totalCoins := sdk.Coins{}
@@ -119,14 +119,16 @@ func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *acc
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (pva PeriodicVestingAccount) IteratePeriods(
 	ctx context.Context,
-	cb func(value vestingtypes.Period) bool,
-) {
+	cb func(value vestingtypes.Period) (bool, error),
+) error {
 	err := pva.VestingPeriods.Walk(ctx, nil, func(_ uint64, value vestingtypes.Period) (stop bool, err error) {
-		return cb(value), nil
+		return cb(value)
 	})
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -163,18 +165,24 @@ func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTim
 		return nil, nil, err
 	}
 
-	pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool) {
+	err = pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool, err error) {
 		x := blockTime.Sub(currentPeriodStartTime)
 		if x.Seconds() < period.Length.Seconds() {
-			return true
+			return true, nil
 		}
 
 		vestedCoins = vestedCoins.Add(period.Amount...)
 
 		// update the start time of the next period
 		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
-		return err != nil
+		if err != nil {
+			return true, err
+		}
+		return false, nil
 	})
+	if err != nil {
+		return nil, nil, err
+	}
 
 	vestingCoins = originalVesting.Sub(vestedCoins...)
 
@@ -218,10 +226,13 @@ func (pva PeriodicVestingAccount) QueryVestingPeriods(ctx context.Context, msg *
 	*vestingtypes.QueryVestingPeriodsResponse, error,
 ) {
 	vestingPeriods := []*vestingtypes.Period{}
-	pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool) {
+	err := pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool, err error) {
 		vestingPeriods = append(vestingPeriods, &period)
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &vestingtypes.QueryVestingPeriodsResponse{
 		VestingPeriods: vestingPeriods,
 	}, nil

@@ -1130,7 +1130,6 @@ func TestTally_Optimistic(t *testing.T) {
 	}
 }
 
-// TODO(@julienrbrt): refactor tally result to fit all proposal types
 func TestTally_MultipleChoice(t *testing.T) {
 	tests := []struct {
 		name          string

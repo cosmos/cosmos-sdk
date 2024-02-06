@@ -22,13 +22,13 @@ func TestGenesis(t *testing.T) {
 	// we set counter to 10
 	_, addr1, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{}, nil)
 	require.NoError(t, err)
-	_, err = k.Execute(ctx, addr1, []byte("sender"), &types.UInt64Value{Value: 10})
+	_, err = k.Execute(ctx, addr1, []byte("sender"), &types.UInt64Value{Value: 10}, nil)
 	require.NoError(t, err)
 
 	// we set counter to 20
 	_, addr2, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{}, nil)
 	require.NoError(t, err)
-	_, err = k.Execute(ctx, addr2, []byte("sender"), &types.UInt64Value{Value: 20})
+	_, err = k.Execute(ctx, addr2, []byte("sender"), &types.UInt64Value{Value: 20}, nil)
 	require.NoError(t, err)
 
 	// export state

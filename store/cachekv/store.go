@@ -28,7 +28,7 @@ type Store struct {
 	mtx           sync.Mutex
 	cache         map[string]*cValue
 	unsortedCache map[string]struct{}
-	sortedCache   internal.BTree // always ascending sorted
+	sortedCache   *internal.BTree // always ascending sorted
 	parent        types.KVStore
 }
 
@@ -39,7 +39,7 @@ func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   internal.NewBTree(),
+		sortedCache:   nil,
 		parent:        parent,
 	}
 }
@@ -93,13 +93,18 @@ func (store *Store) Delete(key []byte) {
 	store.setCacheValue(key, nil, true)
 }
 
+func (store *Store) resetSortedCache() {
+	newTree := internal.NewBTree()
+	store.sortedCache = &newTree
+}
+
 // Implements Cachetypes.KVStore.
 func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
 	if len(store.cache) == 0 && len(store.unsortedCache) == 0 {
-		store.sortedCache = internal.NewBTree()
+		store.sortedCache = nil
 		return
 	}
 
@@ -140,7 +145,7 @@ func (store *Store) Write() {
 	for key := range store.unsortedCache {
 		delete(store.unsortedCache, key)
 	}
-	store.sortedCache = internal.NewBTree()
+	store.sortedCache = nil
 }
 
 // CacheWrap implements CacheWrapper.
@@ -169,6 +174,9 @@ func (store *Store) ReverseIterator(start, end []byte) types.Iterator {
 func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+	if store.sortedCache == nil {
+		store.resetSortedCache()
+	}
 
 	store.dirtyItems(start, end)
 	isoSortedCache := store.sortedCache.Copy()

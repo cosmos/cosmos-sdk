@@ -3,8 +3,6 @@ package cachekv
 import (
 	"strconv"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
 )
 
 func BenchmarkLargeUnsortedMisses(b *testing.B) {
@@ -36,9 +34,10 @@ func generateStore() *Store {
 		cache[key] = &cValue{}
 	}
 
-	return &Store{
+	store := &Store{
 		cache:         cache,
 		unsortedCache: unsorted,
-		sortedCache:   internal.NewBTree(),
 	}
+	store.resetSortedCache()
+	return store
 }

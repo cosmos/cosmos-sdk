@@ -19,6 +19,7 @@ import (
 // - binary codec
 // - header service
 // - gas service
+// - funds
 func TestDependencies(t *testing.T) {
 	app := setupApp(t)
 	ak := app.AccountsKeeper

@@ -44,10 +44,10 @@ func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespons
 
 	err = k.eventService.EventManager(ctx).EmitKV(
 		"authorize_circuit_breaker",
-		event.NewAttribute("granter", msg.ClassId),
-		event.NewAttribute("grantee", msg.Id),
-		event.NewAttribute("permission", msg.Sender),
-		event.NewAttribute("permission", msg.Receiver),
+		event.NewAttribute("classid", msg.ClassId),
+		event.NewAttribute("id", msg.Id),
+		event.NewAttribute("sender", msg.Sender),
+		event.NewAttribute("receiver", msg.Receiver),
 	)
 	if err != nil {
 		return nil, err

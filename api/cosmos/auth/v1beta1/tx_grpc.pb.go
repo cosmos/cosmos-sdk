@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName      = "/cosmos.auth.v1beta1.Msg/UpdateParams"
-	Msg_AsyncMultiMsgExec_FullMethodName = "/cosmos.auth.v1beta1.Msg/AsyncMultiMsgExec"
+	Msg_UpdateParams_FullMethodName = "/cosmos.auth.v1beta1.Msg/UpdateParams"
+	Msg_AsyncExec_FullMethodName    = "/cosmos.auth.v1beta1.Msg/AsyncExec"
 )
 
 // MsgClient is the client API for Msg service.
@@ -32,8 +32,8 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	// AsyncMultiMsgExec allows users to submit multiple messages.
-	AsyncMultiMsgExec(ctx context.Context, in *MsgAsyncMultiMsgExec, opts ...grpc.CallOption) (*MsgAsyncMultiMsgExecResponse, error)
+	// AsyncExec allows users to submit multiple messages.
+	AsyncExec(ctx context.Context, in *MsgAsyncExec, opts ...grpc.CallOption) (*MsgAsyncExecResponse, error)
 }
 
 type msgClient struct {
@@ -53,9 +53,9 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
-func (c *msgClient) AsyncMultiMsgExec(ctx context.Context, in *MsgAsyncMultiMsgExec, opts ...grpc.CallOption) (*MsgAsyncMultiMsgExecResponse, error) {
-	out := new(MsgAsyncMultiMsgExecResponse)
-	err := c.cc.Invoke(ctx, Msg_AsyncMultiMsgExec_FullMethodName, in, out, opts...)
+func (c *msgClient) AsyncExec(ctx context.Context, in *MsgAsyncExec, opts ...grpc.CallOption) (*MsgAsyncExecResponse, error) {
+	out := new(MsgAsyncExecResponse)
+	err := c.cc.Invoke(ctx, Msg_AsyncExec_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +71,8 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	// AsyncMultiMsgExec allows users to submit multiple messages.
-	AsyncMultiMsgExec(context.Context, *MsgAsyncMultiMsgExec) (*MsgAsyncMultiMsgExecResponse, error)
+	// AsyncExec allows users to submit multiple messages.
+	AsyncExec(context.Context, *MsgAsyncExec) (*MsgAsyncExecResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -83,8 +83,8 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
-func (UnimplementedMsgServer) AsyncMultiMsgExec(context.Context, *MsgAsyncMultiMsgExec) (*MsgAsyncMultiMsgExecResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AsyncMultiMsgExec not implemented")
+func (UnimplementedMsgServer) AsyncExec(context.Context, *MsgAsyncExec) (*MsgAsyncExecResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AsyncExec not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -117,20 +117,20 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AsyncMultiMsgExec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAsyncMultiMsgExec)
+func _Msg_AsyncExec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAsyncExec)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AsyncMultiMsgExec(ctx, in)
+		return srv.(MsgServer).AsyncExec(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_AsyncMultiMsgExec_FullMethodName,
+		FullMethod: Msg_AsyncExec_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AsyncMultiMsgExec(ctx, req.(*MsgAsyncMultiMsgExec))
+		return srv.(MsgServer).AsyncExec(ctx, req.(*MsgAsyncExec))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -147,8 +147,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateParams_Handler,
 		},
 		{
-			MethodName: "AsyncMultiMsgExec",
-			Handler:    _Msg_AsyncMultiMsgExec_Handler,
+			MethodName: "AsyncExec",
+			Handler:    _Msg_AsyncExec_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

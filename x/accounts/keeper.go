@@ -76,6 +76,7 @@ func NewKeeper(
 	hs header.Service,
 	bs branch.Service,
 	gs gas.Service,
+	makeSendCoinsMsg CoinTransferMsgFunc,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -85,17 +86,19 @@ func NewKeeper(
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
-		storeService:    ss,
-		eventService:    es,
-		addressCodec:    addressCodec,
-		branchExecutor:  bs,
-		msgRouter:       execRouter,
-		signerProvider:  signerProvider,
-		queryRouter:     queryRouter,
-		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
-		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
-		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.BytesValue),
+		storeService:     ss,
+		eventService:     es,
+		addressCodec:     addressCodec,
+		branchExecutor:   bs,
+		msgRouter:        execRouter,
+		signerProvider:   signerProvider,
+		queryRouter:      queryRouter,
+		makeSendCoinsMsg: makeSendCoinsMsg,
+		Schema:           collections.Schema{},
+		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
+		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountByNumber:  collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
+		AccountsState:    collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.BytesValue),
 	}
 
 	schema, err := sb.Build()

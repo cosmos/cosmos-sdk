@@ -3,10 +3,10 @@ module cosmossdk.io/tools/cosmovisor
 go 1.21
 
 require (
-	cosmossdk.io/log v1.2.1
+	cosmossdk.io/log v1.3.1
 	cosmossdk.io/x/upgrade v0.0.0-20230614103911-b3da8bb4e801
 	github.com/otiai10/copy v1.11.0
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 )

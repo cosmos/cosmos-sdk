@@ -13,10 +13,12 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
+	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -292,6 +294,7 @@ func NewSimApp(
 		runtime.HeaderService{},
 		runtime.BranchService{},
 		runtime.GasService{},
+		makeSendCoinsMsg(addressCodec),
 		addressCodec,
 		appCodec,
 		app.MsgServiceRouter(),
@@ -810,4 +813,22 @@ func BlockedAddresses() map[string]bool {
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	return modAccAddrs
+}
+
+func makeSendCoinsMsg(addressCodec coreaddress.Codec) func([]byte, []byte, sdk.Coins) (protoiface.MessageV1, error) {
+	return func(from, to []byte, coins sdk.Coins) (protoiface.MessageV1, error) {
+		fromStr, err := addressCodec.BytesToString(from)
+		if err != nil {
+			return nil, err
+		}
+		toStr, err := addressCodec.BytesToString(to)
+		if err != nil {
+			return nil, err
+		}
+		return &banktypes.MsgSend{
+			FromAddress: fromStr,
+			ToAddress:   toStr,
+			Amount:      coins,
+		}, nil
+	}
 }

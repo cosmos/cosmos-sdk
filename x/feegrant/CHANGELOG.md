@@ -29,6 +29,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#14649](https://github.com/cosmos/cosmos-sdk/pull/14649) The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 
+### Bug Fixes
+
+* []() Always set all allowances when current block time is zero.
+
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/feegrant/v0.1.0) - 2023-11-07
 
 ### Features

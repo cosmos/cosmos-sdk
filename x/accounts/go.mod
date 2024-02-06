@@ -18,6 +18,8 @@ require (
 )
 
 require (
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/math v1.2.0 // indirect

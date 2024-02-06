@@ -28,6 +28,11 @@ require (
 )
 
 require (
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
+)
+
+require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	filippo.io/edwards25519 v1.1.0 // indirect

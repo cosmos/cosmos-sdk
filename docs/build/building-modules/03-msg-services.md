@@ -5,7 +5,7 @@ sidebar_position: 1
 # `Msg` Services
 
 :::note Synopsis
-A Protobuf `Msg` service processes [messages](./02-messages-and-queries.md#messages). Protobuf `Msg` services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `BaseApp` during [`DeliverTx`](../../learn/advanced/00-baseapp.md#delivertx).
+A Protobuf `Msg` service processes [messages](./02-messages-and-queries.md#messages). Protobuf `Msg` services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `BaseApp` during [`FinalizeBlock`](../../learn/advanced/00-baseapp.md#finalizeblock).
 :::
 
 :::note Pre-requisite Readings

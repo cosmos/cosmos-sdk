@@ -9743,7 +9743,7 @@ type Params struct {
 	//
 	// Since: x/gov v1.0.0
 	OptimisticRejectedThreshold string `protobuf:"bytes,19,opt,name=optimistic_rejected_threshold,json=optimisticRejectedThreshold,proto3" json:"optimistic_rejected_threshold,omitempty"`
-	// yes_quorum defines the minimum percentage of Yes votes in quroum for proposal to pass.
+	// yes_quorum defines the minimum percentage of Yes votes in quorum for proposal to pass.
 	// Default value: 0 (disabled).
 	//
 	// Since: x/gov v1.0.0
@@ -9924,7 +9924,7 @@ type MessageBasedParams struct {
 	VotingPeriod *durationpb.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3" json:"voting_period,omitempty"`
 	// Minimum percentage of total stake needed to vote for a result to be considered valid.
 	Quorum string `protobuf:"bytes,2,opt,name=quorum,proto3" json:"quorum,omitempty"`
-	// yes_quorum defines the minimum percentage of Yes votes in quroum for proposal to pass.
+	// yes_quorum defines the minimum percentage of Yes votes in quorum for proposal to pass.
 	// If zero then the yes_quorum is disabled.
 	YesQuorum string `protobuf:"bytes,20,opt,name=yes_quorum,json=yesQuorum,proto3" json:"yes_quorum,omitempty"`
 	// Minimum proportion of Yes votes for proposal to pass.

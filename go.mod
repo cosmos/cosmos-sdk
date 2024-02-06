@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.3.0
+	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.2.0
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/99designs/keyring v1.2.1
@@ -48,7 +48,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common v0.42.0
 	github.com/rakyll/statik v0.1.7
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5

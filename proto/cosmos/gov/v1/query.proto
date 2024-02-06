@@ -26,6 +26,11 @@ service Query {
     option (google.api.http).get = "/cosmos/gov/v1/proposals";
   }
 
+  // LastProposalId queries the last proposal id stored in state.
+  rpc LastProposalId(QueryLastProposalIdRequest) returns (QueryLastProposalIdResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/last_proposal_id";
+  }
+
   // Vote queries voted information based on proposalID, voterAddr.
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}";
@@ -112,6 +117,15 @@ message QueryProposalsResponse {
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryLastProposalIdRequest is the request type for the Query/LastProposalId RPC method.
+message QueryLastProposalIdRequest {}
+
+// QueryLastProposalIdRequest is the respone type for the Query/LastProposalId RPC method.
+message QueryLastProposalIdResponse {
+  // last_proposal_id defines the last id of the proposal stored in state.
+  uint64 last_proposal_id = 1;
 }
 
 // QueryVoteRequest is the request type for the Query/Vote RPC method.

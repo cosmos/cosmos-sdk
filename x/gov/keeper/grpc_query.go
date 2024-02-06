@@ -157,6 +157,16 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 	return &v1.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
 }
 
+// QueryLastProposalIdRequest implements the Query/QueryLastProposalIdRequest gRPC method
+func (q queryServer) QueryLastProposalId(ctx context.Context, req *v1.QueryLastProposalIdRequest) (*v1.QueryLastProposalIdResponse, error) {
+
+	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &v1.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
+}
+
 // Vote returns Voted information based on proposalID, voterAddr
 func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVoteResponse, error) {
 	if req == nil {

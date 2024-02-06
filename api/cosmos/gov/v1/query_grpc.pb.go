@@ -24,6 +24,7 @@ const (
 	Query_Constitution_FullMethodName        = "/cosmos.gov.v1.Query/Constitution"
 	Query_Proposal_FullMethodName            = "/cosmos.gov.v1.Query/Proposal"
 	Query_Proposals_FullMethodName           = "/cosmos.gov.v1.Query/Proposals"
+	Query_LastProposalId_FullMethodName      = "/cosmos.gov.v1.Query/LastProposalId"
 	Query_Vote_FullMethodName                = "/cosmos.gov.v1.Query/Vote"
 	Query_Votes_FullMethodName               = "/cosmos.gov.v1.Query/Votes"
 	Query_Params_FullMethodName              = "/cosmos.gov.v1.Query/Params"
@@ -44,6 +45,8 @@ type QueryClient interface {
 	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
 	// Proposals queries all proposals based on given status.
 	Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error)
+	// LastProposalId queries the last proposal id stored in state.
+	LastProposalId(ctx context.Context, in *QueryLastProposalIdRequest, opts ...grpc.CallOption) (*QueryLastProposalIdResponse, error)
 	// Vote queries voted information based on proposalID, voterAddr.
 	Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal.
@@ -93,6 +96,15 @@ func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, op
 func (c *queryClient) Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error) {
 	out := new(QueryProposalsResponse)
 	err := c.cc.Invoke(ctx, Query_Proposals_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) LastProposalId(ctx context.Context, in *QueryLastProposalIdRequest, opts ...grpc.CallOption) (*QueryLastProposalIdResponse, error) {
+	out := new(QueryLastProposalIdResponse)
+	err := c.cc.Invoke(ctx, Query_LastProposalId_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,6 +193,8 @@ type QueryServer interface {
 	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
 	// Proposals queries all proposals based on given status.
 	Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error)
+	// LastProposalId queries the last proposal id stored in state.
+	LastProposalId(context.Context, *QueryLastProposalIdRequest) (*QueryLastProposalIdResponse, error)
 	// Vote queries voted information based on proposalID, voterAddr.
 	Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal.
@@ -214,6 +228,9 @@ func (UnimplementedQueryServer) Proposal(context.Context, *QueryProposalRequest)
 }
 func (UnimplementedQueryServer) Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Proposals not implemented")
+}
+func (UnimplementedQueryServer) LastProposalId(context.Context, *QueryLastProposalIdRequest) (*QueryLastProposalIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LastProposalId not implemented")
 }
 func (UnimplementedQueryServer) Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
@@ -302,6 +319,24 @@ func _Query_Proposals_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Proposals(ctx, req.(*QueryProposalsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_LastProposalId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLastProposalIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LastProposalId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_LastProposalId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LastProposalId(ctx, req.(*QueryLastProposalIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -468,6 +503,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Proposals",
 			Handler:    _Query_Proposals_Handler,
+		},
+		{
+			MethodName: "LastProposalId",
+			Handler:    _Query_LastProposalId_Handler,
 		},
 		{
 			MethodName: "Vote",

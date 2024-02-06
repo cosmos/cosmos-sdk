@@ -3,11 +3,10 @@ package feegrant
 import (
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
@@ -39,16 +38,15 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgGrantAllowance) ValidateBasic() error {
-	if msg.Granter == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	if _, err := sdk.AccAddressFromBech32(msg.Granter); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
-	if msg.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	if _, err := sdk.AccAddressFromBech32(msg.Grantee); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 	if msg.Grantee == msg.Granter {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
-
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
 		return err
@@ -59,10 +57,7 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 
 // GetSigners gets the granter account associated with an allowance
 func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		panic(err)
-	}
+	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
 	return []sdk.AccAddress{granter}
 }
 
@@ -78,7 +73,7 @@ func (msg MsgGrantAllowance) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrantAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -107,11 +102,11 @@ func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRe
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgRevokeAllowance) ValidateBasic() error {
-	if msg.Granter == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	if _, err := sdk.AccAddressFromBech32(msg.Granter); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
-	if msg.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	if _, err := sdk.AccAddressFromBech32(msg.Grantee); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 	if msg.Grantee == msg.Granter {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
@@ -123,10 +118,7 @@ func (msg MsgRevokeAllowance) ValidateBasic() error {
 // GetSigners gets the granter address associated with an Allowance
 // to revoke.
 func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		panic(err)
-	}
+	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
 	return []sdk.AccAddress{granter}
 }
 
@@ -142,5 +134,5 @@ func (msg MsgRevokeAllowance) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevokeAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }

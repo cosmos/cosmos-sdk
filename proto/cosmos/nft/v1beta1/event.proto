@@ -1,0 +1,26 @@
+syntax = "proto3";
+package cosmos.nft.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
+
+// EventSend is emitted on Msg/Send
+message EventSend {
+  string class_id = 1;
+  string id       = 2;
+  string sender   = 3;
+  string receiver = 4;
+}
+
+// EventMint is emitted on Mint
+message EventMint {
+  string class_id = 1;
+  string id       = 2;
+  string owner    = 3;
+}
+
+// EventBurn is emitted on Burn
+message EventBurn {
+  string class_id = 1;
+  string id       = 2;
+  string owner    = 3;
+}

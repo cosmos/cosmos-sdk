@@ -7,7 +7,7 @@ import (
 	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-// Gets the first item.
+// First gets the first item.
 func First(st KVStore, start, end []byte) (kv sdkkv.Pair, ok bool) {
 	iter := st.Iterator(start, end)
 	if !iter.Valid() {
@@ -18,7 +18,7 @@ func First(st KVStore, start, end []byte) (kv sdkkv.Pair, ok bool) {
 	return sdkkv.Pair{Key: iter.Key(), Value: iter.Value()}, true
 }
 
-// Gets the last item.  `end` is exclusive.
+// Last gets the last item.  `end` is exclusive.
 func Last(st KVStore, start, end []byte) (kv sdkkv.Pair, ok bool) {
 	iter := st.ReverseIterator(end, start)
 	if !iter.Valid() {

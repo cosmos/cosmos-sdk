@@ -6,10 +6,14 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Keeper defines the governance module Keeper
@@ -27,13 +31,18 @@ type Keeper struct {
 	hooks types.GovHooks
 
 	// The (unexposed) keys used to access the stores from the Context.
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
-	// Proposal router
-	router types.Router
+	// Legacy Proposal router
+	legacyRouter v1beta1.Router
+
+	// Msg server router
+	router *baseapp.MsgServiceRouter
+
+	config types.Config
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -44,8 +53,10 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace types.ParamSubspace,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rtr types.Router,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
+	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	legacyRouter v1beta1.Router, router *baseapp.MsgServiceRouter,
+	config types.Config,
 ) Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -55,16 +66,23 @@ func NewKeeper(
 	// It is vital to seal the governance proposal router here as to not allow
 	// further handlers to be registered after the keeper is created since this
 	// could create invalid or non-deterministic behavior.
-	rtr.Seal()
+	legacyRouter.Seal()
+
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxMetadataLen == 0 {
+		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
+	}
 
 	return Keeper{
-		storeKey:   key,
-		paramSpace: paramSpace,
-		authKeeper: authKeeper,
-		bankKeeper: bankKeeper,
-		sk:         sk,
-		cdc:        cdc,
-		router:     rtr,
+		storeKey:     key,
+		paramSpace:   paramSpace,
+		authKeeper:   authKeeper,
+		bankKeeper:   bankKeeper,
+		sk:           sk,
+		cdc:          cdc,
+		legacyRouter: legacyRouter,
+		router:       router,
+		config:       config,
 	}
 }
 
@@ -84,9 +102,14 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// Router returns the gov Keeper's Router
-func (keeper Keeper) Router() types.Router {
+// Router returns the gov keeper's router
+func (keeper Keeper) Router() *baseapp.MsgServiceRouter {
 	return keeper.router
+}
+
+// LegacyRouter returns the gov keeper's legacy router
+func (keeper Keeper) LegacyRouter() v1beta1.Router {
+	return keeper.legacyRouter
 }
 
 // GetGovernanceAccount returns the governance ModuleAccount
@@ -126,7 +149,7 @@ func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID
 
 // IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
+func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) {
 	iterator := keeper.ActiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
@@ -145,7 +168,7 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.T
 
 // IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
+func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) {
 	iterator := keeper.InactiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
@@ -172,4 +195,13 @@ func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.T
 func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return store.Iterator(types.InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
+}
+
+// assertMetadataLength returns an error if given metadata length
+// is greater than a pre-defined maxMetadataLen.
+func (k Keeper) assertMetadataLength(metadata string) error {
+	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
+	}
+	return nil
 }

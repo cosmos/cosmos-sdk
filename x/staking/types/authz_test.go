@@ -13,6 +13,7 @@ import (
 
 var (
 	coin100 = sdk.NewInt64Coin("steak", 100)
+	coin150 = sdk.NewInt64Coin("steak", 150)
 	coin50  = sdk.NewInt64Coin("steak", 50)
 	delAddr = sdk.AccAddress("_____delegator _____")
 	val1    = sdk.ValAddress("_____validator1_____")
@@ -21,7 +22,7 @@ var (
 )
 
 func TestAuthzAuthorizations(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// verify ValidateBasic returns error for the AUTHORIZATION_TYPE_UNSPECIFIED authorization type
@@ -68,6 +69,17 @@ func TestAuthzAuthorizations(t *testing.T) {
 			stakingtypes.NewMsgDelegate(delAddr, val1, coin100),
 			false,
 			true,
+			nil,
+		},
+		{
+			"delegate: coins more than allowed",
+			[]sdk.ValAddress{val1, val2},
+			[]sdk.ValAddress{},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+			&coin100,
+			stakingtypes.NewMsgDelegate(delAddr, val1, coin150),
+			true,
+			false,
 			nil,
 		},
 		{
@@ -122,7 +134,21 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			nil,
 		},
-
+		{
+			"delegate: testing with a validator out of denylist",
+			[]sdk.ValAddress{},
+			[]sdk.ValAddress{val1},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+			nil,
+			stakingtypes.NewMsgDelegate(delAddr, val2, coin100),
+			false,
+			false,
+			&stakingtypes.StakeAuthorization{
+				Validators: &stakingtypes.StakeAuthorization_DenyList{
+					DenyList: &stakingtypes.StakeAuthorization_Validators{Address: []string{val1.String()}},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+			},
+		},
 		{
 			"undelegate: expect 0 remaining coins",
 			[]sdk.ValAddress{val1, val2},

@@ -4,18 +4,21 @@
 package cosmovisor_test
 
 import (
+	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/otiai10/copy"
+
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/otiai10/copy"
-	"github.com/stretchr/testify/require"
-
 	"github.com/agoric-labs/cosmos-sdk/cosmovisor"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type upgradeTestSuite struct {
@@ -37,7 +40,7 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 
 	// ensure we cannot set this to an invalid value
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		s.Require().Error(cfg.SetCurrentUpgrade(name), name)
+		s.Require().Error(cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: name}), name)
 
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
@@ -46,15 +49,15 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 	}
 
 	// try a few times to make sure this can be reproduced
-	for _, upgrade := range []string{"chain2", "chain3", "chain2"} {
+	for _, name := range []string{"chain2", "chain3", "chain2"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
-		err = cfg.SetCurrentUpgrade(upgrade)
+		err = cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: name})
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
 
-		s.Require().Equal(cfg.UpgradeBin(upgrade), currentBin)
+		s.Require().Equal(cfg.UpgradeBin(name), currentBin)
 	}
 }
 
@@ -67,7 +70,7 @@ func (s *upgradeTestSuite) TestCurrentAlwaysSymlinkToDirectory() {
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 	s.assertCurrentLink(cfg, "genesis")
 
-	err = cfg.SetCurrentUpgrade("chain2")
+	err = cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: "chain2"})
 	s.Require().NoError(err)
 	currentBin, err = cfg.CurrentBin()
 	s.Require().NoError(err)
@@ -92,6 +95,7 @@ func (s *upgradeTestSuite) assertCurrentLink(cfg cosmovisor.Config, target strin
 func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
+	logger := cosmovisor.NewLogger()
 
 	currentBin, err := cfg.CurrentBin()
 	s.Require().NoError(err)
@@ -100,8 +104,8 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 
 	// do upgrade ignores bad files
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		info := &cosmovisor.UpgradeInfo{Name: name}
-		err = cosmovisor.DoUpgrade(cfg, info)
+		info := upgradetypes.Plan{Name: name}
+		err = cosmovisor.DoUpgrade(logger, cfg, info)
 		s.Require().Error(err, name)
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
@@ -111,8 +115,8 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	// make sure it updates a few times
 	for _, upgrade := range []string{"chain2", "chain3"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
-		info := &cosmovisor.UpgradeInfo{Name: upgrade}
-		err = cosmovisor.DoUpgrade(cfg, info)
+		info := upgradetypes.Plan{Name: upgrade}
+		err = cosmovisor.DoUpgrade(logger, cfg, info)
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		upgradeBin := cfg.UpgradeBin(upgrade)
@@ -130,30 +134,41 @@ func (s *upgradeTestSuite) TestOsArch() {
 
 func (s *upgradeTestSuite) TestGetDownloadURL() {
 	// all download tests will fail if we are not on linux...
-	ref, err := filepath.Abs(filepath.FromSlash("./testdata/repo/ref_zipped"))
+	ref, err := filepath.Abs(filepath.FromSlash("./testdata/repo/ref_to_chain3-zip_dir.json"))
 	s.Require().NoError(err)
-	badref, err := filepath.Abs(filepath.FromSlash("./testdata/repo/zip_binary/autod.zip"))
+	badref, err := filepath.Abs(filepath.FromSlash("./testdata/repo/chain2-zip_bin/autod.zip")) // "./testdata/repo/zip_binary/autod.zip"))
 	s.Require().NoError(err)
 
 	cases := map[string]struct {
-		info  string
-		url   string
-		isErr bool
+		info string
+		url  string
+		err  interface{}
+
+		// If err == nil, the test must not report an error.
+		// If err is a string, the test must report an error whose string has err
+		// as a substring.
+		// If err is a func(suite.Suite, error), it is called to check the error
+		// value.
 	}{
 		"missing": {
-			isErr: true,
+			err: "downloading reference link : invalid source string:",
 		},
 		"follow reference": {
 			info: ref,
-			url:  "https://github.com/cosmos/cosmos-sdk/raw/aa5d6140ad4011bb33d472dca8246a0dcbe223ee/cosmovisor/testdata/repo/zip_directory/autod.zip?checksum=sha256:3784e4574cad69b67e34d4ea4425eff140063a3870270a301d6bb24a098a27ae",
+			url:  "https://github.com/cosmos/cosmos-sdk/raw/main/cosmovisor/testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:8951f52a0aea8617de0ae459a20daf704c29d259c425e60d520e363df0f166b4",
 		},
 		"malformated reference target": {
-			info:  badref,
-			isErr: true,
+			info: badref,
+			err:  "upgrade info doesn't contain binary map",
 		},
 		"missing link": {
-			info:  "https://no.such.domain/exists.txt",
-			isErr: true,
+			info: "https://no.such.domain/exists.txt",
+			err: func(s suite.Suite, err error) {
+				var dns *net.DNSError
+				s.Require().True(errors.As(err, &dns), "result is not a DNSError")
+				s.Require().Equal("no.such.domain", dns.Name)
+				s.Require().Equal(true, dns.IsNotFound)
+			},
 		},
 		"proper binary": {
 			info: `{"binaries": {"linux/amd64": "https://foo.bar/", "windows/amd64": "https://something.else"}}`,
@@ -168,19 +183,27 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 			url:  "https://foo.bar/portable",
 		},
 		"missing binary": {
-			info:  `{"binaries": {"linux/arm": "https://foo.bar/"}}`,
-			isErr: true,
+			info: `{"binaries": {"linux/arm": "https://foo.bar/"}}`,
+			err:  "cannot find binary for",
 		},
 	}
 
-	for _, tc := range cases {
-		url, err := cosmovisor.GetDownloadURL(&cosmovisor.UpgradeInfo{Info: tc.info})
-		if tc.isErr {
-			s.Require().Error(err)
-		} else {
-			s.Require().NoError(err)
-			s.Require().Equal(tc.url, url)
-		}
+	for name, tc := range cases {
+		s.Run(name, func() {
+			url, err := cosmovisor.GetDownloadURL(upgradetypes.Plan{Info: tc.info})
+			switch e := tc.err.(type) {
+			case nil:
+				s.Require().NoError(err)
+				s.Require().Equal(tc.url, url)
+
+			case string:
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.err)
+
+			case func(suite.Suite, error):
+				e(s.Suite, err)
+			}
+		})
 	}
 }
 
@@ -206,18 +229,18 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 			canDownload: false,
 		},
 		"get zipped directory": {
-			url:         "./testdata/repo/zip_directory/autod.zip",
+			url:         "./testdata/repo/chain3-zip_dir/autod.zip",
 			canDownload: true,
 			validBinary: true,
 		},
 		"get zipped directory with valid checksum": {
-			// sha256sum ./testdata/repo/zip_directory/autod.zip
-			url:         "./testdata/repo/zip_directory/autod.zip?checksum=sha256:3784e4574cad69b67e34d4ea4425eff140063a3870270a301d6bb24a098a27ae",
+			// sha256sum ./testdata/repo/chain3-zip_dir/autod.zip
+			url:         "./testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:8951f52a0aea8617de0ae459a20daf704c29d259c425e60d520e363df0f166b4",
 			canDownload: true,
 			validBinary: true,
 		},
 		"get zipped directory with invalid checksum": {
-			url:         "./testdata/repo/zip_directory/autod.zip?checksum=sha256:73e2bd6cbb99261733caf137015d5cc58e3f96248d8b01da68be8564989dd906",
+			url:         "./testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:73e2bd6cbb99261733caf137015d5cc58e3f96248d8b01da68be8564989dd906",
 			canDownload: false,
 		},
 		"invalid url": {
@@ -226,43 +249,42 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 		},
 	}
 
-	for _, tc := range cases {
-		var err error
-		// make temp dir
-		home := copyTestData(s.T(), "download")
+	for label, tc := range cases {
+		s.Run(label, func() {
+			var err error
+			// make temp dir
+			home := copyTestData(s.T(), "download")
 
-		cfg := &cosmovisor.Config{
-			Home:                  home,
-			Name:                  "autod",
-			AllowDownloadBinaries: true,
-		}
+			cfg := &cosmovisor.Config{
+				Home:                  home,
+				Name:                  "autod",
+				AllowDownloadBinaries: true,
+			}
 
-		// if we have a relative path, make it absolute, but don't change eg. https://... urls
-		url := tc.url
-		if strings.HasPrefix(url, "./") {
-			url, err = filepath.Abs(url)
-			s.Require().NoError(err)
-		}
+			url := tc.url
+			if strings.HasPrefix(url, "./") {
+				url, err = filepath.Abs(url)
+				s.Require().NoError(err)
+			}
 
-		upgrade := "amazonas"
-		info := &cosmovisor.UpgradeInfo{
-			Name: upgrade,
-			Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
-		}
+			const upgrade = "amazonas"
+			info := upgradetypes.Plan{
+				Name: upgrade,
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
+			}
 
-		err = cosmovisor.DownloadBinary(cfg, info)
-		if !tc.canDownload {
-			s.Require().Error(err)
-			return
-		}
-		s.Require().NoError(err)
+			err = cosmovisor.DownloadBinary(cfg, info)
+			if !tc.canDownload {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
 
-		err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
-		if tc.validBinary {
-			s.Require().NoError(err)
-		} else {
-			s.Require().Error(err)
-		}
+			err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
+			if tc.validBinary {
+				s.Require().NoError(err)
+			}
+		})
 	}
 }
 
@@ -271,9 +293,7 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 // returns the directory (which can now be used as Config.Home) and modified safely
 func copyTestData(t *testing.T, subdir string) string {
 	t.Helper()
-
 	tmpdir := t.TempDir()
-
 	require.NoError(t, copy.Copy(filepath.Join("testdata", subdir), tmpdir))
 
 	return tmpdir

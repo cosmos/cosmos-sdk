@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -20,11 +22,11 @@ type HandlerTestSuite struct {
 
 	app        *simapp.SimApp
 	ctx        sdk.Context
-	govHandler govtypes.Handler
+	govHandler govv1beta1.Handler
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
-	suite.app = simapp.Setup(false)
+	suite.app = simapp.Setup(suite.T(), false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)
 }
@@ -63,14 +65,15 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 			"omit empty fields",
 			testProposal(proposal.ParamChange{
 				Subspace: govtypes.ModuleName,
-				Key:      string(govtypes.ParamStoreKeyDepositParams),
-				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}]}`,
+				Key:      string(govv1.ParamStoreKeyDepositParams),
+				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}], "max_deposit_period": "172800000000000"}`,
 			}),
 			func() {
 				depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
-				suite.Require().Equal(govtypes.DepositParams{
+				defaultPeriod := govv1.DefaultPeriod
+				suite.Require().Equal(govv1.DepositParams{
 					MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
-					MaxDepositPeriod: govtypes.DefaultPeriod,
+					MaxDepositPeriod: &defaultPeriod,
 				}, depositParams)
 			},
 			false,

@@ -97,17 +97,17 @@ func DeliverGenTxs(
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("failed to decode GenTx '%s': %s", genTx, err)
 		}
 
 		bz, err := txEncodingConfig.TxEncoder()(tx)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("failed to encode GenTx '%s': %s", genTx, err)
 		}
 
 		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
 		if !res.IsOK() {
-			panic(res.Log)
+			return nil, fmt.Errorf("failed to execute DelverTx for '%s': %s", genTx, res.Log)
 		}
 	}
 

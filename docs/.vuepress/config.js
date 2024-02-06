@@ -5,15 +5,6 @@ module.exports = {
     "/": {
       lang: "en-US"
     },
-    kr: {
-      lang: "kr"
-    },
-    cn: {
-      lang: "cn"
-    },
-    ru: {
-      lang: "ru"
-    }
   },
   base: process.env.VUEPRESS_BASE || "/",
   head: [
@@ -29,6 +20,7 @@ module.exports = {
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsRepo: "cosmos/cosmos-sdk",
+    docsBranch: "release/v0.46.x",
     docsDir: "docs",
     editLinks: true,
     label: "sdk",
@@ -39,12 +31,16 @@ module.exports = {
     },
     versions: [
       {
-        "label": "v0.44",
-        "key": "v0.44"
-      },
-      {
         "label": "v0.45",
         "key": "v0.45"
+      },
+      {
+        "label": "v0.46",
+        "key": "v0.46"
+      },
+      {
+        "label": "v0.47",
+        "key": "v0.47"
       },
       {
         "label": "main",
@@ -52,9 +48,9 @@ module.exports = {
       }
     ],
     topbar: {
-      banner: true
+      banner: false
     },
-    sidebar: { 
+    sidebar: {
       auto: true,
       nav: [
         {
@@ -76,7 +72,7 @@ module.exports = {
             },
             {
               title: "SDK API Reference",
-              path: "https://godoc.org/github.com/cosmos/cosmos-sdk"
+              path: "https://pkg.go.dev/github.com/cosmos/cosmos-sdk"
             },
             {
               title: "REST API Spec",
@@ -109,7 +105,7 @@ module.exports = {
     },
     footer: {
       question: {
-        text: "Chat with Cosmos developers in <a href='https://discord.gg/W8trcGV' target='_blank'>Discord</a> or reach out on the <a href='https://forum.cosmos.network/c/tendermint' target='_blank'>SDK Developer Forum</a> to learn more."
+        text: "Chat with Cosmos developers in <a href='https://discord.gg/cosmosnetwork' target='_blank'>Discord</a> or reach out on the <a href='https://forum.cosmos.network/c/tendermint' target='_blank'>SDK Developer Forum</a> to learn more."
       },
       logo: "/logo-bw.svg",
       textLink: {
@@ -142,16 +138,11 @@ module.exports = {
           url: "https://www.youtube.com/c/CosmosProject"
         }
       ],
-      smallprint:
-        "This website is maintained by Tendermint Inc. The contents and opinions of this website are those of Tendermint Inc.",
+      smallprint: "The development of the Cosmos SDK is led primarily by [Interchain Core Teams](https://interchain.io/ecosystem). Funding for this development comes primarily from the Interchain Foundation, a Swiss non-profit.",
       links: [
         {
           title: "Documentation",
           children: [
-            {
-              title: "Cosmos SDK",
-              url: "https://docs.cosmos.network"
-            },
             {
               title: "Cosmos Hub",
               url: "https://hub.cosmos.network"
@@ -159,7 +150,11 @@ module.exports = {
             {
               title: "Tendermint Core",
               url: "https://docs.tendermint.com"
-            }
+            },
+            {
+              title: "IBC-Go",
+              url: "https://ibc.cosmos.network"
+            },
           ]
         },
         {
@@ -175,7 +170,7 @@ module.exports = {
             },
             {
               title: "Chat",
-              url: "https://discord.gg/W8trcGV"
+              url: "https://discord.gg/cosmosnetwork"
             }
           ]
         },

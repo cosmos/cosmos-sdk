@@ -31,8 +31,12 @@ func initChain(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
+	blockMaxGas := int64(-1)
+	if config.BlockMaxGas > 0 {
+		blockMaxGas = config.BlockMaxGas
+	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
-	consensusParams := randomConsensusParams(r, appState, cdc)
+	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
@@ -167,16 +171,19 @@ func SimulateFromSeed(
 		ctx := app.NewContext(false, header)
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
-		numQueuedOpsRan := runQueuedOperations(
+		numQueuedOpsRan, futureOps := runQueuedOperations(
 			operationQueue, int(header.Height), tb, r, app, ctx, accs, logWriter,
 			eventStats.Tally, config.Lean, config.ChainID,
 		)
 
-		numQueuedTimeOpsRan := runQueuedTimeOperations(
+		numQueuedTimeOpsRan, timeFutureOps := runQueuedTimeOperations(
 			timeOperationQueue, int(header.Height), header.Time,
 			tb, r, app, ctx, accs, logWriter, eventStats.Tally,
 			config.Lean, config.ChainID,
 		)
+
+		futureOps = append(futureOps, timeFutureOps...)
+		queueOperations(operationQueue, timeOperationQueue, futureOps)
 
 		// run standard operations
 		operations := blockSimulator(r, app, ctx, accs, header)
@@ -321,19 +328,22 @@ func runQueuedOperations(queueOps map[int][]simulation.Operation,
 	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []simulation.Account, logWriter LogWriter,
 	event func(route, op, evResult string), lean bool, chainID string,
-) (numOpsRan int) {
+) (numOpsRan int, allFutureOps []simulation.FutureOperation) {
 	queuedOp, ok := queueOps[height]
 	if !ok {
-		return 0
+		return 0, nil
 	}
+
+	// Keep all future operations
+	allFutureOps = make([]simulation.FutureOperation, 0)
 
 	numOpsRan = len(queuedOp)
 	for i := 0; i < numOpsRan; i++ {
+		opMsg, futureOps, err := queuedOp[i](r, app, ctx, accounts, chainID)
+		if len(futureOps) > 0 {
+			allFutureOps = append(allFutureOps, futureOps...)
+		}
 
-		// For now, queued operations cannot queue more operations.
-		// If a need arises for us to support queued messages to queue more messages, this can
-		// be changed.
-		opMsg, _, err := queuedOp[i](r, app, ctx, accounts, chainID)
 		opMsg.LogEvent(event)
 
 		if !lean || opMsg.OK {
@@ -347,7 +357,7 @@ func runQueuedOperations(queueOps map[int][]simulation.Operation,
 	}
 	delete(queueOps, height)
 
-	return numOpsRan
+	return numOpsRan, allFutureOps
 }
 
 func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
@@ -355,14 +365,14 @@ func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account,
 	logWriter LogWriter, event func(route, op, evResult string),
 	lean bool, chainID string,
-) (numOpsRan int) {
+) (numOpsRan int, allFutureOps []simulation.FutureOperation) {
+	// Keep all future operations
+	allFutureOps = make([]simulation.FutureOperation, 0)
+
 	numOpsRan = 0
 	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
+		opMsg, futureOps, err := queueOps[0].Op(r, app, ctx, accounts, chainID)
 
-		// For now, queued operations cannot queue more operations.
-		// If a need arises for us to support queued messages to queue more messages, this can
-		// be changed.
-		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts, chainID)
 		opMsg.LogEvent(event)
 
 		if !lean || opMsg.OK {
@@ -374,9 +384,13 @@ func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
 			tb.FailNow()
 		}
 
+		if len(futureOps) > 0 {
+			allFutureOps = append(allFutureOps, futureOps...)
+		}
+
 		queueOps = queueOps[1:]
 		numOpsRan++
 	}
 
-	return numOpsRan
+	return numOpsRan, allFutureOps
 }

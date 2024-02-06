@@ -15,7 +15,7 @@ import (
 )
 
 func TestProposalContents(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// initialize parameters

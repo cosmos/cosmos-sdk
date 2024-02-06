@@ -9,6 +9,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
@@ -16,6 +17,7 @@ import (
 var _ authz.QueryServer = Keeper{}
 
 // Authorizations implements the Query/Grants gRPC method.
+// It returns grants for a granter-grantee pair. If msg type URL is set, it returns grants only for that msg type.
 func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -30,13 +32,19 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	if err != nil {
 		return nil, err
 	}
-	ctx := sdk.UnwrapSDKContext(c)
 
+	ctx := sdk.UnwrapSDKContext(c)
 	if req.MsgTypeUrl != "" {
-		authorization, expiration := k.GetCleanAuthorization(ctx, grantee, granter, req.MsgTypeUrl)
-		if authorization == nil {
-			return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgTypeUrl)
+		grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, req.MsgTypeUrl))
+		if !found {
+			return nil, sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "authorization not found for %s type", req.MsgTypeUrl)
 		}
+
+		authorization, err := grant.GetAuthorization()
+		if err != nil {
+			return nil, err
+		}
+
 		authorizationAny, err := codectypes.NewAnyWithValue(authorization)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
@@ -44,7 +52,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 		return &authz.QueryGrantsResponse{
 			Grants: []*authz.Grant{{
 				Authorization: authorizationAny,
-				Expiration:    expiration,
+				Expiration:    grant.Expiration,
 			}},
 		}, nil
 	}
@@ -54,7 +62,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	grantsStore := prefix.NewStore(store, key)
 
 	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, grantsStore, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.Grant, error) {
-		auth1 := auth.GetAuthorization()
+		auth1, err := auth.GetAuthorization()
 		if err != nil {
 			return nil, err
 		}
@@ -96,7 +104,7 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
 	grants, pageRes, err := query.GenericFilteredPaginate(k.cdc, authzStore, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
-		auth1 := auth.GetAuthorization()
+		auth1, err := auth.GetAuthorization()
 		if err != nil {
 			return nil, err
 		}
@@ -141,12 +149,12 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
 
 	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, store, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
-		auth1 := auth.GetAuthorization()
+		auth1, err := auth.GetAuthorization()
 		if err != nil {
 			return nil, err
 		}
 
-		granter, g := addressesFromGrantStoreKey(append(GrantKey, key...))
+		granter, g, _ := parseGrantStoreKey(append(GrantKey, key...))
 		if !g.Equals(grantee) {
 			return nil, nil
 		}

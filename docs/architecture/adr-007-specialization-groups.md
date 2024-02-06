@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 2019 Jul 31: Initial Draft
+* 2019 Jul 31: Initial Draft
 
 ## Context
 
@@ -26,22 +26,22 @@ governance proposals include a field for issue type.
 A specialization group can be broadly broken down into the following functions
 (herein containing examples):
 
-- Membership Admittance
-- Membership Acceptance
-- Membership Revocation
-    - (probably) Without Penalty
-        - member steps down (self-Revocation)
-        - replaced by new member from governance
-    - (probably) With Penalty
-        - due to breach of soft-agreement (determined through governance)
-        - due to breach of hard-agreement (determined by code)
-- Execution of Duties
-    - Special transactions which only execute for members of a specialization
+* Membership Admittance
+* Membership Acceptance
+* Membership Revocation
+    * (probably) Without Penalty
+        * member steps down (self-Revocation)
+        * replaced by new member from governance
+    * (probably) With Penalty
+        * due to breach of soft-agreement (determined through governance)
+        * due to breach of hard-agreement (determined by code)
+* Execution of Duties
+    * Special transactions which only execute for members of a specialization
      group (for example, dCERT members voting to turn off transaction routes in
      an emergency scenario)
-- Compensation
-    - Group compensation (further distribution decided by the specialization group)
-    - Individual compensation for all constituents of a group from the
+* Compensation
+    * Group compensation (further distribution decided by the specialization group)
+    * Individual compensation for all constituents of a group from the
      greater community
 
 Membership admittance to a specialization group could take place over a wide
@@ -163,15 +163,15 @@ type SpecializationGroup interface {
 
 ### Positive
 
-- increases specialization capabilities of a blockchain
-- improve abstractions in `x/gov/` such that they can be used with specialization groups
+* increases specialization capabilities of a blockchain
+* improve abstractions in `x/gov/` such that they can be used with specialization groups
 
 ### Negative
 
-- could be used to increase centralization within a community
+* could be used to increase centralization within a community
 
 ### Neutral
 
 ## References
 
-- [dCERT ADR](./adr-008-dCERT-group.md)
+* [dCERT ADR](./adr-008-dCERT-group.md)

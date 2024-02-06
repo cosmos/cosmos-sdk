@@ -13,7 +13,7 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L29-L37
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
 
 ```go
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
@@ -47,7 +47,7 @@ Taking the slashes into account requires iteration.
 Let `F(X)` be the fraction a validator is to be slashed for a slashing event that happened at period `X`.
 If the validator was slashed at periods `P1, ..., PN`, where `A < P1`, `PN < B`, the distribution module calculates the individual delegator's rewards, `T(A, B)`, as follows:
 
-```
+```go
 stake := initial stake
 rewards := 0
 previous := A
@@ -63,7 +63,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L42-L50
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
 
 ## WithdrawValidatorCommission
 

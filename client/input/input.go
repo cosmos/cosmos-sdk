@@ -42,7 +42,7 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 // If the input is not recognized, it returns false and a nil error.
 func GetConfirmation(prompt string, r *bufio.Reader, w io.Writer) (bool, error) {
 	if inputIsTty() {
-		fmt.Fprintf(w, "%s [y/N]: ", prompt)
+		_, _ = fmt.Fprintf(w, "%s [y/N]: ", prompt)
 	}
 
 	response, err := readLineFromBuf(r)

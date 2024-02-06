@@ -190,11 +190,15 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 			false,
 			func() {
 				suite.grantFeeAllowance(suite.addrs[0], suite.addrs[1])
+
+				// adding this allowance to check whether the pagination working fine.
+				suite.grantFeeAllowance(suite.addrs[1], suite.addrs[2])
 			},
 			func(resp *feegrant.QueryAllowancesByGranterResponse) {
 				suite.Require().Equal(len(resp.Allowances), 1)
 				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
 				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
+				suite.Require().Equal(resp.Pagination.Total, uint64(1))
 			},
 		},
 	}

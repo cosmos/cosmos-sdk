@@ -1,0 +1,40 @@
+project_name: cosmovisor
+
+release:
+  disable: false
+  name_template: "{{.Tag}}"
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/cosmovisor
+    ldflags:
+      - -X 'github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd.Version={{ replace .Version "cosmovisor/" "" }}'
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - name_template: '{{ replace .Version "cosmovisor/" "cosmovisor-" }}-{{ .Os }}-{{ .Arch }}'
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: 'SHA256SUMS-{{ replace .Version "cosmovisor/" "cosmovisor-" }}.txt'
+  algorithm: sha256
+changelog:
+  skip: true
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

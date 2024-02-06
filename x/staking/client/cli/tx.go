@@ -3,8 +3,10 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -44,11 +46,13 @@ func NewTxCmd() *cobra.Command {
 		NewDelegateCmd(),
 		NewRedelegateCmd(),
 		NewUnbondCmd(),
+		NewCancelUnbondingDelegation(),
 	)
 
 	return stakingTxCmd
 }
 
+// NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
 func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
@@ -88,6 +92,7 @@ func NewCreateValidatorCmd() *cobra.Command {
 	return cmd
 }
 
+// NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
 func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
@@ -117,7 +122,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newRate = &rate
 			}
 
-			var newMinSelfDelegation *sdk.Int
+			var newMinSelfDelegation *math.Int
 
 			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
@@ -143,6 +148,7 @@ func NewEditValidatorCmd() *cobra.Command {
 	return cmd
 }
 
+// NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
 func NewDelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -186,6 +192,7 @@ $ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --f
 	return cmd
 }
 
+// NewRedelegateCmd returns a CLI command handler for creating a MsgBeginRedelegate transaction.
 func NewRedelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -234,6 +241,7 @@ $ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp3
 	return cmd
 }
 
+// NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
 func NewUnbondCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -267,6 +275,57 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 			}
 
 			msg := types.NewMsgUndelegate(delAddr, valAddr, amount)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCancelUnbondingDelegation returns a CLI command handler for creating a MsgCancelUnbondingDelegation transaction.
+func NewCancelUnbondingDelegation() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "cancel-unbond [validator-addr] [amount] [creation-height]",
+		Short: "Cancel unbonding delegation and delegate back to the validator",
+		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Cancel Unbonding Delegation and delegate back to the validator.
+
+Example:
+$ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 2 --from mykey
+`,
+				version.AppName, bech32PrefixValAddr,
+			),
+		),
+		Example: fmt.Sprintf(`$ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 2 --from mykey`,
+			version.AppName, bech32PrefixValAddr),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr := clientCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			amount, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			creationHeight, err := strconv.ParseInt(args[2], 10, 64)
+			if err != nil {
+				return sdkerrors.Wrap(fmt.Errorf("invalid height: %d", creationHeight), "invalid height")
+			}
+
+			msg := types.NewMsgCancelUnbondingDelegation(delAddr, valAddr, creationHeight, amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

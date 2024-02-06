@@ -42,7 +42,7 @@ func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler signin
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {
-	return newBuilder()
+	return newBuilder(g.protoCodec)
 }
 
 // WrapTxBuilder returns a builder from provided transaction

@@ -9,7 +9,7 @@ parent:
 
 ## Overview
 
-`x/capability` is an implementation of a Cosmos SDK module, per [ADR 003](./../../../docs/architecture/adr-003-dynamic-capability-store.md),
+`x/capability` is an implementation of a Cosmos SDK module, per [ADR 003](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-003-dynamic-capability-store.md),
 that allows for provisioning, tracking, and authenticating multi-owner capabilities
 at runtime.
 
@@ -53,18 +53,19 @@ func NewApp(...) *App {
 After the keeper is created, it can be used to create scoped sub-keepers which
 are passed to other modules that can create, authenticate, and claim capabilities.
 After all the necessary scoped keepers are created and the state is loaded, the
-main capability keeper must be initialized and sealed to populate the in-memory
-state and to prevent further scoped keepers from being created.
+main capability keeper must be sealed to prevent further scoped keepers from
+being created.
 
 ```go
 func NewApp(...) *App {
   // ...
 
-  // Initialize and seal the capability keeper so all persistent capabilities
-  // are loaded in-memory and prevent any further modules from creating scoped
+  // Creating a scoped keeper
+  scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
+
+  // Seal the capability keeper to prevent any further modules from creating scoped
   // sub-keepers.
-  ctx := app.BaseApp.NewContext(true, tmproto.Header{})
-  app.capabilityKeeper.InitializeAndSeal(ctx)
+  app.capabilityKeeper.Seal()
 
   return app
 }

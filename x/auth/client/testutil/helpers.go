@@ -106,4 +106,13 @@ func TxMultiSignBatchExec(clientCtx client.Context, filename string, from string
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetMultiSignBatchCmd(), args)
 }
 
+// TxAuxToFeeExec executes `GetAuxToFeeCommand` cli command with given args.
+func TxAuxToFeeExec(clientCtx client.Context, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{
+		filename,
+	}
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAuxToFeeCommand(), append(args, extraArgs...))
+}
+
 // DONTCOVER

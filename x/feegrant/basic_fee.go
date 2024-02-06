@@ -1,6 +1,8 @@
 package feegrant
 
 import (
+	time "time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -23,7 +25,7 @@ func (a *BasicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bo
 	}
 
 	if a.SpendLimit != nil {
-		left, invalid := a.SpendLimit.SafeSub(fee)
+		left, invalid := a.SpendLimit.SafeSub(fee...)
 		if invalid {
 			return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "basic allowance")
 		}
@@ -51,4 +53,8 @@ func (a BasicAllowance) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (a BasicAllowance) ExpiresAt() (*time.Time, error) {
+	return a.Expiration, nil
 }

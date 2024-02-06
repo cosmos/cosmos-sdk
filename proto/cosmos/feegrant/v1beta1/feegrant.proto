@@ -11,13 +11,13 @@ import "google/protobuf/duration.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
 
-// BasicAllowance implements Allowance with a one-time grant of tokens
+// BasicAllowance implements Allowance with a one-time grant of coins
 // that optionally expires. The grantee can use up to SpendLimit to cover fees.
 message BasicAllowance {
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
 
-  // spend_limit specifies the maximum amount of tokens that can be spent
-  // by this allowance and will be updated as tokens are spent. If it is
+  // spend_limit specifies the maximum amount of coins that can be spent
+  // by this allowance and will be updated as coins are spent. If it is
   // empty, there is no spend limit and any amount of coins can be spent.
   repeated cosmos.base.v1beta1.Coin spend_limit = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
@@ -58,7 +58,7 @@ message AllowedMsgAllowance {
   option (gogoproto.goproto_getters)         = false;
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
 
-  // allowance can be any of basic and filtered fee allowance.
+  // allowance can be any of basic and periodic fee allowance.
   google.protobuf.Any allowance = 1 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 
   // allowed_messages are the messages for which the grantee has the access.
@@ -68,11 +68,11 @@ message AllowedMsgAllowance {
 // Grant is stored in the KVStore to record a grant with full context
 message Grant {
   // granter is the address of the user granting an allowance of their funds.
-  string granter = 1;
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // grantee is the address of the user being granted an allowance of another user's funds.
-  string grantee = 2;
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // allowance can be any of basic and filtered fee allowance.
+  // allowance can be any of basic, periodic, allowed fee allowance.
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 }

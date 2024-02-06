@@ -8,14 +8,14 @@ order: 2
 
 The minter is a space for holding current inflation information.
 
-- Minter: `0x00 -> ProtocolBuffer(minter)`
+* Minter: `0x00 -> ProtocolBuffer(minter)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc7/proto/cosmos/mint/v1beta1/mint.proto#L8-L19
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L9-L23
 
 ## Params
 
 Minting params are held in the global params store.
 
-- Params: `mint/params -> legacy_amino(params)`
+* Params: `mint/params -> legacy_amino(params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc7/proto/cosmos/mint/v1beta1/mint.proto#L21-L53
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L25-L57

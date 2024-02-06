@@ -30,7 +30,7 @@ and gracefully exit.
 Generally the application binary will restart on exit, but then will execute this BeginBlocker
 again and exit, causing a restart loop. Either the operator can manually install the new software,
 or you can make use of an external watcher daemon to possibly download and then switch binaries,
-also potentially doing a backup. An example of such a daemon is https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc5/cosmovisor
+also potentially doing a backup. An example of such a daemon is https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor
 described below under "Automation".
 
 When the binary restarts with the upgraded version (here v0.40.0), it will detect we have registered the
@@ -110,10 +110,10 @@ to lose connectivity with the exiting nodes, thus this module prefers to just ha
 
 # Automation and Plan.Info
 
-We have deprecated calling out to scripts, instead with propose https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc5/cosmovisor
+We have deprecated calling out to scripts, instead with propose https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor
 as a model for a watcher daemon that can launch simd as a subprocess and then read the upgrade log message
 to swap binaries as needed. You can pass in information into Plan.Info according to the format
-specified here https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc5/cosmovisor/README.md#auto-download .
+specified here https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor/README.md#auto-download .
 This will allow a properly configured cosmsod daemon to auto-download new binaries and auto-upgrade.
 As noted there, this is intended more for full nodes than validators.
 

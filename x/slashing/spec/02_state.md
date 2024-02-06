@@ -14,7 +14,7 @@ Proposers are incentivized to include precommits from all validators in the Tend
 by receiving additional fees proportional to the difference between the voting
 power included in the `LastCommitInfo` and +2/3 (see [fee distribution](x/distribution/spec/03_begin_block.md)).
 
-```
+```go
 type LastCommitInfo struct {
 	Round int32
 	Votes []VoteInfo
@@ -27,8 +27,8 @@ number of blocks by being automatically jailed, potentially slashed, and unbonde
 Information about validator's liveness activity is tracked through `ValidatorSigningInfo`.
 It is indexed in the store as follows:
 
-- ValidatorSigningInfo: `0x01 | ConsAddrLen (1 byte) | ConsAddress -> ProtocolBuffer(ValSigningInfo)`
-- MissedBlocksBitArray: `0x02 | ConsAddrLen (1 byte) | ConsAddress | LittleEndianUint64(signArrayIndex) -> VarInt(didMiss)` (varint is a number encoding format)
+* ValidatorSigningInfo: `0x01 | ConsAddrLen (1 byte) | ConsAddress -> ProtocolBuffer(ValSigningInfo)`
+* MissedBlocksBitArray: `0x02 | ConsAddrLen (1 byte) | ConsAddress | LittleEndianUint64(signArrayIndex) -> VarInt(didMiss)` (varint is a number encoding format)
 
 The first mapping allows us to easily lookup the recent signing info for a
 validator based on the validator's consensus address.
@@ -48,4 +48,4 @@ bonded validator. The `SignedBlocksWindow` parameter defines the size
 
 The information stored for tracking validator liveness is as follows:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/slashing/v1beta1/slashing.proto#L11-L33
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L12-L33

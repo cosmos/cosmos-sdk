@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -95,24 +94,36 @@ func GenesisStateFromGenFile(genFile string) (genesisState map[string]json.RawMe
 
 // ValidateGenesis validates GenTx transactions
 func ValidateGenesis(genesisState *GenesisState, txJSONDecoder sdk.TxDecoder) error {
-	for i, genTx := range genesisState.GenTxs {
-		var tx sdk.Tx
-		tx, err := txJSONDecoder(genTx)
+	for _, genTx := range genesisState.GenTxs {
+		_, err := ValidateAndGetGenTx(genTx, txJSONDecoder)
 		if err != nil {
 			return err
 		}
-
-		msgs := tx.GetMsgs()
-		if len(msgs) != 1 {
-			return errors.New(
-				"must provide genesis Tx with exactly 1 CreateValidator message")
-		}
-
-		// TODO: abstract back to staking
-		if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
-			return fmt.Errorf(
-				"genesis transaction %v does not contain a MsgCreateValidator", i)
-		}
 	}
 	return nil
+}
+
+// ValidateAndGetGenTx validates the genesis transaction and returns GenTx if valid
+// it cannot verify the signature as it is stateless validation
+func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder) (sdk.Tx, error) {
+	tx, err := txJSONDecoder(genTx)
+	if err != nil {
+		return tx, fmt.Errorf("failed to decode gentx: %s, error: %s", genTx, err)
+	}
+
+	msgs := tx.GetMsgs()
+	if len(msgs) != 1 {
+		return tx, fmt.Errorf("unexpected number of GenTx messages; got: %d, expected: 1", len(msgs))
+	}
+
+	// TODO: abstract back to staking
+	if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
+		return tx, fmt.Errorf("unexpected GenTx message type; expected: MsgCreateValidator, got: %T", msgs[0])
+	}
+
+	if err := msgs[0].ValidateBasic(); err != nil {
+		return tx, fmt.Errorf("invalid GenTx '%s': %s", msgs[0], err)
+	}
+
+	return tx, nil
 }

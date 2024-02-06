@@ -8,8 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -20,6 +21,29 @@ type decimalTestSuite struct {
 
 func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
+}
+
+func TestDecApproxEq(t *testing.T) {
+	// d1 = 0.55, d2 = 0.6, tol = 0.1
+	d1 := sdk.NewDecWithPrec(55, 2)
+	d2 := sdk.NewDecWithPrec(6, 1)
+	tol := sdk.NewDecWithPrec(1, 1)
+
+	require.True(sdk.DecApproxEq(t, d1, d2, tol))
+
+	// d1 = 0.55, d2 = 0.6, tol = 1E-5
+	d1 = sdk.NewDecWithPrec(55, 2)
+	d2 = sdk.NewDecWithPrec(6, 1)
+	tol = sdk.NewDecWithPrec(1, 5)
+
+	require.False(sdk.DecApproxEq(t, d1, d2, tol))
+
+	// d1 = 0.6, d2 = 0.61, tol = 0.01
+	d1 = sdk.NewDecWithPrec(6, 1)
+	d2 = sdk.NewDecWithPrec(61, 2)
+	tol = sdk.NewDecWithPrec(1, 2)
+
+	require.True(sdk.DecApproxEq(t, d1, d2, tol))
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")
@@ -372,6 +396,7 @@ func (s *decimalTestSuite) TestPower() {
 		power    uint64
 		expected sdk.Dec
 	}{
+		{sdk.NewDec(100), 0, sdk.OneDec()},                                                 // 10 ^ (0) => 1.0
 		{sdk.OneDec(), 10, sdk.OneDec()},                                                   // 1.0 ^ (10) => 1.0
 		{sdk.NewDecWithPrec(5, 1), 2, sdk.NewDecWithPrec(25, 2)},                           // 0.5 ^ 2 => 0.25
 		{sdk.NewDecWithPrec(2, 1), 2, sdk.NewDecWithPrec(4, 2)},                            // 0.2 ^ 2 => 0.04
@@ -382,7 +407,13 @@ func (s *decimalTestSuite) TestPower() {
 
 	for i, tc := range testCases {
 		res := tc.input.Power(tc.power)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(sdk.SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+		s.Require().True(tc.expected.Sub(res).Abs().LTE(sdk.SmallestDec()), "unexpected result for test case %d, normal power, input: %v", i, tc.input)
+
+		mutableInput := tc.input
+		mutableInput.PowerMut(tc.power)
+		s.Require().True(tc.expected.Sub(mutableInput).Abs().LTE(sdk.SmallestDec()),
+			"unexpected result for test case %d, input %v", i, tc.input)
+		s.Require().True(res.Equal(tc.input), "unexpected result for test case %d, mutable power, input: %v", i, tc.input)
 	}
 }
 
@@ -402,11 +433,12 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		{sdk.SmallestDec(), 2, sdk.NewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
 		{sdk.SmallestDec(), 3, sdk.MustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
 		{sdk.NewDecWithPrec(1, 8), 3, sdk.MustNewDecFromStr("0.002154434690031900")},           // 1e-8 ^ (1/3) ≈ 0.00215443469
+		{sdk.MustNewDecFromStr("9000002314687921634000000000000000000021394871242000000000000000"), 2, sdk.MustNewDecFromStr("94868342004527103646332858502867.899477053226766107")},
 	}
 
 	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
 	// (i.e. 24, 29, 34, ... give the same result) and never converges enough. The maximum number of
-	// iterations (100) causes the result at iteration 100 to be returned, regardless of convergence.
+	// iterations (300) causes the result at iteration 300 to be returned, regardless of convergence.
 
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)

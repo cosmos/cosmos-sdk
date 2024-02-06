@@ -24,20 +24,22 @@ A typical testing flow might look like the following:
 	type IntegrationTestSuite struct {
 		suite.Suite
 
-		cfg     testutil.Config
-		network *testutil.Network
+		cfg     network.Config
+		network *network.Network
 	}
 
 	func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Log("setting up integration test suite")
 
-		cfg := testutil.DefaultConfig()
+		cfg := network.DefaultConfig()
 		cfg.NumValidators = 1
-
 		s.cfg = cfg
-		s.network = testutil.New(s.T(), cfg)
 
-		_, err := s.network.WaitForHeight(1)
+		var err error
+		s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
+		s.Require().NoError(err)
+
+		_, err = s.network.WaitForHeight(1)
 		s.Require().NoError(err)
 	}
 

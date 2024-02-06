@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,7 +19,7 @@ var (
 
 type coinTestSuite struct {
 	suite.Suite
-	ca0, ca1, ca2, cm0, cm1, cm2 sdk.Coin
+	ca0, ca1, ca2, ca4, cm0, cm1, cm2, cm4 sdk.Coin
 }
 
 func TestCoinTestSuite(t *testing.T) {
@@ -26,12 +27,13 @@ func TestCoinTestSuite(t *testing.T) {
 }
 
 func (s *coinTestSuite) SetupSuite() {
-	s.T().Parallel()
 	zero := sdk.NewInt(0)
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
-	s.ca0, s.ca1, s.ca2 = sdk.Coin{testDenom1, zero}, sdk.Coin{testDenom1, one}, sdk.Coin{testDenom1, two}
-	s.cm0, s.cm1, s.cm2 = sdk.Coin{testDenom2, zero}, sdk.Coin{testDenom2, one}, sdk.Coin{testDenom2, two}
+	four := sdk.NewInt(4)
+
+	s.ca0, s.ca1, s.ca2, s.ca4 = sdk.NewCoin(testDenom1, zero), sdk.NewCoin(testDenom1, one), sdk.NewCoin(testDenom1, two), sdk.NewCoin(testDenom1, four)
+	s.cm0, s.cm1, s.cm2, s.cm4 = sdk.NewCoin(testDenom2, zero), sdk.NewCoin(testDenom2, one), sdk.NewCoin(testDenom2, two), sdk.NewCoin(testDenom2, four)
 }
 
 // ----------------------------------------------------------------------------
@@ -96,6 +98,7 @@ func (s *coinTestSuite) TestCoinIsValid() {
 		{sdk.Coin{loremIpsum, sdk.OneInt()}, false},
 		{sdk.Coin{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.OneInt()}, true},
 		{sdk.Coin{"atOm", sdk.OneInt()}, true},
+		{sdk.Coin{"x:y-z.1_2", sdk.OneInt()}, true},
 		{sdk.Coin{"     ", sdk.OneInt()}, false},
 	}
 
@@ -222,6 +225,58 @@ func (s *coinTestSuite) TestSubCoinAmount() {
 	}
 }
 
+func (s *coinTestSuite) TestMulIntCoins() {
+	testCases := []struct {
+		input       sdk.Coins
+		multiplier  sdk.Int
+		expected    sdk.Coins
+		shouldPanic bool
+	}{
+		{sdk.Coins{s.ca2}, sdk.NewInt(0), sdk.Coins{s.ca0}, true},
+		{sdk.Coins{s.ca2}, sdk.NewInt(2), sdk.Coins{s.ca4}, false},
+		{sdk.Coins{s.ca1, s.cm2}, sdk.NewInt(2), sdk.Coins{s.ca2, s.cm4}, false},
+	}
+
+	assert := s.Assert()
+	for i, tc := range testCases {
+		tc := tc
+		if tc.shouldPanic {
+			assert.Panics(func() { tc.input.MulInt(tc.multiplier) })
+		} else {
+			res := tc.input.MulInt(tc.multiplier)
+			assert.True(res.IsValid())
+			assert.Equal(tc.expected, res, "multiplication of coins is incorrect, tc #%d", i)
+		}
+	}
+}
+
+func (s *coinTestSuite) TestQuoIntCoins() {
+	testCases := []struct {
+		input       sdk.Coins
+		divisor     sdk.Int
+		expected    sdk.Coins
+		isValid     bool
+		shouldPanic bool
+	}{
+		{sdk.Coins{s.ca2, s.ca1}, sdk.NewInt(0), sdk.Coins{s.ca0, s.ca0}, true, true},
+		{sdk.Coins{s.ca2}, sdk.NewInt(4), sdk.Coins{s.ca0}, false, false},
+		{sdk.Coins{s.ca2, s.cm4}, sdk.NewInt(2), sdk.Coins{s.ca1, s.cm2}, true, false},
+		{sdk.Coins{s.ca4}, sdk.NewInt(2), sdk.Coins{s.ca2}, true, false},
+	}
+
+	assert := s.Assert()
+	for i, tc := range testCases {
+		tc := tc
+		if tc.shouldPanic {
+			assert.Panics(func() { tc.input.QuoInt(tc.divisor) })
+		} else {
+			res := tc.input.QuoInt(tc.divisor)
+			assert.Equal(tc.isValid, res.IsValid())
+			assert.Equal(tc.expected, res, "quotient of coins is incorrect, tc #%d", i)
+		}
+	}
+}
+
 func (s *coinTestSuite) TestIsGTECoin() {
 	cases := []struct {
 		inputOne sdk.Coin
@@ -231,6 +286,7 @@ func (s *coinTestSuite) TestIsGTECoin() {
 	}{
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true, false},
 		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false, false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
 	}
 
@@ -241,6 +297,30 @@ func (s *coinTestSuite) TestIsGTECoin() {
 		} else {
 			res := tc.inputOne.IsGTE(tc.inputTwo)
 			s.Require().Equal(tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
+		}
+	}
+}
+
+func (s *coinTestSuite) TestIsLTECoin() {
+	cases := []struct {
+		inputOne sdk.Coin
+		inputTwo sdk.Coin
+		expected bool
+		panics   bool
+	}{
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
+		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), false, false},
+	}
+
+	for tcIndex, tc := range cases {
+		tc := tc
+		if tc.panics {
+			s.Require().Panics(func() { tc.inputOne.IsLTE(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsLTE(tc.inputTwo)
+			s.Require().Equal(tc.expected, res, "coin LTE relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }
@@ -429,21 +509,50 @@ func (s *coinTestSuite) TestEqualCoins() {
 
 func (s *coinTestSuite) TestAddCoins() {
 	cases := []struct {
+		name     string
 		inputOne sdk.Coins
 		inputTwo sdk.Coins
 		expected sdk.Coins
 	}{
-		{sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca2, s.cm2}},
-		{sdk.Coins{s.ca0, s.cm1}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.cm1}},
-		{sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2}},
-		{sdk.Coins{s.ca1}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca2, s.cm2}},
-		{sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins(nil)},
+		{"{1atom,1muon}+{1atom,1muon}", sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca2, s.cm2}},
+		{"{0atom,1muon}+{0atom,0muon}", sdk.Coins{s.ca0, s.cm1}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.cm1}},
+		{"{2atom}+{0muon}", sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2}},
+		{"{1atom}+{1atom,2muon}", sdk.Coins{s.ca1}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca2, s.cm2}},
+		{"{0atom,0muon}+{0atom,0muon}", sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins(nil)},
 	}
 
-	for tcIndex, tc := range cases {
-		res := tc.inputOne.Add(tc.inputTwo...)
-		s.Require().True(res.IsValid())
-		s.Require().Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			res := tc.inputOne.Add(tc.inputTwo...)
+			require.True(t, res.IsValid(), fmt.Sprintf("%s + %s = %s", tc.inputOne, tc.inputTwo, res))
+			require.Equal(t, tc.expected, res, "sum of coins is incorrect")
+		})
+	}
+}
+
+// Tests that even if coins with repeated denominations are passed into .Add that they
+// are correctly coalesced. Please see issue https://github.com/cosmos/cosmos-sdk/issues/13234
+func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
+	A := sdk.Coins{
+		{"den", sdk.NewInt(2)},
+		{"den", sdk.NewInt(3)},
+	}
+	B := sdk.Coins{
+		{"den", sdk.NewInt(3)},
+		{"den", sdk.NewInt(2)},
+		{"den", sdk.NewInt(1)},
+	}
+
+	A = A.Sort()
+	B = B.Sort()
+	got := A.Add(B...)
+
+	want := sdk.Coins{
+		{"den", sdk.NewInt(11)},
+	}
+
+	if !got.IsEqual(want) {
+		t.Fatalf("Wrong result\n\tGot:   %s\n\tWant: %s", got, want)
 	}
 }
 
@@ -469,12 +578,36 @@ func (s *coinTestSuite) TestSubCoins() {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.shouldPanic {
-			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
+			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo...) })
 		} else {
-			res := tc.inputOne.Sub(tc.inputTwo)
+			res := tc.inputOne.Sub(tc.inputTwo...)
 			assert.True(res.IsValid())
 			assert.Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", i)
 		}
+	}
+}
+
+func (s *coinTestSuite) TestSafeSubCoin() {
+	cases := []struct {
+		inputOne  sdk.Coin
+		inputTwo  sdk.Coin
+		expected  sdk.Coin
+		expErrMsg string
+	}{
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), sdk.NewInt64Coin(testDenom1, 1), "invalid coin denoms"},
+		{sdk.NewInt64Coin(testDenom1, 10), sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 9), ""},
+		{sdk.NewInt64Coin(testDenom1, 5), sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom1, 5), ""},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 5), sdk.Coin{}, "negative coin amount"},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		res, err := tc.inputOne.SafeSub(tc.inputTwo)
+		if err != nil {
+			s.Require().Contains(err.Error(), tc.expErrMsg)
+			return
+		}
+		s.Require().Equal(tc.expected, res)
 	}
 }
 
@@ -752,7 +885,7 @@ func (s *coinTestSuite) TestParseCoins() {
 		{"2 3foo, 97 bar", false, nil},                      // 3foo is invalid coin name
 		{"11me coin, 12you coin", false, nil},               // no spaces in coin names
 		{"1.2btc", true, sdk.Coins{{"btc", sdk.NewInt(1)}}}, // amount can be decimal, will get truncated
-		{"5foo:bar", false, nil},                            // invalid separator
+		{"5foo:bar", true, sdk.Coins{{"foo:bar", sdk.NewInt(5)}}},
 		{"10atom10", true, sdk.Coins{{"atom10", sdk.NewInt(10)}}},
 		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},
 		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(50)}}},
@@ -832,7 +965,8 @@ func (s *coinTestSuite) TestSortCoins() {
 	}
 }
 
-func (s *coinTestSuite) TestAmountOf() {
+func (s *coinTestSuite) TestSearch() {
+	require := s.Require()
 	case0 := sdk.Coins{}
 	case1 := sdk.Coins{
 		sdk.NewInt64Coin("gold", 0),
@@ -850,7 +984,7 @@ func (s *coinTestSuite) TestAmountOf() {
 		sdk.NewInt64Coin("gas", 8),
 	}
 
-	cases := []struct {
+	amountOfCases := []struct {
 		coins           sdk.Coins
 		amountOf        int64
 		amountOfSpace   int64
@@ -865,13 +999,38 @@ func (s *coinTestSuite) TestAmountOf() {
 		{case4, 0, 0, 8, 0, 0},
 	}
 
-	for _, tc := range cases {
-		s.Require().Equal(sdk.NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"))
-		s.Require().Equal(sdk.NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"))
-		s.Require().Equal(sdk.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"))
-	}
+	s.Run("AmountOf", func() {
+		for i, tc := range amountOfCases {
+			require.Equal(sdk.NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"), i)
+			require.Equal(sdk.NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"), i)
+			require.Equal(sdk.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"), i)
+		}
+		require.Panics(func() { amountOfCases[0].coins.AmountOf("10Invalid") })
+	})
 
-	s.Require().Panics(func() { cases[0].coins.AmountOf("10Invalid") })
+	zeroCoin := sdk.Coin{}
+	findCases := []struct {
+		coins        sdk.Coins
+		denom        string
+		expectedOk   bool
+		expectedCoin sdk.Coin
+	}{
+		{case0, "any", false, zeroCoin},
+		{case1, "other", false, zeroCoin},
+		{case1, "gold", true, case1[0]},
+		{case4, "gas", true, case4[0]},
+		{case2, "gas", true, case2[0]},
+		{case2, "mineral", true, case2[1]},
+		{case2, "tree", true, case2[2]},
+		{case2, "other", false, zeroCoin},
+	}
+	s.Run("Find", func() {
+		for i, tc := range findCases {
+			ok, c := tc.coins.Find(tc.denom)
+			require.Equal(tc.expectedOk, ok, i)
+			require.Equal(tc.expectedCoin, c, i)
+		}
+	})
 }
 
 func (s *coinTestSuite) TestCoinsIsAnyGTE() {

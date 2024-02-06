@@ -9,9 +9,10 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -22,13 +23,16 @@ type KeeperTestSuite struct {
 	homeDir string
 	app     *simapp.SimApp
 	ctx     sdk.Context
+	msgSrvr types.MsgServer
+	addrs   []sdk.AccAddress
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(s.T(), false)
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	app.UpgradeKeeper = keeper.NewKeeper( // recreate keeper in order to use a custom home path
 		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir, app.BaseApp,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -37,6 +41,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		Time:   time.Now(),
 		Height: 10,
 	})
+	s.msgSrvr = keeper.NewMsgServerImpl(s.app.UpgradeKeeper)
+	s.addrs = simapp.AddTestAddrsIncremental(app, s.ctx, 1, sdk.NewInt(30000000))
 }
 
 func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
@@ -44,16 +50,17 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 	_, err := s.app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	s.Require().NoError(err)
 
-	expected := store.UpgradeInfo{
+	expected := types.Plan{
 		Name:   "test_upgrade",
 		Height: 100,
 	}
 
 	// create an upgrade info file
-	s.Require().NoError(s.app.UpgradeKeeper.DumpUpgradeInfoToDisk(expected.Height, expected.Name))
+	s.Require().NoError(s.app.UpgradeKeeper.DumpUpgradeInfoToDisk(101, expected))
 
 	ui, err := s.app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	s.Require().NoError(err)
+	expected.Height = 101
 	s.Require().Equal(expected, ui)
 }
 
@@ -240,6 +247,43 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	require.Equal("", name)
 	require.Equal(int64(0), height)
 
+	keeper.SetUpgradeHandler("test0", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	keeper.ApplyUpgrade(s.ctx, types.Plan{
+		Name:   "test0",
+		Height: 10,
+	})
+
+	s.T().Log("verify valid upgrade name and height")
+	name, height = keeper.GetLastCompletedUpgrade(s.ctx)
+	require.Equal("test0", name)
+	require.Equal(int64(10), height)
+
+	keeper.SetUpgradeHandler("test1", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	newCtx := s.ctx.WithBlockHeight(15)
+	keeper.ApplyUpgrade(newCtx, types.Plan{
+		Name:   "test1",
+		Height: 15,
+	})
+
+	s.T().Log("verify valid upgrade name and height with multiple upgrades")
+	name, height = keeper.GetLastCompletedUpgrade(newCtx)
+	require.Equal("test1", name)
+	require.Equal(int64(15), height)
+}
+
+// This test ensures that `GetLastDoneUpgrade` always returns the last upgrade according to the block height
+// it was executed at, rather than using an ordering based on upgrade names.
+func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
+	keeper := s.app.UpgradeKeeper
+	require := s.Require()
+
+	// apply first upgrade
 	keeper.SetUpgradeHandler("test-v0.9", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		return vm, nil
 	})
@@ -249,11 +293,11 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 		Height: 10,
 	})
 
-	s.T().Log("verify valid upgrade name and height")
-	name, height = keeper.GetLastCompletedUpgrade(s.ctx)
+	name, height := keeper.GetLastCompletedUpgrade(s.ctx)
 	require.Equal("test-v0.9", name)
 	require.Equal(int64(10), height)
 
+	// apply second upgrade
 	keeper.SetUpgradeHandler("test-v0.10", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		return vm, nil
 	})
@@ -264,7 +308,6 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 		Height: 15,
 	})
 
-	s.T().Log("verify valid upgrade name and height with multiple upgrades")
 	name, height = keeper.GetLastCompletedUpgrade(newCtx)
 	require.Equal("test-v0.10", name)
 	require.Equal(int64(15), height)

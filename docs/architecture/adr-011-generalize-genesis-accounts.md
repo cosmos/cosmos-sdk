@@ -2,11 +2,11 @@
 
 ## Changelog
 
-- 2019-08-30: initial draft
+* 2019-08-30: initial draft
 
 ## Context
 
-Currently, the SDK allows for custom account types; the `auth` keeper stores any type fulfilling its `Account` interface. However `auth` does not handle exporting or loading accounts to/from a genesis file, this is done by `genaccounts`, which only handles one of 4 concrete account types (`BaseAccount`, `ContinuousVestingAccount`, `DelayedVestingAccount` and `ModuleAccount`).
+Currently, the Cosmos SDK allows for custom account types; the `auth` keeper stores any type fulfilling its `Account` interface. However `auth` does not handle exporting or loading accounts to/from a genesis file, this is done by `genaccounts`, which only handles one of 4 concrete account types (`BaseAccount`, `ContinuousVestingAccount`, `DelayedVestingAccount` and `ModuleAccount`).
 
 Projects desiring to use custom accounts (say custom vesting accounts) need to fork and modify `genaccounts`.
 
@@ -145,8 +145,8 @@ This will be moved to `auth`. We will leave it to projects to write their own co
 
 Under the new scheme, module and vesting account types need some minor updates:
 
-- Type registration on `auth`'s codec (shown above)
-- A `Validate` method for each `Account` concrete type
+* Type registration on `auth`'s codec (shown above)
+* A `Validate` method for each `Account` concrete type
 
 ## Status
 
@@ -156,15 +156,15 @@ Proposed
 
 ### Positive
 
-- custom accounts can be used without needing to fork `genaccounts`
-- reduction in lines of code
+* custom accounts can be used without needing to fork `genaccounts`
+* reduction in lines of code
 
 ### Negative
 
 ### Neutral
 
-- `genaccounts` module no longer exists
-- accounts in genesis files are stored under `accounts` in `auth` rather than in the `genaccounts` module.
+* `genaccounts` module no longer exists
+* accounts in genesis files are stored under `accounts` in `auth` rather than in the `genaccounts` module.
 -`add-genesis-account` cli command now in `auth`
 
 ## References

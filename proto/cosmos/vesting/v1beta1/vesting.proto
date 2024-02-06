@@ -14,22 +14,14 @@ message BaseVestingAccount {
   option (gogoproto.goproto_stringer) = false;
 
   cosmos.auth.v1beta1.BaseAccount base_account       = 1 [(gogoproto.embed) = true];
-  repeated cosmos.base.v1beta1.Coin original_vesting = 2 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"original_vesting\""
-  ];
-  repeated cosmos.base.v1beta1.Coin delegated_free = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"delegated_free\""
-  ];
-  repeated cosmos.base.v1beta1.Coin delegated_vesting = 4 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"delegated_vesting\""
-  ];
-  int64 end_time = 5 [(gogoproto.moretags) = "yaml:\"end_time\""];
+  repeated cosmos.base.v1beta1.Coin original_vesting = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin delegated_free = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin delegated_vesting = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // Vesting end time, as unix timestamp (in seconds).
+  int64 end_time = 5;
 }
 
 // ContinuousVestingAccount implements the VestingAccount interface. It
@@ -39,7 +31,8 @@ message ContinuousVestingAccount {
   option (gogoproto.goproto_stringer) = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
-  int64              start_time           = 2 [(gogoproto.moretags) = "yaml:\"start_time\""];
+  // Vesting start time, as unix timestamp (in seconds).
+  int64              start_time           = 2;
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
@@ -59,6 +52,7 @@ message DelayedVestingAccount {
 message Period {
   option (gogoproto.goproto_stringer) = false;
 
+  // Period duration in seconds.
   int64    length                          = 1;
   repeated cosmos.base.v1beta1.Coin amount = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
@@ -71,9 +65,8 @@ message PeriodicVestingAccount {
   option (gogoproto.goproto_stringer) = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
-  int64              start_time           = 2 [(gogoproto.moretags) = "yaml:\"start_time\""];
-  // unlocking schedule relative to the BaseVestingAccount start_time.
-  repeated Period vesting_periods = 3 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
+  int64              start_time           = 2;
+  repeated Period    vesting_periods      = 3 [(gogoproto.nullable) = false];
 }
 
 // PermanentLockedAccount implements the VestingAccount interface. It does

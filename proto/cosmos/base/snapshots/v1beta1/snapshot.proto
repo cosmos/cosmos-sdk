@@ -20,6 +20,8 @@ message Metadata {
 }
 
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
+//
+// Since: cosmos-sdk 0.46
 message SnapshotItem {
   // item is the specific type of snapshot item.
   oneof item {
@@ -27,15 +29,21 @@ message SnapshotItem {
     SnapshotIAVLItem         iavl              = 2 [(gogoproto.customname) = "IAVL"];
     SnapshotExtensionMeta    extension         = 3;
     SnapshotExtensionPayload extension_payload = 4;
+    SnapshotKVItem           kv                = 5 [(gogoproto.customname) = "KV"];
+    SnapshotSchema           schema            = 6;
   }
 }
 
 // SnapshotStoreItem contains metadata about a snapshotted store.
+//
+// Since: cosmos-sdk 0.46
 message SnapshotStoreItem {
   string name = 1;
 }
 
 // SnapshotIAVLItem is an exported IAVL node.
+//
+// Since: cosmos-sdk 0.46
 message SnapshotIAVLItem {
   bytes key   = 1;
   bytes value = 2;
@@ -46,12 +54,31 @@ message SnapshotIAVLItem {
 }
 
 // SnapshotExtensionMeta contains metadata about an external snapshotter.
+//
+// Since: cosmos-sdk 0.46
 message SnapshotExtensionMeta {
   string name   = 1;
   uint32 format = 2;
 }
 
 // SnapshotExtensionPayload contains payloads of an external snapshotter.
+//
+// Since: cosmos-sdk 0.46
 message SnapshotExtensionPayload {
   bytes payload = 1;
+}
+
+// SnapshotKVItem is an exported Key/Value Pair
+//
+// Since: cosmos-sdk 0.46
+message SnapshotKVItem {
+  bytes key   = 1;
+  bytes value = 2;
+}
+
+// SnapshotSchema is an exported schema of smt store
+//
+// Since: cosmos-sdk 0.46
+message SnapshotSchema {
+  repeated bytes keys = 1;
 }

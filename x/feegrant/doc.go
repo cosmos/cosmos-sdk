@@ -5,7 +5,7 @@ fees from one account (key) to another account (key).
 Effectively, this allows for a user to pay fees using the balance of an account
 different from their own. Example use cases would be allowing a key on a device to
 pay for fees using a master wallet, or a third party service allowing users to
-pay for transactions without ever really holding their own tokens. This package
+pay for transactions without ever really holding their own coins. This package
 provides ways for specifying fee allowances such that authorizing fee payment to
 another account can be done with clear and safe restrictions.
 

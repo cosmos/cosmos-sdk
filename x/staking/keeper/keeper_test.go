@@ -23,10 +23,11 @@ type KeeperTestSuite struct {
 	addrs       []sdk.AccAddress
 	vals        []types.Validator
 	queryClient types.QueryClient
+	msgServer   types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	querier := keeper.Querier{Keeper: app.StakingKeeper}
@@ -34,6 +35,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
+
+	suite.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
 	header := tmproto.Header{
@@ -52,7 +55,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func TestParams(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	expParams := types.DefaultParams()

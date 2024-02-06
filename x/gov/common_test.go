@@ -6,21 +6,31 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 var (
 	valTokens           = sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
-	TestProposal        = types.NewTextProposal("Test", "description")
+	TestProposal        = v1beta1.NewTextProposal("Test", "description")
 	TestDescription     = stakingtypes.NewDescription("T", "E", "S", "T", "Z")
 	TestCommissionRates = stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
+
+// mkTestLegacyContent creates a MsgExecLegacyContent for testing purposes.
+func mkTestLegacyContent(t *testing.T) *v1.MsgExecLegacyContent {
+	msgContent, err := v1.NewLegacyContent(TestProposal, authtypes.NewModuleAddress(types.ModuleName).String())
+	require.NoError(t, err)
+
+	return msgContent
+}
 
 // SortAddresses - Sorts Addresses
 func SortAddresses(addrs []sdk.AccAddress) {
@@ -68,30 +78,8 @@ func SortByteArrays(src [][]byte) [][]byte {
 	return sorted
 }
 
-const contextKeyBadProposal = "contextKeyBadProposal"
-
 var pubkeys = []cryptotypes.PubKey{
 	ed25519.GenPrivKey().PubKey(),
 	ed25519.GenPrivKey().PubKey(),
 	ed25519.GenPrivKey().PubKey(),
-}
-
-func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
-	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
-
-	for i := 0; i < len(addrs); i++ {
-		valTokens := sdk.TokensFromConsensusPower(powerAmt[i], sdk.DefaultPowerReduction)
-		valCreateMsg, err := stakingtypes.NewMsgCreateValidator(
-			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
-			TestDescription, TestCommissionRates, sdk.OneInt(),
-		)
-		require.NoError(t, err)
-		handleAndCheck(t, stakingHandler, ctx, valCreateMsg)
-	}
-}
-
-func handleAndCheck(t *testing.T, h sdk.Handler, ctx sdk.Context, msg sdk.Msg) {
-	res, err := h(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
 }

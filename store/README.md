@@ -13,7 +13,7 @@ type Store struct {
 
 ### Get
 
-`Store.Get()` checks `Store.cache` first in order to find if there is any cached value associated with the key. If the value exists, the function returns it. If not, the function calls `Store.parent.Get()`, sets the key-value pair to the `Store.cache`, and returns it.
+`Store.Get()` checks `Store.cache` first in order to find if there is any cached value associated with the key. If the value exists, the function returns it. If not, the function calls `Store.parent.Get()`, sets the key-value pair in the `Store.cache`, and returns it.
 
 ### Set
 
@@ -56,7 +56,7 @@ type Store struct {
 2. Iteration efficiently returns the sorted elements within the range
 3. Each tree version is immutable and can be retrieved even after a commit(depending on the pruning settings)
 
-Specification and implementation of IAVL tree can be found in [https://github.com/tendermint/iavl].
+Specification and implementation of IAVL tree can be found in https://github.com/cosmos/iavl.
 
 ## GasKV
 

@@ -11,6 +11,7 @@ const (
 	AttributeKeyReason       = "reason"
 	AttributeKeyJailed       = "jailed"
 	AttributeKeyMissedBlocks = "missed_blocks"
+	AttributeKeyBurnedCoins  = "burned_coins"
 
 	AttributeValueDoubleSign       = "double_sign"
 	AttributeValueMissingSignature = "missing_signature"

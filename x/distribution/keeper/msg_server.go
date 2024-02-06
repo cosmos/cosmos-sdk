@@ -84,7 +84,7 @@ func (k msgServer) WithdrawDelegatorReward(goCtx context.Context, msg *types.Msg
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	)
-	return &types.MsgWithdrawDelegatorRewardResponse{}, nil
+	return &types.MsgWithdrawDelegatorRewardResponse{Amount: amount}, nil
 }
 
 func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types.MsgWithdrawValidatorCommission) (*types.MsgWithdrawValidatorCommissionResponse, error) {
@@ -119,7 +119,7 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 		),
 	)
 
-	return &types.MsgWithdrawValidatorCommissionResponse{}, nil
+	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
 func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {

@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_Existing() {
 
 func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_NonExisting() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc := simapp.MakeTestEncodingConfig().Marshaler
+	cdc := simapp.MakeTestEncodingConfig().Codec
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)

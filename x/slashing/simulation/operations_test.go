@@ -8,11 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -22,15 +28,13 @@ import (
 
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
-	app, ctx := createTestApp(false)
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	app, ctx, accs := createTestApp(t, false, r, 3)
 	ctx.WithChainID("test-chain")
 
 	cdc := app.AppCodec()
 	appParams := make(simtypes.AppParams)
-
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accs := simtypes.RandomAccounts(r, 3)
 
 	expected := []struct {
 		weight     int
@@ -53,14 +57,15 @@ func TestWeightedOperations(t *testing.T) {
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func TestSimulateMsgUnjail(t *testing.T) {
-	app, ctx := createTestApp(false)
+	// setup 3 accounts
+	s := rand.NewSource(5)
+	r := rand.New(s)
+	app, ctx, accounts := createTestApp(t, false, r, 3)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
-	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := getTestingAccounts(t, r, app, ctx, 3)
+	// remove genesis validator account
+	accounts = accounts[1:]
 
 	// setup accounts[0] as validator0
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
@@ -98,35 +103,49 @@ func TestSimulateMsgUnjail(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgUnjail, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddr)
+	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorAddr)
 	require.Len(t, futureOperations, 0)
 }
 
 // returns context and an app with updated mint keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
+func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.SimApp, sdk.Context, []simtypes.Account) {
+	accounts := simtypes.RandomAccounts(r, n)
+	// create validator set with single validator
+	account := accounts[0]
+	tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
+	require.NoError(t, err)
+	validator := tmtypes.NewValidator(tmPk, 1)
+
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balance := banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+	}
+
+	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
-
-	return app, ctx
-}
-
-func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.Context, n int) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, n)
-
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
+	// remove genesis validator account
+	accs := accounts[1:]
+
 	// add coins to the accounts
-	for _, account := range accounts {
+	for _, account := range accs {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
+		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
-	return accounts
+	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
+	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
+
+	return app, ctx, accounts
 }
 
 func getTestingValidator0(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {

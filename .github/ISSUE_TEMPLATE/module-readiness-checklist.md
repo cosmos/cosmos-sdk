@@ -10,13 +10,13 @@ This checklist is to be used for tracking the final internal audit of new Cosmos
 
 ### Release Candidate Checklist
 
-The following checklist should be gone through once the module has been fully implemented. This audit should be performed directly on `master`, or preferably on a `alpha` or `beta` release tag that includes the module.
+The following checklist should be gone through once the module has been fully implemented. This audit should be performed directly on `main`, or preferably on a `alpha` or `beta` release tag that includes the module.
 
 The module **should not** be included in any Release Candidate tag until it has passed this checklist.
 
 - [ ] API audit (at least 1 person) (@assignee)
   - [ ] Are Msg and Query methods and types well-named and organized?
-  - [ ] Is everything well documented (inline godoc as well as [`/spec/` folder](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/SPEC-SPEC.md) in module directory)
+  - [ ] Is everything well documented (inline godoc as well as [`/spec/` folder](https://github.com/cosmos/cosmos-sdk/blob/main/docs/spec/SPEC-SPEC.md) in module directory)
 - [ ] State machine audit (at least 2 people) (@assignee1, @assignee2)
   - [ ] Read through MsgServer code and verify correctness upon visual inspection
   - [ ] Ensure all state machine code which could be confusing is properly commented

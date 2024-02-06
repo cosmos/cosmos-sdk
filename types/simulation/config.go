@@ -21,4 +21,7 @@ type Config struct {
 
 	OnOperation   bool // run slow invariants every operation
 	AllInvariants bool // print all failed invariants if a broken invariant is found
+
+	DBBackend   string // custom db backend type
+	BlockMaxGas int64  // custom max gas for block
 }

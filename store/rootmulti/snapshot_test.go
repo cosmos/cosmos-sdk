@@ -12,13 +12,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -211,7 +211,8 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	require.Equal(t, *dummyExtensionItem.GetExtension(), *nextItem.GetExtension())
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
-	for key, sourceStore := range source.GetStores() {
+	for _, key := range source.StoreKeysByName() {
+		sourceStore := source.GetStoreByName(key.Name()).(types.CommitKVStore)
 		targetStore := target.GetStoreByName(key.Name()).(types.CommitKVStore)
 		switch sourceStore.GetStoreType() {
 		case types.StoreTypeTransient:
@@ -235,7 +236,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 
 	for i := 0; i < b.N; i++ {
 		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger())
-		for key := range source.GetStores() {
+		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}
 		err := target.LoadLatestVersion()
@@ -270,7 +271,7 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 
 	for i := 0; i < b.N; i++ {
 		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger())
-		for key := range source.GetStores() {
+		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}
 		err := target.LoadLatestVersion()

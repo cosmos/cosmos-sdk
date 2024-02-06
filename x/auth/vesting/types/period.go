@@ -5,8 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/yaml"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // Periods stores all vesting periods passed as part of a PeriodicVestingAccount
@@ -230,7 +231,7 @@ func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (int64, 
 		amountP = amountP.Add(periodsP[iP].Amount...)
 		min := coinsMin(amountP, amountQ)
 		if amount.IsAllLTE(min) {
-			diff := min.Sub(amount)
+			diff := min.Sub(amount...)
 			if !diff.IsZero() {
 				emit(nextTime, diff)
 			}
@@ -245,7 +246,7 @@ func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (int64, 
 		amountQ = amountQ.Add(periodsQ[iQ].Amount...)
 		min := coinsMin(amountP, amountQ)
 		if amount.IsAllLTE(min) {
-			diff := min.Sub(amount)
+			diff := min.Sub(amount...)
 			if !diff.IsZero() {
 				emit(nextTime, diff)
 			}
@@ -261,7 +262,7 @@ func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (int64, 
 		amountQ = amountQ.Add(periodsQ[iQ].Amount...)
 		min := coinsMin(amountP, amountQ)
 		if amount.IsAllLTE(min) {
-			diff := min.Sub(amount)
+			diff := min.Sub(amount...)
 			if !diff.IsZero() {
 				emit(nextTime, diff)
 			}

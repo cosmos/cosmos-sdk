@@ -22,11 +22,11 @@ securely. Typically, an operating system's credential sub-system handles passwor
 private keys storage, and user sessions according to the user's password policies. Here
 is a list of the most popular operating systems and their respective passwords manager:
 
-- macOS (since Mac OS 8.6): [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
-- Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
-- GNU/Linux:
-    - [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
-    - [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
+* macOS (since Mac OS 8.6): [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
+* Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
+* GNU/Linux:
+    * [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
+    * [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
 
 GNU/Linux distributions that use GNOME as default desktop environment typically come with
 [Seahorse](https://wiki.gnome.org/Apps/Seahorse). Users of KDE based distributions are
@@ -110,7 +110,7 @@ The `memory` backend stores keys in memory. The keys are immediately deleted aft
 Make sure you can build your own binary, and replace `simd` with the name of your binary in the snippets.
 :::
 
-Applications developed using the Cosmos SDK come with the `keys` subcommand. For the purpose of this tutorial, we're running the `simd` CLI, which is an application built using the Cosmos SDK for testing and educational purposes. For more information, see [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc3/simapp).
+Applications developed using the Cosmos SDK come with the `keys` subcommand. For the purpose of this tutorial, we're running the `simd` CLI, which is an application built using the Cosmos SDK for testing and educational purposes. For more information, see [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/main/simapp).
 
 You can use `simd keys` for help about the keys command and `simd keys [command] --help` for more information about a particular subcommand.
 
@@ -129,7 +129,7 @@ MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a --keyring-backend test)
 
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!
 
-By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module (in particular its [AnteHandlers](../core/baseapp.md#antehandler)) supports natively these two public key algorithms.
+By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module (in particular its [middlewares](../core/baseapp.md#middleware)) supports natively these two public key algorithms.
 
 ## Next {hide}
 

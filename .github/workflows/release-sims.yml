@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: |
           make build
 
@@ -21,8 +21,8 @@ jobs:
     steps:
       - name: install runsim
         run: |
-          export GO111MODULE="on" && go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v2.1.6
+          export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - uses: actions/cache@v3
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -30,9 +30,10 @@ jobs:
   test-sim-multi-seed-long:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2.1.6
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary

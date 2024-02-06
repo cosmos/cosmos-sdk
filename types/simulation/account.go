@@ -25,8 +25,7 @@ func (acc Account) Equals(acc2 Account) bool {
 	return acc.Address.Equals(acc2.Address)
 }
 
-// RandomAcc picks and returns a random account from an array and returs its
-// position in the array.
+// RandomAcc picks and returns a random account and its index from an array.
 func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {
 	idx := r.Intn(len(accs))
 	return accs[idx], idx

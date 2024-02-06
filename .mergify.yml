@@ -1,5 +1,5 @@
 queue_rules:
-  - name: main
+  - name: default
     conditions:
       - base~=^Agoric
 
@@ -12,7 +12,7 @@ pull_request_rules:
       - label=automerge
     actions:
       queue:
-        name: main
+        name: default
         method: merge
       # commit_message: title+body
   - name: backport patches to Agoric branch

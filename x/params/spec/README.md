@@ -24,6 +24,6 @@ The following contents explains how to use params module for master and user mod
 
 1. **[Keeper](01_keeper.md)**
 2. **[Subspace](02_subspace.md)**
-    - [Key](02_subspace.md#key)
-    - [KeyTable](02_subspace.md#keytable)
-    - [ParamSet](02_subspace.md#paramset)
+    * [Key](02_subspace.md#key)
+    * [KeyTable](02_subspace.md#keytable)
+    * [ParamSet](02_subspace.md#paramset)

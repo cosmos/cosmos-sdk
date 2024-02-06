@@ -2,8 +2,6 @@ module cosmossdk.io/store
 
 go 1.21
 
-toolchain go1.21.6
-
 require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.3.1

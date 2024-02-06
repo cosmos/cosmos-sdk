@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/mempool"
-	"cosmossdk.io/server/v2/core/store"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 )
@@ -28,7 +27,7 @@ func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *Default
 }
 
 func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T] {
-	return func(ctx context.Context, app appmanager.AppManager[T], rm store.ReaderMap, txs []T, req proto.Message) ([]T, error) {
+	return func(ctx context.Context, app appmanager.AppManager[T], txs []T, req proto.Message) ([]T, error) {
 
 		abciReq, ok := req.(*abci.RequestPrepareProposal)
 		if !ok {
@@ -37,7 +36,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T
 
 		var maxBlockGas uint64
 
-		res, err := app.QueryWithState(ctx, rm, &consensusv1.QueryParamsRequest{})
+		res, err := app.Query(ctx, 0, &consensusv1.QueryParamsRequest{})
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +99,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T
 }
 
 func (h *DefaultProposalHandler[T]) ProcessHandler() appmanager.ProcessHandler[T] {
-	return func(ctx context.Context, app appmanager.AppManager[T], txs []T, rm store.ReaderMap, req proto.Message) error {
+	return func(ctx context.Context, app appmanager.AppManager[T], txs []T, req proto.Message) error {
 		// If the mempool is nil we simply return ACCEPT,
 		// because PrepareProposal may have included txs that could fail verification.
 		if h.mempool == nil {
@@ -113,7 +112,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() appmanager.ProcessHandler[T
 			return fmt.Errorf("invalid request type: %T", req)
 		}
 
-		res, err := app.QueryWithState(ctx, rm, &consensusv1.QueryParamsRequest{})
+		res, err := app.Query(ctx, 0, &consensusv1.QueryParamsRequest{})
 		if err != nil {
 			return err
 		}

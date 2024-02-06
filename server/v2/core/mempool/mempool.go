@@ -18,9 +18,6 @@ type Mempool[T transaction.Tx] interface {
 	// closed by the caller.
 	Select(context.Context, []T) Iterator[T]
 
-	// CountTx returns the number of transactions currently in the mempool.
-	CountTx() int
-
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
 	Remove(T) error

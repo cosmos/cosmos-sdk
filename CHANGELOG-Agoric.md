@@ -35,6 +35,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
+## `v0.46.16-alpha.agoric.1` - 2024-02-05
+
+* Agoric/agoric-sdk#8224 Merge [cosmos/cosmos-sdk v0.46.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.16)
+
+### Bug Fixes
+
+* Agoric/agoric-sdk#8719 MsgClawback returns the wrong Type
+
 ## `v0.45.16-alpha.agoric.3` - 2023-12-04
 
 * (vesting) [#342](https://github.com/agoric-labs/cosmos-sdk/pull/342) recipient can return clawback vesting grant to funder

@@ -36,3 +36,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18355](https://github.com/cosmos/cosmos-sdk/pull/18355) Added new versions for `Balance`, `Owner`, `Supply`, `NFT`, `Class` queries that receives request via query string.
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/nft/v0.1.0) - 2023-11-07
+
+
+### API Breaking
+
+* []() `appmodule.Environment` is received on the Keeper to get access to different application services
+

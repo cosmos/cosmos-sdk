@@ -4,7 +4,7 @@ package consensusv1
 import (
 	_ "cosmossdk.io/api/amino"
 	_ "cosmossdk.io/api/cosmos/msg/v1"
-	types "cosmossdk.io/api/tendermint/types"
+	types "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"

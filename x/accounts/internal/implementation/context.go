@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

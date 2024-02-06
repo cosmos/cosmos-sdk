@@ -13,6 +13,8 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -47,7 +49,7 @@ func (i interfaceRegistry) RegisterImplementations(any, ...gogoproto.Message) {}
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(nil, ss, eventService{}, nil, nil, nil, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
+	m, err := NewKeeper(nil, ss, eventService{}, nil, nil, nil, notImplementedMakeCoins, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }
@@ -86,4 +88,10 @@ func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req
 
 func (m mockExec) ResponseNameByRequestName(name string) string {
 	return name + "Response"
+}
+
+// notImplementedMakeCoins is for us developers in case we think we can use the test keeper for testing coins,
+// Spoiler: we can't :(, not without bringing in bank dependencies.
+func notImplementedMakeCoins(_, _ []byte, _ sdk.Coins) (implementation.ProtoMsg, error) {
+	panic("this testing suite does not support coin capabilities ")
 }

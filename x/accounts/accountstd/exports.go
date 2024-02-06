@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 

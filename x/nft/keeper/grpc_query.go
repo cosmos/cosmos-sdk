@@ -35,8 +35,8 @@ func (k Keeper) Balance(ctx context.Context, r *nft.QueryBalanceRequest) (*nft.Q
 
 // BalanceByQueryString return the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 // but receives request via query string.
-func (k Keeper) BalanceByQueryString(goCtx context.Context, r *nft.QueryBalanceByQueryStringRequest) (*nft.QueryBalanceByQueryStringResponse, error) {
-	res, err := k.Balance(goCtx, &nft.QueryBalanceRequest{
+func (k Keeper) BalanceByQueryString(ctx context.Context, r *nft.QueryBalanceByQueryStringRequest) (*nft.QueryBalanceByQueryStringResponse, error) {
+	res, err := k.Balance(ctx, &nft.QueryBalanceRequest{
 		ClassId: r.ClassId,
 		Owner:   r.Owner,
 	})
@@ -172,7 +172,7 @@ func (k Keeper) NFTs(ctx context.Context, r *nft.QueryNFTsRequest) (*nft.QueryNF
 }
 
 // NFT return an NFT based on its class and id.
-func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNFTResponse, error) {
+func (k Keeper) NFT(ctx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNFTResponse, error) {
 	if r == nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}

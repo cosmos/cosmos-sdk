@@ -87,6 +87,11 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 		return nil, err
 	}
 
+	funds := accountstd.Funds(ctx)
+	if !funds.Equal(msg.Amount) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid funding amount, should be equal to vesting amount")
+	}
+
 	if err := validateAmount(msg.Amount); err != nil {
 		return nil, err
 	}

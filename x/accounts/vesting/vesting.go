@@ -39,6 +39,13 @@ var (
 	PERMANENT_VESTING_ACCOUNT  = "permanent-vesting-account"
 )
 
+var (
+	MSG_DELEGATE   = "/cosmos.staking.v1beta1.MsgDelegate"
+	MSG_UNDELEGATE = "/cosmos.staking.v1beta1.MsgUndelegate"
+	MSG_SEND       = "/cosmos.bank.v1beta1.MsgSend"
+	MSG_MULTI_SEND = "/cosmos.bank.v1beta1.MsgMultiSend"
+)
+
 type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, error)
 
 // NewBaseVesting creates a new BaseVesting object.
@@ -229,17 +236,19 @@ func (bva *BaseVesting) ExecuteMessages(
 	hs := bva.headerService.GetHeaderInfo(ctx)
 
 	for _, m := range msg.ExecutionMessages {
-		typeUrl := m.TypeUrl
+		concreateMsg, err := vestingtypes.UnpackAnyRaw(m)
+		if err != nil {
+			return nil, err
+		}
+
+		typeUrl := sdk.MsgTypeURL(concreateMsg)
 		switch typeUrl {
-		case "/cosmos.staking.v1beta1.MsgDelegate":
+		case MSG_DELEGATE:
 			msgDelegate, err := accountstd.UnpackAny[stakingtypes.MsgDelegate](m)
 			if err != nil {
 				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 			}
-
-			// Query account balance for the delegated denom
-			balanceQueryReq := banktypes.NewQueryBalanceRequest(sdk.AccAddress(msgDelegate.DelegatorAddress), msgDelegate.Amount.Denom)
-			resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
+			balance, err := bva.getBalance(ctx, msgDelegate.DelegatorAddress, msgDelegate.Amount.Denom)
 			if err != nil {
 				return nil, err
 			}
@@ -250,14 +259,14 @@ func (bva *BaseVesting) ExecuteMessages(
 
 			err = bva.TrackDelegation(
 				ctx,
-				sdk.Coins{*resp.Balance},
+				sdk.Coins{*balance},
 				vestingCoins,
 				sdk.Coins{msgDelegate.Amount},
 			)
 			if err != nil {
 				return nil, err
 			}
-		case "/cosmos.staking.v1beta1.MsgUndelegate":
+		case MSG_UNDELEGATE:
 			msgUndelegate, err := accountstd.UnpackAny[stakingtypes.MsgUndelegate](m)
 			if err != nil {
 				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
@@ -267,60 +276,39 @@ func (bva *BaseVesting) ExecuteMessages(
 			if err != nil {
 				return nil, err
 			}
-		case "/cosmos.bank.v1beta1.MsgSend", "/cosmos.bank.v1beta1.MsgMultiSend":
-			var sender string
-			var amount sdk.Coins
-			if typeUrl == "/cosmos.bank.v1beta1.MsgSend" {
-				msgSend, err := accountstd.UnpackAny[banktypes.MsgSend](m)
-				if err != nil {
-					return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-				}
-				sender = msgSend.FromAddress
-				amount = msgSend.Amount
-			} else {
-				msgMultiSend, err := accountstd.UnpackAny[banktypes.MsgMultiSend](m)
-				if err != nil {
-					return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-				}
-				sender = msgMultiSend.Inputs[0].Address
-				amount = msgMultiSend.Inputs[0].Coins
+		case MSG_SEND:
+			msgSend, err := accountstd.UnpackAny[banktypes.MsgSend](m)
+			if err != nil {
+				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 			}
+			sender := msgSend.FromAddress
+			amount := msgSend.Amount
 
 			vestingCoins, err := getVestingFunc(ctx, hs.Time)
 			if err != nil {
 				return nil, err
 			}
 
-			// Get locked token
-			lockedCoins := bva.LockedCoinsFromVesting(ctx, vestingCoins)
+			err = bva.checkTokensSendable(ctx, sender, amount, vestingCoins)
+			if err != nil {
+				return nil, err
+			}
+		case MSG_MULTI_SEND:
+			msgMultiSend, err := accountstd.UnpackAny[banktypes.MsgMultiSend](m)
+			if err != nil {
+				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
+			}
+			sender := msgMultiSend.Inputs[0].Address
+			amount := msgMultiSend.Inputs[0].Coins
 
-			// Check if any sent tokens is exceeds vesting account balances
-			for _, coin := range amount {
-				// Query account balance for the sent denom
-				balanceQueryReq := banktypes.NewQueryBalanceRequest(sdk.AccAddress(sender), coin.Denom)
-				resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
-				if err != nil {
-					return nil, err
-				}
-				balance := resp.Balance
-				locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
+			vestingCoins, err := getVestingFunc(ctx, hs.Time)
+			if err != nil {
+				return nil, err
+			}
 
-				spendable, hasNeg := sdk.Coins{*balance}.SafeSub(locked)
-				if hasNeg {
-					return nil, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
-						"locked amount exceeds account balance funds: %s > %s", locked, balance)
-				}
-
-				if _, hasNeg := spendable.SafeSub(coin); hasNeg {
-					if len(spendable) == 0 {
-						spendable = sdk.Coins{sdk.NewCoin(coin.Denom, math.ZeroInt())}
-					}
-					return nil, errorsmod.Wrapf(
-						sdkerrors.ErrInsufficientFunds,
-						"spendable balance %s is smaller than %s",
-						spendable, coin,
-					)
-				}
+			err = bva.checkTokensSendable(ctx, sender, amount, vestingCoins)
+			if err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -332,6 +320,50 @@ func (bva *BaseVesting) ExecuteMessages(
 	}
 
 	return &account_abstractionv1.MsgExecuteResponse{ExecutionMessagesResponse: responses}, nil
+}
+
+func (bva BaseVesting) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {
+	// Query account balance for the sent denom
+	balanceQueryReq := banktypes.NewQueryBalanceRequest(sdk.AccAddress(sender), denom)
+	resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Balance, nil
+}
+
+func (bva BaseVesting) checkTokensSendable(ctx context.Context, sender string, amount, vestingCoins sdk.Coins) error {
+	// Get locked token
+	lockedCoins := bva.LockedCoinsFromVesting(ctx, vestingCoins)
+
+	// Check if any sent tokens is exceeds vesting account balances
+	for _, coin := range amount {
+		balance, err := bva.getBalance(ctx, sender, coin.Denom)
+		if err != nil {
+			return err
+		}
+		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
+
+		spendable, hasNeg := sdk.Coins{*balance}.SafeSub(locked)
+		if hasNeg {
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
+				"locked amount exceeds account balance funds: %s > %s", locked, balance)
+		}
+
+		if _, hasNeg := spendable.SafeSub(coin); hasNeg {
+			if len(spendable) == 0 {
+				spendable = sdk.Coins{sdk.NewCoin(coin.Denom, math.ZeroInt())}
+			}
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInsufficientFunds,
+				"spendable balance %s is smaller than %s",
+				spendable, coin,
+			)
+		}
+	}
+
+	return nil
 }
 
 // Check the sender of the bundle is the owner of the vesting account

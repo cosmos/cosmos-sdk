@@ -115,6 +115,7 @@ func initFixture(tb testing.TB) *fixture {
 		msr,
 		sdk.Bech32MainPrefix,
 		authority.String(),
+		nil,
 	)
 
 	blockedAddresses := map[string]bool{

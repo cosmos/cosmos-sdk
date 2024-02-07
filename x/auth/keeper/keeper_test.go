@@ -79,6 +79,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
+		nil,
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)

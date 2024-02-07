@@ -73,6 +73,7 @@ func (s *VestingTestSuite) SetupTest() {
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
+		nil,
 	)
 
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)

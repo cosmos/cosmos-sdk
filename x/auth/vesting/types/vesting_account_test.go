@@ -73,6 +73,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
+		nil,
 	)
 }
 

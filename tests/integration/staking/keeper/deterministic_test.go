@@ -97,6 +97,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
+		nil,
 	)
 
 	blockedAddresses := map[string]bool{

@@ -58,6 +58,7 @@ func TestFundsMigration(t *testing.T) {
 		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
+		nil,
 	)
 
 	// create bank keeper

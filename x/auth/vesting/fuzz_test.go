@@ -103,6 +103,7 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
+		nil,
 	)
 
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)

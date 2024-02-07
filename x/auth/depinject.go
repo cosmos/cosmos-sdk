@@ -72,7 +72,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.MsgServiceRouter, in.Config.Bech32Prefix, auth)
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.MsgServiceRouter, in.Config.Bech32Prefix, auth, nil)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

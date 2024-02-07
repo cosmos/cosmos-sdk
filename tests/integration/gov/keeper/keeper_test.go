@@ -83,6 +83,7 @@ func initFixture(tb testing.TB) *fixture {
 		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
+		nil,
 	)
 
 	blockedAddresses := map[string]bool{

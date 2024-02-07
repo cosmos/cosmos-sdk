@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -87,11 +88,12 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 type AccountKeeper struct {
 	addressCodec address.Codec
 
-	storeService store.KVStoreService
-	cdc          codec.Codec
-	permAddrs    map[string]types.PermissionsForAddress
-	bech32Prefix string
-	router       baseapp.MessageRouter
+	storeService  store.KVStoreService
+	cdc           codec.Codec
+	permAddrs     map[string]types.PermissionsForAddress
+	bech32Prefix  string
+	router        baseapp.MessageRouter
+	branchService branch.Service
 
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
@@ -119,6 +121,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 func NewAccountKeeper(
 	cdc codec.Codec, storeService store.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, ac address.Codec, router baseapp.MessageRouter, bech32Prefix, authority string,
+	branchService branch.Service,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -134,6 +137,7 @@ func NewAccountKeeper(
 		proto:         proto,
 		cdc:           cdc,
 		router:        router,
+		branchService: branchService,
 		permAddrs:     permAddrs,
 		authority:     authority,
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -307,39 +311,48 @@ func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress
 			}
 		}
 
-		handler := ak.router.Handler(msg)
-		if handler == nil {
-			wrappedErr := sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
-			value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
-			if err != nil {
-				return nil, err
-			}
-			msgResponses = append(msgResponses, value)
-			continue
-		}
-
-		msgResult, err := handler(sdkCtx, msg)
-		if err != nil {
-			wrappedErr := errorsmod.Wrapf(err, "failed to execute message; message index: %d; message %v", i, msg)
-			value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
-			if err != nil {
-				return nil, err
-			}
-			msgResponses = append(msgResponses, value)
-			continue
-		}
-		if len(msgResult.MsgResponses) > 0 {
-			msgResponse := msgResult.MsgResponses[0]
-			if msgResponse == nil {
-				wrappedErr := sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
+		// define a function to be executed within the isolated context
+		execFunc := func(ctx context.Context) error {
+			// Call the router handler within the isolated context
+			handler := ak.router.Handler(msg)
+			if handler == nil {
+				wrappedErr := sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
 				value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
 				if err != nil {
-					return nil, err
+					return err
 				}
 				msgResponses = append(msgResponses, value)
 			}
-			msgResponses = append(msgResponses, msgResponse)
+			// execute the handler within the isolated context
+			msgResult, err := handler(sdkCtx, msg)
+			if err != nil {
+				wrappedErr := errorsmod.Wrapf(err, "failed to execute message; message index: %d; message %v", i, msg)
+				value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
+				if err != nil {
+					return err
+				}
+				msgResponses = append(msgResponses, value)
+			}
+			if len(msgResult.MsgResponses) > 0 {
+				msgResponse := msgResult.MsgResponses[0]
+				if msgResponse == nil {
+					wrappedErr := sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
+					value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
+					if err != nil {
+						return err
+					}
+					msgResponses = append(msgResponses, value)
+				}
+				msgResponses = append(msgResponses, msgResponse)
+			}
+			return nil
 		}
+
+		// Execute the function within an isolated context provided by the branch service
+		if err := ak.branchService.Execute(ctx, execFunc); err != nil {
+			return nil, err
+		}
+
 	}
 
 	return msgResponses, nil

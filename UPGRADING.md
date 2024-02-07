@@ -77,7 +77,7 @@ transactions in your application:
 To submit an unordered transaction, the client must set the `unordered` flag to
 `true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
 used as a TTL for the transaction and is used to provide replay protection. See
-[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-account.md)
+[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md)
 for more details.
 
 ### Params
@@ -291,7 +291,7 @@ is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
 ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
 methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
 allows an application to define handlers for these methods via `ExtendVoteHandler`
-and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/building-apps/vote-extensions)
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/abci/vote-extensions)
 for more info.
 
 #### Set PreBlocker
@@ -647,7 +647,7 @@ Read more on those interfaces [here](https://docs.cosmos.network/v0.50/building-
 
 * `GetSigners()` is no longer required to be implemented on `Msg` types. The SDK will automatically infer the signers from the `Signer` field on the message. The signer field is required on all messages unless using a custom signer function.
 
-To find out more please read the [signer field](../../build/building-modules/05-protobuf-annotations.md#signer) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation.
+To find out more please read the [signer field](https://github.com/cosmos/cosmos-sdk/blob/main/docs/build/building-modules/05-protobuf-annotations.md) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation.
 <!-- Link to docs once redeployed -->
 
 #### `x/auth`

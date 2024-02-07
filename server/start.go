@@ -654,15 +654,20 @@ you want to test the upgrade handler itself.
 			newChainID := args[0]
 			newOperatorAddress := args[1]
 
-			// Confirmation prompt to prevent accidental modification of state.
-			reader := bufio.NewReader(os.Stdin)
-			fmt.Println("This operation will modify state in your data folder and cannot be undone. Do you want to continue? (y/n)")
-			text, _ := reader.ReadString('\n')
-			response := strings.TrimSpace(strings.ToLower(text))
-			if response != "y" && response != "yes" {
-				fmt.Println("Operation canceled.")
-				return nil
+			skipConfirmation, _ := cmd.Flags().GetBool("skip-confirmation")
+
+			if !skipConfirmation {
+				// Confirmation prompt to prevent accidental modification of state.
+				reader := bufio.NewReader(os.Stdin)
+				fmt.Println("This operation will modify state in your data folder and cannot be undone. Do you want to continue? (y/n)")
+				text, _ := reader.ReadString('\n')
+				response := strings.TrimSpace(strings.ToLower(text))
+				if response != "y" && response != "yes" {
+					fmt.Println("Operation canceled.")
+					return nil
+				}
 			}
+
 			serverCtx.Viper.Set(KeyIsTestnet, true)
 			serverCtx.Viper.Set(KeyNewChainID, newChainID)
 			serverCtx.Viper.Set(KeyNewOpAddr, newOperatorAddress)
@@ -673,6 +678,7 @@ you want to test the upgrade handler itself.
 
 	addStartNodeFlags(cmd, defaultNodeHome)
 	cmd.Flags().String(KeyTriggerTestnetUpgrade, "", "If set (example: \"v21\"), triggers the v21 upgrade handler to run on the first block of the testnet")
+	cmd.Flags().Bool("skip-confirmation", false, "Skip the confirmation prompt")
 	return cmd
 }
 

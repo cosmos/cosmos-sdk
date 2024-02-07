@@ -42,48 +42,54 @@ objects on-chain.
 
 ## Decision
 
-We propose to adopt a similar mechanism to Solana's [state rent algorithm](https://docs.solanalabs.com/implemented-proposals/rent).
+We propose to adopt a similar mechanism to Solana's [state rent algorithm](https://docs.solanalabs.com/implemented-proposals/rent). Specifically, we propose that unclaimed account balance's be charged some
+dynamic rent, set by governance and controlled by on-chain parameters every epoch.
 
-## Consequences
+When a user sends tokens to a non-existent account, only that account's balance
+will exist until the recipient sends their first transaction. All non-existent
+account balance's will be indexed using a collections map, indexed by the amount
+and address.
 
-> This section describes the resulting context, after applying the decision. All
-> consequences should be listed here, not just the "positive" ones. A particular
-> decision may have positive, negative, and neutral consequences, but all of them
-> affect the team and project in the future.
+We define some threshold `MinBalance`, such that all balances for non-existent
+accounts that fall below this threshold, will be charged a dynamic rent fee every
+configurable epoch, `E`. If the non-existent account's balance is no longer
+sufficient to cover the rent or the balance reaches zero, the balance will be
+permanently deleted from state. In other words, the recipient of the balance must
+send their first transaction prior to being delinquent, otherwise the recipient
+looses their funds.
 
-### Backwards Compatibility
+We define the collection index as follows, such that we only iterate over balances
+that are below the threshold:
 
-> All ADRs that introduce backwards incompatibilities must include a section
-> describing these incompatibilities and their severity. The ADR must explain
-> how the author proposes to deal with these incompatibilities. ADR submissions
-> without a sufficient backwards compatibility treatise may be rejected outright.
+<TODO>
 
 ## Alternatives
 
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through.
+There are many models for which we can design a sufficient state rent solution,
+see [Further Discussions](#further-discussions) below for an example. However,
+in the context of unclaimed account balances, we believe the solution laid out is
+simple and effective to achieve the desired outcome of minimizing state bloat.
+
+## Consequences
 
 ### Positive
 
-> {positive consequences}
-
-### Negative
-
-> {negative consequences}
+* Provides an economic incentive model for state bloat of unclaimed account balances
+  can be minimized.
+* We can further expand upon the aforementioned proposal to design a more generalized
+  approach of state rent going beyond just unclaimed account balances, such as existing
+  accounts that have a balance below some threshold.
 
 ### Neutral
 
-> {neutral consequences}
+* Requires usage of an epoch or epoch-like module.
+* If the list of unclaimed account balances that have a balance below the chain's
+  threshold, the epoch iteration could potentially introduce some performance
+  degradation.
 
 ## Further Discussions
 
-> While an ADR is in the DRAFT or PROPOSED stage, this section should contain a
-> summary of issues to be solved in future iterations (usually referencing comments
-> from a pull-request discussion).
->
-> Later, this section can optionally list ideas or improvements the author or
-> reviewers found during the analysis of this ADR.
+<TODO: Mention Solana's new bond curve doc>
 
 ## References
 

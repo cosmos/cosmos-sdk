@@ -32,6 +32,12 @@
 > sentences, with active voice. "We will ..."
 > {decision body}
 
+## Alternatives
+
+> This section describes alternative designs to the chosen design. This section
+> is important and if an adr does not have any alternatives then it should be
+> considered that the ADR was not thought through.
+
 ## Consequences
 
 > This section describes the resulting context, after applying the decision. All
@@ -45,12 +51,6 @@
 > describing these incompatibilities and their severity. The ADR must explain
 > how the author proposes to deal with these incompatibilities. ADR submissions
 > without a sufficient backwards compatibility treatise may be rejected outright.
-
-## Alternatives
-
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through.
 
 ### Positive
 

@@ -163,7 +163,7 @@ func (k Keeper) SetUnbondingDelegationByUnbondingID(ctx context.Context, ubd typ
 	return k.SetUnbondingType(ctx, id, types.UnbondingType_UnbondingDelegation)
 }
 
-// SetRedelegationByUnbondingID sets an index to look up an Redelegation by the unbondingID of an RedelegationEntry that it contains
+// SetRedelegationByUnbondingID sets an index to look up a Redelegation by the unbondingID of a RedelegationEntry that it contains
 // Note, it does not set the redelegation itself, use SetRedelegation(ctx, red) for that
 func (k Keeper) SetRedelegationByUnbondingID(ctx context.Context, red types.Redelegation, id uint64) error {
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(red.DelegatorAddress)

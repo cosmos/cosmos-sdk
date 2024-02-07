@@ -129,18 +129,18 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-func (am AppModule) RegisterMigrations(mh appmodule.MigrationRegistrar) error {
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	if err := mh.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
+	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err)
 	}
-	if err := mh.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
+	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err)
 	}
-	if err := mh.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
+	if err := mr.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err)
 	}
-	if err := mh.Register(types.ModuleName, 4, m.Migrate4to5); err != nil {
+	if err := mr.Register(types.ModuleName, 4, m.Migrate4to5); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err)
 	}
 

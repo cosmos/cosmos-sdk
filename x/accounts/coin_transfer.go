@@ -1,12 +1,14 @@
 package accounts
 
 import (
+	"google.golang.org/protobuf/proto"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/protobuf/proto"
 )
 
 // protoV2GogoWrapper is a wrapper of a protov2 message into a gogo message.

@@ -112,6 +112,109 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 	return &vestingtypes.MsgInitVestingAccountResponse{}, nil
 }
 
+// ExecuteMessages handle the execution of codectypes Any messages
+// and update the vesting account DelegatedFree and DelegatedVesting
+// when delegate or undelegate is trigger. And check for locked coins
+// when performing a send message.
+func (bva *BaseVesting) ExecuteMessages(
+	ctx context.Context, msg *account_abstractionv1.MsgExecute, getVestingFunc getVestingFunc,
+) (
+	*account_abstractionv1.MsgExecuteResponse, error,
+) {
+	// we always want to ensure that this is called by the x/accounts module, it's the only trusted entrypoint.
+	// if we do not do this check then someone could call this method directly and bypass the authentication.
+	if !accountstd.SenderIsAccountsModule(ctx) {
+		return nil, fmt.Errorf("sender is not the x/accounts module")
+	}
+	hs := bva.headerService.GetHeaderInfo(ctx)
+
+	for _, m := range msg.ExecutionMessages {
+		concreateMsg, err := vestingtypes.UnpackAnyRaw(m)
+		if err != nil {
+			return nil, err
+		}
+
+		typeUrl := sdk.MsgTypeURL(concreateMsg)
+		switch typeUrl {
+		case MSG_DELEGATE:
+			msgDelegate, ok := concreateMsg.(*stakingtypes.MsgDelegate)
+			if !ok {
+				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
+			}
+			balance, err := bva.getBalance(ctx, msgDelegate.DelegatorAddress, msgDelegate.Amount.Denom)
+			if err != nil {
+				return nil, err
+			}
+			vestingCoins, err := getVestingFunc(ctx, hs.Time)
+			if err != nil {
+				return nil, err
+			}
+
+			err = bva.TrackDelegation(
+				ctx,
+				sdk.Coins{*balance},
+				vestingCoins,
+				sdk.Coins{msgDelegate.Amount},
+			)
+			if err != nil {
+				return nil, err
+			}
+		case MSG_UNDELEGATE:
+			msgUndelegate, ok := concreateMsg.(*stakingtypes.MsgUndelegate)
+			if !ok {
+				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
+			}
+
+			err = bva.TrackUndelegation(ctx, sdk.Coins{msgUndelegate.Amount})
+			if err != nil {
+				return nil, err
+			}
+		case MSG_SEND:
+			msgSend, ok := concreateMsg.(*banktypes.MsgSend)
+			if !ok {
+				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
+			}
+			sender := msgSend.FromAddress
+			amount := msgSend.Amount
+
+			vestingCoins, err := getVestingFunc(ctx, hs.Time)
+			if err != nil {
+				return nil, err
+			}
+
+			err = bva.checkTokensSendable(ctx, sender, amount, vestingCoins)
+			if err != nil {
+				return nil, err
+			}
+		case MSG_MULTI_SEND:
+			msgMultiSend, ok := concreateMsg.(*banktypes.MsgMultiSend)
+			if !ok {
+				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
+			}
+			sender := msgMultiSend.Inputs[0].Address
+			amount := msgMultiSend.Inputs[0].Coins
+
+			vestingCoins, err := getVestingFunc(ctx, hs.Time)
+			if err != nil {
+				return nil, err
+			}
+
+			err = bva.checkTokensSendable(ctx, sender, amount, vestingCoins)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// execute messages
+	responses, err := accountstd.ExecModuleAnys(ctx, msg.ExecutionMessages)
+	if err != nil {
+		return nil, err
+	}
+
+	return &account_abstractionv1.MsgExecuteResponse{ExecutionMessagesResponse: responses}, nil
+}
+
 // TrackDelegation tracks a delegation amount for any given vesting account type
 // given the amount of coins currently vesting and the current account balance
 // of the delegation denominations.
@@ -222,109 +325,6 @@ func (bva *BaseVesting) TrackUndelegation(ctx context.Context, amount sdk.Coins)
 	}
 
 	return nil
-}
-
-// ExecuteMessages handle the execution of codectypes Any messages
-// and update the vesting account DelegatedFree and DelegatedVesting
-// when delegate or undelegate is trigger. And check for locked coins
-// when performing a send message.
-func (bva *BaseVesting) ExecuteMessages(
-	ctx context.Context, msg *account_abstractionv1.MsgExecute, getVestingFunc getVestingFunc,
-) (
-	*account_abstractionv1.MsgExecuteResponse, error,
-) {
-	// we always want to ensure that this is called by the x/accounts module, it's the only trusted entrypoint.
-	// if we do not do this check then someone could call this method directly and bypass the authentication.
-	if !accountstd.SenderIsAccountsModule(ctx) {
-		return nil, fmt.Errorf("sender is not the x/accounts module")
-	}
-	hs := bva.headerService.GetHeaderInfo(ctx)
-
-	for _, m := range msg.ExecutionMessages {
-		concreateMsg, err := vestingtypes.UnpackAnyRaw(m)
-		if err != nil {
-			return nil, err
-		}
-
-		typeUrl := sdk.MsgTypeURL(concreateMsg)
-		switch typeUrl {
-		case MSG_DELEGATE:
-			msgDelegate, err := accountstd.UnpackAny[stakingtypes.MsgDelegate](m)
-			if err != nil {
-				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-			}
-			balance, err := bva.getBalance(ctx, msgDelegate.DelegatorAddress, msgDelegate.Amount.Denom)
-			if err != nil {
-				return nil, err
-			}
-			vestingCoins, err := getVestingFunc(ctx, hs.Time)
-			if err != nil {
-				return nil, err
-			}
-
-			err = bva.TrackDelegation(
-				ctx,
-				sdk.Coins{*balance},
-				vestingCoins,
-				sdk.Coins{msgDelegate.Amount},
-			)
-			if err != nil {
-				return nil, err
-			}
-		case MSG_UNDELEGATE:
-			msgUndelegate, err := accountstd.UnpackAny[stakingtypes.MsgUndelegate](m)
-			if err != nil {
-				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-			}
-
-			err = bva.TrackUndelegation(ctx, sdk.Coins{msgUndelegate.Amount})
-			if err != nil {
-				return nil, err
-			}
-		case MSG_SEND:
-			msgSend, err := accountstd.UnpackAny[banktypes.MsgSend](m)
-			if err != nil {
-				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-			}
-			sender := msgSend.FromAddress
-			amount := msgSend.Amount
-
-			vestingCoins, err := getVestingFunc(ctx, hs.Time)
-			if err != nil {
-				return nil, err
-			}
-
-			err = bva.checkTokensSendable(ctx, sender, amount, vestingCoins)
-			if err != nil {
-				return nil, err
-			}
-		case MSG_MULTI_SEND:
-			msgMultiSend, err := accountstd.UnpackAny[banktypes.MsgMultiSend](m)
-			if err != nil {
-				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-			}
-			sender := msgMultiSend.Inputs[0].Address
-			amount := msgMultiSend.Inputs[0].Coins
-
-			vestingCoins, err := getVestingFunc(ctx, hs.Time)
-			if err != nil {
-				return nil, err
-			}
-
-			err = bva.checkTokensSendable(ctx, sender, amount, vestingCoins)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	// execute messages
-	responses, err := accountstd.ExecModuleAnys(ctx, msg.ExecutionMessages)
-	if err != nil {
-		return nil, err
-	}
-
-	return &account_abstractionv1.MsgExecuteResponse{ExecutionMessagesResponse: responses}, nil
 }
 
 func (bva BaseVesting) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {

@@ -25,7 +25,7 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 	}
 }
 
-func (ms msgServer) AsyncMultiMsgExec(goCtx context.Context, msg *types.MsgAsyncMultiMsgExec) (*types.MsgAsyncMultiMsgExecResponse, error) {
+func (ms msgServer) AsyncExec(goCtx context.Context, msg *types.MsgAsyncExec) (*types.MsgAsyncExecResponse, error) {
 	if msg.Signer == "" {
 		return nil, errors.New("empty signer address string is not allowed")
 	}
@@ -48,21 +48,13 @@ func (ms msgServer) AsyncMultiMsgExec(goCtx context.Context, msg *types.MsgAsync
 		return nil, err
 	}
 
-	results, errors := ms.ak.AsyncMsgsExec(goCtx, signer, msgs)
+	results, err := ms.ak.AsyncMsgsExec(goCtx, signer, msgs)
 	if err != nil {
 		return nil, err
 	}
 
-	errorStrings := make([]string, len(errors))
-	for i, err := range errors {
-		if err != nil {
-			errorStrings[i] = err.Error()
-		}
-	}
-
-	return &types.MsgAsyncMultiMsgExecResponse{
-		Error:   errorStrings,
-		Results: results,
+	return &types.MsgAsyncExecResponse{
+		Resp: results[0],
 	}, nil
 }
 

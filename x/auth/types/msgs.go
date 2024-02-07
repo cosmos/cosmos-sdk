@@ -6,7 +6,7 @@ import (
 )
 
 // GetMessages returns the cache values from the MsgExecAuthorized.Msgs if present.
-func (msg MsgAsyncMultiMsgExec) GetMessages() ([]sdk.Msg, error) {
+func (msg MsgAsyncExec) GetMessages() ([]sdk.Msg, error) {
 	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
 		msg, ok := msgAny.GetCachedValue().(sdk.Msg)

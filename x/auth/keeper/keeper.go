@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -87,7 +88,7 @@ type AccountKeeper struct {
 	addressCodec address.Codec
 
 	storeService store.KVStoreService
-	cdc          codec.BinaryCodec
+	cdc          codec.Codec
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
 	router       baseapp.MessageRouter
@@ -116,7 +117,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
+	cdc codec.Codec, storeService store.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, ac address.Codec, router baseapp.MessageRouter, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -282,34 +283,64 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	return params
 }
 
-func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([][]byte, []error) {
-	results := make([][]byte, len(msgs))
-	errors := make([]error, len(msgs))
+func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*codectypes.Any, error) {
+	msgResponses := make([]*codectypes.Any, 0, len(msgs))
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	for i, msg := range msgs {
+		// check if the message sender matches the provided signer
+		signers, _, err := ak.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		if len(signers) != 1 {
+			return nil, fmt.Errorf("authorization can be given to msg with only one signer")
+		}
 		if m, ok := msg.(sdk.HasValidateBasic); ok {
 			if err := m.ValidateBasic(); err != nil {
-				errors[i] = err
+				value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: err.Error()})
+				if err != nil {
+					return nil, err
+				}
+				msgResponses = append(msgResponses, value)
 				continue
 			}
 		}
 
 		handler := ak.router.Handler(msg)
 		if handler == nil {
-			errors[i] = sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
+			wrappedErr := sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
+			value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
+			if err != nil {
+				return nil, err
+			}
+			msgResponses = append(msgResponses, value)
 			continue
 		}
 
-		msgResp, err := handler(sdkCtx, msg)
+		msgResult, err := handler(sdkCtx, msg)
 		if err != nil {
 			wrappedErr := errorsmod.Wrapf(err, "failed to execute message; message index: %d; message %v", i, msg)
-			errors = append(errors, wrappedErr)
+			value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
+			if err != nil {
+				return nil, err
+			}
+			msgResponses = append(msgResponses, value)
 			continue
 		}
-
-		results[i] = msgResp.Data
+		if len(msgResult.MsgResponses) > 0 {
+			msgResponse := msgResult.MsgResponses[0]
+			if msgResponse == nil {
+				wrappedErr := sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
+				value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
+				if err != nil {
+					return nil, err
+				}
+				msgResponses = append(msgResponses, value)
+			}
+			msgResponses = append(msgResponses, msgResponse)
+		}
 	}
 
-	return results, errors
+	return msgResponses, nil
 }

@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/nft"
-	"cosmossdk.io/core/event"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +28,7 @@ func (k Keeper) Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress
 // mintWithNoCheck defines a method for minting a new nft
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it.
-func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT ,receiver sdk.AccAddress) error {
+func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) error {
 	k.setNFT(ctx, token)
 	k.setOwner(ctx, token.ClassId, token.Id, receiver)
 	k.incrTotalSupply(ctx, token.ClassId)

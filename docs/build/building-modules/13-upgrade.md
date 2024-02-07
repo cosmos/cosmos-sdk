@@ -49,7 +49,7 @@ Since these migrations are functions that need access to a Keeper's store, use a
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/migrations.go
 ```
 
-<!-- explain the new way -->
+<!-- TODO v0.51: explain the new way with core -->
 
 ## Writing Migration Scripts
 

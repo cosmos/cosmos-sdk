@@ -7,6 +7,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -32,11 +33,12 @@ var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the gov module.
@@ -144,35 +146,40 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	msgServer := keeper.NewMsgServerImpl(am.keeper)
-	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
-	v1.RegisterMsgServer(cfg.MsgServer(), msgServer)
+	v1beta1.RegisterMsgServer(registrar, keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
+	v1.RegisterMsgServer(registrar, msgServer)
 
-	legacyQueryServer := keeper.NewLegacyQueryServer(am.keeper)
-	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
-	v1.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
+	v1beta1.RegisterQueryServer(registrar, keeper.NewLegacyQueryServer(am.keeper))
+	v1.RegisterQueryServer(registrar, keeper.NewQueryServer(am.keeper))
 
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 1 to 2: %v", err))
+	if err := mr.Register(govtypes.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/gov from version 1 to 2: %w", err)
 	}
 
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 2 to 3: %v", err))
+	if err := mr.Register(govtypes.ModuleName, 2, m.Migrate2to3); err != nil {
+		return fmt.Errorf("failed to migrate x/gov from version 2 to 3: %w", err)
 	}
 
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 3 to 4: %v", err))
+	if err := mr.Register(govtypes.ModuleName, 3, m.Migrate3to4); err != nil {
+		return fmt.Errorf("failed to migrate x/gov from version 3 to 4: %w", err)
 	}
 
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 4, m.Migrate4to5); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 4 to 5: %v", err))
+	if err := mr.Register(govtypes.ModuleName, 4, m.Migrate4to5); err != nil {
+		return fmt.Errorf("failed to migrate x/gov from version 4 to 5: %w", err)
 	}
 
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 5, m.Migrate5to6); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 5 to 6: %v", err))
+	if err := mr.Register(govtypes.ModuleName, 5, m.Migrate5to6); err != nil {
+		return fmt.Errorf("failed to migrate x/gov from version 5 to 6: %w", err)
 	}
+
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the gov module. It returns

@@ -49,6 +49,8 @@ type Configurator interface {
 	// changes, then a no-op function must be registered here.
 	RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error
 
+	// Register registers an in-place store migration for a module.
+	// It permits to register modules migrations that have migrated to serverv2 but still be compatible with baseapp.
 	Register(moduleName string, fromVersion uint64, handler func(context.Context) error) error
 }
 

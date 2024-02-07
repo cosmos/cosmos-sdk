@@ -23,7 +23,6 @@ func DescriptorKebabName(descriptor protoreflect.Descriptor) string {
 }
 
 // DescriptorDocs returns the leading comments of the descriptor.
-// TODO this does not work, to fix.
 func DescriptorDocs(descriptor protoreflect.Descriptor) string {
 	return descriptor.ParentFile().SourceLocations().ByDescriptor(descriptor).LeadingComments
 }
@@ -52,6 +51,10 @@ func isSupportedVersion(input string, buildInfo *debug.BuildInfo) bool {
 	}
 
 	moduleName, version := parseSinceComment(input)
+	if moduleName == "" || version == "" {
+		return true // if no comment consider it's supported
+	}
+
 	for _, dep := range buildInfo.Deps {
 		if !strings.Contains(dep.Path, moduleName) {
 			continue
@@ -60,7 +63,11 @@ func isSupportedVersion(input string, buildInfo *debug.BuildInfo) bool {
 		return version <= dep.Version
 	}
 
-	return true // if cannot find the module consider it's supported
+	// if cannot find the module consider it isn't supported
+	// for instance the x/gov module wasn't extracted in v0.50
+	// so it isn't present in the build info, however, that means
+	// it isn't supported in v0.50.
+	return false
 }
 
 var sinceCommentRegex = regexp.MustCompile(`\/\/\s*since: (\S+) (\S+)`)
@@ -77,7 +84,7 @@ func parseSinceComment(input string) (string, string) {
 
 	matches := sinceCommentRegex.FindStringSubmatch(input)
 	if len(matches) >= 3 {
-		moduleName, version = matches[1], matches[2]
+		moduleName, version = strings.TrimPrefix(matches[1], "x/"), matches[2]
 
 		if !strings.HasPrefix(version, "v") {
 			version = "v" + version

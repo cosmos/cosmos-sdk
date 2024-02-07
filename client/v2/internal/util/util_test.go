@@ -74,15 +74,12 @@ func TestIsSupportedVersion(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		resp := isSupportedVersion(tc.input, mockBuildInfo)
-		if resp != tc.expected {
-			t.Errorf("expected %v, got %v", tc.expected, resp)
-		}
-
-		resp = isSupportedVersion(tc.input, &debug.BuildInfo{})
-		if !resp {
-			t.Errorf("expected %v, got %v", true, resp)
-		}
+		t.Run(tc.input, func(t *testing.T) {
+			resp := isSupportedVersion(tc.input, mockBuildInfo)
+			if resp != tc.expected {
+				t.Errorf("expected %v, got %v", tc.expected, resp)
+			}
+		})
 	}
 }
 
@@ -139,23 +136,25 @@ func TestParseSinceComment(t *testing.T) {
 		},
 		{
 			input:              "// Since: x/feegrant v0.1.0",
-			expectedModuleName: "x/feegrant",
+			expectedModuleName: "feegrant",
 			expectedVersion:    "v0.1.0",
 		},
 		{
 			input:              "// since: x/feegrant 0.1",
-			expectedModuleName: "x/feegrant",
+			expectedModuleName: "feegrant",
 			expectedVersion:    "v0.1",
 		},
 	}
 
 	for _, tc := range cases {
-		moduleName, version := parseSinceComment(tc.input)
-		if moduleName != tc.expectedModuleName {
-			t.Errorf("expected module name %s, got %s", tc.expectedModuleName, moduleName)
-		}
-		if version != tc.expectedVersion {
-			t.Errorf("expected version %s, got %s", tc.expectedVersion, version)
-		}
+		t.Run(tc.input, func(t *testing.T) {
+			moduleName, version := parseSinceComment(tc.input)
+			if moduleName != tc.expectedModuleName {
+				t.Errorf("expected module name %s, got %s", tc.expectedModuleName, moduleName)
+			}
+			if version != tc.expectedVersion {
+				t.Errorf("expected version %s, got %s", tc.expectedVersion, version)
+			}
+		})
 	}
 }

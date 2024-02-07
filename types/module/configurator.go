@@ -21,6 +21,8 @@ import (
 // their services in the RegisterServices method. It is designed to eventually
 // support module object capabilities isolation as described in
 // https://github.com/cosmos/cosmos-sdk/issues/7093
+// Deprecated: The Configurator is deprecated.
+// Preferrably use core services for registering msg/query server and migrations.
 type Configurator interface {
 	grpc.Server
 
@@ -123,6 +125,7 @@ func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, 
 }
 
 // Register implements the Configurator.Register method
+// It permis to register modules migrations that have migrated to serverv2 but still be compatible with baseapp.
 func (c *configurator) Register(moduleName string, fromVersion uint64, handler func(context.Context) error) error {
 	return c.RegisterMigration(moduleName, fromVersion, func(sdkCtx sdk.Context) error {
 		return handler(sdkCtx)

@@ -132,13 +132,19 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.accountKeeper.InitGenesis(ctx, genesisState)
+	err := am.accountKeeper.InitGenesis(ctx, genesisState)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the auth
 // module.
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.accountKeeper.ExportGenesis(ctx)
+	gs, err := am.accountKeeper.ExportGenesis(ctx)
+	if err != nil {
+		panic(err)
+	}
 	return cdc.MustMarshalJSON(gs)
 }
 

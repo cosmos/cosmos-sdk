@@ -39,6 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Agoric/agoric-sdk#8871 Have `tx gov submit-proposal` accept either new or legacy syntax
 
+### Bug Fixes
+
+* (crypto) [#19371](https://github.com/cosmos/cosmos-sdk/pull/19371) Avoid cli redundant log in stdout, log to stderr instead.
+
 ## `v0.46.16-alpha.agoric.1` - 2024-02-05
 
 * Agoric/agoric-sdk#8224 Merge [cosmos/cosmos-sdk v0.46.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.16)

@@ -327,8 +327,8 @@ schema = 3
     version = "v0.1.0"
     hash = "sha256-wQqGTtRWsfR9n0O/SXHVgECebbnNmHddxJIbG63OJBQ="
   [mod."github.com/linxGnu/grocksdb"]
-    version = "v1.8.11"
-    hash = "sha256-R2svcOUzENb2o9r8lxohUYn61FCQO7ZyWkV9wjtpoXY="
+    version = "v1.8.12"
+    hash = "sha256-1tlgs/JnopLI8eoWJlv9hP4jf0OTm1qMZTSg0jAkG7A="
   [mod."github.com/lucasb-eyer/go-colorful"]
     version = "v1.2.0"
     hash = "sha256-Gg9dDJFCTaHrKHRR1SrJgZ8fWieJkybljybkI9x0gyE="
@@ -411,8 +411,8 @@ schema = 3
     version = "v1.8.3"
     hash = "sha256-VgVB4HKAhPSjNg96mIEUN1bt5ZQng8Fi3ZABy3CDWQE="
   [mod."github.com/rs/zerolog"]
-    version = "v1.31.0"
-    hash = "sha256-OF4VM+Rv6M5EAaUVD2nOzcbZLQ4b7OAMteyyTqIoU0M="
+    version = "v1.32.0"
+    hash = "sha256-9dZjtsES+wLp1cFiSVMuEUbdeXVFcgT0dgg5ACZkILk="
   [mod."github.com/sagikazarmark/locafero"]
     version = "v0.4.0"
     hash = "sha256-7I1Oatc7GAaHgAqBFO6Tv4IbzFiYeU9bJAfJhXuWaXk="

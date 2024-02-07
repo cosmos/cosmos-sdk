@@ -285,5 +285,5 @@ We were discussing use case where modules can use a support database, which is n
 * Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 * [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
 * Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
-* [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/ibc/upgrades/quick-guide.md)
+* [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/docs/01-ibc/05-upgrades/01-quick-guide.md)
 * [ADR-40 Effect on IBC](https://github.com/cosmos/ibc-go/discussions/256)

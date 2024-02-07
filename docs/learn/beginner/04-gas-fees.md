@@ -46,7 +46,7 @@ The gas meter is generally held in [`ctx`](../advanced/02-context.md), and consu
 ctx.GasMeter().ConsumeGas(amount, "description")
 ```
 
-By default, the Cosmos SDK makes use of two different gas meters, the [main gas meter](#main-gas-metter) and the [block gas meter](#block-gas-meter).
+By default, the Cosmos SDK makes use of two different gas meters, the [main gas meter](#main-gas-meter) and the [block gas meter](#block-gas-meter).
 
 ### Main Gas Meter
 

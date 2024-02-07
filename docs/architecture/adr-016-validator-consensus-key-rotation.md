@@ -109,7 +109,7 @@ Proposed
 ### Positive
 
 * Validators can immediately or periodically rotate their consensus key to have better security policy
-* improved security against Long-Range attacks (https://nearprotocol.com/blog/long-range-attacks-and-a-new-fork-choice-rule) given a validator throws away the old consensus key(s)
+* improved security against Long-Range attacks (https://near.org/blog/long-range-attacks-and-a-new-fork-choice-rule) given a validator throws away the old consensus key(s)
 
 ### Negative
 

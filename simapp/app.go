@@ -13,10 +13,12 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
+	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -286,7 +288,6 @@ func NewSimApp(
 	addressCodec := authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	// add keepers
-
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
@@ -294,6 +295,7 @@ func NewSimApp(
 		runtime.HeaderService{},
 		runtime.BranchService{},
 		runtime.GasService{},
+		makeSendCoinsMsg(addressCodec),
 		addressCodec,
 		appCodec,
 		app.MsgServiceRouter(),
@@ -360,7 +362,7 @@ func NewSimApp(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.CircuitKeeper = circuitkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[circuittypes.StoreKey]), authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
+	app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[circuittypes.StoreKey])), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
 	app.BaseApp.SetCircuitBreaker(&app.CircuitKeeper)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AuthKeeper)
@@ -817,4 +819,22 @@ func BlockedAddresses() map[string]bool {
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	return modAccAddrs
+}
+
+func makeSendCoinsMsg(addressCodec coreaddress.Codec) func([]byte, []byte, sdk.Coins) (protoiface.MessageV1, error) {
+	return func(from, to []byte, coins sdk.Coins) (protoiface.MessageV1, error) {
+		fromStr, err := addressCodec.BytesToString(from)
+		if err != nil {
+			return nil, err
+		}
+		toStr, err := addressCodec.BytesToString(to)
+		if err != nil {
+			return nil, err
+		}
+		return &banktypes.MsgSend{
+			FromAddress: fromStr,
+			ToAddress:   toStr,
+			Amount:      coins,
+		}, nil
+	}
 }

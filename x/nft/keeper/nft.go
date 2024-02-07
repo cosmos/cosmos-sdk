@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/nft"
+	"cosmossdk.io/core/event"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +28,7 @@ func (k Keeper) Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress
 // mintWithNoCheck defines a method for minting a new nft
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it.
-func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) error {
+func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT ,receiver sdk.AccAddress) error {
 	k.setNFT(ctx, token)
 	k.setOwner(ctx, token.ClassId, token.Id, receiver)
 	k.incrTotalSupply(ctx, token.ClassId)
@@ -36,11 +37,14 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 	if err != nil {
 		return err
 	}
-	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
-		ClassId: token.ClassId,
-		Id:      token.Id,
-		Owner:   recStr,
-	})
+
+	err = k.eventService.EventManager(ctx).EmitKV(
+		"mint_with_no_check",
+		event.NewAttribute("classid", token.ClassId),
+		event.NewAttribute("id", token.Id),
+		event.NewAttribute("owner", recStr),
+	)
+	return err
 }
 
 // Burn defines a method for burning a nft from a specific account.
@@ -76,11 +80,13 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 		return err
 	}
 
-	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventBurn{
-		ClassId: classID,
-		Id:      nftID,
-		Owner:   ownerStr,
-	})
+	err = k.eventService.EventManager(ctx).EmitKV(
+		"burn",
+		event.NewAttribute("classid", classID),
+		event.NewAttribute("id", nftID),
+		event.NewAttribute("owner", ownerStr),
+	)
+	return err
 }
 
 // Update defines a method for updating an exist nft

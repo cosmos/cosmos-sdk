@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/distribution) [#19301](https://github.com/cosmos/cosmos-sdk/pull/19301) Fix vulnerability in `incrementReferenceCount` in distribution.
 * (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.
 * (query) [#23883](https://github.com/cosmos/cosmos-sdk/pull/23883) Fix NPE in query pagination.
 * (client) [#23860](https://github.com/cosmos/cosmos-sdk/pull/23860) Add missing `unordered` field for legacy amino signing of tx body.

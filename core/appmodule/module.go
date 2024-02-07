@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -85,4 +86,17 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
+}
+
+// MsgHandlerRouter is implemented by the runtime provider.
+type MsgHandlerRouter interface {
+	// RegisterHandler is called by modules to register msg handler functions.
+	RegisterHandler(name string, handler func(ctx context.Context, msg protoiface.MessageV1) (msgResp protoiface.MessageV1, err error))
+}
+
+// HasMsgHandler is implemented by modules that instead of exposing msg server expose
+// a set of handlers.
+type HasMsgHandler interface {
+	// RegisterMsgHandlers is implemented by the module that will register msg handlers.
+	RegisterMsgHandlers(router MsgHandlerRouter)
 }

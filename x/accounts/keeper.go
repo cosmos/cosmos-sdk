@@ -8,9 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/branch"
@@ -20,6 +17,8 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,10 +39,10 @@ var (
 	AccountByNumber = collections.NewPrefix(2)
 )
 
-// CoinTransferMsgFunc defines a function that creates a message to send coins from one
-// address to the other. This in most cases will be implemented as a bank.MsgSend creator,
-// but we keep x/accounts independent of bank.
-type CoinTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, error)
+// coinsTransferMsgFunc defines a function that creates a message to send coins from one
+// address to the other, and also a message that parses such  response.
+// This in most cases will be implemented as a bank.MsgSend creator, but we keep x/accounts independent of bank.
+type coinsTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
 
 // QueryRouter represents a router which can be used to route queries to the correct module.
 // It returns the handler given the message name, if multiple handlers are returned, then
@@ -76,7 +75,6 @@ func NewKeeper(
 	hs header.Service,
 	bs branch.Service,
 	gs gas.Service,
-	makeSendCoinsMsg CoinTransferMsgFunc,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -93,7 +91,7 @@ func NewKeeper(
 		msgRouter:        execRouter,
 		signerProvider:   signerProvider,
 		queryRouter:      queryRouter,
-		makeSendCoinsMsg: makeSendCoinsMsg,
+		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
@@ -123,7 +121,7 @@ type Keeper struct {
 	msgRouter        MsgRouter
 	signerProvider   SignerProvider
 	queryRouter      QueryRouter
-	makeSendCoinsMsg CoinTransferMsgFunc
+	makeSendCoinsMsg coinsTransferMsgFunc
 
 	accounts map[string]implementation.Implementation
 
@@ -396,17 +394,22 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 		return nil
 	}
 
-	msg, err := k.makeSendCoinsMsg(from, to, amt)
+	msg, msgResp, err := k.makeSendCoinsMsg(from, to, amt)
 	if err != nil {
 		return err
 	}
 
 	// send module message ensures that "from" cannot impersonate.
-	_, err = k.sendModuleMessageUntyped(ctx, from, msg)
+	err = k.sendModuleMessage(ctx, from, msg, msgResp)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+type gogoProtoPlusV2 interface {
+	proto.Message
+	implementation.ProtoMsg
 }
 
 const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"

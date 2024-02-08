@@ -1,8 +1,84 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/auth/types"
+	banktypes "cosmossdk.io/x/bank/types"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func (s *KeeperTestSuite) TestAsyncExec() {
+	addrs := simtestutil.CreateIncrementalAccounts(2)
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
+
+	msg := &banktypes.MsgSend{
+		FromAddress: addrs[0].String(),
+		ToAddress:   addrs[1].String(),
+		Amount:      coins,
+	}
+
+	msgAny, err := codectypes.NewAnyWithValue(msg)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *types.MsgAsyncExec
+		expectErr bool
+		expErrMsg string
+	}{
+		{
+			name: "empty signer address",
+			req: &types.MsgAsyncExec{
+				Signer: "",
+				Msgs:   []*codectypes.Any{},
+			},
+			expectErr: true,
+			expErrMsg: "empty signer address string is not allowed",
+		},
+		{
+			name: "invalid signer address",
+			req: &types.MsgAsyncExec{
+				Signer: "invalid",
+				Msgs:   []*codectypes.Any{},
+			},
+			expectErr: true,
+			expErrMsg: "invalid signer address",
+		},
+		{
+			name: "empty msgs",
+			req: &types.MsgAsyncExec{
+				Signer: addrs[0].String(),
+				Msgs:   []*codectypes.Any{},
+			},
+			expectErr: true,
+			expErrMsg: "messages cannot be empty",
+		},
+		{
+			name: "valid msg",
+			req: &types.MsgAsyncExec{
+				Signer: addrs[0].String(),
+				Msgs:   []*codectypes.Any{msgAny},
+			},
+			expectErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.AsyncExec(s.ctx, tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
 
 func (s *KeeperTestSuite) TestUpdateParams() {
 	testCases := []struct {

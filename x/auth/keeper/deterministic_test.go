@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -352,8 +351,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 
 		maccPerms[mName] = mPerms
 
-		var bs branch.Service
-
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
 			suite.storeService,
@@ -363,7 +360,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			suite.baseApp.MsgServiceRouter(),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
-			bs,
+			nil,
 		)
 		suite.setModuleAccounts(suite.ctx, ak, []string{mName})
 

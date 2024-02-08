@@ -62,30 +62,32 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitLegacyProp := NewCmdSubmitLegacyProposal()
+	cmdSubmitProp := NewCmdSubmitProposal()
 	for _, propCmd := range legacyPropCmds {
 		flags.AddTxFlagsToCmd(propCmd)
-		cmdSubmitLegacyProp.AddCommand(propCmd)
+		cmdSubmitProp.AddCommand(propCmd)
 	}
 
 	govTxCmd.AddCommand(
 		NewCmdWeightedVote(),
-		NewCmdSubmitProposal(),
+		cmdSubmitProp,
 		NewCmdDraftProposal(),
-
-		// Deprecated
-		cmdSubmitLegacyProp,
 	)
 
 	return govTxCmd
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
+// NOTE: This command has been modified from its original to subsume both
+// the "legacy" and the new (as of v0.46) invocation patterns. This modification
+// will be dropped once all legacy call sites have been updated to either
+// use the new pattern or call the legacy command explicitly.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal <path/to/proposal.json>",
-		Short: "Submit a proposal along with some messages, metadata and deposit",
-		Args:  cobra.ExactArgs(1),
+		Use:     "submit-proposal [path/to/proposal.json]",
+		Short:   "Submit a proposal along with some messages, metadata and deposit",
+		Aliases: []string{"submit-legacy-proposal"},
+		Args:    cobra.MaximumNArgs(1),
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a proposal along with some messages, metadata and deposit.
 They should be defined in a JSON file.
@@ -123,49 +125,9 @@ metadata example:
 	"proposal_forum_url": "",
 	"vote_option_context": "",
 }
-`,
-				version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
 
-			proposal, msgs, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
-			if err != nil {
-				return err
-			}
-
-			addr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, addr, proposal.Metadata, proposal.Title, proposal.Summary, proposal.proposalType)
-			if err != nil {
-				return fmt.Errorf("invalid message: %w", err)
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
-// Deprecated: please use NewCmdSubmitProposal instead.
-func NewCmdSubmitLegacyProposal() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "submit-legacy-proposal",
-		Aliases: []string{"exec-legacy-content"},
-		Short:   "Submit a legacy proposal along with an initial deposit",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a legacy proposal along with an initial deposit.
+Legacy Syntax:
+Submit a legacy proposal along with an initial deposit.
 Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
 
 Example:
@@ -184,7 +146,7 @@ Which is equivalent to:
 
 $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `,
-				version.AppName, version.AppName,
+				version.AppName, version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -193,27 +155,39 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return err
 			}
 
-			proposal, err := parseSubmitLegacyProposal(cmd.Flags())
-			if err != nil {
-				return fmt.Errorf("failed to parse proposal: %w", err)
+			// try to interpret as a legacy submit-proposal call
+			proposal, err := parseSubmitLegacyProposalFlags(cmd.Flags())
+			if err == nil {
+				amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+				if err != nil {
+					return err
+				}
+
+				content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+				if !ok {
+					return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
+				}
+
+				msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
+				if err != nil {
+					return fmt.Errorf("invalid message: %w", err)
+				}
+
+				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 			}
 
-			amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			// otherwise try to interpret as a new (0.46) submit-proposal
+			err = cobra.ExactArgs(1)(cmd, args)
 			if err != nil {
 				return err
 			}
 
-			content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
-			if !ok {
-				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
-			}
-
-			proposer, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			msgs, metadata, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, proposer)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -227,6 +201,115 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
 	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
 	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
+// Deprecated: please use NewCmdSubmitProposal instead.
+// Preserved for tests.
+func NewCmdSubmitLegacyProposal() *cobra.Command {
+	return NewCmdSubmitProposal()
+}
+
+// NewCmdDeposit implements depositing tokens for an active proposal.
+func NewCmdDeposit() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "deposit [proposal-id] [deposit]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Deposit tokens for an active proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a deposit for an active proposal. You can
+find the proposal-id by running "%s query gov proposals".
+
+Example:
+$ %s tx gov deposit 1 10stake --from mykey
+`,
+				version.AppName, version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
+			}
+
+			// Get depositor address
+			from := clientCtx.GetFromAddress()
+
+			// Get amount of coins
+			amount, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := v1.NewMsgDeposit(from, proposalID, amount)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdVote implements creating a new vote command.
+func NewCmdVote() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "vote [proposal-id] [option]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a vote for an active proposal. You can
+find the proposal-id by running "%s query gov proposals".
+
+Example:
+$ %s tx gov vote 1 yes --from mykey
+`,
+				version.AppName, version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			// Get voting address
+			from := clientCtx.GetFromAddress()
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
+			}
+
+			// Find out which vote option user chose
+			byteVoteOption, err := v1.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
+			if err != nil {
+				return err
+			}
+
+			metadata, err := cmd.Flags().GetString(flagMetadata)
+			if err != nil {
+				return err
+			}
+
+			// Build vote message and run basic validation
+			msg := v1.NewMsgVote(from, proposalID, byteVoteOption, metadata)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(flagMetadata, "", "Specify metadata of the vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

@@ -100,7 +100,8 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal1.Status == v1.StatusDepositPeriod)
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
-	authGenState := s1.AccountKeeper.ExportGenesis(ctx)
+	authGenState, err := s1.AccountKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
 	bankGenState := s1.BankKeeper.ExportGenesis(ctx)
 	stakingGenState := s1.StakingKeeper.ExportGenesis(ctx)
 

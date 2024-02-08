@@ -1,0 +1,40 @@
+defaults:
+  actions:
+    backport:
+      assignees:
+        - "{{ author }}"
+
+queue_rules:
+  - name: default
+    conditions:
+      - "#approved-reviews-by>=1"
+
+pull_request_rules:
+  - name: automerge to the base branch with label automerge and branch protection passing
+    conditions:
+      - "#approved-reviews-by>=1"
+      - base=osmo/v0.47.5
+      - label=A:automerge
+    actions:
+      queue:
+        name: default
+        method: squash
+        commit_message_template: |
+          {{ title }} (#{{ number }})
+          {{ body }}
+  - name: backport patches to v22 branch
+    conditions:
+      - base=osmo/v0.47.5
+      - label=A:backport/v22
+    actions:
+      backport:
+        branches:
+          - osmo-v22/v0.47.5
+  - name: backport patches to v23 branch
+    conditions:
+      - base=osmo/v0.47.5
+      - label=A:backport/v23
+    actions:
+      backport:
+        branches:
+          - osmo-v23/v0.47.5

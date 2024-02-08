@@ -35,6 +35,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf("%[1]s query gov proposals --depositor cosmos1...\n%[1]s query gov proposals --voter cosmos1...\n%[1]s query gov proposals --proposal-status (PROPOSAL_STATUS_DEPOSIT_PERIOD|PROPOSAL_STATUS_VOTING_PERIOD|PROPOSAL_STATUS_PASSED|PROPOSAL_STATUS_REJECTED|PROPOSAL_STATUS_FAILED)", version.AppName),
 				},
 				{
+					RpcMethod: "LastProposalId",
+					Use:       "last-proposal-id",
+					Short:     "Query last proposal id",
+				},
+				{
 					RpcMethod: "Proposal",
 					Use:       "proposal [proposal-id]",
 					Alias:     []string{"proposer"},

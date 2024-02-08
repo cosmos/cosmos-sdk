@@ -7,7 +7,6 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -31,12 +30,11 @@ var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
 )
 
 type AppModule struct {
@@ -126,21 +124,16 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 	return cdc.MustMarshalJSON(gs)
 }
 
-// RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	group.RegisterMsgServer(registrar, am.keeper)
-	group.RegisterQueryServer(registrar, am.keeper)
+// RegisterServices registers a gRPC query service to respond to the
+// module-specific gRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	group.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	group.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	return nil
-}
-
-func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error { // TODO, group doesn't use kvstore service, so we cannot migrate it
-	// m := keeper.NewMigrator(am.keeper)
-	// if err := mr.Register(group.ModuleName, 1, m.Migrate1to2); err != nil {
-	// 	return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", group.ModuleName, err)
-	// }
-
-	return nil
+	m := keeper.NewMigrator(am.keeper)
+	if err := cfg.RegisterMigration(group.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err))
+	}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

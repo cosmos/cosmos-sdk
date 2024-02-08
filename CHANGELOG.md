@@ -143,7 +143,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Deprecated
 
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
-* (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Depcreate ` module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServicecs` instead from Core API.
+* (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServicecs` instead from Core API.
 
 ## [v0.50.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.3) - 2023-01-15
 

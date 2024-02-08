@@ -35,6 +35,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
+## `v0.46.16-alpha.agoric.2` - 2024-02-08
+
+* Agoric/agoric-sdk#8871 Have `tx gov submit-proposal` accept either new or legacy syntax
+
 ## `v0.46.16-alpha.agoric.1` - 2024-02-05
 
 * Agoric/agoric-sdk#8224 Merge [cosmos/cosmos-sdk v0.46.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.16)

@@ -371,8 +371,13 @@ func (bva BaseVesting) checkTokensSendable(ctx context.Context, sender string, a
 	return nil
 }
 
-// Check the sender of the bundle is the owner of the vesting account
-func (bva BaseVesting) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
+// this function only check if the bundler is the owner of the vesting account
+// all bundler payment messages will be ignore, this is to prevent bypass vesting
+// account check for send, delegate and undelegate action when execute messages
+// by pass it in bundler. Since vesting doesn't have a handler for payBundler message,
+// this could lead to accounts keeper executes the messages directly without going
+// through vesting account ExecuteMessages handler.
+func (bva BaseVesting) payBundler(ctx context.Context, msg *account_abstractionv1.MsgPayBundler) (*account_abstractionv1.MsgPayBundlerResponse, error) {
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())
@@ -385,15 +390,7 @@ func (bva BaseVesting) Authenticate(ctx context.Context, msg *account_abstractio
 		return nil, fmt.Errorf("bundler is not the owner of this vesting account")
 	}
 
-	// prevent bypass vesting account check for send, delegate and undelegate action
-	// when execute messages by pass it in bundler. Since vesting doesn't have a handler
-	// for payBundler message, this could lead to accounts keeper executes the messages
-	// directly without going through vesting account ExecuteMessages handler.
-	if len(msg.UserOperation.BundlerPaymentMessages) > 0 {
-		return nil, fmt.Errorf("no payment messages should be included for vesting account")
-	}
-
-	return &account_abstractionv1.MsgAuthenticateResponse{}, nil
+	return &account_abstractionv1.MsgPayBundlerResponse{}, nil
 }
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
@@ -487,5 +484,5 @@ func (bva BaseVesting) QueryVestingAccountBaseInfo(ctx context.Context, _ *vesti
 }
 
 func (bva BaseVesting) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-	accountstd.RegisterExecuteHandler(builder, bva.Authenticate)
+	accountstd.RegisterExecuteHandler(builder, bva.payBundler)
 }

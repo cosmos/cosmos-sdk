@@ -38,7 +38,7 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 		return err
 	}
 
-	err = k.eventService.EventManager(ctx).EmitKV(
+	err = k.eventService.EventManager(ctx).Emit(
 		"mint_with_no_check",
 		event.NewAttribute("classid", token.ClassId),
 		event.NewAttribute("id", token.Id),
@@ -80,7 +80,7 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 		return err
 	}
 
-	err = k.eventService.EventManager(ctx).EmitKV(
+	err = k.eventService.EventManager(ctx).Emit(
 		"burn",
 		event.NewAttribute("classid", classID),
 		event.NewAttribute("id", nftID),

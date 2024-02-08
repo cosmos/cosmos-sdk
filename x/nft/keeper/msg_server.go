@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 
-	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
 
@@ -42,15 +41,16 @@ func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespons
 		return nil, err
 	}
 
-	err = k.eventService.EventManager(ctx).EmitKV(
-		"send",
-		event.NewAttribute("classid", msg.ClassId),
-		event.NewAttribute("id", msg.Id),
-		event.NewAttribute("sender", msg.Sender),
-		event.NewAttribute("receiver", msg.Receiver),
-	)
+	eventMsg := &nft.EventSend{
+		ClassId:  msg.ClassId,
+		Id:       msg.Id,
+		Sender:   msg.Sender,
+		Receiver: msg.Receiver,
+	}
+	err = k.eventService.EventManager(ctx).Emit(eventMsg)
 	if err != nil {
 		return nil, err
 	}
+
 	return &nft.MsgSendResponse{}, nil
 }

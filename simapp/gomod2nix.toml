@@ -23,8 +23,8 @@ schema = 3
     version = "v1.0.1"
     hash = "sha256-MgTocXkBzri9FKkNtkARJXPmxRrRO/diQJS5ZzvYrJY="
   [mod."cosmossdk.io/log"]
-    version = "v1.3.0"
-    hash = "sha256-ti835PlPIWxP8c2Drfo5asi2Kd6kBkmXaadQZ/BiMqw="
+    version = "v1.3.1"
+    hash = "sha256-otkUvsz35VuuUWXoTmWBwR61+o6YzvWETGdLfwWDvwY="
   [mod."cosmossdk.io/math"]
     version = "v1.2.0"
     hash = "sha256-yLPUAsJPQxuI0C22cPbP/BzclWb9eBzGFntGDQmdVUc="
@@ -411,8 +411,8 @@ schema = 3
     version = "v1.8.3"
     hash = "sha256-VgVB4HKAhPSjNg96mIEUN1bt5ZQng8Fi3ZABy3CDWQE="
   [mod."github.com/rs/zerolog"]
-    version = "v1.31.0"
-    hash = "sha256-OF4VM+Rv6M5EAaUVD2nOzcbZLQ4b7OAMteyyTqIoU0M="
+    version = "v1.32.0"
+    hash = "sha256-9dZjtsES+wLp1cFiSVMuEUbdeXVFcgT0dgg5ACZkILk="
   [mod."github.com/sagikazarmark/locafero"]
     version = "v0.4.0"
     hash = "sha256-7I1Oatc7GAaHgAqBFO6Tv4IbzFiYeU9bJAfJhXuWaXk="
@@ -490,8 +490,8 @@ schema = 3
     version = "v1.11.0"
     hash = "sha256-Lb6rHHfR62Ozg2j2JZy3MKOMKdsfzd1IYTR57r3Mhp0="
   [mod."golang.org/x/crypto"]
-    version = "v0.18.0"
-    hash = "sha256-BuMVUxOIyfLo8MOhqYt+uQ8NDN6P2KdblKyfPxINzQ4="
+    version = "v0.19.0"
+    hash = "sha256-Vi6vY/eWNlYQ9l3Y+gA+X2+h2CmzEOrBRVFO/cnrPWc="
   [mod."golang.org/x/exp"]
     version = "v0.0.0-20240112132812-db7319d0e0e3"
     hash = "sha256-7fKt9/+xQDQOtrsAWd3+qcUtcZSgKhHNWGu4f6lNyyQ="
@@ -508,11 +508,11 @@ schema = 3
     version = "v0.6.0"
     hash = "sha256-LLims/wjDZtIqlYCVHREewcUOX4hwRwplEuZKPOJ/HI="
   [mod."golang.org/x/sys"]
-    version = "v0.16.0"
-    hash = "sha256-ZkGclbp2S7NQYhbuGji6XokCn2Qi1BJy8dwyAOTV8sY="
+    version = "v0.17.0"
+    hash = "sha256-e0qnE+SitE02IzvnJKI4Uzpq9EOZY+zvE8Wf5b2e6Kg="
   [mod."golang.org/x/term"]
-    version = "v0.16.0"
-    hash = "sha256-9qlHcsCI1sa7ZI4Q+fJbOp3mG5Y+uV16e+pGmG+MQe0="
+    version = "v0.17.0"
+    hash = "sha256-lCo7WPHe8Q9q76f0D8FrfoX90MTvwa21O+Dwr1mOAcA="
   [mod."golang.org/x/text"]
     version = "v0.14.0"
     hash = "sha256-yh3B0tom1RfzQBf1RNmfdNWF1PtiqxV41jW1GVS6JAg="

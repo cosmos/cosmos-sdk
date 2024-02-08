@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
@@ -119,7 +120,8 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	}
 
 	ctx := suite.ctx
-	suite.accountKeeper.InitGenesis(ctx, genState)
+	err := suite.accountKeeper.InitGenesis(ctx, genState)
+	require.NoError(suite.T(), err)
 
 	params := suite.accountKeeper.GetParams(ctx)
 	suite.Require().Equal(genState.Params.MaxMemoCharacters, params.MaxMemoCharacters, "MaxMemoCharacters")
@@ -165,9 +167,15 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		genState.Accounts = append(genState.Accounts, codectypes.UnsafePackAny(acct))
 	}
 
-	suite.accountKeeper.InitGenesis(ctx, genState)
+	err = suite.accountKeeper.InitGenesis(ctx, genState)
+	require.NoError(suite.T(), err)
 
-	keeperAccts := suite.accountKeeper.GetAllAccounts(ctx)
+	var keeperAccts []sdk.AccountI
+	err = suite.accountKeeper.Accounts.Walk(ctx, nil, func(_ sdk.AccAddress, value sdk.AccountI) (stop bool, err error) {
+		keeperAccts = append(keeperAccts, value)
+		return false, nil
+	})
+	require.NoError(suite.T(), err)
 	// len(accts)+1 because we initialize fee_collector account after the genState accounts
 	suite.Require().Equal(len(keeperAccts), len(accts)+1, "number of accounts in the keeper vs in genesis state")
 	for i, genAcct := range accts {
@@ -212,9 +220,15 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		},
 	}
 
-	suite.accountKeeper.InitGenesis(ctx, genState)
+	err = suite.accountKeeper.InitGenesis(ctx, genState)
+	require.NoError(suite.T(), err)
 
-	keeperAccts = suite.accountKeeper.GetAllAccounts(ctx)
+	keeperAccts = nil
+	err = suite.accountKeeper.Accounts.Walk(ctx, nil, func(_ sdk.AccAddress, value sdk.AccountI) (stop bool, err error) {
+		keeperAccts = append(keeperAccts, value)
+		return false, nil
+	})
+	require.NoError(suite.T(), err)
 	// len(genState.Accounts)+1 because we initialize fee_collector as account number 1 (last)
 	suite.Require().Equal(len(keeperAccts), len(genState.Accounts)+1, "number of accounts in the keeper vs in genesis state")
 

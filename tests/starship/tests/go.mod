@@ -14,6 +14,7 @@ replace (
 replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/client/v2 => ../../../client/v2
+	cosmossdk.io/core => ../../../core
 	cosmossdk.io/depinject => ../../../depinject
 	cosmossdk.io/simapp => ../../../simapp
 	cosmossdk.io/x/accounts => ../../../x/accounts
@@ -31,11 +32,12 @@ replace (
 	cosmossdk.io/x/protocolpool => ../../../x/protocolpool
 	cosmossdk.io/x/slashing => ../../../x/slashing
 	cosmossdk.io/x/staking => ../../../x/staking
+	cosmossdk.io/x/tx => ../../../x/tx
 	cosmossdk.io/x/upgrade => ../../../x/upgrade
 )
 
 require (
-	cosmossdk.io/log v1.3.0
+	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.2.0
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -195,7 +197,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/cors v1.8.3 // indirect
-	github.com/rs/zerolog v1.31.0 // indirect
+	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
@@ -221,14 +223,14 @@ require (
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/term v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect

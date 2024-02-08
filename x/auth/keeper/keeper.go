@@ -42,9 +42,6 @@ type AccountKeeperI interface {
 	// Remove an account from the store.
 	RemoveAccount(context.Context, sdk.AccountI)
 
-	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
-	IterateAccounts(context.Context, func(sdk.AccountI) bool)
-
 	// Fetch the public key of an account at a specified address
 	GetPubKey(context.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
 

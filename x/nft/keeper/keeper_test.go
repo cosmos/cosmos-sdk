@@ -54,7 +54,6 @@ func (s *TestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 
@@ -73,7 +72,8 @@ func (s *TestSuite) SetupTest() {
 
 	s.accountKeeper = accountKeeper
 
-	nftKeeper := keeper.NewKeeper(storeService, s.encCfg.Codec, accountKeeper, bankKeeper)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
+	nftKeeper := keeper.NewKeeper(env, s.encCfg.Codec, accountKeeper, bankKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)
 

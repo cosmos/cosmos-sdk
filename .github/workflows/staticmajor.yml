@@ -3,7 +3,7 @@ name: Detect leaking resources and bad code patterns
 on:
   push:
     branches:
-      - main
+      - osmo**
   pull_request:
   workflow_dispatch:
 

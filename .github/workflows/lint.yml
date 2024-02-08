@@ -2,7 +2,7 @@ name: Lint
 on:
   push:
     branches:
-      - main
+      - osmo**
       - release/**
   pull_request:
 permissions:

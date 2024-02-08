@@ -14,6 +14,10 @@ import (
 // MaxBitLen defines the maximum bit length supported bit Int and Uint types.
 const MaxBitLen = 256
 
+// maxWordLen defines the maximum word length supported by Int and Uint types.
+// Note: This can only be used in checks if MaxBitLen % 64 == 0
+const maxWordLen = MaxBitLen / 64
+
 // Integer errors
 var (
 	// ErrIntOverflow is the error returned when an integer overflow occurs
@@ -71,7 +75,7 @@ func unmarshalText(i *big.Int, text string) error {
 		return err
 	}
 
-	if i.BitLen() > MaxBitLen {
+	if len(i.Bits()) > maxWordLen {
 		return fmt.Errorf("integer out of range: %s", text)
 	}
 
@@ -128,7 +132,7 @@ func NewIntFromBigInt(i *big.Int) Int {
 		return Int{}
 	}
 
-	if i.BitLen() > MaxBitLen {
+	if len(i.Bits()) > maxWordLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
 
@@ -143,7 +147,7 @@ func NewIntFromBigIntMut(i *big.Int) Int {
 		return Int{}
 	}
 
-	if i.BitLen() > MaxBitLen {
+	if len(i.Bits()) > maxWordLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
 
@@ -157,7 +161,7 @@ func NewIntFromString(s string) (res Int, ok bool) {
 		return
 	}
 	// Check overflow
-	if i.BitLen() > MaxBitLen {
+	if len(i.Bits()) > maxWordLen {
 		ok = false
 		return
 	}
@@ -175,7 +179,7 @@ func NewIntWithDecimal(n int64, dec int) Int {
 	i.Mul(big.NewInt(n), exp)
 
 	// Check overflow
-	if i.BitLen() > MaxBitLen {
+	if len(i.Bits()) > maxWordLen {
 		panic("NewIntWithDecimal() out of bound")
 	}
 	return Int{i}
@@ -285,7 +289,7 @@ func (i Int) AddRaw(i2 int64) Int {
 func (i Int) SafeAdd(i2 Int) (res Int, err error) {
 	res = Int{add(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > MaxBitLen {
+	if len(res.i.Bits()) > maxWordLen {
 		return Int{}, ErrIntOverflow
 	}
 	return res, nil
@@ -310,7 +314,7 @@ func (i Int) SubRaw(i2 int64) Int {
 func (i Int) SafeSub(i2 Int) (res Int, err error) {
 	res = Int{sub(i.i, i2.i)}
 	// Check overflow/underflow
-	if res.i.BitLen() > MaxBitLen {
+	if len(res.i.Bits()) > maxWordLen {
 		return Int{}, ErrIntOverflow
 	}
 	return res, nil
@@ -335,7 +339,7 @@ func (i Int) MulRaw(i2 int64) Int {
 func (i Int) SafeMul(i2 Int) (res Int, err error) {
 	res = Int{mul(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > MaxBitLen {
+	if len(res.i.Bits()) > maxWordLen {
 		return Int{}, ErrIntOverflow
 	}
 	return res, nil
@@ -497,7 +501,7 @@ func (i *Int) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if i.i.BitLen() > MaxBitLen {
+	if len(i.i.Bits()) > maxWordLen {
 		return fmt.Errorf("integer out of range; got: %d, max: %d", i.i.BitLen(), MaxBitLen)
 	}
 

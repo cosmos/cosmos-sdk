@@ -289,7 +289,6 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 
 func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*codectypes.Any, error) {
 	msgResponses := make([]*codectypes.Any, 0, len(msgs))
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	for i, msg := range msgs {
 		// check if the message sender matches the provided signer
@@ -313,6 +312,7 @@ func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress
 
 		// define a function to be executed within the isolated context
 		execFunc := func(ctx context.Context) error {
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
 			// Call the router handler within the isolated context
 			handler := ak.router.Handler(msg)
 			if handler == nil {

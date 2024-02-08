@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/nft"
@@ -38,13 +37,18 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 		return err
 	}
 
-	err = k.eventService.EventManager(ctx).Emit(
-		"mint_with_no_check",
-		event.NewAttribute("classid", token.ClassId),
-		event.NewAttribute("id", token.Id),
-		event.NewAttribute("owner", recStr),
-	)
-	return err
+	eventToken := &nft.EventMint{
+		ClassId: token.ClassId,
+		Id:      token.Id,
+		Owner:   recStr,
+	}
+
+	err = k.eventService.EventManager(ctx).Emit(eventToken)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Burn defines a method for burning a nft from a specific account.
@@ -75,18 +79,24 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
+
 	ownerStr, err := k.ac.BytesToString(owner.Bytes())
 	if err != nil {
 		return err
 	}
 
-	err = k.eventService.EventManager(ctx).Emit(
-		"burn",
-		event.NewAttribute("classid", classID),
-		event.NewAttribute("id", nftID),
-		event.NewAttribute("owner", ownerStr),
-	)
-	return err
+	eventToken := &nft.EventBurn{
+		ClassId: classID,
+		Id:      nftID,
+		Owner:   ownerStr,
+	}
+
+	err = k.eventService.EventManager(ctx).Emit(eventToken)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update defines a method for updating an exist nft

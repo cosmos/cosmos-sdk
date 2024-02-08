@@ -126,6 +126,17 @@ func (bva *BaseVesting) ExecuteMessages(
 	if !accountstd.SenderIsAccountsModule(ctx) {
 		return nil, fmt.Errorf("sender is not the x/accounts module")
 	}
+	owner, err := bva.Owner.Get(ctx)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())
+	}
+	bundler, err := bva.addressCodec.StringToBytes(msg.Bundler)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid bundler address: %s", err.Error())
+	}
+	if !bytes.Equal(owner, bundler) {
+		return nil, fmt.Errorf("bundler is not the owner of this vesting account")
+	}
 	hs := bva.headerService.GetHeaderInfo(ctx)
 
 	for _, m := range msg.ExecutionMessages {
@@ -371,25 +382,13 @@ func (bva BaseVesting) checkTokensSendable(ctx context.Context, sender string, a
 	return nil
 }
 
-// this function only check if the bundler is the owner of the vesting account
+// this function only a placeholder so that there will be no routing err return
 // all bundler payment messages will be ignore, this is to prevent bypass vesting
 // account check for send, delegate and undelegate action when execute messages
 // by pass it in bundler. Since vesting doesn't have a handler for payBundler message,
 // this could lead to accounts keeper executes the messages directly without going
 // through vesting account ExecuteMessages handler.
 func (bva BaseVesting) payBundler(ctx context.Context, msg *account_abstractionv1.MsgPayBundler) (*account_abstractionv1.MsgPayBundlerResponse, error) {
-	owner, err := bva.Owner.Get(ctx)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())
-	}
-	bundler, err := bva.addressCodec.StringToBytes(msg.Bundler)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid bundler address: %s", err.Error())
-	}
-	if !bytes.Equal(owner, bundler) {
-		return nil, fmt.Errorf("bundler is not the owner of this vesting account")
-	}
-
 	return &account_abstractionv1.MsgPayBundlerResponse{}, nil
 }
 

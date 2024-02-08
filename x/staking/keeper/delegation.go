@@ -627,7 +627,7 @@ func (k Keeper) SetRedelegationQueueTimeSlice(ctx context.Context, timestamp tim
 	return k.RedelegationQueue.Set(ctx, timestamp, triplets)
 }
 
-// InsertRedelegationQueue insert an redelegation delegation to the appropriate
+// InsertRedelegationQueue insert a redelegation delegation to the appropriate
 // timeslice in the redelegation queue.
 func (k Keeper) InsertRedelegationQueue(ctx context.Context, red types.Redelegation, completionTime time.Time) error {
 	timeSlice, err := k.GetRedelegationQueueTimeSlice(ctx, completionTime)

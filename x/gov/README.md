@@ -433,8 +433,6 @@ We will use one KVStore `Governance` to store four mappings:
   doing a range query on `proposalID:addresses`.
 * A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all
   x/gov params.
-* A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
-  us to know if a proposal is in the voting period or not with very low gas cost.
   
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 

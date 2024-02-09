@@ -141,8 +141,7 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 
 	// Update proposal
 	proposal.TotalDeposit = sdk.NewCoins(proposal.TotalDeposit...).Add(depositAmount...)
-	err = k.SetProposal(ctx, proposal)
-	if err != nil {
+	if err = k.Proposals.Set(ctx, proposal.Id, proposal); err != nil {
 		return false, err
 	}
 

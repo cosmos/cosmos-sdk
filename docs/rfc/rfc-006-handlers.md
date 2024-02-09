@@ -218,7 +218,7 @@ RespBody: protojson.Marshal(msgResp)
 
 ### Consensus Messages
 
-Similar to the above design, consensus messages will allow the underlying consensus engine to speak to the modules. Today we get consensus related information from `sdk.Context`. In server/v2 we are unable to continue with this design due to the forced dependency leakage of comet throughout the repo. Secondly, while we already have `cometInfo` if we were to put this on the new execution client we would be tieing CometBFT to the application manager and STF.
+Similar to the above design, consensus messages will allow the underlying consensus engine to speak to the modules. Today we get consensus related information from `sdk.Context`. In server/v2 we are unable to continue with this design due to the forced dependency leakage of comet throughout the repo. Secondly, while we already have `cometInfo` if we were to put this on the new execution client we would be tying CometBFT to the application manager and STF.
 
 In the case of CometBFT, consensus would register handlers for consensus messages for evidence, voteinfo and consensus params. This would allow the consensus engine to speak to the modules.
 
@@ -240,7 +240,7 @@ func (b CircuitModule) RegisterConsensusHandlers(router core_appmodule.MsgHandle
 
 ## Consequences
 
-* REST endpoints for message and queries change due to lack of services and gRPC gatway annotations.
+* REST endpoints for message and queries change due to lack of services and gRPC gateway annotations.
 * When using gRPC directly, one must query a schema endpoint in order to see all possible messages and queries.
 
 ### Backwards Compatibility

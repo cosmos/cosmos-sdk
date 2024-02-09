@@ -719,6 +719,21 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 		return nil, fmt.Errorf("expected string for key %s", KeyNewChainID)
 	}
 
+	// Modify app genesis chain ID and save to genesis file.
+	genFilePath := config.GenesisFile()
+	appGen, err := genutiltypes.AppGenesisFromFile(genFilePath)
+	if err != nil {
+		return nil, err
+	}
+	appGen.ChainID = newChainID
+	if err := appGen.ValidateAndComplete(); err != nil {
+		return nil, err
+	}
+	if err := appGen.SaveAs(genFilePath); err != nil {
+		return nil, err
+	}
+
+	// Load the comet genesis doc provider.
 	genDocProvider := node.DefaultGenesisDocProviderFunc(config)
 
 	// Initialize blockStore and stateDB.
@@ -752,16 +767,6 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 
 	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider)
 	if err != nil {
-		return nil, err
-	}
-
-	// Modify genesis chain ID and save to genesis file.
-	genDoc.ChainID = newChainID
-	genFilePath := config.GenesisFile()
-	if err := genDoc.ValidateAndComplete(); err != nil {
-		return nil, err
-	}
-	if err := genDoc.SaveAs(genFilePath); err != nil {
 		return nil, err
 	}
 
@@ -911,6 +916,7 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 		return nil, err
 	}
 
+	// Since we modified the chainID, we set the new genesisDoc in the stateDB.
 	b, err := cmtjson.Marshal(genDoc)
 	if err != nil {
 		return nil, err

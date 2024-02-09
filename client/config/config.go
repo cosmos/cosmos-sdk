@@ -44,6 +44,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 // ReadDefaultValuesFromDefaultClientConfig reads default values from default client.toml file and updates them in client.Context
 // The client.toml is then discarded.
 func ReadDefaultValuesFromDefaultClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
+	prevHomeDir := ctx.HomeDir
 	dir, err := os.MkdirTemp("", "simapp")
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't create temp dir: %w", err)
@@ -56,7 +57,7 @@ func ReadDefaultValuesFromDefaultClientConfig(ctx client.Context, customClientTe
 		return ctx, fmt.Errorf("couldn't create client config: %w", err)
 	}
 
-	ctx.HomeDir = ""
+	ctx.HomeDir = prevHomeDir
 	return ctx, nil
 }
 

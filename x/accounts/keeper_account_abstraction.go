@@ -3,9 +3,11 @@ package accounts
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 var (
@@ -30,13 +32,17 @@ func (k Keeper) IsAbstractedAccount(ctx context.Context, addr []byte) (bool, err
 		return false, err
 	}
 
-	impl, err := k.getImplementation(accType)
-	if err != nil {
-		return false, err
+	impl, ok := k.accounts[accType]
+	if !ok {
+		return false, fmt.Errorf("%w: %s", errAccountTypeNotFound, accType)
 	}
 	return impl.HasExec(&aa_interface_v1.MsgAuthenticate{}), nil
 }
 
-func (k Keeper) AuthenticateAccount(ctx context.Context) error {
-
+func (k Keeper) AuthenticateAccount(ctx context.Context, addr []byte, msg *aa_interface_v1.MsgAuthenticate) error {
+	_, err := k.Execute(ctx, addr, address.Module("accounts"), msg, nil)
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrAuthentication, err)
+	}
+	return nil
 }

@@ -1,6 +1,7 @@
 package v5
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -12,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func migrateDelegationsByValidatorIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func migrateDelegationsByValidatorIndex(ctx context.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	iterator := storetypes.KVStorePrefixIterator(store, DelegationKey)
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -29,11 +30,11 @@ func migrateDelegationsByValidatorIndex(ctx sdk.Context, store storetypes.KVStor
 }
 
 // MigrateStore performs in-place store migrations from v4 to v5.
-func MigrateStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx context.Context, store storetypes.KVStore, cdc codec.BinaryCodec, logger log.Logger) error {
 	if err := migrateDelegationsByValidatorIndex(ctx, store, cdc); err != nil {
 		return err
 	}
-	return migrateHistoricalInfoKeys(store, ctx.Logger())
+	return migrateHistoricalInfoKeys(store, logger)
 }
 
 // migrateHistoricalInfoKeys migrate HistoricalInfo keys to binary format

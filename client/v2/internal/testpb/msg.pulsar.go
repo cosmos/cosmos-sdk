@@ -3153,6 +3153,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// MsgRequest is a sample request message
 type MsgRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

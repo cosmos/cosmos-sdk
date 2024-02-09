@@ -3,6 +3,9 @@ package util
 import (
 	"runtime/debug"
 	"testing"
+
+	"cosmossdk.io/client/v2/internal/testpb"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func TestIsSupportedVersion(t *testing.T) {
@@ -154,6 +157,41 @@ func TestParseSinceComment(t *testing.T) {
 			}
 			if version != tc.expectedVersion {
 				t.Errorf("expected version %s, got %s", tc.expectedVersion, version)
+			}
+		})
+	}
+}
+
+func TestDescriptorDocs(t *testing.T) {
+	msg1 := testpb.MsgRequest{}
+	descriptor1 := msg1.ProtoReflect().Descriptor()
+
+	msg2 := testpb.MsgResponse{}
+	descriptor2 := msg2.ProtoReflect().Descriptor()
+
+	cases := []struct {
+		name     string
+		input    protoreflect.Descriptor
+		expected string
+	}{
+
+		{
+			name:     "Test with leading comments",
+			input:    descriptor1,
+			expected: "Send a request and returns the request as a response.",
+		},
+		{
+			name:     "Test with no leading comments",
+			input:    descriptor2,
+			expected: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			output := DescriptorDocs(tc.input)
+			if output != tc.expected {
+				t.Errorf("expected %s, got %s", tc.expected, output)
 			}
 		})
 	}

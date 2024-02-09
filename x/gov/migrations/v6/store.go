@@ -5,16 +5,21 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	corestoretypes "cosmossdk.io/core/store"
 	v1 "cosmossdk.io/x/gov/types/v1"
 )
+
+var votingPeriodProposalKeyPrefix = collections.NewPrefix(4) // VotingPeriodProposalKeyPrefix stores which proposals are on voting period.
 
 // MigrateStore performs in-place store migrations from v5 (v0.50) to v6 (v0.51). The
 // migration includes:
 //
 // Addition of new field in params to store types of proposals that can be submitted.
 // Addition of gov params for optimistic proposals.
-func MigrateStore(ctx context.Context, paramsCollection collections.Item[v1.Params], proposalCollection collections.Map[uint64, v1.Proposal]) error {
-	// Migrate proposals
+// Addition of gov params for proposal cancel max period.
+// Cleanup of old proposal stores.
+func MigrateStore(ctx context.Context, storeService corestoretypes.KVStoreService, paramsCollection collections.Item[v1.Params], proposalCollection collections.Map[uint64, v1.Proposal]) error {
+	// Migrate **all** proposals
 	err := proposalCollection.Walk(ctx, nil, func(key uint64, proposal v1.Proposal) (bool, error) {
 		if proposal.Expedited {
 			proposal.ProposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
@@ -29,6 +34,13 @@ func MigrateStore(ctx context.Context, paramsCollection collections.Item[v1.Para
 		return false, nil
 	})
 	if err != nil {
+		return err
+	}
+
+	// Clear old proposal stores
+	sb := collections.NewSchemaBuilder(storeService)
+	votingPeriodProposals := collections.NewMap(sb, votingPeriodProposalKeyPrefix, "voting_period_proposals", collections.Uint64Key, collections.BytesValue)
+	if err := votingPeriodProposals.Clear(ctx, nil); err != nil {
 		return err
 	}
 

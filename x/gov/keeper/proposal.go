@@ -119,8 +119,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
-	err = k.SetProposal(ctx, proposal)
-	if err != nil {
+	if err = k.Proposals.Set(ctx, proposal.Id, proposal); err != nil {
 		return v1.Proposal{}, err
 	}
 	err = k.InactiveProposalsQueue.Set(ctx, collections.Join(*proposal.DepositEndTime, proposalID), proposalID)
@@ -219,23 +218,6 @@ func (k Keeper) CancelProposal(ctx context.Context, proposalID uint64, proposer 
 	return nil
 }
 
-// SetProposal sets a proposal to store.
-func (k Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) error {
-	if proposal.Status == v1.StatusVotingPeriod {
-		err := k.VotingPeriodProposals.Set(ctx, proposal.Id, []byte{1})
-		if err != nil {
-			return err
-		}
-	} else {
-		err := k.VotingPeriodProposals.Remove(ctx, proposal.Id)
-		if err != nil {
-			return err
-		}
-	}
-
-	return k.Proposals.Set(ctx, proposal.Id, proposal)
-}
-
 // DeleteProposal deletes a proposal from store.
 func (k Keeper) DeleteProposal(ctx context.Context, proposalID uint64) error {
 	proposal, err := k.Proposals.Get(ctx, proposalID)
@@ -251,11 +233,6 @@ func (k Keeper) DeleteProposal(ctx context.Context, proposalID uint64) error {
 	}
 	if proposal.VotingEndTime != nil {
 		err := k.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposalID))
-		if err != nil {
-			return err
-		}
-
-		err = k.VotingPeriodProposals.Remove(ctx, proposalID)
 		if err != nil {
 			return err
 		}
@@ -296,7 +273,7 @@ func (k Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Proposal) 
 	endTime := proposal.VotingStartTime.Add(*votingPeriod)
 	proposal.VotingEndTime = &endTime
 	proposal.Status = v1.StatusVotingPeriod
-	if err = k.SetProposal(ctx, proposal); err != nil {
+	if err = k.Proposals.Set(ctx, proposal.Id, proposal); err != nil {
 		return err
 	}
 

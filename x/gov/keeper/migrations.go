@@ -41,5 +41,5 @@ func (m Migrator) Migrate4to5(ctx context.Context) error {
 
 // Migrate4to5 migrates from version 5 to 6.
 func (m Migrator) Migrate5to6(ctx context.Context) error {
-	return v6.MigrateStore(ctx, m.keeper.Params, m.keeper.Proposals)
+	return v6.MigrateStore(ctx, m.keeper.storeService, m.keeper.Params, m.keeper.Proposals)
 }

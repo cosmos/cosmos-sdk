@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	baseaccount "cosmossdk.io/x/accounts/defaults/base"
+	"cosmossdk.io/x/tx/signing/direct"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -285,6 +287,8 @@ func NewSimApp(
 	addressCodec := authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	// add keepers
+	handlersMap := signing.NewHandlerMap(direct.SignModeHandler{})
+
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
@@ -297,9 +301,11 @@ func NewSimApp(
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		appCodec.InterfaceRegistry(),
+		// TESTING: do not add
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
-		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
+		// PRODUCTION: add
+		baseaccount.NewAccount("base", handlersMap),
 	)
 	if err != nil {
 		panic(err)

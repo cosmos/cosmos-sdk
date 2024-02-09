@@ -1544,11 +1544,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					Id:     1,
 					Status: v1.StatusPassed,
 					FinalTallyResult: &v1.TallyResult{
-						YesCount:        "4",
-						AbstainCount:    "1",
-						NoCount:         "0",
-						NoWithVetoCount: "0",
-						SpamCount:       "0",
+						YesCount:         "4",
+						AbstainCount:     "1",
+						NoCount:          "0",
+						NoWithVetoCount:  "0",
+						OptionOneCount:   "4",
+						OptionTwoCount:   "1",
+						OptionThreeCount: "0",
+						OptionFourCount:  "0",
+						SpamCount:        "0",
 					},
 					SubmitTime:      &propTime,
 					VotingStartTime: &propTime,
@@ -1561,11 +1565,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
-					YesCount:        "4",
-					AbstainCount:    "1",
-					NoCount:         "0",
-					NoWithVetoCount: "0",
-					SpamCount:       "0",
+					YesCount:         "4",
+					AbstainCount:     "1",
+					NoCount:          "0",
+					NoWithVetoCount:  "0",
+					OptionOneCount:   "4",
+					OptionTwoCount:   "1",
+					OptionThreeCount: "0",
+					OptionFourCount:  "0",
+					SpamCount:        "0",
 				}
 			},
 			true,
@@ -1588,11 +1596,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
-					YesCount:        "0",
-					AbstainCount:    "0",
-					NoCount:         "0",
-					NoWithVetoCount: "0",
-					SpamCount:       "0",
+					YesCount:         "0",
+					AbstainCount:     "0",
+					NoCount:          "0",
+					NoWithVetoCount:  "0",
+					OptionOneCount:   "0",
+					OptionTwoCount:   "0",
+					OptionThreeCount: "0",
+					OptionFourCount:  "0",
+					SpamCount:        "0",
 				}
 			},
 			true,
@@ -1615,11 +1627,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
-					YesCount:        "0",
-					AbstainCount:    "0",
-					NoCount:         "0",
-					NoWithVetoCount: "0",
-					SpamCount:       "0",
+					YesCount:         "0",
+					AbstainCount:     "0",
+					NoCount:          "0",
+					NoWithVetoCount:  "0",
+					OptionOneCount:   "0",
+					OptionTwoCount:   "0",
+					OptionThreeCount: "0",
+					OptionFourCount:  "0",
+					SpamCount:        "0",
 				}
 			},
 			true,

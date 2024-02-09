@@ -1,12 +1,11 @@
 package v6
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/collections"
 	v1 "cosmossdk.io/x/gov/types/v1"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // MigrateStore performs in-place store migrations from v5 (v0.50) to v6 (v0.51). The
@@ -14,7 +13,7 @@ import (
 //
 // Addition of new field in params to store types of proposals that can be submitted.
 // Addition of gov params for optimistic proposals.
-func MigrateStore(ctx sdk.Context, paramsCollection collections.Item[v1.Params], proposalCollection collections.Map[uint64, v1.Proposal]) error {
+func MigrateStore(ctx context.Context, paramsCollection collections.Item[v1.Params], proposalCollection collections.Map[uint64, v1.Proposal]) error {
 	// Migrate proposals
 	err := proposalCollection.Walk(ctx, nil, func(key uint64, proposal v1.Proposal) (bool, error) {
 		if proposal.Expedited {

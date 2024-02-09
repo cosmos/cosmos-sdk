@@ -734,17 +734,50 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 		return nil, err
 	}
 
-	// There are times when a user stops their node between commits, resulting in a mismatch between the
-	// blockStore and state. For convenience, we just discard the uncommitted blockStore block and operate on
-	// the lastBlockHeight in state.
-	if blockStore.Height() != state.LastBlockHeight {
+	ctx.Viper.Set(KeyNewValAddr, validatorAddress)
+	ctx.Viper.Set(KeyUserPubKey, userPubKey)
+	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
+
+	// We need to create a temporary proxyApp to get the initial state of the application.
+	// Depending on how the node was stopped, the application height can differ from the blockStore height.
+	// This height difference changes how we go about modifying the state.
+	clientCreator := proxy.NewLocalClientCreator(testnetApp)
+	metrics := node.DefaultMetricsProvider(config.Instrumentation)
+	_, _, _, _, proxyMetrics := metrics(genDoc.ChainID) //nolint:dogsled
+	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
+	if err := proxyApp.Start(); err != nil {
+		return nil, fmt.Errorf("error starting proxy app connections: %v", err)
+	}
+	res, err := proxyApp.Query().InfoSync(proxy.RequestInfo)
+	if err != nil {
+		return nil, fmt.Errorf("error calling Info: %v", err)
+	}
+	err = proxyApp.Stop()
+	if err != nil {
+		return nil, err
+	}
+	appHash := res.LastBlockAppHash
+	appHeight := res.LastBlockHeight
+
+	var block *cmttypes.Block
+	switch {
+	case appHeight == blockStore.Height():
+		// This state occurs when we stop the node with the halt height flag, and need to handle differently
+		state.LastBlockHeight++
+		block = blockStore.LoadBlock(blockStore.Height())
+		block.AppHash = appHash
+		state.AppHash = appHash
+	case blockStore.Height() > state.LastBlockHeight:
+		// This state occurs when we kill the node
 		err = blockStore.DeleteLatestBlock()
 		if err != nil {
 			return nil, err
 		}
+		block = blockStore.LoadBlock(blockStore.Height())
+	default:
+		// If there is any other state, we just load the block
+		block = blockStore.LoadBlock(blockStore.Height())
 	}
-
-	block := blockStore.LoadBlock(blockStore.Height())
 
 	block.ChainID = newChainID
 	state.ChainID = newChainID
@@ -852,12 +885,6 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	if err := stateDB.SetSync([]byte("genesisDoc"), b); err != nil {
 		return nil, err
 	}
-
-	// testnetAppCreator makes any application side changes that must be made due to the above modifications.
-	// Also, it makes any optional application side changes to make running the testnet easier (voting times, fund accounts, etc).
-	ctx.Viper.Set(KeyNewValAddr, validatorAddress)
-	ctx.Viper.Set(KeyUserPubKey, userPubKey)
-	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
 	return testnetApp, err
 }

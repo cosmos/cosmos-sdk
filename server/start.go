@@ -776,7 +776,7 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	_, context := getCtx(ctx, true)
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(config.Instrumentation)
-	_, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID) //nolint:dogsled
+	_, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID)
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
 		return nil, fmt.Errorf("error starting proxy app connections: %v", err)

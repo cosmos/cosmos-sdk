@@ -164,7 +164,7 @@ Pull requests that fix bugs and add features that fall in the following categori
 As rule of thumb, the following changes will **NOT** be automatically accepted into stable point-releases:
 
 * **State machine changes**.
-* **Protobug-breaking changes**, as specified in [ADR-044](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-044-protobuf-updates-       guidelines.md).
+* **Protobug-breaking changes**, as specified in [ADR-044](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-044-protobuf-updates-guidelines.md).
 * **Client-breaking changes**, i.e. changes that prevent gRPC, HTTP and RPC clients to continue interacting with the node without any change.
 * **API-breaking changes**, i.e. changes that prevent client applications to _build without modifications_ to the client application's source code.
 * **CLI-breaking changes**, i.e. changes that require usage changes for CLI users.

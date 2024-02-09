@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"math/bits"
 	"strings"
 	"sync"
 	"testing"
@@ -13,6 +14,12 @@ import (
 
 // MaxBitLen defines the maximum bit length supported bit Int and Uint types.
 const MaxBitLen = 256
+
+// maxWordLen defines the maximum word length supported by Int and Uint types.
+// We check overflow, by first doing a fast check if the word length is below maxWordLen
+// and if not then do the slower full bitlen check.
+// NOTE: If MaxBitLen is not a multiple of bits.UintSize, then we need to edit the used logic slightly.
+const maxWordLen = MaxBitLen / bits.UintSize
 
 // Integer errors
 var (
@@ -71,7 +78,7 @@ func unmarshalText(i *big.Int, text string) error {
 		return err
 	}
 
-	if i.BitLen() > MaxBitLen {
+	if bigIntOverflows(i) {
 		return fmt.Errorf("integer out of range: %s", text)
 	}
 
@@ -128,7 +135,7 @@ func NewIntFromBigInt(i *big.Int) Int {
 		return Int{}
 	}
 
-	if i.BitLen() > MaxBitLen {
+	if bigIntOverflows(i) {
 		panic("NewIntFromBigInt() out of bound")
 	}
 
@@ -143,7 +150,7 @@ func NewIntFromBigIntMut(i *big.Int) Int {
 		return Int{}
 	}
 
-	if i.BitLen() > MaxBitLen {
+	if bigIntOverflows(i) {
 		panic("NewIntFromBigInt() out of bound")
 	}
 
@@ -157,7 +164,7 @@ func NewIntFromString(s string) (res Int, ok bool) {
 		return
 	}
 	// Check overflow
-	if i.BitLen() > MaxBitLen {
+	if bigIntOverflows(i) {
 		ok = false
 		return
 	}
@@ -175,7 +182,7 @@ func NewIntWithDecimal(n int64, dec int) Int {
 	i.Mul(big.NewInt(n), exp)
 
 	// Check overflow
-	if i.BitLen() > MaxBitLen {
+	if bigIntOverflows(i) {
 		panic("NewIntWithDecimal() out of bound")
 	}
 	return Int{i}
@@ -285,7 +292,7 @@ func (i Int) AddRaw(i2 int64) Int {
 func (i Int) SafeAdd(i2 Int) (res Int, err error) {
 	res = Int{add(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > MaxBitLen {
+	if bigIntOverflows(res.i) {
 		return Int{}, ErrIntOverflow
 	}
 	return res, nil
@@ -310,7 +317,7 @@ func (i Int) SubRaw(i2 int64) Int {
 func (i Int) SafeSub(i2 Int) (res Int, err error) {
 	res = Int{sub(i.i, i2.i)}
 	// Check overflow/underflow
-	if res.i.BitLen() > MaxBitLen {
+	if bigIntOverflows(res.i) {
 		return Int{}, ErrIntOverflow
 	}
 	return res, nil
@@ -335,7 +342,7 @@ func (i Int) MulRaw(i2 int64) Int {
 func (i Int) SafeMul(i2 Int) (res Int, err error) {
 	res = Int{mul(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > MaxBitLen {
+	if bigIntOverflows(res.i) {
 		return Int{}, ErrIntOverflow
 	}
 	return res, nil
@@ -497,7 +504,7 @@ func (i *Int) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if i.i.BitLen() > MaxBitLen {
+	if bigIntOverflows(i.i) {
 		return fmt.Errorf("integer out of range; got: %d, max: %d", i.i.BitLen(), MaxBitLen)
 	}
 
@@ -590,4 +597,16 @@ func FormatInt(v string) (string, error) {
 	}
 
 	return sign + sb.String(), nil
+}
+
+// check if the big int overflows.
+func bigIntOverflows(i *big.Int) bool {
+	// overflow is defined as i.BitLen() > MaxBitLen
+	// however this check can be expensive when doing many operations.
+	// So we first check if the word length is greater than maxWordLen.
+	// However the most significant word could be zero, hence we still do the bitlen check.
+	if len(i.Bits()) > maxWordLen {
+		return i.BitLen() > MaxBitLen
+	}
+	return false
 }

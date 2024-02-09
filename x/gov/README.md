@@ -65,8 +65,6 @@ staking token of the chain.
 
 ## Concepts
 
-*Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
-
 The governance process is divided in a few steps that are outlined below:
 
 * **Proposal submission:** Proposal is submitted to the blockchain with a
@@ -93,6 +91,11 @@ only should add a whitelist within the respective msg server, granting the gover
 module the right to execute the message once a quorum has been reached. The governance
 module uses the `MsgServiceRouter` to check that these messages are correctly constructed
 and have a respective path to execute on but do not perform a full validity check.
+
+:::warning
+Ultimately, governance is able to execute any proposal, even if they weren't meant to be executed by governance (ie. no authority present).
+Messages without authority are message meant to be executed by users. Using the `MsgSudoExec` message in a proposal, let governance can execute any message, effectively acting as super user.
+:::
 
 ### Deposit
 
@@ -152,10 +155,11 @@ choose from when casting its vote.
 
 The initial option set includes the following options:
 
-* `Yes`
-* `No`
-* `NoWithVeto`
-* `Abstain`
+* `Yes` / `Option 1`
+* `Abstain` / `Option 2`
+* `No` / `Option 3`
+* `NoWithVeto` / `Option 4`
+* `Spam` / `Option Spam`
 
 `NoWithVeto` counts as `No` but also adds a `Veto` vote. `Abstain` option
 allows voters to signal that they do not intend to vote in favor or against the
@@ -203,6 +207,9 @@ A proposal can be expedited, making the proposal use shorter voting duration and
 An optimistic proposal is a proposal that passes unless a threshold a NO votes is reached.
 Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a standard proposal.
 
+That threshold is defined by the `optimistic_rejected_threshold` governance parameter.
+A chain can optionally set a list of authorized addresses that can submit optimistic proposals using the `optimistic_authorized_addresses` governance parameter.
+
 #### Multiple Choice Proposals
 
 A multiple choice proposal is a proposal where the voting options can be defined by the proposer.
@@ -229,6 +236,13 @@ This means that proposals are accepted iff:
   the voting period is superior to 1/2.
 
 For expedited proposals, by default, the threshold is higher than with a *normal proposal*, namely, 66.7%.
+
+### Yes Quorum
+
+Yes quorum is a more restrictive quorum that is used to determine if a proposal passes.
+It is defined as the minimum percentage of voting power that needs to have voted `Yes` for the proposal to pass.
+It differs from `Threshold` as it takes the whole voting power into account, not only `Yes` and `No` votes.
+By default, `YesQuorum` is set to 0, which means no minimum.
 
 #### Inheritance
 
@@ -341,6 +355,10 @@ governance module account: `govKeeper.GetGovernanceAccount().GetAddress()`. Then
 the methods in the `msg_server.go`, perform a check on the message that the signer
 matches `authority`. This will prevent any user from executing that message.
 
+:::warning
+Note, any message can be executed by governance if embedded in `MsgSudoExec`.
+:::
+
 ### Parameters and base types
 
 `Parameters` define the rules according to which votes are run. There can only
@@ -371,16 +389,6 @@ Parameters are stored in a global `GlobalParams` KVStore.
 Additionally, we introduce some basic types:
 
 ```go
-type Vote byte
-
-const (
-    VoteYes         = 0x1
-    VoteNo          = 0x2
-    VoteNoWithVeto  = 0x3
-    VoteAbstain     = 0x4
-    VoteSpam        = 0x5
-)
-
 type ProposalStatus byte
 
 
@@ -425,8 +433,6 @@ We will use one KVStore `Governance` to store four mappings:
   doing a range query on `proposalID:addresses`.
 * A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all
   x/gov params.
-* A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
-  us to know if a proposal is in the voting period or not with very low gas cost.
   
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
@@ -606,6 +612,7 @@ The governance module contains the following parameters:
 | max_deposit_period              | string (time ns)  | "172800000000000" (17280s)              |
 | voting_period                   | string (time ns)  | "172800000000000" (17280s)              |
 | quorum                          | string (dec)      | "0.334000000000000000"                  |
+| yes_quorum                      | string (dec)      | "0.4"                                   |
 | threshold                       | string (dec)      | "0.500000000000000000"                  |
 | veto                            | string (dec)      | "0.334000000000000000"                  |
 | expedited_threshold             | string (time ns)  | "0.667000000000000000"                  |
@@ -624,6 +631,24 @@ The governance module contains the following parameters:
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need
 to be included and not the entire parameter object structure.
+
+### Message Based Parameters
+
+In addition to the parameters above, the governance module can also be configured to have different parameters for a given proposal message.
+
+| Key           | Type             | Example                    |
+| ------------- | ---------------- | -------------------------- |
+| voting_period | string (time ns) | "172800000000000" (17280s) |
+| yes_quorum    | string (dec)     | "0.4"                      |
+| quorum        | string (dec)     | "0.334000000000000000"     |
+| threshold     | string (dec)     | "0.500000000000000000"     |
+| veto          | string (dec)     | "0.334000000000000000"     |
+
+If configured, these params will take precedence over the global params for a specific proposal.
+
+:::warning
+Currently, messaged based parameters limit the number of messages that can be included in a proposal to 1 if a messaged based parameter is configured.
+:::
 
 ## Client
 
@@ -691,26 +716,6 @@ pagination:
   total: "0"
 ```
 
-##### param
-
-The `param` command allows users to query a given parameter for the `gov` module.
-
-```bash
-simd query gov param [param-type] [flags]
-```
-
-Example:
-
-```bash
-simd query gov param voting
-```
-
-Example Output:
-
-```bash
-voting_period: "172800000000000"
-```
-
 ##### params
 
 The `params` command allows users to query all parameters for the `gov` module.
@@ -728,11 +733,6 @@ simd query gov params
 Example Output:
 
 ```bash
-deposit_params:
-  max_deposit_period: 172800s
-  min_deposit:
-  - amount: "10000000"
-    denom: stake
 params:
   expedited_min_deposit:
   - amount: "50000000"
@@ -748,12 +748,6 @@ params:
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"
-  voting_period: 172800s
-tally_params:
-  quorum: "0.334000000000000000"
-  threshold: "0.500000000000000000"
-  veto_threshold: "0.334000000000000000"
-voting_params:
   voting_period: 172800s
 ```
 
@@ -1072,7 +1066,7 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 }
 ```
 
-#### cancel-proposal
+##### cancel-proposal
 
 Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
 
@@ -1514,8 +1508,6 @@ Example Output:
 
 The `Params` endpoint allows users to query all parameters for the `gov` module.
 
-<!-- TODO: #10197 Querying governance params outputs nil values -->
-
 Using legacy v1beta1:
 
 ```bash
@@ -1747,7 +1739,12 @@ Example Output:
     "yes": "1000000",
     "abstain": "0",
     "no": "0",
-    "noWithVeto": "0"
+    "noWithVeto": "0",
+    "option_one_count": "1000000",
+    "option_two_count": "0",
+    "option_three_count": "0",
+    "option_four_count": "0",
+    "spam_count": "0"
   }
 }
 ```
@@ -2484,30 +2481,3 @@ Location: on-chain as json within 255 character limit (mirrors [group vote](../g
   "justification": "",
 }
 ```
-
-## Future Improvements
-
-The current documentation only describes the minimum viable product for the
-governance module. Future improvements may include:
-
-* **`BountyProposals`:** If accepted, a `BountyProposal` creates an open
-  bounty. The `BountyProposal` specifies how many Atoms will be given upon
-  completion. These Atoms will be taken from the `reserve pool`. After a
-  `BountyProposal` is accepted by governance, anybody can submit a
-  `SoftwareUpgradeProposal` with the code to claim the bounty. Note that once a
-  `BountyProposal` is accepted, the corresponding funds in the `reserve pool`
-  are locked so that payment can always be honored. In order to link a
-  `SoftwareUpgradeProposal` to an open bounty, the submitter of the
-  `SoftwareUpgradeProposal` will use the `Proposal.LinkedProposal` attribute.
-  If a `SoftwareUpgradeProposal` linked to an open bounty is accepted by
-  governance, the funds that were reserved are automatically transferred to the
-  submitter.
-* **Complex delegation:** Delegators could choose other representatives than
-  their validators. Ultimately, the chain of representatives would always end
-  up to a validator, but delegators could inherit the vote of their chosen
-  representative before they inherit the vote of their validator. In other
-  words, they would only inherit the vote of their validator if their other
-  appointed representative did not vote.
-* **Better process for proposal review:** There would be two parts to
-  `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
-  reward third party auditors.

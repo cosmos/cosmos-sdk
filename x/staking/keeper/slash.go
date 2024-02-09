@@ -76,12 +76,12 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 
 	operatorAddress, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 	if err != nil {
-		return math.Int{}, err
+		return math.NewInt(0), err
 	}
 
 	// call the before-modification hook
 	if err := k.Hooks().BeforeValidatorModified(ctx, operatorAddress); err != nil {
-		k.Logger(ctx).Error("failed to call before validator modified hook", "error", err)
+		return math.NewInt(0), fmt.Errorf("failed to call before validator modified hook: %w", err)
 	}
 
 	// Track remaining slash amount for the validator
@@ -170,7 +170,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		}
 		// call the before-slashed hook
 		if err := k.Hooks().BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction); err != nil {
-			k.Logger(ctx).Error("failed to call before validator slashed hook", "error", err)
+			return math.NewInt(0), fmt.Errorf("failed to call before validator slashed hook: %w", err)
 		}
 	}
 

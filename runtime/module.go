@@ -67,7 +67,7 @@ func init() {
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideGenesisTxHandler,
-			ProvideKVStoreService,
+			ProvideEnvironment,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
@@ -224,9 +224,10 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
+func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) (store.KVStoreService, appmodule.Environment) {
 	storeKey := ProvideKVStoreKey(config, key, app)
-	return kvStoreService{key: storeKey}
+	kvService := kvStoreService{key: storeKey}
+	return kvService, NewEnvironment(kvService)
 }
 
 func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {

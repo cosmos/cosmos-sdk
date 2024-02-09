@@ -26,7 +26,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
@@ -53,7 +53,7 @@ func TestTallyNoQuorum(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	err = f.govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 	assert.NilError(t, err)
@@ -79,7 +79,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
@@ -108,7 +108,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[1], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
@@ -135,7 +135,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[0], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
@@ -163,7 +163,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
@@ -192,7 +192,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[1], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
@@ -221,7 +221,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
@@ -251,7 +251,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddr1, v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, valAccAddr2, v1.NewNonSplitVoteOption(v1.OptionNo), ""))
@@ -288,7 +288,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[2], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
@@ -327,7 +327,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
@@ -369,7 +369,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
@@ -414,7 +414,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
@@ -460,7 +460,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
@@ -496,7 +496,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID := proposal.Id
 	proposal.Status = v1.StatusVotingPeriod
-	err = f.govKeeper.SetProposal(ctx, proposal)
+	err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	assert.NilError(t, err)
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 	assert.NilError(t, f.govKeeper.AddVote(ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionNo), ""))

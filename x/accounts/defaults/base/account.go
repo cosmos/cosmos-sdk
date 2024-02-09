@@ -10,15 +10,34 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/accounts/accountstd"
+	v1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
+
+var (
+	PubKeyPrefix   = collections.NewPrefix(0)
+	SequencePrefix = collections.NewPrefix(1)
+)
+
+func NewAccount(name string, handlerMap *signing.HandlerMap) accountstd.AccountCreatorFunc {
+	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
+		return name, Account{
+			PubKey:          collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key", codec.CollValue[secp256k1.PubKey](deps.LegacyStateCodec)),
+			Sequence:        collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
+			addrCodec:       deps.AddressCodec,
+			hs:              deps.HeaderService,
+			signingHandlers: handlerMap,
+		}, nil
+	}
+}
 
 // Account implements a base account.
 type Account struct {
@@ -28,10 +47,27 @@ type Account struct {
 	addrCodec address.Codec
 	hs        header.Service
 
-	signingHandlers signing.HandlerMap
+	signingHandlers *signing.HandlerMap
 }
 
-// Authenticate implements the authentication flow of an abstracted account.
+func (a Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitResponse, error) {
+	return &v1.MsgInitResponse{}, a.verifyAndSetPubKey(ctx, msg.PubKey)
+}
+
+func (a Account) SwapPubKey(ctx context.Context, msg *v1.MsgSwapPubKey) (*v1.MsgSwapPubKeyResponse, error) {
+	if !accountstd.SenderIsSelf(ctx) {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	return &v1.MsgSwapPubKeyResponse{}, a.verifyAndSetPubKey(ctx, msg.NewPubKey)
+}
+
+func (a Account) verifyAndSetPubKey(ctx context.Context, key []byte) error {
+	// TODO: verify
+	return a.PubKey.Set(ctx, secp256k1.PubKey{Key: key})
+}
+
+// Authenticate implements the authentication flow of an abstracted base account.
 func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthenticate) (*aa_interface_v1.MsgAuthenticateResponse, error) {
 	if !accountstd.SenderIsAccountsModule(ctx) {
 		return nil, fmt.Errorf("unauthorized: only accounts module is allowed to call this")
@@ -151,3 +187,14 @@ func (a Account) getTxData(msg *aa_interface_v1.MsgAuthenticate) (signing.TxData
 		BodyHasUnknownNonCriticals: false, // NOTE: amino signing must be disabled.
 	}, nil
 }
+
+func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
+	accountstd.RegisterInitHandler(builder, a.Init)
+}
+
+func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	accountstd.RegisterExecuteHandler(builder, a.SwapPubKey)
+	accountstd.RegisterExecuteHandler(builder, a.Authenticate) // account abstraction
+}
+
+func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {}

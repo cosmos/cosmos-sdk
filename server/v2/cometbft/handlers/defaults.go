@@ -6,13 +6,26 @@ import (
 	"fmt"
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
+	abci "cosmossdk.io/api/tendermint/abci"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/mempool"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
+
+// PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations
+// over the list of proposed transactions. It can return a modified list of txs to include in the proposal.
+type PrepareHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) ([]T, error)
+
+// ProcessHandler is a function that takes a list of transactions and returns a boolean and an error.
+// If the verification of a transaction fails, the boolean is false and the error is non-nil.
+type ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) error
+
+type AppManager[T transaction.Tx] interface {
+	ValidateTx(ctx context.Context, tx T, execMode corecontext.ExecMode) (appmanager.TxResult, error)
+	Query(ctx context.Context, version uint64, request appmanager.Type) (response appmanager.Type, err error)
+}
 
 type DefaultProposalHandler[T transaction.Tx] struct {
 	mempool    mempool.Mempool[T]
@@ -26,8 +39,8 @@ func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *Default
 	}
 }
 
-func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T] {
-	return func(ctx context.Context, app appmanager.AppManager[T], txs []T, req proto.Message) ([]T, error) {
+func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
+	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
 
 		abciReq, ok := req.(*abci.RequestPrepareProposal)
 		if !ok {
@@ -79,7 +92,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T
 			_, err := app.ValidateTx(ctx, memTx, corecontext.ExecModePrepareProposal)
 
 			if err != nil {
-				err := h.mempool.Remove(memTx)
+				err := h.mempool.Remove([]T{memTx})
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					return nil, err
 				}
@@ -98,8 +111,8 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() appmanager.PrepareHandler[T
 	}
 }
 
-func (h *DefaultProposalHandler[T]) ProcessHandler() appmanager.ProcessHandler[T] {
-	return func(ctx context.Context, app appmanager.AppManager[T], txs []T, req proto.Message) error {
+func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
+	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) error {
 		// If the mempool is nil we simply return ACCEPT,
 		// because PrepareProposal may have included txs that could fail verification.
 		if h.mempool == nil {

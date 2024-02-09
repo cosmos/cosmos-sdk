@@ -32,6 +32,8 @@ network.
     * [Redelegation](#redelegation)
     * [Queues](#queues)
     * [HistoricalInfo](#historicalinfo)
+    * [TotalLiquidStakedTokens](#totalliquidstakedtokens)
+    * [PendingTokenizeShareAuthorizations](#pendingtokenizeshareauthorizations)
 * [State Transitions](#state-transitions)
     * [Validators](#validators)
     * [Delegations](#delegations)
@@ -45,6 +47,13 @@ network.
     * [MsgCancelUnbondingDelegation](#msgcancelunbondingdelegation)
     * [MsgBeginRedelegate](#msgbeginredelegate)
     * [MsgUpdateParams](#msgupdateparams)
+    * [MsgTokenizeShares](#msgtokenizeshares)
+    * [MsgRedeemTokensForShares](#msgredeemtokensforshares)
+    * [MsgTransferTokenizeShareRecord](#msgtransfertokenizesharerecord)
+    * [MsgEnableTokenizeShares](#msgenabletokenizeshares)
+    * [MsgDisableTokenizeShares](#msgdisabletokenizeshares)
+    * [MsgUnbondValidator](#msgunbondvalidator)
+    * [MsgValidatorBond](#msgvalidatorbond)
 * [Begin-Block](#begin-block)
     * [Historical Info Tracking](#historical-info-tracking)
 * [End-Block](#end-block)
@@ -153,6 +162,10 @@ where `Jailed` is true are not stored within this index.
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but
 is updated during the validator set update process which takes place in [`EndBlock`](#end-block).
+
+`ValidatorBondShares` is the number of shares self bonded from the validator.
+
+`LiquidShares` is the number of shares either tokenized or owned by a liquid staking provider.
 
 Each validator's state is stored in a `Validator` struct:
 
@@ -332,6 +345,22 @@ they are in a deterministic order.
 The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
 historical entries.
 
+
+### TotalLiquidStakedTokens
+
+TotalLiquidStakedTokens stores the total liquid staked tokens monitoring the progress towards the `GlobalLiquidStakingCap`.
+
+* TotalLiquidStakedTokens: `0x85 -> math.Int`. 
+
+
+### PendingTokenizeShareAuthorizations
+
+PendingTokenizeShareAuthorizations stores a queue of addresses that have their tokenize share re-enablement/unlocking in progress. When an address is enqueued, it will sit for 1 unbonding period before the tokenize share lock is removed.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/staking.proto#L417-L421
+```
+
 ## State Transitions
 
 ### Validators
@@ -400,6 +429,8 @@ When a delegation occurs both the validator and the delegation objects are affec
 * transfer the `delegation.Amount` from the delegator's account to the `BondedPool` or the `NotBondedPool` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
 * delete the existing record from `ValidatorByPowerIndex`
 * add an new updated record to the `ValidatorByPowerIndex`
+* if the delegator is a liquid staking provider,
+ increment the `TotalLiquidStakedTokens` and the validator's `LiquidShares`.
 
 #### Begin Unbonding
 
@@ -418,6 +449,7 @@ Delegation may be called.
 * get a unique `unbondingId` and map it to the `UnbondingDelegationEntry` in `UnbondingDelegationByUnbondingId`
 * call the `AfterUnbondingInitiated(unbondingId)` hook
 * add the unbonding delegation to `UnbondingDelegationQueue` with the completion time set to `UnbondingTime`
+* if delegator is a liquid staking provider, decrement the `TotalLiquidStakedTokens` and the validator's `LiquidShares`.
 
 #### Cancel an `UnbondingDelegation` Entry
 
@@ -446,6 +478,8 @@ Redelegations affect the delegation, source and destination validators.
 * otherwise, if the `sourceValidator.Status` is not `Bonded`, and the `destinationValidator`
   is `Bonded`, transfer the newly delegated tokens from the `NotBondedPool` to the `BondedPool` `ModuleAccount`
 * record the token amount in an new entry in the relevant `Redelegation`
+* if the delegator is a liquid staking provider,
+ decrement the source validator's `LiquidShares` increment destination validator's `LiquidShares`
 
 From when a redelegation begins until it completes, the delegator is in a state of "pseudo-unbonding", and can still be
 slashed for infractions that occurred before the redelegation began.
@@ -470,6 +504,7 @@ When a Validator is slashed, the following occurs:
   total slash amount.
 * The `remaingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
   `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
+* Decrements the `TotalLiquidStakedTokens` by slash amount * liquid percentage.
 
 In the case of a slash due to any infraction that requires evidence to submitted (for example double-sign), the slash
 occurs at the block where the evidence is included, not at the block where the infraction occured.
@@ -584,10 +619,17 @@ This message is expected to fail if:
 * the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
 * the exchange rate is invalid, meaning the validator has no tokens (due to slashing) but there are outstanding shares
 * the amount delegated is less than the minimum allowed delegation
+* the delegator is a liquid staking provider and the delegation exceeds
+either the `GlobalLiquidStakingCap`, the `ValidatorLiquidStakingCap` or the validator bond cap.
 
 If an existing `Delegation` object for provided addresses does not already
 exist then it is created as part of this message otherwise the existing
 `Delegation` is updated to include the newly received shares.
+
+If the delegation if is a validator bond, the `ValidatorBondShares` of the validator is increased.
+
+If the delegator is a liquid staking provider, the `TotalLiquidStakedTokens`
+and the validator `LiquidShares` are incremented.
 
 The delegator receives newly minted shares at the current exchange rate.
 The exchange rate is the number of existing shares in the validator divided by
@@ -627,8 +669,14 @@ This message is expected to fail if:
 * the delegation has less shares than the ones worth of `Amount`
 * existing `UnbondingDelegation` has maximum entries as defined by `params.MaxEntries`
 * the `Amount` has a denomination different than one defined by `params.BondDenom`
+* the unbonded delegation is a `ValidatorBond` and the reduction in validator bond would cause the existing liquid delegation to exceed the cap.
 
 When this message is processed the following actions occur:
+
+* if the delegation is a validator bond, the `ValidatorBondShares` of the validator is decreased.
+ 
+* if the delegator is a liquid staking provider, the `TotalLiquidStakedTokens`
+and the validator's `LiquidShares` are decreased.
 
 * validator's `DelegatorShares` and the delegation's `Shares` are both reduced by the message `SharesAmount`
 * calculate the token worth of the shares remove that amount tokens held within the validator
@@ -694,9 +742,15 @@ This message is expected to fail if:
 * the source validator has a receiving redelegation which is not matured (aka. the redelegation may be transitive)
 * existing `Redelegation` has maximum entries as defined by `params.MaxEntries`
 * the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
+* the delegation is a `ValidatorBond` and the reduction in validator bond would cause the existing liquid delegation to exceed the cap.
+* the delegator is a liquid staking provider and the delegation exceeds
+either the `GlobalLiquidStakingCap`, the `ValidatorLiquidStakingCap` or the validator bond cap.
 
 When this message is processed the following actions occur:
 
+* if the delegation if is a validator bond, the `ValidatorBondShares` of the source validator is decreased.
+* if the delegator is a liquid staking provider,
+ the source validator's `LiquidShares` increased and the destination validator's `LiquidShares` is decreased.
 * the source validator's `DelegatorShares` and the delegations `Shares` are both reduced by the message `SharesAmount`
 * calculate the token worth of the shares remove that amount tokens held within the source validator.
 * if the source validator is:
@@ -709,6 +763,201 @@ When this message is processed the following actions occur:
 
 ![Begin redelegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/begin_redelegation_sequence.svg)
 
+## MsgTokenizeShares
+
+The `MsgTokenizeShares` message allows users to tokenize their delegated tokens. Share tokens have denom using the validator address and record id of the underlying delegation with the format `{validatorAddress}/{recordId}`.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L49-L50
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L190-L199
+```
+
+This message returns a response containing the number of tokens generated:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L201-L204
+```
+
+This message is expected to fail if:
+
+* the delegation is a `ValidatorBond`
+* the delegator sender's address has disabled tokenization, meaning that the account 
+lock status is either `LOCKED` or `LOCK_EXPIRING`.
+* the account is a vesting account and the free delegation (non-vesting delegation) is exceeding the tokenized share amount.
+* the sender is NOT a liquid staking provider and the tokenized shares exceeds 
+either the `GlobalLiquidStakingCap`, the `ValidatorLiquidStakingCap` or the validator bond cap.
+
+
+When this message is processed the following actions occur:
+
+* If delegator is a NOT liquid staking provider (otherwise the shares are already included)
+    * Increment the `GlobalLiquidStakingCap`
+    * Increment the validator's `ValidatorLiquidStakingCap`
+* Unbond the delegation shares and transfer the coins back to delegator
+* Create an equivalent amount of tokenized shares that the initial delegation shares
+* Mint the liquid coins and send them to delegator
+* Create a tokenized share record
+* Get validator to whom the sender delegated his shares 
+* Send coins to module address and delegate them to the validator
+
+## MsgRedeemTokensForShares
+
+The `MsgRedeemTokensForShares` message allows users to redeem their native delegations from share tokens.
+
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L52-L54
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L206-L213
+```
+
+This message returns a response containing the amount of staked tokens redeemed:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L215-L218
+```
+
+This message is expected to fail if:
+
+* if the sender's balance doesn't have enough liquid tokens 
+
+
+When this message is processed the following actions occur:
+
+* Get the tokenized shares record
+* Get the validator that issued the tokenized shares from the record
+* Unbond the delegation associated with the tokenized shares
+* The delegator is NOT a liquid staking provider:
+    * Decrease the `ValidatorLiquidStakingCap`
+    * Decrease the validator's `LiquidShares`
+* Burn the liquid coins equivalent of the tokenized shares
+* Delete the tokenized shares record
+* Send equivalent amount of tokens to the delegator
+* Delegate sender's tokens to the validator
+
+## MsgTransferTokenizeShareRecord
+
+The `MsgTransferTokenizeShareRecord` message enables users to transfer the ownership of rewards generated from the tokenized amount of delegation.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L56-L58
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L220-L228
+```
+
+This message is expected to fail if:
+
+* the tokenized shares record doesn't exist
+* the sender address doesn't match the owner address in the record 
+
+When this message is processed the following actions occur:
+
+* the tokenized shares record is updated with the new owner address
+
+## MsgEnableTokenizeShares
+
+The `MsgEnableTokenizeShares` message begins the countdown after which tokenizing shares by the sender delegator address is re-allowed, which will complete after the unbonding period.
+
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L63-L65
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L244-L250
+```
+
+This message returns a response containing the time at which the lock is completely removed:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L252-L255
+```
+
+This message is expected to fail if:
+
+*  if the sender's account lock status is either equal to `UNLOCKED` or `LOCK_EXPIRING`,
+meaning that the tokenized shares aren't currently disabled.
+
+
+When this message is processed the following actions occur:
+
+* queue the unlock authorization.
+
+## MsgDisableTokenizeShares
+
+The `MsgDisableTokenizeShares` message prevents the sender delegator address from tokenizing any of its delegations.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L60-L61
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L233-L239
+```
+
+This message is expected to fail if:
+
+*  the sender's account already has the `LOCKED` lock status
+
+
+When this message is processed the following actions occur:
+
+* if the sender's account lock status is equal to `LOCK_EXPIRING`,
+it cancels the pending unlock authorizations by removing them from the queue.
+* Create a new tokenization lock for the sender's account. Note that
+if there is a lock expiration in progress, it is overridden.
+
+## MsgValidatorBond
+
+The `MsgValidatorBond` message designates a delegation as a validator bond.
+It enables validators to receive more liquid staking delegations
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L67-L68
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L257-L265
+```
+
+This message is expected to fail if:
+
+* the delegator is a liquid staking provider
+
+When this message is processed the following actions occur:
+
+* If the delegation is not already a `ValidatorBond`:
+    * Enable the delegation's `ValidatorBond` flag
+    * Update validator's `ValidatorBondShares`
+
+## MsgUnbondValidator
+
+The `MsgTransferTokenizeShareRecord` message allows validator to change their
+status from transfers from `Bonded` to `Unbonding` without experiencing slashing.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L36-L38
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.45.16-ics-lsm/proto/cosmos/staking/v1beta1/tx.proto#L165-L169
+```
+
+This message is expected to fail if:
+
+* the validator isn't registered or is already jailed
+
+When this message is processed the following actions occur:
+
+* the validator is jailed
+* the validator status changes from `Bonded` to `Unbonding`
 
 ### MsgUpdateParams
 
@@ -878,7 +1127,6 @@ The staking module emits the following events:
 | Type           | Attribute Key       | Attribute Value     |
 | -------------- | ------------------- | ------------------- |
 | edit_validator | commission_rate     | {commissionRate}    |
-| edit_validator | min_self_delegation | {minSelfDelegation} |
 | message        | module              | staking             |
 | message        | action              | edit_validator      |
 | message        | sender              | {senderAddress}     |
@@ -932,18 +1180,91 @@ The staking module emits the following events:
 
 * [0] Time is formatted in the RFC3339 standard
 
+### MsgTokenizeShares
+
+| Type                          | Attribute Key         | Attribute Value         |
+| ----------------------------- | --------------------- | ----------------------- |
+| tokenize_shares               | delegator             | {delegatorAddress}      |
+| tokenize_shares               | validator             | {validatorAddress}      |
+| tokenize_shares               | share_owner           | {shareOwnerAddress}     |
+| tokenize_shares               | amount                | {tokenizeAmount}        |
+| message                       | module                | staking                 |
+| message                       | action                | tokenize_share          |
+| message                       | sender                | {senderAddress}         |
+
+### MsgRedeemTokensForShares
+
+| Type                          | Attribute Key       | Attribute Value          |
+| ----------------------------- | ------------------  | ------------------------ |
+| redeem_tokens_for_shares      | delegator           | {delegatorAddress}       |
+| redeem_tokens_for_shares      | amount              | {redeemAmount}           |
+| message                       | module              | staking                  |
+| message                       | action              | redeem_tokens            |
+| message                       | sender              | {senderAddress}          |
+
+### MsgTransferTokenizeShareRecord
+
+| Type                               | Attribute Key                | Attribute Value                     |
+| ---------------------------------- | ---------------------------- | ----------------------------------- |
+| transfer_tokenize_share_record     | share_record_id              | {shareRecordID}                     |
+| transfer_tokenize_share_record     | sender                       | {senderAddress}                     |
+| transfer_tokenize_share_record     | share_owner                  | {newShareOwnerAddress}              |
+| message                            | module                       | staking                             |
+| message                            | action                       | transfer-tokenize-share-record      |
+| message                            | sender                       | {senderAddress}                     |
+
+### MsgEnableTokenizeShares
+
+| Type                          | Attribute Key       | Attribute Value          |
+| ----------------------------- | ------------------- | ------------------------ |
+| enable_tokenize_shares        | delegator           | {delegatorAddress}       |
+| message                       | module              | staking                  |
+| message                       | action              | enable_tokenize_shares   |
+| message                       | sender              | {senderAddress}          |
+
+### MsgDisableTokenizeShares
+
+| Type                          | Attribute Key       | Attribute Value          |
+| ----------------------------- | ------------------  | ------------------------ |
+| disable_tokenize_shares       | delegator           | {delegatorAddress}       |
+| message                       | module              | staking                  |
+| message                       | action              | disable_tokenize_shares  |
+| message                       | sender              | {senderAddress}          |
+
+### MsgValidatorBond
+
+| Type                 | Attribute Key         | Attribute Value          |
+| -------------------- | --------------------- | ------------------------ |
+| validator_bond       | validator             | {validatorAddress}       |
+| validator_bond       | delegator             | {delegatorAddress}       |
+| message              | action                | validator_bond           |
+| message              | sender                | {senderAddress}          |
+
+### MsgUnbondValidator
+
+| Type                 | Attribute Key         | Attribute Value          |
+| -------------------- | --------------------- | ------------------------ |
+| unbound_validator    | validator             | {validatorAddress}       |
+| message              | action                | unbond_validator         |
+| message              | sender                | {senderAddress}          |
+
+
 ## Parameters
 
 The staking module contains the following parameters:
 
-| Key               | Type             | Example                |
-|-------------------|------------------|------------------------|
-| UnbondingTime     | string (time ns) | "259200000000000"      |
-| MaxValidators     | uint16           | 100                    |
-| KeyMaxEntries     | uint16           | 7                      |
-| HistoricalEntries | uint16           | 3                      |
-| BondDenom         | string           | "stake"                |
-| MinCommissionRate | string           | "0.000000000000000000" |
+| Key                         | Type             | Example                  |
+|-------------------------    |------------------|--------------------------|
+| UnbondingTime               | string (time ns) | "259200000000000"        |
+| MaxValidators               | uint16           | 100                      |
+| KeyMaxEntries               | uint16           | 7                        |
+| HistoricalEntries           | uint16           | 3                        |
+| BondDenom                   | string           | "stake"                  |
+| MinCommissionRate           | string           | "0.000000000000000000"   |
+| ValidatorBondFactor         | string           | "250.0000000000000000"   |
+| GlobalLiquidStakingCap      | string           | "1.000000000000000000"   | 
+| ValidatorLiquidStakingCap   | string           | "0.250000000000000000"   | 
+
 
 ## Client
 
@@ -1564,7 +1885,7 @@ simd tx staking --help
 
 ##### create-validator
 
-The command `create-validator` allows users to create new validator initialized with a self-delegation to it.
+The command `create-validator` allows users to create new validator.
 
 Usage:
 
@@ -1595,8 +1916,7 @@ where `validator.json` contains:
   "details": "description of your validator",
   "commission-rate": "0.10",
   "commission-max-rate": "0.20",
-  "commission-max-change-rate": "0.01",
-  "min-self-delegation": "1"
+  "commission-max-change-rate": "0.01"
 }
 ```
 

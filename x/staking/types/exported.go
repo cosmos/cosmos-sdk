@@ -33,6 +33,7 @@ type ValidatorI interface {
 	GetCommission() math.LegacyDec                                  // validator commission rate
 	GetMinSelfDelegation() math.Int                                 // validator minimum self delegation
 	GetDelegatorShares() math.LegacyDec                             // total outstanding delegator shares
+	GetLiquidShares() math.LegacyDec                                // total shares earmarked from liquid staking
 	TokensFromShares(math.LegacyDec) math.LegacyDec                 // token worth of provided delegator shares
 	TokensFromSharesTruncated(math.LegacyDec) math.LegacyDec        // token worth of provided delegator shares, truncated
 	TokensFromSharesRoundUp(math.LegacyDec) math.LegacyDec          // token worth of provided delegator shares, rounded up

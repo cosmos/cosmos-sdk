@@ -123,6 +123,17 @@ message FeePool {
   ];
 }
 
+// TokenizeShareRecordReward represents the properties of tokenize share
+message TokenizeShareRecordReward {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = true;
+
+  uint64 record_id = 1;
+
+  repeated cosmos.base.v1beta1.DecCoin reward = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
 // CommunityPoolSpendProposal details a proposal for use of community funds,
 // together with how many coins are proposed to be spent, and to which
 // recipient account.

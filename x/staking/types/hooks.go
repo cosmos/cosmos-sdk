@@ -116,3 +116,12 @@ func (h MultiStakingHooks) AfterUnbondingInitiated(ctx context.Context, id uint6
 	}
 	return nil
 }
+
+func (h MultiStakingHooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordID uint64) error {
+	for i := range h {
+		if err := h[i].BeforeTokenizeShareRecordRemoved(ctx, recordID); err != nil {
+			return err
+		}
+	}
+	return nil
+}

@@ -7,6 +7,7 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -1391,6 +1392,746 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryTokenizeShareRecordByIdRequest is request type for the
+// Query/QueryTokenizeShareRecordById RPC method.
+type QueryTokenizeShareRecordByIdRequest struct {
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *QueryTokenizeShareRecordByIdRequest) Reset()         { *m = QueryTokenizeShareRecordByIdRequest{} }
+func (m *QueryTokenizeShareRecordByIdRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTokenizeShareRecordByIdRequest) ProtoMessage()    {}
+func (*QueryTokenizeShareRecordByIdRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{28}
+}
+func (m *QueryTokenizeShareRecordByIdRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTokenizeShareRecordByIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTokenizeShareRecordByIdRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTokenizeShareRecordByIdRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTokenizeShareRecordByIdRequest.Merge(m, src)
+}
+func (m *QueryTokenizeShareRecordByIdRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTokenizeShareRecordByIdRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTokenizeShareRecordByIdRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTokenizeShareRecordByIdRequest proto.InternalMessageInfo
+
+func (m *QueryTokenizeShareRecordByIdRequest) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+// QueryTokenizeShareRecordByIdRequest is response type for the
+// Query/QueryTokenizeShareRecordById RPC method.
+type QueryTokenizeShareRecordByIdResponse struct {
+	Record TokenizeShareRecord `protobuf:"bytes,1,opt,name=record,proto3" json:"record"`
+}
+
+func (m *QueryTokenizeShareRecordByIdResponse) Reset()         { *m = QueryTokenizeShareRecordByIdResponse{} }
+func (m *QueryTokenizeShareRecordByIdResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTokenizeShareRecordByIdResponse) ProtoMessage()    {}
+func (*QueryTokenizeShareRecordByIdResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{29}
+}
+func (m *QueryTokenizeShareRecordByIdResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTokenizeShareRecordByIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTokenizeShareRecordByIdResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTokenizeShareRecordByIdResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTokenizeShareRecordByIdResponse.Merge(m, src)
+}
+func (m *QueryTokenizeShareRecordByIdResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTokenizeShareRecordByIdResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTokenizeShareRecordByIdResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTokenizeShareRecordByIdResponse proto.InternalMessageInfo
+
+func (m *QueryTokenizeShareRecordByIdResponse) GetRecord() TokenizeShareRecord {
+	if m != nil {
+		return m.Record
+	}
+	return TokenizeShareRecord{}
+}
+
+// QueryTokenizeShareRecordByDenomRequest is request type for the
+// Query/QueryTokenizeShareRecordByDenom RPC method.
+type QueryTokenizeShareRecordByDenomRequest struct {
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *QueryTokenizeShareRecordByDenomRequest) Reset() {
+	*m = QueryTokenizeShareRecordByDenomRequest{}
+}
+func (m *QueryTokenizeShareRecordByDenomRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTokenizeShareRecordByDenomRequest) ProtoMessage()    {}
+func (*QueryTokenizeShareRecordByDenomRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{30}
+}
+func (m *QueryTokenizeShareRecordByDenomRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTokenizeShareRecordByDenomRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTokenizeShareRecordByDenomRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTokenizeShareRecordByDenomRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTokenizeShareRecordByDenomRequest.Merge(m, src)
+}
+func (m *QueryTokenizeShareRecordByDenomRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTokenizeShareRecordByDenomRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTokenizeShareRecordByDenomRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTokenizeShareRecordByDenomRequest proto.InternalMessageInfo
+
+func (m *QueryTokenizeShareRecordByDenomRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+// QueryTokenizeShareRecordByDenomResponse is response type for the
+// Query/QueryTokenizeShareRecordByDenom RPC method.
+type QueryTokenizeShareRecordByDenomResponse struct {
+	Record TokenizeShareRecord `protobuf:"bytes,1,opt,name=record,proto3" json:"record"`
+}
+
+func (m *QueryTokenizeShareRecordByDenomResponse) Reset() {
+	*m = QueryTokenizeShareRecordByDenomResponse{}
+}
+func (m *QueryTokenizeShareRecordByDenomResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTokenizeShareRecordByDenomResponse) ProtoMessage()    {}
+func (*QueryTokenizeShareRecordByDenomResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{31}
+}
+func (m *QueryTokenizeShareRecordByDenomResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTokenizeShareRecordByDenomResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTokenizeShareRecordByDenomResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTokenizeShareRecordByDenomResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTokenizeShareRecordByDenomResponse.Merge(m, src)
+}
+func (m *QueryTokenizeShareRecordByDenomResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTokenizeShareRecordByDenomResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTokenizeShareRecordByDenomResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTokenizeShareRecordByDenomResponse proto.InternalMessageInfo
+
+func (m *QueryTokenizeShareRecordByDenomResponse) GetRecord() TokenizeShareRecord {
+	if m != nil {
+		return m.Record
+	}
+	return TokenizeShareRecord{}
+}
+
+// QueryTokenizeShareRecordsOwnedRequest is request type for the
+// Query/QueryTokenizeShareRecordsOwned RPC method.
+type QueryTokenizeShareRecordsOwnedRequest struct {
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+}
+
+func (m *QueryTokenizeShareRecordsOwnedRequest) Reset()         { *m = QueryTokenizeShareRecordsOwnedRequest{} }
+func (m *QueryTokenizeShareRecordsOwnedRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTokenizeShareRecordsOwnedRequest) ProtoMessage()    {}
+func (*QueryTokenizeShareRecordsOwnedRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{32}
+}
+func (m *QueryTokenizeShareRecordsOwnedRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTokenizeShareRecordsOwnedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTokenizeShareRecordsOwnedRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTokenizeShareRecordsOwnedRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTokenizeShareRecordsOwnedRequest.Merge(m, src)
+}
+func (m *QueryTokenizeShareRecordsOwnedRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTokenizeShareRecordsOwnedRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTokenizeShareRecordsOwnedRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTokenizeShareRecordsOwnedRequest proto.InternalMessageInfo
+
+func (m *QueryTokenizeShareRecordsOwnedRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+// QueryTokenizeShareRecordsOwnedResponse is response type for the
+// Query/QueryTokenizeShareRecordsOwned RPC method.
+type QueryTokenizeShareRecordsOwnedResponse struct {
+	Records []TokenizeShareRecord `protobuf:"bytes,1,rep,name=records,proto3" json:"records"`
+}
+
+func (m *QueryTokenizeShareRecordsOwnedResponse) Reset() {
+	*m = QueryTokenizeShareRecordsOwnedResponse{}
+}
+func (m *QueryTokenizeShareRecordsOwnedResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTokenizeShareRecordsOwnedResponse) ProtoMessage()    {}
+func (*QueryTokenizeShareRecordsOwnedResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{33}
+}
+func (m *QueryTokenizeShareRecordsOwnedResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTokenizeShareRecordsOwnedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTokenizeShareRecordsOwnedResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTokenizeShareRecordsOwnedResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTokenizeShareRecordsOwnedResponse.Merge(m, src)
+}
+func (m *QueryTokenizeShareRecordsOwnedResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTokenizeShareRecordsOwnedResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTokenizeShareRecordsOwnedResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTokenizeShareRecordsOwnedResponse proto.InternalMessageInfo
+
+func (m *QueryTokenizeShareRecordsOwnedResponse) GetRecords() []TokenizeShareRecord {
+	if m != nil {
+		return m.Records
+	}
+	return nil
+}
+
+// QueryAllTokenizeShareRecordsRequest is request type for the
+// Query/QueryAllTokenizeShareRecords RPC method.
+type QueryAllTokenizeShareRecordsRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAllTokenizeShareRecordsRequest) Reset()         { *m = QueryAllTokenizeShareRecordsRequest{} }
+func (m *QueryAllTokenizeShareRecordsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllTokenizeShareRecordsRequest) ProtoMessage()    {}
+func (*QueryAllTokenizeShareRecordsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{34}
+}
+func (m *QueryAllTokenizeShareRecordsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllTokenizeShareRecordsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllTokenizeShareRecordsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllTokenizeShareRecordsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllTokenizeShareRecordsRequest.Merge(m, src)
+}
+func (m *QueryAllTokenizeShareRecordsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllTokenizeShareRecordsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllTokenizeShareRecordsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllTokenizeShareRecordsRequest proto.InternalMessageInfo
+
+func (m *QueryAllTokenizeShareRecordsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryAllTokenizeShareRecordsResponse is response type for the
+// Query/QueryAllTokenizeShareRecords RPC method.
+type QueryAllTokenizeShareRecordsResponse struct {
+	Records []TokenizeShareRecord `protobuf:"bytes,1,rep,name=records,proto3" json:"records"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAllTokenizeShareRecordsResponse) Reset()         { *m = QueryAllTokenizeShareRecordsResponse{} }
+func (m *QueryAllTokenizeShareRecordsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllTokenizeShareRecordsResponse) ProtoMessage()    {}
+func (*QueryAllTokenizeShareRecordsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{35}
+}
+func (m *QueryAllTokenizeShareRecordsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllTokenizeShareRecordsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllTokenizeShareRecordsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllTokenizeShareRecordsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllTokenizeShareRecordsResponse.Merge(m, src)
+}
+func (m *QueryAllTokenizeShareRecordsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllTokenizeShareRecordsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllTokenizeShareRecordsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllTokenizeShareRecordsResponse proto.InternalMessageInfo
+
+func (m *QueryAllTokenizeShareRecordsResponse) GetRecords() []TokenizeShareRecord {
+	if m != nil {
+		return m.Records
+	}
+	return nil
+}
+
+func (m *QueryAllTokenizeShareRecordsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryLastTokenizeShareRecordIdRequest is request type for the
+// Query/QueryLastTokenizeShareRecordId RPC method.
+type QueryLastTokenizeShareRecordIdRequest struct {
+}
+
+func (m *QueryLastTokenizeShareRecordIdRequest) Reset()         { *m = QueryLastTokenizeShareRecordIdRequest{} }
+func (m *QueryLastTokenizeShareRecordIdRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLastTokenizeShareRecordIdRequest) ProtoMessage()    {}
+func (*QueryLastTokenizeShareRecordIdRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{36}
+}
+func (m *QueryLastTokenizeShareRecordIdRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLastTokenizeShareRecordIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLastTokenizeShareRecordIdRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLastTokenizeShareRecordIdRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLastTokenizeShareRecordIdRequest.Merge(m, src)
+}
+func (m *QueryLastTokenizeShareRecordIdRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLastTokenizeShareRecordIdRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLastTokenizeShareRecordIdRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLastTokenizeShareRecordIdRequest proto.InternalMessageInfo
+
+// QueryLastTokenizeShareRecordIdResponse is response type for the
+// Query/QueryLastTokenizeShareRecordId RPC method.
+type QueryLastTokenizeShareRecordIdResponse struct {
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *QueryLastTokenizeShareRecordIdResponse) Reset() {
+	*m = QueryLastTokenizeShareRecordIdResponse{}
+}
+func (m *QueryLastTokenizeShareRecordIdResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLastTokenizeShareRecordIdResponse) ProtoMessage()    {}
+func (*QueryLastTokenizeShareRecordIdResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{37}
+}
+func (m *QueryLastTokenizeShareRecordIdResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLastTokenizeShareRecordIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLastTokenizeShareRecordIdResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLastTokenizeShareRecordIdResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLastTokenizeShareRecordIdResponse.Merge(m, src)
+}
+func (m *QueryLastTokenizeShareRecordIdResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLastTokenizeShareRecordIdResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLastTokenizeShareRecordIdResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLastTokenizeShareRecordIdResponse proto.InternalMessageInfo
+
+func (m *QueryLastTokenizeShareRecordIdResponse) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+// QueryTotalTokenizeSharedAssetsRequest is request type for the
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+type QueryTotalTokenizeSharedAssetsRequest struct {
+}
+
+func (m *QueryTotalTokenizeSharedAssetsRequest) Reset()         { *m = QueryTotalTokenizeSharedAssetsRequest{} }
+func (m *QueryTotalTokenizeSharedAssetsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTotalTokenizeSharedAssetsRequest) ProtoMessage()    {}
+func (*QueryTotalTokenizeSharedAssetsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{38}
+}
+func (m *QueryTotalTokenizeSharedAssetsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTotalTokenizeSharedAssetsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTotalTokenizeSharedAssetsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTotalTokenizeSharedAssetsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTotalTokenizeSharedAssetsRequest.Merge(m, src)
+}
+func (m *QueryTotalTokenizeSharedAssetsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTotalTokenizeSharedAssetsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTotalTokenizeSharedAssetsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTotalTokenizeSharedAssetsRequest proto.InternalMessageInfo
+
+// QueryTotalTokenizeSharedAssetsResponse is response type for the
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+type QueryTotalTokenizeSharedAssetsResponse struct {
+	Value types.Coin `protobuf:"bytes,1,opt,name=value,proto3" json:"value"`
+}
+
+func (m *QueryTotalTokenizeSharedAssetsResponse) Reset() {
+	*m = QueryTotalTokenizeSharedAssetsResponse{}
+}
+func (m *QueryTotalTokenizeSharedAssetsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTotalTokenizeSharedAssetsResponse) ProtoMessage()    {}
+func (*QueryTotalTokenizeSharedAssetsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{39}
+}
+func (m *QueryTotalTokenizeSharedAssetsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTotalTokenizeSharedAssetsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTotalTokenizeSharedAssetsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTotalTokenizeSharedAssetsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTotalTokenizeSharedAssetsResponse.Merge(m, src)
+}
+func (m *QueryTotalTokenizeSharedAssetsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTotalTokenizeSharedAssetsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTotalTokenizeSharedAssetsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTotalTokenizeSharedAssetsResponse proto.InternalMessageInfo
+
+func (m *QueryTotalTokenizeSharedAssetsResponse) GetValue() types.Coin {
+	if m != nil {
+		return m.Value
+	}
+	return types.Coin{}
+}
+
+// QueryTotalLiquidStakedRequest is request type for the
+// Query/QueryQueryTotalLiquidStaked RPC method.
+type QueryTotalLiquidStaked struct {
+}
+
+func (m *QueryTotalLiquidStaked) Reset()         { *m = QueryTotalLiquidStaked{} }
+func (m *QueryTotalLiquidStaked) String() string { return proto.CompactTextString(m) }
+func (*QueryTotalLiquidStaked) ProtoMessage()    {}
+func (*QueryTotalLiquidStaked) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{40}
+}
+func (m *QueryTotalLiquidStaked) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTotalLiquidStaked) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTotalLiquidStaked.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTotalLiquidStaked) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTotalLiquidStaked.Merge(m, src)
+}
+func (m *QueryTotalLiquidStaked) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTotalLiquidStaked) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTotalLiquidStaked.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTotalLiquidStaked proto.InternalMessageInfo
+
+// QueryTotalLiquidStakedResponse is response type for the
+// Query/QueryQueryTotalLiquidStaked RPC method.
+type QueryTotalLiquidStakedResponse struct {
+	Tokens string `protobuf:"bytes,1,opt,name=tokens,proto3" json:"tokens,omitempty"`
+}
+
+func (m *QueryTotalLiquidStakedResponse) Reset()         { *m = QueryTotalLiquidStakedResponse{} }
+func (m *QueryTotalLiquidStakedResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTotalLiquidStakedResponse) ProtoMessage()    {}
+func (*QueryTotalLiquidStakedResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{41}
+}
+func (m *QueryTotalLiquidStakedResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTotalLiquidStakedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTotalLiquidStakedResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTotalLiquidStakedResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTotalLiquidStakedResponse.Merge(m, src)
+}
+func (m *QueryTotalLiquidStakedResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTotalLiquidStakedResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTotalLiquidStakedResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTotalLiquidStakedResponse proto.InternalMessageInfo
+
+func (m *QueryTotalLiquidStakedResponse) GetTokens() string {
+	if m != nil {
+		return m.Tokens
+	}
+	return ""
+}
+
+// QueryTokenizeShareLockInfo queries the tokenize share lock information
+// associated with given account
+type QueryTokenizeShareLockInfo struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *QueryTokenizeShareLockInfo) Reset()         { *m = QueryTokenizeShareLockInfo{} }
+func (m *QueryTokenizeShareLockInfo) String() string { return proto.CompactTextString(m) }
+func (*QueryTokenizeShareLockInfo) ProtoMessage()    {}
+func (*QueryTokenizeShareLockInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{42}
+}
+func (m *QueryTokenizeShareLockInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTokenizeShareLockInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTokenizeShareLockInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTokenizeShareLockInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTokenizeShareLockInfo.Merge(m, src)
+}
+func (m *QueryTokenizeShareLockInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTokenizeShareLockInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTokenizeShareLockInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTokenizeShareLockInfo proto.InternalMessageInfo
+
+func (m *QueryTokenizeShareLockInfo) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+// QueryTokenizeShareLockInfoResponse is the response from the
+// QueryTokenizeShareLockInfo query
+type QueryTokenizeShareLockInfoResponse struct {
+	Status         string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	ExpirationTime string `protobuf:"bytes,2,opt,name=expiration_time,json=expirationTime,proto3" json:"expiration_time,omitempty"`
+}
+
+func (m *QueryTokenizeShareLockInfoResponse) Reset()         { *m = QueryTokenizeShareLockInfoResponse{} }
+func (m *QueryTokenizeShareLockInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTokenizeShareLockInfoResponse) ProtoMessage()    {}
+func (*QueryTokenizeShareLockInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{43}
+}
+func (m *QueryTokenizeShareLockInfoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTokenizeShareLockInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTokenizeShareLockInfoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTokenizeShareLockInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTokenizeShareLockInfoResponse.Merge(m, src)
+}
+func (m *QueryTokenizeShareLockInfoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTokenizeShareLockInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTokenizeShareLockInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTokenizeShareLockInfoResponse proto.InternalMessageInfo
+
+func (m *QueryTokenizeShareLockInfoResponse) GetStatus() string {
+	if m != nil {
+		return m.Status
+	}
+	return ""
+}
+
+func (m *QueryTokenizeShareLockInfoResponse) GetExpirationTime() string {
+	if m != nil {
+		return m.ExpirationTime
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*QueryValidatorsRequest)(nil), "cosmos.staking.v1beta1.QueryValidatorsRequest")
 	proto.RegisterType((*QueryValidatorsResponse)(nil), "cosmos.staking.v1beta1.QueryValidatorsResponse")
@@ -1420,6 +2161,22 @@ func init() {
 	proto.RegisterType((*QueryPoolResponse)(nil), "cosmos.staking.v1beta1.QueryPoolResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.staking.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.staking.v1beta1.QueryParamsResponse")
+	proto.RegisterType((*QueryTokenizeShareRecordByIdRequest)(nil), "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest")
+	proto.RegisterType((*QueryTokenizeShareRecordByIdResponse)(nil), "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse")
+	proto.RegisterType((*QueryTokenizeShareRecordByDenomRequest)(nil), "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest")
+	proto.RegisterType((*QueryTokenizeShareRecordByDenomResponse)(nil), "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse")
+	proto.RegisterType((*QueryTokenizeShareRecordsOwnedRequest)(nil), "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest")
+	proto.RegisterType((*QueryTokenizeShareRecordsOwnedResponse)(nil), "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse")
+	proto.RegisterType((*QueryAllTokenizeShareRecordsRequest)(nil), "cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest")
+	proto.RegisterType((*QueryAllTokenizeShareRecordsResponse)(nil), "cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse")
+	proto.RegisterType((*QueryLastTokenizeShareRecordIdRequest)(nil), "cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest")
+	proto.RegisterType((*QueryLastTokenizeShareRecordIdResponse)(nil), "cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse")
+	proto.RegisterType((*QueryTotalTokenizeSharedAssetsRequest)(nil), "cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest")
+	proto.RegisterType((*QueryTotalTokenizeSharedAssetsResponse)(nil), "cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse")
+	proto.RegisterType((*QueryTotalLiquidStaked)(nil), "cosmos.staking.v1beta1.QueryTotalLiquidStaked")
+	proto.RegisterType((*QueryTotalLiquidStakedResponse)(nil), "cosmos.staking.v1beta1.QueryTotalLiquidStakedResponse")
+	proto.RegisterType((*QueryTokenizeShareLockInfo)(nil), "cosmos.staking.v1beta1.QueryTokenizeShareLockInfo")
+	proto.RegisterType((*QueryTokenizeShareLockInfoResponse)(nil), "cosmos.staking.v1beta1.QueryTokenizeShareLockInfoResponse")
 }
 
 func init() {
@@ -1427,94 +2184,132 @@ func init() {
 }
 
 var fileDescriptor_f270127f442bbcd8 = []byte{
-	// 1390 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xdb, 0x6b, 0x1c, 0x65,
-	0x1b, 0xdf, 0x37, 0xcd, 0x17, 0xbe, 0x3c, 0xa5, 0xa1, 0x7d, 0x77, 0x1b, 0xd3, 0x69, 0xba, 0xd9,
-	0x0c, 0xa5, 0xe6, 0xd0, 0xec, 0x98, 0xa4, 0xb6, 0xb1, 0xa2, 0xed, 0xc6, 0x52, 0x5b, 0x5b, 0x6a,
-	0xba, 0x62, 0xf0, 0x48, 0x98, 0x64, 0xa6, 0xb3, 0x43, 0x37, 0x33, 0xdb, 0x79, 0x27, 0xa1, 0x25,
-	0x04, 0xc1, 0x0b, 0xe9, 0x95, 0x08, 0xde, 0x4b, 0x2f, 0x45, 0x14, 0x72, 0x91, 0x8a, 0x5e, 0xd8,
-	0x4b, 0xe9, 0x85, 0x48, 0xa9, 0x54, 0xf4, 0xa6, 0x4a, 0x22, 0xe8, 0x8d, 0xff, 0x81, 0x88, 0xec,
-	0xcc, 0x33, 0xa7, 0xcc, 0x61, 0x67, 0x37, 0x1b, 0x48, 0x6e, 0xda, 0xdd, 0x77, 0x9e, 0xc3, 0xef,
-	0xf7, 0x1c, 0xde, 0x79, 0x9e, 0x0d, 0xf0, 0x0b, 0x3a, 0x5b, 0xd4, 0x99, 0xc0, 0x4c, 0xf1, 0xa6,
-	0xaa, 0x29, 0xc2, 0xf2, 0xf8, 0xbc, 0x6c, 0x8a, 0xe3, 0xc2, 0xad, 0x25, 0xd9, 0xb8, 0x53, 0xac,
-	0x19, 0xba, 0xa9, 0xd3, 0x5e, 0x5b, 0xa6, 0x88, 0x32, 0x45, 0x94, 0xe1, 0x46, 0x50, 0x77, 0x5e,
-	0x64, 0xb2, 0xad, 0xe0, 0xaa, 0xd7, 0x44, 0x45, 0xd5, 0x44, 0x53, 0xd5, 0x35, 0xdb, 0x06, 0x97,
-	0x53, 0x74, 0x45, 0xb7, 0x3e, 0x0a, 0xf5, 0x4f, 0x78, 0xda, 0xaf, 0xe8, 0xba, 0x52, 0x95, 0x05,
-	0xb1, 0xa6, 0x0a, 0xa2, 0xa6, 0xe9, 0xa6, 0xa5, 0xc2, 0xf0, 0xe9, 0xf1, 0x18, 0x6c, 0x0e, 0x0e,
-	0x5b, 0xea, 0x88, 0x2d, 0x35, 0x67, 0x1b, 0x47, 0xa8, 0xf6, 0xa3, 0xa3, 0x68, 0xc0, 0xc1, 0xe6,
-	0x67, 0xc5, 0x1d, 0x12, 0x17, 0x55, 0x4d, 0x17, 0xac, 0x7f, 0xed, 0x23, 0xfe, 0x36, 0xf4, 0x5e,
-	0xaf, 0x4b, 0xcc, 0x8a, 0x55, 0x55, 0x12, 0x4d, 0xdd, 0x60, 0x65, 0xf9, 0xd6, 0x92, 0xcc, 0x4c,
-	0xda, 0x0b, 0x5d, 0xcc, 0x14, 0xcd, 0x25, 0xd6, 0x47, 0x0a, 0x64, 0xa8, 0xbb, 0x8c, 0xdf, 0xe8,
-	0x45, 0x00, 0x8f, 0x6a, 0x5f, 0x47, 0x81, 0x0c, 0xed, 0x9f, 0x38, 0x51, 0x44, 0x10, 0xf5, 0xb8,
-	0x14, 0x6d, 0x97, 0x08, 0xbd, 0x38, 0x23, 0x2a, 0x32, 0xda, 0x2c, 0xfb, 0x34, 0xf9, 0x35, 0x02,
-	0xcf, 0x84, 0x5c, 0xb3, 0x9a, 0xae, 0x31, 0x99, 0x5e, 0x05, 0x58, 0x76, 0x4f, 0xfb, 0x48, 0x61,
-	0xdf, 0xd0, 0xfe, 0x89, 0xc1, 0x62, 0x74, 0x4e, 0x8a, 0xae, 0xfe, 0x74, 0xf7, 0xc3, 0xa7, 0x03,
-	0x99, 0xcf, 0xff, 0x5c, 0x1b, 0x21, 0x65, 0x9f, 0x3e, 0x7d, 0x35, 0x02, 0xf1, 0xb3, 0x0d, 0x11,
-	0xdb, 0x50, 0x02, 0x90, 0x45, 0x38, 0x1c, 0x44, 0xec, 0xc4, 0xea, 0x12, 0xf4, 0xb8, 0xfe, 0xe6,
-	0x44, 0x49, 0x32, 0xec, 0x98, 0x4d, 0x0f, 0x3e, 0x5e, 0x1f, 0x3b, 0x86, 0x8e, 0x5c, 0xa5, 0x92,
-	0x24, 0x19, 0x32, 0x63, 0x6f, 0x98, 0x86, 0xaa, 0x29, 0xe5, 0x03, 0xcb, 0xfe, 0x73, 0x5e, 0xda,
-	0x9a, 0x0f, 0x37, 0x26, 0xaf, 0x41, 0xb7, 0x2b, 0x6a, 0x99, 0x6f, 0x36, 0x24, 0x9e, 0x3a, 0xbf,
-	0x4e, 0xa0, 0x10, 0x74, 0x73, 0x41, 0xae, 0xca, 0x8a, 0x5d, 0x8a, 0x6d, 0x27, 0xd5, 0xb6, 0x92,
-	0xf9, 0x9b, 0xc0, 0x60, 0x02, 0x6c, 0x0c, 0xd4, 0x07, 0x90, 0x93, 0xdc, 0xe3, 0x39, 0x03, 0x8f,
-	0x9d, 0x32, 0x1a, 0x89, 0x8b, 0x99, 0x67, 0xca, 0xb1, 0x34, 0x5d, 0xa8, 0x07, 0xef, 0x8b, 0xdf,
-	0x06, 0xb2, 0xe1, 0x67, 0xcc, 0x8e, 0x69, 0x56, 0x0a, 0x3f, 0x69, 0x5f, 0xbd, 0x7d, 0x47, 0x60,
-	0x38, 0xc8, 0xf7, 0x4d, 0x6d, 0x5e, 0xd7, 0x24, 0x55, 0x53, 0xf6, 0x44, 0xbe, 0x9e, 0x12, 0x18,
-	0x49, 0x83, 0x1f, 0x13, 0xa7, 0x40, 0x76, 0xc9, 0x79, 0x1e, 0xca, 0xdb, 0x68, 0x5c, 0xde, 0x22,
-	0x4c, 0xfa, 0xab, 0x9e, 0xba, 0x26, 0x77, 0x20, 0x41, 0x5f, 0x11, 0x6c, 0x57, 0x7f, 0x81, 0xd8,
-	0xd9, 0x38, 0x07, 0x3d, 0x58, 0x1b, 0xc1, 0x6c, 0xf4, 0x3d, 0x5e, 0x1f, 0xcb, 0xa1, 0xab, 0x2d,
-	0x49, 0x70, 0xe5, 0xad, 0x24, 0x84, 0xd3, 0xd9, 0xd1, 0x5a, 0x3a, 0xcf, 0xfe, 0xff, 0xee, 0xbd,
-	0x81, 0xcc, 0x5f, 0xf7, 0x06, 0x32, 0xfc, 0x32, 0x5e, 0xb9, 0xe1, 0x7a, 0xa6, 0xef, 0x42, 0x36,
-	0xa2, 0x6b, 0xf0, 0xa2, 0x69, 0xa2, 0x69, 0xca, 0x34, 0xdc, 0x12, 0xfc, 0xd7, 0x04, 0x06, 0x2c,
-	0xc7, 0x11, 0xc9, 0xda, 0xd5, 0x01, 0x33, 0xf0, 0x9e, 0x8c, 0xc4, 0x8d, 0x91, 0xbb, 0x06, 0x5d,
-	0x76, 0x8d, 0x61, 0xb0, 0x5a, 0xad, 0x54, 0xb4, 0xc2, 0xdf, 0x77, 0x2e, 0xe7, 0x0b, 0x0e, 0xbd,
-	0x88, 0x66, 0xdf, 0x76, 0xb4, 0xda, 0xd4, 0xe3, 0xbe, 0x58, 0xfd, 0xec, 0xdc, 0xce, 0xd1, 0xb8,
-	0x31, 0x5a, 0x95, 0xb6, 0xdd, 0xce, 0xbe, 0xd0, 0xed, 0xec, 0x35, 0xfc, 0xc0, 0xb9, 0x86, 0x5d,
-	0x62, 0x49, 0xd7, 0xf0, 0x2e, 0xcc, 0x8c, 0x7b, 0x0f, 0x37, 0x20, 0xb0, 0x67, 0xef, 0xe1, 0x07,
-	0x1d, 0x70, 0xc4, 0x22, 0x58, 0x96, 0xa5, 0x1d, 0xc9, 0x08, 0x65, 0xc6, 0xc2, 0x5c, 0xe4, 0xed,
-	0x12, 0x6f, 0xe4, 0x20, 0x33, 0x16, 0x66, 0xb7, 0xbc, 0x57, 0xa9, 0xc4, 0xcc, 0xad, 0x76, 0xf6,
-	0x35, 0xb2, 0x23, 0x31, 0x73, 0x36, 0xe1, 0xfd, 0xdc, 0xd9, 0x86, 0x0a, 0x79, 0x42, 0x80, 0x8b,
-	0x0a, 0x20, 0x56, 0x84, 0x06, 0xbd, 0x86, 0x9c, 0xd0, 0xb6, 0x27, 0xe3, 0x8a, 0xc2, 0x6f, 0x2e,
-	0xaa, 0x71, 0x0f, 0x1b, 0xf2, 0x8e, 0xb6, 0xee, 0xba, 0xf3, 0xe2, 0x71, 0x2b, 0x3f, 0xbc, 0xe8,
-	0xec, 0xc2, 0x86, 0xfd, 0x36, 0xf4, 0x0a, 0xd8, 0x3b, 0x4b, 0xd2, 0x7d, 0x02, 0xf9, 0x18, 0xec,
-	0xbb, 0xfa, 0x55, 0xbf, 0x18, 0x5b, 0x29, 0x3b, 0xb2, 0x82, 0x9d, 0xc2, 0x86, 0xbb, 0xa4, 0x32,
-	0x53, 0x37, 0xd4, 0x05, 0xb1, 0x7a, 0x59, 0xbb, 0xa1, 0xfb, 0x96, 0xef, 0x8a, 0xac, 0x2a, 0x15,
-	0xd3, 0x72, 0xb3, 0xaf, 0x8c, 0xdf, 0xf8, 0xb7, 0xe1, 0x68, 0xa4, 0x16, 0x02, 0x3c, 0x0b, 0x9d,
-	0x15, 0x95, 0x99, 0x88, 0xed, 0x44, 0x1c, 0xb6, 0x2d, 0xda, 0x96, 0x0e, 0x4f, 0xe1, 0xa0, 0x65,
-	0x7a, 0x46, 0xd7, 0xab, 0x08, 0x83, 0x9f, 0x81, 0x43, 0xbe, 0x33, 0x74, 0xf2, 0x22, 0x74, 0xd6,
-	0x74, 0xbd, 0x8a, 0x4e, 0xfa, 0xe3, 0x9c, 0xd4, 0x75, 0xfc, 0xdc, 0x2d, 0x25, 0x3e, 0x07, 0xd4,
-	0xb6, 0x28, 0x1a, 0xe2, 0xa2, 0xd3, 0x82, 0xfc, 0x5b, 0x90, 0x0d, 0x9c, 0xa2, 0xa7, 0x12, 0x74,
-	0xd5, 0xac, 0x13, 0xf4, 0x95, 0x8f, 0xf5, 0x65, 0x49, 0x05, 0x86, 0x29, 0x5b, 0x71, 0x62, 0xad,
-	0x17, 0xfe, 0x67, 0x99, 0xa6, 0x9f, 0x11, 0x00, 0xaf, 0x8b, 0x68, 0x31, 0xce, 0x56, 0xf4, 0xcf,
-	0x21, 0x9c, 0x90, 0x5a, 0x1e, 0x67, 0x5e, 0xe1, 0x6e, 0x1d, 0xc8, 0x87, 0x3f, 0xfd, 0xf1, 0x69,
-	0xc7, 0x71, 0xca, 0x0b, 0x31, 0x3f, 0xec, 0xf8, 0x3a, 0xf0, 0x4b, 0x02, 0xdd, 0xae, 0x1d, 0x3a,
-	0x96, 0xce, 0x9f, 0x03, 0xaf, 0x98, 0x56, 0x1c, 0xd1, 0x9d, 0xf7, 0xd0, 0x3d, 0x4f, 0x27, 0x1b,
-	0xa3, 0x13, 0x56, 0x82, 0x0d, 0xb7, 0x4a, 0x7f, 0x25, 0x90, 0x8b, 0xda, 0xc3, 0xe9, 0x54, 0x3a,
-	0x28, 0xe1, 0xd1, 0x89, 0x7b, 0xa1, 0x05, 0x4d, 0xe4, 0x73, 0xd5, 0xe3, 0x53, 0xa2, 0xe7, 0x5a,
-	0xe0, 0x23, 0xf8, 0xde, 0x7b, 0xf4, 0x5f, 0x02, 0xc7, 0x12, 0x77, 0x56, 0x5a, 0x4a, 0x07, 0x35,
-	0x61, 0x50, 0xe4, 0xa6, 0xb7, 0x63, 0x02, 0x69, 0xcf, 0x7a, 0xb4, 0xaf, 0xd0, 0xcb, 0xad, 0xd0,
-	0xf6, 0x26, 0x3d, 0x7f, 0x00, 0x7e, 0x20, 0x00, 0x9e, 0xbf, 0x06, 0xcd, 0x12, 0xda, 0xe5, 0x1a,
-	0x34, 0x4b, 0x78, 0x96, 0xe7, 0xdf, 0xf7, 0x78, 0x94, 0xe9, 0xcc, 0x36, 0xd3, 0x27, 0xac, 0x04,
-	0xdf, 0x2e, 0xab, 0xf4, 0x1f, 0x02, 0xd9, 0x88, 0x38, 0xd2, 0x33, 0x89, 0x38, 0xe3, 0x97, 0x55,
-	0x6e, 0xaa, 0x79, 0x45, 0x64, 0x6a, 0x78, 0x4c, 0x15, 0x2a, 0xb7, 0x9b, 0x69, 0x64, 0x3a, 0xe9,
-	0x8f, 0x04, 0x72, 0x51, 0x4b, 0x59, 0x83, 0x56, 0x4d, 0xd8, 0x3f, 0x1b, 0xb4, 0x6a, 0xd2, 0x06,
-	0xc8, 0x97, 0xbc, 0x08, 0x9c, 0xa6, 0xa7, 0xe2, 0x22, 0x90, 0x98, 0xcf, 0x7a, 0x7f, 0x26, 0xee,
-	0x32, 0x0d, 0xfa, 0x33, 0xcd, 0x22, 0xd7, 0xa0, 0x3f, 0x53, 0xad, 0x52, 0x29, 0xfb, 0xd3, 0xa5,
-	0x97, 0x32, 0xa1, 0x8c, 0x7e, 0x4f, 0xe0, 0x40, 0x60, 0x54, 0xa7, 0xe3, 0x89, 0x68, 0xa3, 0xf6,
-	0x22, 0x6e, 0xa2, 0x19, 0x15, 0x24, 0x74, 0xcd, 0x23, 0xf4, 0x0a, 0x2d, 0xb5, 0x42, 0xc8, 0x08,
-	0xc0, 0x7e, 0x42, 0x20, 0x1b, 0x31, 0xe4, 0x36, 0xe8, 0xcc, 0xf8, 0x69, 0x9e, 0x9b, 0x6a, 0x5e,
-	0x11, 0xa9, 0x5d, 0xf1, 0xa8, 0x9d, 0xa7, 0x2f, 0xb7, 0x42, 0xcd, 0xf7, 0x32, 0xdf, 0x24, 0x40,
-	0xc3, 0xce, 0xe8, 0xe9, 0x26, 0xd1, 0x39, 0xac, 0xce, 0x34, 0xad, 0x87, 0xa4, 0xde, 0xf3, 0x48,
-	0x5d, 0xa7, 0xaf, 0x6f, 0x8f, 0x54, 0x78, 0x06, 0xf8, 0x86, 0x40, 0x4f, 0x70, 0x98, 0xa4, 0xc9,
-	0x45, 0x15, 0x39, 0xed, 0x72, 0x93, 0x4d, 0xe9, 0x20, 0xb3, 0x97, 0x3c, 0x66, 0x13, 0xf4, 0xb9,
-	0x38, 0x66, 0x15, 0x57, 0x79, 0x4e, 0xd5, 0x6e, 0xe8, 0xc2, 0x8a, 0x3d, 0x48, 0xaf, 0xd2, 0x8f,
-	0x08, 0x74, 0xd6, 0x47, 0x54, 0x3a, 0x94, 0xe8, 0xdc, 0x37, 0x0d, 0x73, 0xc3, 0x29, 0x24, 0x11,
-	0xdc, 0xb0, 0x07, 0x2e, 0x4f, 0xfb, 0xe3, 0xc0, 0xd5, 0x27, 0x62, 0xfa, 0x31, 0x81, 0x2e, 0x7b,
-	0x7e, 0xa5, 0x23, 0xc9, 0x0e, 0xfc, 0x23, 0x33, 0x37, 0x9a, 0x4a, 0x16, 0xe1, 0x8c, 0x7a, 0x70,
-	0x0a, 0x34, 0x1f, 0x0b, 0xc7, 0x9e, 0xa2, 0x2f, 0x3e, 0xdc, 0xc8, 0x93, 0x47, 0x1b, 0x79, 0xf2,
-	0xfb, 0x46, 0x9e, 0x7c, 0xb2, 0x99, 0xcf, 0x3c, 0xda, 0xcc, 0x67, 0x7e, 0xd9, 0xcc, 0x67, 0xde,
-	0x39, 0xa9, 0xa8, 0x66, 0x65, 0x69, 0xbe, 0xb8, 0xa0, 0x2f, 0x3a, 0x36, 0xec, 0xff, 0xc6, 0x98,
-	0x74, 0x53, 0xb8, 0xed, 0x1a, 0x34, 0xef, 0xd4, 0x64, 0x36, 0xdf, 0x65, 0xfd, 0x85, 0x71, 0xf2,
-	0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x88, 0x69, 0x9e, 0x5b, 0x70, 0x1d, 0x00, 0x00,
+	// 1994 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5a, 0xdd, 0x6f, 0x1c, 0x57,
+	0x15, 0xf7, 0x75, 0x1c, 0x97, 0x9c, 0xaa, 0xa6, 0xb9, 0x76, 0x1c, 0x7b, 0x9a, 0xae, 0x9d, 0x69,
+	0x88, 0x13, 0xa7, 0xde, 0x69, 0x9c, 0xc6, 0x31, 0xce, 0x57, 0xd7, 0x89, 0x42, 0x43, 0xac, 0xd6,
+	0xdd, 0x94, 0x88, 0x4f, 0xad, 0xc6, 0x3b, 0xd3, 0xf5, 0xc8, 0xbb, 0x73, 0xd7, 0x33, 0xb3, 0x6e,
+	0x8c, 0x65, 0x21, 0xf1, 0x80, 0xfa, 0x84, 0x90, 0x78, 0x47, 0x7d, 0x44, 0x08, 0xa4, 0x3c, 0xb8,
+	0x08, 0x24, 0xe8, 0x23, 0xaa, 0x04, 0x42, 0x55, 0x51, 0xab, 0xc2, 0x43, 0x83, 0x62, 0x10, 0xbc,
+	0xf0, 0x1f, 0x20, 0x84, 0x66, 0xee, 0x99, 0x2f, 0xcf, 0xdc, 0x99, 0xdd, 0xf5, 0x5a, 0x72, 0x5e,
+	0x92, 0x9d, 0x3b, 0xf7, 0x9c, 0xf3, 0xfb, 0x9d, 0x8f, 0x3b, 0xf7, 0x1c, 0x19, 0xe4, 0x2a, 0xb3,
+	0x1b, 0xcc, 0x56, 0x6c, 0x47, 0x5d, 0x33, 0xcc, 0x9a, 0xb2, 0x71, 0x71, 0x45, 0x77, 0xd4, 0x8b,
+	0xca, 0x7a, 0x4b, 0xb7, 0x36, 0x8b, 0x4d, 0x8b, 0x39, 0x8c, 0x8e, 0xf2, 0x3d, 0x45, 0xdc, 0x53,
+	0xc4, 0x3d, 0xd2, 0x34, 0xca, 0xae, 0xa8, 0xb6, 0xce, 0x05, 0x02, 0xf1, 0xa6, 0x5a, 0x33, 0x4c,
+	0xd5, 0x31, 0x98, 0xc9, 0x75, 0x48, 0x23, 0x35, 0x56, 0x63, 0xde, 0x4f, 0xc5, 0xfd, 0x85, 0xab,
+	0xa7, 0x6a, 0x8c, 0xd5, 0xea, 0xba, 0xa2, 0x36, 0x0d, 0x45, 0x35, 0x4d, 0xe6, 0x78, 0x22, 0x36,
+	0xbe, 0x3d, 0x23, 0xc0, 0xe6, 0xe3, 0xe0, 0xbb, 0x0a, 0x51, 0x14, 0xfe, 0x96, 0x2a, 0x33, 0x7c,
+	0xcb, 0xe3, 0xfc, 0x7d, 0x85, 0x1b, 0x47, 0x2a, 0xfc, 0xd5, 0x0b, 0x28, 0xea, 0x63, 0x8f, 0xb2,
+	0x96, 0x8e, 0xab, 0x0d, 0xc3, 0x64, 0x8a, 0xf7, 0x2f, 0x5f, 0x92, 0x1f, 0xc2, 0xe8, 0x5b, 0xee,
+	0x8e, 0x07, 0x6a, 0xdd, 0xd0, 0x54, 0x87, 0x59, 0x76, 0x59, 0x5f, 0x6f, 0xe9, 0xb6, 0x43, 0x47,
+	0x61, 0xd0, 0x76, 0x54, 0xa7, 0x65, 0x8f, 0x91, 0x49, 0x72, 0xee, 0x58, 0x19, 0x9f, 0xe8, 0x1d,
+	0x80, 0xd0, 0x15, 0x63, 0xfd, 0x93, 0xe4, 0xdc, 0xb3, 0xb3, 0x67, 0x8b, 0x08, 0xc2, 0x45, 0x5c,
+	0xe4, 0x26, 0x11, 0x77, 0x71, 0x59, 0xad, 0xe9, 0xa8, 0xb3, 0x1c, 0x91, 0x94, 0x1f, 0x11, 0x38,
+	0x99, 0x30, 0x6d, 0x37, 0x99, 0x69, 0xeb, 0x74, 0x09, 0x60, 0x23, 0x58, 0x1d, 0x23, 0x93, 0x47,
+	0xce, 0x3d, 0x3b, 0x7b, 0xba, 0x98, 0x1e, 0xb3, 0x62, 0x20, 0xbf, 0x78, 0xec, 0xa3, 0x2f, 0x26,
+	0xfa, 0x7e, 0xfe, 0xaf, 0x47, 0xd3, 0xa4, 0x1c, 0x91, 0xa7, 0x5f, 0x4b, 0x41, 0x3c, 0x95, 0x8b,
+	0x98, 0x43, 0x89, 0x41, 0x56, 0xe1, 0x44, 0x1c, 0xb1, 0xef, 0xab, 0xd7, 0x61, 0x28, 0xb0, 0x57,
+	0x51, 0x35, 0xcd, 0xe2, 0x3e, 0x5b, 0x3c, 0xfd, 0xc9, 0xce, 0xcc, 0x8b, 0x68, 0x28, 0x10, 0x2a,
+	0x69, 0x9a, 0xa5, 0xdb, 0xf6, 0x7d, 0xc7, 0x32, 0xcc, 0x5a, 0xf9, 0xb9, 0x8d, 0xe8, 0xba, 0xac,
+	0xed, 0x8d, 0x47, 0xe0, 0x93, 0xaf, 0xc3, 0xb1, 0x60, 0xab, 0xa7, 0xbe, 0x53, 0x97, 0x84, 0xe2,
+	0xf2, 0x0e, 0x81, 0xc9, 0xb8, 0x99, 0xdb, 0x7a, 0x5d, 0xaf, 0xf1, 0x54, 0xed, 0x39, 0xa9, 0x9e,
+	0xa5, 0xcc, 0x7f, 0x08, 0x9c, 0xce, 0x80, 0x8d, 0x8e, 0xfa, 0x01, 0x8c, 0x68, 0xc1, 0x72, 0xc5,
+	0xc2, 0x65, 0x3f, 0x8d, 0xa6, 0x45, 0x3e, 0x0b, 0x55, 0xf9, 0x9a, 0x16, 0x27, 0x5d, 0xe7, 0xfd,
+	0xe2, 0xf1, 0xc4, 0x70, 0xf2, 0x9d, 0xcd, 0x7d, 0x3a, 0xac, 0x25, 0xdf, 0xf4, 0x2e, 0xdf, 0x7e,
+	0x4f, 0xe0, 0x7c, 0x9c, 0xef, 0x37, 0xcc, 0x15, 0x66, 0x6a, 0x86, 0x59, 0x7b, 0x2a, 0xe2, 0xf5,
+	0x05, 0x81, 0xe9, 0x76, 0xf0, 0x63, 0xe0, 0x6a, 0x30, 0xdc, 0xf2, 0xdf, 0x27, 0xe2, 0x76, 0x41,
+	0x14, 0xb7, 0x14, 0x95, 0xd1, 0xac, 0xa7, 0x81, 0xca, 0x03, 0x08, 0xd0, 0xaf, 0x08, 0x96, 0x6b,
+	0x34, 0x41, 0x78, 0x34, 0x6e, 0xc2, 0x10, 0xe6, 0x46, 0x3c, 0x1a, 0x63, 0x9f, 0xec, 0xcc, 0x8c,
+	0xa0, 0xa9, 0x3d, 0x41, 0x08, 0xf6, 0x7b, 0x41, 0x48, 0x86, 0xb3, 0xbf, 0xbb, 0x70, 0x2e, 0x7c,
+	0xe9, 0xbd, 0xf7, 0x27, 0xfa, 0xfe, 0xfd, 0xfe, 0x44, 0x9f, 0xbc, 0x81, 0x47, 0x6e, 0x32, 0x9f,
+	0xe9, 0x77, 0x60, 0x38, 0xa5, 0x6a, 0xf0, 0xa0, 0xe9, 0xa0, 0x68, 0xca, 0x34, 0x59, 0x12, 0xf2,
+	0xaf, 0x09, 0x4c, 0x78, 0x86, 0x53, 0x82, 0x75, 0xa8, 0x1d, 0x66, 0xe1, 0x39, 0x99, 0x8a, 0x1b,
+	0x3d, 0xf7, 0x06, 0x0c, 0xf2, 0x1c, 0x43, 0x67, 0x75, 0x9b, 0xa9, 0xa8, 0x45, 0xfe, 0xc0, 0x3f,
+	0x9c, 0x6f, 0xfb, 0xf4, 0x52, 0x8a, 0x7d, 0xdf, 0xde, 0xea, 0x51, 0x8d, 0x47, 0x7c, 0xf5, 0x99,
+	0x7f, 0x3a, 0xa7, 0xe3, 0x46, 0x6f, 0xad, 0xf6, 0xec, 0x74, 0x8e, 0xb8, 0xee, 0x60, 0x8f, 0xe1,
+	0x0f, 0xfd, 0x63, 0x38, 0x20, 0x96, 0x75, 0x0c, 0x1f, 0xc2, 0xc8, 0x04, 0xe7, 0x70, 0x0e, 0x81,
+	0xa7, 0xf6, 0x1c, 0xfe, 0xb0, 0x1f, 0xc6, 0x3d, 0x82, 0x65, 0x5d, 0x3b, 0x90, 0x88, 0x50, 0xdb,
+	0xaa, 0x56, 0x52, 0x4f, 0x17, 0xb1, 0x92, 0xe7, 0x6d, 0xab, 0xfa, 0x60, 0xcf, 0x77, 0x95, 0x6a,
+	0xb6, 0xb3, 0x57, 0xcf, 0x91, 0x3c, 0x3d, 0x9a, 0xed, 0x3c, 0xc8, 0xf8, 0x3e, 0x0f, 0xf4, 0x20,
+	0x43, 0x3e, 0x25, 0x20, 0xa5, 0x39, 0x10, 0x33, 0xc2, 0x84, 0x51, 0x4b, 0xcf, 0x28, 0xdb, 0x97,
+	0x45, 0x49, 0x11, 0x55, 0x97, 0x56, 0xb8, 0x27, 0x2c, 0xfd, 0x40, 0x4b, 0x77, 0xc7, 0xff, 0xf0,
+	0x04, 0x99, 0x9f, 0x6c, 0x74, 0x0e, 0x61, 0xc1, 0xfe, 0x36, 0xf1, 0x09, 0x78, 0x7a, 0x9a, 0xa4,
+	0x0f, 0x08, 0x14, 0x04, 0xd8, 0x0f, 0xf5, 0xa7, 0xbe, 0x21, 0xcc, 0x94, 0x03, 0x69, 0xc1, 0x5e,
+	0xc5, 0x82, 0x7b, 0xdd, 0xb0, 0x1d, 0x66, 0x19, 0x55, 0xb5, 0x7e, 0xd7, 0x7c, 0x87, 0x45, 0x9a,
+	0xef, 0x55, 0xdd, 0xa8, 0xad, 0x3a, 0x9e, 0x99, 0x23, 0x65, 0x7c, 0x92, 0xbf, 0x05, 0x2f, 0xa4,
+	0x4a, 0x21, 0xc0, 0x05, 0x18, 0x58, 0x35, 0x6c, 0x07, 0xb1, 0x9d, 0x15, 0x61, 0xdb, 0x23, 0xed,
+	0xc9, 0xc8, 0x14, 0x9e, 0xf7, 0x54, 0x2f, 0x33, 0x56, 0x47, 0x18, 0xf2, 0x32, 0x1c, 0x8f, 0xac,
+	0xa1, 0x91, 0xab, 0x30, 0xd0, 0x64, 0xac, 0x8e, 0x46, 0x4e, 0x89, 0x8c, 0xb8, 0x32, 0x51, 0xee,
+	0x9e, 0x90, 0x3c, 0x02, 0x94, 0x6b, 0x54, 0x2d, 0xb5, 0xe1, 0x97, 0xa0, 0xfc, 0x4d, 0x18, 0x8e,
+	0xad, 0xa2, 0xa5, 0x12, 0x0c, 0x36, 0xbd, 0x15, 0xb4, 0x55, 0x10, 0xda, 0xf2, 0x76, 0xc5, 0x2e,
+	0x53, 0x5c, 0x50, 0xbe, 0x0c, 0x2f, 0x79, 0x9a, 0xdf, 0x66, 0x6b, 0xba, 0x69, 0x7c, 0x5f, 0xbf,
+	0xbf, 0xaa, 0x5a, 0x7a, 0x59, 0xaf, 0x32, 0x4b, 0x5b, 0xdc, 0xbc, 0xab, 0xf9, 0xfe, 0x1e, 0x82,
+	0x7e, 0x83, 0xdf, 0xdf, 0x06, 0xca, 0xfd, 0x86, 0x26, 0xaf, 0xc3, 0x99, 0x6c, 0x31, 0x44, 0x78,
+	0x17, 0x06, 0x2d, 0x6f, 0x35, 0xef, 0xee, 0x97, 0xa6, 0x68, 0xc0, 0x85, 0x5b, 0x46, 0x05, 0xf2,
+	0x0d, 0x38, 0x2b, 0x36, 0x79, 0x5b, 0x37, 0x59, 0xc3, 0x07, 0x3b, 0x02, 0x47, 0x35, 0xf7, 0x19,
+	0x07, 0x33, 0xfc, 0x41, 0x76, 0x60, 0x2a, 0x57, 0xbe, 0xf7, 0xa8, 0xaf, 0xc3, 0x57, 0x44, 0x56,
+	0xed, 0x37, 0xdf, 0x35, 0x75, 0x2d, 0x02, 0x9a, 0xbd, 0x6b, 0xea, 0x96, 0x0f, 0xda, 0x7b, 0x90,
+	0x5b, 0x62, 0xd2, 0xbe, 0x38, 0x62, 0xbe, 0x07, 0xcf, 0x70, 0x93, 0xb9, 0x17, 0x11, 0x31, 0x68,
+	0x5f, 0x83, 0xdc, 0xc0, 0xac, 0x28, 0xd5, 0xeb, 0x69, 0x96, 0x7d, 0xcc, 0xf1, 0x83, 0x9d, 0x74,
+	0xdd, 0x07, 0xff, 0x8e, 0x60, 0x3a, 0x09, 0xed, 0x1d, 0x00, 0xc9, 0xde, 0x9d, 0xe8, 0x53, 0x18,
+	0xe3, 0x25, 0xd5, 0x76, 0x52, 0xec, 0x06, 0x55, 0x24, 0xcf, 0x63, 0x34, 0x33, 0x36, 0x22, 0xd1,
+	0xbd, 0xf5, 0x36, 0x15, 0xa4, 0x91, 0xa3, 0xc6, 0x5d, 0xa4, 0x95, 0x6c, 0x5b, 0x77, 0x82, 0x93,
+	0xa2, 0x12, 0x24, 0x8c, 0x70, 0x23, 0x9a, 0xb8, 0x0c, 0x47, 0x37, 0xd4, 0x7a, 0xcb, 0x6f, 0x61,
+	0xc7, 0x63, 0xcc, 0x7d, 0xce, 0xb7, 0x98, 0x61, 0xa2, 0xdf, 0xf8, 0x6e, 0x79, 0x0c, 0x3b, 0x7a,
+	0xcf, 0xc0, 0x92, 0xb1, 0xde, 0x32, 0xb4, 0xfb, 0x8e, 0xba, 0xa6, 0x6b, 0xf2, 0x3c, 0x7e, 0xd7,
+	0x12, 0x6f, 0x02, 0x93, 0xa3, 0x30, 0xe8, 0xb8, 0x90, 0x82, 0x91, 0x29, 0x7f, 0x92, 0xe7, 0xf0,
+	0xac, 0x8f, 0xe1, 0x5d, 0x62, 0xd5, 0x35, 0xf7, 0xf8, 0xa5, 0x63, 0xf0, 0x8c, 0xca, 0x3f, 0x51,
+	0x28, 0xe6, 0x3f, 0xca, 0x3a, 0xc8, 0x62, 0xb9, 0xa8, 0xd5, 0xd4, 0x41, 0xed, 0x14, 0x7c, 0x59,
+	0x7f, 0xd8, 0x34, 0x2c, 0x7e, 0x65, 0x73, 0x8c, 0x86, 0xce, 0xbf, 0x92, 0xe5, 0xa1, 0x70, 0xf9,
+	0x6d, 0xa3, 0xa1, 0xcf, 0xfe, 0xed, 0x25, 0x38, 0xea, 0xd9, 0xa1, 0x3f, 0x23, 0x00, 0xe1, 0x4d,
+	0x83, 0x16, 0x45, 0xd9, 0x97, 0x3e, 0x32, 0x96, 0x94, 0xb6, 0xf7, 0xe3, 0x5c, 0x40, 0x79, 0xcf,
+	0x3d, 0xac, 0x7f, 0xf8, 0x97, 0x7f, 0xfc, 0xb4, 0xff, 0x0c, 0x95, 0x15, 0xc1, 0x70, 0x3c, 0x72,
+	0x4b, 0xf9, 0x25, 0x81, 0x63, 0x81, 0x1e, 0x3a, 0xd3, 0x9e, 0x3d, 0x1f, 0x5e, 0xb1, 0xdd, 0xed,
+	0x88, 0xee, 0xb5, 0x10, 0xdd, 0x65, 0x7a, 0x29, 0x1f, 0x9d, 0xb2, 0x15, 0xbf, 0x94, 0x6c, 0xd3,
+	0xbf, 0x12, 0x18, 0x49, 0x9b, 0x55, 0xd2, 0xf9, 0xf6, 0xa0, 0x24, 0xdb, 0x4b, 0xe9, 0xab, 0x5d,
+	0x48, 0x22, 0x9f, 0xa5, 0x90, 0x4f, 0x89, 0xde, 0xec, 0x82, 0x8f, 0x12, 0xe9, 0x0d, 0xe8, 0xff,
+	0x08, 0xbc, 0x98, 0x39, 0xd7, 0xa3, 0xa5, 0xf6, 0xa0, 0x66, 0x34, 0xd3, 0xd2, 0xe2, 0x7e, 0x54,
+	0x20, 0xed, 0x07, 0x21, 0xed, 0x7b, 0xf4, 0x6e, 0x37, 0xb4, 0xc3, 0x6e, 0x38, 0xea, 0x80, 0x3f,
+	0x11, 0x80, 0xd0, 0x5e, 0x4e, 0xb1, 0x24, 0xe6, 0x5d, 0x39, 0xc5, 0x92, 0x9c, 0x77, 0xc8, 0xdf,
+	0x0b, 0x79, 0x94, 0xe9, 0xf2, 0x3e, 0xc3, 0xa7, 0x6c, 0xc5, 0x6f, 0xe0, 0xdb, 0xf4, 0xbf, 0x04,
+	0x86, 0x53, 0xfc, 0x48, 0xaf, 0x64, 0xe2, 0x14, 0x0f, 0xf4, 0xa4, 0xf9, 0xce, 0x05, 0x91, 0xa9,
+	0x15, 0x32, 0xad, 0x51, 0xbd, 0xd7, 0x4c, 0x53, 0xc3, 0x49, 0xff, 0x4c, 0x60, 0x24, 0x6d, 0x70,
+	0x95, 0x53, 0xaa, 0x19, 0x33, 0xba, 0x9c, 0x52, 0xcd, 0x9a, 0x92, 0xc9, 0xa5, 0xd0, 0x03, 0x73,
+	0xf4, 0x55, 0x91, 0x07, 0x32, 0xe3, 0xe9, 0xd6, 0x67, 0xe6, 0xbc, 0x27, 0xa7, 0x3e, 0xdb, 0x19,
+	0x76, 0xe5, 0xd4, 0x67, 0x5b, 0xe3, 0xa6, 0x36, 0xeb, 0x33, 0xa0, 0xd7, 0x66, 0x40, 0x6d, 0xfa,
+	0x07, 0x02, 0xcf, 0xc5, 0xc6, 0x19, 0xf4, 0x62, 0x26, 0xda, 0xb4, 0xd9, 0x91, 0x34, 0xdb, 0x89,
+	0x08, 0x12, 0x7a, 0x23, 0x24, 0x74, 0x8b, 0x96, 0xba, 0x21, 0x64, 0xc5, 0x60, 0x7f, 0x4a, 0x60,
+	0x38, 0x65, 0x10, 0x90, 0x53, 0x99, 0xe2, 0x89, 0x87, 0x34, 0xdf, 0xb9, 0x20, 0x52, 0xbb, 0x17,
+	0x52, 0x7b, 0x8d, 0xde, 0xe8, 0x86, 0x5a, 0xe4, 0x63, 0xbe, 0x4b, 0x80, 0x26, 0x8d, 0xd1, 0xb9,
+	0x0e, 0xd1, 0xf9, 0xac, 0xae, 0x74, 0x2c, 0x87, 0xa4, 0xbe, 0x1b, 0x92, 0x7a, 0x8b, 0xbe, 0xb9,
+	0x3f, 0x52, 0xc9, 0x3b, 0xc0, 0x67, 0x04, 0x4e, 0x0a, 0xda, 0x48, 0x7a, 0x35, 0x13, 0x72, 0x76,
+	0xcf, 0x2a, 0x5d, 0xeb, 0x4e, 0xd8, 0xbf, 0xdc, 0x78, 0x7c, 0x17, 0xe8, 0xbc, 0x88, 0xaf, 0x83,
+	0x0a, 0x2a, 0xb6, 0xab, 0xa1, 0xc2, 0xbb, 0x8a, 0xca, 0xca, 0x66, 0xc5, 0xd0, 0x94, 0x2d, 0x43,
+	0xdb, 0xa6, 0xff, 0x24, 0x20, 0x89, 0x9b, 0x4d, 0x7a, 0xa3, 0x73, 0x78, 0xd1, 0x2e, 0x57, 0xba,
+	0xd9, 0xb5, 0x3c, 0x32, 0xbc, 0x93, 0x97, 0xa6, 0x42, 0x86, 0x5e, 0x43, 0xed, 0x46, 0xd9, 0x64,
+	0x8d, 0x6d, 0xfa, 0x98, 0xc0, 0xb8, 0xb0, 0x3f, 0xa5, 0xd7, 0x3b, 0x85, 0x19, 0x6b, 0x8b, 0xa5,
+	0x1b, 0xdd, 0x8a, 0x23, 0xc9, 0x5b, 0x1e, 0xc9, 0xeb, 0xf4, 0x6a, 0x67, 0x24, 0xdd, 0xee, 0x5b,
+	0x53, 0xb6, 0xbc, 0x26, 0x7c, 0xdb, 0xbd, 0xc9, 0x9c, 0x14, 0xb4, 0xa6, 0x39, 0x29, 0x9a, 0xdd,
+	0x40, 0xe7, 0xa4, 0x68, 0x4e, 0x37, 0x2c, 0xcf, 0x79, 0xdc, 0x5e, 0xa1, 0xc5, 0x8e, 0xb8, 0xd9,
+	0xee, 0xad, 0x7b, 0x5c, 0xd8, 0x82, 0xe6, 0x04, 0x2c, 0xaf, 0xc7, 0xcd, 0x09, 0x58, 0x6e, 0xe7,
+	0x2b, 0x5f, 0xf7, 0x48, 0x5d, 0xa1, 0x97, 0x45, 0xa4, 0xea, 0xaa, 0xed, 0x54, 0xd2, 0xa3, 0x66,
+	0x68, 0xf4, 0x73, 0x2f, 0x19, 0x05, 0xbd, 0x6f, 0x6e, 0x32, 0x66, 0x37, 0xd7, 0xb9, 0xc9, 0x98,
+	0xd3, 0x72, 0xcb, 0xd7, 0xf2, 0x2e, 0x2c, 0x8e, 0xab, 0x62, 0x0f, 0x39, 0xad, 0xa2, 0x72, 0xf0,
+	0x8f, 0x08, 0x1c, 0x4f, 0xf4, 0xd6, 0x39, 0xd7, 0xea, 0xc4, 0x7e, 0x69, 0xae, 0xb3, 0xfd, 0x01,
+	0xf6, 0x4b, 0x1e, 0xf6, 0x19, 0x7a, 0x21, 0x1b, 0x7b, 0xdd, 0x93, 0xad, 0xd8, 0x1c, 0xdc, 0x1f,
+	0x09, 0x9c, 0x48, 0x6f, 0xea, 0x67, 0xdb, 0xaf, 0x6b, 0x5f, 0x46, 0x5a, 0xe8, 0x5c, 0x26, 0x80,
+	0xbf, 0xe8, 0xc1, 0xbf, 0x46, 0x17, 0xda, 0xac, 0x95, 0x3a, 0xab, 0xae, 0x55, 0x0c, 0xf3, 0x1d,
+	0xa6, 0x6c, 0xe1, 0xb4, 0x61, 0x9b, 0xfe, 0x86, 0xc0, 0x50, 0x7c, 0x34, 0x9c, 0x43, 0x23, 0x75,
+	0x76, 0x2d, 0x5d, 0xea, 0x48, 0xc6, 0x2f, 0x8b, 0xf0, 0x1b, 0x3c, 0x4b, 0x5f, 0x11, 0x91, 0x58,
+	0x0d, 0x84, 0x11, 0x3b, 0x1f, 0x8b, 0x6f, 0xd3, 0x1f, 0x11, 0x18, 0x58, 0x66, 0xac, 0x4e, 0xcf,
+	0x65, 0x1a, 0x8f, 0xcc, 0xb6, 0xa5, 0xf3, 0x6d, 0xec, 0x44, 0x70, 0xe7, 0x43, 0x70, 0x05, 0x7a,
+	0x4a, 0x04, 0xae, 0xe9, 0xda, 0xff, 0x31, 0x81, 0x41, 0x3e, 0x8d, 0xa6, 0xd3, 0xd9, 0x06, 0xa2,
+	0x03, 0x70, 0xe9, 0x42, 0x5b, 0x7b, 0x11, 0xce, 0x85, 0x10, 0xce, 0x24, 0x2d, 0x08, 0xe1, 0xf0,
+	0x99, 0xf8, 0x9d, 0x8f, 0x9e, 0x14, 0xc8, 0xc7, 0x4f, 0x0a, 0xe4, 0xef, 0x4f, 0x0a, 0xe4, 0x27,
+	0xbb, 0x85, 0xbe, 0x8f, 0x77, 0x0b, 0x7d, 0x9f, 0xef, 0x16, 0xfa, 0xbe, 0xfd, 0x72, 0xcd, 0x70,
+	0x56, 0x5b, 0x2b, 0xc5, 0x2a, 0x6b, 0xf8, 0x3a, 0xf8, 0x7f, 0x33, 0xb6, 0xb6, 0xa6, 0x3c, 0x0c,
+	0x14, 0x3a, 0x9b, 0x4d, 0xdd, 0x5e, 0x19, 0xf4, 0xfe, 0x5e, 0xf0, 0xd2, 0xff, 0x03, 0x00, 0x00,
+	0xff, 0xff, 0x6a, 0x6f, 0x20, 0x16, 0x5e, 0x29, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1576,6 +2371,22 @@ type QueryClient interface {
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
+	// Query for individual tokenize share record information by share by id
+	TokenizeShareRecordById(ctx context.Context, in *QueryTokenizeShareRecordByIdRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByIdResponse, error)
+	// Query for individual tokenize share record information by share denom
+	TokenizeShareRecordByDenom(ctx context.Context, in *QueryTokenizeShareRecordByDenomRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByDenomResponse, error)
+	// Query tokenize share records by address
+	TokenizeShareRecordsOwned(ctx context.Context, in *QueryTokenizeShareRecordsOwnedRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordsOwnedResponse, error)
+	// Query for all tokenize share records
+	AllTokenizeShareRecords(ctx context.Context, in *QueryAllTokenizeShareRecordsRequest, opts ...grpc.CallOption) (*QueryAllTokenizeShareRecordsResponse, error)
+	// Query for last tokenize share record id
+	LastTokenizeShareRecordId(ctx context.Context, in *QueryLastTokenizeShareRecordIdRequest, opts ...grpc.CallOption) (*QueryLastTokenizeShareRecordIdResponse, error)
+	// Query for total tokenized staked assets
+	TotalTokenizeSharedAssets(ctx context.Context, in *QueryTotalTokenizeSharedAssetsRequest, opts ...grpc.CallOption) (*QueryTotalTokenizeSharedAssetsResponse, error)
+	// Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+	TotalLiquidStaked(ctx context.Context, in *QueryTotalLiquidStaked, opts ...grpc.CallOption) (*QueryTotalLiquidStakedResponse, error)
+	// Query tokenize share locks
+	TokenizeShareLockInfo(ctx context.Context, in *QueryTokenizeShareLockInfo, opts ...grpc.CallOption) (*QueryTokenizeShareLockInfoResponse, error)
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.
@@ -1691,6 +2502,78 @@ func (c *queryClient) DelegatorValidator(ctx context.Context, in *QueryDelegator
 	return out, nil
 }
 
+func (c *queryClient) TokenizeShareRecordById(ctx context.Context, in *QueryTokenizeShareRecordByIdRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByIdResponse, error) {
+	out := new(QueryTokenizeShareRecordByIdResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TokenizeShareRecordById", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TokenizeShareRecordByDenom(ctx context.Context, in *QueryTokenizeShareRecordByDenomRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByDenomResponse, error) {
+	out := new(QueryTokenizeShareRecordByDenomResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TokenizeShareRecordByDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TokenizeShareRecordsOwned(ctx context.Context, in *QueryTokenizeShareRecordsOwnedRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordsOwnedResponse, error) {
+	out := new(QueryTokenizeShareRecordsOwnedResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TokenizeShareRecordsOwned", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllTokenizeShareRecords(ctx context.Context, in *QueryAllTokenizeShareRecordsRequest, opts ...grpc.CallOption) (*QueryAllTokenizeShareRecordsResponse, error) {
+	out := new(QueryAllTokenizeShareRecordsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/AllTokenizeShareRecords", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) LastTokenizeShareRecordId(ctx context.Context, in *QueryLastTokenizeShareRecordIdRequest, opts ...grpc.CallOption) (*QueryLastTokenizeShareRecordIdResponse, error) {
+	out := new(QueryLastTokenizeShareRecordIdResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/LastTokenizeShareRecordId", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TotalTokenizeSharedAssets(ctx context.Context, in *QueryTotalTokenizeSharedAssetsRequest, opts ...grpc.CallOption) (*QueryTotalTokenizeSharedAssetsResponse, error) {
+	out := new(QueryTotalTokenizeSharedAssetsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TotalTokenizeSharedAssets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TotalLiquidStaked(ctx context.Context, in *QueryTotalLiquidStaked, opts ...grpc.CallOption) (*QueryTotalLiquidStakedResponse, error) {
+	out := new(QueryTotalLiquidStakedResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TotalLiquidStaked", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TokenizeShareLockInfo(ctx context.Context, in *QueryTokenizeShareLockInfo, opts ...grpc.CallOption) (*QueryTokenizeShareLockInfoResponse, error) {
+	out := new(QueryTokenizeShareLockInfoResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TokenizeShareLockInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error) {
 	out := new(QueryHistoricalInfoResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/HistoricalInfo", in, out, opts...)
@@ -1767,6 +2650,22 @@ type QueryServer interface {
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
+	// Query for individual tokenize share record information by share by id
+	TokenizeShareRecordById(context.Context, *QueryTokenizeShareRecordByIdRequest) (*QueryTokenizeShareRecordByIdResponse, error)
+	// Query for individual tokenize share record information by share denom
+	TokenizeShareRecordByDenom(context.Context, *QueryTokenizeShareRecordByDenomRequest) (*QueryTokenizeShareRecordByDenomResponse, error)
+	// Query tokenize share records by address
+	TokenizeShareRecordsOwned(context.Context, *QueryTokenizeShareRecordsOwnedRequest) (*QueryTokenizeShareRecordsOwnedResponse, error)
+	// Query for all tokenize share records
+	AllTokenizeShareRecords(context.Context, *QueryAllTokenizeShareRecordsRequest) (*QueryAllTokenizeShareRecordsResponse, error)
+	// Query for last tokenize share record id
+	LastTokenizeShareRecordId(context.Context, *QueryLastTokenizeShareRecordIdRequest) (*QueryLastTokenizeShareRecordIdResponse, error)
+	// Query for total tokenized staked assets
+	TotalTokenizeSharedAssets(context.Context, *QueryTotalTokenizeSharedAssetsRequest) (*QueryTotalTokenizeSharedAssetsResponse, error)
+	// Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+	TotalLiquidStaked(context.Context, *QueryTotalLiquidStaked) (*QueryTotalLiquidStakedResponse, error)
+	// Query tokenize share locks
+	TokenizeShareLockInfo(context.Context, *QueryTokenizeShareLockInfo) (*QueryTokenizeShareLockInfoResponse, error)
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.
@@ -1811,6 +2710,30 @@ func (*UnimplementedQueryServer) DelegatorValidators(ctx context.Context, req *Q
 }
 func (*UnimplementedQueryServer) DelegatorValidator(ctx context.Context, req *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorValidator not implemented")
+}
+func (*UnimplementedQueryServer) TokenizeShareRecordById(ctx context.Context, req *QueryTokenizeShareRecordByIdRequest) (*QueryTokenizeShareRecordByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareRecordById not implemented")
+}
+func (*UnimplementedQueryServer) TokenizeShareRecordByDenom(ctx context.Context, req *QueryTokenizeShareRecordByDenomRequest) (*QueryTokenizeShareRecordByDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareRecordByDenom not implemented")
+}
+func (*UnimplementedQueryServer) TokenizeShareRecordsOwned(ctx context.Context, req *QueryTokenizeShareRecordsOwnedRequest) (*QueryTokenizeShareRecordsOwnedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareRecordsOwned not implemented")
+}
+func (*UnimplementedQueryServer) AllTokenizeShareRecords(ctx context.Context, req *QueryAllTokenizeShareRecordsRequest) (*QueryAllTokenizeShareRecordsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllTokenizeShareRecords not implemented")
+}
+func (*UnimplementedQueryServer) LastTokenizeShareRecordId(ctx context.Context, req *QueryLastTokenizeShareRecordIdRequest) (*QueryLastTokenizeShareRecordIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LastTokenizeShareRecordId not implemented")
+}
+func (*UnimplementedQueryServer) TotalTokenizeSharedAssets(ctx context.Context, req *QueryTotalTokenizeSharedAssetsRequest) (*QueryTotalTokenizeSharedAssetsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalTokenizeSharedAssets not implemented")
+}
+func (*UnimplementedQueryServer) TotalLiquidStaked(ctx context.Context, req *QueryTotalLiquidStaked) (*QueryTotalLiquidStakedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalLiquidStaked not implemented")
+}
+func (*UnimplementedQueryServer) TokenizeShareLockInfo(ctx context.Context, req *QueryTokenizeShareLockInfo) (*QueryTokenizeShareLockInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareLockInfo not implemented")
 }
 func (*UnimplementedQueryServer) HistoricalInfo(ctx context.Context, req *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HistoricalInfo not implemented")
@@ -2024,6 +2947,150 @@ func _Query_DelegatorValidator_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TokenizeShareRecordById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareRecordByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareRecordById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TokenizeShareRecordById",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareRecordById(ctx, req.(*QueryTokenizeShareRecordByIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TokenizeShareRecordByDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareRecordByDenomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareRecordByDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TokenizeShareRecordByDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareRecordByDenom(ctx, req.(*QueryTokenizeShareRecordByDenomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TokenizeShareRecordsOwned_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareRecordsOwnedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareRecordsOwned(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TokenizeShareRecordsOwned",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareRecordsOwned(ctx, req.(*QueryTokenizeShareRecordsOwnedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllTokenizeShareRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllTokenizeShareRecordsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllTokenizeShareRecords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/AllTokenizeShareRecords",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllTokenizeShareRecords(ctx, req.(*QueryAllTokenizeShareRecordsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_LastTokenizeShareRecordId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLastTokenizeShareRecordIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LastTokenizeShareRecordId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/LastTokenizeShareRecordId",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LastTokenizeShareRecordId(ctx, req.(*QueryLastTokenizeShareRecordIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TotalTokenizeSharedAssets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalTokenizeSharedAssetsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TotalTokenizeSharedAssets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TotalTokenizeSharedAssets",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TotalTokenizeSharedAssets(ctx, req.(*QueryTotalTokenizeSharedAssetsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TotalLiquidStaked_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalLiquidStaked)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TotalLiquidStaked(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TotalLiquidStaked",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TotalLiquidStaked(ctx, req.(*QueryTotalLiquidStaked))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TokenizeShareLockInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareLockInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareLockInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TokenizeShareLockInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareLockInfo(ctx, req.(*QueryTokenizeShareLockInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_HistoricalInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryHistoricalInfoRequest)
 	if err := dec(in); err != nil {
@@ -2125,6 +3192,38 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelegatorValidator",
 			Handler:    _Query_DelegatorValidator_Handler,
+		},
+		{
+			MethodName: "TokenizeShareRecordById",
+			Handler:    _Query_TokenizeShareRecordById_Handler,
+		},
+		{
+			MethodName: "TokenizeShareRecordByDenom",
+			Handler:    _Query_TokenizeShareRecordByDenom_Handler,
+		},
+		{
+			MethodName: "TokenizeShareRecordsOwned",
+			Handler:    _Query_TokenizeShareRecordsOwned_Handler,
+		},
+		{
+			MethodName: "AllTokenizeShareRecords",
+			Handler:    _Query_AllTokenizeShareRecords_Handler,
+		},
+		{
+			MethodName: "LastTokenizeShareRecordId",
+			Handler:    _Query_LastTokenizeShareRecordId_Handler,
+		},
+		{
+			MethodName: "TotalTokenizeSharedAssets",
+			Handler:    _Query_TotalTokenizeSharedAssets_Handler,
+		},
+		{
+			MethodName: "TotalLiquidStaked",
+			Handler:    _Query_TotalLiquidStaked_Handler,
+		},
+		{
+			MethodName: "TokenizeShareLockInfo",
+			Handler:    _Query_TokenizeShareLockInfo_Handler,
 		},
 		{
 			MethodName: "HistoricalInfo",
@@ -3244,6 +4343,508 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryTokenizeShareRecordByIdRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTokenizeShareRecordByIdRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTokenizeShareRecordByIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Id != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTokenizeShareRecordByIdResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTokenizeShareRecordByIdResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTokenizeShareRecordByIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Record.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTokenizeShareRecordByDenomRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTokenizeShareRecordByDenomRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTokenizeShareRecordByDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTokenizeShareRecordByDenomResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTokenizeShareRecordByDenomResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTokenizeShareRecordByDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Record.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTokenizeShareRecordsOwnedRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTokenizeShareRecordsOwnedRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTokenizeShareRecordsOwnedRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTokenizeShareRecordsOwnedResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTokenizeShareRecordsOwnedResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTokenizeShareRecordsOwnedResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Records) > 0 {
+		for iNdEx := len(m.Records) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Records[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllTokenizeShareRecordsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllTokenizeShareRecordsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllTokenizeShareRecordsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllTokenizeShareRecordsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllTokenizeShareRecordsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllTokenizeShareRecordsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Records) > 0 {
+		for iNdEx := len(m.Records) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Records[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLastTokenizeShareRecordIdRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLastTokenizeShareRecordIdRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLastTokenizeShareRecordIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLastTokenizeShareRecordIdResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLastTokenizeShareRecordIdResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLastTokenizeShareRecordIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Id != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTotalTokenizeSharedAssetsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTotalTokenizeSharedAssetsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTotalTokenizeSharedAssetsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTotalTokenizeSharedAssetsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTotalTokenizeSharedAssetsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTotalTokenizeSharedAssetsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Value.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTotalLiquidStaked) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTotalLiquidStaked) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTotalLiquidStaked) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTotalLiquidStakedResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTotalLiquidStakedResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTotalLiquidStakedResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Tokens) > 0 {
+		i -= len(m.Tokens)
+		copy(dAtA[i:], m.Tokens)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Tokens)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTokenizeShareLockInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTokenizeShareLockInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTokenizeShareLockInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTokenizeShareLockInfoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTokenizeShareLockInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTokenizeShareLockInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ExpirationTime) > 0 {
+		i -= len(m.ExpirationTime)
+		copy(dAtA[i:], m.ExpirationTime)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ExpirationTime)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Status) > 0 {
+		i -= len(m.Status)
+		copy(dAtA[i:], m.Status)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Status)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -3687,6 +5288,206 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryTokenizeShareRecordByIdRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovQuery(uint64(m.Id))
+	}
+	return n
+}
+
+func (m *QueryTokenizeShareRecordByIdResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Record.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryTokenizeShareRecordByDenomRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryTokenizeShareRecordByDenomResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Record.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryTokenizeShareRecordsOwnedRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryTokenizeShareRecordsOwnedResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Records) > 0 {
+		for _, e := range m.Records {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryAllTokenizeShareRecordsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAllTokenizeShareRecordsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Records) > 0 {
+		for _, e := range m.Records {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLastTokenizeShareRecordIdRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryLastTokenizeShareRecordIdResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovQuery(uint64(m.Id))
+	}
+	return n
+}
+
+func (m *QueryTotalTokenizeSharedAssetsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryTotalTokenizeSharedAssetsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Value.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryTotalLiquidStaked) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryTotalLiquidStakedResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Tokens)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryTokenizeShareLockInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryTokenizeShareLockInfoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Status)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ExpirationTime)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -6584,6 +8385,1275 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTokenizeShareRecordByIdRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordByIdRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordByIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTokenizeShareRecordByIdResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordByIdResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordByIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Record.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTokenizeShareRecordByDenomRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordByDenomRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordByDenomRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTokenizeShareRecordByDenomResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordByDenomResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordByDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Record.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTokenizeShareRecordsOwnedRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordsOwnedRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordsOwnedRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTokenizeShareRecordsOwnedResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordsOwnedResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTokenizeShareRecordsOwnedResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Records = append(m.Records, TokenizeShareRecord{})
+			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllTokenizeShareRecordsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllTokenizeShareRecordsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllTokenizeShareRecordsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllTokenizeShareRecordsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllTokenizeShareRecordsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllTokenizeShareRecordsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Records = append(m.Records, TokenizeShareRecord{})
+			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLastTokenizeShareRecordIdRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLastTokenizeShareRecordIdRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLastTokenizeShareRecordIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLastTokenizeShareRecordIdResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLastTokenizeShareRecordIdResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLastTokenizeShareRecordIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTotalTokenizeSharedAssetsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTotalTokenizeSharedAssetsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTotalTokenizeSharedAssetsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTotalTokenizeSharedAssetsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTotalTokenizeSharedAssetsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTotalTokenizeSharedAssetsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Value.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTotalLiquidStaked) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTotalLiquidStaked: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTotalLiquidStaked: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTotalLiquidStakedResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTotalLiquidStakedResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTotalLiquidStakedResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tokens", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tokens = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTokenizeShareLockInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTokenizeShareLockInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTokenizeShareLockInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTokenizeShareLockInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTokenizeShareLockInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTokenizeShareLockInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Status = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpirationTime", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ExpirationTime = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

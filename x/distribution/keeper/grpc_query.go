@@ -370,3 +370,52 @@ func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoo
 
 	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil
 }
+
+// TokenizeShareRecordReward returns estimated amount of reward from tokenize share record ownership
+func (k Keeper) TokenizeShareRecordReward(c context.Context, req *types.QueryTokenizeShareRecordRewardRequest) (*types.QueryTokenizeShareRecordRewardResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	totalRewards := sdk.DecCoins{}
+	rewards := []types.TokenizeShareRecordReward{}
+
+	ownerAddr, err := sdk.AccAddressFromBech32(req.OwnerAddress)
+	if err != nil {
+		return nil, err
+	}
+	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
+	for _, record := range records {
+		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		moduleAddr := record.GetModuleAddress()
+		moduleBalance := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
+		moduleBalanceDecCoins := sdk.NewDecCoinsFromCoins(moduleBalance...)
+
+		val := k.stakingKeeper.Validator(ctx, valAddr)
+		del := k.stakingKeeper.Delegation(ctx, moduleAddr, valAddr)
+		if val != nil && del != nil {
+			// withdraw rewards
+			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+			recordReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+
+			rewards = append(rewards, types.TokenizeShareRecordReward{
+				RecordId: record.Id,
+				Reward:   recordReward.Add(moduleBalanceDecCoins...),
+			})
+			totalRewards = totalRewards.Add(recordReward...)
+		} else if !moduleBalance.IsZero() {
+			rewards = append(rewards, types.TokenizeShareRecordReward{
+				RecordId: record.Id,
+				Reward:   moduleBalanceDecCoins,
+			})
+			totalRewards = totalRewards.Add(moduleBalanceDecCoins...)
+		}
+	}
+
+	return &types.QueryTokenizeShareRecordRewardResponse{
+		Rewards: rewards,
+		Total:   totalRewards,
+	}, nil
+}

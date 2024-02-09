@@ -41,14 +41,14 @@ func (s *WithdrawAllTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-// TearDownSuite cleans up the curret test network after _each_ test.
+// TearDownSuite cleans up the current test network after _each_ test.
 func (s *WithdrawAllTestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-// This test requires multiple validators, if I add this test to `E2ETestSuite` by increasing
-// `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
+// This test requires multiple validators, if I add this test to `CLITestSuite` by increasing
+// `NumValidators` the existing tests are leading to non-determinism so created new suite for this test.
 func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
 	val := s.network.Validators[0]

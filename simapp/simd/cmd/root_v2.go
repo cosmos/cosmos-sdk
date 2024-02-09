@@ -115,16 +115,15 @@ func ProvideClientContext(
 		WithAddressCodec(addressCodec).
 		WithValidatorAddressCodec(validatorAddressCodec).
 		WithConsensusAddressCodec(consensusAddressCodec).
-		WithHomeDir(tempDir()).
+		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // uses by default the binary name as prefix
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
+	clientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}
-	clientCtx.HomeDir = ""
 
 	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
 	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)

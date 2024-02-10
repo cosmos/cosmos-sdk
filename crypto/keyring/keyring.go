@@ -856,7 +856,7 @@ func (ks keystore) MigrateAll() ([]*Record, error) {
 
 		rec, err := ks.migrate(key)
 		if err != nil {
-			fmt.Printf("migrate err for key %s: %q\n", key, err)
+			fmt.Fprintf(os.Stderr, "migrate err for key %s: %q\n", key, err)
 			continue
 		}
 
@@ -926,7 +926,7 @@ func (ks keystore) migrate(key string) (*Record, error) {
 		return nil, fmt.Errorf("unable to set keyring.Item, err: %w", err)
 	}
 
-	fmt.Printf("Successfully migrated key %s.\n", key)
+	fmt.Fprintf(os.Stderr, "Successfully migrated key %s.\n", key)
 
 	return k, nil
 }

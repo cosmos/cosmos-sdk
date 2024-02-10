@@ -60,7 +60,9 @@ func TestGetQueryCmd(t *testing.T) {
 			true,
 		},
 		"all evidence (default pagination)": {
-			[]string{},
+			[]string{
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
+			},
 			func() client.Context {
 				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
 				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{

@@ -26,6 +26,7 @@ type ClientConfig struct {
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
+<<<<<<< HEAD
 func (c *ClientConfig) SetChainID(chainID string) {
 	c.ChainID = chainID
 }
@@ -48,6 +49,40 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
+=======
+// ReadFromClientConfig reads values from client.toml file and updates them in client.Context
+// It uses CreateClientConfig internally with no custom template and custom config.
+// Deprecated: use CreateClientConfig instead.
+func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
+	return CreateClientConfig(ctx, "", nil)
+}
+
+// ReadDefaultValuesFromDefaultClientConfig reads default values from default client.toml file and updates them in client.Context
+// The client.toml is then discarded.
+func ReadDefaultValuesFromDefaultClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
+	prevHomeDir := ctx.HomeDir
+	dir, err := os.MkdirTemp("", "simapp")
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't create temp dir: %w", err)
+	}
+	defer os.RemoveAll(dir)
+
+	ctx.HomeDir = dir
+	ctx, err = CreateClientConfig(ctx, customClientTemplate, customConfig)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't create client config: %w", err)
+	}
+
+	ctx.HomeDir = prevHomeDir
+	return ctx, nil
+}
+
+// CreateClientConfig reads the client.toml file and returns a new populated client.Context
+// If the client.toml file does not exist, it creates one with default values.
+// It takes a customClientTemplate and customConfig as input that can be used to overwrite the default config and enhance the client.toml file.
+// The custom template/config must be both provided or be "" and nil.
+func CreateClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
+>>>>>>> 72a56d993 (fix(simapp): fix default home (#19393))
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
 	conf := DefaultConfig()

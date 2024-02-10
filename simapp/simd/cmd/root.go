@@ -98,7 +98,18 @@ func NewRootCmd() *cobra.Command {
 
 	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, tempApp.BasicModuleManager)
 
+<<<<<<< HEAD
 	// add keyring to autocli opts
+=======
+	// autocli opts
+	customClientTemplate, customClientConfig := initClientConfig()
+	var err error
+	initClientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
+
+>>>>>>> 72a56d993 (fix(simapp): fix default home (#19393))
 	autoCliOpts := tempApp.AutoCliOpts()
 	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
 	autoCliOpts.Keyring, _ = keyring.NewAutoCLIKeyring(initClientCtx.Keyring)

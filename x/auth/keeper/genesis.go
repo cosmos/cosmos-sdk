@@ -47,7 +47,7 @@ func (ak AccountKeeper) ExportGenesis(ctx context.Context) (*types.GenesisState,
 	err := ak.Accounts.Walk(ctx, nil, func(key sdk.AccAddress, value sdk.AccountI) (stop bool, err error) {
 		genAcc, ok := value.(types.GenesisAccount)
 		if !ok {
-			return true, fmt.Errorf("unable to conver account with address %s into a genesis account: type %T", key, value)
+			return true, fmt.Errorf("unable to convert account with address %s into a genesis account: type %T", key, value)
 		}
 		genAccounts = append(genAccounts, genAcc)
 		return false, nil

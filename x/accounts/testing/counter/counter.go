@@ -60,6 +60,7 @@ func (a Account) Init(ctx context.Context, msg *counterv1.MsgInit) (*counterv1.M
 	if err != nil {
 		return nil, err
 	}
+	// check funds
 	return &counterv1.MsgInitResponse{}, nil
 }
 
@@ -114,17 +115,23 @@ func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDepen
 	chainID := a.hs.GetHeaderInfo(ctx).ChainID
 
 	// test gas meter
-	gasBefore := a.gs.GetGasMeter(ctx).Limit()
-	a.gs.GetGasMeter(ctx).Consume(gasBefore, "before")
-	a.gs.GetGasMeter(ctx).Consume(10, "test")
-	gasAfter := a.gs.GetGasMeter(ctx).Limit()
-	a.gs.GetGasMeter(ctx).Consume(gasBefore, "After")
+	gm := a.gs.GetGasMeter(ctx)
+	gasBefore := gm.Limit() - gm.Remaining()
+	gm.Consume(10, "test")
+	gasAfter := gm.Limit() - gm.Remaining()
+
+	// test funds
+	funds := accountstd.Funds(ctx)
+	if len(funds) == 0 {
+		return nil, fmt.Errorf("expected funds")
+	}
 
 	return &counterv1.MsgTestDependenciesResponse{
 		ChainId:   chainID,
 		Address:   meStr,
 		BeforeGas: gasBefore,
 		AfterGas:  gasAfter,
+		Funds:     funds,
 	}, nil
 }
 

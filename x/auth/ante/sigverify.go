@@ -1,10 +1,14 @@
 package ante
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
+
+	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -46,6 +50,11 @@ func init() {
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 
+type AccountAbstractionKeeper interface {
+	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
+	AuthenticateAccount(ctx context.Context, addr []byte, msg *aa_interface_v1.MsgAuthenticate) error
+}
+
 // SigVerificationDecorator verifies all signatures for a tx and returns an
 // error if any are invalid.
 // It will populate an account's public key if that is not present only if
@@ -61,12 +70,14 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
+	aaKeeper        AccountAbstractionKeeper
 	signModeHandler *txsigning.HandlerMap
 	sigGasConsumer  SignatureVerificationGasConsumer
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper) SigVerificationDecorator {
 	return SigVerificationDecorator{
+		aaKeeper:        aaKeeper,
 		ak:              ak,
 		signModeHandler: signModeHandler,
 		sigGasConsumer:  sigGasConsumer,
@@ -176,7 +187,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	for i := range signers {
-		err = svd.authenticate(ctx, sigTx, signers[i], signatures[i], pubKeys[i])
+		err = svd.authenticate(ctx, sigTx, signers[i], signatures[i], pubKeys[i], i)
 		if err != nil {
 			return ctx, err
 		}
@@ -209,7 +220,19 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 }
 
 // authenticate the authentication of the TX for a specific tx signer.
-func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey, signerIndex int) error {
+	// first we check if it's an AA
+	if svd.aaKeeper != nil {
+		isAa, err := svd.aaKeeper.IsAbstractedAccount(ctx, signer)
+		if err != nil {
+			return err
+		}
+		if isAa {
+			return svd.authenticateAbstractedAccount(ctx, tx, signer, signerIndex)
+		}
+	}
+
+	// not an AA, proceed with standard auth flow.
 	acc, err := GetSignerAcc(ctx, svd.ak, signer)
 	if err != nil {
 		return err
@@ -381,6 +404,27 @@ func (svd SigVerificationDecorator) increaseSequence(tx authsigning.Tx, acc sdk.
 	}
 
 	return acc.SetSequence(acc.GetSequence() + 1)
+}
+
+// authenticateAbstractedAccount computes an AA authentication instruction and invokes the auth flow on the AA.
+func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx sdk.Context, authTx authsigning.Tx, signer []byte, index int) error {
+	// the bundler is the AA itself.
+	selfBundler, err := svd.ak.AddressCodec().BytesToString(signer)
+	if err != nil {
+		return err
+	}
+
+	infoTx := authTx.(interface {
+		GetRawTx() *tx.TxRaw
+		GetProtoTx() *tx.Tx
+	})
+
+	return svd.aaKeeper.AuthenticateAccount(ctx, signer, &aa_interface_v1.MsgAuthenticate{
+		Bundler:     selfBundler,
+		RawTx:       infoTx.GetRawTx(),
+		Tx:          infoTx.GetProtoTx(),
+		SignerIndex: uint32(index),
+	})
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params

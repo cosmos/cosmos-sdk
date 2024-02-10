@@ -156,7 +156,7 @@ func (a Account) computeSignerData(ctx context.Context) (secp256k1.PubKey, signi
 }
 
 func (a Account) getNumber(ctx context.Context, addrStr string) (uint64, error) {
-	accNum, err := accountstd.QueryModule[accountsv1.AccountNumberResponse](ctx, accountsv1.AccountNumberRequest{Address: addrStr})
+	accNum, err := accountstd.QueryModule[accountsv1.AccountNumberResponse](ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
 	if err != nil {
 		return 0, err
 	}
@@ -188,6 +188,14 @@ func (a Account) getTxData(msg *aa_interface_v1.MsgAuthenticate) (signing.TxData
 	}, nil
 }
 
+func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.QuerySequenceResponse, error) {
+	seq, err := a.Sequence.Peek(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.QuerySequenceResponse{Sequence: seq}, nil
+}
+
 func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, a.Init)
 }
@@ -197,4 +205,6 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, a.Authenticate) // account abstraction
 }
 
-func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {}
+func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+	accountstd.RegisterQueryHandler(builder, a.QuerySequence)
+}

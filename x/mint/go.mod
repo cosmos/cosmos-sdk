@@ -23,6 +23,8 @@ require (
 	gotest.tools/v3 v3.5.1
 )
 
+require cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
+
 require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
@@ -167,6 +169,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking

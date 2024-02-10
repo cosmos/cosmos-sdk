@@ -27,6 +27,8 @@ require (
 	google.golang.org/protobuf v1.32.0
 )
 
+require cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
+
 require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -168,6 +170,7 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking

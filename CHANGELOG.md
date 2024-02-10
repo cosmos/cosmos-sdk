@@ -91,7 +91,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (abci): [#19200](https://github.com/cosmos/cosmos-sdk/pull/19200) Ensure that sdk side ve math matches cometbft
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
 * (crypto) [#19371](https://github.com/cosmos/cosmos-sdk/pull/19371) Avoid cli redundant log in stdout, log to stderr instead.
- 
+* (client) [#19393](https://github.com/cosmos/cosmos-sdk/pull/19393/) Add `ReadDefaultValuesFromDefaultClientConfig` to populate the default values from the default client config in client.Context without creating a app folder.
+
 ### API Breaking Changes
 
 * (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `x/genutil` now handles the application export. `server.AddCommands` does not take an `AppExporter` but instead `genutilcli.Commands` does.

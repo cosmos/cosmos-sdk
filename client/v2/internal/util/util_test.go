@@ -163,7 +163,7 @@ func TestParseSinceComment(t *testing.T) {
 }
 
 func TestDescriptorDocs(t *testing.T) {
-	msg1 := testpb.MsgRequest{}
+	msg1 := &testpb.MsgRequest{}
 	descriptor1 := msg1.ProtoReflect().Descriptor()
 
 	msg2 := testpb.MsgResponse{}
@@ -178,7 +178,7 @@ func TestDescriptorDocs(t *testing.T) {
 		{
 			name:     "Test with leading comments",
 			input:    descriptor1,
-			expected: "Send a request and returns the request as a response.",
+			expected: "MsgRequest is a sample request message",
 		},
 		{
 			name:     "Test with no leading comments",

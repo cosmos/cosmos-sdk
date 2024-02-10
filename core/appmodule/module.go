@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -38,17 +39,12 @@ type HasServices interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
-// HasPrepareCheckState is an extension interface that contains information about the AppModule
-// and PrepareCheckState.
-type HasPrepareCheckState interface {
+// HasMigrations is the extension interface that modules should implement to register migrations.
+type HasMigrations interface {
 	AppModule
-	PrepareCheckState(context.Context) error
-}
 
-// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
-type HasPrecommit interface {
-	AppModule
-	Precommit(context.Context) error
+	// RegisterMigrations registers the module's migrations with the app's migrator.
+	RegisterMigrations(MigrationRegistrar) error
 }
 
 // ResponsePreBlock represents the response from the PreBlock method.
@@ -85,4 +81,32 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
+}
+
+// MsgHandlerRouter is implemented by the runtime provider.
+type MsgHandlerRouter interface {
+	// RegisterHandler is called by modules to register msg handler functions.
+	RegisterHandler(name string, handler func(ctx context.Context, msg protoiface.MessageV1) (msgResp protoiface.MessageV1, err error))
+}
+
+// HasMsgHandler is implemented by modules that instead of exposing msg server expose
+// a set of handlers.
+type HasMsgHandler interface {
+	// RegisterMsgHandlers is implemented by the module that will register msg handlers.
+	RegisterMsgHandlers(router MsgHandlerRouter)
+}
+
+// ---------------------------------------------------------------------------- //
+
+// HasPrepareCheckState is an extension interface that contains information about the AppModule
+// and PrepareCheckState.
+type HasPrepareCheckState interface {
+	AppModule
+	PrepareCheckState(context.Context) error
+}
+
+// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
+type HasPrecommit interface {
+	AppModule
+	Precommit(context.Context) error
 }

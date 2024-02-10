@@ -68,8 +68,7 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 				panic(err)
 			}
 		}
-		err := k.SetProposal(ctx, *proposal)
-		if err != nil {
+		if err := k.Proposals.Set(ctx, proposal.Id, *proposal); err != nil {
 			panic(err)
 		}
 	}

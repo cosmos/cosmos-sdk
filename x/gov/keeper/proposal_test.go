@@ -112,13 +112,12 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 }
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
-	testCases := map[string]struct {
+	testCases := []struct {
+		name      string
 		expedited bool
 	}{
-		"regular proposal": {},
-		"expedited proposal": {
-			expedited: true,
-		},
+		{name: "regular proposal", expedited: false},
+		{name: "expedited proposal", expedited: true},
 	}
 
 	for _, tc := range testCases {

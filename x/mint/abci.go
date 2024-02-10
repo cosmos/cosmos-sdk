@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -64,15 +63,17 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalcul
 		defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 	}
 
-	err = k.eventService.EventManager().EmitKV(
-		sdk.NewEvent(
-			types.EventTypeMint,
-			event.NewAttribute(types.AttributeKeyBondedRatio, bondedRatio.String()),
-			event.NewAttribute(types.AttributeKeyInflation, minter.Inflation.String()),
-			event.NewAttribute(types.AttributeKeyAnnualProvisions, minter.AnnualProvisions.String()),
-			event.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
-		),
+	err = k.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeMint,
+		event.NewAttribute(types.AttributeKeyBondedRatio, bondedRatio.String()),
+		event.NewAttribute(types.AttributeKeyInflation, minter.Inflation.String()),
+		event.NewAttribute(types.AttributeKeyAnnualProvisions, minter.AnnualProvisions.String()),
+		event.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
 	)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

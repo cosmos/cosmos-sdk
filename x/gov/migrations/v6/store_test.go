@@ -37,7 +37,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run migrations.
-	err = v6.MigrateStore(ctx, paramsCollection, proposalCollection)
+	err = v6.MigrateStore(ctx, storeService, paramsCollection, proposalCollection)
 	require.NoError(t, err)
 
 	// Check params

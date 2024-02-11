@@ -245,8 +245,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		proposal.FinalTallyResult = &tallyResults
 
-		err = keeper.SetProposal(ctx, proposal)
-		if err != nil {
+		if err = keeper.Proposals.Set(ctx, proposal.Id, proposal); err != nil {
 			return false, err
 		}
 
@@ -307,7 +306,7 @@ func failUnsupportedProposal(
 	proposal.FailedReason = fmt.Sprintf("proposal failed because it cannot be processed by gov: %s", errMsg)
 	proposal.Messages = nil // clear out the messages
 
-	if err := keeper.SetProposal(ctx, proposal); err != nil {
+	if err := keeper.Proposals.Set(ctx, proposal.Id, proposal); err != nil {
 		return err
 	}
 

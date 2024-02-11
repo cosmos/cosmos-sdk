@@ -28,7 +28,7 @@ type ModuleInputs struct {
 
 	ModuleKey              depinject.OwnModuleKey
 	Config                 *modulev1.Module
-	StoreService           appmodule.Environment
+	Environment            appmodule.Environment
 	Cdc                    codec.Codec
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 

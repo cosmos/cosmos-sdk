@@ -18,9 +18,6 @@ var (
 	ErrBundlerPayment = errors.New("bundler payment failed")
 	// ErrExecution is returned when the execution fails.
 	ErrExecution = errors.New("execution failed")
-	// ErrDisallowedTxCompatInBundle is returned when the tx compat
-	// is populated in a bundle.
-	ErrDisallowedTxCompatInBundle = errors.New("tx compat field populated in bundle")
 )
 
 // IsAbstractedAccount returns if the provided address is an abstracted account or not.

@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -463,10 +464,16 @@ func (app *BaseApp) ResetDeliverState() {
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
 func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
-	return nil
-
 	if app.paramStore == nil {
-		return nil
+		def := tmtypes.DefaultConsensusParams()
+		return &abci.ConsensusParams{
+			Block: &abci.BlockParams{
+				MaxBytes: 5000000000,
+				MaxGas:   50000000,
+			},
+			Evidence:  &def.Evidence,
+			Validator: &def.Validator,
+		}
 	}
 
 	cp := new(abci.ConsensusParams)

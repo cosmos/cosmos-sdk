@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -65,7 +66,10 @@ func (a Account) SwapPubKey(ctx context.Context, msg *v1.MsgSwapPubKey) (*v1.Msg
 }
 
 func (a Account) verifyAndSetPubKey(ctx context.Context, key []byte) error {
-	// TODO: verify
+	_, err := dcrd_secp256k1.ParsePubKey(key)
+	if err != nil {
+		return err
+	}
 	return a.PubKey.Set(ctx, secp256k1.PubKey{Key: key})
 }
 

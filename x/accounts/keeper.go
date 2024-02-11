@@ -40,11 +40,6 @@ var (
 	AccountByNumber = collections.NewPrefix(2)
 )
 
-// coinsTransferMsgFunc defines a function that creates a message to send coins from one
-// address to the other, and also a message that parses such  response.
-// This in most cases will be implemented as a bank.MsgSend creator, but we keep x/accounts independent of bank.
-type coinsTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
-
 // QueryRouter represents a router which can be used to route queries to the correct module.
 // It returns the handler given the message name, if multiple handlers are returned, then
 // it is up to the caller to choose which one to call.
@@ -430,11 +425,6 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 		return err
 	}
 	return nil
-}
-
-type gogoProtoPlusV2 interface {
-	proto.Message
-	implementation.ProtoMsg
 }
 
 const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"

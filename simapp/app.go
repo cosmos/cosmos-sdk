@@ -79,7 +79,6 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 	"cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -287,8 +286,6 @@ func NewSimApp(
 	addressCodec := authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	// add keepers
-	handlersMap := signing.NewHandlerMap(direct.SignModeHandler{})
-
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
@@ -305,7 +302,7 @@ func NewSimApp(
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
 		// PRODUCTION: add
-		baseaccount.NewAccount("base", handlersMap),
+		baseaccount.NewAccount("base", txConfig.SignModeHandler()),
 	)
 	if err != nil {
 		panic(err)

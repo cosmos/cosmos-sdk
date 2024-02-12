@@ -37,7 +37,7 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 	for _, option := range options {
 		switch proposal.ProposalType {
 		case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-			if option.Option != v1.OptionNo && option.Option != v1.OptionSpam {
+			if option.Option != v1.OptionNo {
 				return errors.Wrap(types.ErrInvalidVote, "optimistic proposals can only be rejected")
 			}
 		case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:

@@ -227,7 +227,8 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) (store.KVStoreService, appmodule.Environment) {
 	storeKey := ProvideKVStoreKey(config, key, app)
 	kvService := kvStoreService{key: storeKey}
-	return kvService, NewEnvironment(kvService)
+
+	return kvService, NewEnvironment(kvService, app.app.logger)
 }
 
 func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {

@@ -44,9 +44,10 @@ func (ms *MigrationStream) CloseWithError(err error) {
 	close(ms.chBuffer)
 }
 
-// ReadMsg implements protoio.Read interface.
-// NOTE: it is following the pattern of the `Snapshot Restore`, but the migration is done in memory.
-// It doesn't require any deserialization, just passing the pointer to the `msg`.
+// ReadMsg implements the protoio.Read interface.
+//
+// NOTE: It we follow the pattern of snapshot.Restore, however, the migration is done in memory.
+// It doesn't require any deserialization -- just passing the pointer to the <msg>.
 func (ms *MigrationStream) ReadMsg(msg proto.Message) error {
 	// msg should be a pointer to the same type as the one written to the stream
 	snapshotsItem, ok := msg.(*snapshotstypes.SnapshotItem)

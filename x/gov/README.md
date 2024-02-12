@@ -2,8 +2,6 @@
 sidebar_position: 1
 ---
 
-<!--- TODO(@julienrbrt), describe spam votes and vote options changes -->
-
 # `x/gov`
 
 ## Abstract

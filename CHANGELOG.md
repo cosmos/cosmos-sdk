@@ -52,6 +52,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#18499](https://github.com/cosmos/cosmos-sdk/pull/18499) Add `MsgRouter` response type from message name function.
 * (types) [#18768](https://github.com/cosmos/cosmos-sdk/pull/18768) Add MustValAddressFromBech32 function.
 * (gRPC) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) Add debug log prints for each gRPC request.
+* (server) [#19280](https://github.com/cosmos/cosmos-sdk/pull/19280) Adds in-place testnet CLI command.
 
 ### Improvements
 

@@ -160,12 +160,12 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 // QueryLastProposalIdRequest implements the Query/QueryLastProposalIdRequest gRPC method
 func (q queryServer) LastProposalId(ctx context.Context, req *v1.QueryLastProposalIdRequest) (*v1.QueryLastProposalIdResponse, error) {
 
-	nextProposalId, err := q.k.ProposalID.Next(ctx)
+	lastProposalId, err := q.k.ProposalID.Peek(ctx)
 	if err != nil {
 		return &v1.QueryLastProposalIdResponse{}, err
 	}
 
-	return &v1.QueryLastProposalIdResponse{LastProposalId: nextProposalId - 1}, nil
+	return &v1.QueryLastProposalIdResponse{LastProposalId: lastProposalId}, nil
 }
 
 // Vote returns Voted information based on proposalID, voterAddr

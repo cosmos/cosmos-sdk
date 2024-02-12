@@ -27,6 +27,7 @@ require (
 )
 
 require cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
+
 require github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 
 require (

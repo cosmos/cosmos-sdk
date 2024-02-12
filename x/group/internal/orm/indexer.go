@@ -1,8 +1,8 @@
 package orm
 
 import (
+	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
 )
 
@@ -144,7 +144,10 @@ func uniqueKeysAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, 
 
 // checkUniqueIndexKey checks that the given secondary index key is unique
 func checkUniqueIndexKey(store storetypes.KVStore, secondaryIndexKeyBytes []byte) error {
-	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
+	it, err := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
+	if err != nil {
+		return err
+	}
 	defer it.Close()
 	if it.Valid() {
 		return errors.ErrORMUniqueConstraint

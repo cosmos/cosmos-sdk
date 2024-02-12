@@ -1,5 +1,5 @@
 // Package prefixstore provides a store that prefixes all keys with a given
-// prefix. It is used to isolate storage reads and writes for an account.
+// prefix.
 // Implementation taken from cosmossdk.io/store/prefix, and adapted to
 // the cosmossdk.io/core/store.KVStore interface.
 package prefixstore

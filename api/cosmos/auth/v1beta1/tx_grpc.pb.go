@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName = "/cosmos.auth.v1beta1.Msg/UpdateParams"
-	Msg_AsyncExec_FullMethodName    = "/cosmos.auth.v1beta1.Msg/AsyncExec"
+	Msg_UpdateParams_FullMethodName  = "/cosmos.auth.v1beta1.Msg/UpdateParams"
+	Msg_NonAtomicExec_FullMethodName = "/cosmos.auth.v1beta1.Msg/NonAtomicExec"
 )
 
 // MsgClient is the client API for Msg service.
@@ -32,8 +32,8 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	// AsyncExec allows users to submit multiple messages.
-	AsyncExec(ctx context.Context, in *MsgAsyncExec, opts ...grpc.CallOption) (*MsgAsyncExecResponse, error)
+	// NonAtomicExec allows users to submit multiple messages for non-atomic execution.
+	NonAtomicExec(ctx context.Context, in *MsgNonAtomicExec, opts ...grpc.CallOption) (*MsgNonAtomicExecResponse, error)
 }
 
 type msgClient struct {
@@ -53,9 +53,9 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
-func (c *msgClient) AsyncExec(ctx context.Context, in *MsgAsyncExec, opts ...grpc.CallOption) (*MsgAsyncExecResponse, error) {
-	out := new(MsgAsyncExecResponse)
-	err := c.cc.Invoke(ctx, Msg_AsyncExec_FullMethodName, in, out, opts...)
+func (c *msgClient) NonAtomicExec(ctx context.Context, in *MsgNonAtomicExec, opts ...grpc.CallOption) (*MsgNonAtomicExecResponse, error) {
+	out := new(MsgNonAtomicExecResponse)
+	err := c.cc.Invoke(ctx, Msg_NonAtomicExec_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +71,8 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	// AsyncExec allows users to submit multiple messages.
-	AsyncExec(context.Context, *MsgAsyncExec) (*MsgAsyncExecResponse, error)
+	// NonAtomicExec allows users to submit multiple messages for non-atomic execution.
+	NonAtomicExec(context.Context, *MsgNonAtomicExec) (*MsgNonAtomicExecResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -83,8 +83,8 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
-func (UnimplementedMsgServer) AsyncExec(context.Context, *MsgAsyncExec) (*MsgAsyncExecResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AsyncExec not implemented")
+func (UnimplementedMsgServer) NonAtomicExec(context.Context, *MsgNonAtomicExec) (*MsgNonAtomicExecResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NonAtomicExec not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -117,20 +117,20 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AsyncExec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAsyncExec)
+func _Msg_NonAtomicExec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgNonAtomicExec)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AsyncExec(ctx, in)
+		return srv.(MsgServer).NonAtomicExec(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_AsyncExec_FullMethodName,
+		FullMethod: Msg_NonAtomicExec_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AsyncExec(ctx, req.(*MsgAsyncExec))
+		return srv.(MsgServer).NonAtomicExec(ctx, req.(*MsgNonAtomicExec))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -147,8 +147,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateParams_Handler,
 		},
 		{
-			MethodName: "AsyncExec",
-			Handler:    _Msg_AsyncExec_Handler,
+			MethodName: "NonAtomicExec",
+			Handler:    _Msg_NonAtomicExec_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

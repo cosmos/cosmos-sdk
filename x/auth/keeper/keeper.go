@@ -17,7 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -287,8 +286,8 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	return params
 }
 
-func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*codectypes.Any, error) {
-	msgResponses := make([]*codectypes.Any, 0, len(msgs))
+func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*types.NonAtomicExecResult, error) {
+	msgResponses := make([]*types.NonAtomicExecResult, 0, len(msgs))
 
 	for i, msg := range msgs {
 		// check if the message sender matches the provided signer
@@ -301,10 +300,7 @@ func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress
 		}
 		if m, ok := msg.(sdk.HasValidateBasic); ok {
 			if err := m.ValidateBasic(); err != nil {
-				value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: err.Error()})
-				if err != nil {
-					return nil, err
-				}
+				value := &types.NonAtomicExecResult{Error: err.Error()}
 				msgResponses = append(msgResponses, value)
 				continue
 			}
@@ -317,7 +313,7 @@ func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress
 			handler := ak.router.Handler(msg)
 			if handler == nil {
 				wrappedErr := sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
-				value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
+				value := &types.NonAtomicExecResult{Error: wrappedErr.Error()}
 				if err != nil {
 					return err
 				}
@@ -327,7 +323,7 @@ func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress
 			msgResult, err := handler(sdkCtx, msg)
 			if err != nil {
 				wrappedErr := errorsmod.Wrapf(err, "failed to execute message; message index: %d; message %v", i, msg)
-				value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
+				value := &types.NonAtomicExecResult{Error: wrappedErr.Error()}
 				if err != nil {
 					return err
 				}
@@ -337,13 +333,16 @@ func (ak AccountKeeper) AsyncMsgsExec(ctx context.Context, signer sdk.AccAddress
 				msgResponse := msgResult.MsgResponses[0]
 				if msgResponse == nil {
 					wrappedErr := sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
-					value, err := codectypes.NewAnyWithValue(&types.MsgAsyncExecResponse{Error: wrappedErr.Error()})
+					value := &types.NonAtomicExecResult{Error: wrappedErr.Error()}
 					if err != nil {
 						return err
 					}
 					msgResponses = append(msgResponses, value)
 				}
-				msgResponses = append(msgResponses, msgResponse)
+				value := &types.NonAtomicExecResult{
+					Resp: msgResponse,
+				}
+				msgResponses = append(msgResponses, value)
 			}
 			return nil
 		}

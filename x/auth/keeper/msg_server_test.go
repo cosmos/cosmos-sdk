@@ -25,13 +25,13 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 
 	testCases := []struct {
 		name      string
-		req       *types.MsgAsyncExec
+		req       *types.MsgNonAtomicExec
 		expectErr bool
 		expErrMsg string
 	}{
 		{
 			name: "empty signer address",
-			req: &types.MsgAsyncExec{
+			req: &types.MsgNonAtomicExec{
 				Signer: "",
 				Msgs:   []*codectypes.Any{},
 			},
@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 		},
 		{
 			name: "invalid signer address",
-			req: &types.MsgAsyncExec{
+			req: &types.MsgNonAtomicExec{
 				Signer: "invalid",
 				Msgs:   []*codectypes.Any{},
 			},
@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 		},
 		{
 			name: "empty msgs",
-			req: &types.MsgAsyncExec{
+			req: &types.MsgNonAtomicExec{
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{},
 			},
@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 		},
 		{
 			name: "valid msg",
-			req: &types.MsgAsyncExec{
+			req: &types.MsgNonAtomicExec{
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{msgAny},
 			},
@@ -69,7 +69,7 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			_, err := s.msgServer.AsyncExec(s.ctx, tc.req)
+			_, err := s.msgServer.NonAtomicExec(s.ctx, tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expErrMsg)

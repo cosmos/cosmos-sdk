@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +24,7 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 	}
 }
 
-func (ms msgServer) AsyncExec(goCtx context.Context, msg *types.MsgAsyncExec) (*types.MsgAsyncExecResponse, error) {
+func (ms msgServer) NonAtomicExec(goCtx context.Context, msg *types.MsgNonAtomicExec) (*types.MsgNonAtomicExecResponse, error) {
 	if msg.Signer == "" {
 		return nil, errors.New("empty signer address string is not allowed")
 	}
@@ -44,33 +43,14 @@ func (ms msgServer) AsyncExec(goCtx context.Context, msg *types.MsgAsyncExec) (*
 		return nil, err
 	}
 
-	if err := validateMsgs(msgs); err != nil {
-		return nil, err
-	}
-
-	results, err := ms.ak.AsyncMsgsExec(goCtx, signer, msgs)
+	results, err := ms.ak.NonAtomicMsgsExec(goCtx, signer, msgs)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgAsyncExecResponse{
-		Resp: results[0],
+	return &types.MsgNonAtomicExecResponse{
+		Results: results,
 	}, nil
-}
-
-func validateMsgs(msgs []sdk.Msg) error {
-	for i, msg := range msgs {
-		m, ok := msg.(sdk.HasValidateBasic)
-		if !ok {
-			continue
-		}
-
-		if err := m.ValidateBasic(); err != nil {
-			return errorsmod.Wrapf(err, "msg %d", i)
-		}
-	}
-
-	return nil
 }
 
 func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {

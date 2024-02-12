@@ -22,6 +22,7 @@ type Keeper struct {
 	storeService     storetypes.KVStoreService
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
+	logger           log.Logger
 	feeCollectorName string
 	EventService     event.Service
 	// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -57,6 +58,7 @@ func NewKeeper(
 		EventService:     env.EventService,
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
+		logger:           env.Logger,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -77,8 +79,8 @@ func (k Keeper) GetAuthority() string {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	return k.Logger(ctx).With("module", "x/"+types.ModuleName)
 }
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's

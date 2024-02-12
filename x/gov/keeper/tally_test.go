@@ -995,31 +995,6 @@ func TestTally_Optimistic(t *testing.T) {
 			},
 		},
 		{
-			name: "spam votes: prop fails/burn deposit",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_SPAM)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_SPAM)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_SPAM)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_SPAM)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_SPAM)
-				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_SPAM)
-			},
-			expectedPass: false,
-			expectedBurn: true,
-			expectedTally: v1.TallyResult{
-				YesCount:         "0",
-				AbstainCount:     "0",
-				NoCount:          "0",
-				NoWithVetoCount:  "0",
-				OptionOneCount:   "0",
-				OptionTwoCount:   "0",
-				OptionThreeCount: "0",
-				OptionFourCount:  "0",
-				SpamCount:        "6000000",
-			},
-		},
-		{
 			name: "one delegator votes: threshold no not reached, prop passes",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)

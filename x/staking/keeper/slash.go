@@ -36,7 +36,6 @@ import (
 //	but not at a height in the future
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
 	logger := k.Logger(ctx)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if slashFactor.IsNegative() {
 		return math.NewInt(0), fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor)
@@ -89,14 +88,16 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	// redelegations, as that stake has since unbonded
 	remainingSlashAmount := slashAmount
 
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	height := headerInfo.Height
 	switch {
-	case infractionHeight > sdkCtx.BlockHeight():
+	case infractionHeight > height:
 		// Can't slash infractions in the future
 		return math.NewInt(0), fmt.Errorf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
-			infractionHeight, sdkCtx.BlockHeight())
+			infractionHeight, height)
 
-	case infractionHeight == sdkCtx.BlockHeight():
+	case infractionHeight == height:
 		// Special-case slash at current height for efficiency - we don't need to
 		// look through unbonding delegations or redelegations.
 		logger.Info(
@@ -104,7 +105,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 			"height", infractionHeight,
 		)
 
-	case infractionHeight < sdkCtx.BlockHeight():
+	case infractionHeight < height:
 		// Iterate through unbonding delegations from slashed validator
 		unbondingDelegations, err := k.GetUnbondingDelegationsFromValidator(ctx, operatorAddress)
 		if err != nil {
@@ -245,8 +246,7 @@ func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.HeaderInfo().Time
+	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	totalSlashAmount = math.ZeroInt()
 	burnedAmount := math.ZeroInt()
 
@@ -302,8 +302,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.HeaderInfo().Time
+	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	totalSlashAmount = math.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := math.ZeroInt(), math.ZeroInt()
 

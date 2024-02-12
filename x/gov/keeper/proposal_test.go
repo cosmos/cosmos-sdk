@@ -18,34 +18,6 @@ import (
 )
 
 // TODO(tip): remove this
-func (suite *KeeperTestSuite) TestGetSetProposal() {
-	testCases := map[string]struct {
-		proposalType v1.ProposalType
-	}{
-		"unspecified proposal type": {},
-		"regular proposal": {
-			proposalType: v1.ProposalType_PROPOSAL_TYPE_STANDARD,
-		},
-		"expedited proposal": {
-			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
-		},
-	}
-
-	for _, tc := range testCases {
-		tp := TestProposal
-		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.proposalType)
-		suite.Require().NoError(err)
-		proposalID := proposal.Id
-		err = suite.govKeeper.SetProposal(suite.ctx, proposal)
-		suite.Require().NoError(err)
-
-		gotProposal, err := suite.govKeeper.Proposals.Get(suite.ctx, proposalID)
-		suite.Require().Nil(err)
-		suite.Require().Equal(proposal, gotProposal)
-	}
-}
-
-// TODO(tip): remove this
 func (suite *KeeperTestSuite) TestDeleteProposal() {
 	testCases := map[string]struct {
 		proposalType v1.ProposalType
@@ -67,7 +39,7 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.proposalType)
 		suite.Require().NoError(err)
 		proposalID := proposal.Id
-		err = suite.govKeeper.SetProposal(suite.ctx, proposal)
+		err = suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 		suite.Require().NoError(err)
 
 		suite.Require().NotPanics(func() {
@@ -274,7 +246,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				suite.Require().Nil(err)
 
 				proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
-				err = suite.govKeeper.SetProposal(suite.ctx, proposal2)
+				err = suite.govKeeper.Proposals.Set(suite.ctx, proposal2.Id, proposal2)
 				suite.Require().NoError(err)
 				return proposal2ID, suite.addrs[1].String()
 			},

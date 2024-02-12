@@ -68,6 +68,7 @@ func (ms *MigrationStream) ReadMsg(msg proto.Message) error {
 	if err != nil {
 		return err.(error)
 	}
+
 	return nil
 }
 

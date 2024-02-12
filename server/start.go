@@ -898,7 +898,7 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 		return nil, err
 	}
 
-	// Modfiy Validators stateDB entry.
+	// Modify Validators stateDB entry.
 	err = stateDB.Set([]byte(fmt.Sprintf("validatorsKey:%v", blockStore.Height())), buf)
 	if err != nil {
 		return nil, err

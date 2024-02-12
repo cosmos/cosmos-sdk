@@ -60,6 +60,7 @@ func (ms *MigrationStream) ReadMsg(msg proto.Message) error {
 	if item == nil {
 		return io.EOF
 	}
+
 	*snapshotsItem = *(item.(*snapshotstypes.SnapshotItem))
 
 	// check if there is an error from the writer.

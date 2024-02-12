@@ -66,3 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking Changes
 
 * [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Deprecate `CommunityPool` and `FundCommunityPool` rpc methods. Use `x/protocolpool` module's rpc methods instead.
+
+### Bug Fixes
+
+* [#19301](https://github.com/cosmos/cosmos-sdk/pull/19301) Fix vulnerability in `incrementReferenceCount` in distribution.

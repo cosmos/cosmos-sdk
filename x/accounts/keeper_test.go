@@ -28,7 +28,7 @@ func TestKeeper_Init(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		sender := []byte("sender")
 
-		resp, addr, err := m.Init(ctx, "test", sender, &types.Empty{})
+		resp, addr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil)
 		require.NoError(t, err)
 		require.Equal(t, &types.Empty{}, resp)
 		require.NotNil(t, addr)
@@ -45,7 +45,7 @@ func TestKeeper_Init(t *testing.T) {
 	})
 
 	t.Run("unknown account type", func(t *testing.T) {
-		_, _, err := m.Init(ctx, "unknown", []byte("sender"), &types.Empty{})
+		_, _, err := m.Init(ctx, "unknown", []byte("sender"), &types.Empty{}, nil)
 		require.ErrorIs(t, err, errAccountTypeNotFound)
 	})
 }
@@ -56,17 +56,17 @@ func TestKeeper_Execute(t *testing.T) {
 
 	// create account
 	sender := []byte("sender")
-	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{})
+	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil)
 	require.NoError(t, err)
 
 	t.Run("ok", func(t *testing.T) {
-		resp, err := m.Execute(ctx, accAddr, sender, &types.Empty{})
+		resp, err := m.Execute(ctx, accAddr, sender, &types.Empty{}, nil)
 		require.NoError(t, err)
 		require.Equal(t, &types.Empty{}, resp)
 	})
 
 	t.Run("unknown account", func(t *testing.T) {
-		_, err := m.Execute(ctx, []byte("unknown"), sender, &types.Empty{})
+		_, err := m.Execute(ctx, []byte("unknown"), sender, &types.Empty{}, nil)
 		require.ErrorIs(t, err, collections.ErrNotFound)
 	})
 
@@ -85,7 +85,7 @@ func TestKeeper_Execute(t *testing.T) {
 			return accAddr, nil
 		})
 
-		resp, err := m.Execute(ctx, accAddr, sender, &types.Int64Value{Value: 1000})
+		resp, err := m.Execute(ctx, accAddr, sender, &types.Int64Value{Value: 1000}, nil)
 		require.NoError(t, err)
 		require.True(t, implementation.Equal(&types.Empty{}, resp))
 	})
@@ -99,7 +99,7 @@ func TestKeeper_Query(t *testing.T) {
 
 	// create account
 	sender := []byte("sender")
-	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{})
+	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil)
 	require.NoError(t, err)
 
 	t.Run("ok", func(t *testing.T) {

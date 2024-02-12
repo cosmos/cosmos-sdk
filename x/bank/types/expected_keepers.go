@@ -18,12 +18,8 @@ type AccountKeeper interface {
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	GetAllAccounts(ctx context.Context) []sdk.AccountI
 	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
 	SetAccount(ctx context.Context, acc sdk.AccountI)
-
-	IterateAccounts(ctx context.Context, process func(sdk.AccountI) bool)
-
 	ValidatePermissions(macc sdk.ModuleAccountI) error
 
 	GetModuleAddress(moduleName string) sdk.AccAddress

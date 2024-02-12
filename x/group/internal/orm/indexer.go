@@ -81,7 +81,9 @@ func (i Indexer) OnDelete(store storetypes.KVStore, rowID RowID, value interface
 		if err != nil {
 			return err
 		}
-		store.Delete(indexKey)
+		if err := store.Delete(indexKey); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -105,7 +107,9 @@ func (i Indexer) OnUpdate(store storetypes.KVStore, rowID RowID, newValue, oldVa
 		if err != nil {
 			return err
 		}
-		store.Delete(indexKey)
+		if err := store.Delete(indexKey); err != nil {
+			return err
+		}
 	}
 	newKeys, err := difference(newSecIdxKeys, oldSecIdxKeys)
 	if err != nil {
@@ -138,8 +142,7 @@ func uniqueKeysAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, 
 		return err
 	}
 
-	store.Set(indexKey, []byte{})
-	return nil
+	return store.Set(indexKey, []byte{})
 }
 
 // checkUniqueIndexKey checks that the given secondary index key is unique
@@ -173,8 +176,7 @@ func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, ro
 		return errorsmod.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
-	store.Set(encodedKey, []byte{})
-	return nil
+	return store.Set(encodedKey, []byte{})
 }
 
 // difference returns the list of elements that are in a but not in b.

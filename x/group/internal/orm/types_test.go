@@ -30,7 +30,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 	}
 	bz, err := md.Marshal()
 	require.NoError(t, err)
-	store.Set(EncodeSequence(1), bz)
+	require.NoError(t, store.Set(EncodeSequence(1), bz))
 
 	specs := map[string]struct {
 		srcRowID     RowID

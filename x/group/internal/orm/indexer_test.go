@@ -412,7 +412,7 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 			key := storetypes.NewKVStoreKey("test")
 			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
-			store.Set(presetKey, []byte{})
+			require.NoError(t, store.Set(presetKey, []byte{}))
 
 			err := uniqueKeysAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))
@@ -459,7 +459,7 @@ func TestMultiKeyAddFunc(t *testing.T) {
 			key := storetypes.NewKVStoreKey("test")
 			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
-			store.Set(presetKey, []byte{})
+			require.NoError(t, store.Set(presetKey, []byte{}))
 
 			err := multiKeyAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))

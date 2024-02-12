@@ -83,7 +83,7 @@ func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc c
 	router := baseapp.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
-	accountKeeper := authkeeper.NewAccountKeeper(cdc, runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), authtypes.ProtoBaseAccount, nil, addresscodec.NewBech32Codec(sdk.Bech32MainPrefix), router, sdk.Bech32MainPrefix, authorityAddr.String(), nil)
+	accountKeeper := authkeeper.NewAccountKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey))), authtypes.ProtoBaseAccount, nil, addresscodec.NewBech32Codec(sdk.Bech32MainPrefix), router, sdk.Bech32MainPrefix, authorityAddr.String())
 
 	oldPolicyAccounts := make([]*authtypes.ModuleAccount, len(policies))
 	for i, policyAddr := range policies {

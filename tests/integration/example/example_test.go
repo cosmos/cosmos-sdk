@@ -45,14 +45,13 @@ func Example() {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey])),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		router,
 		"cosmos",
 		authority,
-		nil,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -139,14 +138,13 @@ func Example_oneModule() {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey])),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		router,
 		"cosmos",
 		authority,
-		nil,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)

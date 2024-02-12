@@ -90,14 +90,13 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey])),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
-		nil,
 	)
 
 	blockedAddresses := map[string]bool{

@@ -51,14 +51,13 @@ func TestFundsMigration(t *testing.T) {
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encCfg.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey])),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
-		nil,
 	)
 
 	// create bank keeper

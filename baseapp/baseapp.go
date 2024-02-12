@@ -511,10 +511,9 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams) {
-	return
-
 	if app.paramStore == nil {
-		panic("cannot store consensus params with no params store set")
+		//temp hack to support hardcoded consensus params
+		return
 	}
 
 	if cp == nil {

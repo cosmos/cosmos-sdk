@@ -24,7 +24,7 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 		// Happens when there is no last state to load form
 		panic(err)
 	}
-	logger.Info("Initial", "AppHash", hex.EncodeToString(app.GetAppHashInternal()))
+	logger.Debug("Initial", "AppHash", hex.EncodeToString(app.GetAppHashInternal()))
 
 	app.deliverState = nil
 
@@ -37,7 +37,7 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 	}
 
 	app.BeginBlock(beginBlockRequest)
-	logger.Info("after beginBlock", "AppHash", hex.EncodeToString(app.GetAppHashInternal()))
+	logger.Debug("after beginBlock", "AppHash", hex.EncodeToString(app.GetAppHashInternal()))
 
 	if !isBeginBlockFraudulent {
 		// BeginBlock is not the fraudulent state transition
@@ -52,21 +52,21 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 			// The last DeliverTx is the fraudulent state transition
 			fraudulentDeliverTx := req.DeliverTxRequests[len(req.DeliverTxRequests)-1]
 			app.DeliverTx(*fraudulentDeliverTx)
-			logger.Info("AppHash", "after delivertx", hex.EncodeToString(app.GetAppHashInternal()))
+			logger.Debug("after delivertx", "AppHash", hex.EncodeToString(app.GetAppHashInternal()))
 
 		} else {
 			// EndBlock is the fraudulent state transition
 			app.EndBlock(*req.EndBlockRequest)
-			logger.Info("AppHash", "after endblock", hex.EncodeToString(app.GetAppHashInternal()))
+			logger.Debug("after endblock", "AppHash", hex.EncodeToString(app.GetAppHashInternal()))
 		}
 	}
 
 	validAppHash := app.GetAppHash(abci.RequestGetAppHash{}).AppHash
+	logger.Debug("validAppHash", "AppHash", hex.EncodeToString(validAppHash))
 
 	storeKeyToWitnessData := cms.GetWitnessDataMap()
-	logger.Info("validAppHash", "AppHash", hex.EncodeToString(validAppHash))
 
-	//FIXME: NOT sure why we need to revert, it's probably better to use cached state and discard
+	//TODO: NOT sure why we need to revert, it's probably better to use cached state and discard
 
 	// Revert app to previous state
 	cms.SetInterBlockCache(nil)
@@ -115,12 +115,9 @@ func (app *BaseApp) executeNonFraudulentTransactions(req abci.RequestGenerateFra
 	nonFraudulentRequests := req.DeliverTxRequests[:numNonFraudulentRequests]
 	for _, deliverTxRequest := range nonFraudulentRequests {
 		app.DeliverTx(*deliverTxRequest)
-		app.logger.Info("AppHash", "after non-fraudulent tx", hex.EncodeToString(app.GetAppHashInternal()))
-
 	}
 }
 
-// TODO: refactor. should be responsibale only for manipulating witness data
 // Generate a fraudproof for an app with the given trace buffers
 func (app *BaseApp) getFraudProof(storeKeyToWitnessData map[string][]iavl.WitnessData) (FraudProof, error) {
 	fraudProof := FraudProof{}

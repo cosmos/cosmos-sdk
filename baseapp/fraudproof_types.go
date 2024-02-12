@@ -20,20 +20,16 @@ type FraudProof struct {
 	// The block height to load state of
 	BlockHeight int64
 
-	// TODO: Add Proof that appHash is inside merklized ISRs in block header at block height
-
 	PreStateAppHash      []byte
 	ExpectedValidAppHash []byte
 	// A map from module name to state witness
 	stateWitness map[string]StateWitness
 
 	// Fraudulent state transition has to be one of these
-	// Only one have of these three can be non-nil
+	// Only one of these three can be non-nil
 	FraudulentBeginBlock *abci.RequestBeginBlock
 	FraudulentDeliverTx  *abci.RequestDeliverTx
 	FraudulentEndBlock   *abci.RequestEndBlock
-
-	// TODO: Add Proof that fraudulent state transition is inside merkelizied transactions in block header
 }
 
 // State witness with a list of all witness data
@@ -135,18 +131,16 @@ func (fraudProof *FraudProof) GetDeepIAVLTrees() (map[string]*iavl.DeepSubTree, 
 
 // Returns true only if only one of the three pointers is nil
 func (fraudProof *FraudProof) checkFraudulentStateTransition() bool {
-	// if fraudProof.fraudulentBeginBlock != nil {
-	// 	return fraudProof.fraudulentDeliverTx == nil && fraudProof.fraudulentEndBlock == nil
-	// }
-	// if fraudProof.fraudulentDeliverTx != nil {
-	// 	return fraudProof.fraudulentEndBlock == nil
-	// }
-	// return fraudProof.fraudulentEndBlock != nil
-	return true
+	if fraudProof.FraudulentBeginBlock != nil {
+		return fraudProof.FraudulentDeliverTx == nil && fraudProof.FraudulentEndBlock == nil
+	}
+	if fraudProof.FraudulentDeliverTx != nil {
+		return fraudProof.FraudulentEndBlock == nil
+	}
+	return fraudProof.FraudulentEndBlock != nil
 }
 
 // Performs fraud proof verification on a store and substore level
-// TODO: better naming required
 func (fraudProof *FraudProof) ValidateBasic() (bool, error) {
 	if !fraudProof.checkFraudulentStateTransition() {
 		return false, ErrMoreThanOneBlockTypeUsed

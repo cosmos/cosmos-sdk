@@ -297,7 +297,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			"request with filter of deposit address",
 			func() {
 				testProposals[1].Status = v1.StatusVotingPeriod
-				err := suite.govKeeper.SetProposal(ctx, *testProposals[1])
+				err := suite.govKeeper.Proposals.Set(ctx, testProposals[1].Id, *testProposals[1])
 				suite.Require().NoError(err)
 				suite.Require().NoError(suite.govKeeper.AddVote(ctx, testProposals[1].Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
 
@@ -520,7 +520,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			"valid request",
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 				suite.Require().NoError(suite.govKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
 
@@ -637,7 +637,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 			"valid request",
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 				suite.Require().NoError(suite.govKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
 
@@ -743,7 +743,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 			"request after adding 2 votes",
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 				votes = []*v1.Vote{
 					{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: v1.NewNonSplitVoteOption(v1.OptionAbstain)},
@@ -849,7 +849,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 			"request after adding 2 votes",
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 
 				votes = []v1beta1.Vote{
@@ -1503,7 +1503,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 	suite.reset()
-	ctx, queryClient := suite.ctx, suite.queryClient
+	queryClient := suite.queryClient
 
 	var (
 		req      *v1.QueryTallyResultRequest
@@ -1544,28 +1544,36 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					Id:     1,
 					Status: v1.StatusPassed,
 					FinalTallyResult: &v1.TallyResult{
-						YesCount:        "4",
-						AbstainCount:    "1",
-						NoCount:         "0",
-						NoWithVetoCount: "0",
-						SpamCount:       "0",
+						YesCount:         "4",
+						AbstainCount:     "1",
+						NoCount:          "0",
+						NoWithVetoCount:  "0",
+						OptionOneCount:   "4",
+						OptionTwoCount:   "1",
+						OptionThreeCount: "0",
+						OptionFourCount:  "0",
+						SpamCount:        "0",
 					},
 					SubmitTime:      &propTime,
 					VotingStartTime: &propTime,
 					VotingEndTime:   &propTime,
 					Metadata:        "proposal metadata",
 				}
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
-					YesCount:        "4",
-					AbstainCount:    "1",
-					NoCount:         "0",
-					NoWithVetoCount: "0",
-					SpamCount:       "0",
+					YesCount:         "4",
+					AbstainCount:     "1",
+					NoCount:          "0",
+					NoWithVetoCount:  "0",
+					OptionOneCount:   "4",
+					OptionTwoCount:   "1",
+					OptionThreeCount: "0",
+					OptionFourCount:  "0",
+					SpamCount:        "0",
 				}
 			},
 			true,
@@ -1582,17 +1590,21 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					VotingEndTime:   &propTime,
 					Metadata:        "proposal metadata",
 				}
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
-					YesCount:        "0",
-					AbstainCount:    "0",
-					NoCount:         "0",
-					NoWithVetoCount: "0",
-					SpamCount:       "0",
+					YesCount:         "0",
+					AbstainCount:     "0",
+					NoCount:          "0",
+					NoWithVetoCount:  "0",
+					OptionOneCount:   "0",
+					OptionTwoCount:   "0",
+					OptionThreeCount: "0",
+					OptionFourCount:  "0",
+					SpamCount:        "0",
 				}
 			},
 			true,
@@ -1609,17 +1621,21 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					VotingEndTime:   &propTime,
 					Metadata:        "proposal metadata",
 				}
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
-					YesCount:        "0",
-					AbstainCount:    "0",
-					NoCount:         "0",
-					NoWithVetoCount: "0",
-					SpamCount:       "0",
+					YesCount:         "0",
+					AbstainCount:     "0",
+					NoCount:          "0",
+					NoWithVetoCount:  "0",
+					OptionOneCount:   "0",
+					OptionTwoCount:   "0",
+					OptionThreeCount: "0",
+					OptionFourCount:  "0",
+					SpamCount:        "0",
 				}
 			},
 			true,
@@ -1648,7 +1664,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 	suite.reset()
-	ctx, queryClient := suite.ctx, suite.legacyQueryClient
+	queryClient := suite.legacyQueryClient
 
 	var (
 		req      *v1beta1.QueryTallyResultRequest
@@ -1700,7 +1716,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 					VotingEndTime:   &propTime,
 					Metadata:        "proposal metadata",
 				}
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
@@ -1726,7 +1742,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 					VotingEndTime:   &propTime,
 					Metadata:        "proposal metadata",
 				}
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
@@ -1752,7 +1768,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 					VotingEndTime:   &propTime,
 					Metadata:        "proposal metadata",
 				}
-				err := suite.govKeeper.SetProposal(ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -1820,7 +1836,7 @@ func (suite *KeeperTestSuite) TestProposalVoteOptions() {
 					Metadata:        "proposal metadata",
 					ProposalType:    v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				}
-				err := suite.govKeeper.SetProposal(suite.ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 			},
 			req: &v1.QueryProposalVoteOptionsRequest{ProposalId: 1},
@@ -1848,7 +1864,7 @@ func (suite *KeeperTestSuite) TestProposalVoteOptions() {
 					Metadata:        "proposal metadata",
 					ProposalType:    v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE,
 				}
-				err := suite.govKeeper.SetProposal(suite.ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 
 				// multiple choice proposal, but no vote options set
@@ -1879,7 +1895,7 @@ func (suite *KeeperTestSuite) TestProposalVoteOptions() {
 					Metadata:        "proposal metadata",
 					ProposalType:    v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE,
 				}
-				err := suite.govKeeper.SetProposal(suite.ctx, proposal)
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 				err = suite.govKeeper.ProposalVoteOptions.Set(suite.ctx, proposal.Id, v1.ProposalVoteOptions{
 					OptionOne:   "Vote for @tac0turle",

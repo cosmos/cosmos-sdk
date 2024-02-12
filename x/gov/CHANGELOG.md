@@ -36,6 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#19352](https://github.com/cosmos/cosmos-sdk/pull/19352) `TallyResult` include vote options counts. Those counts replicates the now deprecated (but not removed) yes, no, abstain and veto count fields.
 * [#18976](https://github.com/cosmos/cosmos-sdk/pull/18976) Log and send an event when a proposal deposit refund or burn has failed.
 * [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` parameter for modifying how long a proposal can be cancelled after it has been submitted.
 * [#19167](https://github.com/cosmos/cosmos-sdk/pull/19167) Add `YesQuorum` parameter specifying a minimum of yes vote in the total proposal voting power for the proposal to pass.
@@ -58,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19349](https://github.com/cosmos/cosmos-sdk/pull/19349) Simplify state management in `x/gov`. Note `k.VotingPeriodProposals` and `k.SetProposal` are no longer needed and have been removed.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a `ProposalType` parameter instead.
 * [#17496](https://github.com/cosmos/cosmos-sdk/pull/17496) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Move `QueryProposalVotesParams` and `QueryVoteParams` from the `types/v1` package to `utils` and remove unused `querier.go` file.

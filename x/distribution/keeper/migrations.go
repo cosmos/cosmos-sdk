@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	"context"
+
 	v4 "cosmossdk.io/x/distribution/migrations/v4"
 	"cosmossdk.io/x/distribution/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -18,7 +18,7 @@ func NewMigrator(keeper Keeper) Migrator {
 }
 
 // Migrate1to2 migrates from version 1 to 2.
-func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+func (m Migrator) Migrate1to2(ctx context.Context) error {
 	return nil
 }
 
@@ -26,13 +26,13 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 // version 2 to version 3. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params module and stores them directly into the x/distribution
 // module state.
-func (m Migrator) Migrate2to3(ctx sdk.Context) error {
+func (m Migrator) Migrate2to3(ctx context.Context) error {
 	return nil
 }
 
 // Migrate3to4 migrates the x/distribution module state to use collections
 // Additionally it migrates distribution fee pool to use protocol pool module account
-func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+func (m Migrator) Migrate3to4(ctx context.Context) error {
 	if err := v4.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc); err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return m.migrateFunds(ctx)
 }
 
-func (m Migrator) migrateFunds(ctx sdk.Context) error {
+func (m Migrator) migrateFunds(ctx context.Context) error {
 	macc := m.keeper.GetDistributionAccount(ctx)
 	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolModuleName)
 

@@ -67,6 +67,7 @@ func newUpgradeFileWatcher(cfg *Config, logger log.Logger) (*fileWatcher, error)
 
 func (fw *fileWatcher) Stop() {
 	close(fw.cancel)
+	fw.ticker.Stop()
 }
 
 // MonitorUpdate pools the filesystem to check for new upgrade currentInfo.

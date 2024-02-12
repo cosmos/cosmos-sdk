@@ -126,6 +126,23 @@ type Implementation struct {
 	ExecuteHandlersSchema map[string]HandlerSchema
 }
 
+// HasExec returns true if the account can execute the given msg.
+func (i Implementation) HasExec(m ProtoMsg) bool {
+	_, ok := i.ExecuteHandlersSchema[MessageName(m)]
+	return ok
+}
+
+// HasQuery returns true if the account can execute the given request.
+func (i Implementation) HasQuery(m ProtoMsg) bool {
+	_, ok := i.QueryHandlersSchema[MessageName(m)]
+	return ok
+}
+
+// HasInit returns true if the account uses the provided init message.
+func (i Implementation) HasInit(m ProtoMsg) bool {
+	return i.InitHandlerSchema.RequestSchema.Name == MessageName(m)
+}
+
 // MessageSchema defines the schema of a message.
 // A message can also define a state schema.
 type MessageSchema struct {

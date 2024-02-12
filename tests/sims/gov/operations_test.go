@@ -218,7 +218,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "title", "summary", proposer, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
-	err = suite.GovKeeper.SetProposal(ctx, proposal)
+	err = suite.GovKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	require.NoError(t, err)
 
 	// execute operation
@@ -261,7 +261,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
-	err = suite.GovKeeper.SetProposal(ctx, proposal)
+	err = suite.GovKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	require.NoError(t, err)
 
 	// execute operation

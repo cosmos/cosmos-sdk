@@ -200,6 +200,13 @@ func (c coreAppModuleBasicAdaptor) RegisterServices(cfg Configurator) {
 			panic(err)
 		}
 	}
+
+	if module, ok := c.module.(appmodule.HasMigrations); ok {
+		err := module.RegisterMigrations(cfg)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (c coreAppModuleBasicAdaptor) IsOnePerModuleType() {}

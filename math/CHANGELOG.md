@@ -42,6 +42,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 * [#18421](https://github.com/cosmos/cosmos-sdk/pull/18421) Add mutative api for `LegacyDec.BigInt()`.
 
 * [#18874](https://github.com/cosmos/cosmos-sdk/pull/18874) Speedup `math.Int.Mul` by removing a duplicate overflow check
+* [#19386](https://github.com/cosmos/cosmos-sdk/pull/19386) Speedup `math.Int` overflow checks
 
 ### Bug Fixes
 

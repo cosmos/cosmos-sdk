@@ -3,7 +3,6 @@ package module
 import (
 	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/nft"
@@ -27,9 +26,9 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	Registry     cdctypes.InterfaceRegistry
+	Environment appmodule.Environment
+	Cdc         codec.Codec
+	Registry    cdctypes.InterfaceRegistry
 
 	AccountKeeper nft.AccountKeeper
 	BankKeeper    nft.BankKeeper
@@ -43,7 +42,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.AccountKeeper, in.BankKeeper)
+	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper, in.BankKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 
 	return ModuleOutputs{NFTKeeper: k, Module: m}

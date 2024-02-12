@@ -822,8 +822,8 @@ schema = 3
     version = "v1.4.11"
     hash = "sha256-hXJIGN8Arg09ldCgrSyYZK+xMelYavEj2I3ltxJfAqE="
   [mod."github.com/cosmos/iavl"]
-    version = "v1.0.0-beta.1.0.20240125174944-11ba4961dae9"
-    hash = "sha256-GvCKYRTpMQVO6KGYICqCURxM7VPIQ53stydoHsykD9s="
+    version = "v1.0.0"
+    hash = "sha256-Zm1TfR7vBJ7zMT0whznStO42S0t6hyrwpbUnDmM3MlI="
   [mod."github.com/cosmos/ics23/go"]
     version = "v0.10.0"
     hash = "sha256-KYEv727BO/ht63JO02xiKFGFAddg41Ve9l2vSSZZBq0="
@@ -1213,8 +1213,8 @@ schema = 3
     version = "v3.2.2+incompatible"
     hash = "sha256-LOkpuXhWrFayvVf1GOaOmZI5YKEsgqVSb22aF8LnCEM="
   [mod."github.com/golang-jwt/jwt/v4"]
-    version = "v4.4.2"
-    hash = "sha256-Tq9hcpUVjsMim90WZhZXBn5IYNtZb5Ig94eiRyWs0fo="
+    version = "v4.0.0"
+    hash = "sha256-m/Enz2eiBx6tht0G04UV5tyiFyu6q1fTG5h5NbYQgW0="
   [mod."github.com/golang/freetype"]
     version = "v0.0.0-20170609003504-e2365dfdc4a0"
     hash = "sha256-AHAFBd20/tqxohkWyQkui2bUef9i1HWYgk9LOIFErvA="

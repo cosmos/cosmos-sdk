@@ -26,13 +26,12 @@ require (
 	gotest.tools/v3 v3.5.1
 )
 
-require github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-
 require (
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
+	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 )
 
 require (

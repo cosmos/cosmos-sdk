@@ -79,7 +79,7 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(&testing.T{}, key, storetypes.NewTransientStoreKey("transient_test"))
-	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
 
 	maccPerms := map[string][]string{}
 
@@ -96,18 +96,19 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		address.NewBech32Codec("cosmos"),
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
-		nil,
 	)
 
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	authtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	storeService := env.KVStoreService
 
 	// 2. Now run the fuzzers.
 	f.Fuzz(func(t *testing.T, in []byte) {

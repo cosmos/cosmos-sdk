@@ -49,9 +49,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -73,14 +74,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
-		storeService,
+		env,
 		types.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
-		nil,
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)

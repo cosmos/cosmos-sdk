@@ -42,9 +42,9 @@ func (s *VestingAccountTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -66,14 +66,13 @@ func (s *VestingAccountTestSuite) SetupTest() {
 
 	s.accountKeeper = keeper.NewAccountKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
-		nil,
 	)
 }
 

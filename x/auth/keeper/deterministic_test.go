@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
@@ -33,7 +33,7 @@ type DeterministicTestSuite struct {
 	accountNumberLanes uint64
 
 	key           *storetypes.KVStoreKey
-	storeService  corestore.KVStoreService
+	env           appmodule.Environment
 	ctx           sdk.Context
 	baseApp       *baseapp.BaseApp
 	queryClient   types.QueryClient
@@ -57,9 +57,10 @@ func (suite *DeterministicTestSuite) SetupTest() {
 
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -82,14 +83,13 @@ func (suite *DeterministicTestSuite) SetupTest() {
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
-		storeService,
+		env,
 		types.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
-		nil,
 	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
@@ -97,7 +97,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	suite.key = key
-	suite.storeService = storeService
+	suite.env = env
 	suite.maccPerms = maccPerms
 	suite.accountNumberLanes = 1
 }
@@ -304,14 +304,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
-			suite.storeService,
+			suite.env,
 			types.ProtoBaseAccount,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			suite.baseApp.MsgServiceRouter(),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
-			nil,
 		)
 		suite.setModuleAccounts(suite.ctx, ak, maccs)
 
@@ -353,14 +352,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
-			suite.storeService,
+			suite.env,
 			types.ProtoBaseAccount,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			suite.baseApp.MsgServiceRouter(),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
-			nil,
 		)
 		suite.setModuleAccounts(suite.ctx, ak, []string{mName})
 

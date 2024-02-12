@@ -4,7 +4,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/auth/keeper"
@@ -31,7 +30,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
-	StoreService     store.KVStoreService
+	Environment      appmodule.Environment
 	Cdc              codec.Codec
 	MsgServiceRouter baseapp.MessageRouter
 
@@ -72,7 +71,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.MsgServiceRouter, in.Config.Bech32Prefix, auth, nil)
+	k := keeper.NewAccountKeeper(in.Cdc, in.Environment, in.AccountI, maccPerms, in.AddressCodec, in.MsgServiceRouter, in.Config.Bech32Prefix, auth)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

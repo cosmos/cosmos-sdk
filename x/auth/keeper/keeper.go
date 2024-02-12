@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
@@ -116,14 +117,16 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.Codec, storeService store.KVStoreService, proto func() sdk.AccountI,
+	cdc codec.Codec, env appmodule.Environment, proto func() sdk.AccountI,
 	maccPerms map[string][]string, ac address.Codec, router baseapp.MessageRouter, bech32Prefix, authority string,
-	branchService branch.Service,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
+
+	storeService := env.KVStoreService
+	branchService := env.BranchService
 
 	sb := collections.NewSchemaBuilder(storeService)
 

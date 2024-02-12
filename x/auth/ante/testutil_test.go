@@ -70,6 +70,8 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1)
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
+
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
 		"mint":                   {"minter"},
@@ -89,8 +91,8 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	baseApp.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		suite.encCfg.Codec, runtime.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
-		baseapp.NewMsgServiceRouter(), sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(), nil,
+		suite.encCfg.Codec, env, types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
+		baseapp.NewMsgServiceRouter(), sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 	err := suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())

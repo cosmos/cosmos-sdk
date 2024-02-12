@@ -45,9 +45,10 @@ type VestingTestSuite struct {
 
 func (s *VestingTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
 
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
@@ -66,14 +67,13 @@ func (s *VestingTestSuite) SetupTest() {
 	s.bankKeeper = vestingtestutil.NewMockBankKeeper(ctrl)
 	s.accountKeeper = authkeeper.NewAccountKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
-		nil,
 	)
 
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)

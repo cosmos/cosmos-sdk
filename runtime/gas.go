@@ -40,18 +40,18 @@ type SDKGasMeter struct {
 }
 
 func (gm SDKGasMeter) GasConsumed() storetypes.Gas {
-	return gm.gm.Remaining()
+	return gm.gm.Consumed()
 }
 
 func (gm SDKGasMeter) GasConsumedToLimit() storetypes.Gas {
 	if gm.IsPastLimit() {
 		return gm.gm.Limit()
 	}
-	return gm.gm.Remaining()
+	return gm.gm.Consumed()
 }
 
 func (gm SDKGasMeter) GasRemaining() storetypes.Gas {
-	return gm.gm.Remaining()
+	return gm.gm.Consumed() - gm.gm.Limit()
 }
 
 func (gm SDKGasMeter) Limit() storetypes.Gas {
@@ -67,15 +67,15 @@ func (gm SDKGasMeter) RefundGas(amount storetypes.Gas, descriptor string) {
 }
 
 func (gm SDKGasMeter) IsPastLimit() bool {
-	return gm.gm.Remaining() <= gm.gm.Limit()
+	return gm.gm.Consumed() <= gm.gm.Limit()
 }
 
 func (gm SDKGasMeter) IsOutOfGas() bool {
-	return gm.gm.Remaining() >= gm.gm.Limit()
+	return gm.gm.Consumed() >= gm.gm.Limit()
 }
 
 func (gm SDKGasMeter) String() string {
-	return fmt.Sprintf("BasicGasMeter:\n  limit: %d\n  consumed: %d", gm.gm.Limit(), gm.gm.Remaining())
+	return fmt.Sprintf("BasicGasMeter:\n  limit: %d\n  consumed: %d", gm.gm.Limit(), gm.gm.Consumed())
 }
 
 // CoreGasmeter is a wrapper around the SDK's GasMeter that implements the GasMeter interface.
@@ -83,16 +83,18 @@ type CoreGasmeter struct {
 	gm storetypes.GasMeter
 }
 
-func (cgm CoreGasmeter) Consume(amount gas.Gas, descriptor string) {
+func (cgm CoreGasmeter) Consume(amount gas.Gas, descriptor string) error {
 	cgm.gm.ConsumeGas(amount, descriptor)
+	return nil
 }
 
-func (cgm CoreGasmeter) Refund(amount gas.Gas, descriptor string) {
+func (cgm CoreGasmeter) Refund(amount gas.Gas, descriptor string) error {
 	cgm.gm.RefundGas(amount, descriptor)
+	return nil
 }
 
-func (cgm CoreGasmeter) Remaining() gas.Gas {
-	return cgm.gm.GasRemaining()
+func (cgm CoreGasmeter) Consumed() gas.Gas {
+	return cgm.gm.GasConsumed()
 }
 
 func (cgm CoreGasmeter) Limit() gas.Gas {

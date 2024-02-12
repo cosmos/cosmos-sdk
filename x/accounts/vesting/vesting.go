@@ -140,15 +140,15 @@ func (bva *BaseVesting) ExecuteMessages(
 	hs := bva.headerService.GetHeaderInfo(ctx)
 
 	for _, m := range msg.ExecutionMessages {
-		concreateMsg, err := vestingtypes.UnpackAnyRaw(m)
+		concreteMsg, err := vestingtypes.UnpackAnyRaw(m)
 		if err != nil {
 			return nil, err
 		}
 
-		typeUrl := sdk.MsgTypeURL(concreateMsg)
+		typeUrl := sdk.MsgTypeURL(concreteMsg)
 		switch typeUrl {
 		case MSG_DELEGATE:
-			msgDelegate, ok := concreateMsg.(*stakingtypes.MsgDelegate)
+			msgDelegate, ok := concreteMsg.(*stakingtypes.MsgDelegate)
 			if !ok {
 				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 			}
@@ -171,7 +171,7 @@ func (bva *BaseVesting) ExecuteMessages(
 				return nil, err
 			}
 		case MSG_UNDELEGATE:
-			msgUndelegate, ok := concreateMsg.(*stakingtypes.MsgUndelegate)
+			msgUndelegate, ok := concreteMsg.(*stakingtypes.MsgUndelegate)
 			if !ok {
 				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 			}
@@ -181,7 +181,7 @@ func (bva *BaseVesting) ExecuteMessages(
 				return nil, err
 			}
 		case MSG_SEND:
-			msgSend, ok := concreateMsg.(*banktypes.MsgSend)
+			msgSend, ok := concreteMsg.(*banktypes.MsgSend)
 			if !ok {
 				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 			}
@@ -198,7 +198,7 @@ func (bva *BaseVesting) ExecuteMessages(
 				return nil, err
 			}
 		case MSG_MULTI_SEND:
-			msgMultiSend, ok := concreateMsg.(*banktypes.MsgMultiSend)
+			msgMultiSend, ok := concreteMsg.(*banktypes.MsgMultiSend)
 			if !ok {
 				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
 			}

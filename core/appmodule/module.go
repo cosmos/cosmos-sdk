@@ -95,8 +95,6 @@ type HasMsgHandler interface {
 	// RegisterMsgHandlers is implemented by the module that will register msg handlers.
 	RegisterMsgHandlers(router MsgHandlerRouter)
 }
-<<<<<<< HEAD
-=======
 
 // ---------------------------------------------------------------------------- //
 
@@ -112,4 +110,3 @@ type HasPrecommit interface {
 	AppModule
 	Precommit(context.Context) error
 }
->>>>>>> main

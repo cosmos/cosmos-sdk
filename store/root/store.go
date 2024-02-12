@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
-	"cosmossdk.io/store/v2/pruning"
 )
 
 var _ store.RootStore = (*Store)(nil)
@@ -42,9 +41,6 @@ type Store struct {
 	// workingHash defines the current (yet to be committed) hash
 	workingHash []byte
 
-	// pruningManager manages pruning of the SS and SC backends
-	pruningManager *pruning.Manager
-
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
 	telemetry metrics.StoreMetrics
 }
@@ -53,20 +49,13 @@ func New(
 	logger log.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
-	ssOpts, scOpts pruning.Options,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
-	pruningManager := pruning.NewManager(logger, ss, sc)
-	pruningManager.SetStorageOptions(ssOpts)
-	pruningManager.SetCommitmentOptions(scOpts)
-	pruningManager.Start()
-
 	return &Store{
 		logger:          logger.With("module", "root_store"),
 		initialVersion:  1,
 		stateStore:      ss,
 		stateCommitment: sc,
-		pruningManager:  pruningManager,
 		telemetry:       m,
 	}, nil
 }
@@ -81,8 +70,6 @@ func (s *Store) Close() (err error) {
 	s.stateCommitment = nil
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
-
-	s.pruningManager.Stop()
 
 	return err
 }
@@ -329,10 +316,25 @@ func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 
 	s.workingHash = nil
 
-	// prune SS and SC
-	s.pruningManager.Prune(version)
-
 	return s.lastCommitInfo.Hash(), nil
+}
+
+// Prune prunes the root store to the provided version.
+func (s *Store) Prune(version uint64) error {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "prune")
+	}
+
+	if err := s.stateStore.Prune(version); err != nil {
+		return fmt.Errorf("failed to prune SS store: %w", err)
+	}
+
+	if err := s.stateCommitment.Prune(version); err != nil {
+		return fmt.Errorf("failed to prune SC store: %w", err)
+	}
+
+	return nil
 }
 
 // writeSC accepts a Changeset and writes that as a batch to the underlying SC

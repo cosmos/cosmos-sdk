@@ -189,104 +189,103 @@ func TestKeeperEndToEndWithPrimaryKeyTable(t *testing.T) {
 	require.False(t, exists)
 }
 
-// func TestGasCostsPrimaryKeyTable(t *testing.T) {
-// 	interfaceRegistry := types.NewInterfaceRegistry()
-// 	cdc := codec.NewProtoCodec(interfaceRegistry)
+func TestGasCostsPrimaryKeyTable(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-// 	key := storetypes.NewKVStoreKey("test")
-// 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-// 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	key := storetypes.NewKVStoreKey("test")
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
-// 	k := NewTestKeeper(cdc)
+	k := NewTestKeeper(cdc)
 
-// 	tm := testdata.TableModel{
-// 		Id:       1,
-// 		Name:     "name",
-// 		Number:   123,
-// 		Metadata: []byte("metadata"),
-// 	}
-// 	rowID, err := k.autoUInt64Table.Create(store, &tm)
-// 	require.NoError(t, err)
-// 	require.Equal(t, uint64(1), rowID)
+	tm := testdata.TableModel{
+		Id:       1,
+		Name:     "name",
+		Number:   123,
+		Metadata: []byte("metadata"),
+	}
+	rowID, err := k.autoUInt64Table.Create(store, &tm)
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), rowID)
 
-// 	gCtx := NewGasCountingMockContext()
-// 	err = k.primaryKeyTable.Create(gCtx.KVStore(store), &tm)
-// 	require.NoError(t, err)
-// 	t.Logf("gas consumed on create: %d", gCtx.GasConsumed())
+	err = k.primaryKeyTable.Create(store, &tm)
+	require.NoError(t, err)
+	t.Logf("gas consumed on create: %d", testCtx.Ctx.GasMeter().GasConsumed())
 
-// 	// get by primary key
-// 	gCtx.ResetGasMeter()
-// 	var loaded testdata.TableModel
-// 	err = k.primaryKeyTable.GetOne(gCtx.KVStore(store), PrimaryKey(&tm), &loaded)
-// 	require.NoError(t, err)
-// 	t.Logf("gas consumed on get by primary key: %d", gCtx.GasConsumed())
+	// get by primary key
+	testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	var loaded testdata.TableModel
+	err = k.primaryKeyTable.GetOne(store, PrimaryKey(&tm), &loaded)
+	require.NoError(t, err)
+	t.Logf("gas consumed on get by primary key: %d", testCtx.Ctx.GasMeter().GasConsumed())
 
-// 	// get by secondary index
-// 	gCtx.ResetGasMeter()
-// 	// and when loaded from MultiKeyIndex
-// 	it, err := k.primaryKeyTableModelByNumberIndex.Get(gCtx.KVStore(store), tm.Number)
-// 	require.NoError(t, err)
-// 	var loadedSlice []testdata.TableModel
-// 	_, err = ReadAll(it, &loadedSlice)
-// 	require.NoError(t, err)
-// 	t.Logf("gas consumed on get by multi index key: %d", gCtx.GasConsumed())
+	// get by secondary index
+	testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	// and when loaded from MultiKeyIndex
+	it, err := k.primaryKeyTableModelByNumberIndex.Get(store, tm.Number)
+	require.NoError(t, err)
+	var loadedSlice []testdata.TableModel
+	_, err = ReadAll(it, &loadedSlice)
+	require.NoError(t, err)
+	t.Logf("gas consumed on get by multi index key: %d", testCtx.Ctx.GasMeter().GasConsumed())
 
-// 	// delete
-// 	gCtx.ResetGasMeter()
-// 	err = k.primaryKeyTable.Delete(gCtx.KVStore(store), &tm)
-// 	require.NoError(t, err)
-// 	t.Logf("gas consumed on delete by primary key: %d", gCtx.GasConsumed())
+	// delete
+	testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	err = k.primaryKeyTable.Delete(store, &tm)
+	require.NoError(t, err)
+	t.Logf("gas consumed on delete by primary key: %d", testCtx.Ctx.GasMeter().GasConsumed())
 
-// 	// with 3 elements
-// 	var tms []testdata.TableModel
-// 	for i := 1; i < 4; i++ {
-// 		gCtx.ResetGasMeter()
-// 		tm := testdata.TableModel{
-// 			Id:       uint64(i),
-// 			Name:     fmt.Sprintf("name%d", i),
-// 			Number:   123,
-// 			Metadata: []byte("metadata"),
-// 		}
-// 		err = k.primaryKeyTable.Create(gCtx.KVStore(store), &tm)
-// 		require.NoError(t, err)
-// 		t.Logf("%d: gas consumed on create: %d", i, gCtx.GasConsumed())
-// 		tms = append(tms, tm)
-// 	}
+	// with 3 elements
+	var tms []testdata.TableModel
+	for i := 1; i < 4; i++ {
+		testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+		tm := testdata.TableModel{
+			Id:       uint64(i),
+			Name:     fmt.Sprintf("name%d", i),
+			Number:   123,
+			Metadata: []byte("metadata"),
+		}
+		err = k.primaryKeyTable.Create(store, &tm)
+		require.NoError(t, err)
+		t.Logf("%d: gas consumed on create: %d", i, testCtx.Ctx.GasMeter().GasConsumed())
+		tms = append(tms, tm)
+	}
 
-// 	for i := 1; i < 4; i++ {
-// 		gCtx.ResetGasMeter()
-// 		tm := testdata.TableModel{
-// 			Id:       uint64(i),
-// 			Name:     fmt.Sprintf("name%d", i),
-// 			Number:   123,
-// 			Metadata: []byte("metadata"),
-// 		}
-// 		err = k.primaryKeyTable.GetOne(gCtx.KVStore(store), PrimaryKey(&tm), &loaded)
-// 		require.NoError(t, err)
-// 		t.Logf("%d: gas consumed on get by primary key: %d", i, gCtx.GasConsumed())
-// 	}
+	for i := 1; i < 4; i++ {
+		testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+		tm := testdata.TableModel{
+			Id:       uint64(i),
+			Name:     fmt.Sprintf("name%d", i),
+			Number:   123,
+			Metadata: []byte("metadata"),
+		}
+		err = k.primaryKeyTable.GetOne(store, PrimaryKey(&tm), &loaded)
+		require.NoError(t, err)
+		t.Logf("%d: gas consumed on get by primary key: %d", i, testCtx.Ctx.GasMeter().GasConsumed())
+	}
 
-// 	// get by secondary index
-// 	gCtx.ResetGasMeter()
-// 	// and when loaded from MultiKeyIndex
-// 	it, err = k.primaryKeyTableModelByNumberIndex.Get(gCtx.KVStore(store), tm.Number)
-// 	require.NoError(t, err)
-// 	_, err = ReadAll(it, &loadedSlice)
-// 	require.NoError(t, err)
-// 	require.Len(t, loadedSlice, 3)
-// 	t.Logf("gas consumed on get by multi index key: %d", gCtx.GasConsumed())
+	// get by secondary index
+	testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	// and when loaded from MultiKeyIndex
+	it, err = k.primaryKeyTableModelByNumberIndex.Get(store, tm.Number)
+	require.NoError(t, err)
+	_, err = ReadAll(it, &loadedSlice)
+	require.NoError(t, err)
+	require.Len(t, loadedSlice, 3)
+	t.Logf("gas consumed on get by multi index key: %d", testCtx.Ctx.GasMeter().GasConsumed())
 
-// 	// delete
-// 	for i, m := range tms {
-// 		gCtx.ResetGasMeter()
+	// delete
+	for i, m := range tms {
+		testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 
-// 		m := m
-// 		err = k.primaryKeyTable.Delete(gCtx.KVStore(store), &m)
+		m := m
+		err = k.primaryKeyTable.Delete(store, &m)
 
-// 		require.NoError(t, err)
-// 		t.Logf("%d: gas consumed on delete: %d", i, gCtx.GasConsumed())
-// 	}
-// }
+		require.NoError(t, err)
+		t.Logf("%d: gas consumed on delete: %d", i, testCtx.Ctx.GasMeter().GasConsumed())
+	}
+}
 
 func TestExportImportStateAutoUInt64Table(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()

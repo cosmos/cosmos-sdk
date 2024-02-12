@@ -251,7 +251,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 	}
 
 	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, str); err != nil {
-		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
+		return fmt.Errorf("error in after validator removed hook: %w", err)
 	}
 
 	return nil
@@ -383,13 +383,19 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 	if err != nil {
 		return nil, err
 	}
-	validators = make([]types.Validator, maxValidators)
 
 	i := 0
+	validators = make([]types.Validator, maxValidators)
+
 	err = k.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
-		// sanity check
+		// Note, we do NOT error here as the MaxValidators param may change via on-chain
+		// governance. In cases where the param is increased, this case should never
+		// be hit. In cases where the param is decreased, we will simply not return
+		// the remainder of the validator set, as the ApplyAndReturnValidatorSetUpdates
+		// call should ensure the validators past the cliff will be moved to the
+		// unbonding set.
 		if i >= int(maxValidators) {
-			return true, fmt.Errorf("more validators than maxValidators found")
+			return true, nil
 		}
 
 		validator, err := k.GetValidator(ctx, key)
@@ -399,6 +405,7 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 
 		validators[i] = validator
 		i++
+
 		return false, nil
 	})
 	if err != nil {

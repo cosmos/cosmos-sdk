@@ -15,10 +15,14 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -35,6 +39,11 @@ var (
 	// AccountByNumber is the key for the accounts by number.
 	AccountByNumber = collections.NewPrefix(2)
 )
+
+// coinsTransferMsgFunc defines a function that creates a message to send coins from one
+// address to the other, and also a message that parses such  response.
+// This in most cases will be implemented as a bank.MsgSend creator, but we keep x/accounts independent of bank.
+type coinsTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
 
 // QueryRouter represents a router which can be used to route queries to the correct module.
 // It returns the handler given the message name, if multiple handlers are returned, then
@@ -61,10 +70,12 @@ type InterfaceRegistry interface {
 }
 
 func NewKeeper(
+	cdc codec.BinaryCodec,
 	ss store.KVStoreService,
 	es event.Service,
 	hs header.Service,
 	bs branch.Service,
+	gs gas.Service,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -74,17 +85,19 @@ func NewKeeper(
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
-		storeService:    ss,
-		eventService:    es,
-		addressCodec:    addressCodec,
-		branchExecutor:  bs,
-		msgRouter:       execRouter,
-		signerProvider:  signerProvider,
-		queryRouter:     queryRouter,
-		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
-		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
-		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.BytesValue),
+		storeService:     ss,
+		eventService:     es,
+		addressCodec:     addressCodec,
+		branchExecutor:   bs,
+		msgRouter:        execRouter,
+		signerProvider:   signerProvider,
+		queryRouter:      queryRouter,
+		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
+		Schema:           collections.Schema{},
+		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
+		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountByNumber:  collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
+		AccountsState:    collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -92,7 +105,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, hs, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, hs, gs, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}
@@ -102,13 +115,14 @@ func NewKeeper(
 
 type Keeper struct {
 	// deps coming from the runtime
-	storeService   store.KVStoreService
-	eventService   event.Service
-	addressCodec   address.Codec
-	branchExecutor branch.Service
-	msgRouter      MsgRouter
-	signerProvider SignerProvider
-	queryRouter    QueryRouter
+	storeService     store.KVStoreService
+	eventService     event.Service
+	addressCodec     address.Codec
+	branchExecutor   branch.Service
+	msgRouter        MsgRouter
+	signerProvider   SignerProvider
+	queryRouter      QueryRouter
+	makeSendCoinsMsg coinsTransferMsgFunc
 
 	accounts map[string]implementation.Implementation
 
@@ -134,6 +148,7 @@ func (k Keeper) Init(
 	accountType string,
 	creator []byte,
 	initRequest implementation.ProtoMsg,
+	funds sdk.Coins,
 ) (implementation.ProtoMsg, []byte, error) {
 	impl, err := k.getImplementation(accountType)
 	if err != nil {
@@ -152,8 +167,13 @@ func (k Keeper) Init(
 		return nil, nil, err
 	}
 
+	// send funds, if provided
+	err = k.maybeSendFunds(ctx, creator, accountAddr, funds)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to transfer funds: %w", err)
+	}
 	// make the context and init the account
-	ctx = k.makeAccountContext(ctx, num, accountAddr, creator, false)
+	ctx = k.makeAccountContext(ctx, num, accountAddr, creator, funds, false)
 	resp, err := impl.Init(ctx, initRequest)
 	if err != nil {
 		return nil, nil, err
@@ -176,6 +196,7 @@ func (k Keeper) Execute(
 	accountAddr []byte,
 	sender []byte,
 	execRequest implementation.ProtoMsg,
+	funds sdk.Coins,
 ) (implementation.ProtoMsg, error) {
 	// get account type
 	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
@@ -198,8 +219,13 @@ func (k Keeper) Execute(
 		return nil, err
 	}
 
+	err = k.maybeSendFunds(ctx, sender, accountAddr, funds)
+	if err != nil {
+		return nil, fmt.Errorf("unable to transfer coins to account: %w", err)
+	}
+
 	// make the context and execute the account state transition.
-	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, sender, false)
+	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, sender, funds, false)
 	return impl.Execute(ctx, execRequest)
 }
 
@@ -230,7 +256,7 @@ func (k Keeper) Query(
 	}
 
 	// make the context and execute the account query
-	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, nil, true)
+	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, nil, nil, true)
 	return impl.Query(ctx, queryRequest)
 }
 
@@ -249,7 +275,7 @@ func (k Keeper) makeAddress(accNum uint64) ([]byte, error) {
 }
 
 // makeAccountContext makes a new context for the given account.
-func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, accountAddr, sender []byte, isQuery bool) context.Context {
+func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, accountAddr, sender []byte, funds sdk.Coins, isQuery bool) context.Context {
 	// if it's not a query we create a context that allows to do anything.
 	if !isQuery {
 		return implementation.MakeAccountContext(
@@ -258,6 +284,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 			accountNumber,
 			accountAddr,
 			sender,
+			funds,
 			k.sendModuleMessage,
 			k.sendModuleMessageUntyped,
 			k.queryModule,
@@ -271,6 +298,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 		k.storeService,
 		accountNumber,
 		accountAddr,
+		nil,
 		nil,
 		func(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 			return fmt.Errorf("cannot execute in query context")
@@ -358,6 +386,31 @@ func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementat
 		return fmt.Errorf("multiple handlers for query: %s", queryName)
 	}
 	return handlers[0](ctx, queryReq, queryResp)
+}
+
+// maybeSendFunds will send the provided coins between the provided addresses, if amt
+// is not empty.
+func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coins) error {
+	if amt.IsZero() {
+		return nil
+	}
+
+	msg, msgResp, err := k.makeSendCoinsMsg(from, to, amt)
+	if err != nil {
+		return err
+	}
+
+	// send module message ensures that "from" cannot impersonate.
+	err = k.sendModuleMessage(ctx, from, msg, msgResp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type gogoProtoPlusV2 interface {
+	proto.Message
+	implementation.ProtoMsg
 }
 
 const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"

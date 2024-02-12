@@ -5,11 +5,11 @@ import (
 	"io"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -23,7 +23,7 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db dbm.DB, storeKeys []string, logger log.Logger) (*CommitStore, error)
+	NewStore func(db store.RawDB, storeKeys []string, logger log.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestSnapshotter() {
@@ -45,12 +45,12 @@ func (s *CommitStoreTestSuite) TestSnapshotter() {
 		}
 		s.Require().NoError(commitStore.WriteBatch(store.NewChangesetWithPairs(kvPairs)))
 
-		_, err = commitStore.Commit()
+		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
 	}
 
-	latestStoreInfos := commitStore.WorkingStoreInfos(latestVersion)
-	s.Require().Equal(len(storeKeys), len(latestStoreInfos))
+	cInfo := commitStore.WorkingCommitInfo(latestVersion)
+	s.Require().Equal(len(storeKeys), len(cInfo.StoreInfos))
 
 	// create a snapshot
 	dummyExtensionItem := snapshotstypes.SnapshotItem{
@@ -106,11 +106,10 @@ func (s *CommitStoreTestSuite) TestSnapshotter() {
 	}
 
 	// check the restored tree hash
-	targetStoreInfos := targetStore.WorkingStoreInfos(latestVersion)
-	s.Require().Equal(len(storeKeys), len(targetStoreInfos))
-	for _, storeInfo := range targetStoreInfos {
+	targetCommitInfo := targetStore.WorkingCommitInfo(latestVersion)
+	for _, storeInfo := range targetCommitInfo.StoreInfos {
 		matched := false
-		for _, latestStoreInfo := range latestStoreInfos {
+		for _, latestStoreInfo := range cInfo.StoreInfos {
 			if storeInfo.Name == latestStoreInfo.Name {
 				s.Require().Equal(latestStoreInfo.GetHash(), storeInfo.GetHash())
 				matched = true

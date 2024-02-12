@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
-	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -34,8 +33,8 @@ const (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type (
-	VerifyVoteExtensionFunc func(context.Context, store.GetReader, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
-	ExtendVoteFunc          func(context.Context, store.GetReader, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
+	VerifyVoteExtensionFunc func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+	ExtendVoteFunc          func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
 )
 
 type Consensus[T transaction.Tx] struct {
@@ -88,11 +87,8 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 	if err != nil {
 		return nil, err
 	}
-	var execMode corecontext.ExecMode
-	if req.Type == abci.CheckTxType_Recheck {
-		execMode = corecontext.ExecModeReCheck
-	}
-	resp, err := c.app.ValidateTx(ctx, decodedTx, execMode)
+
+	resp, err := c.app.ValidateTx(ctx, decodedTx)
 	if err != nil {
 		return nil, err
 	}

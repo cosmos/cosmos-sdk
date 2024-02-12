@@ -1,6 +1,7 @@
 package v4
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/x/distribution/types"
@@ -9,7 +10,7 @@ import (
 )
 
 // MigrateFunds migrates the distribution module funds to pool module
-func MigrateFunds(ctx sdk.Context, bankKeeper types.BankKeeper, feePool types.FeePool, macc, poolMacc sdk.ModuleAccountI) (types.FeePool, error) {
+func MigrateFunds(ctx context.Context, bankKeeper types.BankKeeper, feePool types.FeePool, macc, poolMacc sdk.ModuleAccountI) (types.FeePool, error) {
 	poolBal, remainder := feePool.CommunityPool.TruncateDecimal()
 
 	distrbalances := bankKeeper.GetAllBalances(ctx, macc.GetAddress())

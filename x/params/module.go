@@ -4,6 +4,7 @@ import (
 	"context"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/params/keeper"
@@ -19,9 +20,9 @@ import (
 var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasServices         = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
 )
 
 // ConsensusVersion defines the current x/params module consensus version.
@@ -72,10 +73,11 @@ func (am AppModule) IsAppModule() {}
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
 
-// RegisterServices registers a gRPC query service to respond to the
-// module-specific gRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	proposal.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	proposal.RegisterQueryServer(registrar, am.keeper)
+
+	return nil
 }
 
 // RegisterStoreDecoder doesn't register any type.

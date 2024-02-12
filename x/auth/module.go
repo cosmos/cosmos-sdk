@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -34,10 +35,11 @@ var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 
 	_ appmodule.AppModule                       = AppModule{}
 	_ appmodule.HasTxValidation[transaction.Tx] = AppModule{}
+	_ appmodule.HasServices                     = AppModule{}
+	_ appmodule.HasMigrations                   = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the auth module.
@@ -103,27 +105,31 @@ func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAc
 	}
 }
 
-// RegisterServices registers a GRPC query service to respond to the
-// module-specific GRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
-	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.accountKeeper))
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.accountKeeper))
+	types.RegisterQueryServer(registrar, keeper.NewQueryServer(am.accountKeeper))
 
-	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer())
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
+	m := keeper.NewMigrator(am.accountKeeper)
+	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
 	}
 
-	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %w", types.ModuleName, err)
+	}
+	if err := mr.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %w", types.ModuleName, err)
+	}
+	if err := mr.Register(types.ModuleName, 4, m.Migrate4To5); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %w", types.ModuleName, err)
 	}
 
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
-	}
-	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4To5); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5", types.ModuleName))
-	}
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the auth module. It returns
@@ -131,13 +137,19 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.accountKeeper.InitGenesis(ctx, genesisState)
+	err := am.accountKeeper.InitGenesis(ctx, genesisState)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the auth
 // module.
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.accountKeeper.ExportGenesis(ctx)
+	gs, err := am.accountKeeper.ExportGenesis(ctx)
+	if err != nil {
+		panic(err)
+	}
 	return cdc.MustMarshalJSON(gs)
 }
 
@@ -154,7 +166,6 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
-		ante.NewSetPubKeyDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
 	}
 

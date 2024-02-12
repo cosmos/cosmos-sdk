@@ -31,7 +31,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	}
 
 	// run account creation logic
-	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg)
+	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg, request.Funds)
 	if err != nil {
 		return nil, err
 	}
@@ -44,12 +44,8 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 
 	eventManager := m.k.eventService.EventManager(ctx)
 	err = eventManager.EmitKV(
-		ctx,
 		"account_creation",
-		event.Attribute{
-			Key:   "address",
-			Value: accAddrString,
-		},
+		event.NewAttribute("address", accAddrString),
 	)
 	if err != nil {
 		return nil, err
@@ -84,7 +80,7 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	}
 
 	// run account execution logic
-	resp, err := m.k.Execute(ctx, targetAddr, senderAddr, req)
+	resp, err := m.k.Execute(ctx, targetAddr, senderAddr, req, execute.Funds)
 	if err != nil {
 		return nil, err
 	}

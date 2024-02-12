@@ -26,7 +26,7 @@ func NewValidateBasicDecorator() ValidateBasicDecorator {
 
 func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// no need to validate basic on recheck tx, call next antehandler
-	if ctx.IsReCheckTx() {
+	if ctx.ExecMode() == sdk.ExecModeReCheck {
 		return next(ctx, tx, simulate)
 	}
 
@@ -101,7 +101,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*storetypes.Gas(len(ctx.TxBytes())), "txSize")
 
 	// simulate gas cost for signatures in simulate mode
-	if simulate {
+	if ctx.ExecMode() == sdk.ExecModeSimulate {
 		// in simulate mode, each element should be a nil signature
 		sigs, err := sigTx.GetSignaturesV2()
 		if err != nil {

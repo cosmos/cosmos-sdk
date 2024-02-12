@@ -39,6 +39,14 @@ type HasServices interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
+// HasMigrations is the extension interface that modules should implement to register migrations.
+type HasMigrations interface {
+	AppModule
+
+	// RegisterMigrations registers the module's migrations with the app's migrator.
+	RegisterMigrations(MigrationRegistrar) error
+}
+
 // ResponsePreBlock represents the response from the PreBlock method.
 // It can modify consensus parameters in storage and signal the caller through the return value.
 // When it returns ConsensusParamsChanged=true, the caller must refresh the consensus parameter in the finalize context.

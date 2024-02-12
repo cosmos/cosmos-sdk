@@ -101,7 +101,7 @@ func (k Keeper) authenticate(
 	_, err = k.Execute(ctx, senderAddr, ModuleAccountAddress, &account_abstractionv1.MsgAuthenticate{
 		Bundler:       bundler,
 		UserOperation: op,
-	})
+	}, nil)
 	return err
 }
 
@@ -139,7 +139,7 @@ func (k Keeper) opExecuteMessages(
 	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddress, &account_abstractionv1.MsgExecute{
 		Bundler:           bundler,
 		ExecutionMessages: op.ExecutionMessages,
-	})
+	}, nil)
 	// here is where we check if the account handles execution messages
 	// if it does not, then we simply execute the provided messages on behalf of the sender
 	switch {
@@ -197,7 +197,7 @@ func (k Keeper) payBundler(
 	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddress, &account_abstractionv1.MsgPayBundler{
 		Bundler:                bundler,
 		BundlerPaymentMessages: op.BundlerPaymentMessages,
-	})
+	}, nil)
 	// here is where we check if the account handles bundler payment messages
 	// if it does not, then we simply execute the provided messages on behalf of the sender
 	switch {

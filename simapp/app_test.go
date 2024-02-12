@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -176,7 +177,7 @@ func TestRunMigrations(t *testing.T) {
 				for i := tc.fromVersion; i < tc.toVersion; i++ {
 					// Register migration for module from version `fromVersion` to `fromVersion+1`.
 					tt.Logf("Registering migration for %q v%d", tc.moduleName, i)
-					err = configurator.RegisterMigration(tc.moduleName, i, func(sdk.Context) error {
+					err = configurator.RegisterMigration(tc.moduleName, i, func(context.Context) error {
 						called++
 
 						return nil

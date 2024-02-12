@@ -3,11 +3,11 @@ package gas
 import (
 	"unsafe"
 
-	"cosmossdk.io/server/v2/core/stf"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/server/v2/core/store"
 )
 
-func NewMeteredWriterMap(conf StoreConfig, meter stf.GasMeter, state store.WriterMap) MeteredWriterMap {
+func NewMeteredWriterMap(conf StoreConfig, meter gas.Meter, state store.WriterMap) MeteredWriterMap {
 	return MeteredWriterMap{
 		config:             conf,
 		meter:              meter,
@@ -21,7 +21,7 @@ func NewMeteredWriterMap(conf StoreConfig, meter stf.GasMeter, state store.Write
 // writers, the metered writers are memoized.
 type MeteredWriterMap struct {
 	config             StoreConfig
-	meter              stf.GasMeter
+	meter              gas.Meter
 	state              store.WriterMap
 	cacheMeteredStores map[string]*Store
 }

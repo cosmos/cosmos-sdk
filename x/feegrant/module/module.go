@@ -7,6 +7,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
@@ -24,11 +25,12 @@ import (
 var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasServices         = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -45,16 +47,22 @@ func (ab AppModuleBasic) Name() string {
 	return feegrant.ModuleName
 }
 
-// RegisterServices registers a gRPC query service to respond to the
-// module-specific gRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	feegrant.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	feegrant.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	feegrant.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
+	feegrant.RegisterQueryServer(registrar, am.keeper)
+
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	err := cfg.RegisterMigration(feegrant.ModuleName, 1, m.Migrate1to2)
-	if err != nil {
-		panic(fmt.Sprintf("failed to migrate x/feegrant from version 1 to 2: %v", err))
+
+	if err := mr.Register(feegrant.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/feegrant from version 1 to 2: %w", err)
 	}
+
+	return nil
 }
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.

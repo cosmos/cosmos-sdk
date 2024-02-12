@@ -145,10 +145,6 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	return EndBlocker(c, am.keeper)
 }
 
-// ____________________________________________________________________________
-
-// AppModuleSimulation functions
-
 // GenerateGenesisState creates a randomized GenState of the group module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)

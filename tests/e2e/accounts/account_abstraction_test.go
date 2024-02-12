@@ -35,12 +35,12 @@ func TestAccountAbstraction(t *testing.T) {
 
 	_, aaAddr, err := ak.Init(ctx, "aa_minimal", accCreator, &rotationv1.MsgInit{
 		PubKeyBytes: privKey.PubKey().Bytes(),
-	})
+	}, nil)
 	require.NoError(t, err)
 
 	_, aaFullAddr, err := ak.Init(ctx, "aa_full", accCreator, &rotationv1.MsgInit{
 		PubKeyBytes: privKey.PubKey().Bytes(),
-	})
+	}, nil)
 	require.NoError(t, err)
 
 	aaAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(aaAddr)

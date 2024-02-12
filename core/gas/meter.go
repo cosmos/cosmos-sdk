@@ -1,9 +1,24 @@
 // Package gas provides a basic API for app modules to track gas usage.
 package gas
 
-import "context"
+import (
+	"context"
+	"errors"
+	"math"
+)
 
+// ErrOutOfGas must be used by GasMeter implementers to signal
+// that the state transition consumed all the allowed computational
+// gas.
+var ErrOutOfGas = errors.New("out of gas")
+
+// Gas defines type alias of uint64 for gas consumption. Gas is used
+// to measure computational overhead when executing state transitions,
+// it might be related to storage access and not only.
 type Gas = uint64
+
+// NoGasLimit signals that no gas limit must be applied.
+const NoGasLimit Gas = math.MaxUint64
 
 // Service represents a gas service which can retrieve and set a gas meter in a context.
 // gas.Service is a core API type that should be provided by the runtime module being used to
@@ -26,10 +41,10 @@ type Service interface {
 	WithBlockGasMeter(ctx context.Context, meter Meter) context.Context
 }
 
-// Meter represents a gas meter.
+// Meter represents a gas meter for modules consumption
 type Meter interface {
-	GasConsumed() Gas
+	Consumed() Gas
 	Limit() Gas
-	ConsumeGas(amount Gas, descriptor string) error
-	RefundGas(amount Gas, descriptor string) error
+	Consume(amount Gas, descriptor string) error
+	Refund(amount Gas, descriptor string) error
 }

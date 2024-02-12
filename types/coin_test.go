@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -156,6 +157,9 @@ func (s *coinTestSuite) TestCoinsDenoms() {
 }
 
 func (s *coinTestSuite) TestAddCoin() {
+	// 2**256 - 1 value to check for overflows
+	maxUint256 := math.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+
 	cases := []struct {
 		inputOne    sdk.Coin
 		inputTwo    sdk.Coin
@@ -165,6 +169,10 @@ func (s *coinTestSuite) TestAddCoin() {
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom1, 1), false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), sdk.NewInt64Coin(testDenom1, 1), true},
+
+		// addition cannot lead to a number with more than 256 bits
+		{sdk.NewCoin(testDenom1, maxUint256), sdk.NewCoin(testDenom1, math.NewInt(0)), sdk.NewCoin(testDenom1, maxUint256), false},
+		{sdk.NewCoin(testDenom1, maxUint256), sdk.NewCoin(testDenom1, math.NewInt(1)), sdk.NewInt64Coin(testDenom1, 1), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -298,6 +306,30 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 			res := tc.input.QuoInt(tc.divisor)
 			assert.Equal(tc.isValid, res.IsValid())
 			assert.Equal(tc.expected, res, "quotient of coins is incorrect, tc #%d", i)
+		}
+	}
+}
+
+func (s *coinTestSuite) TestIsGTCoin() {
+	cases := []struct {
+		inputOne sdk.Coin
+		inputTwo sdk.Coin
+		expected bool
+		panics   bool
+	}{
+		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), false, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
+	}
+
+	for tcIndex, tc := range cases {
+		tc := tc
+		if tc.panics {
+			s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsGT(tc.inputTwo)
+			s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }

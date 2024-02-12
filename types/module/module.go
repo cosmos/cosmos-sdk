@@ -467,6 +467,13 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 			}
 		}
 
+		if module, ok := module.(appmodule.HasMigrations); ok {
+			err := module.RegisterMigrations(cfg)
+			if err != nil {
+				return err
+			}
+		}
+
 		if cfg.Error() != nil {
 			return cfg.Error()
 		}

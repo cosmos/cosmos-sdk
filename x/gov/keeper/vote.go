@@ -15,13 +15,18 @@ import (
 
 // AddVote adds a vote on a specific proposal
 func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
-	// Check if proposal is in voting period.
-	inVotingPeriod, err := k.VotingPeriodProposals.Has(ctx, proposalID)
+	// get proposal
+	proposal, err := k.Proposals.Get(ctx, proposalID)
 	if err != nil {
+		if stderrors.Is(err, collections.ErrNotFound) {
+			return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		}
+
 		return err
 	}
 
-	if !inVotingPeriod {
+	// check if proposal is in voting period.
+	if proposal.Status != v1.StatusVotingPeriod {
 		return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
@@ -29,16 +34,10 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		return err
 	}
 
-	// get proposal
-	proposal, err := k.Proposals.Get(ctx, proposalID)
-	if err != nil {
-		return err
-	}
-
 	for _, option := range options {
 		switch proposal.ProposalType {
 		case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-			if option.Option != v1.OptionNo && option.Option != v1.OptionSpam {
+			if option.Option != v1.OptionNo {
 				return errors.Wrap(types.ErrInvalidVote, "optimistic proposals can only be rejected")
 			}
 		case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:

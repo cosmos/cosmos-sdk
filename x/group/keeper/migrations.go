@@ -20,7 +20,7 @@ func NewMigrator(keeper Keeper) Migrator {
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	return v2.Migrate(
 		ctx,
-		m.keeper.key,
+		m.keeper.storeService,
 		m.keeper.accKeeper,
 		m.keeper.groupPolicySeq,
 		m.keeper.groupPolicyTable,

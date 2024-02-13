@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/orm"
@@ -25,12 +25,12 @@ const (
 // Specifically, it changes the group policy account from module account to base account.
 func Migrate(
 	ctx sdk.Context,
-	storeKey storetypes.StoreKey,
+	storeService store.KVStoreService,
 	accountKeeper group.AccountKeeper,
 	groupPolicySeq orm.Sequence,
 	groupPolicyTable orm.PrimaryKeyTable,
 ) error {
-	store := ctx.KVStore(storeKey)
+	store := storeService.OpenKVStore(ctx)
 	curAccVal := groupPolicySeq.CurVal(store)
 	groupPolicyAccountDerivationKey := make(map[string][]byte, 0)
 	policyKey := []byte{GroupPolicyTablePrefix}

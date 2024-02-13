@@ -524,6 +524,10 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	require.True(blockTime2.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }
 
+// TestUndelegateFromUnbondedValidator tests the undelegation process from an unbonded validator.
+// It creates a validator with a self-delegation and a second delegation to the same validator.
+// Then it unbonds the self-delegation to put the validator in the unbonding state.
+// Finally, it unbonds the remaining shares of the second delegation and verifies that the validator is deleted from the state.
 func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
@@ -576,7 +580,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	require.True(ctx.HeaderInfo().Time.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
 	// unbond the validator
-	ctx = ctx.WithHeaderInfo(coreheader.Info{Time: validator.UnbondingTime})
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: 10, Time: validator.UnbondingTime})
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.NoError(err)
 
@@ -602,6 +606,9 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
 
+// TestUnbondingAllDelegationFromValidator tests the process of unbonding all delegations from a validator.
+// It creates a validator with a self-delegation and a second delegation, then unbonds all the delegations
+// to put the validator in an unbonding state. Finally, it verifies that the validator is deleted from the state.
 func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
@@ -636,7 +643,6 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	delegation := stakingtypes.NewDelegation(addrDels[1].String(), addrVals[0].String(), issuedShares)
 	require.NoError(keeper.SetDelegation(ctx, delegation))
 
-	ctx = ctx.WithBlockHeight(10)
 	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: 10, Time: time.Unix(333, 0)})
 
 	// unbond the all self-delegation to put validator in unbonding state
@@ -660,7 +666,7 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	require.Equal(validator.Status, stakingtypes.Unbonding)
 
 	// unbond the validator
-	ctx = ctx.WithHeaderInfo(coreheader.Info{Time: validator.UnbondingTime})
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: 10, Time: validator.UnbondingTime})
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.NoError(err)
 

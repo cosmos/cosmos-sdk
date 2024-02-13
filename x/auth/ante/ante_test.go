@@ -168,6 +168,24 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 			nil,
 		},
 		{
+			"unrecognized account2",
+			func(suite *AnteTestSuite) TestCaseArgs {
+				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1))
+				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{0, 1, 0}, []uint64{0, 0, 0}
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+				return TestCaseArgs{
+					accNums: accNums,
+					accSeqs: accSeqs,
+					msgs:    msgs,
+					privs:   privs,
+				}
+			},
+			false,
+			true,
+			nil,
+		},
+		{
 			"save all the accounts, should pass",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0))

@@ -896,6 +896,66 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGRPCQueryLastProposalId() {
+	suite.reset()
+	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
+
+	var (
+		req *v1.QueryLastProposalIdRequest
+	)
+
+	testCases := []struct {
+		msg               string
+		malleate          func()
+		expPass           bool
+		expLastProposalId uint64
+	}{
+		{
+			"empty state request",
+			func() {
+				req = &v1.QueryLastProposalIdRequest{}
+			},
+			true,
+			0,
+		},
+		{
+			"request proposals with limit 3",
+			func() {
+				// create 5 test proposals
+				for i := 0; i < 5; i++ {
+					govAddress := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+					testProposal := []sdk.Msg{
+						v1.NewMsgVote(govAddress, uint64(i), v1.OptionYes, ""),
+					}
+					proposal, err := suite.govKeeper.SubmitProposal(ctx, testProposal, "", "title", "summary", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+					suite.Require().NotEmpty(proposal)
+					suite.Require().NoError(err)
+				}
+			},
+			true,
+			5,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
+
+			proposals, err := queryClient.LastProposalId(gocontext.Background(), req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(proposals.LastProposalId, tc.expLastProposalId)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(proposals)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	queryClient := suite.queryClient
 	testCases := []struct {

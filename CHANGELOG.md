@@ -73,6 +73,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (crypto/keys) [#18026](https://github.com/cosmos/cosmos-sdk/pull/18026) Made public key generation constant time on `secp256k1`
 * (crypto | x/auth) [#14372](https://github.com/cosmos/cosmos-sdk/pull/18194) Key checks on signatures antehandle.
 * (types) [#18963](https://github.com/cosmos/cosmos-sdk/pull/18963) Swap out amino json encoding of `ABCIMessageLogs` for std lib json encoding
+* (x/gov) [#19383](https://github.com/cosmos/cosmos-sdk/pull/19383) Add Query for getting Last Proposal ID
 
 ### Deprecated
 

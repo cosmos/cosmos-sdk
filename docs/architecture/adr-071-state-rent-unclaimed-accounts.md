@@ -58,10 +58,57 @@ permanently deleted from state. In other words, the recipient of the balance mus
 send their first transaction prior to being delinquent, otherwise the recipient
 looses their funds.
 
-We define the collection index as follows, such that we only iterate over balances
-that are below the threshold:
+The collected rent can then be sent to the community pool, burned, or used in some
+combination of the two. Note, rent will be charged per unique denomination in the
+unclaimed account's balance.
 
-<TODO>
+We define the collection index as follows, such that we only iterate over balances
+that are below the threshold `MinBalance`:
+
+```go
+var (
+  // ...
+
+	NewAccountByAmountPrefix = collections.NewPrefix(0)
+)
+
+type Keeper struct {
+  // ...
+
+  NewAccKeySet collections.KeySet[collections.Triple[sdkmath.Int, string, []byte]] // <balance, denom, address>
+}
+
+func NewKeeper(...) {
+  k := Keeper{
+    // ...
+
+    NewAccKeySet: collections.NewKeySet(
+      schemaBuilder,
+      NewAccountByAmountPrefix,
+      "new_account_by_amount",
+      collections.TripleKeyCodec(collections.IntKey, collections.StringKey, collections.BytesKey),
+    ),
+  }
+
+  // ...
+}
+```
+
+We can then define iteration as follows:
+
+```go
+k.NewAccKeySet.Walk(ctx, nil, func(key collections.Triple[sdkmath.Int, string, []byte]) (bool, error) {
+  amount := key.K1()
+  if amount.LT(MinBalance) {
+    // Charge rent...
+  }
+})
+```
+
+We propose that we introduce the index and iteration logic to reside in the new
+`x/accounts` module, where the configured epoch module has access to the `x/accounts`
+module to trigger the state rent execution. However, the actual state rent logic
+resides within `x/accounts`, or perhaps a new module altogether.
 
 ## Alternatives
 

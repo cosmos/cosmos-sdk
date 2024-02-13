@@ -149,11 +149,13 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, err
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCreateValidator,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgCreateValidatorResponse{}, nil
 }
@@ -236,11 +238,13 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, err
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeEditValidator,
 		event.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
 		event.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgEditValidatorResponse{}, nil
 }
@@ -297,13 +301,15 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 		}()
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeDelegate,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 		event.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgDelegateResponse{}, nil
 }
@@ -368,13 +374,15 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 		}()
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeRedelegate,
 		event.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
 		event.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
 		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 		event.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgBeginRedelegateResponse{
 		CompletionTime: completionTime,
@@ -436,13 +444,15 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 		}()
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeUnbond,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 		event.NewAttribute(sdk.AttributeKeyAmount, undelegatedCoin.String()),
 		event.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,

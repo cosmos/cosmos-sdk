@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -316,7 +315,7 @@ func NewKeeper(
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
+func (k Keeper) Logger() log.Logger {
 	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 

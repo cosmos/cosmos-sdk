@@ -35,7 +35,7 @@ import (
 //	Infraction was committed at the current height or at a past height,
 //	but not at a height in the future
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
-	logger := k.Logger(ctx)
+	logger := k.Logger()
 
 	if slashFactor.IsNegative() {
 		return math.NewInt(0), fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor)
@@ -219,8 +219,7 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		return err
 	}
 
-	logger := k.Logger(ctx)
-	logger.Info("validator jailed", "validator", consAddr)
+	k.Logger().Info("validator jailed", "validator", consAddr)
 	return nil
 }
 
@@ -233,8 +232,8 @@ func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	if err := k.unjailValidator(ctx, validator); err != nil {
 		return err
 	}
-	logger := k.Logger(ctx)
-	logger.Info("validator un-jailed", "validator", consAddr)
+
+	k.Logger().Info("validator un-jailed", "validator", consAddr)
 	return nil
 }
 

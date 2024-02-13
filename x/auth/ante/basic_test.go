@@ -112,7 +112,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 		name  string
 		sigV2 signing.SignatureV2
 	}{
-		{"SingleSignatureData", signing.SignatureV2{PubKey: priv1.PubKey()}},
+		{"SingleSignatureData", signing.SignatureV2{PubKey: priv1.PubKey(), Data: &signing.SingleSignatureData{}}}, // single signature
 		{"MultiSignatureData", signing.SignatureV2{PubKey: priv1.PubKey(), Data: multisig.NewMultisig(2)}},
 	}
 

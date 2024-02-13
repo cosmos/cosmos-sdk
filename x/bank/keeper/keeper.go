@@ -386,7 +386,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	return nil
 }
 
-// BurnCoins burns coins deletes coins from the balance of the module account.
+// BurnCoins burns coins deletes coins from the balance of an account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, address)
@@ -454,7 +454,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	return nil
 }
 
-// trackUndelegation trakcs undelegation of the given account if it is a vesting account
+// trackUndelegation tracks undelegation of the given account if it is a vesting account
 func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {

@@ -62,22 +62,23 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 
 	// Create a new group in the groupTable.
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	groupInfo := &group.GroupInfo{
-		Id:          k.groupTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
+		Id:          k.groupTable.Sequence().PeekNextVal(kvStore),
 		Admin:       msg.Admin,
 		Metadata:    msg.Metadata,
 		Version:     1,
 		TotalWeight: totalWeight.String(),
 		CreatedAt:   ctx.HeaderInfo().Time,
 	}
-	groupID, err := k.groupTable.Create(ctx.KVStore(k.key), groupInfo)
+	groupID, err := k.groupTable.Create(kvStore, groupInfo)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "could not create group")
 	}
 
 	// Create new group members in the groupMemberTable.
 	for i, m := range msg.Members {
-		err := k.groupMemberTable.Create(ctx.KVStore(k.key), &group.GroupMember{
+		err := k.groupMemberTable.Create(kvStore, &group.GroupMember{
 			GroupId: groupID,
 			Member: &group.Member{
 				Address:  m.Address,
@@ -112,6 +113,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	action := func(g *group.GroupInfo) error {
 		totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
 		if err != nil {
@@ -134,7 +136,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 			// Checking if the group member is already part of the group
 			var found bool
 			var prevGroupMember group.GroupMember
-			switch err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&groupMember), &prevGroupMember); {
+			switch err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&groupMember), &prevGroupMember); {
 			case err == nil:
 				found = true
 			case sdkerrors.ErrNotFound.Is(err):
@@ -167,7 +169,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 				}
 
 				// Delete group member in the groupMemberTable.
-				if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), &groupMember); err != nil {
+				if err := k.groupMemberTable.Delete(kvStore, &groupMember); err != nil {
 					return errorsmod.Wrap(err, "delete member")
 				}
 				continue
@@ -185,12 +187,12 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 				}
 				// Save updated group member in the groupMemberTable.
 				groupMember.Member.AddedAt = prevGroupMember.Member.AddedAt
-				if err := k.groupMemberTable.Update(ctx.KVStore(k.key), &groupMember); err != nil {
+				if err := k.groupMemberTable.Update(kvStore, &groupMember); err != nil {
 					return errorsmod.Wrap(err, "add member")
 				}
 			} else { // else handle create.
 				groupMember.Member.AddedAt = ctx.HeaderInfo().Time
-				if err := k.groupMemberTable.Create(ctx.KVStore(k.key), &groupMember); err != nil {
+				if err := k.groupMemberTable.Create(kvStore, &groupMember); err != nil {
 					return errorsmod.Wrap(err, "add member")
 				}
 			}
@@ -208,7 +210,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 			return err
 		}
 
-		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
+		return k.groupTable.Update(kvStore, g.Id, g)
 	}
 
 	if err := k.doUpdateGroup(ctx, msg.GetGroupID(), msg.GetAdmin(), action, "members updated"); err != nil {
@@ -236,11 +238,12 @@ func (k Keeper) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGrou
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	action := func(g *group.GroupInfo) error {
 		g.Admin = msg.NewAdmin
 		g.Version++
 
-		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
+		return k.groupTable.Update(kvStore, g.Id, g)
 	}
 
 	if err := k.doUpdateGroup(ctx, msg.GetGroupID(), msg.GetAdmin(), action, "admin updated"); err != nil {
@@ -264,10 +267,11 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, msg *group.MsgUpdateG
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	action := func(g *group.GroupInfo) error {
 		g.Metadata = msg.Metadata
 		g.Version++
-		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
+		return k.groupTable.Update(kvStore, g.Id, g)
 	}
 
 	if err := k.doUpdateGroup(ctx, msg.GetGroupID(), msg.GetAdmin(), action, "metadata updated"); err != nil {
@@ -368,12 +372,14 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 		return nil, err
 	}
 
+	kvStore := k.storeService.OpenKVStore(goCtx)
+
 	// Generate account address of group policy.
 	var accountAddr sdk.AccAddress
 	// loop here in the rare case where a ADR-028-derived address creates a
 	// collision with an existing address.
 	for {
-		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
+		nextAccVal := k.groupPolicySeq.NextVal(kvStore)
 		derivationKey := make([]byte, 8)
 		binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
@@ -413,7 +419,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 		return nil, err
 	}
 
-	if err := k.groupPolicyTable.Create(ctx.KVStore(k.key), &groupPolicy); err != nil {
+	if err := k.groupPolicyTable.Create(kvStore, &groupPolicy); err != nil {
 		return nil, errorsmod.Wrap(err, "could not create group policy")
 	}
 
@@ -434,10 +440,11 @@ func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpda
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupPolicy.Admin = msg.NewAdmin
 		groupPolicy.Version++
-		return k.groupPolicyTable.Update(ctx.KVStore(k.key), groupPolicy)
+		return k.groupPolicyTable.Update(kvStore, groupPolicy)
 	}
 
 	if err := k.doUpdateGroupPolicy(ctx, msg.GroupPolicyAddress, msg.Admin, action, "group policy admin updated"); err != nil {
@@ -458,6 +465,7 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, msg *grou
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupInfo, err := k.getGroupInfo(ctx, groupPolicy.GroupId)
 		if err != nil {
@@ -475,7 +483,7 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, msg *grou
 		}
 
 		groupPolicy.Version++
-		return k.groupPolicyTable.Update(ctx.KVStore(k.key), groupPolicy)
+		return k.groupPolicyTable.Update(kvStore, groupPolicy)
 	}
 
 	if err = k.doUpdateGroupPolicy(ctx, msg.GroupPolicyAddress, msg.Admin, action, "group policy's decision policy updated"); err != nil {
@@ -488,11 +496,12 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, msg *grou
 func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, msg *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := msg.GetMetadata()
+	kvStore := k.storeService.OpenKVStore(goCtx)
 
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupPolicy.Metadata = metadata
 		groupPolicy.Version++
-		return k.groupPolicyTable.Update(ctx.KVStore(k.key), groupPolicy)
+		return k.groupPolicyTable.Update(kvStore, groupPolicy)
 	}
 
 	if err := k.assertMetadataLength(metadata, "group policy metadata"); err != nil {
@@ -560,6 +569,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	policyAcc, err := k.getGroupPolicyInfo(ctx, msg.GroupPolicyAddress)
 	if err != nil {
 		return nil, errorsmod.Wrapf(err, "load group policy: %s", msg.GroupPolicyAddress)
@@ -572,7 +582,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 
 	// Only members of the group can submit a new proposal.
 	for _, proposer := range msg.Proposers {
-		if !k.groupMemberTable.Has(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupMember{GroupId: groupInfo.Id, Member: &group.Member{Address: proposer}})) {
+		if !k.groupMemberTable.Has(kvStore, orm.PrimaryKey(&group.GroupMember{GroupId: groupInfo.Id, Member: &group.Member{Address: proposer}})) {
 			return nil, errorsmod.Wrapf(errors.ErrUnauthorized, "not in group: %s", proposer)
 		}
 	}
@@ -593,7 +603,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 	}
 
 	m := &group.Proposal{
-		Id:                 k.proposalTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
+		Id:                 k.proposalTable.Sequence().PeekNextVal(kvStore),
 		GroupPolicyAddress: msg.GroupPolicyAddress,
 		Metadata:           msg.Metadata,
 		Proposers:          msg.Proposers,
@@ -612,7 +622,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		return nil, errorsmod.Wrap(err, "create proposal")
 	}
 
-	id, err := k.proposalTable.Create(ctx.KVStore(k.key), m)
+	id, err := k.proposalTable.Create(kvStore, m)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "create proposal")
 	}
@@ -661,6 +671,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	proposal, err := k.getProposal(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err
@@ -682,7 +693,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 	}
 
 	proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
-	if err := k.proposalTable.Update(ctx.KVStore(k.key), msg.ProposalId, &proposal); err != nil {
+	if err := k.proposalTable.Update(kvStore, msg.ProposalId, &proposal); err != nil {
 		return nil, err
 	}
 
@@ -716,6 +727,7 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	kvStore := k.storeService.OpenKVStore(goCtx)
 	proposal, err := k.getProposal(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err
@@ -742,7 +754,7 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 
 	// Count and store votes.
 	voter := group.GroupMember{GroupId: groupInfo.Id, Member: &group.Member{Address: msg.Voter}}
-	if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voter), &voter); err != nil {
+	if err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&voter), &voter); err != nil {
 		return nil, errorsmod.Wrapf(err, "voter address: %s", msg.Voter)
 	}
 	newVote := group.Vote{
@@ -755,7 +767,7 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 
 	// The ORM will return an error if the vote already exists,
 	// making sure than a voter hasn't already voted.
-	if err := k.voteTable.Create(ctx.KVStore(k.key), &newVote); err != nil {
+	if err := k.voteTable.Create(kvStore, &newVote); err != nil {
 		return nil, errorsmod.Wrap(err, "store vote")
 	}
 
@@ -890,7 +902,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 			return nil, err
 		}
 	} else {
-		store := ctx.KVStore(k.key)
+		store := k.storeService.OpenKVStore(goCtx)
 		if err := k.proposalTable.Update(store, proposal.Id, &proposal); err != nil {
 			return nil, err
 		}
@@ -949,8 +961,10 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
+	kvStore := k.storeService.OpenKVStore(goCtx)
+
 	// delete group member in the groupMemberTable.
-	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), gm); err != nil {
+	if err := k.groupMemberTable.Delete(kvStore, gm); err != nil {
 		return nil, errorsmod.Wrap(err, "group member")
 	}
 
@@ -962,7 +976,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
-	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.Id, &groupInfo); err != nil {
+	if err := k.groupTable.Update(kvStore, groupInfo.Id, &groupInfo); err != nil {
 		return nil, err
 	}
 
@@ -977,8 +991,9 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 }
 
 func (k Keeper) getGroupMember(ctx sdk.Context, member *group.GroupMember) (*group.GroupMember, error) {
+	kvStore := k.storeService.OpenKVStore(ctx)
 	var groupMember group.GroupMember
-	switch err := k.groupMemberTable.GetOne(ctx.KVStore(k.key),
+	switch err := k.groupMemberTable.GetOne(kvStore,
 		orm.PrimaryKey(member), &groupMember); {
 	case err == nil:
 		break
@@ -1060,7 +1075,8 @@ func (k Keeper) doUpdateGroup(ctx sdk.Context, groupID uint64, reqGroupAdmin str
 // validateDecisionPolicies loops through all decision policies from the group,
 // and calls each of their Validate() method.
 func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) error {
-	it, err := k.groupPolicyByGroupIndex.Get(ctx.KVStore(k.key), g.Id)
+	kvStore := k.storeService.OpenKVStore(ctx)
+	it, err := k.groupPolicyByGroupIndex.Get(kvStore, g.Id)
 	if err != nil {
 		return err
 	}

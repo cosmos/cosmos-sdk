@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -49,9 +48,8 @@ func (i interfaceRegistry) RegisterImplementations(any, ...gogoproto.Message) {}
 
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
-	_, ctx := colltest.MockStore()
-	key := storetypes.NewKVStoreKey(StoreKey)
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
+	ss, ctx := colltest.MockStore()
+	env := runtime.NewEnvironment(ss)
 	m, err := NewKeeper(nil, env, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx

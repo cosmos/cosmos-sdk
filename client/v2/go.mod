@@ -28,6 +28,7 @@ require (
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/math v1.2.0 // indirect
 	cosmossdk.io/store v1.0.2 // indirect
+	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -169,6 +170,7 @@ replace github.com/cosmos/cosmos-sdk => ./../../
 replace (
 	cosmossdk.io/core => ./../../core
 	cosmossdk.io/depinject => ./../../depinject
+	cosmossdk.io/x/accounts => ./../../x/accounts
 	cosmossdk.io/x/auth => ./../../x/auth
 	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/distribution => ./../../x/distribution

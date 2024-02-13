@@ -33,6 +33,7 @@ require (
 require github.com/cometbft/cometbft v0.38.5 // indirect
 
 require (
+	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -168,6 +169,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking

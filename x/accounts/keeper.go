@@ -71,6 +71,7 @@ type InterfaceRegistry interface {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
+	es event.Service,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -82,7 +83,7 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 	keeper := Keeper{
 		storeService:     storeService,
-		eventService:     env.EventService,
+		eventService:     es,
 		addressCodec:     addressCodec,
 		branchExecutor:   env.BranchService,
 		msgRouter:        execRouter,

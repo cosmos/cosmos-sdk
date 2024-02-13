@@ -288,6 +288,7 @@ func NewSimApp(
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey])),
+		runtime.EventService{},
 		addressCodec,
 		appCodec,
 		app.MsgServiceRouter(),

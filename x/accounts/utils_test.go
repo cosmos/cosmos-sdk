@@ -50,7 +50,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	t.Helper()
 	ss, ctx := colltest.MockStore()
 	env := runtime.NewEnvironment(ss)
-	m, err := NewKeeper(nil, env, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
+	m, err := NewKeeper(nil, env, eventService{}, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

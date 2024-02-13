@@ -254,7 +254,10 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	assert.DeepEqual(t, f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 5).String(), diffTokens.String())
 }
 
-// tests Slash at a previous height with an unbonding delegation
+// TestSlashWithUnbondingDelegation tests the slashing of a validator with an unbonding delegation.
+// It sets up an environment with a validator and an unbonding delegation, and then performs slashing
+// operations on the validator. The test verifies that the slashing correctly affects the unbonding
+// delegation and the validator's power.
 func TestSlashWithUnbondingDelegation(t *testing.T) {
 	f, addrDels, addrVals := bootstrapSlashTest(t, 10)
 
@@ -271,7 +274,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 
 	// slash validator for the first time
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 12})
 	bondedPool := f.stakingKeeper.GetBondedPool(f.sdkCtx)
 	oldBondedPoolBalances := f.bankKeeper.GetAllBalances(f.sdkCtx, bondedPool.GetAddress())
 

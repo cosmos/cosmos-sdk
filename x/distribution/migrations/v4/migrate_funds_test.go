@@ -10,6 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -48,14 +49,20 @@ func TestFundsMigration(t *testing.T) {
 	router := baseapp.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(encCfg.Codec.InterfaceRegistry())
 
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
+
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encCfg.Codec,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey])),
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		router,
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -69,11 +76,6 @@ func TestFundsMigration(t *testing.T) {
 		authority.String(),
 		log.NewNopLogger(),
 	)
-
-	// gomock initializations
-	ctrl := gomock.NewController(t)
-	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	// create distribution keeper
 	distrKeeper := keeper.NewKeeper(

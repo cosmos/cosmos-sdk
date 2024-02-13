@@ -13,10 +13,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/gas"
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -71,11 +70,7 @@ type InterfaceRegistry interface {
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	ss store.KVStoreService,
-	es event.Service,
-	hs header.Service,
-	bs branch.Service,
-	gs gas.Service,
+	env appmodule.Environment,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -83,12 +78,13 @@ func NewKeeper(
 	ir InterfaceRegistry,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
-	sb := collections.NewSchemaBuilder(ss)
+	storeService := env.KVStoreService
+	sb := collections.NewSchemaBuilder(storeService)
 	keeper := Keeper{
-		storeService:     ss,
-		eventService:     es,
+		storeService:     storeService,
+		eventService:     env.EventService,
 		addressCodec:     addressCodec,
-		branchExecutor:   bs,
+		branchExecutor:   env.BranchService,
 		msgRouter:        execRouter,
 		signerProvider:   signerProvider,
 		queryRouter:      queryRouter,
@@ -105,7 +101,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, hs, gs, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env.HeaderService, env.GasService, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}

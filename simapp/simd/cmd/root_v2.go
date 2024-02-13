@@ -109,7 +109,7 @@ func ProvideClientContext(
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	// Read the config again to overwrite the default values with the values from the config file
-	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
+	clientCtx, _ = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx)
 
 	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
 	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)

@@ -66,12 +66,14 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 			continue
 		}
 
-		k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeCompleteUnbonding,
 			event.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
 			event.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress),
 			event.NewAttribute(types.AttributeKeyDelegator, dvPair.DelegatorAddress),
-		)
+		); err != nil {
+			return nil, err
+		}
 	}
 
 	// Remove all mature redelegations from the red queue.
@@ -104,13 +106,15 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 			continue
 		}
 
-		k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeCompleteRedelegation,
 			event.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
 			event.NewAttribute(types.AttributeKeyDelegator, dvvTriplet.DelegatorAddress),
 			event.NewAttribute(types.AttributeKeySrcValidator, dvvTriplet.ValidatorSrcAddress),
 			event.NewAttribute(types.AttributeKeyDstValidator, dvvTriplet.ValidatorDstAddress),
-		)
+		); err != nil {
+			return nil, err
+		}
 	}
 
 	err = k.PurgeAllMaturedConsKeyRotatedKeys(ctx, time)

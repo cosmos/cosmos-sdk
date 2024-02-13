@@ -575,13 +575,15 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCancelUnbondingDelegation,
 		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 		event.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }

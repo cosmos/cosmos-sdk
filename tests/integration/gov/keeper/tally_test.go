@@ -356,7 +356,6 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	assert.Assert(t, found)
 	val2, found := f.stakingKeeper.GetValidator(ctx, vals[1])
 	assert.Assert(t, found)
-
 	_, err := f.stakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val1, true)
 	assert.NilError(t, err)
 	_, err = f.stakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)

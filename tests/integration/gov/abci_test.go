@@ -360,6 +360,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
+			acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+			suite.AccountKeeper.SetAccount(ctx, acc)
 
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err := suite.StakingKeeper.EndBlocker(ctx)
@@ -420,6 +422,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 	toAddrStr, err := ac.BytesToString(addrs[0])
 	require.NoError(t, err)
+
+	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+	suite.AccountKeeper.SetAccount(ctx, acc)
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	_, err = suite.StakingKeeper.EndBlocker(ctx)
@@ -499,6 +504,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 
+			acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+			suite.AccountKeeper.SetAccount(ctx, acc)
 			// Create a validator so that able to vote on proposal.
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err = suite.StakingKeeper.EndBlocker(ctx)

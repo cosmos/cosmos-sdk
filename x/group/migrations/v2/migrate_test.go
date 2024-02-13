@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
@@ -34,14 +35,15 @@ var (
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, groupmodule.AppModuleBasic{}).Codec
 	storeKey := storetypes.NewKVStoreKey(v2.ModuleName)
+	storeService := runtime.NewKVStoreService(storeKey)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
 	oldAccs, accountKeeper := createOldPolicyAccount(ctx, storeKey, cdc, policies)
-	groupPolicyTable, groupPolicySeq, err := createGroupPolicies(ctx, storeKey, cdc, policies)
+	groupPolicyTable, groupPolicySeq, err := createGroupPolicies(ctx, storeService, cdc, policies)
 	require.NoError(t, err)
 
-	require.NoError(t, v2.Migrate(ctx, storeKey, accountKeeper, groupPolicySeq, groupPolicyTable))
+	require.NoError(t, v2.Migrate(ctx, storeService, accountKeeper, groupPolicySeq, groupPolicyTable))
 	for i, policyAddr := range policies {
 		oldAcc := oldAccs[i]
 		newAcc := accountKeeper.GetAccount(ctx, policyAddr)
@@ -53,13 +55,14 @@ func TestMigrate(t *testing.T) {
 	}
 }
 
-func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) (orm.PrimaryKeyTable, orm.Sequence, error) {
+func createGroupPolicies(ctx sdk.Context, storeService corestore.KVStoreService, cdc codec.Codec, policies []sdk.AccAddress) (orm.PrimaryKeyTable, orm.Sequence, error) {
 	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	groupPolicySeq := orm.NewSequence(v2.GroupPolicyTableSeqPrefix)
+	kvStore := storeService.OpenKVStore(ctx)
 
 	for _, policyAddr := range policies {
 		groupPolicyInfo, err := group.NewGroupPolicyInfo(policyAddr, 1, authorityAddr, "", 1, group.NewPercentageDecisionPolicy("1", 1, 1), ctx.HeaderInfo().Time)
@@ -67,11 +70,11 @@ func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc code
 			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
 		}
 
-		if err := groupPolicyTable.Create(ctx.KVStore(storeKey), &groupPolicyInfo); err != nil {
+		if err := groupPolicyTable.Create(kvStore, &groupPolicyInfo); err != nil {
 			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
 		}
 
-		groupPolicySeq.NextVal(ctx.KVStore(storeKey))
+		groupPolicySeq.NextVal(kvStore)
 	}
 
 	return *groupPolicyTable, groupPolicySeq, nil

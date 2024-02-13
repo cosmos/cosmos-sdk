@@ -287,9 +287,9 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 	)
 }
 
-// sendAnyMessages it a helper function that executes untyped codectypes.Any messages
+// SendAnyMessages it a helper function that executes untyped codectypes.Any messages
 // The messages must all belong to a module.
-func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages []*implementation.Any) ([]*implementation.Any, error) {
+func (k Keeper) SendAnyMessages(ctx context.Context, sender []byte, anyMessages []*implementation.Any) ([]*implementation.Any, error) {
 	anyResponses := make([]*implementation.Any, len(anyMessages))
 	for i := range anyMessages {
 		msg, err := implementation.UnpackAnyRaw(anyMessages[i])

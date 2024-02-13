@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -14,6 +15,7 @@ import (
 	"cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/auth/vesting"
+	vestingtestutil "cosmossdk.io/x/auth/vesting/testutil"
 	"cosmossdk.io/x/auth/vesting/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -46,6 +48,10 @@ func (s *VestingAccountTestSuite) SetupTest() {
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
 
+	// gomock initializations
+	ctrl := gomock.NewController(&testing.T{})
+	acctsModKeeper := vestingtestutil.NewMockAccountsModKeeper(ctrl)
+
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
 		"mint":                   {"minter"},
@@ -68,9 +74,9 @@ func (s *VestingAccountTestSuite) SetupTest() {
 		encCfg.Codec,
 		env,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
-		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)

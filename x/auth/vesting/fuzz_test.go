@@ -13,6 +13,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
+	vestingtestutil "cosmossdk.io/x/auth/vesting/testutil"
 	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
@@ -94,13 +95,17 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 	baseApp.SetCMS(testCtx.CMS)
 	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
+	// gomock initializations
+	ctrl := gomock.NewController(&testing.T{})
+	acctsModKeeper := vestingtestutil.NewMockAccountsModKeeper(ctrl)
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encCfg.Codec,
 		env,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		address.NewBech32Codec("cosmos"),
-		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)

@@ -37,10 +37,11 @@ var (
 type VestingTestSuite struct {
 	suite.Suite
 
-	ctx           sdk.Context
-	accountKeeper authkeeper.AccountKeeper
-	bankKeeper    *vestingtestutil.MockBankKeeper
-	msgServer     vestingtypes.MsgServer
+	ctx            sdk.Context
+	accountKeeper  authkeeper.AccountKeeper
+	acctsModKeeper *vestingtestutil.MockAccountsModKeeper
+	bankKeeper     *vestingtestutil.MockBankKeeper
+	msgServer      vestingtypes.MsgServer
 }
 
 func (s *VestingTestSuite) SetupTest() {
@@ -65,13 +66,14 @@ func (s *VestingTestSuite) SetupTest() {
 
 	ctrl := gomock.NewController(s.T())
 	s.bankKeeper = vestingtestutil.NewMockBankKeeper(ctrl)
+	s.acctsModKeeper = vestingtestutil.NewMockAccountsModKeeper(ctrl)
 	s.accountKeeper = authkeeper.NewAccountKeeper(
 		encCfg.Codec,
 		env,
 		authtypes.ProtoBaseAccount,
+		s.acctsModKeeper,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
-		baseApp.MsgServiceRouter(),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)

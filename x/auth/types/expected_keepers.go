@@ -3,8 +3,7 @@ package types
 import (
 	"context"
 
-	"cosmossdk.io/x/accounts/internal/implementation"
-	
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,5 +15,5 @@ type BankKeeper interface {
 }
 
 type AccountsModKeeper interface {
-	SendAnyMessages(ctx context.Context, sender []byte, anyMessages []*implementation.Any) ([]*implementation.Any, error)
+	SendAnyMessages(ctx context.Context, sender []byte, anyMessages []*codectypes.Any) ([]*codectypes.Any, error)
 }

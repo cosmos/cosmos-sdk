@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"github.com/golang/mock/gomock"
+
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -69,6 +71,7 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			s.acctsModKeeper.EXPECT().SendAnyMessages(s.ctx, gomock.Any(), gomock.Any()).AnyTimes()
 			_, err := s.msgServer.NonAtomicExec(s.ctx, tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)

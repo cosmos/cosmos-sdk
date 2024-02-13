@@ -8,7 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
+	types0 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,7 +37,7 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // BlockedAddr mocks base method.
-func (m *MockBankKeeper) BlockedAddr(addr types.AccAddress) bool {
+func (m *MockBankKeeper) BlockedAddr(addr types0.AccAddress) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BlockedAddr", addr)
 	ret0, _ := ret[0].(bool)
@@ -50,7 +51,7 @@ func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr interface{}) *gomock.Call
 }
 
 // IsSendEnabledCoins mocks base method.
-func (m *MockBankKeeper) IsSendEnabledCoins(ctx context.Context, coins ...types.Coin) error {
+func (m *MockBankKeeper) IsSendEnabledCoins(ctx context.Context, coins ...types0.Coin) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx}
 	for _, a := range coins {
@@ -69,7 +70,7 @@ func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoins(ctx interface{}, coins 
 }
 
 // SendCoins mocks base method.
-func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types0.AccAddress, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoins", ctx, fromAddr, toAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -80,4 +81,42 @@ func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types.A
 func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoins", reflect.TypeOf((*MockBankKeeper)(nil).SendCoins), ctx, fromAddr, toAddr, amt)
+}
+
+// MockAccountsModKeeper is a mock of AccountsModKeeper interface.
+type MockAccountsModKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockAccountsModKeeperMockRecorder
+}
+
+// MockAccountsModKeeperMockRecorder is the mock recorder for MockAccountsModKeeper.
+type MockAccountsModKeeperMockRecorder struct {
+	mock *MockAccountsModKeeper
+}
+
+// NewMockAccountsModKeeper creates a new mock instance.
+func NewMockAccountsModKeeper(ctrl *gomock.Controller) *MockAccountsModKeeper {
+	mock := &MockAccountsModKeeper{ctrl: ctrl}
+	mock.recorder = &MockAccountsModKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAccountsModKeeper) EXPECT() *MockAccountsModKeeperMockRecorder {
+	return m.recorder
+}
+
+// SendAnyMessages mocks base method.
+func (m *MockAccountsModKeeper) SendAnyMessages(ctx context.Context, sender []byte, anyMessages []*types.Any) ([]*types.Any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendAnyMessages", ctx, sender, anyMessages)
+	ret0, _ := ret[0].([]*types.Any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SendAnyMessages indicates an expected call of SendAnyMessages.
+func (mr *MockAccountsModKeeperMockRecorder) SendAnyMessages(ctx, sender, anyMessages interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendAnyMessages", reflect.TypeOf((*MockAccountsModKeeper)(nil).SendAnyMessages), ctx, sender, anyMessages)
 }

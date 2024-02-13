@@ -9,14 +9,13 @@ import (
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -85,12 +84,11 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 type AccountKeeper struct {
 	addressCodec address.Codec
 
-	storeService  store.KVStoreService
-	cdc           codec.Codec
-	permAddrs     map[string]types.PermissionsForAddress
-	bech32Prefix  string
-	router        baseapp.MessageRouter
-	branchService branch.Service
+	storeService      store.KVStoreService
+	cdc               codec.Codec
+	permAddrs         map[string]types.PermissionsForAddress
+	bech32Prefix      string
+	AccountsModKeeper types.AccountsModKeeper
 
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
@@ -116,8 +114,8 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.Codec, env appmodule.Environment, proto func() sdk.AccountI,
-	maccPerms map[string][]string, ac address.Codec, router baseapp.MessageRouter, bech32Prefix, authority string,
+	cdc codec.Codec, env appmodule.Environment, proto func() sdk.AccountI, accountsModKeeper types.AccountsModKeeper,
+	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -125,23 +123,21 @@ func NewAccountKeeper(
 	}
 
 	storeService := env.KVStoreService
-	branchService := env.BranchService
 
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
-		addressCodec:  ac,
-		bech32Prefix:  bech32Prefix,
-		storeService:  storeService,
-		proto:         proto,
-		cdc:           cdc,
-		router:        router,
-		branchService: branchService,
-		permAddrs:     permAddrs,
-		authority:     authority,
-		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
-		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		addressCodec:      ac,
+		bech32Prefix:      bech32Prefix,
+		storeService:      storeService,
+		proto:             proto,
+		cdc:               cdc,
+		AccountsModKeeper: accountsModKeeper,
+		permAddrs:         permAddrs,
+		authority:         authority,
+		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -287,17 +283,10 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 }
 
 func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*types.NonAtomicExecResult, error) {
+	var msgsAny []*codectypes.Any
 	msgResponses := make([]*types.NonAtomicExecResult, 0, len(msgs))
 
-	for i, msg := range msgs {
-		// check if the message sender matches the provided signer
-		signers, _, err := ak.cdc.GetMsgV1Signers(msg)
-		if err != nil {
-			return nil, err
-		}
-		if len(signers) != 1 {
-			return nil, fmt.Errorf("authorization can be given to msg with only one signer")
-		}
+	for _, msg := range msgs {
 		if m, ok := msg.(sdk.HasValidateBasic); ok {
 			if err := m.ValidateBasic(); err != nil {
 				value := &types.NonAtomicExecResult{Error: err.Error()}
@@ -306,52 +295,28 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 			}
 		}
 
-		// define a function to be executed within the isolated context
-		execFunc := func(ctx context.Context) error {
-			sdkCtx := sdk.UnwrapSDKContext(ctx)
-			// Call the router handler within the isolated context
-			handler := ak.router.Handler(msg)
-			if handler == nil {
-				wrappedErr := sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
-				value := &types.NonAtomicExecResult{Error: wrappedErr.Error()}
-				if err != nil {
-					return err
-				}
-				msgResponses = append(msgResponses, value)
-			}
-			// execute the handler within the isolated context
-			msgResult, err := handler(sdkCtx, msg)
-			if err != nil {
-				wrappedErr := errorsmod.Wrapf(err, "failed to execute message; message index: %d; message %v", i, msg)
-				value := &types.NonAtomicExecResult{Error: wrappedErr.Error()}
-				if err != nil {
-					return err
-				}
-				msgResponses = append(msgResponses, value)
-			}
-			if len(msgResult.MsgResponses) > 0 {
-				msgResponse := msgResult.MsgResponses[0]
-				if msgResponse == nil {
-					wrappedErr := sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
-					value := &types.NonAtomicExecResult{Error: wrappedErr.Error()}
-					if err != nil {
-						return err
-					}
-					msgResponses = append(msgResponses, value)
-				}
-				value := &types.NonAtomicExecResult{
-					Resp: msgResponse,
-				}
-				msgResponses = append(msgResponses, value)
-			}
-			return nil
+		anyValue, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			value := &types.NonAtomicExecResult{Error: err.Error()}
+			msgResponses = append(msgResponses, value)
+			continue
 		}
+		msgsAny = append(msgsAny, anyValue)
 
-		// Execute the function within an isolated context provided by the branch service
-		if err := ak.branchService.Execute(ctx, execFunc); err != nil {
-			return nil, err
+	}
+
+	results, err := ak.AccountsModKeeper.SendAnyMessages(ctx, signer, msgsAny)
+	if err != nil {
+		// If an error occurs during message execution, append error response
+		value := &types.NonAtomicExecResult{Error: err.Error()}
+		msgResponses = append(msgResponses, value)
+	}
+
+	for _, res := range results {
+		response := &types.NonAtomicExecResult{
+			Resp: res,
 		}
-
+		msgResponses = append(msgResponses, response)
 	}
 
 	return msgResponses, nil

@@ -51,6 +51,7 @@ type AnteTestSuite struct {
 	txBuilder      client.TxBuilder
 	accountKeeper  keeper.AccountKeeper
 	bankKeeper     *authtestutil.MockBankKeeper
+	acctsModKeeper *authtestutil.MockAccountsModKeeper
 	txBankKeeper   *txtestutil.MockBankKeeper
 	feeGrantKeeper *antetestutil.MockFeegrantKeeper
 	encCfg         moduletestutil.TestEncodingConfig
@@ -60,10 +61,12 @@ type AnteTestSuite struct {
 func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	t.Helper()
 	suite := &AnteTestSuite{}
+	// gomock initializations
 	ctrl := gomock.NewController(t)
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
 	suite.txBankKeeper = txtestutil.NewMockBankKeeper(ctrl)
 	suite.feeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
+	suite.acctsModKeeper = authtestutil.NewMockAccountsModKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
@@ -91,8 +94,8 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	baseApp.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		suite.encCfg.Codec, env, types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
-		baseapp.NewMsgServiceRouter(), sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
+		suite.encCfg.Codec, env, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
+		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 	err := suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())

@@ -150,7 +150,7 @@ func (k Keeper) opExecuteMessages(
 	case implementation.IsRoutingError(err):
 		// if it is a routing error, it means the account does not handle execution messages,
 		// in this case we attempt to execute the provided messages on behalf of the op sender.
-		return k.sendAnyMessages(ctx, senderAddr, op.ExecutionMessages)
+		return k.SendAnyMessages(ctx, senderAddr, op.ExecutionMessages)
 	default:
 		// some other error
 		return nil, err
@@ -208,7 +208,7 @@ func (k Keeper) payBundler(
 	case implementation.IsRoutingError(err):
 		// if we get a routing message error it means the account does not handle bundler payment messages,
 		// in this case we attempt to execute the provided messages on behalf of the op sender.
-		return k.sendAnyMessages(ctx, senderAddr, op.BundlerPaymentMessages)
+		return k.SendAnyMessages(ctx, senderAddr, op.BundlerPaymentMessages)
 	default:
 		// some other execution error.
 		return nil, err

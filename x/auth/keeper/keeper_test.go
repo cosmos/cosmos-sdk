@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -12,6 +13,7 @@ import (
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -39,10 +41,11 @@ type KeeperTestSuite struct {
 
 	ctx sdk.Context
 
-	queryClient   types.QueryClient
-	accountKeeper keeper.AccountKeeper
-	msgServer     types.MsgServer
-	encCfg        moduletestutil.TestEncodingConfig
+	queryClient    types.QueryClient
+	accountKeeper  keeper.AccountKeeper
+	acctsModKeeper *authtestutil.MockAccountsModKeeper
+	msgServer      types.MsgServer
+	encCfg         moduletestutil.TestEncodingConfig
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -53,6 +56,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
+
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	suite.acctsModKeeper = acctsModKeeper
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -76,9 +84,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 		suite.encCfg.Codec,
 		env,
 		types.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
-		baseApp.MsgServiceRouter(),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
 	)

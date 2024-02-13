@@ -3,15 +3,16 @@ package orm
 import (
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
+	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/stretchr/testify/require"
 )
 
 func TestPrimaryKeyTable(t *testing.T) {

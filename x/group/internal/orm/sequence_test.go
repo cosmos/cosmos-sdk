@@ -3,13 +3,14 @@ package orm
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestSequenceUniqueConstraint(t *testing.T) {

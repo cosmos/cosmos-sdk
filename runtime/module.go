@@ -224,11 +224,17 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) (store.KVStoreService, appmodule.Environment) {
+func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder, logger log.Logger) (store.KVStoreService, appmodule.Environment) {
 	storeKey := ProvideKVStoreKey(config, key, app)
 	kvService := kvStoreService{key: storeKey}
+	if app.app == nil {
+		panic("app is nil")
+	}
 
-	return kvService, NewEnvironment(kvService, app.app.logger)
+	if logger == nil {
+		panic("logger is nil")
+	}
+	return kvService, NewEnvironment(kvService, logger)
 }
 
 func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {

@@ -159,7 +159,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "query")
+		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
 	val, err := s.stateStore.Get(storeKey, version, key)
@@ -201,7 +201,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 func (s *Store) LoadLatestVersion() error {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
+		defer s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
 	}
 
 	lv, err := s.GetLatestVersion()
@@ -215,7 +215,7 @@ func (s *Store) LoadLatestVersion() error {
 func (s *Store) LoadVersion(version uint64) error {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "load_version")
+		defer s.telemetry.MeasureSince(now, "root_store", "load_version")
 	}
 
 	return s.loadVersion(version)
@@ -251,7 +251,7 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "working_hash")
+		defer s.telemetry.MeasureSince(now, "root_store", "working_hash")
 	}
 
 	if s.workingHash == nil {
@@ -273,7 +273,7 @@ func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "commit")
+		defer s.telemetry.MeasureSince(now, "root_store", "commit")
 	}
 
 	if s.workingHash == nil {
@@ -323,7 +323,7 @@ func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 func (s *Store) Prune(version uint64) error {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "prune")
+		defer s.telemetry.MeasureSince(now, "root_store", "prune")
 	}
 
 	if err := s.stateStore.Prune(version); err != nil {

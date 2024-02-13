@@ -42,16 +42,16 @@ type CommitStore struct {
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, pruneOptions *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
-	if pruneOptions == nil {
-		pruneOptions = store.DefaultPruneOptions()
+func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+	if pruneOpts == nil {
+		pruneOpts = store.DefaultPruneOptions()
 	}
 
 	return &CommitStore{
 		logger:       logger,
 		db:           db,
 		multiTrees:   multiTrees,
-		pruneOptions: pruneOptions,
+		pruneOptions: pruneOpts,
 	}, nil
 }
 
@@ -227,7 +227,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 	// Prune the old versions.
 	if prune, pruneVersion := c.pruneOptions.ShouldPrune(version); prune {
 		if err := c.Prune(pruneVersion); err != nil {
-			c.logger.Info("failed to prune the commitment", "pruneVersion", pruneVersion, "err", err)
+			c.logger.Info("failed to prune SC", "prune_version", pruneVersion, "err", err)
 		}
 	}
 

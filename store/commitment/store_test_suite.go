@@ -23,7 +23,7 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db store.RawDB, storeKeys []string, pruneOptions *store.PruneOptions, logger log.Logger) (*CommitStore, error)
+	NewStore func(db store.RawDB, storeKeys []string, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
@@ -121,11 +121,11 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 
 func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	storeKeys := []string{storeKey1, storeKey2}
-	pruneOptions := &store.PruneOptions{
+	pruneOpts := &store.PruneOptions{
 		KeepRecent: 10,
 		Interval:   5,
 	}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, pruneOptions, log.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, pruneOpts, log.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(100)
@@ -146,7 +146,7 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 		s.Require().NoError(err)
 	}
 
-	pruneVersion := latestVersion - pruneOptions.KeepRecent - 1
+	pruneVersion := latestVersion - pruneOpts.KeepRecent - 1
 	// check the store
 	for i := uint64(1); i <= latestVersion; i++ {
 		commitInfo, _ := commitStore.GetCommitInfo(i)

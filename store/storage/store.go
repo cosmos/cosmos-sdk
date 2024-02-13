@@ -29,15 +29,15 @@ type StorageStore struct {
 }
 
 // NewStorageStore returns a reference to a new StorageStore.
-func NewStorageStore(db Database, pruneOptions *store.PruneOptions, logger log.Logger) *StorageStore {
-	if pruneOptions == nil {
-		pruneOptions = store.DefaultPruneOptions()
+func NewStorageStore(db Database, pruneOpts *store.PruneOptions, logger log.Logger) *StorageStore {
+	if pruneOpts == nil {
+		pruneOpts = store.DefaultPruneOptions()
 	}
 
 	return &StorageStore{
 		logger:       logger,
 		db:           db,
-		pruneOptions: pruneOptions,
+		pruneOptions: pruneOpts,
 	}
 }
 
@@ -78,7 +78,7 @@ func (ss *StorageStore) ApplyChangeset(version uint64, cs *store.Changeset) erro
 
 	if prune, pruneVersion := ss.pruneOptions.ShouldPrune(version); prune {
 		if err := ss.Prune(pruneVersion); err != nil {
-			ss.logger.Info("failed to prune the storage", "pruneVersion", pruneVersion, "err", err)
+			ss.logger.Info("failed to prune SS", "prune_version", pruneVersion, "err", err)
 		}
 	}
 

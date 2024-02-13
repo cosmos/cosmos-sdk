@@ -90,7 +90,6 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 			// valid. But some mempool implementations may insert invalid txs, so we
 			// check again.
 			_, err := app.ValidateTx(ctx, memTx, corecontext.ExecModePrepareProposal)
-
 			if err != nil {
 				err := h.mempool.Remove([]T{memTx})
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {

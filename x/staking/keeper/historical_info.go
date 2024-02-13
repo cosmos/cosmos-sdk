@@ -43,11 +43,9 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return nil
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO: remove this
-
 	historicalEntry := types.HistoricalRecord{
 		Time:           &headerInfo.Time,
-		ValidatorsHash: sdkCtx.CometInfo().ValidatorsHash,
+		ValidatorsHash: sdk.UnwrapSDKContext(ctx).CometInfo().ValidatorsHash,
 		Apphash:        headerInfo.AppHash,
 	}
 

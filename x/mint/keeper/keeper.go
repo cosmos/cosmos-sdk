@@ -6,8 +6,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
-	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/mint/types"
@@ -19,12 +17,11 @@ import (
 // Keeper of the mint store
 type Keeper struct {
 	cdc              codec.BinaryCodec
-	storeService     storetypes.KVStoreService
+	environment      appmodule.Environment
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	logger           log.Logger
 	feeCollectorName string
-	EventService     event.Service
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
@@ -49,13 +46,10 @@ func NewKeeper(
 		panic(fmt.Sprintf("the x/%s module account has not been set", types.ModuleName))
 	}
 
-	storeService := env.KVStoreService
-
-	sb := collections.NewSchemaBuilder(storeService)
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
 		cdc:              cdc,
-		storeService:     storeService,
-		EventService:     env.EventService,
+		environment:      env,
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		logger:           env.Logger,
@@ -80,8 +74,7 @@ func (k Keeper) GetAuthority() string {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx context.Context) log.Logger {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
+	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's

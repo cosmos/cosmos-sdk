@@ -106,7 +106,6 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 		}
 
 		return h.txSelector.SelectedTxs(ctx), nil
-
 	}
 }
 

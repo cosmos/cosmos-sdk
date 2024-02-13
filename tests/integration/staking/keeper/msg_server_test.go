@@ -326,8 +326,7 @@ func TestRotateConsPubKey(t *testing.T) {
 
 				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-				newCtx := ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(params.UnbondingTime)})
-				newCtx = newCtx.WithBlockHeight(newCtx.BlockHeight() + 1)
+				newCtx := ctx.WithHeaderInfo(header.Info{Height: ctx.BlockHeight() + 1, Time: ctx.HeaderInfo().Time.Add(params.UnbondingTime)}).WithBlockHeight(ctx.BlockHeight() + 1)
 				// this should remove keys from waiting queue since unbonding time is reached
 				_, err = stakingKeeper.EndBlocker(newCtx)
 				assert.NilError(t, err)

@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -32,6 +33,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx           sdk.Context
+	environment   appmodule.Environment
 	poolKeeper    poolkeeper.Keeper
 	authKeeper    *pooltestutil.MockAccountKeeper
 	bankKeeper    *pooltestutil.MockBankKeeper
@@ -44,6 +46,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	environment := runtime.NewEnvironment(storeService)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
@@ -65,7 +68,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		environment,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,

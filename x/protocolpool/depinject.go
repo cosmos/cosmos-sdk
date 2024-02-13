@@ -3,7 +3,6 @@ package protocolpool
 import (
 	modulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	"cosmossdk.io/core/appmodule"
-	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -33,7 +32,7 @@ type ModuleInputs struct {
 
 	Config       *modulev1.Module
 	Codec        codec.Codec
-	StoreService storetypes.KVStoreService
+	Environment  appmodule.Environment
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -54,7 +53,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authority.String())
+	k := keeper.NewKeeper(in.Codec, in.Environment, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authority.String())
 	m := NewAppModule(in.Codec, k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{

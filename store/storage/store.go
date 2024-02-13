@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots"
 )
@@ -20,13 +21,23 @@ var (
 
 // StorageStore is a wrapper around the store.VersionedDatabase interface.
 type StorageStore struct {
-	db Database
+	logger log.Logger
+	db     Database
+
+	// pruneOptions defines the pruning configuration.
+	pruneOptions *store.PruneOptions
 }
 
 // NewStorageStore returns a reference to a new StorageStore.
-func NewStorageStore(db Database) *StorageStore {
+func NewStorageStore(db Database, pruneOpts *store.PruneOptions, logger log.Logger) *StorageStore {
+	if pruneOpts == nil {
+		pruneOpts = store.DefaultPruneOptions()
+	}
+
 	return &StorageStore{
-		db: db,
+		logger:       logger,
+		db:           db,
+		pruneOptions: pruneOpts,
 	}
 }
 
@@ -61,7 +72,17 @@ func (ss *StorageStore) ApplyChangeset(version uint64, cs *store.Changeset) erro
 		}
 	}
 
-	return b.Write()
+	if err := b.Write(); err != nil {
+		return err
+	}
+
+	if prune, pruneVersion := ss.pruneOptions.ShouldPrune(version); prune {
+		if err := ss.Prune(pruneVersion); err != nil {
+			ss.logger.Info("failed to prune SS", "prune_version", pruneVersion, "err", err)
+		}
+	}
+
+	return nil
 }
 
 // GetLatestVersion returns the latest version of the store.

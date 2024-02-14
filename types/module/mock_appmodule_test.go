@@ -13,7 +13,6 @@ type AppModuleWithAllExtensions interface {
 	module.HasServices
 	module.HasGenesis
 	module.HasInvariants
-	module.HasConsensusVersion
 	module.HasABCIEndBlock
 	module.HasName
 }
@@ -24,7 +23,6 @@ type AppModuleWithAllExtensionsABCI interface {
 	module.HasServices
 	module.HasABCIGenesis
 	module.HasInvariants
-	module.HasConsensusVersion
 	module.HasABCIEndBlock
 	module.HasName
 }
@@ -36,6 +34,7 @@ type CoreAppModule interface {
 	appmodule.HasGenesis
 	appmodule.HasBeginBlocker
 	appmodule.HasEndBlocker
+	appmodule.HasConsensusVersion
 	appmodule.HasPrecommit
 	appmodule.HasPrepareCheckState
 }

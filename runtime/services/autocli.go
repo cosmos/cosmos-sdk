@@ -113,7 +113,7 @@ func (a *autocliConfigurator) RegisterMigration(string, uint64, module.Migration
 	return nil
 }
 
-func (a *autocliConfigurator) Register(string, uint64, func(context.Context) error) error { return nil }
+func (a *autocliConfigurator) Register(string, uint64, appmodule.MigrationHandler) error { return nil }
 
 func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	if a.registryCache == nil {
@@ -132,7 +132,7 @@ func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface
 		a.queryServer.RegisterService(sd, ss)
 	}
 }
-func (a *autocliConfigurator) Error() error { return nil }
+func (a *autocliConfigurator) Error() error { return a.err }
 
 // autocliServiceRegistrar is used to capture the service name for registered services
 type autocliServiceRegistrar struct {

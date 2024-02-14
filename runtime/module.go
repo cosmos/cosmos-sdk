@@ -11,6 +11,8 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -27,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -37,10 +40,13 @@ type appModule struct {
 }
 
 func (m appModule) RegisterServices(configurator module.Configurator) {
-	err := m.app.registerRuntimeServices(configurator)
+	autocliv1.RegisterQueryServer(configurator.QueryServer(), services.NewAutoCLIQueryService(m.app.ModuleManager.Modules))
+
+	reflectionSvc, err := services.NewReflectionService()
 	if err != nil {
 		panic(err)
 	}
+	reflectionv1.RegisterReflectionServiceServer(configurator.QueryServer(), reflectionSvc)
 }
 
 func (m appModule) IsOnePerModuleType() {}

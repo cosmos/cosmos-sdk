@@ -68,6 +68,10 @@ type RootStore interface {
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (proof.CommitID, error)
 
+	// Prune prunes the RootStore to the provided version. It is used to remove
+	// old versions of the RootStore by the CLI.
+	Prune(version uint64) error
+
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
 

@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -24,7 +25,7 @@ const (
 // Migrate migrates the x/group module state from the consensus version 1 to version 2.
 // Specifically, it changes the group policy account from module account to base account.
 func Migrate(
-	ctx sdk.Context,
+	ctx context.Context,
 	storeService store.KVStoreService,
 	accountKeeper group.AccountKeeper,
 	groupPolicySeq orm.Sequence,

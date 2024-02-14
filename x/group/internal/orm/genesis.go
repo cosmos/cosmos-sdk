@@ -1,6 +1,6 @@
 package orm
 
-import storetypes "cosmossdk.io/store/types"
+import storetypes "cosmossdk.io/core/store"
 
 // TableExportable defines the methods to import and export a table.
 type TableExportable interface {

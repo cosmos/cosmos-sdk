@@ -232,26 +232,35 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 	}
 
 	// not an AA, proceed with standard auth flow.
-	acc, err := GetSignerAcc(ctx, svd.ak, signer)
-	if err != nil {
-		return err
+  
+	// newlyCreated is a flag that indicates if the account was newly created.
+	// This is only the case when the user is sending their first tx.
+	newlyCreated := false
+	acc := GetSignerAcc(ctx, svd.ak, signer)
+	if acc == nil {
+		// If the account is nil, we assume this is the account's first tx. In this case, the account needs to be
+		// created, but the sign doc should use account number 0. This is because the account number is
+		// not known until the account is created when the tx was signed, the account number was unknown
+		// and 0 was set.
+		acc = svd.ak.NewAccountWithAddress(ctx, txPubKey.Address().Bytes())
+		newlyCreated = true
 	}
 
 	// the account is without a pubkey, let's attempt to check if in the
 	// tx we were correctly provided a valid pubkey.
 	if acc.GetPubKey() == nil {
-		err = svd.setPubKey(ctx.IsSigverifyTx(), ctx.ExecMode() == sdk.ExecModeSimulate, acc, txPubKey)
+		err := svd.setPubKey(ctx, acc, txPubKey)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = svd.consumeSignatureGas(ctx, acc.GetPubKey(), sig)
+	err := svd.consumeSignatureGas(ctx, acc.GetPubKey(), sig)
 	if err != nil {
 		return err
 	}
 
-	err = svd.verifySig(ctx, tx, acc, sig)
+	err = svd.verifySig(ctx, tx, acc, sig, newlyCreated)
 	if err != nil {
 		return err
 	}
@@ -290,7 +299,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 }
 
 // verifySig will verify the signature of the provided signer account.
-func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
+func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2, newlyCreated bool) error {
 	if sig.Sequence != acc.GetSequence() {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
@@ -315,8 +324,17 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
+	// if we are not in genesis use the account number from the account
 	if !genesis {
 		accNum = acc.GetAccountNumber()
+	}
+
+	// if the account number is 0 and the account is signing, the sign doc will not have an account number
+	if acc.GetSequence() == 0 && newlyCreated {
+		// If the account sequence is 0, and we're in genesis, then we're
+		// dealing with an account that has been generated but never used.
+		// in this case, we should not verify signatures.
+		accNum = 0
 	}
 
 	anyPk, _ := codectypes.NewAnyWithValue(pubKey)
@@ -354,18 +372,19 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 
 // setPubKey will attempt to set the pubkey for the account given the list of available public keys.
 // This must be called only in case the account has not a pubkey set yet.
-func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
 	// if we're not in sig verify then we can just skip.
-	if !isSigVerifyTx {
+	if !ctx.IsSigverifyTx() {
 		return nil
 	}
+
 	// if the pubkey is nil then we don't have any pubkey to set
-	// for this account, which alwo means we cannot do signature
+	// for this account, which also means we cannot do signature
 	// verification.
 	if txPubKey == nil {
 		// if we're not in simulation mode, and we do not have a valid pubkey
 		// for this signer, then we simply error.
-		if !simulate {
+		if ctx.ExecMode() != sdk.ExecModeSimulate {
 			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", acc.GetAddress().String())
 		}
 		// if we're in simulation mode, then we can populate the pubkey with the
@@ -374,9 +393,9 @@ func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc 
 		return acc.SetPubKey(txPubKey)
 	}
 
-	// NOTE(tip): this is a way to claim the account, in a context in which the
-	// account was created in an implicit way.
-	// TODO(tip): considering moving account initialization logic: https://github.com/cosmos/cosmos-sdk/issues/19092
+	// this code path is taken when a user has received tokens but not submitted their first transaction
+	// if the address does not match the pubkey, then we error.
+	// TODO: in the future the relationship between address and pubkey should be more flexible.
 	if !acc.GetAddress().Equals(sdk.AccAddress(txPubKey.Address().Bytes())) {
 		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", acc.GetAddress(), txPubKey.Address())
 	}
@@ -558,12 +577,8 @@ func multisignatureSimulationVerificationGas(
 
 // GetSignerAcc returns an account for a given address that is expected to sign
 // a transaction.
-func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (sdk.AccountI, error) {
-	if acc := ak.GetAccount(ctx, addr); acc != nil {
-		return acc, nil
-	}
-
-	return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) sdk.AccountI {
+	return ak.GetAccount(ctx, addr)
 }
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.

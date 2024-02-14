@@ -8,28 +8,31 @@ import (
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
+	"cosmossdk.io/x/group/internal/orm/prefixstore"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestTypeSafeRowGetter(t *testing.T) {
-	storeKey := storetypes.NewKVStoreKey("test")
-	ctx := NewMockContext()
+	key := storetypes.NewKVStoreKey("test")
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	prefixKey := [2]byte{0x2}
-	store := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])
+	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), prefixKey[:])
+
 	md := testdata.TableModel{
 		Id:   1,
 		Name: "some name",
 	}
 	bz, err := md.Marshal()
 	require.NoError(t, err)
-	store.Set(EncodeSequence(1), bz)
+	require.NoError(t, store.Set(EncodeSequence(1), bz))
 
 	specs := map[string]struct {
 		srcRowID     RowID
@@ -70,7 +73,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 			getter := NewTypeSafeRowGetter(prefixKey, spec.srcModelType, cdc)
 			var loadedObj testdata.TableModel
 
-			err := getter(ctx.KVStore(storeKey), spec.srcRowID, &loadedObj)
+			err := getter(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), spec.srcRowID, &loadedObj)
 			if spec.expErr != nil {
 				require.True(t, spec.expErr.Is(err), err)
 				return

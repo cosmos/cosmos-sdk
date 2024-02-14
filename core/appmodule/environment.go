@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 )
 
 // Environment is used to get all services to their respective module
@@ -16,4 +17,5 @@ type Environment struct {
 	HeaderService   header.Service
 	KVStoreService  store.KVStoreService
 	MemStoreService store.MemoryStoreService
+	Logger          log.Logger
 }

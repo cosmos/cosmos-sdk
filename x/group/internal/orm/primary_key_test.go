@@ -6,12 +6,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
@@ -22,8 +25,9 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 	tb, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 
-	ctx := NewMockContext()
-	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
+	key := storetypes.NewKVStoreKey("test")
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	metadata := []byte("metadata")
 	t1 := testdata.TableModel{
@@ -51,7 +55,7 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
 		expError   *errorsmod.Error
-		method     func(store storetypes.KVStore, start, end []byte) (Iterator, error)
+		method     func(store corestore.KVStore, start, end []byte) (Iterator, error)
 	}{
 		"exact match with a single result": {
 			start:     EncodeSequence(1), // == PrimaryKey(&t1)
@@ -208,8 +212,9 @@ func TestContains(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx := NewMockContext()
-	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
+	key := storetypes.NewKVStoreKey("test")
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	tb, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)

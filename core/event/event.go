@@ -1,6 +1,6 @@
 package event
 
-// KVEventAttribute is a kv-pair event attribute.
+// Attribute is a kv-pair event attribute.
 type Attribute struct {
 	Key, Value string
 }

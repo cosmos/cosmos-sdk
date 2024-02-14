@@ -42,9 +42,19 @@ type HasServices interface {
 // HasMigrations is the extension interface that modules should implement to register migrations.
 type HasMigrations interface {
 	AppModule
+	HasConsensusVersion
 
 	// RegisterMigrations registers the module's migrations with the app's migrator.
 	RegisterMigrations(MigrationRegistrar) error
+}
+
+// HasConsensusVersion is the interface for declaring a module consensus version.
+type HasConsensusVersion interface {
+	// ConsensusVersion is a sequence number for state-breaking change of the
+	// module. It should be incremented on each consensus-breaking change
+	// introduced by the module. To avoid wrong/empty versions, the initial version
+	// should be set to 1.
+	ConsensusVersion() uint64
 }
 
 // ResponsePreBlock represents the response from the PreBlock method.

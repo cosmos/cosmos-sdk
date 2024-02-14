@@ -5,20 +5,23 @@ import (
 	"os"
 
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/tx/signing"
@@ -27,28 +30,38 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+)
+
+var (
+	_ appmodule.AppModule   = appModule{}
+	_ appmodule.HasServices = appModule{}
 )
 
 type appModule struct {
 	app *App
 }
 
-func (m appModule) RegisterServices(configurator module.Configurator) {
-	err := m.app.registerRuntimeServices(configurator)
+func (m appModule) RegisterServices(registar grpc.ServiceRegistrar) error {
+	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	autocliv1.RegisterQueryServer(registar, autoCliQueryService)
+
+	reflectionSvc, err := services.NewReflectionService()
+	if err != nil {
+		return err
+	}
+	reflectionv1.RegisterReflectionServiceServer(registar, reflectionSvc)
+
+	return nil
 }
 
 func (m appModule) IsOnePerModuleType() {}
 func (m appModule) IsAppModule()        {}
-
-var (
-	_ appmodule.AppModule = appModule{}
-	_ module.HasServices  = appModule{}
-)
 
 func init() {
 	appconfig.Register(&runtimev2.Module{},
@@ -56,12 +69,9 @@ func init() {
 			ProvideApp,
 			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
+			ProvideEnvironment,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
-			ProvideKVStoreService,
-			ProvideMemoryStoreService,
-			ProvideTransientStoreService,
-			ProvideEventService,
 			ProvideAddressCodec,
 		),
 		appconfig.Invoke(SetupAppBuilder),
@@ -114,7 +124,7 @@ type AppInputs struct {
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder
 	Modules            map[string]appmodule.AppModule
-	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
+	CustomModuleBasics map[string]sdkmodule.AppModuleBasic `optional:"true"`
 	InterfaceRegistry  codectypes.InterfaceRegistry
 	LegacyAmino        *codec.LegacyAmino
 	Logger             log.Logger
@@ -125,7 +135,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.config = inputs.Config
 	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
-	app.moduleManager = NewMMv2(inputs.Config, inputs.Modules)
+	app.moduleManager = NewModuleManager(app.logger, inputs.Config, inputs.Modules)
 
 	for name, mod := range inputs.Modules {
 		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
@@ -134,7 +144,7 @@ func SetupAppBuilder(inputs AppInputs) {
 			continue
 		}
 
-		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
+		coreAppModuleBasic := sdkmodule.CoreAppModuleBasicAdaptor(name, mod)
 		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
 		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	}
@@ -204,23 +214,28 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideKVStoreService(config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
-	storeKey := ProvideKVStoreKey(config, key, app)
-	return stf.NewKVStoreService([]byte(storeKey.Name()))
-}
+// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
+func ProvideEnvironment(config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) (
+	appmodule.Environment,
+	store.KVStoreService,
+	store.MemoryStoreService,
+	store.TransientStoreService,
+) {
+	kvStoreKey := ProvideKVStoreKey(config, key, app)
+	kvService := stf.NewKVStoreService([]byte(kvStoreKey.Name()))
 
-func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {
-	storeKey := ProvideMemoryStoreKey(key, app)
-	return stf.NewMemoryStoreService([]byte(storeKey.Name()))
-}
+	memStoreKey := ProvideMemoryStoreKey(key, app)
+	memService := stf.NewMemoryStoreService([]byte(memStoreKey.Name()))
 
-func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
-	storeKey := ProvideTransientStoreKey(key, app)
-	return stf.NewTransientStoreService([]byte(storeKey.Name()))
-}
+	transientStoreKey := ProvideTransientStoreKey(key, app)
+	transientService := stf.NewTransientStoreService([]byte(transientStoreKey.Name()))
 
-func ProvideEventService() event.Service {
-	return EventService{}
+	env := appmodule.Environment{
+		KVStoreService:  kvService,
+		MemStoreService: memService,
+	}
+
+	return env, kvService, memService, transientService
 }
 
 type (

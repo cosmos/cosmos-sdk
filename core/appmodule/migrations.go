@@ -12,5 +12,11 @@ type MigrationRegistrar interface {
 	// a particular function, the upgrade logic (see RunMigrations function)
 	// will panic. If the ConsensusVersion bump does not introduce any store
 	// changes, then a no-op function must be registered here.
-	Register(moduleName string, fromVersion uint64, handler func(context.Context) error) error
+	Register(moduleName string, fromVersion uint64, handler MigrationHandler) error
 }
+
+// MigrationHandler is the migration function that each module registers.
+type MigrationHandler func(context.Context) error
+
+// VersionMap is a map of moduleName -> version
+type VersionMap map[string]uint64

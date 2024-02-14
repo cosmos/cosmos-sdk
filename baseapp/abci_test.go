@@ -2211,11 +2211,25 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	}
 	require.Equal(t, 10, successful)
 
+	extVotes := []abci.ExtendedVoteInfo{}
+	for _, val := range vals {
+		extVotes = append(extVotes, abci.ExtendedVoteInfo{
+			VoteExtension:      allVEs[0],
+			BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+			ExtensionSignature: []byte{},
+			Validator: abci.Validator{
+				Address: val.Bytes(),
+				Power:   666,
+			},
+		},
+		)
+	}
+
 	prepPropReq := &abci.RequestPrepareProposal{
 		Height: 1,
 		LocalLastCommit: abci.ExtendedCommitInfo{
 			Round: 0,
-			Votes: []abci.ExtendedVoteInfo{},
+			Votes: extVotes,
 		},
 	}
 
@@ -2274,6 +2288,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			ExtensionSignature: extSig,
 			Validator: abci.Validator{
 				Address: vals[i].Bytes(),
+				Power:   666,
 			},
 		})
 	}

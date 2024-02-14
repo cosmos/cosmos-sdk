@@ -287,7 +287,7 @@ func NewSimApp(
 	// add keepers
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey])),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), logger),
 		runtime.EventService{},
 		addressCodec,
 		appCodec,

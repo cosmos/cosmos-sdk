@@ -30,9 +30,9 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Codec        codec.Codec
-	Environment  appmodule.Environment
+	Config      *modulev1.Module
+	Codec       codec.Codec
+	Environment appmodule.Environment
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper

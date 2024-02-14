@@ -747,6 +747,10 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 	}
 }
 
+// TestCancelContinuousFund tests the cancellation of a continuous fund.
+// It verifies various scenarios such as canceling a fund with an empty recipient,
+// canceling a fund with no recipient found, canceling a fund with unclaimed funds for the recipient,
+// and canceling a fund with no errors.
 func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 	recipient2 := sdk.AccAddress([]byte("recipientAddr2___________________"))
 

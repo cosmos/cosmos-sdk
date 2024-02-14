@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -11,7 +10,7 @@ import (
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/collections/indexes"
 	addresscodec "cosmossdk.io/core/address"
-	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
@@ -69,7 +68,7 @@ func NewRotationHistoryIndexes(sb *collections.SchemaBuilder) rotationHistoryInd
 
 // Keeper of the x/staking store
 type Keeper struct {
-	storeService          storetypes.KVStoreService
+	environment           appmodule.Environment
 	cdc                   codec.BinaryCodec
 	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
@@ -135,14 +134,14 @@ type Keeper struct {
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeService storetypes.KVStoreService,
+	env appmodule.Environment,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	authority string,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
 ) *Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
@@ -162,7 +161,7 @@ func NewKeeper(
 	}
 
 	k := &Keeper{
-		storeService:          storeService,
+		environment:           env,
 		cdc:                   cdc,
 		authKeeper:            ak,
 		bankKeeper:            bk,
@@ -316,9 +315,8 @@ func NewKeeper(
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
+func (k Keeper) Logger() log.Logger {
+	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // Hooks gets the hooks for staking *Keeper {

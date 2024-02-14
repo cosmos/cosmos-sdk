@@ -37,6 +37,7 @@ import (
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -201,6 +202,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 		},
 	}
 
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	addStartNodeFlags(cmd, opts)
 	return cmd
 }

@@ -30,7 +30,7 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
@@ -124,7 +124,7 @@ type AppInputs struct {
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder
 	Modules            map[string]appmodule.AppModule
-	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
+	CustomModuleBasics map[string]sdkmodule.AppModuleBasic `optional:"true"`
 	InterfaceRegistry  codectypes.InterfaceRegistry
 	LegacyAmino        *codec.LegacyAmino
 	Logger             log.Logger
@@ -144,7 +144,7 @@ func SetupAppBuilder(inputs AppInputs) {
 			continue
 		}
 
-		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
+		coreAppModuleBasic := sdkmodule.CoreAppModuleBasicAdaptor(name, mod)
 		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
 		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	}

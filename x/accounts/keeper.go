@@ -14,9 +14,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
@@ -82,10 +80,9 @@ func NewKeeper(
 	storeService := env.KVStoreService
 	sb := collections.NewSchemaBuilder(storeService)
 	keeper := Keeper{
-		storeService:     storeService,
+		environment:      env,
 		eventService:     es,
 		addressCodec:     addressCodec,
-		branchExecutor:   env.BranchService,
 		msgRouter:        execRouter,
 		signerProvider:   signerProvider,
 		queryRouter:      queryRouter,
@@ -112,10 +109,9 @@ func NewKeeper(
 
 type Keeper struct {
 	// deps coming from the runtime
-	storeService     store.KVStoreService
+	environment      appmodule.Environment
 	eventService     event.Service
 	addressCodec     address.Codec
-	branchExecutor   branch.Service
 	msgRouter        MsgRouter
 	signerProvider   SignerProvider
 	queryRouter      QueryRouter
@@ -277,7 +273,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 	if !isQuery {
 		return implementation.MakeAccountContext(
 			ctx,
-			k.storeService,
+			k.environment.KVStoreService,
 			accountNumber,
 			accountAddr,
 			sender,
@@ -292,7 +288,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 	// and does not allow to get the sender.
 	return implementation.MakeAccountContext(
 		ctx,
-		k.storeService,
+		k.environment.KVStoreService,
 		accountNumber,
 		accountAddr,
 		nil,

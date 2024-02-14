@@ -77,7 +77,7 @@ func (k Keeper) Authenticate(
 	op *v1.UserOperation,
 ) (gasUsed uint64, err error) {
 	// authenticate
-	gasUsed, err = k.branchExecutor.ExecuteWithGasLimit(ctx, op.AuthenticationGasLimit, func(ctx context.Context) error {
+	gasUsed, err = k.environment.BranchService.ExecuteWithGasLimit(ctx, op.AuthenticationGasLimit, func(ctx context.Context) error {
 		return k.authenticate(ctx, bundler, op)
 	})
 	if err != nil {
@@ -117,7 +117,7 @@ func (k Keeper) OpExecuteMessages(
 	op *v1.UserOperation,
 ) (gasUsed uint64, responses []*implementation.Any, err error) {
 	// execute messages, the real operation intent
-	gasUsed, err = k.branchExecutor.ExecuteWithGasLimit(ctx, op.ExecutionGasLimit, func(ctx context.Context) error {
+	gasUsed, err = k.environment.BranchService.ExecuteWithGasLimit(ctx, op.ExecutionGasLimit, func(ctx context.Context) error {
 		responses, err = k.opExecuteMessages(ctx, bundler, op)
 		return err
 	})
@@ -170,7 +170,7 @@ func (k Keeper) PayBundler(
 	op *v1.UserOperation,
 ) (gasUsed uint64, responses []*implementation.Any, err error) {
 	// pay bundler
-	gasUsed, err = k.branchExecutor.ExecuteWithGasLimit(ctx, op.BundlerPaymentGasLimit, func(ctx context.Context) error {
+	gasUsed, err = k.environment.BranchService.ExecuteWithGasLimit(ctx, op.BundlerPaymentGasLimit, func(ctx context.Context) error {
 		responses, err = k.payBundler(ctx, bundler, op)
 		return err
 	})

@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
@@ -57,7 +56,7 @@ func NewModuleManager(logger log.Logger, config *runtimev2.Module, modules map[s
 		config.ExportGenesis = modulesName
 	}
 	if len(config.OrderMigrations) == 0 {
-		config.OrderMigrations = module.DefaultMigrationsOrder(modulesName)
+		config.OrderMigrations = sdkmodule.DefaultMigrationsOrder(modulesName)
 	}
 
 	return &MM{
@@ -231,6 +230,13 @@ func (m *MM) RegisterServices(app *App) error {
 		// register msg + query
 		if services, ok := module.(appmodule.HasServices); ok {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
+				return err
+			}
+		}
+
+		// register migrations
+		if module, ok := module.(appmodule.HasMigrations); ok {
+			if err := module.RegisterMigrations(m.migrationRegistrar); err != nil {
 				return err
 			}
 		}

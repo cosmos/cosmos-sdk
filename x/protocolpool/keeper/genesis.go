@@ -10,8 +10,7 @@ import (
 )
 
 func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	currentTime := sdkCtx.BlockTime()
+	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	for _, cf := range data.ContinuousFund {
 		// ignore expired ContinuousFunds
 		if cf.Expiry != nil && cf.Expiry.Before(currentTime) {

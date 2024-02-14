@@ -7,11 +7,10 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
-	coreevent "cosmossdk.io/core/event"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/store"
 )
 
@@ -235,7 +234,7 @@ func (s STF[T]) preBlock(ctx context.Context, state store.WriterMap, txs []T) ([
 	for i, e := range pbCtx.events {
 		pbCtx.events[i].Attributes = append(
 			e.Attributes,
-			coreevent.Attribute{Key: "mode", Value: "PreBlock"},
+			event.Attribute{Key: "mode", Value: "PreBlock"},
 		)
 	}
 	// TODO: update consensus module to accept consensus messages (facu)
@@ -253,7 +252,7 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlo
 	for i, e := range bbCtx.events {
 		bbCtx.events[i].Attributes = append(
 			e.Attributes,
-			coreevent.Attribute{Key: "mode", Value: "BeginBlock"},
+			event.Attribute{Key: "mode", Value: "BeginBlock"},
 		)
 	}
 
@@ -277,7 +276,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Ev
 	for i, e := range ebCtx.events {
 		ebCtx.events[i].Attributes = append(
 			e.Attributes,
-			coreevent.Attribute{Key: "mode", Value: "BeginBlock"},
+			event.Attribute{Key: "mode", Value: "BeginBlock"},
 		)
 	}
 

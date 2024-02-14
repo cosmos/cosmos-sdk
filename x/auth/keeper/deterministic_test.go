@@ -12,7 +12,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
@@ -37,7 +36,6 @@ type DeterministicTestSuite struct {
 	key            *storetypes.KVStoreKey
 	env            appmodule.Environment
 	ctx            sdk.Context
-	baseApp        *baseapp.BaseApp
 	queryClient    types.QueryClient
 	accountKeeper  keeper.AccountKeeper
 	acctsModKeeper *authtestutil.MockAccountsModKeeper
@@ -78,16 +76,6 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		multiPerm:                {"burner", "minter", "staking"},
 		randomPerm:               {"random"},
 	}
-
-	baseApp := baseapp.NewBaseApp(
-		"authz",
-		log.NewNopLogger(),
-		testCtx.DB,
-		suite.encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
-	suite.baseApp = baseApp
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
@@ -70,15 +69,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		multiPerm:                {"burner", "minter", "staking"},
 		randomPerm:               {"random"},
 	}
-
-	baseApp := baseapp.NewBaseApp(
-		"authz",
-		log.NewNopLogger(),
-		testCtx.DB,
-		suite.encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,

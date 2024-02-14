@@ -71,11 +71,6 @@ func initFixture(tb testing.TB) *fixture {
 		types.ModuleName:               {authtypes.Burner},
 	}
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
-
 	// gomock initializations
 	ctrl := gomock.NewController(tb)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
@@ -110,6 +105,11 @@ func initFixture(tb testing.TB) *fixture {
 	// set default staking params
 	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
 	assert.NilError(tb, err)
+
+	// Create MsgServiceRouter, but don't populate it before creating the gov
+	// keeper.
+	router := baseapp.NewMsgServiceRouter()
+	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
 	govKeeper := keeper.NewKeeper(
 		cdc,

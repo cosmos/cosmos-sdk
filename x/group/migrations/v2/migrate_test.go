@@ -17,7 +17,6 @@ import (
 	v2 "cosmossdk.io/x/group/migrations/v2"
 	groupmodule "cosmossdk.io/x/group/module"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -82,9 +81,6 @@ func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc code
 
 // createOldPolicyAccount re-creates the group policy account using a module account
 func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper) {
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
-
 	// gomock initializations
 	ctrl := gomock.NewController(&testing.T{})
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)

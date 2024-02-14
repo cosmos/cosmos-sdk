@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
@@ -18,7 +17,6 @@ import (
 	vestingtestutil "cosmossdk.io/x/auth/vesting/testutil"
 	"cosmossdk.io/x/auth/vesting/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -60,15 +58,6 @@ func (s *VestingAccountTestSuite) SetupTest() {
 		"multiPerm":              {"burner", "minter", "staking"},
 		"random":                 {"random"},
 	}
-
-	baseApp := baseapp.NewBaseApp(
-		"authz",
-		log.NewNopLogger(),
-		testCtx.DB,
-		encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	s.accountKeeper = keeper.NewAccountKeeper(
 		encCfg.Codec,

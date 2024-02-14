@@ -10,8 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO use server/v2 core service implementation
-
 var _ event.Service = (*EventService)(nil)
 
 type EventService struct {

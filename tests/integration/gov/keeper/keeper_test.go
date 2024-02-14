@@ -41,6 +41,7 @@ type fixture struct {
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
 
+	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
 	govKeeper     *keeper.Keeper
@@ -153,6 +154,7 @@ func initFixture(tb testing.TB) *fixture {
 		ctx:               sdkCtx,
 		queryClient:       queryClient,
 		legacyQueryClient: legacyQueryClient,
+		accountKeeper:     accountKeeper,
 		bankKeeper:        bankKeeper,
 		stakingKeeper:     stakingKeeper,
 		govKeeper:         govKeeper,

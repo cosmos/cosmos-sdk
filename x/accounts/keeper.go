@@ -78,8 +78,7 @@ func NewKeeper(
 	ir InterfaceRegistry,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
-	storeService := env.KVStoreService
-	sb := collections.NewSchemaBuilder(storeService)
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		environment:      env,
 		eventService:     es,

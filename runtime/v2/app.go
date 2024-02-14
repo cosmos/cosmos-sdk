@@ -118,6 +118,3 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 
 	return a.storeKeys[i]
 }
-
-// TODO
-// Genesis (NO BASIC MANAGER), Migrations

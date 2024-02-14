@@ -44,8 +44,12 @@ type appModule struct {
 }
 
 func (m appModule) RegisterServices(registar grpc.ServiceRegistrar) error {
-	appv1alpha1.RegisterQueryServer(registar, services.NewAppQueryService(m.app.appConfig))
-	autocliv1.RegisterQueryServer(registar, services.NewAutoCLIQueryService(m.app.moduleManager.modules))
+	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
+	if err != nil {
+		return err
+	}
+
+	autocliv1.RegisterQueryServer(registar, autoCliQueryService)
 
 	reflectionSvc, err := services.NewReflectionService()
 	if err != nil {

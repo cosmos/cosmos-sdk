@@ -6,8 +6,6 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
@@ -22,6 +20,9 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
 type MM struct {
@@ -246,6 +247,7 @@ func (m *MM) RegisterServices(app *App) error {
 
 	return nil
 }
+
 func registerServices(s appmodule.HasServices, app *App, registry *protoregistry.Files) error {
 	c := &configurator{
 		cdc:            app.cdc,

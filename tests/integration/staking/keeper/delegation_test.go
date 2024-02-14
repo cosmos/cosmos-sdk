@@ -95,6 +95,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	// mature unbonding delegations
 	ctx = ctx.WithHeaderInfo(header.Info{Time: completionTime})
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addrDel)
+	f.accountKeeper.SetAccount(ctx, acc)
 	_, err = f.stakingKeeper.CompleteUnbonding(ctx, addrDel, addrVal)
 	assert.NilError(t, err)
 

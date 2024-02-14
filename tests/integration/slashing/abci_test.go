@@ -10,6 +10,7 @@ import (
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
@@ -28,6 +29,7 @@ import (
 func TestBeginBlocker(t *testing.T) {
 	var (
 		interfaceRegistry codectypes.InterfaceRegistry
+		accountKeeper     authkeeper.AccountKeeper
 		bankKeeper        bankkeeper.Keeper
 		stakingKeeper     *stakingkeeper.Keeper
 		slashingKeeper    slashingkeeper.Keeper
@@ -39,6 +41,7 @@ func TestBeginBlocker(t *testing.T) {
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&interfaceRegistry,
+		&accountKeeper,
 		&bankKeeper,
 		&stakingKeeper,
 		&slashingKeeper,
@@ -54,6 +57,8 @@ func TestBeginBlocker(t *testing.T) {
 
 	// bond the validator
 	power := int64(100)
+	acc := accountKeeper.NewAccountWithAddress(ctx, sdk.AccAddress(addr))
+	accountKeeper.SetAccount(ctx, acc)
 	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, true)
 	_, err = stakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)

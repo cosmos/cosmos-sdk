@@ -42,6 +42,7 @@ type fixture struct {
 
 	ctx sdk.Context
 
+	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
 	slashingKeeper slashingkeeper.Keeper
 	stakingKeeper  *stakingkeeper.Keeper
@@ -136,6 +137,7 @@ func initFixture(tb testing.TB) *fixture {
 	return &fixture{
 		app:            integrationApp,
 		ctx:            sdkCtx,
+		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		slashingKeeper: slashingKeeper,
 		stakingKeeper:  stakingKeeper,
@@ -158,6 +160,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	// create max (5) validators all with the same power
 	for i := uint32(0); i < p.MaxValidators; i++ {
 		addr, val := f.valAddrs[i], pks[i]
+		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
+		f.accountKeeper.SetAccount(f.ctx, acc)
 		tstaking.CreateValidatorWithValPower(addr, val, 100, true)
 	}
 
@@ -167,6 +171,8 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
 	addr, val := f.valAddrs[5], pks[5]
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 50)
 	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
@@ -247,6 +253,8 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(valpubkey.Address()), info))
 
 	// Validator created
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	amt := tstaking.CreateValidatorWithValPower(addr, valpubkey, 100, true)
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
@@ -303,6 +311,9 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	info := slashingtypes.NewValidatorSigningInfo(consaddr, f.ctx.HeaderInfo().Height, int64(0), time.Unix(0, 0), false, int64(0))
 	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(val.Address()), info))
+
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
+	f.accountKeeper.SetAccount(f.ctx, acc)
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 
@@ -367,6 +378,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	pks := simtestutil.CreateTestPubKeys(3)
 	simtestutil.AddTestAddrsFromPubKeys(f.bankKeeper, f.stakingKeeper, f.ctx, pks, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 200))
+	for _, pk := range pks {
+		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(pk.Address()))
+		f.accountKeeper.SetAccount(f.ctx, acc)
+	}
 
 	addr, val := pks[0].Address(), pks[0]
 	consAddr := sdk.ConsAddress(addr)

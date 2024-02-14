@@ -105,7 +105,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.NoError(t, err)
 	// for 50 blocks, mark the validator as having not signed
 	for ; height < ((signedBlocksWindow * 2) - minSignedPerWindow + 1); height++ {
-		ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height}).WithCometInfo(comet.Info{
+		ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height}).WithBlockHeight(height).WithCometInfo(comet.Info{
 			LastCommit: comet.CommitInfo{Votes: []comet.VoteInfo{{
 				Validator:   abciVal,
 				BlockIDFlag: comet.BlockIDFlagAbsent,

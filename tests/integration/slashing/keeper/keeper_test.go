@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
@@ -300,7 +301,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	consaddr, err := f.stakingKeeper.ConsensusAddressCodec().BytesToString(val.Address())
 	assert.NilError(t, err)
 
-	info := slashingtypes.NewValidatorSigningInfo(consaddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	info := slashingtypes.NewValidatorSigningInfo(consaddr, f.ctx.HeaderInfo().Height, int64(0), time.Unix(0, 0), false, int64(0))
 	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(val.Address()), info))
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
@@ -314,7 +315,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	// 1000 first blocks OK
 	height := int64(0)
 	for ; height < signedBlocksWindow; height++ {
-		f.ctx = f.ctx.WithBlockHeight(height)
+		f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height}).WithBlockHeight(height)
 		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagCommit)
 		assert.NilError(t, err)
 	}
@@ -324,7 +325,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// 501 blocks missed
 	for ; height < signedBlocksWindow+(signedBlocksWindow-minSignedPerWindow)+1; height++ {
-		f.ctx = f.ctx.WithBlockHeight(height)
+		f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height}).WithBlockHeight(height)
 		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagAbsent)
 		assert.NilError(t, err)
 	}
@@ -342,7 +343,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	assert.DeepEqual(t, resultingTokens, validator.GetTokens())
 
 	// another block missed
-	f.ctx = f.ctx.WithBlockHeight(height)
+	f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height}).WithBlockHeight(height)
 	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagAbsent))
 
 	// validator should not have been slashed twice
@@ -389,7 +390,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// 100 first blocks OK
 	height := int64(0)
 	for ; height < int64(100); height++ {
-		f.ctx = f.ctx.WithBlockHeight(height)
+		f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 		assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagCommit))
 	}
 
@@ -403,7 +404,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// 600 more blocks happened
 	height += 600
-	f.ctx = f.ctx.WithBlockHeight(height)
+	f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 
 	// validator added back in
 	tstaking.DelegateWithPower(sdk.AccAddress(pks[2].Address()), valAddr, 50)
@@ -429,7 +430,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// misses 500 blocks + within the signing windows i.e. 700-1700
 	// validators misses all 1000 blocks of a SignedBlockWindows
 	for ; height < latest+1; height++ {
-		err = f.slashingKeeper.HandleValidatorSignature(f.ctx.WithBlockHeight(height), val.Address(), newPower, comet.BlockIDFlagAbsent)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height}), val.Address(), newPower, comet.BlockIDFlagAbsent)
 		assert.NilError(t, err)
 	}
 
@@ -451,7 +452,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// some blocks pass
 	height = int64(5000)
-	f.ctx = f.ctx.WithBlockHeight(height)
+	f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 
 	info = slashingtypes.NewValidatorSigningInfo(consaddrStr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
 	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, consAddr, info)
@@ -479,7 +480,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator misses 501 blocks after SignedBlockWindow period (1000 blocks)
 	latest = signedBlocksWindow + height
 	for ; height < latest+minSignedPerWindow; height++ {
-		f.ctx = f.ctx.WithBlockHeight(height)
+		f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, comet.BlockIDFlagAbsent)
 		assert.NilError(t, err)
 	}

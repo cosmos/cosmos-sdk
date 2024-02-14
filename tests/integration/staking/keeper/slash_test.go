@@ -420,7 +420,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	oldNotBonded := f.bankKeeper.GetBalance(f.sdkCtx, notBondedPool.GetAddress(), bondDenom).Amount
 
 	// slash validator
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithBlockHeight(12).WithHeaderInfo(header.Info{Height: 12})
 	_, found := f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, consAddr)
 	assert.Assert(t, found)
 
@@ -488,7 +488,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	assert.Equal(t, int64(4), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))
 
 	// slash the validator again, by 100%
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithBlockHeight(12).WithHeaderInfo(header.Info{Height: 12})
 	_, found = f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, consAddr)
 	assert.Assert(t, found)
 
@@ -521,7 +521,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// slash the validator again, by 100%
 	// no stake remains to be slashed
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithBlockHeight(12).WithHeaderInfo(header.Info{Height: 12})
 	// validator still in unbonding period
 	validator, _ = f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, consAddr)
 	assert.Equal(t, validator.GetStatus(), sdk.Unbonding)
@@ -588,7 +588,7 @@ func TestSlashBoth(t *testing.T) {
 	oldBonded := f.bankKeeper.GetBalance(f.sdkCtx, bondedPool.GetAddress(), bondDenom).Amount
 	oldNotBonded := f.bankKeeper.GetBalance(f.sdkCtx, notBondedPool.GetAddress(), bondDenom).Amount
 	// slash validator
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithBlockHeight(12).WithHeaderInfo(header.Info{Height: 12})
 	_, found := f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, sdk.GetConsAddress(PKs[0]))
 	assert.Assert(t, found)
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())

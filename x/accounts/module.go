@@ -32,11 +32,11 @@ const (
 )
 
 var (
-	_ appmodule.AppModule        = AppModule{}
-	_ module.HasName             = AppModule{}
-	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
-	_ module.HasConsensusVersion = AppModule{}
+	_ appmodule.AppModule           = AppModule{}
+	_ appmodule.HasConsensusVersion = AppModule{}
+	_ module.HasName                = AppModule{}
+	_ module.HasGenesis             = AppModule{}
+	_ module.HasServices            = AppModule{}
 )
 
 func NewAppModule(k Keeper) AppModule {

@@ -35,7 +35,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 // RegisterModules registers the provided modules with the module manager and
 // the basic module manager. This is the primary hook for integrating with
 // modules which are not registered using the app config.
-func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error {
+func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error { // TODO use directly appmodule.AppModule and remove app module basic
 	for _, appModule := range modules {
 		name := appModule.Name()
 		if _, ok := a.app.moduleManager.modules[name]; ok {

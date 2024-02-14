@@ -7,6 +7,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
@@ -19,18 +20,24 @@ import (
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
 )
 
-type MMv2 struct {
-	config  *runtimev2.Module
-	modules map[string]appmodule.AppModule
+type MM struct {
+	logger             log.Logger
+	config             *runtimev2.Module
+	modules            map[string]appmodule.AppModule
+	migrationRegistrar *migrationRegistrar
 }
 
-func NewMMv2(config *runtimev2.Module, modules map[string]appmodule.AppModule) *MMv2 {
+// NewModuleManager is the constructor for the module manager
+// It handles all the interactions between the modules and the application
+func NewModuleManager(logger log.Logger, config *runtimev2.Module, modules map[string]appmodule.AppModule) *MM {
 	modulesName := maps.Keys(modules)
 
+	// TODO: check for missing modules
 	if len(config.PreBlockers) == 0 {
 		config.PreBlockers = modulesName
 	}
@@ -49,15 +56,20 @@ func NewMMv2(config *runtimev2.Module, modules map[string]appmodule.AppModule) *
 	if len(config.ExportGenesis) == 0 {
 		config.ExportGenesis = modulesName
 	}
+	if len(config.OrderMigrations) == 0 {
+		config.OrderMigrations = module.DefaultMigrationsOrder(modulesName)
+	}
 
-	return &MMv2{
-		config:  config,
-		modules: modules,
+	return &MM{
+		logger:             logger,
+		config:             config,
+		modules:            modules,
+		migrationRegistrar: newMigrationRegistrar(),
 	}
 }
 
 // BeginBlock runs the begin-block logic of all modules
-func (m *MMv2) BeginBlock() func(ctx context.Context) error {
+func (m *MM) BeginBlock() func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		for _, moduleName := range m.config.BeginBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasBeginBlocker); ok {
@@ -72,7 +84,7 @@ func (m *MMv2) BeginBlock() func(ctx context.Context) error {
 }
 
 // EndBlock runs the end-block logic of all modules and tx validator updates
-func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)) {
+func (m *MM) EndBlock() (endblock func(ctx context.Context) error, valupdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)) {
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	endBlock := func(ctx context.Context) error {
@@ -125,6 +137,10 @@ func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate f
 					return nil, err
 				}
 
+				if len(valUpdates) > 0 {
+					return nil, errors.New("validator end block updates already set by a previous module")
+				}
+
 				valUpdates = append(valUpdates, up...)
 			}
 		}
@@ -136,7 +152,7 @@ func (m *MMv2) EndBlock() (endblock func(ctx context.Context) error, valupdate f
 }
 
 // PreBlocker runs the pre-block logic of all modules
-func (m *MMv2) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error {
+func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error {
 	return func(ctx context.Context, txs []transaction.Tx) error {
 		for _, moduleName := range m.config.PreBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasPreBlocker); ok {
@@ -151,7 +167,7 @@ func (m *MMv2) PreBlocker() func(ctx context.Context, txs []transaction.Tx) erro
 }
 
 // TxValidators validates incoming transactions
-func (m *MMv2) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
+func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
 	return func(ctx context.Context, tx transaction.Tx) error {
 		for _, moduleName := range m.config.TxValidation {
 			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[transaction.Tx]); ok {
@@ -165,8 +181,52 @@ func (m *MMv2) TxValidation() func(ctx context.Context, tx transaction.Tx) error
 	}
 }
 
+// TODO write as descriptive godoc as module manager v1.
+func (m *MM) RunMigrations(ctx context.Context, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
+	updatedVM := appmodule.VersionMap{}
+	for _, moduleName := range m.config.OrderMigrations {
+		module := m.modules[moduleName]
+		fromVersion, exists := fromVM[moduleName]
+		toVersion := uint64(0)
+		if module, ok := module.(appmodule.HasConsensusVersion); ok {
+			toVersion = module.ConsensusVersion()
+		}
+
+		// We run migration if the module is specified in `fromVM`.
+		// Otherwise we run InitGenesis.
+		//
+		// The module won't exist in the fromVM in two cases:
+		// 1. A new module is added. In this case we run InitGenesis with an
+		// empty genesis state.
+		// 2. An existing chain is upgrading from version < 0.43 to v0.43+ for the first time.
+		// In this case, all modules have yet to be added to x/upgrade's VersionMap store.
+		if exists {
+			m.logger.Info(fmt.Sprintf("migrating module %s from version %d to version %d", moduleName, fromVersion, toVersion))
+			if err := m.migrationRegistrar.RunModuleMigrations(ctx, moduleName, fromVersion, toVersion); err != nil {
+				return nil, err
+			}
+		} else {
+			m.logger.Info(fmt.Sprintf("adding a new module: %s", moduleName))
+			if _, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
+				// module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+			}
+			if _, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
+				// moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+				// The module manager assumes only one module will update the validator set, and it can't be a new module.
+				// if len(moduleValUpdates) > 0 {
+				// 	return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
+				// }
+			}
+		}
+
+		updatedVM[moduleName] = toVersion
+	}
+
+	return updatedVM, nil
+}
+
 // RegisterServices registers all module services.
-func (m *MMv2) RegisterServices(app *App) error {
+func (m *MM) RegisterServices(app *App) error {
 	for _, module := range m.modules {
 		// register msg + query
 		if services, ok := module.(appmodule.HasServices); ok {

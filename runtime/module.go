@@ -14,7 +14,6 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -70,7 +69,6 @@ func init() {
 			ProvideEnvironment,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
-			ProvideEventService,
 			ProvideBasicManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
@@ -238,10 +236,6 @@ func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.M
 func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
 	storeKey := ProvideTransientStoreKey(key, app)
 	return transientStoreService{key: storeKey}
-}
-
-func ProvideEventService() event.Service {
-	return EventService{}
 }
 
 func ProvideBasicManager(app *AppBuilder) module.BasicManager {

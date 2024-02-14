@@ -17,10 +17,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Configurator provides the hooks to allow modules to configure and register
-// their services in the RegisterServices method. It is designed to eventually
-// support module object capabilities isolation as described in
-// https://github.com/cosmos/cosmos-sdk/issues/7093
 // Deprecated: The Configurator is deprecated.
 // Preferably use core services for registering msg/query server and migrations.
 type Configurator interface {

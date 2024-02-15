@@ -66,6 +66,7 @@ require (
 )
 
 require (
+	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
@@ -180,6 +181,7 @@ replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
 	cosmossdk.io/depinject => ./depinject
+	cosmossdk.io/x/accounts => ./x/accounts
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking

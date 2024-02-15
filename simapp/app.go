@@ -22,6 +22,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
+	baseaccount "cosmossdk.io/x/accounts/defaults/base"
 	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
 	vestingv1 "cosmossdk.io/x/accounts/vesting"
@@ -298,6 +299,7 @@ func NewSimApp(
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		appCodec.InterfaceRegistry(),
+		// TESTING: do not add
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
 		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
@@ -306,6 +308,8 @@ func NewSimApp(
 		accountstd.AddAccount(vestingv1.PERIODIC_VESTING_ACCOUNT, vestingv1.NewPeriodicVestingAccount),
 		accountstd.AddAccount(vestingv1.DELAYED_VESTING_ACCOUNT, vestingv1.NewDelayedVestingAccount),
 		accountstd.AddAccount(vestingv1.PERMANENT_VESTING_ACCOUNT, vestingv1.NewPermanentLockedAccount),
+		// PRODUCTION: add
+		baseaccount.NewAccount("base", txConfig.SignModeHandler()),
 	)
 	if err != nil {
 		panic(err)
@@ -347,8 +351,8 @@ func NewSimApp(
 
 	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec, legacyAmino, runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), app.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	app.SlashingKeeper = slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), logger),
+		appCodec, legacyAmino, app.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[feegrant.StoreKey]), app.AuthKeeper)
@@ -604,11 +608,12 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:   app.AuthKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+				AccountAbstractionKeeper: app.AccountsKeeper,
+				AccountKeeper:            app.AuthKeeper,
+				BankKeeper:               app.BankKeeper,
+				SignModeHandler:          txConfig.SignModeHandler(),
+				FeegrantKeeper:           app.FeeGrantKeeper,
+				SigGasConsumer:           ante.DefaultSigVerificationGasConsumer,
 			},
 			&app.CircuitKeeper,
 			app.UnorderedTxManager,

@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -106,7 +107,6 @@ func NewSigningOptions(addressPrefix, validatorPrefix string) (*txsigning.Option
 func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
 	var err error
 	if configOpts.SigningOptions == nil {
-		//configOpts.SigningOptions, err = NewDefaultSigningOptions()
 		configOpts.SigningOptions, err = NewSigningOptions(configOpts.AddressPrefix, configOpts.ValidatorPrefix)
 		if err != nil {
 			return nil, err
@@ -193,7 +193,6 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	var err error
 	if configOptions.SigningContext == nil {
 		if configOptions.SigningOptions == nil {
-			//configOptions.SigningOptions, err = NewDefaultSigningOptions()
 			configOptions.SigningOptions, err = NewSigningOptions(configOptions.AddressPrefix, configOptions.ValidatorPrefix)
 			if err != nil {
 				return nil, err

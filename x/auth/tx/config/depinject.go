@@ -2,15 +2,14 @@ package tx
 
 import (
 	"context"
-	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"fmt"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
+	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"

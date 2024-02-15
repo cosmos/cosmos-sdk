@@ -56,7 +56,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 
 		paramsResp, ok := res.(*consensusv1.QueryParamsResponse)
 		if !ok {
-			return nil, fmt.Errorf("failed to query consensus params")
+			return nil, fmt.Errorf("unexpected consensus params response type; expected: %T, got: %T", &consensusv1.QueryParamsResponse{}, res)
 		}
 
 		if b := paramsResp.GetParams().Block; b != nil {
@@ -130,7 +130,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 
 		paramsResp, ok := res.(*consensusv1.QueryParamsResponse)
 		if !ok {
-			return fmt.Errorf("failed to query consensus params")
+			return fmt.Errorf("unexpected consensus params response type; expected: %T, got: %T", &consensusv1.QueryParamsResponse{}, res)
 		}
 
 		var maxBlockGas uint64

@@ -164,6 +164,8 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
+require cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
+
 require github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 
 replace github.com/cosmos/cosmos-sdk => ./../../
@@ -171,6 +173,7 @@ replace github.com/cosmos/cosmos-sdk => ./../../
 replace (
 	cosmossdk.io/core => ./../../core
 	cosmossdk.io/depinject => ./../../depinject
+	cosmossdk.io/x/accounts => ./../../x/accounts
 	cosmossdk.io/x/auth => ./../../x/auth
 	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/distribution => ./../../x/distribution

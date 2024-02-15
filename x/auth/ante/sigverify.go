@@ -232,7 +232,7 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 	}
 
 	// not an AA, proceed with standard auth flow.
-  
+
 	// newlyCreated is a flag that indicates if the account was newly created.
 	// This is only the case when the user is sending their first tx.
 	newlyCreated := false

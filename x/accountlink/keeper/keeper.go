@@ -45,14 +45,14 @@ type Keeper struct {
 	authKeeper    types.AuthKeeper
 	accountKeeper types.AccountKeeper
 	// map all smart account addresses by key pair of owner address and account type
-	accounts *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], types.AccountsMetadata, AccountsIndexes]
+	accounts collections.IndexedMap[collections.Pair[sdk.AccAddress, string], types.AccountsMetadata, AccountsIndexes]
 }
 
 func NewKeeper(authKeeper types.AuthKeeper, accountKeeper types.AccountKeeper, storeService store.KVStoreService, cdc LegacyStateCodec) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		authKeeper: authKeeper,
-		accounts:   collections.NewIndexedMap(sb, types.AccountsPrefix, "accounts", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.AccountsMetadata](cdc), newAccountsIndexes(sb)),
+		accounts:   *collections.NewIndexedMap(sb, types.AccountsPrefix, "accounts", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.AccountsMetadata](cdc), newAccountsIndexes(sb)),
 	}
 }
 

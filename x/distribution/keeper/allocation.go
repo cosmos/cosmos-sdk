@@ -104,11 +104,14 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 	}
 
 	// update current commission
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	err = k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCommission,
 		event.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
 		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 	)
+	if err != nil {
+		return err
+	}
 	currentCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valBz)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
@@ -134,11 +137,14 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 	}
 
 	// update outstanding rewards
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	err = k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeRewards,
 		event.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
 		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 	)
+	if err != nil {
+		return err
+	}
 
 	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {

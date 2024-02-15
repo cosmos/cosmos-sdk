@@ -312,12 +312,15 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, math.ZeroInt())}
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	err = k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeWithdrawRewards,
 		event.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
 		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 		event.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return finalRewards, nil
 }

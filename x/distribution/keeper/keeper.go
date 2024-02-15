@@ -167,10 +167,13 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	err = k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSetWithdrawAddress,
 		event.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
 	)
+	if err != nil {
+		return err
+	}
 
 	return k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddr, withdrawAddr)
 }
@@ -250,10 +253,13 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 		}
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	err = k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeWithdrawCommission,
 		event.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return commission, nil
 }

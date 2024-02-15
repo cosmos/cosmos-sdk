@@ -73,6 +73,14 @@ func Sender(ctx context.Context) []byte {
 	return implementation.Sender(ctx)
 }
 
+// HasSender checks if the execution context was sent from the provided sender
+func HasSender(ctx context.Context, wantSender []byte) bool {
+	return bytes.Equal(Sender(ctx), wantSender)
+}
+
+// SenderIsSelf checks if the sender of the request is the account itself.
+func SenderIsSelf(ctx context.Context) bool { return HasSender(ctx, Whoami(ctx)) }
+
 // SenderIsAccountsModule returns true if the sender of the execution request is the accounts module.
 func SenderIsAccountsModule(ctx context.Context) bool {
 	return bytes.Equal(Sender(ctx), accountsModuleAddress)

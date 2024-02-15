@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/types"
 
@@ -41,8 +42,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.DelegatorStartingInfo.Set(ctx, collections.Join(val, del), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
+	return k.DelegatorStartingInfo.Set(ctx, collections.Join(val, del), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(k.environment.HeaderService.GetHeaderInfo(ctx).Height)))
 }
 
 // calculate the rewards accrued by a delegation between two periods
@@ -103,8 +103,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 		return sdk.DecCoins{}, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if startingInfo.Height == uint64(sdkCtx.BlockHeight()) {
+	if startingInfo.Height == uint64(k.environment.HeaderService.GetHeaderInfo(ctx).Height) {
 		// started this height, no rewards yet
 		return sdk.DecCoins{}, nil
 	}
@@ -122,7 +121,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 	startingHeight := startingInfo.Height
 	// Slashes this block happened after reward allocation, but we have to account
 	// for them for the stake sanity check below.
-	endingHeight := uint64(sdkCtx.BlockHeight())
+	endingHeight := uint64(k.environment.HeaderService.GetHeaderInfo(ctx).Height)
 	var iterErr error
 	if endingHeight > startingHeight {
 		err = k.IterateValidatorSlashEventsBetween(ctx, valAddr, startingHeight, endingHeight,
@@ -313,14 +312,11 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, math.ZeroInt())}
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
-			sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
-		),
+	k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeWithdrawRewards,
+		event.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
+		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
+		event.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
 	)
 
 	return finalRewards, nil

@@ -56,13 +56,14 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 		"paying with no account": {
 			fee:   1,
-			valid: false,
-			err:   sdkerrors.ErrUnknownAddress,
+			valid: true,
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				// Do not register the account
 				priv, _, addr := testdata.KeyTestPubAddr()
+				acc := authtypes.NewBaseAccountWithAddress(addr)
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(nil).Times(2)
 				return TestAccount{
-					acc:  authtypes.NewBaseAccountWithAddress(addr),
+					acc:  acc,
 					priv: priv,
 				}, nil
 			},
@@ -77,8 +78,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 		"no fee with no account": {
 			fee:   0,
-			valid: false,
-			err:   sdkerrors.ErrUnknownAddress,
+			valid: true,
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				// Do not register the account
 				priv, _, addr := testdata.KeyTestPubAddr()

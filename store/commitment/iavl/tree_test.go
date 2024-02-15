@@ -14,14 +14,14 @@ import (
 
 func TestCommitterSuite(t *testing.T) {
 	s := &commitment.CommitStoreTestSuite{
-		NewStore: func(db store.RawDB, storeKeys []string, logger log.Logger) (*commitment.CommitStore, error) {
+		NewStore: func(db store.RawDB, storeKeys []string, pruneOpts *store.PruneOptions, logger log.Logger) (*commitment.CommitStore, error) {
 			multiTrees := make(map[string]commitment.Tree)
 			cfg := DefaultConfig()
 			for _, storeKey := range storeKeys {
 				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
 				multiTrees[storeKey] = NewIavlTree(prefixDB, logger, cfg)
 			}
-			return commitment.NewCommitStore(multiTrees, db, logger)
+			return commitment.NewCommitStore(multiTrees, db, pruneOpts, logger)
 		},
 	}
 

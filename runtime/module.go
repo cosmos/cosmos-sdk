@@ -39,7 +39,7 @@ type appModule struct {
 	app *App
 }
 
-func (m appModule) RegisterServices(configurator module.Configurator) {
+func (m appModule) RegisterServices(configurator module.Configurator) { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	autocliv1.RegisterQueryServer(configurator.QueryServer(), services.NewAutoCLIQueryService(m.app.ModuleManager.Modules))
 
 	reflectionSvc, err := services.NewReflectionService()
@@ -230,10 +230,10 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) (store.KVStoreService, appmodule.Environment) {
+func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder, logger log.Logger) (store.KVStoreService, appmodule.Environment) {
 	storeKey := ProvideKVStoreKey(config, key, app)
 	kvService := kvStoreService{key: storeKey}
-	return kvService, NewEnvironment(kvService)
+	return kvService, NewEnvironment(kvService, logger)
 }
 
 func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {

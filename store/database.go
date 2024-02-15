@@ -148,10 +148,3 @@ type RawDB interface {
 	// This will does the same thing as NewBatch if the batch implementation doesn't support pre-allocation.
 	NewBatchWithSize(int) RawBatch
 }
-
-type (
-	// Options defines the interface of a database options.
-	Options interface {
-		Get(string) interface{}
-	}
-)

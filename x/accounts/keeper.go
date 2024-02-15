@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -65,7 +64,6 @@ type InterfaceRegistry interface {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
-	es event.Service,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -76,7 +74,6 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		environment:      env,
-		eventService:     es,
 		logger:           env.Logger,
 		addressCodec:     addressCodec,
 		msgRouter:        execRouter,
@@ -106,7 +103,6 @@ func NewKeeper(
 type Keeper struct {
 	// deps coming from the runtime
 	environment      appmodule.Environment
-	eventService     event.Service
 	addressCodec     address.Codec
 	msgRouter        MsgRouter
 	signerProvider   SignerProvider

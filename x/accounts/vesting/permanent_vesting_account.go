@@ -65,10 +65,14 @@ func (plva PermanentLockedAccount) QueryVestingAccountInfo(ctx context.Context, 
 		return nil, err
 	}
 	originalVesting := sdk.Coins{}
-	plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
+	err = plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false, nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	resp.VestingCoins = originalVesting
 	resp.VestedVesting = sdk.Coins{}
 	return resp, nil

@@ -351,7 +351,10 @@ func (bva BaseVesting) getBalance(ctx context.Context, sender, denom string) (*s
 
 func (bva BaseVesting) checkTokensSendable(ctx context.Context, sender string, amount, vestingCoins sdk.Coins) error {
 	// Get locked token
-	lockedCoins := bva.LockedCoinsFromVesting(ctx, vestingCoins)
+	lockedCoins, err := bva.LockedCoinsFromVesting(ctx, vestingCoins)
+	if err != nil {
+		return err
+	}
 
 	// Check if any sent tokens is exceeds vesting account balances
 	for _, coin := range amount {
@@ -413,18 +416,21 @@ func (bva BaseVesting) IterateCoinEntries(
 // an empty slice of Coins is returned.
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
-func (bva BaseVesting) LockedCoinsFromVesting(ctx context.Context, vestingCoins sdk.Coins) sdk.Coins {
+func (bva BaseVesting) LockedCoinsFromVesting(ctx context.Context, vestingCoins sdk.Coins) (sdk.Coins, error) {
 	delegatedVestingCoins := sdk.Coins{}
-	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool, err error) {
+	err := bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool, err error) {
 		delegatedVestingCoins = append(delegatedVestingCoins, sdk.NewCoin(key, value))
 		return false, nil
 	})
+	if err != nil {
+		return sdk.Coins{}, err
+	}
 
 	lockedCoins := vestingCoins.Sub(vestingCoins.Min(delegatedVestingCoins)...)
 	if lockedCoins == nil {
-		return sdk.Coins{}
+		return sdk.Coins{}, nil
 	}
-	return lockedCoins
+	return lockedCoins, nil
 }
 
 // QueryVestingAccountInfo returns a vesting account's info

@@ -198,6 +198,9 @@ type BaseApp struct {
 
 	// Used to synchronize the application when using an unsynchronized ABCI++ client.
 	mtx sync.RWMutex
+	// Used to synchronize CacheMultistoreWithVersion since the multistore mutates version
+	// information internally during first time loads leading to data races.
+	cacheMsWithVersionMtx sync.Mutex
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

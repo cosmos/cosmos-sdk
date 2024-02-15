@@ -155,8 +155,8 @@ func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
-	app.mtx.Lock()
-	defer app.mtx.Unlock()
+	app.mtx.RLock()
+	defer app.mtx.RUnlock()
 
 	// add panic recovery for all queries
 	//
@@ -1027,11 +1027,8 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 		case "simulate":
 			txBytes := req.Data
 
-			// Simulate enters runTx which requires us to give up the lock now.
-			app.mtx.Unlock()
+			// Simulate must not recursively re-enter and attempt to acquire `app.mtx`.
 			gInfo, res, err := app.Simulate(txBytes)
-			app.mtx.Lock()
-
 			if err != nil {
 				return sdkerrors.QueryResult(errorsmod.Wrap(err, "failed to simulate tx"), app.trace)
 			}
@@ -1179,11 +1176,8 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.RequestQ
 		return sdkerrors.QueryResult(err, app.trace)
 	}
 
-	// handler recursively can re-enter Query which requires us to give up the lock now.
-	app.mtx.Unlock()
+	// handler must not recursively re-enter and attempt to acquire `app.mtx`.
 	resp, err := handler(ctx, req)
-	app.mtx.Lock()
-
 	if err != nil {
 		resp = sdkerrors.QueryResult(gRPCErrorToSDKError(err), app.trace)
 		resp.Height = req.Height
@@ -1264,7 +1258,18 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
+	// Acquire an exclusive lock to ensure that the multistore can be versioned.
+	// Internally the multistore updates version ranges while loading which leads to data races.
+	// If there are upstream changes to the multistore to make it use locks effectively
+	// in this scenario then we could remove this lock.
+	var cacheMS storetypes.CacheMultiStore
+	var err error
+	func() {
+		app.cacheMsWithVersionMtx.Lock()
+		defer app.cacheMsWithVersionMtx.Unlock()
+		cacheMS, err = qms.CacheMultiStoreWithVersion(height)
+	}()
+
 	if err != nil {
 		return sdk.Context{},
 			errorsmod.Wrapf(

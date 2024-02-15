@@ -114,6 +114,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
 	s.baseApp = baseapp.NewBaseApp(
@@ -128,7 +129,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	require.NoError(t, err)
 
-	s.keeper = keeper.NewKeeper(skip, storeService, s.encCfg.Codec, t.TempDir(), s.baseApp, authority)
+	s.keeper = keeper.NewKeeper(env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority)
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
@@ -460,6 +461,7 @@ func TestDowngradeVerification(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
@@ -468,7 +470,7 @@ func TestDowngradeVerification(t *testing.T) {
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	require.NoError(t, err)
 
-	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authority)
+	k := keeper.NewKeeper(env, skip, encCfg.Codec, t.TempDir(), nil, authority)
 	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 	// submit a plan.
@@ -517,7 +519,7 @@ func TestDowngradeVerification(t *testing.T) {
 		require.NoError(t, err)
 
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authority)
+		k := keeper.NewKeeper(env, skip, encCfg.Codec, t.TempDir(), nil, authority)
 		m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 		// assertions

@@ -77,7 +77,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(in.Enviornment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, auth)
+	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, auth)
 	m := NewAppModule(k, in.AddressCodec)
 
 	return ModuleOutputs{UpgradeKeeper: k, Module: m}

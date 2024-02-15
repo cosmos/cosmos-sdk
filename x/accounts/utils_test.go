@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
@@ -24,6 +25,20 @@ type addressCodec struct{}
 func (a addressCodec) StringToBytes(text string) ([]byte, error) { return []byte(text), nil }
 func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string(bz), nil }
 
+type eventService struct{}
+
+func (e eventService) Emit(event protoiface.MessageV1) error { return nil }
+
+func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
+	return nil
+}
+
+func (e eventService) EmitNonConsensus(event protoiface.MessageV1) error {
+	return nil
+}
+
+func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
+
 var _ InterfaceRegistry = (*interfaceRegistry)(nil)
 
 type interfaceRegistry struct{}
@@ -36,6 +51,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	t.Helper()
 	ss, ctx := colltest.MockStore()
 	env := runtime.NewEnvironment(ss, log.NewNopLogger())
+	env.EventService = eventService{}
 	m, err := NewKeeper(nil, env, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx

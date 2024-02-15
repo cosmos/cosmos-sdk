@@ -36,7 +36,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config             *modulev1.Module
-	Enviornment        appmodule.Environment
+	Environment        appmodule.Environment
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
 	AppVersionModifier baseapp.AppVersionModifier

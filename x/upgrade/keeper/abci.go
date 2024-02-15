@@ -32,7 +32,7 @@ func (k Keeper) PreBlocker(ctx context.Context) (appmodule.ResponsePreBlock, err
 	}
 	found := err == nil
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO remove with consensus messages
 	if !k.DowngradeVerified() {
 		k.SetDowngradeVerified(true)
 		// This check will make sure that we are using a valid binary.

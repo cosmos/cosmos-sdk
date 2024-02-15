@@ -16,7 +16,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 
 	// Prune store to ensure we only have parameter-defined historical entries.
 	// In most cases, this will involve removing a single historical entry.
@@ -25,7 +25,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	// Since the entries to be deleted are always in a continuous range, we can iterate
 	// over the historical entries starting from the most recent version to be pruned
 	// and then return at the first empty entry.
-	for i := sdkCtx.HeaderInfo().Height - int64(entryNum); i >= 0; i-- {
+	for i := headerInfo.Height - int64(entryNum); i >= 0; i-- {
 		has, err := k.HistoricalInfo.Has(ctx, uint64(i))
 		if err != nil {
 			return err
@@ -43,14 +43,12 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return nil
 	}
 
-	time := sdkCtx.HeaderInfo().Time
-
 	historicalEntry := types.HistoricalRecord{
-		Time:           &time,
-		ValidatorsHash: sdkCtx.CometInfo().ValidatorsHash,
-		Apphash:        sdkCtx.HeaderInfo().AppHash,
+		Time:           &headerInfo.Time,
+		ValidatorsHash: sdk.UnwrapSDKContext(ctx).CometInfo().ValidatorsHash,
+		Apphash:        headerInfo.AppHash,
 	}
 
 	// Set latest HistoricalInfo at current height
-	return k.HistoricalInfo.Set(ctx, uint64(sdkCtx.HeaderInfo().Height), historicalEntry)
+	return k.HistoricalInfo.Set(ctx, uint64(headerInfo.Height), historicalEntry)
 }

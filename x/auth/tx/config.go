@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,6 +53,10 @@ type ConfigOptions struct {
 	JSONDecoder sdk.TxDecoder
 	// JSONEncoder is the encoder that will be used to encode json transactions.
 	JSONEncoder sdk.TxEncoder
+	// AddressPredix is the bech32 address prefix.
+	AddressPrefix string
+	// ValidatorPrefix is the bech32 validator prefix.
+	ValidatorPrefix string
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
@@ -73,12 +76,14 @@ var DefaultSignModes = []signingtypes.SignMode{
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
-func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMode,
-	customSignModes ...txsigning.SignModeHandler,
+func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMode, addressPrefix,
+	validatorPrefix string, customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
 		EnabledSignModes: enabledSignModes,
 		CustomSignModes:  customSignModes,
+		AddressPrefix:    addressPrefix,
+		ValidatorPrefix:  validatorPrefix,
 	})
 	if err != nil {
 		panic(err)
@@ -86,13 +91,12 @@ func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMod
 	return txConfig
 }
 
-// NewDefaultSigningOptions returns the sdk default signing options used by x/tx.  This includes account and
+// NewSigningOptions returns signing options used by x/tx. This includes account and
 // validator address prefix enabled codecs.
-func NewDefaultSigningOptions() (*txsigning.Options, error) {
-	sdkConfig := sdk.GetConfig()
+func NewSigningOptions(addressPrefix, validatorPrefix string) (*txsigning.Options, error) {
 	return &txsigning.Options{
-		AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
-		ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
+		AddressCodec:          authcodec.NewBech32Codec(addressPrefix),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(validatorPrefix),
 	}, nil
 }
 
@@ -102,7 +106,8 @@ func NewDefaultSigningOptions() (*txsigning.Options, error) {
 func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
 	var err error
 	if configOpts.SigningOptions == nil {
-		configOpts.SigningOptions, err = NewDefaultSigningOptions()
+		//configOpts.SigningOptions, err = NewDefaultSigningOptions()
+		configOpts.SigningOptions, err = NewSigningOptions(configOpts.AddressPrefix, configOpts.ValidatorPrefix)
 		if err != nil {
 			return nil, err
 		}
@@ -188,7 +193,8 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	var err error
 	if configOptions.SigningContext == nil {
 		if configOptions.SigningOptions == nil {
-			configOptions.SigningOptions, err = NewDefaultSigningOptions()
+			//configOptions.SigningOptions, err = NewDefaultSigningOptions()
+			configOptions.SigningOptions, err = NewSigningOptions(configOptions.AddressPrefix, configOptions.ValidatorPrefix)
 			if err != nil {
 				return nil, err
 			}

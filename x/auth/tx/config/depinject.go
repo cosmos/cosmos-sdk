@@ -2,6 +2,8 @@ package tx
 
 import (
 	"context"
+	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"fmt"
 
 	"google.golang.org/grpc"
@@ -44,6 +46,8 @@ type ModuleInputs struct {
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
 	Codec                 codec.Codec
 	ProtoFileResolver     txsigning.ProtoFileResolver
+	AuthConfig            *authv1.Module
+	StakingConfig         *stakingv1.Module
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
 	MetadataBankKeeper     BankKeeper                         `optional:"true"`
@@ -78,6 +82,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			ValidatorAddressCodec: in.ValidatorAddressCodec,
 		},
 		CustomSignModes: customSignModeHandlers,
+		AddressPrefix:   in.AuthConfig.Bech32Prefix,
+		ValidatorPrefix: in.StakingConfig.Bech32PrefixValidator,
 	}
 
 	// enable SIGN_MODE_TEXTUAL only if bank keeper is available

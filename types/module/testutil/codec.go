@@ -30,7 +30,7 @@ func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig
 	encCfg := TestEncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Codec:             codec,
-		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
+		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes, "cosmos", "cosmosvaloper"),
 		Amino:             aminoCodec,
 	}
 
@@ -47,7 +47,7 @@ func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig
 func MakeTestTxConfig() client.TxConfig {
 	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	return tx.NewTxConfig(cdc, tx.DefaultSignModes)
+	return tx.NewTxConfig(cdc, tx.DefaultSignModes, "cosmos", "cosmosvaloper")
 }
 
 type TestBuilderTxConfig struct {

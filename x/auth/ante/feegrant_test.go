@@ -145,7 +145,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			suite := SetupTestSuite(t, false)
-			protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry), tx.DefaultSignModes)
+			protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry), tx.DefaultSignModes, "cosmos", "cosmosvaloper")
 			// this just tests our handler
 			dfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, suite.feeGrantKeeper, nil)
 			feeAnteHandler := sdk.ChainAnteDecorators(dfd)

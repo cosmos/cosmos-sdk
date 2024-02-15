@@ -22,7 +22,7 @@ func TestGenerator(t *testing.T) {
 	std.RegisterInterfaces(interfaceRegistry)
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	protoCodec := codec.NewProtoCodec(interfaceRegistry)
-	suite.Run(t, txtestutil.NewTxConfigTestSuite(tx.NewTxConfig(protoCodec, tx.DefaultSignModes)))
+	suite.Run(t, txtestutil.NewTxConfigTestSuite(tx.NewTxConfig(protoCodec, tx.DefaultSignModes, "cosmos", "cosmosvaloper")))
 }
 
 func TestConfigOptions(t *testing.T) {

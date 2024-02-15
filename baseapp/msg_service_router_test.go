@@ -138,7 +138,7 @@ func TestMsgService(t *testing.T) {
 	app := appBuilder.Build(dbm.NewMemDB(), nil)
 
 	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes, "cosmos", "cosmosvaloper")
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 

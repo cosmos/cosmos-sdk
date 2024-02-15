@@ -66,7 +66,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes, "cosmos", "cosmosvaloper")
 	db := dbm.NewMemDB()
 	logBuffer := new(bytes.Buffer)
 	logger := log.NewLogger(logBuffer, log.ColorOption(false))
@@ -503,7 +503,7 @@ func TestTxDecoder(t *testing.T) {
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes, "cosmos", "cosmosvaloper")
 
 	tx := newTxCounter(t, txConfig, 1, 0)
 	txBytes, err := txConfig.TxEncoder()(tx)

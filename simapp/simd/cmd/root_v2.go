@@ -116,7 +116,9 @@ func ProvideClientContext(
 		WithValidatorAddressCodec(validatorAddressCodec).
 		WithConsensusAddressCodec(consensusAddressCodec).
 		WithHomeDir(simapp.DefaultNodeHome).
-		WithViper("") // uses by default the binary name as prefix
+		WithViper(""). // uses by default the binary name as prefix
+		WithAddressPrefix(txConfigOpts.AddressPrefix).
+		WithValidatorPrefix(txConfigOpts.ValidatorPrefix)
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()

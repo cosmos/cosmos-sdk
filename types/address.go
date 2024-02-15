@@ -71,6 +71,31 @@ const (
 	Bech32PrefixConsPub = Bech32MainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
 )
 
+// GetBech32PrefixAccPub returns the Bech32 prefix of an account's public key.
+func GetBech32PrefixAccPub(mainPrefix string) string {
+	return mainPrefix + PrefixPublic
+}
+
+// GetBech32PrefixValAddr returns the Bech32 prefix of a validator's operator address.
+func GetBech32PrefixValAddr(mainPrefix string) string {
+	return mainPrefix + PrefixValidator + PrefixOperator
+}
+
+// GetBech32PrefixValPub returns the Bech32 prefix of a validator's operator public key.
+func GetBech32PrefixValPub(mainPrefix string) string {
+	return mainPrefix + PrefixValidator + PrefixOperator + PrefixPublic
+}
+
+// GetBech32PrefixConsAddr returns the Bech32 prefix of a consensus node address.
+func GetBech32PrefixConsAddr(mainPrefix string) string {
+	return mainPrefix + PrefixValidator + PrefixConsensus
+}
+
+// GetBech32PrefixConsPub returns the Bech32 prefix of a consensus node public key.
+func GetBech32PrefixConsPub(mainPrefix string) string {
+	return mainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
+}
+
 // cache variables
 var (
 	// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,

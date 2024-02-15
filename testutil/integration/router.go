@@ -55,7 +55,7 @@ func NewIntegrationApp(
 	basicModuleManager := module.NewBasicManagerFromManager(moduleManager, nil)
 	basicModuleManager.RegisterInterfaces(interfaceRegistry)
 
-	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes, "cosmos", "cosmosvaloper")
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 

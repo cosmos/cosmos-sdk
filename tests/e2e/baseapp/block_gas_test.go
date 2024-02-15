@@ -136,8 +136,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, testutil.MintModuleName, addr1, feeAmount)
 			require.NoError(t, err)
 			require.Equal(t, feeCoin.Amount, bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount)
-			seq := accountKeeper.GetAccount(ctx, addr1).GetSequence()
-			require.Equal(t, uint64(0), seq)
 
 			// msg and signatures
 			msg := &baseapptestutil.MsgKeyValue{
@@ -152,8 +150,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			txBuilder.SetFeeAmount(feeAmount)
 			txBuilder.SetGasLimit(uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
 
-			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
-			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
@@ -176,7 +173,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(38798) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(38012) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > uint64(simtestutil.DefaultConsensusParams.Block.MaxGas) {
 				// capped by gasLimit
@@ -186,7 +183,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			// tx fee is always deducted
 			require.Equal(t, int64(0), bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
 			// sender's sequence is always increased
-			seq = accountKeeper.GetAccount(ctx, addr1).GetSequence()
+			seq := accountKeeper.GetAccount(ctx, addr1).GetSequence()
 			require.NoError(t, err)
 			require.Equal(t, uint64(1), seq)
 		})

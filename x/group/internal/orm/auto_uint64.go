@@ -3,8 +3,8 @@ package orm
 import (
 	"github.com/cosmos/gogoproto/proto"
 
+	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

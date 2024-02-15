@@ -118,18 +118,18 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-func (am AppModule) RegisterMigrations(mh appmodule.MigrationRegistrar) error {
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 
-	if err := mh.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
+	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
 	}
 
-	if err := mh.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
+	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %w", types.ModuleName, err)
 	}
 
-	if err := mh.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
+	if err := mr.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %w", types.ModuleName, err)
 	}
 

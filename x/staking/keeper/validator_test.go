@@ -423,6 +423,7 @@ func (s *KeeperTestSuite) TestValidatorToken() {
 	require.True(validator.Tokens.IsZero())
 }
 
+// TestUnbondingValidator tests the functionality of unbonding a validator.
 func (s *KeeperTestSuite) TestUnbondingValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
@@ -434,7 +435,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 
 	// set unbonding validator
 	endTime := time.Now()
-	endHeight := ctx.BlockHeight() + 10
+	endHeight := ctx.HeaderInfo().Height + 10
 	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()}))
 
 	resVals, err := keeper.GetUnbondingValidators(ctx, endTime, endHeight)
@@ -461,12 +462,12 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	require.Equal(valAddr.String(), resVals[0])
 
 	// check unbonding mature validators
-	ctx = ctx.WithBlockHeight(endHeight).WithHeaderInfo(header.Info{Time: endTime})
+	ctx = ctx.WithHeaderInfo(header.Info{Height: endHeight, Time: endTime})
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
 
 	require.NoError(keeper.SetValidator(ctx, validator))
-	ctx = ctx.WithBlockHeight(endHeight).WithHeaderInfo(header.Info{Time: endTime})
+	ctx = ctx.WithHeaderInfo(header.Info{Height: endHeight, Time: endTime})
 
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "unexpected validator in unbonding queue; status was not unbonding")

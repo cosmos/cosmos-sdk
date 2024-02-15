@@ -25,7 +25,7 @@ type GoLevelDB struct {
 
 var _ store.RawDB = (*GoLevelDB)(nil)
 
-func NewGoLevelDB(name, dir string, opts store.Options) (*GoLevelDB, error) {
+func NewGoLevelDB(name, dir string, opts store.DBOptions) (*GoLevelDB, error) {
 	defaultOpts := &opt.Options{
 		Filter: filter.NewBloomFilter(10), // by default, goleveldb doesn't use a bloom filter.
 	}

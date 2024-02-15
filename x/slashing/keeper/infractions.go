@@ -103,12 +103,14 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	}
 
 	if missed {
-		k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeLiveness,
 			event.NewAttribute(types.AttributeKeyAddress, consStr),
 			event.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
 			event.NewAttribute(types.AttributeKeyHeight, fmt.Sprintf("%d", height)),
-		)
+		); err != nil {
+			return err
+		}
 
 		logger.Debug(
 			"absent validator",

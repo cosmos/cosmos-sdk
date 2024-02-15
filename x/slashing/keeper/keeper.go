@@ -120,20 +120,18 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 		return err
 	}
 
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSlash,
 		event.NewAttribute(types.AttributeKeyAddress, consStr),
 		event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
 		reasonAttr,
 		event.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 	)
-	return nil
 }
 
 // Jail attempts to jail a validator. The slash is delegated to the staking module
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
-
 	err := k.sk.Jail(ctx, consAddr)
 	if err != nil {
 		return err

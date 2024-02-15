@@ -1,4 +1,4 @@
-package upgrade
+package keeper
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -23,17 +22,17 @@ import (
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
-func PreBlocker(ctx context.Context, k *keeper.Keeper) (appmodule.ResponsePreBlock, error) {
+func (k Keeper) PreBlocker(ctx context.Context) (appmodule.ResponsePreBlock, error) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockHeight := sdkCtx.HeaderInfo().Height
+	blockHeight := k.environment.HeaderService.GetHeaderInfo(ctx).Height
 	plan, err := k.GetUpgradePlan(ctx)
 	if err != nil && !errors.Is(err, types.ErrNoUpgradePlanFound) {
 		return nil, err
 	}
 	found := err == nil
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if !k.DowngradeVerified() {
 		k.SetDowngradeVerified(true)
 		// This check will make sure that we are using a valid binary.

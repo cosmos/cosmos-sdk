@@ -1,4 +1,4 @@
-package upgrade_test
+package keeper_test
 
 import (
 	"context"
@@ -542,23 +542,4 @@ func TestDowngradeVerification(t *testing.T) {
 			require.NoError(t, err, name)
 		}
 	}
-}
-
-type paramStore struct {
-	params cmtproto.ConsensusParams
-}
-
-var _ baseapp.ParamStore = (*paramStore)(nil)
-
-func (ps *paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
-	ps.params = value
-	return nil
-}
-
-func (ps paramStore) Has(_ context.Context) (bool, error) {
-	return true, nil
-}
-
-func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
-	return ps.params, nil
 }

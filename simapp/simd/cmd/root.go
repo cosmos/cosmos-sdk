@@ -108,7 +108,7 @@ func NewRootCmd() *cobra.Command {
 	// autocli opts
 	customClientTemplate, customClientConfig := initClientConfig()
 	var err error
-	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	initClientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}

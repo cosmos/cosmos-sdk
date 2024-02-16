@@ -44,9 +44,6 @@ func (a MinimalAbstractedAccount) RotatePubKey(ctx context.Context, msg *rotatio
 
 // Authenticate authenticates the account, auth always passess.
 func (a MinimalAbstractedAccount) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
-	if msg.UserOperation.AuthenticationMethod != "secp256k1" {
-		return nil, fmt.Errorf("authentication method not supported")
-	}
 	_, err := a.Sequence.Next(ctx)
 	return &account_abstractionv1.MsgAuthenticateResponse{}, err
 }

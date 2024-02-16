@@ -40,5 +40,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17044](https://github.com/cosmos/cosmos-sdk/pull/17044) Use collections for `AddrPubkeyRelation`:
     * remove from `types`: `AddrPubkeyRelationKey`
     * remove from `Keeper`: `AddPubkey`
+* [#19440](https://github.com/cosmos/cosmos-sdk/pull/19440) Slashing Module creation takes `appmodule.Environment` instead of individual services
 
 ### Bug Fixes

@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
@@ -27,15 +28,15 @@ var (
 	backends = map[string]func(dataDir string) (store.VersionedDatabase, error){
 		"rocksdb_versiondb_opts": func(dataDir string) (store.VersionedDatabase, error) {
 			db, err := rocksdb.New(dataDir)
-			return storage.NewStorageStore(db), err
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 		"pebbledb_default_opts": func(dataDir string) (store.VersionedDatabase, error) {
 			db, err := pebbledb.New(dataDir)
-			return storage.NewStorageStore(db), err
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 		"btree_sqlite": func(dataDir string) (store.VersionedDatabase, error) {
 			db, err := sqlite.New(dataDir)
-			return storage.NewStorageStore(db), err
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 	}
 	rng = rand.New(rand.NewSource(567320))

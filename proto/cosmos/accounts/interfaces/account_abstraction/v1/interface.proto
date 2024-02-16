@@ -3,67 +3,31 @@ syntax = "proto3";
 package cosmos.accounts.interfaces.account_abstraction.v1;
 
 import "google/protobuf/any.proto";
-import "cosmos/accounts/v1/account_abstraction.proto";
+import "cosmos/tx/v1beta1/tx.proto";
 
 option go_package = "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1";
 
 // MsgAuthenticate is a message that an x/account account abstraction implementer
-// must handle to authenticate a state transition.
+// must handle to authenticate a transaction. Always ensure the caller is the Accounts module.
 message MsgAuthenticate {
   // bundler defines the address of the bundler that sent the operation.
   // NOTE: in case the operation was sent directly by the user, this field will reflect
   // the user address.
   string bundler = 1;
-  // user_operation is the operation that the user is trying to perform.
-  // it also contains authentication information.
-  cosmos.accounts.v1.UserOperation user_operation = 2;
+  // raw_tx defines the raw version of the tx, this is useful to compute the signature quickly.
+  cosmos.tx.v1beta1.TxRaw raw_tx = 2;
+  // tx defines the decoded version of the tx, coming from raw_tx.
+  cosmos.tx.v1beta1.Tx tx = 3;
+  // signer_index defines the index of the signer in the tx.
+  // Specifically this can be used to extract the signature at the correct
+  // index.
+  uint32 signer_index = 4;
 }
 
 // MsgAuthenticateResponse is the response to MsgAuthenticate.
 // The authentication either fails or succeeds, this is why
 // there are no auxiliary fields to the response.
 message MsgAuthenticateResponse {}
-
-// MsgPayBundler is a message that an x/account account abstraction implementer
-// can optionally implement in case it wants to further refine control over
-// the bundler payment messages.
-// The account must ensure the caller of this message is the x/accounts module itself.
-message MsgPayBundler {
-  // bundler is the address of the bundler.
-  // NOTE: in case the operation was sent directly by the user, this field will
-  // reflect the user address.
-  string bundler = 1;
-  // bundler_payment_messages are the messages that the operation sender will execute.
-  // The account can modify the messages as it sees fit.
-  repeated google.protobuf.Any bundler_payment_messages = 2;
-}
-
-// MsgPayBundlerResponse is the response to MsgPayBundler.
-message MsgPayBundlerResponse {
-  // bundler_payment_messages_response are the messages that the bundler will pay for.
-  repeated google.protobuf.Any bundler_payment_messages_response = 1;
-}
-
-// MsgExecute is a message that an x/account account abstraction implementer
-// can optionally implement in case it wants to further refine control over
-// the execution messages. It can be used to extend the execution flow, possibly
-// block certain messages, or modify them.
-// The account must ensure the caller of this message is the x/accounts module itself.
-message MsgExecute {
-  // bundler is the address of the bundler.
-  // NOTE: in case the operation was sent directly by the user, this field will
-  // reflect the user address.
-  string bundler = 1;
-  // execution_messages are the messages that the operation sender will execute.
-  // The account can modify the messages as it sees fit.
-  repeated google.protobuf.Any execution_messages = 2;
-}
-
-// MsgExecuteResponse is the response to MsgExecute.
-message MsgExecuteResponse {
-  // execution_messages_response are the messages that the operation sender will execute.
-  repeated google.protobuf.Any execution_messages_response = 1;
-}
 
 // QueryAuthenticationMethods is a query that an x/account account abstraction implementer
 // must handle to return the authentication methods that the account supports.

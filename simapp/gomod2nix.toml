@@ -1,6 +1,12 @@
 schema = 3
 
 [mod]
+  [mod."buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go"]
+    version = "v1.32.0-20230509103710-5e5b9fdd0180.1"
+    hash = "sha256-+BS0SWZDFyUHohKwCt2pN3ybSR8NZ8DcfqZxhcJn4ho="
+  [mod."buf.build/gen/go/tendermint/tendermint/protocolbuffers/go"]
+    version = "v1.32.0-20231117195010-33ed361a9051.1"
+    hash = "sha256-7T1OD5XbhEPpd9GTBihHsqLNBsAAd4aaxLQ8rmWboLk="
   [mod."cloud.google.com/go"]
     version = "v0.112.0"
     hash = "sha256-lmNLoqmLURfxu+a6V/SeoP8xVn0Wi2SD7uxxAtSjm+o="
@@ -396,8 +402,8 @@ schema = 3
     version = "v0.5.0"
     hash = "sha256-/sXlngf8AoEIeLIiaLg6Y7uYPVq7tI0qnLt0mUyKid4="
   [mod."github.com/prometheus/common"]
-    version = "v0.46.0"
-    hash = "sha256-Q303suNDzc+DbIYhiqURNhymXeheWEshwm7XasKnX+Y="
+    version = "v0.47.0"
+    hash = "sha256-zAfgbOSycgChcWT8x8oo5k1tq/y6Oay3gLdUEkt0NYk="
   [mod."github.com/prometheus/procfs"]
     version = "v0.12.0"
     hash = "sha256-Y4ZZmxIpVCO67zN3pGwSk2TcI88zvmGJkgwq9DRTwFw="

@@ -3,7 +3,7 @@ module cosmossdk.io/api
 go 1.20
 
 require (
-	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117194844-6dac0b3364f5.1
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/gogoproto v1.4.11
 	google.golang.org/genproto/googleapis/api v0.0.0-20240125205218-1f4bbc51befe

@@ -14,8 +14,8 @@ deps:
   - remote: buf.build
     owner: googleapis
     repository: googleapis
-    commit: e874a0be2bf140a5a4c7d4122c635823
-    digest: shake256:4fe3036b4d706f6ee2b13c730bd04777f021dfd02ed27e6e40480acfe664a7548238312ee0727fd77648a38d227e296d43f4a38a34cdd46068156211016d9657
+    commit: 7e6f6e774e29406da95bd61cdcdbc8bc
+    digest: shake256:fe43dd2265ea0c07d76bd925eeba612667cf4c948d2ce53d6e367e1b4b3cb5fa69a51e6acb1a6a50d32f894f054a35e6c0406f6808a483f2752e10c866ffbf73
   - remote: buf.build
     owner: protocolbuffers
     repository: wellknowntypes
@@ -24,5 +24,5 @@ deps:
   - remote: buf.build
     owner: tendermint
     repository: tendermint
-    commit: 6dac0b3364f541edb76be851c1525d8e
+    commit: 33ed361a90514289beabf3189e1d7665
     digest: shake256:038267e06294714fd883610626554b04a127b576b4e253befb4206cb72d5d3c1eeccacd4b9ec8e3fb891f7c14e1cb0f770c077d2989638995b0a61c85afedb1d

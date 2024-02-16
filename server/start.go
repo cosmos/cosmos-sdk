@@ -608,10 +608,10 @@ func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[
 	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
 		var appPtr *T
 		appPtr, err = testnetify[T](svrCtx, home, appCreator, db, traceWriter)
-		app = *appPtr
 		if err != nil {
 			return app, traceCleanupFn, err
 		}
+		app = *appPtr
 	} else {
 		app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 	}

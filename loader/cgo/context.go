@@ -3,10 +3,13 @@ package cgo
 import (
 	"context"
 	"sync"
+
+	"cosmossdk.io/core/intermodule"
 )
 
 type contextWrapper struct {
-	ctx context.Context
+	client intermodule.Client
+	ctx    context.Context
 }
 
 func resolveContext(ctxId uint32) *contextWrapper {

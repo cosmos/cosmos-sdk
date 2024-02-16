@@ -18,6 +18,7 @@ import (
 // typedef const InitData* (*init_t)(void*);
 // typedef void (*callback_t)(void*);
 // extern void printHello();
+//
 // static const InitData* init(void* f) {
 // 	return ((init_t)f)(printHello);
 // }

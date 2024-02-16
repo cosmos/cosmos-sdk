@@ -45,7 +45,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), nil, noopLog)
 	s.Require().NoError(err)
 
-	rs, err := New(noopLog, ss, sc, nil)
+	rs, err := New(noopLog, ss, sc, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
@@ -61,7 +61,7 @@ func (s *RootStoreTestSuite) TestGetStateCommitment() {
 }
 
 func (s *RootStoreTestSuite) TestGetStateStorage() {
-	s.Require().Equal(s.rootStore.GetStateStorage(), s.rootStore.(*Store).stateStore)
+	s.Require().Equal(s.rootStore.GetStateStorage(), s.rootStore.(*Store).stateStorage)
 }
 
 func (s *RootStoreTestSuite) TestSetInitialVersion() {

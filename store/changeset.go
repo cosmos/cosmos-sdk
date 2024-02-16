@@ -1,5 +1,11 @@
 package store
 
+import (
+	"bytes"
+
+	"cosmossdk.io/store/v2/internal/encoding"
+)
+
 // KVPair defines a key-value pair with additional metadata that is used to
 // track writes. Deletion can be denoted by a nil value or explicitly by the
 // Delete field.
@@ -60,4 +66,102 @@ func (cs *Changeset) Merge(other *Changeset) {
 	for storeKey, pairs := range other.Pairs {
 		cs.Pairs[storeKey] = append(cs.Pairs[storeKey], pairs...)
 	}
+}
+
+// encodedSize returns the size of the encoded Changeset.
+func (cs *Changeset) encodedSize() int {
+	size := encoding.EncodeUvarintSize(uint64(len(cs.Pairs)))
+	for storeKey, pairs := range cs.Pairs {
+		size += encoding.EncodeBytesSize([]byte(storeKey))
+		size += encoding.EncodeUvarintSize(uint64(len(pairs)))
+		for _, pair := range pairs {
+			size += encoding.EncodeBytesSize(pair.Key)
+			size += encoding.EncodeBytesSize(pair.Value)
+		}
+	}
+	return size
+}
+
+// Marshal returns the encoded byte representation of Changeset.
+// NOTE: The Changeset is encoded as follows:
+// - number of store keys (uvarint)
+// - for each store key:
+// -- store key (bytes)
+// -- number of pairs (uvarint)
+// -- for each pair:
+// --- key (bytes)
+// --- value (bytes)
+func (cs *Changeset) Marshal() ([]byte, error) {
+	var buf bytes.Buffer
+	buf.Grow(cs.encodedSize())
+
+	if err := encoding.EncodeUvarint(&buf, uint64(len(cs.Pairs))); err != nil {
+		return nil, err
+	}
+	for storeKey, pairs := range cs.Pairs {
+		if err := encoding.EncodeBytes(&buf, []byte(storeKey)); err != nil {
+			return nil, err
+		}
+		if err := encoding.EncodeUvarint(&buf, uint64(len(pairs))); err != nil {
+			return nil, err
+		}
+		for _, pair := range pairs {
+			if err := encoding.EncodeBytes(&buf, pair.Key); err != nil {
+				return nil, err
+			}
+			if err := encoding.EncodeBytes(&buf, pair.Value); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return buf.Bytes(), nil
+}
+
+// Unmarshal decodes the Changeset from the given byte slice.
+func (cs *Changeset) Unmarshal(buf []byte) error {
+	storeCount, n, err := encoding.DecodeUvarint(buf)
+	if err != nil {
+		return err
+	}
+	buf = buf[n:]
+
+	cs.Pairs = make(map[string]KVPairs, storeCount)
+	for i := uint64(0); i < storeCount; i++ {
+		storeKey, n, err := encoding.DecodeBytes(buf)
+		if err != nil {
+			return err
+		}
+		buf = buf[n:]
+
+		pairCount, n, err := encoding.DecodeUvarint(buf)
+		if err != nil {
+			return err
+		}
+		buf = buf[n:]
+
+		pairs := make(KVPairs, pairCount)
+		for j := uint64(0); j < pairCount; j++ {
+			key, n, err := encoding.DecodeBytes(buf)
+			if err != nil {
+				return err
+			}
+			buf = buf[n:]
+
+			value, n, err := encoding.DecodeBytes(buf)
+			if err != nil {
+				return err
+			}
+			buf = buf[n:]
+
+			pairs[j] = KVPair{
+				Key:      key,
+				Value:    value,
+				StoreKey: string(storeKey),
+			}
+		}
+		cs.Pairs[string(storeKey)] = pairs
+	}
+
+	return nil
 }

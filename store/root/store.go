@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
+	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/proof"
 )
 
@@ -26,8 +27,8 @@ type Store struct {
 	logger         log.Logger
 	initialVersion uint64
 
-	// stateStore reflects the state storage backend
-	stateStore store.VersionedDatabase
+	// stateStorage reflects the state storage backend
+	stateStorage store.VersionedDatabase
 
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
@@ -43,30 +44,42 @@ type Store struct {
 
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
 	telemetry metrics.StoreMetrics
+
+	// Migration related fields
+	// migrationManager reflects the migration manager used to migrate state from v1 to v2
+	migrationManager *migration.Manager
+	// chChangeset reflects the channel used to send the changeset to the migration manager
+	chChangeset chan *migration.VersionedChangeset
+	// chDone reflects the channel used to signal the migration manager that the migration is done
+	chDone chan struct{}
+	// isMigrating reflects whether the store is currently migrating
+	isMigrating bool
 }
 
 func New(
 	logger log.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
+	mm *migration.Manager,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	return &Store{
-		logger:          logger.With("module", "root_store"),
-		initialVersion:  1,
-		stateStore:      ss,
-		stateCommitment: sc,
-		telemetry:       m,
+		logger:           logger.With("module", "root_store"),
+		initialVersion:   1,
+		stateStorage:     ss,
+		stateCommitment:  sc,
+		migrationManager: mm,
+		telemetry:        m,
 	}, nil
 }
 
 // Close closes the store and resets all internal fields. Note, Close() is NOT
 // idempotent and should only be called once.
 func (s *Store) Close() (err error) {
-	err = errors.Join(err, s.stateStore.Close())
+	err = errors.Join(err, s.stateStorage.Close())
 	err = errors.Join(err, s.stateCommitment.Close())
 
-	s.stateStore = nil
+	s.stateStorage = nil
 	s.stateCommitment = nil
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
@@ -106,7 +119,7 @@ func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
 }
 
 func (s *Store) GetStateStorage() store.VersionedDatabase {
-	return s.stateStore
+	return s.stateStorage
 }
 
 func (s *Store) GetStateCommitment() store.Committer {
@@ -126,7 +139,7 @@ func (s *Store) LastCommitID() (proof.CommitID, error) {
 	// in SS might not be the latest version in the SC stores.
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
-	latestVersion, err := s.stateStore.GetLatestVersion()
+	latestVersion, err := s.stateStorage.GetLatestVersion()
 	if err != nil {
 		return proof.CommitID{}, err
 	}
@@ -162,7 +175,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
-	val, err := s.stateStore.Get(storeKey, version, key)
+	val, err := s.stateStorage.Get(storeKey, version, key)
 	if err != nil || val == nil {
 		// fallback to querying SC backend if not found in SS backend
 		//
@@ -255,6 +268,21 @@ func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 	}
 
 	if s.workingHash == nil {
+		// if migration is in progress, send the changeset to the migration manager
+		if s.isMigrating {
+			// if the migration manager has already migrated to the version, close the
+			// channels and replace the state storage and commitment
+			if s.migrationManager.GetMigratedVersion() == s.lastCommitInfo.Version {
+				close(s.chDone)
+				close(s.chChangeset)
+				s.isMigrating = false
+				s.stateStorage = s.migrationManager.GetStateStorage()
+				s.stateCommitment = s.migrationManager.GetStateCommitment()
+			} else {
+				s.chChangeset <- &migration.VersionedChangeset{Version: s.lastCommitInfo.Version + 1, Changeset: cs}
+			}
+		}
+
 		if err := s.writeSC(cs); err != nil {
 			return nil, err
 		}
@@ -290,7 +318,12 @@ func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 
 	// commit SS async
 	eg.Go(func() error {
-		if err := s.stateStore.ApplyChangeset(version, cs); err != nil {
+		// if we're migrating, we don't want to commit to the state storage
+		if s.stateStorage == nil {
+			return nil
+		}
+
+		if err := s.stateStorage.ApplyChangeset(version, cs); err != nil {
 			return fmt.Errorf("failed to commit SS: %w", err)
 		}
 
@@ -326,13 +359,38 @@ func (s *Store) Prune(version uint64) error {
 		defer s.telemetry.MeasureSince(now, "root_store", "prune")
 	}
 
-	if err := s.stateStore.Prune(version); err != nil {
+	if err := s.stateStorage.Prune(version); err != nil {
 		return fmt.Errorf("failed to prune SS store: %w", err)
 	}
 
 	if err := s.stateCommitment.Prune(version); err != nil {
 		return fmt.Errorf("failed to prune SC store: %w", err)
 	}
+
+	return nil
+}
+
+// StartMigration starts the migration process. It sets the migration manager
+// and initializes the channels. An error is returned if migration is already in
+// progress.
+// NOTE: This method should only be called once after loadVersion.
+func (s *Store) StartMigration() error {
+	if s.isMigrating {
+		return fmt.Errorf("migration already in progress")
+	}
+
+	// buffer the changeset channel to avoid blocking
+	s.chChangeset = make(chan *migration.VersionedChangeset, 1)
+	s.chDone = make(chan struct{})
+
+	s.isMigrating = true
+
+	go func() {
+		version := s.lastCommitInfo.Version
+		if err := s.migrationManager.Start(version, s.chChangeset, s.chDone); err != nil {
+			s.logger.Error("failed to start migration", "err", err)
+		}
+	}()
 
 	return nil
 }

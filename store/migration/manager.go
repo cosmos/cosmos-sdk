@@ -1,11 +1,18 @@
 package migration
 
 import (
+	"encoding/binary"
+	"fmt"
+	"sync"
+	"time"
+
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/snapshots"
+	"cosmossdk.io/store/v2/storage"
 )
 
 const (
@@ -13,25 +20,68 @@ const (
 	defaultChannelBufferSize = 1024
 	// defaultStorageBufferSize is the default buffer size for the storage snapshotter.
 	defaultStorageBufferSize = 1024
+
+	migrateChangesetKeyFmt = "m/cs_%x" // m/<version>
 )
+
+// VersionedChangeset is a pair of version and Changeset.
+type VersionedChangeset struct {
+	Version   uint64
+	Changeset *store.Changeset
+}
 
 // Manager manages the migration of the whole state from store/v1 to store/v2.
 type Manager struct {
 	logger           log.Logger
 	snapshotsManager *snapshots.Manager
 
-	storageSnapshotter snapshots.StorageSnapshotter
-	commitSnapshotter  snapshots.CommitSnapshotter
+	stateStorage    *storage.StorageStore
+	stateCommitment *commitment.CommitStore
+
+	db              store.RawDB
+	migratedVersion uint64
+	mtx             sync.Mutex
+	chChangeset     <-chan *VersionedChangeset
+	chDone          chan struct{}
 }
 
 // NewManager returns a new Manager.
-func NewManager(sm *snapshots.Manager, ss snapshots.StorageSnapshotter, cs snapshots.CommitSnapshotter, logger log.Logger) *Manager {
+func NewManager(db store.RawDB, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
 	return &Manager{
-		logger:             logger,
-		snapshotsManager:   sm,
-		storageSnapshotter: ss,
-		commitSnapshotter:  cs,
+		logger:           logger,
+		snapshotsManager: sm,
+		stateStorage:     ss,
+		stateCommitment:  sc,
+		db:               db,
 	}
+}
+
+// Start starts the whole migration process.
+func (m *Manager) Start(version uint64, chChangeset <-chan *VersionedChangeset, chDone chan struct{}) error {
+	m.chChangeset = chChangeset
+	m.chDone = chDone
+
+	go func() {
+		if err := m.writeChangeset(); err != nil {
+			m.logger.Error("failed to write changeset", "err", err)
+		}
+	}()
+
+	if err := m.Migrate(version); err != nil {
+		return fmt.Errorf("failed to migrate state: %w", err)
+	}
+
+	return m.Sync()
+}
+
+// GetStateStorage returns the state storage.
+func (m *Manager) GetStateStorage() *storage.StorageStore {
+	return m.stateStorage
+}
+
+// GetStateCommitment returns the state commitment.
+func (m *Manager) GetStateCommitment() *commitment.CommitStore {
+	return m.stateCommitment
 }
 
 // Migrate migrates the whole state at the given height to the new store/v2.
@@ -49,13 +99,106 @@ func (m *Manager) Migrate(height uint64) error {
 
 	eg := new(errgroup.Group)
 	eg.Go(func() error {
-		return m.storageSnapshotter.Restore(height, chStorage)
+		return m.stateStorage.Restore(height, chStorage)
 	})
 	eg.Go(func() error {
 		defer close(chStorage)
-		_, err := m.commitSnapshotter.Restore(height, 0, ms, chStorage)
+		_, err := m.stateCommitment.Restore(height, 0, ms, chStorage)
 		return err
 	})
 
-	return eg.Wait()
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+
+	m.mtx.Lock()
+	m.migratedVersion = height
+	m.mtx.Unlock()
+
+	return nil
+}
+
+// writeChangeset writes the Changeset to the db.
+func (m *Manager) writeChangeset() error {
+	for vc := range m.chChangeset {
+		cs := vc.Changeset
+		buf := make([]byte, 8)
+		binary.BigEndian.PutUint64(buf, vc.Version)
+		csKey := []byte(fmt.Sprintf(migrateChangesetKeyFmt, buf))
+		csBytes, err := cs.Marshal()
+		if err != nil {
+			return fmt.Errorf("failed to marshal changeset: %w", err)
+		}
+
+		batch := m.db.NewBatch()
+		defer batch.Close()
+
+		if err := batch.Set(csKey, csBytes); err != nil {
+			return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
+		}
+		if err := batch.Write(); err != nil {
+			return fmt.Errorf("failed to write changeset to db: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// GetMigratedVersion returns the migrated version.
+// It is used to check the migrated version in the RootStore.
+func (m *Manager) GetMigratedVersion() uint64 {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+	return m.migratedVersion
+}
+
+// Sync catches up the Changesets which are committed while the migration is in progress.
+// It should be called after the migration is done.
+func (m *Manager) Sync() error {
+	version := m.GetMigratedVersion()
+	if version == 0 {
+		return fmt.Errorf("migration is not done yet")
+	}
+	version += 1
+
+	for {
+		select {
+		case <-m.chDone:
+			return nil
+		default:
+			buf := make([]byte, 8)
+			binary.BigEndian.PutUint64(buf, version)
+			csKey := []byte(fmt.Sprintf(migrateChangesetKeyFmt, buf))
+			csBytes, err := m.db.Get(csKey)
+			if err != nil {
+				return fmt.Errorf("failed to get changeset from db: %w", err)
+			}
+			if csBytes == nil {
+				// wait for the next changeset
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+
+			cs := store.NewChangeset()
+			if err := cs.Unmarshal(csBytes); err != nil {
+				return fmt.Errorf("failed to unmarshal changeset: %w", err)
+			}
+
+			if err := m.stateCommitment.WriteBatch(cs); err != nil {
+				return fmt.Errorf("failed to write changeset to commitment: %w", err)
+			}
+			if _, err := m.stateCommitment.Commit(version); err != nil {
+				return fmt.Errorf("failed to commit changeset to commitment: %w", err)
+			}
+			if err := m.stateStorage.ApplyChangeset(version, cs); err != nil {
+				return fmt.Errorf("failed to write changeset to storage: %w", err)
+			}
+
+			m.mtx.Lock()
+			m.migratedVersion = version
+			m.mtx.Unlock()
+
+			version += 1
+		}
+	}
 }

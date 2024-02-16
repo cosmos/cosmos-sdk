@@ -8,9 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,6 +20,7 @@ import (
 func TestPeriodicFeeValidAllow(t *testing.T) {
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
@@ -219,7 +222,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 
 			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
 			// now try to deduct
-			remove, err := tc.allow.Accept(ctx, tc.fee, []sdk.Msg{})
+			remove, err := tc.allow.Accept(ctx, env, tc.fee, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return

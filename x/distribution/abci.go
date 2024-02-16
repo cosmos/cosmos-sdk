@@ -11,20 +11,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+var BlockMultipleToDistributeRewards = int64(50)
+
 // BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block.
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	// determine the total power signing the block
-	var previousTotalPower int64
-	for _, voteInfo := range req.LastCommitInfo.GetVotes() {
-		previousTotalPower += voteInfo.Validator.Power
-	}
-
 	// TODO this is Tendermint-dependent
 	// ref https://github.com/cosmos/cosmos-sdk/issues/3095
-	if ctx.BlockHeight() > 1 {
+	blockHeight := ctx.BlockHeight()
+	// only allocate rewards if the block height is greater than 1
+	// and for every multiple of 50 blocks for performance reasons.
+	if blockHeight > 1 && blockHeight%BlockMultipleToDistributeRewards == 0 {
+		// determine the total power signing the block
+		var previousTotalPower int64
+		for _, voteInfo := range req.LastCommitInfo.GetVotes() {
+			previousTotalPower += voteInfo.Validator.Power
+		}
+
 		k.AllocateTokens(ctx, previousTotalPower, req.LastCommitInfo.GetVotes())
 	}
 

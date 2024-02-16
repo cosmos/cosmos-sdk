@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -159,7 +160,13 @@ func (s *KeeperTestSuite) TestCommunityPoolSpend() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			_, err := s.msgServer.CommunityPoolSpend(s.ctx, tc.input)
+			amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+			s.Require().NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, s.addrs[0], amount))
+
+			err := s.distrKeeper.FundCommunityPool(s.ctx, amount, s.addrs[0])
+			s.Require().Nil(err)
+
+			_, err = s.msgServer.CommunityPoolSpend(s.ctx, tc.input)
 
 			if tc.expErr {
 				s.Require().Error(err)

@@ -10,145 +10,146 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func TestPrimaryKeyTable(t *testing.T) {
-	rapid.Check(t, testPrimaryKeyMachine)
-}
+	rapid.Check(t, func(rt *rapid.T) {
+		// Init creates a new instance of the state machine model by building the real
+		// table and making the empty model map
+		// Create context
+		key := storetypes.NewKVStoreKey("test")
+		testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+		store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
-func testPrimaryKeyMachine(t *rapid.T) {
-	// Init creates a new instance of the state machine model by building the real
-	// table and making the empty model map
-	// Create context
-	ctx := NewMockContext()
-	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
+		// Create primary key table
+		interfaceRegistry := types.NewInterfaceRegistry()
+		cdc := codec.NewProtoCodec(interfaceRegistry)
+		table, err := NewPrimaryKeyTable(
+			[2]byte{0x1},
+			&testdata.TableModel{},
+			cdc,
+		)
+		require.NoError(t, err)
 
-	// Create primary key table
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
-	table, err := NewPrimaryKeyTable(
-		[2]byte{0x1},
-		&testdata.TableModel{},
-		cdc,
-	)
-	require.NoError(t, err)
+		// Create model state
+		state := make(map[string]*testdata.TableModel)
 
-	// Create model state
-	state := make(map[string]*testdata.TableModel)
+		rt.Repeat(map[string]func(*rapid.T){
+			// Create is one of the model commands. It adds an object to the table, creating
+			// an error if it already exists.
+			"Create": func(t *rapid.T) {
+				g := genTableModel.Draw(t, "g")
+				pk := string(PrimaryKey(g))
 
-	t.Repeat(map[string]func(*rapid.T){
-		// Create is one of the model commands. It adds an object to the table, creating
-		// an error if it already exists.
-		"Create": func(t *rapid.T) {
-			g := genTableModel.Draw(t, "g")
-			pk := string(PrimaryKey(g))
+				t.Logf("pk: %v", pk)
+				t.Logf("state: %v", state)
 
-			t.Logf("pk: %v", pk)
-			t.Logf("state: %v", state)
+				err := table.Create(store, g)
 
-			err := table.Create(store, g)
+				if state[pk] != nil {
+					require.Error(t, err)
+				} else {
+					require.NoError(t, err)
+					state[pk] = g
+				}
+			},
 
-			if state[pk] != nil {
-				require.Error(t, err)
-			} else {
+			// Update is one of the model commands. It updates the value at a given primary
+			// key and fails if that primary key doesn't already exist in the table.
+			"Update": func(t *rapid.T) {
+				tm := generateTableModel(state).Draw(t, "tm")
+
+				newName := rapid.StringN(1, 100, 150).Draw(t, "newName")
+				tm.Name = newName
+
+				// Perform the real Update
+				err := table.Update(store, tm)
+
+				if state[string(PrimaryKey(tm))] == nil {
+					// If there's no value in the model, we expect an error
+					require.Error(t, err)
+				} else {
+					// If we have a value in the model, expect no error
+					require.NoError(t, err)
+
+					// Update the model with the new value
+					state[string(PrimaryKey(tm))] = tm
+				}
+			},
+
+			// Set is one of the model commands. It sets the value at a key in the table
+			// whether it exists or not.
+			"Set": func(t *rapid.T) {
+				g := genTableModel.Draw(t, "g")
+				pk := string(PrimaryKey(g))
+
+				err := table.Set(store, g)
+
 				require.NoError(t, err)
 				state[pk] = g
-			}
-		},
+			},
 
-		// Update is one of the model commands. It updates the value at a given primary
-		// key and fails if that primary key doesn't already exist in the table.
-		"Update": func(t *rapid.T) {
-			tm := generateTableModel(state).Draw(t, "tm")
+			// Delete is one of the model commands. It removes the object with the given
+			// primary key from the table and returns an error if that primary key doesn't
+			// already exist in the table.
+			"Delete": func(t *rapid.T) {
+				tm := generateTableModel(state).Draw(t, "tm")
 
-			newName := rapid.StringN(1, 100, 150).Draw(t, "newName")
-			tm.Name = newName
+				// Perform the real Delete
+				err := table.Delete(store, tm)
 
-			// Perform the real Update
-			err := table.Update(store, tm)
+				if state[string(PrimaryKey(tm))] == nil {
+					// If there's no value in the model, we expect an error
+					require.Error(t, err)
+				} else {
+					// If we have a value in the model, expect no error
+					require.NoError(t, err)
 
-			if state[string(PrimaryKey(tm))] == nil {
-				// If there's no value in the model, we expect an error
-				require.Error(t, err)
-			} else {
-				// If we have a value in the model, expect no error
-				require.NoError(t, err)
+					// Delete the value from the model
+					delete(state, string(PrimaryKey(tm)))
+				}
+			},
 
-				// Update the model with the new value
-				state[string(PrimaryKey(tm))] = tm
-			}
-		},
+			// Has is one of the model commands. It checks whether a key already exists in
+			// the table.
+			"Has": func(t *rapid.T) {
+				pk := PrimaryKey(generateTableModel(state).Draw(t, "g"))
 
-		// Set is one of the model commands. It sets the value at a key in the table
-		// whether it exists or not.
-		"Set": func(t *rapid.T) {
-			g := genTableModel.Draw(t, "g")
-			pk := string(PrimaryKey(g))
+				realHas := table.Has(store, pk)
+				modelHas := state[string(pk)] != nil
 
-			err := table.Set(store, g)
+				require.Equal(t, realHas, modelHas)
+			},
 
-			require.NoError(t, err)
-			state[pk] = g
-		},
+			// GetOne is one of the model commands. It fetches an object from the table by
+			// its primary key and returns an error if that primary key isn't in the table.
+			"GetOne": func(t *rapid.T) {
+				pk := PrimaryKey(generateTableModel(state).Draw(t, "tm"))
 
-		// Delete is one of the model commands. It removes the object with the given
-		// primary key from the table and returns an error if that primary key doesn't
-		// already exist in the table.
-		"Delete": func(t *rapid.T) {
-			tm := generateTableModel(state).Draw(t, "tm")
+				var tm testdata.TableModel
 
-			// Perform the real Delete
-			err := table.Delete(store, tm)
+				err := table.GetOne(store, pk, &tm)
+				t.Logf("tm: %v", tm)
 
-			if state[string(PrimaryKey(tm))] == nil {
-				// If there's no value in the model, we expect an error
-				require.Error(t, err)
-			} else {
-				// If we have a value in the model, expect no error
-				require.NoError(t, err)
+				if state[string(pk)] == nil {
+					require.Error(t, err)
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, *state[string(pk)], tm)
+				}
+			},
 
-				// Delete the value from the model
-				delete(state, string(PrimaryKey(tm)))
-			}
-		},
-
-		// Has is one of the model commands. It checks whether a key already exists in
-		// the table.
-		"Has": func(t *rapid.T) {
-			pk := PrimaryKey(generateTableModel(state).Draw(t, "g"))
-
-			realHas := table.Has(store, pk)
-			modelHas := state[string(pk)] != nil
-
-			require.Equal(t, realHas, modelHas)
-		},
-
-		// GetOne is one of the model commands. It fetches an object from the table by
-		// its primary key and returns an error if that primary key isn't in the table.
-		"GetOne": func(t *rapid.T) {
-			pk := PrimaryKey(generateTableModel(state).Draw(t, "tm"))
-
-			var tm testdata.TableModel
-
-			err := table.GetOne(store, pk, &tm)
-			t.Logf("tm: %v", tm)
-
-			if state[string(pk)] == nil {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, *state[string(pk)], tm)
-			}
-		},
-
-		// Check that the real values match the state values.
-		"": func(t *rapid.T) {
-			for i := range state {
-				has := table.Has(store, []byte(i))
-				require.Equal(t, true, has)
-			}
-		},
+			// Check that the real values match the state values.
+			"": func(t *rapid.T) {
+				for i := range state {
+					has := table.Has(store, []byte(i))
+					require.Equal(t, true, has)
+				}
+			},
+		})
 	})
 }
 

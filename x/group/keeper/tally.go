@@ -22,7 +22,9 @@ func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.
 		return p.FinalTallyResult, nil
 	}
 
-	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), p.Id)
+	kvStore := k.storeService.OpenKVStore(ctx)
+
+	it, err := k.voteByProposalIndex.Get(kvStore, p.Id)
 	if err != nil {
 		return group.TallyResult{}, err
 	}
@@ -41,7 +43,7 @@ func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.
 		}
 
 		var member group.GroupMember
-		err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupMember{
+		err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&group.GroupMember{
 			GroupId: groupID,
 			Member:  &group.Member{Address: vote.Voter},
 		}), &member)

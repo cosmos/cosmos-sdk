@@ -77,7 +77,6 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				suite.Require().NoError(err)
 
 				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), add).Return(acc).AnyTimes()
-				suite.accountKeeper.EXPECT().SetAccount(gomock.Any(), acc).Return()
 
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{

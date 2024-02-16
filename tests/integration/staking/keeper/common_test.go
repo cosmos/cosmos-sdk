@@ -82,6 +82,11 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val1))
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val2))
 
+	for _, addr := range addrs {
+		acc := f.accountKeeper.NewAccountWithAddress(f.sdkCtx, addr)
+		f.accountKeeper.SetAccount(f.sdkCtx, acc)
+	}
+
 	_, err := f.stakingKeeper.Delegate(f.sdkCtx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, powers[0]), types.Unbonded, val1, true)
 	assert.NilError(t, err)
 	_, err = f.stakingKeeper.Delegate(f.sdkCtx, addrs[1], f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, powers[1]), types.Unbonded, val2, true)
@@ -137,7 +142,7 @@ func initFixture(tb testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[types.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)

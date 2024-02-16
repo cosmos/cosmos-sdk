@@ -23,12 +23,12 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db store.RawDB, storeKeys []string, logger log.Logger) (*CommitStore, error)
+	NewStore func(db store.RawDB, storeKeys []string, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error)
 }
 
-func (s *CommitStoreTestSuite) TestSnapshotter() {
+func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	storeKeys := []string{storeKey1, storeKey2}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, log.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -62,7 +62,7 @@ func (s *CommitStoreTestSuite) TestSnapshotter() {
 		},
 	}
 
-	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
+	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, log.NewNopLogger())
 	s.Require().NoError(err)
 
 	chunks := make(chan io.ReadCloser, kvCount*int(latestVersion))
@@ -116,5 +116,44 @@ func (s *CommitStoreTestSuite) TestSnapshotter() {
 			}
 		}
 		s.Require().True(matched)
+	}
+}
+
+func (s *CommitStoreTestSuite) TestStore_Pruning() {
+	storeKeys := []string{storeKey1, storeKey2}
+	pruneOpts := &store.PruneOptions{
+		KeepRecent: 10,
+		Interval:   5,
+	}
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, pruneOpts, log.NewNopLogger())
+	s.Require().NoError(err)
+
+	latestVersion := uint64(100)
+	kvCount := 10
+	for i := uint64(1); i <= latestVersion; i++ {
+		kvPairs := make(map[string]store.KVPairs)
+		for _, storeKey := range storeKeys {
+			kvPairs[storeKey] = store.KVPairs{}
+			for j := 0; j < kvCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
+				kvPairs[storeKey] = append(kvPairs[storeKey], store.KVPair{Key: key, Value: value})
+			}
+		}
+		s.Require().NoError(commitStore.WriteBatch(store.NewChangesetWithPairs(kvPairs)))
+
+		_, err = commitStore.Commit(i)
+		s.Require().NoError(err)
+	}
+
+	pruneVersion := latestVersion - pruneOpts.KeepRecent - 1
+	// check the store
+	for i := uint64(1); i <= latestVersion; i++ {
+		commitInfo, _ := commitStore.GetCommitInfo(i)
+		if i <= pruneVersion {
+			s.Require().Nil(commitInfo)
+		} else {
+			s.Require().NotNil(commitInfo)
+		}
 	}
 }

@@ -36,14 +36,22 @@ type CommitStore struct {
 	logger     log.Logger
 	db         store.RawDB
 	multiTrees map[string]Tree
+
+	// pruneOptions is the pruning configuration.
+	pruneOptions *store.PruneOptions
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+	if pruneOpts == nil {
+		pruneOpts = store.DefaultPruneOptions()
+	}
+
 	return &CommitStore{
-		logger:     logger,
-		db:         db,
-		multiTrees: multiTrees,
+		logger:       logger,
+		db:           db,
+		multiTrees:   multiTrees,
+		pruneOptions: pruneOpts,
 	}, nil
 }
 
@@ -214,6 +222,13 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 
 	if err := c.flushCommitInfo(version, cInfo); err != nil {
 		return nil, err
+	}
+
+	// Prune the old versions.
+	if prune, pruneVersion := c.pruneOptions.ShouldPrune(version); prune {
+		if err := c.Prune(pruneVersion); err != nil {
+			c.logger.Info("failed to prune SC", "prune_version", pruneVersion, "err", err)
+		}
 	}
 
 	return cInfo, nil

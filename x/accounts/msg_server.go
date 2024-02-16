@@ -31,7 +31,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	}
 
 	// run account creation logic
-	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg)
+	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg, request.Funds)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 		return nil, err
 	}
 
-	eventManager := m.k.eventService.EventManager(ctx)
+	eventManager := m.k.environment.EventService.EventManager(ctx)
 	err = eventManager.EmitKV(
 		"account_creation",
 		event.NewAttribute("address", accAddrString),
@@ -80,7 +80,7 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	}
 
 	// run account execution logic
-	resp, err := m.k.Execute(ctx, targetAddr, senderAddr, req)
+	resp, err := m.k.Execute(ctx, targetAddr, senderAddr, req, execute.Funds)
 	if err != nil {
 		return nil, err
 	}
@@ -96,15 +96,5 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 }
 
 func (m msgServer) ExecuteBundle(ctx context.Context, req *v1.MsgExecuteBundle) (*v1.MsgExecuteBundleResponse, error) {
-	_, err := m.k.addressCodec.StringToBytes(req.Bundler)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := &v1.MsgExecuteBundleResponse{Responses: make([]*v1.UserOperationResponse, len(req.Operations))}
-	for i, op := range req.Operations {
-		resp.Responses[i] = m.k.ExecuteUserOperation(ctx, req.Bundler, op)
-	}
-
-	return resp, nil
+	panic("impl")
 }

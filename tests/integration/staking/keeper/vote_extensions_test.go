@@ -40,6 +40,8 @@ func TestValidateVoteExtensions(t *testing.T) {
 	vals := []stakingtypes.Validator{}
 	for _, v := range privKeys {
 		valAddr := sdk.ValAddress(v.PubKey().Address())
+		acc := f.accountKeeper.NewAccountWithAddress(f.sdkCtx, sdk.AccAddress(v.PubKey().Address()))
+		f.accountKeeper.SetAccount(f.sdkCtx, acc)
 		simtestutil.AddTestAddrsFromPubKeys(f.bankKeeper, f.stakingKeeper, f.sdkCtx, []cryptotypes.PubKey{v.PubKey()}, math.NewInt(100000000000))
 		vals = append(vals, testutil.NewValidator(t, valAddr, v.PubKey()))
 	}

@@ -19,11 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_AccountQuery_FullMethodName          = "/cosmos.accounts.v1.Query/AccountQuery"
-	Query_Schema_FullMethodName                = "/cosmos.accounts.v1.Query/Schema"
-	Query_AccountType_FullMethodName           = "/cosmos.accounts.v1.Query/AccountType"
-	Query_AccountNumber_FullMethodName         = "/cosmos.accounts.v1.Query/AccountNumber"
-	Query_SimulateUserOperation_FullMethodName = "/cosmos.accounts.v1.Query/SimulateUserOperation"
+	Query_AccountQuery_FullMethodName  = "/cosmos.accounts.v1.Query/AccountQuery"
+	Query_Schema_FullMethodName        = "/cosmos.accounts.v1.Query/Schema"
+	Query_AccountType_FullMethodName   = "/cosmos.accounts.v1.Query/AccountType"
+	Query_AccountNumber_FullMethodName = "/cosmos.accounts.v1.Query/AccountNumber"
 )
 
 // QueryClient is the client API for Query service.
@@ -38,8 +37,6 @@ type QueryClient interface {
 	AccountType(ctx context.Context, in *AccountTypeRequest, opts ...grpc.CallOption) (*AccountTypeResponse, error)
 	// AccountNumber returns the account number given the account address.
 	AccountNumber(ctx context.Context, in *AccountNumberRequest, opts ...grpc.CallOption) (*AccountNumberResponse, error)
-	// SimulateUserOperation simulates a user operation.
-	SimulateUserOperation(ctx context.Context, in *SimulateUserOperationRequest, opts ...grpc.CallOption) (*SimulateUserOperationResponse, error)
 }
 
 type queryClient struct {
@@ -86,15 +83,6 @@ func (c *queryClient) AccountNumber(ctx context.Context, in *AccountNumberReques
 	return out, nil
 }
 
-func (c *queryClient) SimulateUserOperation(ctx context.Context, in *SimulateUserOperationRequest, opts ...grpc.CallOption) (*SimulateUserOperationResponse, error) {
-	out := new(SimulateUserOperationResponse)
-	err := c.cc.Invoke(ctx, Query_SimulateUserOperation_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -107,8 +95,6 @@ type QueryServer interface {
 	AccountType(context.Context, *AccountTypeRequest) (*AccountTypeResponse, error)
 	// AccountNumber returns the account number given the account address.
 	AccountNumber(context.Context, *AccountNumberRequest) (*AccountNumberResponse, error)
-	// SimulateUserOperation simulates a user operation.
-	SimulateUserOperation(context.Context, *SimulateUserOperationRequest) (*SimulateUserOperationResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -127,9 +113,6 @@ func (UnimplementedQueryServer) AccountType(context.Context, *AccountTypeRequest
 }
 func (UnimplementedQueryServer) AccountNumber(context.Context, *AccountNumberRequest) (*AccountNumberResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccountNumber not implemented")
-}
-func (UnimplementedQueryServer) SimulateUserOperation(context.Context, *SimulateUserOperationRequest) (*SimulateUserOperationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SimulateUserOperation not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -216,24 +199,6 @@ func _Query_AccountNumber_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_SimulateUserOperation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SimulateUserOperationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).SimulateUserOperation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Query_SimulateUserOperation_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).SimulateUserOperation(ctx, req.(*SimulateUserOperationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -256,10 +221,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AccountNumber",
 			Handler:    _Query_AccountNumber_Handler,
-		},
-		{
-			MethodName: "SimulateUserOperation",
-			Handler:    _Query_SimulateUserOperation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

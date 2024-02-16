@@ -8,6 +8,7 @@ import (
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/slashing/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -24,9 +25,8 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 }
 
 func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	logger := k.Logger(ctx)
-	height := sdkCtx.BlockHeight()
+	height := k.environment.HeaderService.GetHeaderInfo(ctx).Height
 
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
@@ -103,14 +103,14 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	}
 
 	if missed {
-		sdkCtx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeLiveness,
-				sdk.NewAttribute(types.AttributeKeyAddress, consStr),
-				sdk.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
-				sdk.NewAttribute(types.AttributeKeyHeight, fmt.Sprintf("%d", height)),
-			),
-		)
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+			types.EventTypeLiveness,
+			event.NewAttribute(types.AttributeKeyAddress, consStr),
+			event.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
+			event.NewAttribute(types.AttributeKeyHeight, fmt.Sprintf("%d", height)),
+		); err != nil {
+			return err
+		}
 
 		logger.Debug(
 			"absent validator",
@@ -149,17 +149,18 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 				return err
 			}
 
-			sdkCtx.EventManager().EmitEvent(
-				sdk.NewEvent(
-					types.EventTypeSlash,
-					sdk.NewAttribute(types.AttributeKeyAddress, consStr),
-					sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-					sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
-					sdk.NewAttribute(types.AttributeKeyJailed, consStr),
-					sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
-				),
-			)
-			err = k.sk.Jail(sdkCtx, consAddr)
+			if err := k.environment.EventService.EventManager(ctx).EmitKV(
+				types.EventTypeSlash,
+				event.NewAttribute(types.AttributeKeyAddress, consStr),
+				event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
+				event.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
+				event.NewAttribute(types.AttributeKeyJailed, consStr),
+				event.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
+			); err != nil {
+				return err
+			}
+
+			err = k.sk.Jail(ctx, consAddr)
 			if err != nil {
 				return err
 			}
@@ -167,7 +168,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 			if err != nil {
 				return err
 			}
-			signInfo.JailedUntil = sdkCtx.HeaderInfo().Time.Add(downtimeJailDur)
+			signInfo.JailedUntil = k.environment.HeaderService.GetHeaderInfo(ctx).Time.Add(downtimeJailDur)
 
 			// We need to reset the counter & bitmap so that the validator won't be
 			// immediately slashed for downtime upon re-bonding.

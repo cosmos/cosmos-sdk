@@ -34,13 +34,6 @@ func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrant
 		return nil, err
 	}
 
-	// create the account if it is not in account state
-	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
-	if granteeAcc == nil {
-		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
-		k.authKeeper.SetAccount(ctx, granteeAcc)
-	}
-
 	authorization, err := msg.GetAuthorization()
 	if err != nil {
 		return nil, err

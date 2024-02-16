@@ -837,10 +837,6 @@ type AccountsIndexes struct {
 	Number *indexes.Unique[uint64, sdk.AccAddress, authtypes.BaseAccount]
 }
 
-func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, authtypes.BaseAccount] {
-	return []collections.Index[sdk.AccAddress, authtypes.BaseAccount]{a.Number}
-}
-
 func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
 	return AccountsIndexes{
 		Number: indexes.NewUnique(
@@ -867,14 +863,22 @@ Where the first type parameter is `uint64`, which is the field type of our index
 The second type parameter is the primary key `sdk.AccAddress`
 And the third type parameter is the actual object we're storing `authtypes.BaseAccount`.
 
-Then we implement a function called `IndexesList` on our `AccountIndexes` struct, this will be used
-by the `IndexedMap` to keep the underlying map in sync with the indexes, in our case `Number`.
-This function just needs to return the slice of indexes contained in the struct.
-
 Then we create a `NewAccountIndexes` function that instantiates and returns the `AccountsIndexes` struct.
 
 The function takes a `SchemaBuilder`. Then we instantiate our `indexes.Unique`, let's analyse the arguments we pass to
 `indexes.NewUnique`.
+
+#### NOTE: indexes list
+
+The `AccountsIndexes` struct contains the indexes, the `NewIndexedMap` function will infer the indexes form that struct
+using reflection, this happens only at init and is not computationally expensive. In case you want to explicitly declare
+indexes: implement the `Indexes` interface in the `AccountsIndexes` struct:
+
+```go
+func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, authtypes.BaseAccount] {
+    return []collections.Index[sdk.AccAddress, authtypes.BaseAccount]{a.Number}
+}
+```
 
 #### Instantiating a `indexes.Unique`
 

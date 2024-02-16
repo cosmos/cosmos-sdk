@@ -6,7 +6,9 @@ option go_package = "cosmossdk.io/x/accounts/v1";
 
 import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
-import "cosmos/accounts/v1/account_abstraction.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/tx/v1beta1/tx.proto";
+import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service for the x/accounts module.
 service Msg {
@@ -33,6 +35,10 @@ message MsgInit {
   string account_type = 2;
   // message is the message to be sent to the account.
   google.protobuf.Any message = 3;
+  // funds contains the coins that the account wants to
+  // send alongside the request.
+  repeated cosmos.base.v1beta1.Coin funds = 4
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 // MsgInitResponse defines the Create response type for the Msg/Create RPC method.
@@ -52,6 +58,10 @@ message MsgExecute {
   string target = 2;
   // message is the message to be sent to the account.
   google.protobuf.Any message = 3;
+  // funds contains the coins that the account wants to
+  // send alongside the request.
+  repeated cosmos.base.v1beta1.Coin funds = 4
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 // MsgExecuteResponse defines the Execute response type for the Msg/Execute RPC method.
@@ -68,12 +78,18 @@ message MsgExecuteBundle {
   // bundler defines the entity going through the standard TX flow
   // to execute one or multiple UserOperations on behalf of others.
   string bundler = 1;
-  // operations is the list of operations to be executed.
-  repeated UserOperation operations = 2;
+  // txs defines the txs to execute on behalf of other users.
+  repeated cosmos.tx.v1beta1.TxRaw txs = 2;
+}
+
+// BundledTxResponse defines the response of a bundled tx.
+message BundledTxResponse {
+  google.protobuf.Any exec_responses = 1;
+  string              error          = 2;
 }
 
 // MsgExecuteBundleResponse defines the ExecuteBundle response type for the Msg/ExecuteBundle RPC method.
 message MsgExecuteBundleResponse {
   // responses is the list of responses returned by the account implementations.
-  repeated UserOperationResponse responses = 1;
+  repeated BundledTxResponse responses = 1;
 }

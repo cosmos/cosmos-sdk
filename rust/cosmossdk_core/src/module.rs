@@ -2,11 +2,9 @@
 use crate::services::ServiceBundle;
 
 pub trait Module {
-    type Config;
-
-    fn init(config: Self::Config, resolver: &Resolver) -> Self;
-
-    fn register(&self, registrar: &mut Registrar) -> Result<(), zeropb::Code>;
+    // TODO: descriptor
+    // TODO: init
+    fn route(&self, method_id: u32, ctx: &mut zeropb::Context, req: *const u8) -> Result<*const u8, u32>;
 }
 
 pub struct Registrar {}

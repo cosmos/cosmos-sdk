@@ -15,9 +15,11 @@ import (
 // #include <stdint.h>
 // #include "../../rust/cosmossdk_core/cosmossdk_core.h"
 //
-// typedef const InitData* (*init_t)();
-// const InitData* init(void* f) {
-// 	return ((init_t)f)();
+// typedef const InitData* (*init_t)(void*);
+// typedef void (*callback_t)(void*);
+// extern void printHello();
+// static const InitData* init(void* f) {
+// 	return ((init_t)f)(printHello);
 // }
 import "C"
 import (
@@ -25,6 +27,11 @@ import (
 
 	"google.golang.org/protobuf/proto"
 )
+
+//export printHello
+func printHello() {
+	fmt.Println("Hello from Go!")
+}
 
 func LoadLibrary(path string) {
 	err := loadLibrary(path)

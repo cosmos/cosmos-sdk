@@ -31,9 +31,9 @@ impl example::counter::v1::msg_server::Msg for Counter {
     }
 }
 
-static MSG_SERVICE: example::counter::v1::msg_server::MsgServer<Counter> = example::counter::v1::msg_server::MsgServer::new(Counter {
-    kv_store_service: todo!()
-});
+// static MSG_SERVICE: example::counter::v1::msg_server::MsgServer<Counter> = example::counter::v1::msg_server::MsgServer::new(Counter {
+//     kv_store_service: todo!()
+// });
 
 static PROTO_FILE_DESCRIPTORS: &'static [u8] = include_bytes!("file_descriptor_set.bin");
 
@@ -42,7 +42,7 @@ static MODULE_DESCRIPTORS: &'static [ModuleDescriptor] = &[
         name: "example.counter.v1".as_ptr(),
         name_len: "example.counter.v1".len(),
         // init_fn: fn
-        init_fn: |init_data| { null() },
+        // init_fn: |init_data| { null() },
     },
 ];
 
@@ -55,7 +55,8 @@ static INIT_DATA: cosmossdk_core::c::InitData = cosmossdk_core::c::InitData {
 };
 
 #[no_mangle]
-extern fn __init() -> *const cosmossdk_core::c::InitData {
+extern fn __init(f: extern "C" fn()) -> *const cosmossdk_core::c::InitData {
+    f();
     &INIT_DATA
 }
 

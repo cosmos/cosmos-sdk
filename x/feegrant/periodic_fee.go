@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,8 +23,8 @@ var _ FeeAllowanceI = (*PeriodicAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
-func (a *PeriodicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
-	blockTime := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
+func (a *PeriodicAllowance) Accept(ctx context.Context, env appmodule.Environment, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
+	blockTime := env.HeaderService.GetHeaderInfo(ctx).Time
 
 	if a.Basic.Expiration != nil && blockTime.After(*a.Basic.Expiration) {
 		return true, errorsmod.Wrap(ErrFeeLimitExpired, "absolute limit")

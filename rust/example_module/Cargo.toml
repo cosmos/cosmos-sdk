@@ -11,4 +11,4 @@ zeropb = { path = "../zeropb" }
 crate-type = ["cdylib"]
 
 [build-dependencies]
-zeropb_codegen = { path = "../zeropb_codegen" }
+zeropb_build = { path = "../zeropb_build" }

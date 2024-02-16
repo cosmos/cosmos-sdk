@@ -1,5 +1,5 @@
 [package]
-name = "zeropb_codegen"
+name = "zeropb_build"
 version = "0.1.0"
 edition = "2021"
 

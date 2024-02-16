@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -50,7 +51,7 @@ func TestGetAppDBBackend(t *testing.T) {
 
 func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T) {
 	tempDir := t.TempDir()
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[types.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -129,7 +130,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("Failed closing config.toml: %v", err)
 	}
 
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[types.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -172,7 +173,7 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 	if err := writer.Close(); err != nil {
 		t.Fatalf("Failed closing app.toml: %v", err)
 	}
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[types.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, tempDir, "")
 
 	cmd.PreRunE = preRunETestImpl
@@ -194,7 +195,7 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 	const testAddr = "tcp://127.1.2.3:12345"
 	tempDir := t.TempDir()
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[types.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -224,7 +225,7 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	const testAddr = "tcp://127.1.2.3:12345"
 	tempDir := t.TempDir()
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[types.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -314,7 +315,7 @@ func newPrecedenceCommon(t *testing.T) precedenceCommon {
 	})
 
 	// Set up the command object that is used in this test
-	retval.cmd = server.StartCmd(nil)
+	retval.cmd = server.StartCmd[types.Application](nil)
 	retval.cmd.PersistentFlags().String(flags.FlagHome, tempDir, "")
 	retval.cmd.PreRunE = preRunETestImpl
 
@@ -431,7 +432,7 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 	if err := os.Mkdir(subDir, 0o600); err != nil {
 		t.Fatalf("Failed to create sub directory: %v", err)
 	}
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[types.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, subDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -471,7 +472,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run StartCmd.
-	cmd = server.StartCmd(nil)
+	cmd = server.StartCmd[types.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, tempDir, "")
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
 		ctx, err := server.InterceptConfigsAndCreateContext(cmd, "", nil, cmtcfg.DefaultConfig())

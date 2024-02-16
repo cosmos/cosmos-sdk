@@ -6,11 +6,12 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // ExportSnapshotCmd returns a command to take a snapshot of the application state
-func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
+func ExportSnapshotCmd[T types.Application](appCreator servertypes.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export app state to snapshot store",

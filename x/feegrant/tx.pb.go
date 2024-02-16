@@ -226,6 +226,8 @@ func (m *MsgRevokeAllowanceResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgRevokeAllowanceResponse proto.InternalMessageInfo
 
 // MsgPruneAllowances prunes expired fee allowances.
+//
+// Since cosmos-sdk 0.50
 type MsgPruneAllowances struct {
 	// pruner is the address of the user pruning expired allowances.
 	Pruner string `protobuf:"bytes,1,opt,name=pruner,proto3" json:"pruner,omitempty"`
@@ -272,6 +274,8 @@ func (m *MsgPruneAllowances) GetPruner() string {
 }
 
 // MsgPruneAllowancesResponse defines the Msg/PruneAllowancesResponse response type.
+//
+// Since cosmos-sdk 0.50
 type MsgPruneAllowancesResponse struct {
 }
 
@@ -370,7 +374,9 @@ type MsgClient interface {
 	// RevokeAllowance revokes any fee allowance of granter's account that
 	// has been granted to the grantee.
 	RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance, opts ...grpc.CallOption) (*MsgRevokeAllowanceResponse, error)
-	// PruneAllowances prunes expired fee allowances.
+	// PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
+	//
+	// Since cosmos-sdk 0.50
 	PruneAllowances(ctx context.Context, in *MsgPruneAllowances, opts ...grpc.CallOption) (*MsgPruneAllowancesResponse, error)
 }
 
@@ -417,7 +423,9 @@ type MsgServer interface {
 	// RevokeAllowance revokes any fee allowance of granter's account that
 	// has been granted to the grantee.
 	RevokeAllowance(context.Context, *MsgRevokeAllowance) (*MsgRevokeAllowanceResponse, error)
-	// PruneAllowances prunes expired fee allowances.
+	// PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
+	//
+	// Since cosmos-sdk 0.50
 	PruneAllowances(context.Context, *MsgPruneAllowances) (*MsgPruneAllowancesResponse, error)
 }
 

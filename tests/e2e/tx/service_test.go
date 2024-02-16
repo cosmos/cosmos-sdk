@@ -337,10 +337,10 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 			"with pagination",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
-				Page:   2,
+				Page:   1,
 				Limit:  2,
 			},
-			false, "", 1,
+			false, "", 2,
 		},
 		{
 			"with multi events",
@@ -361,12 +361,13 @@ func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
-				s.Require().Equal(len(grpcRes.Txs), tc.expLen)
+				s.Require().Equal(tc.expLen, len(grpcRes.Txs))
+
 				// Make sure fields are populated.
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
 				s.Require().NotEmpty(grpcRes.TxResponses[0].Timestamp)
-				s.Require().NotEmpty(grpcRes.TxResponses[0].RawLog)
+				s.Require().Empty(grpcRes.TxResponses[0].RawLog) // logs are empty if the transactions are successful
 			}
 		})
 	}
@@ -395,9 +396,9 @@ func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 2),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 1, 2),
 			false,
-			"", 1,
+			"", 2,
 		},
 		{
 			"valid request: order by asc",
@@ -517,7 +518,7 @@ func (s E2ETestSuite) TestGetTx_GRPCGateway() {
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
 				s.Require().NotEmpty(result.TxResponse.Timestamp)
-				s.Require().NotEmpty(result.TxResponse.RawLog)
+				s.Require().Empty(result.TxResponse.RawLog) // logs are empty on successful transactions
 			}
 		})
 	}

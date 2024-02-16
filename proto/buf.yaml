@@ -2,6 +2,7 @@
 version: v1
 name: buf.build/cosmos/cosmos-sdk
 deps:
+  - buf.build/tendermint/tendermint:33ed361a90514289beabf3189e1d7665 # latest tendermint buf is v0.38.x which is what we want (https://buf.build/tendermint/tendermint/compare/v0.38.x..33ed361a90514289beabf3189e1d7665)
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
@@ -20,5 +21,6 @@ lint:
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
     - RPC_REQUEST_STANDARD_NAME
+    - ENUM_NO_ALLOW_ALIAS
   ignore:
     - tendermint

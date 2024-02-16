@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
@@ -20,7 +21,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type KeeperTestSuite struct {
@@ -295,10 +295,12 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	suite.Error(err)
 	suite.Contains(err.Error(), "fee allowance expired")
 
-	// verify: feegrant is revoked
+	// verify: feegrant is not revoked
+	// Because using the past feegrant will return err, data will be rolled back in actual scenarios.
+	// Only when the feegrant allowance used up in a certain transaction feegrant will revoked success due to err is nil
+	// abci's EndBlocker will remove the expired feegrant.
 	_, err = suite.feegrantKeeper.GetAllowance(ctx, suite.addrs[0], suite.addrs[2])
-	suite.Error(err)
-	suite.Contains(err.Error(), "not found")
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {

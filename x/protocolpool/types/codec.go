@@ -11,6 +11,11 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgFundCommunityPool{},
 		&MsgCommunityPoolSpend{},
+		&MsgSubmitBudgetProposal{},
+		&MsgClaimBudget{},
+		&MsgCreateContinuousFund{},
+		&MsgCancelContinuousFund{},
+		&MsgWithdrawContinuousFund{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

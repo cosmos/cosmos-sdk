@@ -8,7 +8,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -20,7 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type UpgradeTestSuite struct {
@@ -37,14 +38,15 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx
 
 	skipUpgradeHeights := make(map[int64]bool)
-	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
+	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	suite.Require().NoError(err)
 	suite.encodedAuthority = authority
-	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, suite.T().TempDir(), nil, authority)
+	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority)
 	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
 		"bank": 0,
 	})

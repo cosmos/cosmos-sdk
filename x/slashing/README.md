@@ -53,7 +53,7 @@ blocks. Validators who are _bonded_ are _at stake_, meaning that part or all of
 their stake and their delegators' stake is at risk if they commit a protocol fault.
 
 For each of these validators we keep a `ValidatorSigningInfo` record that contains
-information partaining to validator's liveness and other infraction related
+information pertaining to validator's liveness and other infraction related
 attributes.
 
 ### Tombstone Caps

@@ -33,6 +33,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#17158](https://github.com/cosmos/cosmos-sdk/pull/17158) Start the goroutine after need to create a snapshot.
 
+### Bug fixes
+
+* [#18651](https://github.com/cosmos/cosmos-sdk/pull/18651) Propagate iavl.MutableTree.Remove errors firstly to the caller instead of returning a synthesized error firstly.
+
 
 ## [v1.0.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store%2Fv1.0.0-alpha.1) - 2023-07-11
 
@@ -54,7 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* [#16588](https://github.com/cosmos/cosmos-sdk/pull/16588) Propogate the Snapshotter's failure to the caller, (it will create a empty snapshot silently before).
+* [#16588](https://github.com/cosmos/cosmos-sdk/pull/16588) Propagate the Snapshotter's failure to the caller, (it will create a empty snapshot silently before).
 
 ## [v0.1.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store%2Fv0.1.0-alpha.1) - 2023-03-17
 

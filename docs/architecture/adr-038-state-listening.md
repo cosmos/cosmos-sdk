@@ -7,7 +7,7 @@
 * 10/14/2022:
     * Add `ListenCommit`, flatten the state writes in a block to a single batch.
     * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
-    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propogate errors.
+    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propagate errors.
 * 26/05/2023: Update with ABCI 2.0
 
 ## Status
@@ -20,7 +20,7 @@ This ADR defines a set of changes to enable listening to state changes of indivi
 
 ## Context
 
-Currently, KVStore data can be remotely accessed through [Queries](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/messages-and-queries.md#queries)
+Currently, KVStore data can be remotely accessed through [Queries](https://github.com/cosmos/cosmos-sdk/blob/main/docs/build/building-modules/02-messages-and-queries.md#queries)
 which proceed either through Tendermint and the ABCI, or through the gRPC server.
 In addition to these request/response queries, it would be beneficial to have a means of listening to state changes as they occur in real time.
 
@@ -354,7 +354,7 @@ var Handshake = plugin.HandshakeConfig{
     MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
 }
 
-// ListenerPlugin is the base struc for all kinds of go-plugin implementations
+// ListenerPlugin is the base struct for all kinds of go-plugin implementations
 // It will be included in interfaces of different Plugins
 type ABCIListenerPlugin struct {
     // GRPCPlugin must still implement the Plugin interface

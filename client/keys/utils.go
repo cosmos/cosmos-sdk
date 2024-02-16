@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/muesli/termenv"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -69,5 +70,19 @@ func printTextRecords(w io.Writer, kos []KeyOutput) error {
 		return err
 	}
 
+	return nil
+}
+
+// printDiscreetly Print a secret string to an alternate screen, so the string isn't printed to the terminal.
+func printDiscreetly(clientCtx client.Context, w io.Writer, promptMsg, secretMsg string) error {
+	output := termenv.NewOutput(w)
+	output.AltScreen()
+	defer output.ExitAltScreen()
+	if _, err := fmt.Fprintf(output, "%s\n\n%s\n\nPress 'Enter' key to continue.", promptMsg, secretMsg); err != nil {
+		return err
+	}
+	if _, err := fmt.Scanln(); err != nil {
+		return err
+	}
 	return nil
 }

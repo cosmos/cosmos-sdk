@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/core/coins"
+	"cosmossdk.io/client/v2/internal/coins"
 )
 
 type coinType struct{}
@@ -22,8 +22,7 @@ func (c coinType) NewValue(context.Context, *Builder) Value {
 }
 
 func (c coinType) DefaultValue() string {
-	stringCoin, _ := coins.FormatCoins([]*basev1beta1.Coin{}, nil)
-	return stringCoin
+	return "zero"
 }
 
 func (c *coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {

@@ -49,7 +49,7 @@ Griefing, the act of intentionally getting oneself slashed in order to make anot
 
 ### Implementation
 
-In the slashing module, we will add two queues that will track all of the recent slash events.  For double sign faults, we will define "recent slashes" as ones that have occurred within the last `unbonding period`.  For liveness faults, we will define "recent slashes" as ones that have occurred withing the last `jail period`.
+In the slashing module, we will add two queues that will track all of the recent slash events.  For double sign faults, we will define "recent slashes" as ones that have occurred within the last `unbonding period`.  For liveness faults, we will define "recent slashes" as ones that have occurred within the last `jail period`.
 
 ```go
 type SlashEvent struct {

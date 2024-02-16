@@ -9,10 +9,10 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
+	"cosmossdk.io/x/group/internal/orm/prefixstore"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -116,8 +116,12 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 			return err
 		}
 
-		pStore := prefix.NewStore(store, prefixKey[:])
-		bz := pStore.Get(rowID)
+		pStore := prefixstore.New(store, prefixKey[:])
+		bz, err := pStore.Get(rowID)
+		if err != nil {
+			return err
+		}
+
 		if len(bz) == 0 {
 			return sdkerrors.ErrNotFound
 		}

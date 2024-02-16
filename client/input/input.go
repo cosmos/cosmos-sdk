@@ -77,6 +77,21 @@ func GetString(prompt string, buf *bufio.Reader) (string, error) {
 	return strings.TrimSpace(out), nil
 }
 
+// GetSecretString returns the secret string output of a given reader.
+func GetSecretString(prompt string, buf *bufio.Reader) (secret string, err error) {
+	if inputIsTty() {
+		secret, err = speakeasy.FAsk(os.Stderr, prompt)
+	} else {
+		secret, err = readLineFromBuf(buf)
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return secret, nil
+}
+
 // inputIsTty returns true iff we have an interactive prompt,
 // where we can disable echo and request to repeat the password.
 // If false, we can optimize for piped input from another command

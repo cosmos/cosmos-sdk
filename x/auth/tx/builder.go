@@ -8,6 +8,8 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/auth/ante"
+	authsigning "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,8 +19,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
@@ -221,6 +221,11 @@ func (w *wrapper) GetTimeoutHeight() uint64 {
 	return w.tx.Body.TimeoutHeight
 }
 
+// GetUnordered returns the transaction's unordered field (if set).
+func (w *wrapper) GetUnordered() bool {
+	return w.tx.Body.Unordered
+}
+
 func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	sigs := w.tx.Signatures
@@ -283,6 +288,13 @@ func (w *wrapper) SetTimeoutHeight(height uint64) {
 	w.bodyBz = nil
 }
 
+func (w *wrapper) SetUnordered(v bool) {
+	w.tx.Body.Unordered = v
+
+	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
+	w.bodyBz = nil
+}
+
 func (w *wrapper) SetMemo(memo string) {
 	w.tx.Body.Memo = memo
 
@@ -340,11 +352,17 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	rawSigs := make([][]byte, n)
 
 	for i, sig := range signatures {
-		var modeInfo *tx.ModeInfo
+		var (
+			modeInfo *tx.ModeInfo
+			pubKey   *codectypes.Any
+			err      error
+		)
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-		pubKey, err := codectypes.NewAnyWithValue(sig.PubKey)
-		if err != nil {
-			return err
+		if sig.PubKey != nil {
+			pubKey, err = codectypes.NewAnyWithValue(sig.PubKey)
+			if err != nil {
+				return err
+			}
 		}
 		signerInfos[i] = &tx.SignerInfo{
 			PublicKey: pubKey,
@@ -403,6 +421,14 @@ func (w *wrapper) GetTx() authsigning.Tx {
 
 func (w *wrapper) GetProtoTx() *tx.Tx {
 	return w.tx
+}
+
+func (w *wrapper) GetRawTx() *tx.TxRaw {
+	return &tx.TxRaw{
+		BodyBytes:     w.bodyBz,
+		AuthInfoBytes: w.authInfoBz,
+		Signatures:    w.tx.Signatures,
+	}
 }
 
 // Deprecated: AsAny extracts proto Tx and wraps it into Any.

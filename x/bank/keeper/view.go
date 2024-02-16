@@ -119,7 +119,11 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx context.Context) []types.Balance
 	mapAddressToBalancesIdx := make(map[string]int)
 
 	k.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
-		idx, ok := mapAddressToBalancesIdx[addr.String()]
+		addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+		if err != nil {
+			panic(err)
+		}
+		idx, ok := mapAddressToBalancesIdx[addrStr]
 		if ok {
 			// address is already on the set of accounts balances
 			balances[idx].Coins = balances[idx].Coins.Add(balance)
@@ -128,11 +132,11 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx context.Context) []types.Balance
 		}
 
 		accountBalance := types.Balance{
-			Address: addr.String(),
+			Address: addrStr,
 			Coins:   sdk.NewCoins(balance),
 		}
 		balances = append(balances, accountBalance)
-		mapAddressToBalancesIdx[addr.String()] = len(balances) - 1
+		mapAddressToBalancesIdx[addrStr] = len(balances) - 1
 		return false
 	})
 

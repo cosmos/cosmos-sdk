@@ -3,22 +3,33 @@
 package simapp
 
 import (
+	_ "embed"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cast"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth"
+	"cosmossdk.io/x/auth/ante/unorderedtx"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	authsims "cosmossdk.io/x/auth/simulation"
+	authtypes "cosmossdk.io/x/auth/types"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/gov"
+	govclient "cosmossdk.io/x/gov/client"
 	govkeeper "cosmossdk.io/x/gov/keeper"
+	govtypes "cosmossdk.io/x/gov/types"
 	groupkeeper "cosmossdk.io/x/group/keeper"
 	mintkeeper "cosmossdk.io/x/mint/keeper"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
@@ -30,6 +41,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -39,12 +51,9 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -65,6 +74,8 @@ type SimApp struct {
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
+	UnorderedTxManager *unorderedtx.Manager
+
 	// keepers
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
@@ -73,7 +84,6 @@ type SimApp struct {
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             *govkeeper.Keeper
-	CrisisKeeper          *crisiskeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
@@ -97,6 +107,23 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
 }
 
+// AppConfig returns the default app config.
+func AppConfig() depinject.Config {
+	return depinject.Configs(
+		// appconfig.LoadYAML(AppConfigYAML),
+		appConfig,
+		depinject.Supply(
+			// supply custom module basics
+			map[string]module.AppModuleBasic{
+				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+				govtypes.ModuleName: gov.NewAppModuleBasic(
+					[]govclient.ProposalHandler{},
+				),
+			},
+		),
+	)
+}
+
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
@@ -112,7 +139,7 @@ func NewSimApp(
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
-			AppConfig,
+			AppConfig(),
 			depinject.Supply(
 				// supply the application options
 				appOpts,
@@ -175,7 +202,6 @@ func NewSimApp(
 		&app.MintKeeper,
 		&app.DistrKeeper,
 		&app.GovKeeper,
-		&app.CrisisKeeper,
 		&app.UpgradeKeeper,
 		&app.AuthzKeeper,
 		&app.EvidenceKeeper,
@@ -231,8 +257,6 @@ func NewSimApp(
 
 	/****  Module Options ****/
 
-	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
-
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()
 
@@ -261,11 +285,36 @@ func NewSimApp(
 	// 	return app.App.InitChainer(ctx, req)
 	// })
 
+	// create, start, and load the unordered tx manager
+	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
+	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
+	app.UnorderedTxManager.Start()
+
+	if err := app.UnorderedTxManager.OnInit(); err != nil {
+		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
+	}
+
+	// register custom snapshot extensions (if any)
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(
+			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
 
 	return app
+}
+
+// Close implements the Application interface and closes all necessary application
+// resources.
+func (app *SimApp) Close() error {
+	return app.UnorderedTxManager.Close()
 }
 
 // LegacyAmino returns SimApp's amino codec.

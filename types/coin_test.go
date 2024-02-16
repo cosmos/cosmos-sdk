@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -76,7 +77,7 @@ func (s *coinTestSuite) TestIsEqualCoin() {
 
 func (s *coinTestSuite) TestCoinIsValid() {
 	loremIpsum := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam viverra dui vel nulla aliquet, non dictum elit aliquam. Proin consequat leo in consectetur mattis. Phasellus eget odio luctus, rutrum dolor at, venenatis ante. Praesent metus erat, sodales vitae sagittis eget, commodo non ipsum. Duis eget urna quis erat mattis pulvinar. Vivamus egestas imperdiet sem, porttitor hendrerit lorem pulvinar in. Vivamus laoreet sapien eget libero euismod tristique. Suspendisse tincidunt nulla quis luctus mattis.
-	Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed id turpis at erat placerat fermentum id sed sapien. Fusce mattis enim id nulla viverra, eget placerat eros aliquet. Nunc fringilla urna ac condimentum ultricies. Praesent in eros ac neque fringilla sodales. Donec ut venenatis eros. Quisque iaculis lectus neque, a varius sem ullamcorper nec. Cras tincidunt dignissim libero nec volutpat. Donec molestie enim sed metus venenatis, quis elementum sem varius. Curabitur eu venenatis nulla.
+	Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed id turpis at erat placerat fermentum id sed sapien. Fusce mattis enim id nulla viverra, eget placerat eros aliquet. Nunc fringilla urna ac condimentum ultricies. Praesent in eros ac neque fringilla sodales. Donec ut venenatis eros. Quisque iaculis lectus neque, a various sem ullamcorper nec. Cras tincidunt dignissim libero nec volutpat. Donec molestie enim sed metus venenatis, quis elementum sem various. Curabitur eu venenatis nulla.
 	Cras sit amet ligula vel turpis placerat sollicitudin. Nunc massa odio, eleifend id lacus nec, ultricies elementum arcu. Donec imperdiet nulla lacus, a venenatis lacus fermentum nec. Proin vestibulum dolor enim, vitae posuere velit aliquet non. Suspendisse pharetra condimentum nunc tincidunt viverra. Etiam posuere, ligula ut maximus congue, mauris orci consectetur velit, vel finibus eros metus non tellus. Nullam et dictum metus. Aliquam maximus fermentum mauris elementum aliquet. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam dapibus lectus sed tellus rutrum tincidunt. Nulla at dolor sem. Ut non dictum arcu, eget congue sem.`
 
 	loremIpsum = strings.ReplaceAll(loremIpsum, " ", "")
@@ -156,6 +157,9 @@ func (s *coinTestSuite) TestCoinsDenoms() {
 }
 
 func (s *coinTestSuite) TestAddCoin() {
+	// 2**256 - 1 value to check for overflows
+	maxUint256 := math.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+
 	cases := []struct {
 		inputOne    sdk.Coin
 		inputTwo    sdk.Coin
@@ -165,6 +169,10 @@ func (s *coinTestSuite) TestAddCoin() {
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom1, 1), false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), sdk.NewInt64Coin(testDenom1, 1), true},
+
+		// addition cannot lead to a number with more than 256 bits
+		{sdk.NewCoin(testDenom1, maxUint256), sdk.NewCoin(testDenom1, math.NewInt(0)), sdk.NewCoin(testDenom1, maxUint256), false},
+		{sdk.NewCoin(testDenom1, maxUint256), sdk.NewCoin(testDenom1, math.NewInt(1)), sdk.NewInt64Coin(testDenom1, 1), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -298,6 +306,30 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 			res := tc.input.QuoInt(tc.divisor)
 			assert.Equal(tc.isValid, res.IsValid())
 			assert.Equal(tc.expected, res, "quotient of coins is incorrect, tc #%d", i)
+		}
+	}
+}
+
+func (s *coinTestSuite) TestIsGTCoin() {
+	cases := []struct {
+		inputOne sdk.Coin
+		inputTwo sdk.Coin
+		expected bool
+		panics   bool
+	}{
+		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), false, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
+	}
+
+	for tcIndex, tc := range cases {
+		tc := tc
+		if tc.panics {
+			s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsGT(tc.inputTwo)
+			s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }

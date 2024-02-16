@@ -24,8 +24,10 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventGrant is emitted on Msg/Grant
+//
+// Since: cosmos-sdk 0.43
 type EventGrant struct {
-	// Msg type URL for which an autorization is granted
+	// Msg type URL for which an authorization is granted
 	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// Granter account address
 	Granter string `protobuf:"bytes,3,opt,name=granter,proto3" json:"granter,omitempty"`
@@ -88,8 +90,10 @@ func (m *EventGrant) GetGrantee() string {
 }
 
 // EventRevoke is emitted on Msg/Revoke
+//
+// Since: cosmos-sdk 0.43
 type EventRevoke struct {
-	// Msg type URL for which an autorization is revoked
+	// Msg type URL for which an authorization is revoked
 	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// Granter account address
 	Granter string `protobuf:"bytes,3,opt,name=granter,proto3" json:"granter,omitempty"`
@@ -151,15 +155,64 @@ func (m *EventRevoke) GetGrantee() string {
 	return ""
 }
 
+// EventPruneExpiredGrants is emitted on Msg/PruneExpiredGrants
+//
+// Since: x/authz 1.0.0
+type EventPruneExpiredGrants struct {
+	// Address of the pruner
+	Pruner string `protobuf:"bytes,2,opt,name=pruner,proto3" json:"pruner,omitempty"`
+}
+
+func (m *EventPruneExpiredGrants) Reset()         { *m = EventPruneExpiredGrants{} }
+func (m *EventPruneExpiredGrants) String() string { return proto.CompactTextString(m) }
+func (*EventPruneExpiredGrants) ProtoMessage()    {}
+func (*EventPruneExpiredGrants) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f88cbc71a8baf1f, []int{2}
+}
+func (m *EventPruneExpiredGrants) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventPruneExpiredGrants) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventPruneExpiredGrants.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventPruneExpiredGrants) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventPruneExpiredGrants.Merge(m, src)
+}
+func (m *EventPruneExpiredGrants) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventPruneExpiredGrants) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventPruneExpiredGrants.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventPruneExpiredGrants proto.InternalMessageInfo
+
+func (m *EventPruneExpiredGrants) GetPruner() string {
+	if m != nil {
+		return m.Pruner
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*EventGrant)(nil), "cosmos.authz.v1beta1.EventGrant")
 	proto.RegisterType((*EventRevoke)(nil), "cosmos.authz.v1beta1.EventRevoke")
+	proto.RegisterType((*EventPruneExpiredGrants)(nil), "cosmos.authz.v1beta1.EventPruneExpiredGrants")
 }
 
 func init() { proto.RegisterFile("cosmos/authz/v1beta1/event.proto", fileDescriptor_1f88cbc71a8baf1f) }
 
 var fileDescriptor_1f88cbc71a8baf1f = []byte{
-	// 234 bytes of a gzipped FileDescriptorProto
+	// 269 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x48, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0x2c, 0x2d, 0xc9, 0xa8, 0xd2, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34,
 	0xd4, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x81, 0xa8,
@@ -170,11 +223,13 @@ var fileDescriptor_1f88cbc71a8baf1f = []byte{
 	0xe5, 0x08, 0x19, 0x71, 0xb1, 0xa7, 0x83, 0x94, 0xa6, 0x16, 0x49, 0x30, 0x83, 0x24, 0x9d, 0x24,
 	0x2e, 0x6d, 0xd1, 0x85, 0x59, 0xeb, 0x98, 0x92, 0x52, 0x94, 0x5a, 0x5c, 0x1c, 0x5c, 0x52, 0x94,
 	0x99, 0x97, 0x1e, 0x04, 0x53, 0x88, 0xd0, 0x93, 0x2a, 0xc1, 0x42, 0x9c, 0x9e, 0x54, 0xa5, 0xe9,
-	0x8c, 0x5c, 0xdc, 0x60, 0x87, 0x05, 0xa5, 0x96, 0xe5, 0x67, 0xa7, 0x0e, 0x1e, 0x97, 0x39, 0xe9,
-	0x9d, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb,
-	0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x14, 0x54, 0x63, 0x71, 0x4a, 0xb6,
-	0x5e, 0x66, 0xbe, 0x7e, 0x05, 0x24, 0x9e, 0x92, 0xd8, 0xc0, 0x21, 0x6d, 0x0c, 0x08, 0x00, 0x00,
-	0xff, 0xff, 0x8b, 0xe3, 0x4c, 0x04, 0xbe, 0x01, 0x00, 0x00,
+	0x8c, 0x5c, 0xdc, 0x60, 0x87, 0x05, 0xa5, 0x96, 0xe5, 0x67, 0xa7, 0x0e, 0x22, 0x97, 0x79, 0x73,
+	0x89, 0x83, 0x1d, 0x16, 0x50, 0x54, 0x9a, 0x97, 0xea, 0x5a, 0x51, 0x90, 0x59, 0x94, 0x9a, 0x02,
+	0x0e, 0xbd, 0x62, 0x21, 0x03, 0x2e, 0xb6, 0x02, 0x90, 0x68, 0x11, 0xc4, 0x79, 0x78, 0x4c, 0x83,
+	0xaa, 0x73, 0xd2, 0x3b, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18,
+	0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xa8, 0xbe,
+	0xe2, 0x94, 0x6c, 0xbd, 0xcc, 0x7c, 0xfd, 0x0a, 0x48, 0xa4, 0x27, 0xb1, 0x81, 0xa3, 0xcd, 0x18,
+	0x10, 0x00, 0x00, 0xff, 0xff, 0xe8, 0x9f, 0xa5, 0x63, 0x0b, 0x02, 0x00, 0x00,
 }
 
 func (m *EventGrant) Marshal() (dAtA []byte, err error) {
@@ -265,6 +320,36 @@ func (m *EventRevoke) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *EventPruneExpiredGrants) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventPruneExpiredGrants) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventPruneExpiredGrants) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Pruner) > 0 {
+		i -= len(m.Pruner)
+		copy(dAtA[i:], m.Pruner)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Pruner)))
+		i--
+		dAtA[i] = 0x12
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintEvent(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvent(v)
 	base := offset
@@ -312,6 +397,19 @@ func (m *EventRevoke) Size() (n int) {
 		n += 1 + l + sovEvent(uint64(l))
 	}
 	l = len(m.Grantee)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	return n
+}
+
+func (m *EventPruneExpiredGrants) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Pruner)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
@@ -594,6 +692,88 @@ func (m *EventRevoke) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Grantee = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventPruneExpiredGrants) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventPruneExpiredGrants: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventPruneExpiredGrants: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pruner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pruner = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

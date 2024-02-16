@@ -8,7 +8,7 @@ import (
 )
 
 type Dog struct {
-	Name string `protobuf:"bytes,1,opt,name=size,proto3" json:"size,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (d Dog) Greet() string { return d.Name }

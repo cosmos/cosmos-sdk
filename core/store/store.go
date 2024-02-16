@@ -1,7 +1,5 @@
 package store
 
-import dbm "github.com/cosmos/cosmos-db"
-
 // KVStore describes the basic interface for interacting with key-value stores.
 type KVStore interface {
 	// Get returns nil iff key doesn't exist. Errors on nil key.
@@ -32,5 +30,49 @@ type KVStore interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
-// Iterator is an alias db's Iterator for convenience.
-type Iterator = dbm.Iterator
+// Iterator represents an iterator over a domain of keys. Callers must call
+// Close when done. No writes can happen to a domain while there exists an
+// iterator over it. Some backends may take out database locks to ensure this
+// will not happen.
+//
+// Callers must make sure the iterator is valid before calling any methods on it,
+// otherwise these methods will panic.
+type Iterator interface {
+	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
+	Domain() (start, end []byte)
+
+	// Valid returns whether the current iterator is valid. Once invalid, the Iterator remains
+	// invalid forever.
+	Valid() bool
+
+	// Next moves the iterator to the next key in the database, as defined by order of iteration.
+	// If Valid returns false, this method will panic.
+	Next()
+
+	// Key returns the key at the current position. Panics if the iterator is invalid.
+	// Note, the key returned should be a copy and thus safe for modification.
+	Key() []byte
+
+	// Value returns the value at the current position. Panics if the iterator is
+	// invalid.
+	// Note, the value returned should be a copy and thus safe for modification.
+	Value() []byte
+
+	// Error returns the last error encountered by the iterator, if any.
+	Error() error
+
+	// Close closes the iterator, releasing any allocated resources.
+	Close() error
+}
+
+// IteratorCreator defines an interface for creating forward and reverse iterators.
+type IteratorCreator interface {
+	// Iterator creates a new iterator for the given store name and domain, where
+	// domain is defined by [start, end). Note, both start and end are optional.
+	Iterator(storeKey string, start, end []byte) (Iterator, error)
+
+	// ReverseIterator creates a new reverse iterator for the given store name
+	// and domain, where domain is defined by [start, end). Note, both start and
+	// end are optional.
+	ReverseIterator(storeKey string, start, end []byte) (Iterator, error)
+}

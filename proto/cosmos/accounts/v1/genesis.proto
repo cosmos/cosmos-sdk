@@ -18,8 +18,10 @@ message GenesisAccount {
   string address = 1;
   // account_type is the account type of the account.
   string account_type = 2;
+  // account_number is the account number of the account.
+  uint64 account_number = 3;
   // state is the account state represented as a slice of raw key value byte pairs.
-  repeated KVPair state = 3;
+  repeated KVPair state = 4;
 }
 
 // KVPair defines a key value pair.

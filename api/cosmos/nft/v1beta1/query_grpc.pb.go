@@ -19,13 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Balance_FullMethodName = "/cosmos.nft.v1beta1.Query/Balance"
-	Query_Owner_FullMethodName   = "/cosmos.nft.v1beta1.Query/Owner"
-	Query_Supply_FullMethodName  = "/cosmos.nft.v1beta1.Query/Supply"
-	Query_NFTs_FullMethodName    = "/cosmos.nft.v1beta1.Query/NFTs"
-	Query_NFT_FullMethodName     = "/cosmos.nft.v1beta1.Query/NFT"
-	Query_Class_FullMethodName   = "/cosmos.nft.v1beta1.Query/Class"
-	Query_Classes_FullMethodName = "/cosmos.nft.v1beta1.Query/Classes"
+	Query_Balance_FullMethodName              = "/cosmos.nft.v1beta1.Query/Balance"
+	Query_BalanceByQueryString_FullMethodName = "/cosmos.nft.v1beta1.Query/BalanceByQueryString"
+	Query_Owner_FullMethodName                = "/cosmos.nft.v1beta1.Query/Owner"
+	Query_OwnerByQueryString_FullMethodName   = "/cosmos.nft.v1beta1.Query/OwnerByQueryString"
+	Query_Supply_FullMethodName               = "/cosmos.nft.v1beta1.Query/Supply"
+	Query_SupplyByQueryString_FullMethodName  = "/cosmos.nft.v1beta1.Query/SupplyByQueryString"
+	Query_NFTs_FullMethodName                 = "/cosmos.nft.v1beta1.Query/NFTs"
+	Query_NFT_FullMethodName                  = "/cosmos.nft.v1beta1.Query/NFT"
+	Query_NFTByQueryString_FullMethodName     = "/cosmos.nft.v1beta1.Query/NFTByQueryString"
+	Query_Class_FullMethodName                = "/cosmos.nft.v1beta1.Query/Class"
+	Query_ClassByQueryString_FullMethodName   = "/cosmos.nft.v1beta1.Query/ClassByQueryString"
+	Query_Classes_FullMethodName              = "/cosmos.nft.v1beta1.Query/Classes"
 )
 
 // QueryClient is the client API for Query service.
@@ -34,17 +39,37 @@ const (
 type QueryClient interface {
 	// Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	Balance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error)
+	// BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+	//
+	// Since: nft v0.1.1
+	BalanceByQueryString(ctx context.Context, in *QueryBalanceByQueryStringRequest, opts ...grpc.CallOption) (*QueryBalanceByQueryStringResponse, error)
 	// Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
 	Owner(ctx context.Context, in *QueryOwnerRequest, opts ...grpc.CallOption) (*QueryOwnerResponse, error)
+	// OwnerByQueryString queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
+	//
+	// Since: nft v0.1.1
+	OwnerByQueryString(ctx context.Context, in *QueryOwnerByQueryStringRequest, opts ...grpc.CallOption) (*QueryOwnerByQueryStringResponse, error)
 	// Supply queries the number of NFTs from the given class, same as totalSupply of ERC721.
 	Supply(ctx context.Context, in *QuerySupplyRequest, opts ...grpc.CallOption) (*QuerySupplyResponse, error)
+	// SupplyByQueryString queries the number of NFTs from the given class, same as totalSupply of ERC721.
+	//
+	// Since: nft v0.1.1
+	SupplyByQueryString(ctx context.Context, in *QuerySupplyByQueryStringRequest, opts ...grpc.CallOption) (*QuerySupplyByQueryStringResponse, error)
 	// NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
 	// ERC721Enumerable
 	NFTs(ctx context.Context, in *QueryNFTsRequest, opts ...grpc.CallOption) (*QueryNFTsResponse, error)
 	// NFT queries an NFT based on its class and id.
 	NFT(ctx context.Context, in *QueryNFTRequest, opts ...grpc.CallOption) (*QueryNFTResponse, error)
+	// NFTByQueryString queries an NFT based on its class and id.
+	//
+	// Since: nft v0.1.1
+	NFTByQueryString(ctx context.Context, in *QueryNFTByQueryStringRequest, opts ...grpc.CallOption) (*QueryNFTByQueryStringResponse, error)
 	// Class queries an NFT class based on its id
 	Class(ctx context.Context, in *QueryClassRequest, opts ...grpc.CallOption) (*QueryClassResponse, error)
+	// Class queries an NFT class based on its id
+	//
+	// Since: nft v0.1.1
+	ClassByQueryString(ctx context.Context, in *QueryClassByQueryStringRequest, opts ...grpc.CallOption) (*QueryClassByQueryStringResponse, error)
 	// Classes queries all NFT classes
 	Classes(ctx context.Context, in *QueryClassesRequest, opts ...grpc.CallOption) (*QueryClassesResponse, error)
 }
@@ -66,6 +91,15 @@ func (c *queryClient) Balance(ctx context.Context, in *QueryBalanceRequest, opts
 	return out, nil
 }
 
+func (c *queryClient) BalanceByQueryString(ctx context.Context, in *QueryBalanceByQueryStringRequest, opts ...grpc.CallOption) (*QueryBalanceByQueryStringResponse, error) {
+	out := new(QueryBalanceByQueryStringResponse)
+	err := c.cc.Invoke(ctx, Query_BalanceByQueryString_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) Owner(ctx context.Context, in *QueryOwnerRequest, opts ...grpc.CallOption) (*QueryOwnerResponse, error) {
 	out := new(QueryOwnerResponse)
 	err := c.cc.Invoke(ctx, Query_Owner_FullMethodName, in, out, opts...)
@@ -75,9 +109,27 @@ func (c *queryClient) Owner(ctx context.Context, in *QueryOwnerRequest, opts ...
 	return out, nil
 }
 
+func (c *queryClient) OwnerByQueryString(ctx context.Context, in *QueryOwnerByQueryStringRequest, opts ...grpc.CallOption) (*QueryOwnerByQueryStringResponse, error) {
+	out := new(QueryOwnerByQueryStringResponse)
+	err := c.cc.Invoke(ctx, Query_OwnerByQueryString_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) Supply(ctx context.Context, in *QuerySupplyRequest, opts ...grpc.CallOption) (*QuerySupplyResponse, error) {
 	out := new(QuerySupplyResponse)
 	err := c.cc.Invoke(ctx, Query_Supply_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SupplyByQueryString(ctx context.Context, in *QuerySupplyByQueryStringRequest, opts ...grpc.CallOption) (*QuerySupplyByQueryStringResponse, error) {
+	out := new(QuerySupplyByQueryStringResponse)
+	err := c.cc.Invoke(ctx, Query_SupplyByQueryString_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +154,27 @@ func (c *queryClient) NFT(ctx context.Context, in *QueryNFTRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *queryClient) NFTByQueryString(ctx context.Context, in *QueryNFTByQueryStringRequest, opts ...grpc.CallOption) (*QueryNFTByQueryStringResponse, error) {
+	out := new(QueryNFTByQueryStringResponse)
+	err := c.cc.Invoke(ctx, Query_NFTByQueryString_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) Class(ctx context.Context, in *QueryClassRequest, opts ...grpc.CallOption) (*QueryClassResponse, error) {
 	out := new(QueryClassResponse)
 	err := c.cc.Invoke(ctx, Query_Class_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ClassByQueryString(ctx context.Context, in *QueryClassByQueryStringRequest, opts ...grpc.CallOption) (*QueryClassByQueryStringResponse, error) {
+	out := new(QueryClassByQueryStringResponse)
+	err := c.cc.Invoke(ctx, Query_ClassByQueryString_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,17 +196,37 @@ func (c *queryClient) Classes(ctx context.Context, in *QueryClassesRequest, opts
 type QueryServer interface {
 	// Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
+	// BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+	//
+	// Since: nft v0.1.1
+	BalanceByQueryString(context.Context, *QueryBalanceByQueryStringRequest) (*QueryBalanceByQueryStringResponse, error)
 	// Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
 	Owner(context.Context, *QueryOwnerRequest) (*QueryOwnerResponse, error)
+	// OwnerByQueryString queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
+	//
+	// Since: nft v0.1.1
+	OwnerByQueryString(context.Context, *QueryOwnerByQueryStringRequest) (*QueryOwnerByQueryStringResponse, error)
 	// Supply queries the number of NFTs from the given class, same as totalSupply of ERC721.
 	Supply(context.Context, *QuerySupplyRequest) (*QuerySupplyResponse, error)
+	// SupplyByQueryString queries the number of NFTs from the given class, same as totalSupply of ERC721.
+	//
+	// Since: nft v0.1.1
+	SupplyByQueryString(context.Context, *QuerySupplyByQueryStringRequest) (*QuerySupplyByQueryStringResponse, error)
 	// NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
 	// ERC721Enumerable
 	NFTs(context.Context, *QueryNFTsRequest) (*QueryNFTsResponse, error)
 	// NFT queries an NFT based on its class and id.
 	NFT(context.Context, *QueryNFTRequest) (*QueryNFTResponse, error)
+	// NFTByQueryString queries an NFT based on its class and id.
+	//
+	// Since: nft v0.1.1
+	NFTByQueryString(context.Context, *QueryNFTByQueryStringRequest) (*QueryNFTByQueryStringResponse, error)
 	// Class queries an NFT class based on its id
 	Class(context.Context, *QueryClassRequest) (*QueryClassResponse, error)
+	// Class queries an NFT class based on its id
+	//
+	// Since: nft v0.1.1
+	ClassByQueryString(context.Context, *QueryClassByQueryStringRequest) (*QueryClassByQueryStringResponse, error)
 	// Classes queries all NFT classes
 	Classes(context.Context, *QueryClassesRequest) (*QueryClassesResponse, error)
 	mustEmbedUnimplementedQueryServer()
@@ -149,11 +239,20 @@ type UnimplementedQueryServer struct {
 func (UnimplementedQueryServer) Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Balance not implemented")
 }
+func (UnimplementedQueryServer) BalanceByQueryString(context.Context, *QueryBalanceByQueryStringRequest) (*QueryBalanceByQueryStringResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BalanceByQueryString not implemented")
+}
 func (UnimplementedQueryServer) Owner(context.Context, *QueryOwnerRequest) (*QueryOwnerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Owner not implemented")
 }
+func (UnimplementedQueryServer) OwnerByQueryString(context.Context, *QueryOwnerByQueryStringRequest) (*QueryOwnerByQueryStringResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OwnerByQueryString not implemented")
+}
 func (UnimplementedQueryServer) Supply(context.Context, *QuerySupplyRequest) (*QuerySupplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Supply not implemented")
+}
+func (UnimplementedQueryServer) SupplyByQueryString(context.Context, *QuerySupplyByQueryStringRequest) (*QuerySupplyByQueryStringResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SupplyByQueryString not implemented")
 }
 func (UnimplementedQueryServer) NFTs(context.Context, *QueryNFTsRequest) (*QueryNFTsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NFTs not implemented")
@@ -161,8 +260,14 @@ func (UnimplementedQueryServer) NFTs(context.Context, *QueryNFTsRequest) (*Query
 func (UnimplementedQueryServer) NFT(context.Context, *QueryNFTRequest) (*QueryNFTResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NFT not implemented")
 }
+func (UnimplementedQueryServer) NFTByQueryString(context.Context, *QueryNFTByQueryStringRequest) (*QueryNFTByQueryStringResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NFTByQueryString not implemented")
+}
 func (UnimplementedQueryServer) Class(context.Context, *QueryClassRequest) (*QueryClassResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Class not implemented")
+}
+func (UnimplementedQueryServer) ClassByQueryString(context.Context, *QueryClassByQueryStringRequest) (*QueryClassByQueryStringResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClassByQueryString not implemented")
 }
 func (UnimplementedQueryServer) Classes(context.Context, *QueryClassesRequest) (*QueryClassesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Classes not implemented")
@@ -198,6 +303,24 @@ func _Query_Balance_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_BalanceByQueryString_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryBalanceByQueryStringRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).BalanceByQueryString(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_BalanceByQueryString_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).BalanceByQueryString(ctx, req.(*QueryBalanceByQueryStringRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_Owner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryOwnerRequest)
 	if err := dec(in); err != nil {
@@ -216,6 +339,24 @@ func _Query_Owner_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_OwnerByQueryString_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryOwnerByQueryStringRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).OwnerByQueryString(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_OwnerByQueryString_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).OwnerByQueryString(ctx, req.(*QueryOwnerByQueryStringRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_Supply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QuerySupplyRequest)
 	if err := dec(in); err != nil {
@@ -230,6 +371,24 @@ func _Query_Supply_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Supply(ctx, req.(*QuerySupplyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SupplyByQueryString_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySupplyByQueryStringRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SupplyByQueryString(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_SupplyByQueryString_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SupplyByQueryString(ctx, req.(*QuerySupplyByQueryStringRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -270,6 +429,24 @@ func _Query_NFT_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_NFTByQueryString_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryNFTByQueryStringRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).NFTByQueryString(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_NFTByQueryString_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).NFTByQueryString(ctx, req.(*QueryNFTByQueryStringRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_Class_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryClassRequest)
 	if err := dec(in); err != nil {
@@ -284,6 +461,24 @@ func _Query_Class_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Class(ctx, req.(*QueryClassRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ClassByQueryString_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryClassByQueryStringRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ClassByQueryString(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ClassByQueryString_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ClassByQueryString(ctx, req.(*QueryClassByQueryStringRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -318,12 +513,24 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Balance_Handler,
 		},
 		{
+			MethodName: "BalanceByQueryString",
+			Handler:    _Query_BalanceByQueryString_Handler,
+		},
+		{
 			MethodName: "Owner",
 			Handler:    _Query_Owner_Handler,
 		},
 		{
+			MethodName: "OwnerByQueryString",
+			Handler:    _Query_OwnerByQueryString_Handler,
+		},
+		{
 			MethodName: "Supply",
 			Handler:    _Query_Supply_Handler,
+		},
+		{
+			MethodName: "SupplyByQueryString",
+			Handler:    _Query_SupplyByQueryString_Handler,
 		},
 		{
 			MethodName: "NFTs",
@@ -334,8 +541,16 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_NFT_Handler,
 		},
 		{
+			MethodName: "NFTByQueryString",
+			Handler:    _Query_NFTByQueryString_Handler,
+		},
+		{
 			MethodName: "Class",
 			Handler:    _Query_Class_Handler,
+		},
+		{
+			MethodName: "ClassByQueryString",
+			Handler:    _Query_ClassByQueryString_Handler,
 		},
 		{
 			MethodName: "Classes",

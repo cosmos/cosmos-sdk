@@ -16,7 +16,7 @@ func TestMultiIndex(t *testing.T) {
 		return value.City, nil
 	})
 
-	// we crete two reference keys for primary key 1 and 2 associated with "milan"
+	// we create two reference keys for primary key 1 and 2 associated with "milan"
 	require.NoError(t, mi.Reference(ctx, 1, company{City: "milan"}, func() (company, error) { return company{}, collections.ErrNotFound }))
 	require.NoError(t, mi.Reference(ctx, 2, company{City: "milan"}, func() (company, error) { return company{}, collections.ErrNotFound }))
 

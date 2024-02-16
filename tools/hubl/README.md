@@ -45,7 +45,7 @@ The chain configuration is stored in `~/.hubl/config.toml`.
 
 :::tip
 
-When using an unsecure gRPC endpoint, change the `insecure` field to `true` in the config file.
+When using an insecure gRPC endpoint, change the `insecure` field to `true` in the config file.
 
 ```toml
 [chains]

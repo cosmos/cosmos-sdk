@@ -24,7 +24,7 @@ type WithdrawAllTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func (s *WithdrawAllTestSuite) SetupSuite() {
@@ -50,11 +50,11 @@ func (s *WithdrawAllTestSuite) TearDownSuite() {
 // `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
 func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
-	val := s.network.Validators[0]
-	val1 := s.network.Validators[1]
-	clientCtx := val.ClientCtx
+	val := s.network.GetValidators()[0]
+	val1 := s.network.GetValidators()[1]
+	clientCtx := val.GetClientCtx()
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	info, _, err := val.GetClientCtx().Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 
 	pubkey, err := info.GetPubKey()
@@ -63,14 +63,14 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	newAddr := sdk.AccAddress(pubkey.Address())
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
+		FromAddress: val.GetAddress().String(),
 		ToAddress:   newAddr.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))),
 	}
 	_, err = clitestutil.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend,
-		val.Address,
+		val.GetAddress(),
 		clitestutil.TestTxConfig{},
 	)
 
@@ -80,22 +80,22 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	// delegate 500 tokens to validator1
 	msg := &stakingtypes.MsgDelegate{
 		DelegatorAddress: newAddr.String(),
-		ValidatorAddress: val.ValAddress.String(),
+		ValidatorAddress: val.GetValAddress().String(),
 		Amount:           sdk.NewCoin("stake", math.NewInt(500)),
 	}
 
-	_, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, newAddr, clitestutil.TestTxConfig{})
+	_, err = clitestutil.SubmitTestTx(val.GetClientCtx(), msg, newAddr, clitestutil.TestTxConfig{})
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
 
 	// delegate 500 tokens to validator2
 	msg2 := &stakingtypes.MsgDelegate{
 		DelegatorAddress: newAddr.String(),
-		ValidatorAddress: val1.ValAddress.String(),
+		ValidatorAddress: val1.GetValAddress().String(),
 		Amount:           sdk.NewCoin("stake", math.NewInt(500)),
 	}
 
-	_, err = clitestutil.SubmitTestTx(val.ClientCtx, msg2, newAddr, clitestutil.TestTxConfig{})
+	_, err = clitestutil.SubmitTestTx(val.GetClientCtx(), msg2, newAddr, clitestutil.TestTxConfig{})
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
 

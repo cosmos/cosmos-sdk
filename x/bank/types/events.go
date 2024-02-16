@@ -24,37 +24,37 @@ const (
 )
 
 // NewCoinSpentEvent constructs a new coin spent sdk.Event
-func NewCoinSpentEvent(spender sdk.AccAddress, amount sdk.Coins) sdk.Event {
+func NewCoinSpentEvent(spender string, amount sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeCoinSpent,
-		sdk.NewAttribute(AttributeKeySpender, spender.String()),
+		sdk.NewAttribute(AttributeKeySpender, spender),
 		sdk.NewAttribute(sdk.AttributeKeyAmount, amount.String()),
 	)
 }
 
 // NewCoinReceivedEvent constructs a new coin received sdk.Event
-func NewCoinReceivedEvent(receiver sdk.AccAddress, amount sdk.Coins) sdk.Event {
+func NewCoinReceivedEvent(receiver string, amount sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeCoinReceived,
-		sdk.NewAttribute(AttributeKeyReceiver, receiver.String()),
+		sdk.NewAttribute(AttributeKeyReceiver, receiver),
 		sdk.NewAttribute(sdk.AttributeKeyAmount, amount.String()),
 	)
 }
 
 // NewCoinMintEvent construct a new coin minted sdk.Event
-func NewCoinMintEvent(minter sdk.AccAddress, amount sdk.Coins) sdk.Event {
+func NewCoinMintEvent(minter string, amount sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeCoinMint,
-		sdk.NewAttribute(AttributeKeyMinter, minter.String()),
+		sdk.NewAttribute(AttributeKeyMinter, minter),
 		sdk.NewAttribute(sdk.AttributeKeyAmount, amount.String()),
 	)
 }
 
 // NewCoinBurnEvent constructs a new coin burned sdk.Event
-func NewCoinBurnEvent(burner sdk.AccAddress, amount sdk.Coins) sdk.Event {
+func NewCoinBurnEvent(burner string, amount sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeCoinBurn,
-		sdk.NewAttribute(AttributeKeyBurner, burner.String()),
+		sdk.NewAttribute(AttributeKeyBurner, burner),
 		sdk.NewAttribute(sdk.AttributeKeyAmount, amount.String()),
 	)
 }

@@ -10,7 +10,7 @@ abstractions.
 
 ### `Store`
 
-The bulk of the store interfaces are defined [here](https://github.com/cosmos/cosmos-sdk/blob/main/store/types/store.go),
+The bulk of the store interfaces are defined [here](https://github.com/cosmos/cosmos-sdk/blob/main/store/store.go),
 where the base primitive interface, for which other interfaces build off of, is
 the `Store` type. The `Store` interface defines the ability to tell the type of
 the implementing store and the ability to cache wrap via the `CacheWrapper` interface.
@@ -29,7 +29,7 @@ with, which also provides the basis of most state storage and commitment operati
 is the `KVStore`. The `KVStore` interface provides basic CRUD abilities and
 prefix-based iteration, including reverse iteration.
 
-Typically, each module has it's own dedicated `KVStore` instance, which it can
+Typically, each module has its own dedicated `KVStore` instance, which it can
 get access to via the `sdk.Context` and the use of a pointer-based named key --
 `KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How a exactly a `KVStoreKey`
 maps to a `KVStore` will be illustrated below through the `CommitMultiStore`.
@@ -42,7 +42,7 @@ until `Commit()` is called on the `CommitMultiStore`.
 
 ### `CommitMultiStore`
 
-The `CommitMultiStore` interface exposes the the top-level interface that is used
+The `CommitMultiStore` interface exposes the top-level interface that is used
 to manage state commitment and storage by an SDK application and abstracts the
 concept of multiple `KVStore`s which are used by multiple modules. Specifically,
 it supports the following high-level primitives:
@@ -53,7 +53,7 @@ it supports the following high-level primitives:
 * Allows for loading state storage at a particular height/version in the past to
   provide current head and historical queries.
 * Provides the ability to rollback state to a previous height/version.
-* Provides the ability to to load state storage at a particular height/version
+* Provides the ability to load state storage at a particular height/version
   while also performing store upgrades, which are used during live hard-fork
   application state migrations.
 * Provides the ability to commit all current accumulated state to disk and performs

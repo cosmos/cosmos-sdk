@@ -16,14 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestErrorHandling(t *testing.T) {
-	// first, try to generate a key, must return an error
-	// (no panic)
-	path := *hd.NewParams(44, 555, 0, false, 0)
-	_, err := NewPrivKeySecp256k1Unsafe(path)
-	require.Error(t, err)
-}
-
 func TestPublicKeyUnsafe(t *testing.T) {
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := NewPrivKeySecp256k1Unsafe(path)

@@ -42,7 +42,7 @@ This section should include an assumptions sub-section if any, the mandatory pro
 This is the main section of the document, and should contain protocol documentation, design rationale, required references, and technical details where appropriate.
 The section may have any or all of the following sub-sections, as appropriate to the particular specification. The API sub-section is especially encouraged when appropriate.
 
-* *API* - A detailed description of the features's API.
+* *API* - A detailed description of the feature's API.
 * *Technical Details* - All technical details including syntax, diagrams, semantics, protocols, data structures, algorithms, and pseudocode as appropriate. The technical specification should be detailed enough such that separate correct implementations of the specification without knowledge of each other are compatible.
 * *Backwards Compatibility* - A discussion of compatibility (or lack thereof) with previous feature or protocol versions.
 * *Known Issues* - A list of known issues. This sub-section is specially important for specifications of already in-use features.

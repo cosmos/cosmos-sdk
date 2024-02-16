@@ -184,7 +184,7 @@ func TestParseSubmitProposal(t *testing.T) {
 	"title": "My awesome title",
 	"summary": "My awesome summary",
 	"deposit": "1000test",
-	"expedited": true
+	"proposal_type": "expedited"
 }
 `, addr, addr, addr, addr, addr, base64.StdEncoding.EncodeToString(expectedMetadata)))
 
@@ -223,7 +223,7 @@ func TestParseSubmitProposal(t *testing.T) {
 	require.Equal(t, "My awesome description", textProp.Description)
 	require.Equal(t, "My awesome title", proposal.Title)
 	require.Equal(t, "My awesome summary", proposal.Summary)
-	require.Equal(t, true, proposal.Expedited)
+	require.Equal(t, v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, proposal.proposalType)
 
 	err = okJSON.Close()
 	require.Nil(t, err, "unexpected error")

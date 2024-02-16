@@ -1,8 +1,9 @@
 name: Starship E2E Tests
 # E2E tests using Starship, run on a schedule
 on:
-  schedule:
-    - cron: "0 */6 * * *" # every 6 hours
+  # schedule:
+  #   - cron: "0 */6 * * *" # every 6 hours
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,7 +18,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           check-latest: true

@@ -6,6 +6,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/accounts/cli"
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -23,15 +25,19 @@ const (
 	StoreKey   = "_" + ModuleName // unfortunately accounts collides with auth store key
 )
 
+// ModuleAccountAddress defines the x/accounts module address.
+var ModuleAccountAddress = address.Module(ModuleName)
+
 const (
 	ConsensusVersion = 1
 )
 
 var (
-	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
+
 	_ module.HasName             = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 	_ module.HasConsensusVersion = AppModule{}
 )
 
@@ -42,8 +48,6 @@ func NewAppModule(k Keeper) AppModule {
 type AppModule struct {
 	k Keeper
 }
-
-func (m AppModule) IsOnePerModuleType() {}
 
 func (m AppModule) IsAppModule() {}
 
@@ -57,9 +61,11 @@ func (m AppModule) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeM
 
 // App module services
 
-func (m AppModule) RegisterServices(configurator module.Configurator) {
-	v1.RegisterQueryServer(configurator.QueryServer(), NewQueryServer(m.k))
-	v1.RegisterMsgServer(configurator.MsgServer(), NewMsgServer(m.k))
+func (m AppModule) RegisterServices(registar grpc.ServiceRegistrar) error {
+	v1.RegisterQueryServer(registar, NewQueryServer(m.k))
+	v1.RegisterMsgServer(registar, NewMsgServer(m.k))
+
+	return nil
 }
 
 // App module genesis

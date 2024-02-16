@@ -7,24 +7,16 @@ import (
 	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	govtypes "cosmossdk.io/x/gov/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
@@ -35,10 +27,11 @@ const ConsensusVersion = 2
 var (
 	_ module.AppModuleBasic = AppModule{}
 	_ module.HasGenesis     = AppModule{}
-	_ module.HasServices    = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
 )
 
 // Module init related flags
@@ -109,9 +102,6 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -121,13 +111,20 @@ func AddModuleInitFlags(startCmd *cobra.Command) {
 }
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	types.RegisterMsgServer(registrar, am.keeper)
 
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+
+	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
 	}
+
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
@@ -159,69 +156,4 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 func (am AppModule) EndBlock(ctx context.Context) error {
 	EndBlocker(ctx, *am.keeper)
 	return nil
-}
-
-// App Wiring Setup
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	AppOpts      servertypes.AppOptions `optional:"true"`
-
-	BankKeeper   types.SupplyKeeper
-	AddressCodec address.Codec
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Module       appmodule.AppModule
-	CrisisKeeper *keeper.Keeper
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	var invalidCheckPeriod uint
-	if in.AppOpts != nil {
-		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
-	}
-
-	feeCollectorName := in.Config.FeeCollectorName
-	if feeCollectorName == "" {
-		feeCollectorName = authtypes.FeeCollectorName
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	k := keeper.NewKeeper(
-		in.Cdc,
-		in.StoreService,
-		invalidCheckPeriod,
-		in.BankKeeper,
-		feeCollectorName,
-		authority.String(),
-		in.AddressCodec,
-	)
-
-	var skipGenesisInvariants bool
-	if in.AppOpts != nil {
-		skipGenesisInvariants = cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
-	}
-
-	m := NewAppModule(k, skipGenesisInvariants)
-
-	return ModuleOutputs{CrisisKeeper: k, Module: m}
 }

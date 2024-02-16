@@ -40,11 +40,11 @@ func (s *addressTestSuite) TestAddressRace() {
 	done := make(chan bool, workers)
 	cancel := make(chan bool)
 
-	for i := byte(1); i <= 2; i++ { // workes which will loop in first 100 addresses
+	for i := byte(1); i <= 2; i++ { // works which will loop in first 100 addresses
 		go addressStringCaller(s.Require(), i, 100, cancel, done)
 	}
 
-	for i := byte(1); i <= 2; i++ { // workes which will generate 1e6 new addresses
+	for i := byte(1); i <= 2; i++ { // works which will generate 1e6 new addresses
 		go addressStringCaller(s.Require(), i, 1000000, cancel, done)
 	}
 

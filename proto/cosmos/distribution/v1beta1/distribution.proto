@@ -115,12 +115,17 @@ message ValidatorSlashEvents {
 }
 
 // FeePool is the global fee pool for distribution.
+// It holds decimal coins. Once whole those coins can be burned or distributed to the community pool.
 message FeePool {
   repeated cosmos.base.v1beta1.DecCoin community_pool = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    deprecated               = true
   ];
+
+  repeated cosmos.base.v1beta1.DecCoin decimal_pool = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
 }
 
 // CommunityPoolSpendProposal details a proposal for use of community funds,

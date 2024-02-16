@@ -37,7 +37,7 @@ func TestNestedAnys(t *testing.T) {
 	testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
 	msgContent, err := v1.NewLegacyContent(testProposal, "cosmos1govacct")
 	require.NoError(t, err)
-	proposal, err := v1.NewProposal([]sdk.Msg{msgContent}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
+	proposal, err := v1.NewProposal([]sdk.Msg{msgContent}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	require.NotPanics(t, func() { _ = proposal.String() })
@@ -46,32 +46,34 @@ func TestNestedAnys(t *testing.T) {
 
 func TestProposalSetExpedited(t *testing.T) {
 	const startExpedited = false
-	proposal, err := v1.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), startExpedited)
+	proposal, err := v1.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 	require.Equal(t, startExpedited, proposal.Expedited)
+	require.Equal(t, proposal.ProposalType, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 
-	proposal, err = v1.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), !startExpedited)
+	proposal, err = v1.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 	require.NoError(t, err)
 	require.Equal(t, !startExpedited, proposal.Expedited)
+	require.Equal(t, proposal.ProposalType, v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 }
 
 func TestProposalGetMinDepositFromParams(t *testing.T) {
 	testcases := []struct {
-		expedited          bool
+		proposalType       v1.ProposalType
 		expectedMinDeposit math.Int
 	}{
 		{
-			expedited:          true,
+			proposalType:       v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
 			expectedMinDeposit: v1.DefaultMinExpeditedDepositTokens,
 		},
 		{
-			expedited:          false,
+			proposalType:       v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 			expectedMinDeposit: v1.DefaultMinDepositTokens,
 		},
 	}
 
 	for _, tc := range testcases {
-		proposal, err := v1.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), tc.expedited)
+		proposal, err := v1.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), tc.proposalType)
 		require.NoError(t, err)
 
 		actualMinDeposit := proposal.GetMinDepositFromParams(v1.DefaultParams())

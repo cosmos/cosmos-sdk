@@ -2,7 +2,7 @@
 
 Welcome to the Cosmos SDK's team roadmap. 
 
-> This document is meant to help the team get feedback on the proposed work and for others to follow where we stand in our process. This will be a living document updated on a regular basis. If you'd like to participate in any workscope or would like to suggest another feature please reach out to [Marko](marko@binary.builders) or [Sam](sam@binary.builders) and we will schedule a call to discuss the feature request. 
+> This document is meant to help the team get feedback on the proposed work and for others to follow where we stand in our process. This will be a living document updated on a regular basis. If you'd like to participate in any workscope or would like to suggest another feature please reach out to [Marko](mailto:marko@binary.builders) or [Sam](mailto:sam@binary.builders) and we will schedule a call to discuss the feature request. 
 
 
 ## Q1
@@ -116,7 +116,7 @@ Issue: https://github.com/cosmos/iavl/issues/548
         * Users should be able to pick between delayed execution and optimistic
         * RFC/ADR is merged
         * Implementation started. 
-    * Progess:
+    * Progress:
         * On pause till ABCI 2.0 is merged
 
 ### Client UX
@@ -159,14 +159,14 @@ Issue: https://github.com/cosmos/iavl/issues/548
         * KvStoreService is being added to all modules
 * [ ] [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
     * Objective:
-        * Depreacte global bech32 setting
+        * Deprecate global bech32 setting
     * Progress:
         * All modules except bank use the `address.Codec`
 * [ ] Make sdk.Msg only be `proto.message`
     * Objectives: 
         * Reduce sdk.Msg to only be proto.message
         * Reduce boilerplate in `msgs.go`
-    * Progess: 
+    * Progress: 
         * [x] [Make ValidateBasic Optional](https://github.com/cosmos/cosmos-sdk/issues/15648)
         * [ ] [Make GetSigners be optional](https://github.com/cosmos/cosmos-sdk/issues/15677)
         * [ ] Remove GetsignBytes for legacy amino encoding

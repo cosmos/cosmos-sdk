@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm"
@@ -46,7 +46,7 @@ const (
 )
 
 type Keeper struct {
-	key storetypes.StoreKey
+	storeService corestoretypes.KVStoreService
 
 	accKeeper group.AccountKeeper
 
@@ -83,13 +83,40 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
-		key:       storeKey,
-		router:    router,
-		accKeeper: accKeeper,
-		cdc:       cdc,
+		storeService: storeService,
+		router:       router,
+		accKeeper:    accKeeper,
+		cdc:          cdc,
 	}
+
+	/*
+		Example of group params:
+		config.MaxExecutionPeriod = "1209600s" 	// example execution period in seconds
+		config.MaxMetadataLen = 1000 			// example metadata length in bytes
+		config.MaxProposalTitleLen = 255 		// example max title length in characters
+		config.MaxProposalSummaryLen = 10200 	// example max summary length in characters
+	*/
+
+	defaultConfig := group.DefaultConfig()
+	// Set the max execution period if not set by app developer.
+	if config.MaxExecutionPeriod <= 0 {
+		config.MaxExecutionPeriod = defaultConfig.MaxExecutionPeriod
+	}
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxMetadataLen <= 0 {
+		config.MaxMetadataLen = defaultConfig.MaxMetadataLen
+	}
+	// If MaxProposalTitleLen not set by app developer, set to default value.
+	if config.MaxProposalTitleLen <= 0 {
+		config.MaxProposalTitleLen = defaultConfig.MaxProposalTitleLen
+	}
+	// If MaxProposalSummaryLen not set by app developer, set to default value.
+	if config.MaxProposalSummaryLen <= 0 {
+		config.MaxProposalSummaryLen = defaultConfig.MaxProposalSummaryLen
+	}
+	k.config = config
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
 	if err != nil {
@@ -205,14 +232,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	}
 	k.voteTable = *voteTable
 
-	if config.MaxMetadataLen == 0 {
-		config.MaxMetadataLen = group.DefaultConfig().MaxMetadataLen
-	}
-	if config.MaxExecutionPeriod == 0 {
-		config.MaxExecutionPeriod = group.DefaultConfig().MaxExecutionPeriod
-	}
-	k.config = config
-
 	return k
 }
 
@@ -223,18 +242,18 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
-	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
+	return k.groupTable.Sequence().CurVal(k.storeService.OpenKVStore(ctx))
 }
 
 // GetGroupPolicySeq returns the current value of the group policy table sequence
 func (k Keeper) GetGroupPolicySeq(ctx sdk.Context) uint64 {
-	return k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
+	return k.groupPolicySeq.CurVal(k.storeService.OpenKVStore(ctx))
 }
 
 // proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.
 func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals []group.Proposal, err error) {
 	timeBytes := sdk.FormatTimeBytes(endTime)
-	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
+	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(k.storeService.OpenKVStore(ctx), nil, timeBytes)
 	if err != nil {
 		return proposals, err
 	}
@@ -266,9 +285,7 @@ func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals 
 
 // pruneProposal deletes a proposal from state.
 func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
-	store := ctx.KVStore(k.key)
-
-	err := k.proposalTable.Delete(store, proposalID)
+	err := k.proposalTable.Delete(k.storeService.OpenKVStore(ctx), proposalID)
 	if err != nil {
 		return err
 	}
@@ -291,7 +308,7 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
 
-			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
+			if err := k.proposalTable.Update(k.storeService.OpenKVStore(ctx), proposalInfo.Id, &proposalInfo); err != nil {
 				return err
 			}
 		}
@@ -301,7 +318,7 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 
 // proposalsByGroupPolicy returns all proposals for a given group policy.
 func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
-	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(k.storeService.OpenKVStore(ctx), groupPolicyAddr.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +349,7 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 
 	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &v)"
 	for _, v := range votes {
-		err = k.voteTable.Delete(ctx.KVStore(k.key), &v)
+		err = k.voteTable.Delete(k.storeService.OpenKVStore(ctx), &v)
 		if err != nil {
 			return err
 		}
@@ -343,7 +360,7 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 
 // votesByProposal returns all votes for a given proposal.
 func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vote, error) {
-	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), proposalID)
+	it, err := k.voteByProposalIndex.Get(k.storeService.OpenKVStore(ctx), proposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -434,12 +451,39 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return errorsmod.Wrap(err, "doTallyAndUpdate")
 			}
 
-			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+			if err := k.proposalTable.Update(k.storeService.OpenKVStore(ctx), proposal.Id, &proposal); err != nil {
 				return errorsmod.Wrap(err, "proposal update")
 			}
 		}
 		// Note: We do nothing if the proposal has been marked as ACCEPTED or
 		// REJECTED.
+	}
+	return nil
+}
+
+// assertMetadataLength returns an error if given metadata length
+// is greater than defined MaxMetadataLen in the module configuration
+func (k Keeper) assertMetadataLength(metadata, description string) error {
+	if uint64(len(metadata)) > k.config.MaxMetadataLen {
+		return errors.ErrMetadataTooLong.Wrapf(description)
+	}
+	return nil
+}
+
+// assertSummaryLength returns an error if given summary length
+// is greater than defined MaxProposalSummaryLen in the module configuration
+func (k Keeper) assertSummaryLength(summary string) error {
+	if uint64(len(summary)) > k.config.MaxProposalSummaryLen {
+		return errors.ErrSummaryTooLong
+	}
+	return nil
+}
+
+// assertTitleLength returns an error if given summary length
+// is greater than defined MaxProposalTitleLen in the module configuration
+func (k Keeper) assertTitleLength(title string) error {
+	if uint64(len(title)) > k.config.MaxProposalTitleLen {
+		return errors.ErrTitleTooLong
 	}
 	return nil
 }

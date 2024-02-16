@@ -235,6 +235,15 @@ func (d LegacyDec) BigInt() *big.Int {
 	return cp.Set(d.i)
 }
 
+// BigIntMut converts LegacyDec to big.Int, mutative the input
+func (d LegacyDec) BigIntMut() *big.Int {
+	if d.IsNil() {
+		return nil
+	}
+
+	return d.i
+}
+
 func (d LegacyDec) ImmutOp(op func(LegacyDec, LegacyDec) LegacyDec, d2 LegacyDec) LegacyDec {
 	return op(d.Clone(), d2)
 }
@@ -716,7 +725,7 @@ func (d LegacyDec) TruncateDec() LegacyDec {
 	return LegacyNewDecFromBigInt(chopPrecisionAndTruncateNonMutative(d.i))
 }
 
-// Ceil returns the smallest interger value (as a decimal) that is greater than
+// Ceil returns the smallest integer value (as a decimal) that is greater than
 // or equal to the given decimal.
 func (d LegacyDec) Ceil() LegacyDec {
 	tmp := new(big.Int).Set(d.i)
@@ -731,6 +740,10 @@ func (d LegacyDec) Ceil() LegacyDec {
 
 	if rem.Sign() == -1 {
 		return LegacyNewDecFromBigInt(quo)
+	}
+
+	if d.i.BitLen() >= maxDecBitLen {
+		panic("Int overflow")
 	}
 
 	return LegacyNewDecFromBigInt(quo.Add(quo, oneInt))

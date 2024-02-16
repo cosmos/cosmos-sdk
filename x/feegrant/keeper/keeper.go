@@ -9,14 +9,12 @@ import (
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // Keeper manages state of all fee grants, as well as calculating approval.
@@ -71,13 +69,6 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
-	// create the account if it is not in account state
-	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
-	if granteeAcc == nil {
-		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
-		k.authKeeper.SetAccount(ctx, granteeAcc)
-	}
-
 	exp, err := feeAllowance.ExpiresAt()
 	if err != nil {
 		return err
@@ -85,7 +76,8 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 	// expiration shouldn't be in the past.
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if exp != nil && exp.Before(sdkCtx.HeaderInfo().Time) {
+	now := sdkCtx.HeaderInfo().Time
+	if exp != nil && exp.Before(now) {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 	}
 
@@ -104,6 +96,15 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
 	if err != nil {
 		return err
+	}
+
+	// if block time is not zero, update the period reset
+	// if it is zero, it could be genesis initialization, so we don't need to update the period reset
+	if !now.IsZero() {
+		err = feeAllowance.UpdatePeriodReset(now)
+		if err != nil {
+			return err
+		}
 	}
 
 	grant, err := feegrant.NewGrant(granterStr, granteeStr, feeAllowance)
@@ -219,18 +220,9 @@ func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddres
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
 func (k Keeper) IterateAllFeeAllowances(ctx context.Context, cb func(grant feegrant.Grant) bool) error {
-	store := k.storeService.OpenKVStore(ctx)
-	iter := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), feegrant.FeeAllowanceKeyPrefix)
-	defer iter.Close()
-
-	err := k.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (stop bool, err error) {
+	return k.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (stop bool, err error) {
 		return cb(grant), nil
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
@@ -250,12 +242,9 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 	}
 
 	remove, err := grant.Accept(ctx, fee, msgs)
-	if remove {
+	if remove && err == nil {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
 		_ = k.revokeAllowance(ctx, granter, grantee)
-		if err != nil {
-			return err
-		}
 		emitUseGrantEvent(ctx, granterStr, granteeStr)
 
 		return nil

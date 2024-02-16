@@ -5,11 +5,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/x/auth/ante"
+	"cosmossdk.io/x/auth/tx"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 func TestRejectExtensionOptionsDecorator(t *testing.T) {

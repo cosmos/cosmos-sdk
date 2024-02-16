@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package cosmos.accounts.testing.rotation.v1;
+
+option go_package = "cosmossdk.io/x/accounts/testing/rotation/v1";
+
+// MsgInit is the init message used to create a new account
+// abstraction implementation that we use for testing, this account
+// also allows for rotating the public key.
+message MsgInit {
+  bytes pub_key_bytes = 1;
+}
+
+// MsgInitResponse is the init message response.
+message MsgInitResponse {}
+
+// MsgRotatePubKey is the message used to swap the public key
+// of the account.
+message MsgRotatePubKey {
+  bytes new_pub_key_bytes = 1;
+}
+
+// MsgRotatePubKeyResponse is the MsgRotatePubKey response.
+message MsgRotatePubKeyResponse {}

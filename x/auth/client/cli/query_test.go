@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"cosmossdk.io/x/auth/client/cli"
 )
 
 func TestParseSigs(t *testing.T) {

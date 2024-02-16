@@ -3,6 +3,7 @@ package tx
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"strings"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,6 +35,8 @@ type Factory struct {
 	timeoutHeight      uint64
 	gasAdjustment      float64
 	chainID            string
+	fromName           string
+	unordered          bool
 	offline            bool
 	generateOnly       bool
 	memo               string
@@ -83,6 +87,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 	gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)
 	memo := clientCtx.Viper.GetString(flags.FlagNote)
 	timeoutHeight := clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
+	unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
 
 	gasStr := clientCtx.Viper.GetString(flags.FlagGas)
 	gasSetting, _ := flags.ParseGasSetting(gasStr)
@@ -92,6 +97,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
+		fromName:           clientCtx.FromName,
 		offline:            clientCtx.Offline,
 		generateOnly:       clientCtx.GenerateOnly,
 		gas:                gasSetting.Gas,
@@ -99,6 +105,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		accountNumber:      accNum,
 		sequence:           accSeq,
 		timeoutHeight:      timeoutHeight,
+		unordered:          unordered,
 		gasAdjustment:      gasAdj,
 		memo:               memo,
 		signMode:           signMode,
@@ -128,6 +135,8 @@ func (f Factory) Fees() sdk.Coins                           { return f.fees }
 func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
+func (f Factory) Unordered() bool                           { return f.unordered }
+func (f Factory) FromName() string                          { return f.fromName }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
@@ -185,6 +194,13 @@ func (f Factory) WithKeybase(keybase keyring.Keyring) Factory {
 	return f
 }
 
+// WithFromName returns a copy of the Factory with updated fromName
+// fromName will be use for building a simulation tx.
+func (f Factory) WithFromName(fromName string) Factory {
+	f.fromName = fromName
+	return f
+}
+
 // WithSequence returns a copy of the Factory with an updated sequence number.
 func (f Factory) WithSequence(sequence uint64) Factory {
 	f.sequence = sequence
@@ -230,6 +246,12 @@ func (f Factory) WithSignMode(mode signing.SignMode) Factory {
 // WithTimeoutHeight returns a copy of the Factory with an updated timeout height.
 func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	f.timeoutHeight = height
+	return f
+}
+
+// WithUnordered returns a copy of the Factory with an updated unordered field.
+func (f Factory) WithUnordered(v bool) Factory {
+	f.unordered = v
 	return f
 }
 
@@ -308,7 +330,9 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			return nil, errors.New("cannot provide both fees and gas prices")
 		}
 
-		glDec := math.LegacyNewDec(int64(f.gas))
+		// f.gas is a uint64 and we should convert to LegacyDec
+		// without the risk of under/overflow via uint64->int64.
+		glDec := math.LegacyNewDecFromBigInt(new(big.Int).SetUint64(f.gas))
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
@@ -406,10 +430,8 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
-		PubKey: pk,
-		Data: &signing.SingleSignatureData{
-			SignMode: f.signMode,
-		},
+		PubKey:   pk,
+		Data:     f.getSimSignatureData(pk),
 		Sequence: f.Sequence(),
 	}
 	if err := txb.SetSignatures(sig); err != nil {
@@ -435,22 +457,39 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 		pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
 	)
 
-	// Use the first element from the list of keys in order to generate a valid
-	// pubkey that supports multiple algorithms.
 	if f.simulateAndExecute && f.keybase != nil {
-		records, _ := f.keybase.List()
-		if len(records) == 0 {
-			return nil, errors.New("cannot build signature for simulation, key records slice is empty")
+		record, err := f.keybase.Key(f.fromName)
+		if err != nil {
+			return nil, err
 		}
 
-		// take the first record just for simulation purposes
-		pk, ok = records[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
+		pk, ok = record.PubKey.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
 			return nil, errors.New("cannot build signature for simulation, failed to convert proto Any to public key")
 		}
 	}
 
 	return pk, nil
+}
+
+// getSimSignatureData based on the pubKey type gets the correct SignatureData type
+// to use for building a simulation tx.
+func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureData {
+	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey)
+	if !ok {
+		return &signing.SingleSignatureData{SignMode: f.signMode}
+	}
+
+	multiSignatureData := make([]signing.SignatureData, 0, multisigPubKey.Threshold)
+	for i := uint32(0); i < multisigPubKey.Threshold; i++ {
+		multiSignatureData = append(multiSignatureData, &signing.SingleSignatureData{
+			SignMode: f.SignMode(),
+		})
+	}
+
+	return &signing.MultiSignatureData{
+		Signatures: multiSignatureData,
+	}
 }
 
 // Prepare ensures the account defined by ctx.GetFromAddress() exists and
@@ -465,10 +504,6 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 
 	fc := f
 	from := clientCtx.FromAddress
-
-	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
-		return fc, err
-	}
 
 	initNum, initSeq := fc.accountNumber, fc.sequence
 	if initNum == 0 || initSeq == 0 {

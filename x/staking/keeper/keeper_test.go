@@ -10,8 +10,10 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -26,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -53,6 +54,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	s.key = key
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.key = key
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
@@ -69,7 +71,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		authtypes.NewModuleAddress(stakingtypes.GovModuleName).String(),
@@ -356,7 +358,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 					},
 				},
 			}
-			bz := stakingtypes.MustMarshalUBD(s.cdc, ubd)
+			bz := s.cdc.MustMarshal(&ubd)
 			s.ctx.KVStore(s.key).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
 			s.ctx.KVStore(s.key).Set(getUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
 		},
@@ -444,7 +446,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 				Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
 				MinSelfDelegation: math.ZeroInt(),
 			}
-			valBz := stakingtypes.MustMarshalValidator(s.cdc, &val)
+			valBz := s.cdc.MustMarshal(&val)
 			// legacy Set method
 			s.ctx.KVStore(s.key).Set(getValidatorKey(valAddrs[i]), valBz)
 		},

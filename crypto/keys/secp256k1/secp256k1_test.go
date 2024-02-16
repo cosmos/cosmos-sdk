@@ -238,7 +238,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 }
 
 func TestGenPrivKeyFromSecret(t *testing.T) {
-	// curve oder N
+	// curve order N
 	N := secp.S256().N
 	tests := []struct {
 		name   string
@@ -449,4 +449,15 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 			require.Equal(t, bz1, bz2)
 		})
 	}
+}
+
+func TestLegacyKeyGenerationAgainstConstantTime(t *testing.T) {
+	privKey := secp256k1.GenPrivKey()
+
+	pubKey := privKey.PubKey()
+
+	nonConstantTimePk := secp.PrivKeyFromBytes(privKey.Key).PubKey().SerializeCompressed() // Legacy functionality from pubkey
+	legacyPubKey := &secp256k1.PubKey{Key: nonConstantTimePk}
+
+	require.Equal(t, legacyPubKey, pubKey)
 }

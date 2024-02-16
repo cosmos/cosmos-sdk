@@ -65,7 +65,7 @@ func (b *Batch) Delete(storeKey string, key []byte) error {
 }
 
 func (b *Batch) Write() error {
-	_, err := b.tx.Exec(latestVersionStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
+	_, err := b.tx.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}

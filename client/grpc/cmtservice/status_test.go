@@ -21,12 +21,12 @@ func TestStatusCommand(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, network.WaitForNextBlock())
 
-	val0 := network.Validators[0]
+	val0 := network.GetValidators()[0]
 	cmd := server.StatusCommand()
 
-	out, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cmd, []string{})
+	out, err := clitestutil.ExecTestCLICmd(val0.GetClientCtx(), cmd, []string{})
 	require.NoError(t, err)
 
 	// Make sure the output has the validator moniker.
-	require.Contains(t, out.String(), fmt.Sprintf("\"moniker\":\"%s\"", val0.Moniker))
+	require.Contains(t, out.String(), fmt.Sprintf("\"moniker\":\"%s\"", val0.GetMoniker()))
 }

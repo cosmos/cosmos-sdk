@@ -164,14 +164,24 @@ func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress) ([]string,
 
 	allowedValidators := make([]string, len(allowed))
 	if len(allowed) > 0 {
+		foundAllowedValidators := make(map[string]bool, len(allowed))
 		for i, validator := range allowed {
+			if foundAllowedValidators[validator.String()] {
+				return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate allowed validator address: %s", validator.String())
+			}
+			foundAllowedValidators[validator.String()] = true
 			allowedValidators[i] = validator.String()
 		}
 		return allowedValidators, nil, nil
 	}
 
 	deniedValidators := make([]string, len(denied))
+	foundDeniedValidators := make(map[string]bool, len(denied))
 	for i, validator := range denied {
+		if foundDeniedValidators[validator.String()] {
+			return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate denied validator address: %s", validator.String())
+		}
+		foundDeniedValidators[validator.String()] = true
 		deniedValidators[i] = validator.String()
 	}
 

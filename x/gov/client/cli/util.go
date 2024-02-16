@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	govutils "cosmossdk.io/x/gov/client/utils"
 	govv1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -48,7 +50,10 @@ func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 		proposalType, _ := fs.GetString(FlagProposalType)
 		proposal.Title, _ = fs.GetString(FlagTitle)
 		proposal.Description, _ = fs.GetString(FlagDescription)
-		proposal.Type = govutils.NormalizeProposalType(proposalType)
+
+		if strings.EqualFold(proposalType, "text") {
+			proposal.Type = v1beta1.ProposalTypeText
+		}
 		proposal.Deposit, _ = fs.GetString(FlagDeposit)
 		if err := proposal.validate(); err != nil {
 			return nil, err
@@ -83,12 +88,14 @@ func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 // proposal defines the new Msg-based proposal.
 type proposal struct {
 	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages  []json.RawMessage `json:"messages,omitempty"`
-	Metadata  string            `json:"metadata"`
-	Deposit   string            `json:"deposit"`
-	Title     string            `json:"title"`
-	Summary   string            `json:"summary"`
-	Expedited bool              `json:"expedited"`
+	Messages        []json.RawMessage `json:"messages,omitempty"`
+	Metadata        string            `json:"metadata"`
+	Deposit         string            `json:"deposit"`
+	Title           string            `json:"title"`
+	Summary         string            `json:"summary"`
+	ProposalTypeStr string            `json:"proposal_type,omitempty"`
+
+	proposalType govv1.ProposalType `json:"-"`
 }
 
 // parseSubmitProposal reads and parses the proposal.
@@ -104,6 +111,12 @@ func parseSubmitProposal(cdc codec.Codec, path string) (proposal, []sdk.Msg, sdk
 	if err != nil {
 		return proposal, nil, nil, err
 	}
+
+	proposalType := govv1.ProposalType_PROPOSAL_TYPE_STANDARD
+	if proposal.ProposalTypeStr != "" {
+		proposalType = govutils.NormalizeProposalType(proposal.ProposalTypeStr)
+	}
+	proposal.proposalType = proposalType
 
 	msgs := make([]sdk.Msg, len(proposal.Messages))
 	for i, anyJSON := range proposal.Messages {
@@ -132,13 +145,14 @@ func AddGovPropFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagMetadata, "", "The metadata to include with the governance proposal")
 	cmd.Flags().String(FlagTitle, "", "The title to put on the governance proposal")
 	cmd.Flags().String(FlagSummary, "", "The summary to include with the governance proposal")
+	cmd.Flags().Bool(FlagExpedited, false, "Whether to expedite the governance proposal")
 }
 
-// ReadGovPropFlags parses a MsgSubmitProposal from the provided context and flags.
+// ReadGovPropCmdFlags parses a MsgSubmitProposal from the provided context and flags.
 // Setting the messages is up to the caller.
 //
 // See also AddGovPropFlagsToCmd.
-func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
+func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
 	rv := &govv1.MsgSubmitProposal{}
 
 	deposit, err := flagSet.GetString(FlagDeposit)
@@ -167,7 +181,25 @@ func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.
 		return nil, fmt.Errorf("could not read summary: %w", err)
 	}
 
-	rv.Proposer = clientCtx.GetFromAddress().String()
+	expedited, err := flagSet.GetBool(FlagExpedited)
+	if err != nil {
+		return nil, fmt.Errorf("could not read expedited: %w", err)
+	}
+	if expedited {
+		rv.Expedited = true
+		rv.ProposalType = govv1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+	}
+
+	rv.Proposer = proposer
 
 	return rv, nil
+}
+
+// ReadGovPropFlags parses a MsgSubmitProposal from the provided context and flags.
+// Setting the messages is up to the caller.
+//
+// See also AddGovPropFlagsToCmd.
+// Deprecated: use ReadPropCmdFlags instead, as this depends on global bech32 prefixes.
+func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
+	return ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
 }

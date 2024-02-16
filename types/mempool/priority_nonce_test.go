@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/auth/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func TestOutOfOrder(t *testing.T) {
@@ -434,6 +434,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 			OnRead: func(tx sdk.Tx) {
 				s.iterations++
 			},
+			SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
 		},
 	)
 
@@ -697,8 +698,9 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	// unlimited
 	mp := mempool.NewPriorityMempool(
 		mempool.PriorityNonceMempoolConfig[int64]{
-			TxPriority: mempool.NewDefaultTxPriority(),
-			MaxTx:      0,
+			TxPriority:      mempool.NewDefaultTxPriority(),
+			MaxTx:           0,
+			SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
 		},
 	)
 	for i, tx := range txs {
@@ -717,8 +719,9 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	// limit: 3
 	mp = mempool.NewPriorityMempool(
 		mempool.PriorityNonceMempoolConfig[int64]{
-			TxPriority: mempool.NewDefaultTxPriority(),
-			MaxTx:      3,
+			TxPriority:      mempool.NewDefaultTxPriority(),
+			MaxTx:           3,
+			SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
 		},
 	)
 	for i, tx := range txs {
@@ -736,8 +739,9 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	// disabled
 	mp = mempool.NewPriorityMempool(
 		mempool.PriorityNonceMempoolConfig[int64]{
-			TxPriority: mempool.NewDefaultTxPriority(),
-			MaxTx:      -1,
+			TxPriority:      mempool.NewDefaultTxPriority(),
+			MaxTx:           -1,
+			SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
 		},
 	)
 	for _, tx := range txs {
@@ -782,6 +786,7 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 				threshold := int64(100 + feeBump)
 				return np >= op*threshold/100
 			},
+			SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
 		},
 	)
 

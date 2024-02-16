@@ -59,11 +59,13 @@ func MakeHandlerArguments(options HandlerArgumentOptions) (signing.SignerData, s
 		SignerInfos: signerInfo,
 	}
 
-	bodyBz, err := proto.Marshal(txBody)
+	protov2MarshalOpts := proto.MarshalOptions{Deterministic: true}
+	bodyBz, err := protov2MarshalOpts.Marshal(txBody)
 	if err != nil {
 		return signing.SignerData{}, signing.TxData{}, err
 	}
-	authInfoBz, err := proto.Marshal(authInfo)
+
+	authInfoBz, err := protov2MarshalOpts.Marshal(authInfo)
 	if err != nil {
 		return signing.SignerData{}, signing.TxData{}, err
 	}

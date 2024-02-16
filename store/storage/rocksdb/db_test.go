@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 )
@@ -21,7 +22,8 @@ const (
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
-			return New(dir)
+			db, err := New(dir)
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 		EmptyBatchSize: 12,
 	}
@@ -33,15 +35,15 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	cs := new(store.Changeset)
+	batch := NewBatch(db, 1)
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+		require.NoError(t, batch.Set(storeKey1, []byte(key), []byte(val)))
 	}
 
-	require.NoError(t, db.ApplyChangeset(1, cs))
+	require.NoError(t, batch.Write())
 
 	// reverse iterator without an end key
 	iter, err := db.ReverseIterator(storeKey1, 1, []byte("key000"), nil)
@@ -61,7 +63,6 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, iter.Error())
 
 	// seek past domain, which should make the iterator invalid and produce an error
-	require.False(t, iter.Next())
 	require.False(t, iter.Valid())
 
 	// reverse iterator with with a start and end domain
@@ -82,7 +83,6 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, iter2.Error())
 
 	// seek past domain, which should make the iterator invalid and produce an error
-	require.False(t, iter2.Next())
 	require.False(t, iter2.Valid())
 
 	// start must be <= end

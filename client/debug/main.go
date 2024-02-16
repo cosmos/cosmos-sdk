@@ -79,7 +79,7 @@ func getCodecInterfaces() *cobra.Command {
 	}
 }
 
-// getCodecInterfaceImpls creates and returns a new cmd used for listing all registered implemenations of a given interface on the application codec.
+// getCodecInterfaceImpls creates and returns a new cmd used for listing all registered implementations of a given interface on the application codec.
 func getCodecInterfaceImpls() *cobra.Command {
 	return &cobra.Command{
 		Use:     "list-implementations [interface]",

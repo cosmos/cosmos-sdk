@@ -1,6 +1,8 @@
 package store
 
 import (
+	"fmt"
+
 	"cosmossdk.io/errors"
 )
 
@@ -8,9 +10,6 @@ import (
 const StoreCodespace = "store"
 
 var (
-	// ErrInvalidProof is returned when a proof is invalid
-	ErrInvalidProof = errors.Register(StoreCodespace, 2, "invalid proof")
-
 	// ErrTxDecode is returned if we cannot parse a transaction
 	ErrTxDecode = errors.Register(StoreCodespace, 3, "tx parse error")
 
@@ -32,7 +31,22 @@ var (
 	ErrClosed          = errors.Register(StoreCodespace, 8, "closed")
 	ErrRecordNotFound  = errors.Register(StoreCodespace, 9, "record not found")
 	ErrUnknownStoreKey = errors.Register(StoreCodespace, 10, "unknown store key")
-	ErrInvalidVersion  = errors.Register(StoreCodespace, 11, "invalid version")
-	ErrKeyEmpty        = errors.Register(StoreCodespace, 12, "key empty")
-	ErrStartAfterEnd   = errors.Register(StoreCodespace, 13, "start key after end key")
+	ErrKeyEmpty        = errors.Register(StoreCodespace, 11, "key empty")
+	ErrStartAfterEnd   = errors.Register(StoreCodespace, 12, "start key after end key")
+
+	// ErrBatchClosed is returned when a closed or written batch is used.
+	ErrBatchClosed = errors.Register(StoreCodespace, 13, "batch has been written or closed")
+
+	// ErrValueNil is returned when attempting to set a nil value.
+	ErrValueNil = errors.Register(StoreCodespace, 14, "value nil")
 )
+
+// ErrVersionPruned defines an error returned when a version queried is pruned
+// or does not exist.
+type ErrVersionPruned struct {
+	EarliestVersion uint64
+}
+
+func (e ErrVersionPruned) Error() string {
+	return fmt.Sprintf("requested version is pruned; earliest available version is: %d", e.EarliestVersion)
+}

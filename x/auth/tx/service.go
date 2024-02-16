@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/x/auth/migrations/legacytx"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,7 +20,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
@@ -97,7 +98,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 	gasInfo, result, err := s.simulate(txBytes)
 	if err != nil {
-		return nil, status.Errorf(codes.Unknown, "%v With gas wanted: '%d' and gas used: '%d' ", err, gasInfo.GasWanted, gasInfo.GasUsed)
+		return nil, status.Errorf(codes.Unknown, "%v with gas used: '%d'", err, gasInfo.GasUsed)
 	}
 
 	return &txtypes.SimulateResponse{

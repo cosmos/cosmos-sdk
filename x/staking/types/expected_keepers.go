@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,7 +17,6 @@ import (
 type AccountKeeper interface {
 	AddressCodec() address.Codec
 
-	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI // only used for simulation
 
 	GetModuleAddress(name string) sdk.AccAddress
@@ -35,6 +35,7 @@ type BankKeeper interface {
 
 	GetSupply(ctx context.Context, denom string) sdk.Coin
 
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderPool, recipientPool string, amt sdk.Coins) error
 	UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
@@ -46,16 +47,16 @@ type BankKeeper interface {
 type ValidatorSet interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
-		func(index int64, validator ValidatorI) (stop bool)) error
+		func(index int64, validator sdk.ValidatorI) (stop bool)) error
 
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(context.Context,
-		func(index int64, validator ValidatorI) (stop bool)) error
+		func(index int64, validator sdk.ValidatorI) (stop bool)) error
 
-	Validator(context.Context, sdk.ValAddress) (ValidatorI, error)            // get a particular validator by operator address
-	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (ValidatorI, error) // get a particular validator by consensus address
-	TotalBondedTokens(context.Context) (math.Int, error)                      // total bonded tokens within the validator set
-	StakingTokenSupply(context.Context) (math.Int, error)                     // total staking token supply
+	Validator(context.Context, sdk.ValAddress) (sdk.ValidatorI, error)            // get a particular validator by operator address
+	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (sdk.ValidatorI, error) // get a particular validator by consensus address
+	TotalBondedTokens(context.Context) (math.Int, error)                          // total bonded tokens within the validator set
+	StakingTokenSupply(context.Context) (math.Int, error)                         // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
 	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) (math.Int, error)
@@ -65,7 +66,7 @@ type ValidatorSet interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (DelegationI, error)
+	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (sdk.DelegationI, error)
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(context.Context) (uint32, error)
@@ -82,7 +83,7 @@ type DelegationSet interface {
 	// iterate through all delegations from one delegator by validator-AccAddress,
 	//   execute func for each validator
 	IterateDelegations(ctx context.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation DelegationI) (stop bool)) error
+		fn func(index int64, delegation sdk.DelegationI) (stop bool)) error
 }
 
 // Event Hooks
@@ -106,6 +107,7 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error
 	AfterUnbondingInitiated(ctx context.Context, id uint64) error
+	AfterConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey, rotationFee sdk.Coin) error
 }
 
 // StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.

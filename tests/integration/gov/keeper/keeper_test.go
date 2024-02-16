@@ -8,6 +8,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	authsims "cosmossdk.io/x/auth/simulation"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -29,10 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type fixture struct {
@@ -41,6 +41,7 @@ type fixture struct {
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
 
+	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
 	govKeeper     *keeper.Keeper
@@ -62,6 +63,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	maccPerms := map[string][]string{
 		pooltypes.ModuleName:           {},
+		pooltypes.StreamAccount:        {},
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -90,9 +92,9 @@ func initFixture(tb testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
+	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
 
 	// set default staking params
 	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
@@ -152,6 +154,7 @@ func initFixture(tb testing.TB) *fixture {
 		ctx:               sdkCtx,
 		queryClient:       queryClient,
 		legacyQueryClient: legacyQueryClient,
+		accountKeeper:     accountKeeper,
 		bankKeeper:        bankKeeper,
 		stakingKeeper:     stakingKeeper,
 		govKeeper:         govKeeper,

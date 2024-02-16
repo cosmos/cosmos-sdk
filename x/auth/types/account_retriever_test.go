@@ -5,9 +5,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/x/auth/testutil"
+	"cosmossdk.io/x/auth/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestAccountRetriever(t *testing.T) {
@@ -22,24 +23,24 @@ func TestAccountRetriever(t *testing.T) {
 	_, err = network.WaitForHeight(3)
 	require.NoError(t, err)
 
-	val := network.Validators[0]
-	clientCtx := val.ClientCtx
+	val := network.GetValidators()[0]
+	clientCtx := val.GetClientCtx()
 	ar := types.AccountRetriever{}
 
 	clientCtx = clientCtx.WithHeight(2)
 
-	acc, err := ar.GetAccount(clientCtx, val.Address)
+	acc, err := ar.GetAccount(clientCtx, val.GetAddress())
 	require.NoError(t, err)
 	require.NotNil(t, acc)
 
-	acc, height, err := ar.GetAccountWithHeight(clientCtx, val.Address)
+	acc, height, err := ar.GetAccountWithHeight(clientCtx, val.GetAddress())
 	require.NoError(t, err)
 	require.NotNil(t, acc)
 	require.Equal(t, height, int64(2))
 
-	require.NoError(t, ar.EnsureExists(clientCtx, val.Address))
+	require.NoError(t, ar.EnsureExists(clientCtx, val.GetAddress()))
 
-	accNum, accSeq, err := ar.GetAccountNumberSequence(clientCtx, val.Address)
+	accNum, accSeq, err := ar.GetAccountNumberSequence(clientCtx, val.GetAddress())
 	require.NoError(t, err)
 	require.Equal(t, accNum, uint64(0))
 	require.Equal(t, accSeq, uint64(1))

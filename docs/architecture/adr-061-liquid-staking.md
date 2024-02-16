@@ -20,7 +20,7 @@ As both Proof of Stake and blockchain use cases have matured, this design has ag
 
 The most important deficiency of the legacy staking design is that it composes poorly with on chain protocols for trading, lending, derivatives that are referred to collectively as DeFi. The legacy staking implementation starves these applications of liquidity by increasing the risk free rate adaptively. It basically makes DeFi and staking security somewhat incompatible. 
 
-The Osmosis team has adopted the idea of Superfluid and Interfluid staking where assets that are participating in DeFi appliactions can also be used in proof of stake. This requires tight integration with an enshrined set of DeFi applications and thus is unsuitable for the Cosmos SDK.
+The Osmosis team has adopted the idea of Superfluid and Interfluid staking where assets that are participating in DeFi applications can also be used in proof of stake. This requires tight integration with an enshrined set of DeFi applications and thus is unsuitable for the Cosmos SDK.
 
 It's also important to note that Interchain Accounts are available in the default IBC implementation and can be used to [rehypothecate](https://www.investopedia.com/terms/h/hypothecation.asp#toc-what-is-rehypothecation) delegations. Thus liquid staking is already possible and these changes merely improve the UX of liquid staking. Centralized exchanges also rehypothecate staked assets, posing challenges for decentralization. This ADR takes the position that adoption of in-protocol liquid staking is the preferable outcome and provides new levers to incentivize decentralization of stake. 
 

@@ -8,13 +8,12 @@ import (
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -24,15 +23,16 @@ const (
 
 func TestDeposits(t *testing.T) {
 	testcases := []struct {
-		name      string
-		expedited bool
+		name         string
+		proposalType v1.ProposalType
 	}{
 		{
-			name: "regular",
+			name:         "regular",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 		},
 		{
-			name:      "expedited",
-			expedited: true,
+			name:         "expedited",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
 		},
 	}
 
@@ -46,7 +46,7 @@ func TestDeposits(t *testing.T) {
 			// initialize and deposit an amount depositMultiplier times larger
 			// than the regular min deposit amount.
 			depositMultiplier := int64(1)
-			if tc.expedited {
+			if tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
 				depositMultiplier = v1.DefaultMinExpeditedDepositTokensRatio
 			}
 
@@ -54,7 +54,7 @@ func TestDeposits(t *testing.T) {
 			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 			tp := TestProposal
-			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], tc.expedited)
+			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], tc.proposalType)
 			require.NoError(t, err)
 			proposalID := proposal.Id
 
@@ -146,7 +146,7 @@ func TestDeposits(t *testing.T) {
 			require.Equal(t, addr1Initial, bankKeeper.GetAllBalances(ctx, TestAddrs[1]))
 
 			// Test delete and burn deposits
-			proposal, err = govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], true)
+			proposal, err = govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			require.NoError(t, err)
 			proposalID = proposal.Id
 			_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
@@ -226,7 +226,7 @@ func TestDepositAmount(t *testing.T) {
 			require.NoError(t, err)
 
 			tp := TestProposal
-			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", testAddrs[0], false)
+			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", testAddrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 			require.NoError(t, err)
 			proposalID := proposal.Id
 
@@ -343,7 +343,11 @@ func TestValidateInitialDeposit(t *testing.T) {
 			err := govKeeper.Params.Set(ctx, params)
 			require.NoError(t, err)
 
-			err = govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, tc.expedited)
+			if tc.expedited {
+				err = govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
+			} else {
+				err = govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+			}
 
 			if tc.expectError {
 				require.Error(t, err)
@@ -409,14 +413,14 @@ func TestChargeDeposit(t *testing.T) {
 					params.ProposalCancelDest = TestAddrs[1].String()
 				default:
 					// community address for proposal cancel dest address
-					params.ProposalCancelDest = authtypes.NewModuleAddress(pooltypes.ModuleName).String()
+					params.ProposalCancelDest = authtypes.NewModuleAddress(protocolModuleName).String()
 				}
 
 				err := govKeeper.Params.Set(ctx, params)
 				require.NoError(t, err)
 
 				tp := TestProposal
-				proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], false)
+				proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 				require.NoError(t, err)
 				proposalID := proposal.Id
 				// deposit to proposal

@@ -6,7 +6,12 @@ package v1
 import (
 	context "context"
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
+	tx "github.com/cosmos/cosmos-sdk/types/tx"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
@@ -34,10 +39,11 @@ type MsgInit struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// account_type is the type of the account to be created.
 	AccountType string `protobuf:"bytes,2,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
-	// message is the message to be sent to the account, it's up to the account
-	// implementation to decide what encoding format should be used to interpret
-	// this message.
-	Message []byte `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	// message is the message to be sent to the account.
+	Message *types.Any `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	// funds contains the coins that the account wants to
+	// send alongside the request.
+	Funds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=funds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
 }
 
 func (m *MsgInit) Reset()         { *m = MsgInit{} }
@@ -87,9 +93,16 @@ func (m *MsgInit) GetAccountType() string {
 	return ""
 }
 
-func (m *MsgInit) GetMessage() []byte {
+func (m *MsgInit) GetMessage() *types.Any {
 	if m != nil {
 		return m.Message
+	}
+	return nil
+}
+
+func (m *MsgInit) GetFunds() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Funds
 	}
 	return nil
 }
@@ -99,7 +112,7 @@ type MsgInitResponse struct {
 	// account_address is the address of the newly created account.
 	AccountAddress string `protobuf:"bytes,1,opt,name=account_address,json=accountAddress,proto3" json:"account_address,omitempty"`
 	// response is the response returned by the account implementation.
-	Response []byte `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
+	Response *types.Any `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
 }
 
 func (m *MsgInitResponse) Reset()         { *m = MsgInitResponse{} }
@@ -142,7 +155,7 @@ func (m *MsgInitResponse) GetAccountAddress() string {
 	return ""
 }
 
-func (m *MsgInitResponse) GetResponse() []byte {
+func (m *MsgInitResponse) GetResponse() *types.Any {
 	if m != nil {
 		return m.Response
 	}
@@ -155,8 +168,11 @@ type MsgExecute struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// target is the address of the account to be executed.
 	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
-	// message is the message to be sent to the account, it's up to the account
-	Message []byte `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	// message is the message to be sent to the account.
+	Message *types.Any `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	// funds contains the coins that the account wants to
+	// send alongside the request.
+	Funds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=funds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
 }
 
 func (m *MsgExecute) Reset()         { *m = MsgExecute{} }
@@ -206,9 +222,16 @@ func (m *MsgExecute) GetTarget() string {
 	return ""
 }
 
-func (m *MsgExecute) GetMessage() []byte {
+func (m *MsgExecute) GetMessage() *types.Any {
 	if m != nil {
 		return m.Message
+	}
+	return nil
+}
+
+func (m *MsgExecute) GetFunds() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Funds
 	}
 	return nil
 }
@@ -216,7 +239,7 @@ func (m *MsgExecute) GetMessage() []byte {
 // MsgExecuteResponse defines the Execute response type for the Msg/Execute RPC method.
 type MsgExecuteResponse struct {
 	// response is the response returned by the account implementation.
-	Response []byte `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	Response *types.Any `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
 }
 
 func (m *MsgExecuteResponse) Reset()         { *m = MsgExecuteResponse{} }
@@ -252,9 +275,164 @@ func (m *MsgExecuteResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExecuteResponse proto.InternalMessageInfo
 
-func (m *MsgExecuteResponse) GetResponse() []byte {
+func (m *MsgExecuteResponse) GetResponse() *types.Any {
 	if m != nil {
 		return m.Response
+	}
+	return nil
+}
+
+// MsgExecuteBundle defines the ExecuteBundle request type for the Msg/ExecuteBundle RPC method.
+type MsgExecuteBundle struct {
+	// bundler defines the entity going through the standard TX flow
+	// to execute one or multiple UserOperations on behalf of others.
+	Bundler string `protobuf:"bytes,1,opt,name=bundler,proto3" json:"bundler,omitempty"`
+	// txs defines the txs to execute on behalf of other users.
+	Txs []*tx.TxRaw `protobuf:"bytes,2,rep,name=txs,proto3" json:"txs,omitempty"`
+}
+
+func (m *MsgExecuteBundle) Reset()         { *m = MsgExecuteBundle{} }
+func (m *MsgExecuteBundle) String() string { return proto.CompactTextString(m) }
+func (*MsgExecuteBundle) ProtoMessage()    {}
+func (*MsgExecuteBundle) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29c2b6d8a13d4189, []int{4}
+}
+func (m *MsgExecuteBundle) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExecuteBundle) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExecuteBundle.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExecuteBundle) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecuteBundle.Merge(m, src)
+}
+func (m *MsgExecuteBundle) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExecuteBundle) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecuteBundle.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExecuteBundle proto.InternalMessageInfo
+
+func (m *MsgExecuteBundle) GetBundler() string {
+	if m != nil {
+		return m.Bundler
+	}
+	return ""
+}
+
+func (m *MsgExecuteBundle) GetTxs() []*tx.TxRaw {
+	if m != nil {
+		return m.Txs
+	}
+	return nil
+}
+
+// BundledTxResponse defines the response of a bundled tx.
+type BundledTxResponse struct {
+	ExecResponses *types.Any `protobuf:"bytes,1,opt,name=exec_responses,json=execResponses,proto3" json:"exec_responses,omitempty"`
+	Error         string     `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+}
+
+func (m *BundledTxResponse) Reset()         { *m = BundledTxResponse{} }
+func (m *BundledTxResponse) String() string { return proto.CompactTextString(m) }
+func (*BundledTxResponse) ProtoMessage()    {}
+func (*BundledTxResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29c2b6d8a13d4189, []int{5}
+}
+func (m *BundledTxResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BundledTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BundledTxResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BundledTxResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BundledTxResponse.Merge(m, src)
+}
+func (m *BundledTxResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *BundledTxResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_BundledTxResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BundledTxResponse proto.InternalMessageInfo
+
+func (m *BundledTxResponse) GetExecResponses() *types.Any {
+	if m != nil {
+		return m.ExecResponses
+	}
+	return nil
+}
+
+func (m *BundledTxResponse) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+// MsgExecuteBundleResponse defines the ExecuteBundle response type for the Msg/ExecuteBundle RPC method.
+type MsgExecuteBundleResponse struct {
+	// responses is the list of responses returned by the account implementations.
+	Responses []*BundledTxResponse `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
+}
+
+func (m *MsgExecuteBundleResponse) Reset()         { *m = MsgExecuteBundleResponse{} }
+func (m *MsgExecuteBundleResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExecuteBundleResponse) ProtoMessage()    {}
+func (*MsgExecuteBundleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29c2b6d8a13d4189, []int{6}
+}
+func (m *MsgExecuteBundleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExecuteBundleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExecuteBundleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExecuteBundleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecuteBundleResponse.Merge(m, src)
+}
+func (m *MsgExecuteBundleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExecuteBundleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecuteBundleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExecuteBundleResponse proto.InternalMessageInfo
+
+func (m *MsgExecuteBundleResponse) GetResponses() []*BundledTxResponse {
+	if m != nil {
+		return m.Responses
 	}
 	return nil
 }
@@ -264,34 +442,54 @@ func init() {
 	proto.RegisterType((*MsgInitResponse)(nil), "cosmos.accounts.v1.MsgInitResponse")
 	proto.RegisterType((*MsgExecute)(nil), "cosmos.accounts.v1.MsgExecute")
 	proto.RegisterType((*MsgExecuteResponse)(nil), "cosmos.accounts.v1.MsgExecuteResponse")
+	proto.RegisterType((*MsgExecuteBundle)(nil), "cosmos.accounts.v1.MsgExecuteBundle")
+	proto.RegisterType((*BundledTxResponse)(nil), "cosmos.accounts.v1.BundledTxResponse")
+	proto.RegisterType((*MsgExecuteBundleResponse)(nil), "cosmos.accounts.v1.MsgExecuteBundleResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/accounts/v1/tx.proto", fileDescriptor_29c2b6d8a13d4189) }
 
 var fileDescriptor_29c2b6d8a13d4189 = []byte{
-	// 349 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xb1, 0x4e, 0x02, 0x41,
-	0x10, 0x65, 0x45, 0x41, 0x07, 0x22, 0xc9, 0x16, 0x78, 0x39, 0x92, 0x0d, 0x62, 0xa2, 0x84, 0xe2,
-	0x4e, 0xd4, 0xca, 0x4e, 0x13, 0x13, 0x2d, 0x28, 0xbc, 0x18, 0x0b, 0x1b, 0x73, 0xde, 0x6d, 0x36,
-	0x84, 0xdc, 0xed, 0xe5, 0x66, 0x21, 0xd0, 0x19, 0xbf, 0xc0, 0xdf, 0xb0, 0xe3, 0x33, 0x2c, 0x29,
-	0x2d, 0x0d, 0x14, 0xfc, 0x86, 0xf1, 0x6e, 0x0f, 0x31, 0x06, 0x62, 0xf9, 0xe6, 0xcd, 0xbe, 0xf7,
-	0x66, 0x76, 0xa0, 0xe6, 0x49, 0x0c, 0x24, 0xda, 0xae, 0xe7, 0xc9, 0x7e, 0xa8, 0xd0, 0x1e, 0xb4,
-	0x6d, 0x35, 0xb4, 0xa2, 0x58, 0x2a, 0x49, 0x69, 0x4a, 0x5a, 0x19, 0x69, 0x0d, 0xda, 0xe6, 0x9e,
-	0x7e, 0x10, 0xa0, 0xf8, 0xee, 0x0d, 0x50, 0xa4, 0xcd, 0x8d, 0x1e, 0x14, 0x3b, 0x28, 0x6e, 0xc2,
-	0xae, 0xa2, 0x55, 0x28, 0x20, 0x0f, 0x7d, 0x1e, 0x1b, 0xa4, 0x4e, 0x9a, 0x3b, 0x8e, 0x46, 0x74,
-	0x1f, 0xca, 0x5a, 0xea, 0x51, 0x8d, 0x22, 0x6e, 0x6c, 0x24, 0x6c, 0x49, 0xd7, 0xee, 0x46, 0x11,
-	0xa7, 0x06, 0x14, 0x03, 0x8e, 0xe8, 0x0a, 0x6e, 0xe4, 0xeb, 0xa4, 0x59, 0x76, 0x32, 0x78, 0x5e,
-	0x7a, 0x99, 0x8f, 0x5b, 0x5a, 0xa9, 0x71, 0x0f, 0x15, 0x6d, 0xe6, 0x70, 0x8c, 0x64, 0x88, 0x9c,
-	0x1e, 0x41, 0x25, 0x13, 0x77, 0x7d, 0x3f, 0xe6, 0x88, 0xda, 0x7d, 0x57, 0x97, 0x2f, 0xd2, 0x2a,
-	0x35, 0x61, 0x3b, 0xd6, 0x8f, 0x92, 0x04, 0x65, 0x67, 0x81, 0x1b, 0x1e, 0x40, 0x07, 0xc5, 0xd5,
-	0x90, 0x7b, 0x7d, 0xc5, 0x57, 0xce, 0x51, 0x85, 0x82, 0x72, 0x63, 0xc1, 0x95, 0x9e, 0x40, 0xa3,
-	0xff, 0x86, 0x3f, 0x06, 0xfa, 0x63, 0xb2, 0xc8, 0xbf, 0x1c, 0x8b, 0xfc, 0x8e, 0x75, 0xf2, 0x46,
-	0x20, 0xdf, 0x41, 0x41, 0xaf, 0x61, 0x33, 0x59, 0x70, 0xcd, 0xfa, 0xfb, 0x33, 0x96, 0x5e, 0x88,
-	0x79, 0xb0, 0x86, 0x5c, 0xb8, 0xdd, 0x42, 0x31, 0x9b, 0x92, 0xad, 0xe8, 0xd7, 0xbc, 0x79, 0xb8,
-	0x9e, 0xcf, 0x24, 0xcd, 0xad, 0xe7, 0xf9, 0xb8, 0x45, 0x2e, 0xcf, 0xde, 0xa7, 0x8c, 0x4c, 0xa6,
-	0x8c, 0x7c, 0x4e, 0x19, 0x79, 0x9d, 0xb1, 0xdc, 0x64, 0xc6, 0x72, 0x1f, 0x33, 0x96, 0x7b, 0x30,
-	0x53, 0x1d, 0xf4, 0x7b, 0x56, 0x57, 0xda, 0xc3, 0xe5, 0x9b, 0x7b, 0x2a, 0x24, 0x47, 0x74, 0xfa,
-	0x15, 0x00, 0x00, 0xff, 0xff, 0xd9, 0x2e, 0x5d, 0x73, 0x90, 0x02, 0x00, 0x00,
+	// 609 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x54, 0xcd, 0x6e, 0xd3, 0x4c,
+	0x14, 0x8d, 0x9b, 0xb6, 0xf9, 0x7a, 0xd3, 0x9f, 0x8f, 0x51, 0x55, 0x5c, 0x57, 0x72, 0x4b, 0xf8,
+	0x8b, 0x2a, 0x18, 0x37, 0x85, 0x55, 0x59, 0xb5, 0x15, 0x08, 0x16, 0x5d, 0x60, 0x75, 0xc5, 0xa6,
+	0xf2, 0xcf, 0x64, 0x88, 0xda, 0x78, 0x22, 0xdf, 0x71, 0x71, 0x76, 0x88, 0x07, 0x40, 0x3c, 0x07,
+	0xab, 0x3e, 0x46, 0x97, 0x5d, 0xb2, 0x40, 0x80, 0x1a, 0xa4, 0xbe, 0x06, 0xb2, 0x3d, 0xe3, 0x04,
+	0x4a, 0xa2, 0x2e, 0x59, 0x65, 0xe6, 0x9e, 0x73, 0xef, 0x9c, 0x73, 0xc6, 0x19, 0x58, 0x0b, 0x04,
+	0x76, 0x05, 0x3a, 0x5e, 0x10, 0x88, 0x24, 0x92, 0xe8, 0x9c, 0xb6, 0x1c, 0x99, 0xd2, 0x5e, 0x2c,
+	0xa4, 0x20, 0xa4, 0x00, 0xa9, 0x06, 0xe9, 0x69, 0xcb, 0x5a, 0xe5, 0x42, 0xf0, 0x13, 0xe6, 0xe4,
+	0x0c, 0x3f, 0x69, 0x3b, 0x5e, 0xd4, 0x2f, 0xe8, 0xd6, 0x6d, 0x35, 0xab, 0x8b, 0x3c, 0x1b, 0xd3,
+	0x45, 0xae, 0x00, 0x5b, 0x01, 0xbe, 0x87, 0xcc, 0x39, 0x6d, 0xf9, 0x4c, 0x7a, 0x2d, 0x27, 0x10,
+	0x9d, 0x48, 0xe1, 0x96, 0xc2, 0x65, 0x5a, 0xa2, 0x5a, 0x83, 0xb5, 0xcc, 0x05, 0x17, 0xf9, 0xd2,
+	0xc9, 0x56, 0x45, 0xb5, 0xf1, 0xd3, 0x80, 0xda, 0x01, 0xf2, 0x57, 0x51, 0x47, 0x92, 0x15, 0x98,
+	0x45, 0x16, 0x85, 0x2c, 0x36, 0x8d, 0x0d, 0xa3, 0x39, 0xe7, 0xaa, 0x1d, 0xb9, 0x03, 0xf3, 0x4a,
+	0xf8, 0x91, 0xec, 0xf7, 0x98, 0x39, 0x95, 0xa3, 0x75, 0x55, 0x3b, 0xec, 0xf7, 0x18, 0xa1, 0x50,
+	0xeb, 0x32, 0x44, 0x8f, 0x33, 0xb3, 0xba, 0x61, 0x34, 0xeb, 0xdb, 0xcb, 0xb4, 0xb0, 0x47, 0xb5,
+	0x3d, 0xba, 0x1b, 0xf5, 0x5d, 0x4d, 0x22, 0x1e, 0xcc, 0xb4, 0x93, 0x28, 0x44, 0x73, 0x7a, 0xa3,
+	0xda, 0xac, 0x6f, 0xaf, 0x52, 0x15, 0x50, 0x66, 0x8c, 0x2a, 0xe9, 0x74, 0x5f, 0x74, 0xa2, 0xbd,
+	0xad, 0xf3, 0x6f, 0xeb, 0x95, 0xcf, 0xdf, 0xd7, 0x9b, 0xbc, 0x23, 0xdf, 0x26, 0x3e, 0x0d, 0x44,
+	0xd7, 0x51, 0x2e, 0x8b, 0x9f, 0xc7, 0x18, 0x1e, 0x3b, 0x99, 0x2e, 0xcc, 0x1b, 0xd0, 0x2d, 0x26,
+	0xef, 0xd4, 0x3f, 0x5c, 0x9d, 0x6d, 0x2a, 0x0b, 0x8d, 0x13, 0x58, 0x52, 0x2e, 0x5d, 0x86, 0x3d,
+	0x11, 0x21, 0x23, 0x0f, 0x61, 0x49, 0xbb, 0xf2, 0xc2, 0x30, 0x66, 0x88, 0xca, 0xf6, 0xa2, 0x2a,
+	0xef, 0x16, 0x55, 0xb2, 0x05, 0xff, 0xc5, 0xaa, 0x29, 0xb7, 0x3e, 0xce, 0x5c, 0xc9, 0x6a, 0x7c,
+	0x35, 0x00, 0x0e, 0x90, 0x3f, 0x4f, 0x59, 0x90, 0x48, 0x36, 0x36, 0xd7, 0x15, 0x98, 0x95, 0x5e,
+	0xcc, 0x99, 0x54, 0x89, 0xaa, 0xdd, 0x3f, 0x1f, 0xe6, 0x0b, 0x20, 0x43, 0x77, 0x65, 0x9e, 0xa3,
+	0x31, 0x19, 0x37, 0x8a, 0xa9, 0x0d, 0xff, 0x0f, 0xe7, 0xec, 0x25, 0x51, 0x78, 0xc2, 0x88, 0x09,
+	0x35, 0x3f, 0x5f, 0xe9, 0xb0, 0xf4, 0x96, 0x6c, 0x42, 0x55, 0xa6, 0x68, 0x4e, 0xe5, 0x1e, 0x4d,
+	0xed, 0x51, 0xa6, 0xa5, 0xc3, 0xc3, 0xd4, 0xf5, 0xde, 0xb9, 0x19, 0x69, 0x67, 0x3e, 0x93, 0xab,
+	0x3b, 0x1b, 0x6d, 0xb8, 0x55, 0x4c, 0x0f, 0x0f, 0xd3, 0x52, 0xee, 0x33, 0x58, 0x64, 0x29, 0x0b,
+	0x8e, 0xb4, 0x1a, 0x9c, 0x28, 0x7a, 0x21, 0xe3, 0xea, 0x5e, 0x24, 0xcb, 0x30, 0xc3, 0xe2, 0x58,
+	0xc4, 0xea, 0xe2, 0x8a, 0x4d, 0xe3, 0x08, 0xcc, 0x3f, 0xfd, 0x94, 0xc7, 0xed, 0xc3, 0xdc, 0xe8,
+	0x49, 0x99, 0x87, 0xfb, 0xf4, 0xfa, 0xab, 0x40, 0xaf, 0x09, 0x75, 0x87, 0x7d, 0xdb, 0x1f, 0xa7,
+	0xa0, 0x7a, 0x80, 0x9c, 0xbc, 0x84, 0xe9, 0xfc, 0x0f, 0xbb, 0xf6, 0xb7, 0x09, 0xea, 0x3b, 0xb7,
+	0xee, 0x4e, 0x00, 0x4b, 0x59, 0xaf, 0xa1, 0xa6, 0xbf, 0x52, 0x7b, 0x0c, 0x5f, 0xe1, 0xd6, 0x83,
+	0xc9, 0x78, 0x39, 0x32, 0x80, 0x85, 0xdf, 0xaf, 0xf4, 0xde, 0xe4, 0xc6, 0x82, 0x65, 0x3d, 0xba,
+	0x09, 0x4b, 0x1f, 0x62, 0xcd, 0xbc, 0xbf, 0x3a, 0xdb, 0x34, 0xf6, 0x9e, 0x9e, 0x5f, 0xda, 0xc6,
+	0xc5, 0xa5, 0x6d, 0xfc, 0xb8, 0xb4, 0x8d, 0x4f, 0x03, 0xbb, 0x72, 0x31, 0xb0, 0x2b, 0x5f, 0x06,
+	0x76, 0xe5, 0x8d, 0x7a, 0x09, 0x31, 0x3c, 0xa6, 0x1d, 0xe1, 0xa4, 0xa3, 0xcf, 0xb2, 0x3f, 0x9b,
+	0x5f, 0xed, 0x93, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xc4, 0x6a, 0x98, 0xb0, 0xb3, 0x05, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -310,6 +508,9 @@ type MsgClient interface {
 	Init(ctx context.Context, in *MsgInit, opts ...grpc.CallOption) (*MsgInitResponse, error)
 	// Execute executes a message to the target account.
 	Execute(ctx context.Context, in *MsgExecute, opts ...grpc.CallOption) (*MsgExecuteResponse, error)
+	// ExecuteBundle pertains account abstraction, it is used by the bundler
+	// to execute multiple UserOperations in a single transaction message.
+	ExecuteBundle(ctx context.Context, in *MsgExecuteBundle, opts ...grpc.CallOption) (*MsgExecuteBundleResponse, error)
 }
 
 type msgClient struct {
@@ -338,12 +539,24 @@ func (c *msgClient) Execute(ctx context.Context, in *MsgExecute, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *msgClient) ExecuteBundle(ctx context.Context, in *MsgExecuteBundle, opts ...grpc.CallOption) (*MsgExecuteBundleResponse, error) {
+	out := new(MsgExecuteBundleResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.accounts.v1.Msg/ExecuteBundle", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Init creates a new account in the chain.
 	Init(context.Context, *MsgInit) (*MsgInitResponse, error)
 	// Execute executes a message to the target account.
 	Execute(context.Context, *MsgExecute) (*MsgExecuteResponse, error)
+	// ExecuteBundle pertains account abstraction, it is used by the bundler
+	// to execute multiple UserOperations in a single transaction message.
+	ExecuteBundle(context.Context, *MsgExecuteBundle) (*MsgExecuteBundleResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -355,6 +568,9 @@ func (*UnimplementedMsgServer) Init(ctx context.Context, req *MsgInit) (*MsgInit
 }
 func (*UnimplementedMsgServer) Execute(ctx context.Context, req *MsgExecute) (*MsgExecuteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Execute not implemented")
+}
+func (*UnimplementedMsgServer) ExecuteBundle(ctx context.Context, req *MsgExecuteBundle) (*MsgExecuteBundleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecuteBundle not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -397,6 +613,24 @@ func _Msg_Execute_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ExecuteBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExecuteBundle)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExecuteBundle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.accounts.v1.Msg/ExecuteBundle",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExecuteBundle(ctx, req.(*MsgExecuteBundle))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.accounts.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -408,6 +642,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Execute",
 			Handler:    _Msg_Execute_Handler,
+		},
+		{
+			MethodName: "ExecuteBundle",
+			Handler:    _Msg_ExecuteBundle_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -434,10 +672,29 @@ func (m *MsgInit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Message) > 0 {
-		i -= len(m.Message)
-		copy(dAtA[i:], m.Message)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Message)))
+	if len(m.Funds) > 0 {
+		for iNdEx := len(m.Funds) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Funds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if m.Message != nil {
+		{
+			size, err := m.Message.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -478,10 +735,15 @@ func (m *MsgInitResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Response) > 0 {
-		i -= len(m.Response)
-		copy(dAtA[i:], m.Response)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Response)))
+	if m.Response != nil {
+		{
+			size, err := m.Response.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0x12
 	}
@@ -515,10 +777,29 @@ func (m *MsgExecute) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Message) > 0 {
-		i -= len(m.Message)
-		copy(dAtA[i:], m.Message)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Message)))
+	if len(m.Funds) > 0 {
+		for iNdEx := len(m.Funds) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Funds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if m.Message != nil {
+		{
+			size, err := m.Message.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -559,12 +840,140 @@ func (m *MsgExecuteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Response) > 0 {
-		i -= len(m.Response)
-		copy(dAtA[i:], m.Response)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Response)))
+	if m.Response != nil {
+		{
+			size, err := m.Response.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExecuteBundle) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExecuteBundle) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExecuteBundle) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Txs) > 0 {
+		for iNdEx := len(m.Txs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Txs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Bundler) > 0 {
+		i -= len(m.Bundler)
+		copy(dAtA[i:], m.Bundler)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Bundler)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BundledTxResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BundledTxResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BundledTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Error) > 0 {
+		i -= len(m.Error)
+		copy(dAtA[i:], m.Error)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Error)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ExecResponses != nil {
+		{
+			size, err := m.ExecResponses.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExecuteBundleResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExecuteBundleResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExecuteBundleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Responses) > 0 {
+		for iNdEx := len(m.Responses) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Responses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -594,9 +1003,15 @@ func (m *MsgInit) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = len(m.Message)
-	if l > 0 {
+	if m.Message != nil {
+		l = m.Message.Size()
 		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Funds) > 0 {
+		for _, e := range m.Funds {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	return n
 }
@@ -611,8 +1026,8 @@ func (m *MsgInitResponse) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = len(m.Response)
-	if l > 0 {
+	if m.Response != nil {
+		l = m.Response.Size()
 		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
@@ -632,9 +1047,15 @@ func (m *MsgExecute) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = len(m.Message)
-	if l > 0 {
+	if m.Message != nil {
+		l = m.Message.Size()
 		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Funds) > 0 {
+		for _, e := range m.Funds {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	return n
 }
@@ -645,9 +1066,60 @@ func (m *MsgExecuteResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Response)
+	if m.Response != nil {
+		l = m.Response.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgExecuteBundle) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Bundler)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Txs) > 0 {
+		for _, e := range m.Txs {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BundledTxResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ExecResponses != nil {
+		l = m.ExecResponses.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Error)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgExecuteBundleResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Responses) > 0 {
+		for _, e := range m.Responses {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	return n
 }
@@ -755,7 +1227,7 @@ func (m *MsgInit) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -765,24 +1237,60 @@ func (m *MsgInit) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Message = append(m.Message[:0], dAtA[iNdEx:postIndex]...)
 			if m.Message == nil {
-				m.Message = []byte{}
+				m.Message = &types.Any{}
+			}
+			if err := m.Message.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Funds", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Funds = append(m.Funds, types1.Coin{})
+			if err := m.Funds[len(m.Funds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		default:
@@ -871,7 +1379,7 @@ func (m *MsgInitResponse) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -881,24 +1389,26 @@ func (m *MsgInitResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response[:0], dAtA[iNdEx:postIndex]...)
 			if m.Response == nil {
-				m.Response = []byte{}
+				m.Response = &types.Any{}
+			}
+			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		default:
@@ -1019,7 +1529,7 @@ func (m *MsgExecute) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1029,24 +1539,60 @@ func (m *MsgExecute) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Message = append(m.Message[:0], dAtA[iNdEx:postIndex]...)
 			if m.Message == nil {
-				m.Message = []byte{}
+				m.Message = &types.Any{}
+			}
+			if err := m.Message.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Funds", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Funds = append(m.Funds, types1.Coin{})
+			if err := m.Funds[len(m.Funds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		default:
@@ -1103,7 +1649,7 @@ func (m *MsgExecuteResponse) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1113,24 +1659,344 @@ func (m *MsgExecuteResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response[:0], dAtA[iNdEx:postIndex]...)
 			if m.Response == nil {
-				m.Response = []byte{}
+				m.Response = &types.Any{}
+			}
+			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExecuteBundle) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExecuteBundle: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExecuteBundle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bundler", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Bundler = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Txs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Txs = append(m.Txs, &tx.TxRaw{})
+			if err := m.Txs[len(m.Txs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BundledTxResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BundledTxResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BundledTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExecResponses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ExecResponses == nil {
+				m.ExecResponses = &types.Any{}
+			}
+			if err := m.ExecResponses.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Error = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExecuteBundleResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExecuteBundleResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExecuteBundleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Responses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Responses = append(m.Responses, &BundledTxResponse{})
+			if err := m.Responses[len(m.Responses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		default:

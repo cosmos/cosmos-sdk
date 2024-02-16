@@ -98,7 +98,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwrite)
 }
 
-// Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
+// ReadTxFromFile read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
 func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
@@ -113,6 +113,39 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	}
 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
+}
+
+// ReadTxsFromFile read and decode a multi transactions (must be in Txs format) from the given filename.
+// Can pass "-" to read from stdin.
+func ReadTxsFromFile(ctx client.Context, filename string) (txs []sdk.Tx, err error) {
+	var fileBuff []byte
+
+	if filename == "-" {
+		fileBuff, err = io.ReadAll(os.Stdin)
+	} else {
+		fileBuff, err = os.ReadFile(filename)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to read batch txs from file %s: %w", filename, err)
+	}
+
+	// In SignBatchCmd, the output prints each tx line by line separated by "\n".
+	// So we split the output bytes to slice of tx bytes,
+	// last element always be empty bytes.
+	txsBytes := bytes.Split(fileBuff, []byte("\n"))
+	txDecoder := ctx.TxConfig.TxJSONDecoder()
+	for _, txBytes := range txsBytes {
+		if len(txBytes) == 0 {
+			continue
+		}
+		tx, err := txDecoder(txBytes)
+		if err != nil {
+			return nil, err
+		}
+		txs = append(txs, tx)
+	}
+	return txs, nil
 }
 
 // ReadTxsFromInput reads multiples txs from the given filename(s). Can pass "-" to read from stdin.

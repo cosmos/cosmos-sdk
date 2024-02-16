@@ -35,8 +35,8 @@ This specification defines the vesting account implementation that is used by th
 For all vesting accounts, the owner of the vesting account is able to delegate and undelegate from validators, however they cannot transfer coins to another account until those coins are vested. This specification allows for four different kinds of vesting:
 
 * Delayed vesting, where all coins are vested once `ET` is reached.
-* Continous vesting, where coins begin to vest at `ST` and vest linearly with respect to time until `ET` is reached
-* Periodic vesting, where coins begin to vest at `ST` and vest periodically according to number of periods and the vesting amount per period. The number of periods, length per period, and amount per period are configurable. A periodic vesting account is distinguished from a continuous vesting account in that coins can be released in staggered tranches. For example, a periodic vesting account could be used for vesting arrangements where coins are relased quarterly, yearly, or over any other function of tokens over time.
+* Continuous vesting, where coins begin to vest at `ST` and vest linearly with respect to time until `ET` is reached
+* Periodic vesting, where coins begin to vest at `ST` and vest periodically according to number of periods and the vesting amount per period. The number of periods, length per period, and amount per period are configurable. A periodic vesting account is distinguished from a continuous vesting account in that coins can be released in staggered tranches. For example, a periodic vesting account could be used for vesting arrangements where coins are released quarterly, yearly, or over any other function of tokens over time.
 * Permanent locked vesting, where coins are locked forever. Coins in this account can still be used for delegating and for governance votes even while locked.
 
 ## Note
@@ -543,7 +543,7 @@ V' = 0
     V' = 25
     ```
 
-3. During vesting period 2, 5 coins are transfered and 5 coins are delegated
+3. During vesting period 2, 5 coins are transferred and 5 coins are delegated
 
     ```text
     DV = 5

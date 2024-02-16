@@ -15,7 +15,6 @@ import (
 type AccountKeeper interface {
 	AddressCodec() address.Codec
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -32,10 +31,10 @@ type StakingKeeper interface {
 	ConsensusAddressCodec() address.Codec
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
-		func(index int64, validator stakingtypes.ValidatorI) (stop bool)) error
+		func(index int64, validator sdk.ValidatorI) (stop bool)) error
 
-	Validator(context.Context, sdk.ValAddress) (stakingtypes.ValidatorI, error)            // get a particular validator by operator address
-	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error) // get a particular validator by consensus address
+	Validator(context.Context, sdk.ValAddress) (sdk.ValidatorI, error)            // get a particular validator by operator address
+	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (sdk.ValidatorI, error) // get a particular validator by consensus address
 
 	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
 	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) (math.Int, error)
@@ -45,7 +44,7 @@ type StakingKeeper interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (stakingtypes.DelegationI, error)
+	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (sdk.DelegationI, error)
 	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 
 	// MaxValidators returns the maximum amount of bonded validators
@@ -53,6 +52,10 @@ type StakingKeeper interface {
 
 	// IsValidatorJailed returns if the validator is jailed.
 	IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bool, error)
+
+	// ValidatorIdentifier maps the new cons key to previous cons key (which is the address before the rotation).
+	// (that is: newConsKey -> oldConsKey)
+	ValidatorIdentifier(context.Context, sdk.ConsAddress) (sdk.ConsAddress, error)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

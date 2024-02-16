@@ -207,7 +207,7 @@ For backward compatibility with the existing `authtypes.NewModuleAddress`, we ad
 ```go
 func Module(moduleName string, derivationKeys ...[]byte) []byte{
 	if len(derivationKeys) == 0 {
-		return authtypes.NewModuleAddress(modulenName)  // legacy case
+		return authtypes.NewModuleAddress(moduleName)  // legacy case
 	}
 	submoduleAddress := Hash("module", []byte(moduleName) + 0 + key)
 	return fold((a, k) => Derive(a, k), subsubKeys, submoduleAddress)
@@ -319,10 +319,10 @@ Algorithm for complex / composed keys:
 
 Module addresses: Should module addresses have different size to differentiate it?
 
-* we will need to set a pre-image prefix for module addresse to keept them in 32-byte space: `hash(hash('module') + module_key)`
+* we will need to set a pre-image prefix for module address to keep them in 32-byte space: `hash(hash('module') + module_key)`
 * Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
 
-Discssion about arithmetic hash function for ZKP
+Discussion about arithmetic hash function for ZKP
 
 * Posseidon / Rescue
 * Problem: much bigger risk because we don’t know much techniques and history of crypto-analysis of arithmetic constructions. It’s still a new ground and area of active research.
@@ -331,7 +331,7 @@ Post quantum signature size
 
 * Alan suggestion: Falcon: speed / size ration - very good.
 * Aaron - should we think about it?
-  Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050 . But that’s a lot of uncertainty. But there is magic happening with recurions / linking / simulation and that can speedup the progress.
+  Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050 . But that’s a lot of uncertainty. But there is magic happening with recursions / linking / simulation and that can speedup the progress.
 
 Other ideas
 

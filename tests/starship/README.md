@@ -128,7 +128,7 @@ make install
 * Longer running pods or infra without issues.
 
 ### Testing/Infra
-* Add more tests based on requirements, port all exsiting adhoc tests to Starship
+* Add more tests based on requirements, port all existing adhoc tests to Starship
 * Add build system into starship (premetive exists) to be able to build the current simapp from the branch
 * Start from non-empty genesis
 * Add the concept of `jobs` into Starship config, where we can run predefined jobs against the infra

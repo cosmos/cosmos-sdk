@@ -52,7 +52,11 @@ type protoMessage[T any] interface {
 }
 
 // CollValue inits a collections.ValueCodec for a generic gogo protobuf message.
-func CollValue[T any, PT protoMessage[T]](cdc BinaryCodec) collcodec.ValueCodec[T] {
+func CollValue[T any, PT protoMessage[T]](cdc interface {
+	Marshal(proto.Message) ([]byte, error)
+	Unmarshal([]byte, proto.Message) error
+},
+) collcodec.ValueCodec[T] {
 	return &collValue[T, PT]{cdc.(Codec), proto.MessageName(PT(new(T)))}
 }
 
@@ -104,7 +108,8 @@ type collValue2[T any, PT protoMessageV2[T]] struct {
 }
 
 func (c collValue2[T, PT]) Encode(value PT) ([]byte, error) {
-	return protov2.Marshal(value)
+	protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
+	return protov2MarshalOpts.Marshal(value)
 }
 
 func (c collValue2[T, PT]) Decode(b []byte) (PT, error) {

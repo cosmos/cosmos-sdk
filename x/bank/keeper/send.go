@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -178,20 +177,11 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
+				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
 
-		// Create account if recipient does not exist.
-		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
-		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, outAddress)
-		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
-		}
 	}
 
 	return nil
@@ -216,23 +206,20 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	// Create account if recipient does not exist.
-	//
-	// NOTE: This should ultimately be removed in favor a more flexible approach
-	// such as delegated fee messages.
-	accExists := k.ak.HasAccount(ctx, toAddr)
-	if !accExists {
-		defer telemetry.IncrCounter(1, "new", "account")
-		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
+	fromAddrString, err := k.ak.AddressCodec().BytesToString(fromAddr)
+	if err != nil {
+		return err
+	}
+	toAddrString, err := k.ak.AddressCodec().BytesToString(toAddr)
+	if err != nil {
+		return err
 	}
 
-	// bech32 encoding is expensive! Only do it once for fromAddr
-	fromAddrString := fromAddr.String()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddrString),
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
@@ -279,9 +266,13 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 		}
 	}
 
+	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	if err != nil {
+		return err
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinSpentEvent(addr, amt),
+		types.NewCoinSpentEvent(addrStr, amt),
 	)
 
 	return nil
@@ -304,10 +295,15 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		}
 	}
 
+	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	if err != nil {
+		return err
+	}
+
 	// emit coin received event
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinReceivedEvent(addr, amt),
+		types.NewCoinReceivedEvent(addrStr, amt),
 	)
 
 	return nil
@@ -357,7 +353,11 @@ func (k BaseSendKeeper) IsSendEnabledCoin(ctx context.Context, coin sdk.Coin) bo
 // BlockedAddr checks if a given address is restricted from
 // receiving funds.
 func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
-	return k.blockedAddrs[addr.String()]
+	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	if err != nil {
+		panic(err)
+	}
+	return k.blockedAddrs[addrStr]
 }
 
 // GetBlockedAddresses returns the full list of addresses restricted from receiving funds.

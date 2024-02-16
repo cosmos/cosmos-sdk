@@ -34,8 +34,7 @@ func NewVersionCommand() *cobra.Command {
 			}
 
 			// Extract and set extra information from the context
-			extraInfo := extraInfoFromContext(cmd)
-			verInfo.ExtraInfo = &extraInfo
+			verInfo.ExtraInfo = extraInfoFromContext(cmd)
 
 			var (
 				bz  []byte

@@ -9,8 +9,12 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -31,9 +35,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type fixture struct {
@@ -41,6 +42,7 @@ type fixture struct {
 
 	ctx sdk.Context
 
+	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
 	slashingKeeper slashingkeeper.Keeper
 	stakingKeeper  *stakingkeeper.Keeper
@@ -91,9 +93,9 @@ func initFixture(tb testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	slashingKeeper := slashingkeeper.NewKeeper(cdc, &codec.LegacyAmino{}, runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
+	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger()), cdc, &codec.LegacyAmino{}, stakingKeeper, authority.String())
 
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
@@ -135,6 +137,7 @@ func initFixture(tb testing.TB) *fixture {
 	return &fixture{
 		app:            integrationApp,
 		ctx:            sdkCtx,
+		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		slashingKeeper: slashingKeeper,
 		stakingKeeper:  stakingKeeper,
@@ -157,6 +160,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	// create max (5) validators all with the same power
 	for i := uint32(0); i < p.MaxValidators; i++ {
 		addr, val := f.valAddrs[i], pks[i]
+		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
+		f.accountKeeper.SetAccount(f.ctx, acc)
 		tstaking.CreateValidatorWithValPower(addr, val, 100, true)
 	}
 
@@ -166,6 +171,8 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
 	addr, val := f.valAddrs[5], pks[5]
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 50)
 	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
@@ -246,6 +253,8 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(valpubkey.Address()), info))
 
 	// Validator created
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	amt := tstaking.CreateValidatorWithValPower(addr, valpubkey, 100, true)
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
@@ -277,7 +286,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	// validator should be bonded still, should not have been jailed or slashed
 	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(valpubkey))
-	assert.Equal(t, stakingtypes.Bonded, validator.GetStatus())
+	assert.Equal(t, sdk.Bonded, validator.GetStatus())
 	bondPool := f.stakingKeeper.GetBondedPool(f.ctx)
 	expTokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 100)
 	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(f.ctx, bondPool.GetAddress(), bondDenom).Amount))
@@ -300,8 +309,11 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	consaddr, err := f.stakingKeeper.ConsensusAddressCodec().BytesToString(val.Address())
 	assert.NilError(t, err)
 
-	info := slashingtypes.NewValidatorSigningInfo(consaddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	info := slashingtypes.NewValidatorSigningInfo(consaddr, f.ctx.HeaderInfo().Height, int64(0), time.Unix(0, 0), false, int64(0))
 	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(val.Address()), info))
+
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
+	f.accountKeeper.SetAccount(f.ctx, acc)
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 
@@ -314,7 +326,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	// 1000 first blocks OK
 	height := int64(0)
 	for ; height < signedBlocksWindow; height++ {
-		f.ctx = f.ctx.WithBlockHeight(height)
+		f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height})
 		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagCommit)
 		assert.NilError(t, err)
 	}
@@ -324,7 +336,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// 501 blocks missed
 	for ; height < signedBlocksWindow+(signedBlocksWindow-minSignedPerWindow)+1; height++ {
-		f.ctx = f.ctx.WithBlockHeight(height)
+		f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height})
 		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagAbsent)
 		assert.NilError(t, err)
 	}
@@ -335,14 +347,14 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// validator should have been jailed and slashed
 	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))
-	assert.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
+	assert.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
 	resultingTokens := amt.Sub(f.stakingKeeper.TokensFromConsensusPower(f.ctx, 1))
 	assert.DeepEqual(t, resultingTokens, validator.GetTokens())
 
 	// another block missed
-	f.ctx = f.ctx.WithBlockHeight(height)
+	f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height})
 	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagAbsent))
 
 	// validator should not have been slashed twice
@@ -366,6 +378,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	pks := simtestutil.CreateTestPubKeys(3)
 	simtestutil.AddTestAddrsFromPubKeys(f.bankKeeper, f.stakingKeeper, f.ctx, pks, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 200))
+	for _, pk := range pks {
+		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(pk.Address()))
+		f.accountKeeper.SetAccount(f.ctx, acc)
+	}
 
 	addr, val := pks[0].Address(), pks[0]
 	consAddr := sdk.ConsAddress(addr)
@@ -389,7 +405,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// 100 first blocks OK
 	height := int64(0)
 	for ; height < int64(100); height++ {
-		f.ctx = f.ctx.WithBlockHeight(height)
+		f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 		assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, comet.BlockIDFlagCommit))
 	}
 
@@ -403,7 +419,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// 600 more blocks happened
 	height += 600
-	f.ctx = f.ctx.WithBlockHeight(height)
+	f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 
 	// validator added back in
 	tstaking.DelegateWithPower(sdk.AccAddress(pks[2].Address()), valAddr, 50)
@@ -429,7 +445,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// misses 500 blocks + within the signing windows i.e. 700-1700
 	// validators misses all 1000 blocks of a SignedBlockWindows
 	for ; height < latest+1; height++ {
-		err = f.slashingKeeper.HandleValidatorSignature(f.ctx.WithBlockHeight(height), val.Address(), newPower, comet.BlockIDFlagAbsent)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx.WithHeaderInfo(coreheader.Info{Height: height}), val.Address(), newPower, comet.BlockIDFlagAbsent)
 		assert.NilError(t, err)
 	}
 
@@ -451,7 +467,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// some blocks pass
 	height = int64(5000)
-	f.ctx = f.ctx.WithBlockHeight(height)
+	f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 
 	info = slashingtypes.NewValidatorSigningInfo(consaddrStr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
 	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, consAddr, info)
@@ -479,7 +495,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator misses 501 blocks after SignedBlockWindow period (1000 blocks)
 	latest = signedBlocksWindow + height
 	for ; height < latest+minSignedPerWindow; height++ {
-		f.ctx = f.ctx.WithBlockHeight(height)
+		f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, comet.BlockIDFlagAbsent)
 		assert.NilError(t, err)
 	}

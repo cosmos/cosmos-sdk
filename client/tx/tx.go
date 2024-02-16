@@ -11,6 +11,8 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 
+	authsigning "cosmossdk.io/x/auth/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -18,7 +20,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
@@ -28,7 +29,6 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 	if err != nil {
 		return err
 	}
-
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
@@ -245,7 +245,7 @@ func checkMultipleSigners(tx authsigning.Tx) error {
 // Sign signs a given tx with a named key. The bytes signed over are canconical.
 // The resulting signature will be added to the transaction builder overwriting the previous
 // ones if overwrite=true (otherwise, the signature will be appended).
-// Signing a transaction with mutltiple signers in the DIRECT mode is not supprted and will
+// Signing a transaction with mutltiple signers in the DIRECT mode is not supported and will
 // return an error.
 // An error is returned upon failure.
 func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # `x/params`
 
-> Note: The Params module has been depreacted in favour of each module housing its own parameters. 
+> Note: The Params module has been deprecated in favour of each module housing its own parameters. 
 
 ## Abstract
 

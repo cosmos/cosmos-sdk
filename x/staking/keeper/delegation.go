@@ -165,7 +165,7 @@ func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddre
 // GetUnbondingDelegationsFromValidator returns all unbonding delegations from a
 // particular validator.
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 	rng := collections.NewPrefixedPairRange[[]byte, []byte](valAddr)
 	err = k.UnbondingDelegationByValIndex.Walk(
 		ctx,
@@ -212,14 +212,16 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 	return unbonding, err
 }
 
-// GetDelegatorBonded returs the total amount a delegator has bonded.
+// GetDelegatorBonded returns the total amount a delegator has bonded.
 func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	bonded := math.LegacyZeroDec()
 
+	var iterErr error
 	err := k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
 		validatorAddr, err := k.validatorAddressCodec.StringToBytes(delegation.ValidatorAddress)
 		if err != nil {
-			panic(err) // shouldn't happen
+			iterErr = err
+			return true
 		}
 		validator, err := k.GetValidator(ctx, validatorAddr)
 		if err == nil {
@@ -229,6 +231,9 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 		}
 		return false
 	})
+	if iterErr != nil {
+		return bonded.RoundInt(), iterErr
+	}
 	return bonded.RoundInt(), err
 }
 
@@ -333,7 +338,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 		}
 
 		if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-			k.Logger(ctx).Error("failed to call after unbonding initiated hook", "error", err)
+			return ubd, fmt.Errorf("failed to call after unbonding initiated hook: %w", err)
 		}
 	}
 	return ubd, nil
@@ -459,16 +464,16 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sd
 // HasReceivingRedelegation checks if validator is receiving a redelegation.
 func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) (bool, error) {
 	rng := collections.NewSuperPrefixedTripleRange[[]byte, []byte, []byte](valDstAddr, delAddr)
-	hasAtleastOneEntry := false
+	hasReceivingRedelegation := false
 	err := k.RedelegationsByValDst.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
-		hasAtleastOneEntry = true
+		hasReceivingRedelegation = true
 		return true, nil // returning true here to stop the iterations after 1st finding
 	})
 	if err != nil {
 		return false, err
 	}
 
-	return hasAtleastOneEntry, nil
+	return hasReceivingRedelegation, nil
 }
 
 // HasMaxRedelegationEntries checks if the redelegation entries reached maximum limit.
@@ -549,8 +554,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 	}
 
 	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-		k.Logger(ctx).Error("failed to call after unbonding initiated hook", "error", err)
-		// TODO (Facu): Should we return here? We are ignoring this error
+		return types.Redelegation{}, fmt.Errorf("failed to call after unbonding initiated hook: %w", err)
 	}
 
 	return red, nil
@@ -623,7 +627,7 @@ func (k Keeper) SetRedelegationQueueTimeSlice(ctx context.Context, timestamp tim
 	return k.RedelegationQueue.Set(ctx, timestamp, triplets)
 }
 
-// InsertRedelegationQueue insert an redelegation delegation to the appropriate
+// InsertRedelegationQueue insert a redelegation delegation to the appropriate
 // timeslice in the redelegation queue.
 func (k Keeper) InsertRedelegationQueue(ctx context.Context, red types.Redelegation, completionTime time.Time) error {
 	timeSlice, err := k.GetRedelegationQueueTimeSlice(ctx, completionTime)
@@ -649,11 +653,10 @@ func (k Keeper) InsertRedelegationQueue(ctx context.Context, red types.Redelegat
 // the queue.
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet, err error) {
 	var keys []time.Time
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
-	rng := (&collections.Range[time.Time]{}).EndInclusive(sdkCtx.HeaderInfo().Time)
+	rng := (&collections.Range[time.Time]{}).EndInclusive(headerInfo.Time)
 	err = k.RedelegationQueue.Walk(ctx, rng, func(key time.Time, value types.DVVTriplets) (bool, error) {
 		keys = append(keys, key)
 		matureRedelegations = append(matureRedelegations, value.Triplets...)
@@ -717,7 +720,7 @@ func (k Keeper) Delegate(
 	// all non bonded
 	if subtractAccount {
 		if tokenSrc == types.Bonded {
-			panic("delegation token source cannot be bonded")
+			return math.LegacyZeroDec(), fmt.Errorf("delegation token source cannot be bonded; expected Unbonded or Unbonding, got Bonded")
 		}
 
 		var sendName string
@@ -728,7 +731,7 @@ func (k Keeper) Delegate(
 		case validator.IsUnbonding(), validator.IsUnbonded():
 			sendName = types.NotBondedPoolName
 		default:
-			panic("invalid validator status")
+			return math.LegacyZeroDec(), fmt.Errorf("invalid validator status: %v", validator.Status)
 		}
 
 		bondDenom, err := k.BondDenom(ctx)
@@ -760,7 +763,7 @@ func (k Keeper) Delegate(
 				return math.LegacyDec{}, err
 			}
 		default:
-			panic("unknown token source bond status")
+			return math.LegacyZeroDec(), fmt.Errorf("unknown token source bond status: %v", tokenSrc)
 		}
 	}
 
@@ -832,9 +835,12 @@ func (k Keeper) Unbond(
 		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
 		err = k.jailValidator(ctx, validator)
 		if err != nil {
-			return amount, err
+			return amount, fmt.Errorf("failed to jail validator: %v", err)
 		}
-		validator = k.mustGetValidator(ctx, valbz)
+		validator, err = k.GetValidator(ctx, valbz)
+		if err != nil {
+			return amount, fmt.Errorf("validator record not found for address: %X", valbz)
+		}
 	}
 
 	if delegation.Shares.IsZero() {
@@ -884,7 +890,7 @@ func (k Keeper) getBeginInfo(
 	if err != nil && errors.Is(err, types.ErrNoValidatorFound) {
 		return completionTime, height, false, nil
 	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)
 	if err != nil {
 		return completionTime, height, false, err
@@ -894,8 +900,8 @@ func (k Keeper) getBeginInfo(
 	switch {
 	case errors.Is(err, types.ErrNoValidatorFound) || validator.IsBonded():
 		// the longest wait - just unbonding period from now
-		completionTime = sdkCtx.HeaderInfo().Time.Add(unbondingTime)
-		height = sdkCtx.BlockHeight()
+		completionTime = headerInfo.Time.Add(unbondingTime)
+		height = headerInfo.Height
 
 		return completionTime, height, false, nil
 
@@ -906,7 +912,7 @@ func (k Keeper) getBeginInfo(
 		return validator.UnbondingTime, validator.UnbondingHeight, false, nil
 
 	default:
-		panic(fmt.Sprintf("unknown validator status: %s", validator.Status))
+		return completionTime, height, false, fmt.Errorf("unknown validator status: %v", validator.Status)
 	}
 }
 
@@ -950,9 +956,9 @@ func (k Keeper) Undelegate(
 		return time.Time{}, math.Int{}, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	completionTime := sdkCtx.HeaderInfo().Time.Add(unbondingTime)
-	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.BlockHeight(), completionTime, returnAmount)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	completionTime := headerInfo.Time.Add(unbondingTime)
+	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, headerInfo.Height, completionTime, returnAmount)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
@@ -980,8 +986,8 @@ func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, v
 	}
 
 	balances := sdk.NewCoins()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ctxTime := sdkCtx.HeaderInfo().Time
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	ctxTime := headerInfo.Time
 
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
@@ -1077,7 +1083,7 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrTinyRedelegationAmount
 	}
 
-	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, srcValidator.GetStatus(), dstValidator, false)
+	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, types.BondStatus(srcValidator.GetStatus()), dstValidator, false)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -1125,8 +1131,8 @@ func (k Keeper) CompleteRedelegation(
 	}
 
 	balances := sdk.NewCoins()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ctxTime := sdkCtx.HeaderInfo().Time
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	ctxTime := headerInfo.Time
 
 	// loop through all the entries and complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {

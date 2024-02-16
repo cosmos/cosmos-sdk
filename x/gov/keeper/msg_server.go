@@ -29,13 +29,6 @@ var _ v1.MsgServer = msgServer{}
 
 // SubmitProposal implements the MsgServer.SubmitProposal method.
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
-	if msg.Title == "" {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
-	}
-	if msg.Summary == "" {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
-	}
-
 	proposer, err := k.authKeeper.AddressCodec().StringToBytes(msg.GetProposer())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
@@ -63,28 +56,35 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		// nothing can be done here, and this is still a valid case, so we ignore the error
 	}
 
+	// This method checks that all message metadata, summary and title
+	// has te expected length defined in the module configuration.
+	if err := k.validateProposalLengths(msg.Metadata, msg.Title, msg.Summary); err != nil {
+		return nil, err
+	}
+
 	proposalMsgs, err := msg.GetMsgs()
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	initialDeposit := msg.GetInitialDeposit()
-
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
 	}
 
-	if err := k.validateInitialDeposit(ctx, params, initialDeposit, msg.Expedited); err != nil {
+	if msg.Expedited { // checking for backward compatibility
+		msg.ProposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+	}
+	if err := k.validateInitialDeposit(ctx, params, msg.GetInitialDeposit(), msg.ProposalType); err != nil {
 		return nil, err
 	}
 
-	if err := k.validateDepositDenom(ctx, params, initialDeposit); err != nil {
+	if err := k.validateDepositDenom(ctx, params, msg.GetInitialDeposit()); err != nil {
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.Expedited)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.ProposalType)
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +115,45 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 	return &v1.MsgSubmitProposalResponse{
 		ProposalId: proposal.Id,
+	}, nil
+}
+
+// SubmitMultipleChoiceProposal implements the MsgServer.SubmitMultipleChoiceProposal method.
+func (k msgServer) SubmitMultipleChoiceProposal(ctx context.Context, msg *v1.MsgSubmitMultipleChoiceProposal) (*v1.MsgSubmitMultipleChoiceProposalResponse, error) {
+	resp, err := k.SubmitProposal(ctx, &v1.MsgSubmitProposal{
+		InitialDeposit: msg.InitialDeposit,
+		Proposer:       msg.Proposer,
+		Title:          msg.Title,
+		Summary:        msg.Summary,
+		Metadata:       msg.Metadata,
+		ProposalType:   v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.VoteOptions == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("vote options cannot be nil")
+	}
+
+	// check that if a vote option is provided, the previous one is also provided
+	if (msg.VoteOptions.OptionTwo != "" && msg.VoteOptions.OptionOne == "") ||
+		(msg.VoteOptions.OptionThree != "" && msg.VoteOptions.OptionTwo == "") ||
+		(msg.VoteOptions.OptionFour != "" && msg.VoteOptions.OptionThree == "") {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("if a vote option is provided, the previous one must also be provided")
+	}
+
+	// check that at least two vote options are provided
+	if msg.VoteOptions.OptionOne == "" && msg.VoteOptions.OptionTwo == "" {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("vote options cannot be empty, two or more options must be provided")
+	}
+
+	if err := k.ProposalVoteOptions.Set(ctx, resp.ProposalId, *msg.VoteOptions); err != nil {
+		return nil, err
+	}
+
+	return &v1.MsgSubmitMultipleChoiceProposalResponse{
+		ProposalId: resp.ProposalId,
 	}, nil
 }
 
@@ -186,8 +225,7 @@ func (k msgServer) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteRespon
 		return nil, errors.Wrap(govtypes.ErrInvalidVote, msg.Option.String())
 	}
 
-	err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata)
-	if err != nil {
+	if err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata); err != nil {
 		return nil, err
 	}
 
@@ -267,13 +305,13 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	return &v1.MsgDepositResponse{}, nil
 }
 
-// UpdateParams implements the MsgServer.UpdateParams method.
+// UpdateParams implements the v1.UpdateParams method.
 func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*v1.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
-	if err := msg.Params.ValidateBasic(); err != nil {
+	if err := msg.Params.ValidateBasic(k.authKeeper.AddressCodec()); err != nil {
 		return nil, err
 	}
 
@@ -282,6 +320,82 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*
 	}
 
 	return &v1.MsgUpdateParamsResponse{}, nil
+}
+
+// UpdateMessageParams implements the v1.MsgServer method
+func (k msgServer) UpdateMessageParams(ctx context.Context, msg *v1.MsgUpdateMessageParams) (*v1.MsgUpdateMessageParamsResponse, error) {
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+
+	// delete the message params if the params are empty
+	if msg.Params == nil || *msg.Params == (v1.MessageBasedParams{}) {
+		if err := k.MessageBasedParams.Remove(ctx, msg.MsgUrl); err != nil {
+			return nil, err
+		}
+
+		return &v1.MsgUpdateMessageParamsResponse{}, nil
+	}
+
+	if err := msg.Params.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	// note: we don't need to validate the message URL here, as it is gov gated
+	// a chain may want to configure proposal messages before having an upgrade
+	// adding new messages.
+
+	if err := k.MessageBasedParams.Set(ctx, msg.MsgUrl, *msg.Params); err != nil {
+		return nil, err
+	}
+
+	return &v1.MsgUpdateMessageParamsResponse{}, nil
+}
+
+// SudoExec implements the v1.MsgServer method
+func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSudoExecResponse, error) {
+	if msg == nil || msg.Msg == nil {
+		return nil, errors.Wrap(govtypes.ErrInvalidProposal, "sudo-ed message cannot be nil")
+	}
+
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+
+	sudoedMsg, err := msg.GetSudoedMsg()
+	if err != nil {
+		return nil, errors.Wrapf(govtypes.ErrInvalidProposal, "invalid sudo-ed message: %s", err)
+	}
+
+	// check if the message implements the HasValidateBasic interface
+	if m, ok := sudoedMsg.(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return nil, errors.Wrapf(govtypes.ErrInvalidProposal, "invalid sudo-ed message: %s", err)
+		}
+	}
+
+	handler := k.router.Handler(sudoedMsg)
+	if handler == nil {
+		return nil, errors.Wrapf(govtypes.ErrInvalidProposal, "unrecognized message route: %s", sdk.MsgTypeURL(sudoedMsg))
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	msgResp, err := handler(sdkCtx, sudoedMsg)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
+	}
+
+	// emit the events from the executed message
+	events := msgResp.Events
+	sdkEvents := make([]sdk.Event, 0, len(events))
+	for _, event := range events {
+		sdkEvents = append(sdkEvents, sdk.Event(event))
+	}
+	sdkCtx.EventManager().EmitEvents(sdkEvents)
+
+	return &v1.MsgSudoExecResponse{
+		Result: msgResp.Data,
+	}, nil
 }
 
 type legacyMsgServer struct {
@@ -321,7 +435,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		"",
 		msg.GetContent().GetTitle(),
 		msg.GetContent().GetDescription(),
-		false, // legacy proposals cannot be expedited
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD, // legacy proposals can only be standard
 	)
 	if err != nil {
 		return nil, err

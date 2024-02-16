@@ -50,7 +50,7 @@ An account that has had its pubkey changed cannot be automatically pruned from s
 	ctx.GasMeter().ConsumeGas(amount, "pubkey change fee")
 ```
 
-Everytime a key for an address is changed, we will store a log of this change in the state of the chain, thus creating a stack of all previous keys for an address and the time intervals for which they were active.  This allows dapps and clients to easily query past keys for an account which may be useful for features such as verifying timestamped off-chain signed messages.
+Every time a key for an address is changed, we will store a log of this change in the state of the chain, thus creating a stack of all previous keys for an address and the time intervals for which they were active.  This allows dapps and clients to easily query past keys for an account which may be useful for features such as verifying timestamped off-chain signed messages.
 
 ## Consequences
 
@@ -72,5 +72,5 @@ Breaks the current assumed relationship between address and pubkeys as H(pubkey)
 * Will require that PubKeys for an account are included in the genesis exports.
 
 ## References
-
-* https://algorand.com/resources/algorand-announcements/announcing-rekeying
+<!-- markdown-link-check-disable-next-line -->
+* https://algorandtechnologies.com/news/announcing-rekeying

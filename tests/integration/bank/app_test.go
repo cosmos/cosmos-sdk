@@ -11,6 +11,9 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	_ "cosmossdk.io/x/auth"
+	_ "cosmossdk.io/x/auth/tx/config"
+	authtypes "cosmossdk.io/x/auth/types"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
@@ -29,9 +32,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
@@ -64,7 +64,7 @@ var (
 	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
 
-	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
+	sendMsg1 = types.NewMsgSend(addr1.String(), addr2.String(), coins)
 
 	multiSendMsg1 = &types.MsgMultiSend{
 		Inputs:  []types.Input{types.NewInput(addr1, coins)},
@@ -167,7 +167,11 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	origAccNum := res1.GetAccountNumber()
 	origSeq := res1.GetSequence()
 
-	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
+	addr1Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr1)
+	require.NoError(t, err)
+	addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
+	require.NoError(t, err)
+	sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := header.Info{Height: baseApp.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
@@ -386,7 +390,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 		"Change send enabled",
 		"Modify send enabled and set to true",
-		false,
+		govv1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	require.NoError(t, err, "making goodGovProp")
 
@@ -415,10 +419,8 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			},
 			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
 			expInError: []string{
-				"pubKey does not match signer address",
+				"cannot be claimed by public key with address",
 				govAddr,
-				"with signer index: 0",
-				"invalid pubkey",
 			},
 		},
 		{

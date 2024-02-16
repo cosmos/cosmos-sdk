@@ -1012,7 +1012,7 @@ Example Output:
 
 ### SendEnabled
 
-The `SendEnabled` enpoints allows users to query the SendEnabled entries of the `bank` module.
+The `SendEnabled` endpoints allows users to query the SendEnabled entries of the `bank` module.
 
 Any denominations NOT returned, use the `Params.DefaultSendEnabled` value.
 

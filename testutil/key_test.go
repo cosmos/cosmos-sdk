@@ -18,7 +18,7 @@ func TestGenerateCoinKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test creation
-	k, err := keyring.NewInMemory(cdc).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
+	k, err := keyring.NewInMemory(cdc).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.CoinType, 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
 	addr1, err := k.GetAddress()
 	require.NoError(t, err)
@@ -32,7 +32,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
 	require.NoError(t, err)
 
-	addr, mnemonic, err := GenerateSaveCoinKey(kb, "keyname", "", false, hd.Secp256k1)
+	addr, mnemonic, err := GenerateSaveCoinKey(kb, "keyname", "", false, hd.Secp256k1, types.GetFullBIP44Path())
 	require.NoError(t, err)
 
 	// Test key was actually saved
@@ -43,7 +43,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	require.Equal(t, addr, addr1)
 
 	// Test in-memory recovery
-	k, err = keyring.NewInMemory(encCfg.Codec).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
+	k, err = keyring.NewInMemory(encCfg.Codec).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.CoinType, 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
 	addr1, err = k.GetAddress()
 	require.NoError(t, err)
@@ -58,15 +58,15 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	keyname := "justakey"
-	addr1, _, err := GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1)
+	addr1, _, err := GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1, types.GetFullBIP44Path())
 	require.NoError(t, err)
 
 	// Test overwrite with overwrite=false
-	_, _, err = GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1)
+	_, _, err = GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1, types.GetFullBIP44Path())
 	require.Error(t, err)
 
 	// Test overwrite with overwrite=true
-	addr2, _, err := GenerateSaveCoinKey(kb, keyname, "", true, hd.Secp256k1)
+	addr2, _, err := GenerateSaveCoinKey(kb, keyname, "", true, hd.Secp256k1, types.GetFullBIP44Path())
 	require.NoError(t, err)
 
 	require.NotEqual(t, addr1, addr2)

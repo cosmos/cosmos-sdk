@@ -68,7 +68,8 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 		err error
 	)
 	if msg, ok := v.(protov2.Message); ok {
-		bz, err = protov2.Marshal(msg)
+		protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
+		bz, err = protov2MarshalOpts.Marshal(msg)
 	} else {
 		bz, err = proto.Marshal(v)
 	}
@@ -109,7 +110,8 @@ func (any *Any) pack(x proto.Message) error {
 		err error
 	)
 	if msg, ok := x.(protov2.Message); ok {
-		bz, err = protov2.Marshal(msg)
+		protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
+		bz, err = protov2MarshalOpts.Marshal(msg)
 	} else {
 		bz, err = proto.Marshal(x)
 	}

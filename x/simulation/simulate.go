@@ -297,7 +297,7 @@ type blockSimFn func(
 ) (opCount int)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
-// parameters being passed everytime, to minimize memory overhead.
+// parameters being passed every time, to minimize memory overhead.
 func createBlockSimulator(tb testing.TB, testingMode bool, w io.Writer, params Params,
 	event func(route, op, evResult string), ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []simulation.FutureOperation,

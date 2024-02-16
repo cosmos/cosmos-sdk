@@ -35,8 +35,7 @@ import (
 //	Infraction was committed at the current height or at a past height,
 //	but not at a height in the future
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
-	logger := k.Logger(ctx)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	logger := k.Logger()
 
 	if slashFactor.IsNegative() {
 		return math.NewInt(0), fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor)
@@ -57,7 +56,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		// Log the slash attempt for future reference (maybe we should tag it too)
 		conStr, err := k.consensusAddressCodec.BytesToString(consAddr)
 		if err != nil {
-			panic(err)
+			return math.NewInt(0), err
 		}
 
 		logger.Error(
@@ -76,12 +75,12 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 
 	operatorAddress, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 	if err != nil {
-		return math.Int{}, err
+		return math.NewInt(0), err
 	}
 
 	// call the before-modification hook
 	if err := k.Hooks().BeforeValidatorModified(ctx, operatorAddress); err != nil {
-		k.Logger(ctx).Error("failed to call before validator modified hook", "error", err)
+		return math.NewInt(0), fmt.Errorf("failed to call before validator modified hook: %w", err)
 	}
 
 	// Track remaining slash amount for the validator
@@ -89,14 +88,16 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	// redelegations, as that stake has since unbonded
 	remainingSlashAmount := slashAmount
 
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	height := headerInfo.Height
 	switch {
-	case infractionHeight > sdkCtx.BlockHeight():
+	case infractionHeight > height:
 		// Can't slash infractions in the future
 		return math.NewInt(0), fmt.Errorf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
-			infractionHeight, sdkCtx.BlockHeight())
+			infractionHeight, height)
 
-	case infractionHeight == sdkCtx.BlockHeight():
+	case infractionHeight == height:
 		// Special-case slash at current height for efficiency - we don't need to
 		// look through unbonding delegations or redelegations.
 		logger.Info(
@@ -104,7 +105,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 			"height", infractionHeight,
 		)
 
-	case infractionHeight < sdkCtx.BlockHeight():
+	case infractionHeight < height:
 		// Iterate through unbonding delegations from slashed validator
 		unbondingDelegations, err := k.GetUnbondingDelegationsFromValidator(ctx, operatorAddress)
 		if err != nil {
@@ -170,7 +171,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		}
 		// call the before-slashed hook
 		if err := k.Hooks().BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction); err != nil {
-			k.Logger(ctx).Error("failed to call before validator slashed hook", "error", err)
+			return math.NewInt(0), fmt.Errorf("failed to call before validator slashed hook: %w", err)
 		}
 	}
 
@@ -182,16 +183,16 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	}
 
 	switch validator.GetStatus() {
-	case types.Bonded:
+	case sdk.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			return math.NewInt(0), err
 		}
-	case types.Unbonding, types.Unbonded:
+	case sdk.Unbonding, sdk.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			return math.NewInt(0), err
 		}
 	default:
-		panic("invalid validator status")
+		return math.NewInt(0), fmt.Errorf("invalid validator status")
 	}
 
 	logger.Info(
@@ -210,24 +211,29 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 
 // jail a validator
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
-	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
+	validator, err := k.GetValidatorByConsAddr(ctx, consAddr)
+	if err != nil {
+		return fmt.Errorf("validator with consensus-Address %s not found", consAddr)
+	}
 	if err := k.jailValidator(ctx, validator); err != nil {
 		return err
 	}
 
-	logger := k.Logger(ctx)
-	logger.Info("validator jailed", "validator", consAddr)
+	k.Logger().Info("validator jailed", "validator", consAddr)
 	return nil
 }
 
 // unjail a validator
 func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
-	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
+	validator, err := k.GetValidatorByConsAddr(ctx, consAddr)
+	if err != nil {
+		return fmt.Errorf("validator with consensus-Address %s not found", consAddr)
+	}
 	if err := k.unjailValidator(ctx, validator); err != nil {
 		return err
 	}
-	logger := k.Logger(ctx)
-	logger.Info("validator un-jailed", "validator", consAddr)
+
+	k.Logger().Info("validator un-jailed", "validator", consAddr)
 	return nil
 }
 
@@ -239,8 +245,7 @@ func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.HeaderInfo().Time
+	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	totalSlashAmount = math.ZeroInt()
 	burnedAmount := math.ZeroInt()
 
@@ -296,8 +301,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.HeaderInfo().Time
+	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	totalSlashAmount = math.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := math.ZeroInt(), math.ZeroInt()
 
@@ -356,14 +360,14 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		}
 
 		// tokens of a redelegation currently live in the destination validator
-		// therefor we must burn tokens from the destination-validator's bonding status
+		// therefore we must burn tokens from the destination-validator's bonding status
 		switch {
 		case dstValidator.IsBonded():
 			bondedBurnedAmount = bondedBurnedAmount.Add(tokensToBurn)
 		case dstValidator.IsUnbonded() || dstValidator.IsUnbonding():
 			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
 		default:
-			panic("unknown validator status")
+			return math.ZeroInt(), fmt.Errorf("unknown validator status")
 		}
 	}
 

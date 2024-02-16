@@ -6,6 +6,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -13,7 +14,6 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var TestProposal = getTestProposal()
@@ -57,6 +57,10 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val1))
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val2))
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val3))
+
+	for _, addr := range addrs {
+		f.accountKeeper.SetAccount(f.ctx, f.accountKeeper.NewAccountWithAddress(f.ctx, addr))
+	}
 
 	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[0]), stakingtypes.Unbonded, val1, true)
 	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[1], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[1]), stakingtypes.Unbonded, val2, true)

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -23,13 +23,18 @@ const (
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (Proposal, error) {
+func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time, metadata, title, summary string, proposer sdk.AccAddress, proposalType ProposalType) (Proposal, error) {
 	msgs, err := sdktx.SetMsgs(messages)
 	if err != nil {
 		return Proposal{}, err
 	}
 
 	tally := EmptyTallyResult()
+
+	// undefined proposal type defaults to standard
+	if proposalType == ProposalType_PROPOSAL_TYPE_UNSPECIFIED {
+		proposalType = ProposalType_PROPOSAL_TYPE_STANDARD
+	}
 
 	p := Proposal{
 		Id:               id,
@@ -42,7 +47,12 @@ func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.
 		Title:            title,
 		Summary:          summary,
 		Proposer:         proposer.String(),
-		Expedited:        expedited,
+		ProposalType:     proposalType,
+	}
+
+	// expedited field is deprecated but we want to keep setting it for backwards compatibility
+	if proposalType == ProposalType_PROPOSAL_TYPE_EXPEDITED {
+		p.Expedited = true
 	}
 
 	return p, nil
@@ -64,14 +74,14 @@ func (p Proposal) GetMinDepositFromParams(params Params) sdk.Coins {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (p Proposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, p.Messages)
 }
 
 // Proposals is an array of proposal
 type Proposals []*Proposal
 
-var _ types.UnpackInterfacesMessage = Proposals{}
+var _ codectypes.UnpackInterfacesMessage = Proposals{}
 
 // String implements stringer interface
 func (p Proposals) String() string {
@@ -84,7 +94,7 @@ func (p Proposals) String() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposals) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (p Proposals) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, x := range p {
 		err := x.UnpackInterfaces(unpacker)
 		if err != nil {

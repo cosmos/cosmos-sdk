@@ -7,12 +7,12 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/feegrant"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *KeeperTestSuite) TestGrantAllowance() {
@@ -77,7 +77,6 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				suite.Require().NoError(err)
 
 				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), add).Return(acc).AnyTimes()
-				suite.accountKeeper.EXPECT().SetAccount(gomock.Any(), acc).Return()
 
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
@@ -149,6 +148,28 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 						Expiration: &oneYear,
 					},
 					PeriodSpendLimit: suite.atom,
+				})
+				suite.Require().NoError(err)
+				return &feegrant.MsgGrantAllowance{
+					Granter:   suite.encodedAddrs[1],
+					Grantee:   suite.encodedAddrs[2],
+					Allowance: any,
+				}
+			},
+			false,
+			"",
+		},
+		{
+			"valid: with period reset",
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
+					Basic: feegrant.BasicAllowance{
+						SpendLimit: suite.atom,
+						Expiration: &oneYear,
+					},
+					Period:           time.Hour,
+					PeriodSpendLimit: suite.atom,
+					PeriodReset:      oneYear,
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{

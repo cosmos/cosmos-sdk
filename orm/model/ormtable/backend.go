@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/orm/types/kv"
 )
 
@@ -25,11 +26,11 @@ type Backend interface {
 	ReadBackend
 
 	// CommitmentStore returns the merklized commitment store.
-	CommitmentStore() kv.Store
+	CommitmentStore() store.KVStore
 
 	// IndexStore returns the index store if a separate one exists,
 	// otherwise it the commitment store.
-	IndexStore() kv.Store
+	IndexStore() store.KVStore
 
 	// ValidateHooks returns a ValidateHooks instance or nil.
 	ValidateHooks() ValidateHooks
@@ -86,8 +87,8 @@ func NewReadBackend(options ReadBackendOptions) ReadBackend {
 }
 
 type backend struct {
-	commitmentStore kv.Store
-	indexStore      kv.Store
+	commitmentStore store.KVStore
+	indexStore      store.KVStore
 	validateHooks   ValidateHooks
 	writeHooks      WriteHooks
 }
@@ -120,11 +121,11 @@ func (c backend) IndexStoreReader() kv.ReadonlyStore {
 	return c.indexStore
 }
 
-func (c backend) CommitmentStore() kv.Store {
+func (c backend) CommitmentStore() store.KVStore {
 	return c.commitmentStore
 }
 
-func (c backend) IndexStore() kv.Store {
+func (c backend) IndexStore() store.KVStore {
 	return c.indexStore
 }
 
@@ -135,11 +136,11 @@ func (c backend) IndexStore() kv.Store {
 // used for all operations.
 type BackendOptions struct {
 	// CommitmentStore is the commitment store.
-	CommitmentStore kv.Store
+	CommitmentStore store.KVStore
 
 	// IndexStore is the optional index store.
 	// If it is nil the CommitmentStore will be used.
-	IndexStore kv.Store
+	IndexStore store.KVStore
 
 	// ValidateHooks are optional hooks into ORM insert, update and delete operations.
 	ValidateHooks ValidateHooks

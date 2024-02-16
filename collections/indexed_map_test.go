@@ -104,3 +104,27 @@ func TestIndexedMap(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, company{"milan", 4}, v)
 }
+
+type inferIndex struct {
+	City *indexes.Multi[string, string, company]
+	Vat  *indexes.Unique[uint64, string, company]
+}
+
+func newInferIndex(schema *collections.SchemaBuilder) *inferIndex {
+	return &inferIndex{
+		City: indexes.NewMulti(schema, collections.NewPrefix(1), "companies_by_city", collections.StringKey, collections.StringKey, func(pk string, value company) (string, error) {
+			return value.City, nil
+		}),
+		Vat: indexes.NewUnique(schema, collections.NewPrefix(2), "companies_by_vat", collections.Uint64Key, collections.StringKey, func(pk string, value company) (uint64, error) {
+			return value.Vat, nil
+		}),
+	}
+}
+
+func TestIndexedMapInfer(t *testing.T) {
+	sk, _ := colltest.MockStore()
+	schema := collections.NewSchemaBuilder(sk)
+
+	_, err := collections.NewIndexedMapSafe(schema, collections.NewPrefix(0), "im", collections.StringKey, colltest.MockValueCodec[company](), newInferIndex(schema))
+	require.NoError(t, err)
+}

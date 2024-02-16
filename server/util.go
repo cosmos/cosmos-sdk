@@ -173,6 +173,10 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
 	}
+	opts = append(opts,
+		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
+		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
+		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
 
 	// check and set filter level or keys for the logger if any
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
@@ -194,9 +198,6 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		opts = append(opts, log.LevelOption(logLvl))
 	}
 
-	// Check if the CometBFT flag for trace logging is set and enable stack traces if so.
-	opts = append(opts, log.TraceOption(ctx.Viper.GetBool("trace"))) // cmtcli.TraceFlag
-
 	return log.NewLogger(out, opts...), nil
 }
 
@@ -214,13 +215,15 @@ func GetServerContextFromCmd(cmd *cobra.Command) *Context {
 // SetCmdServerContext sets a command's Context value to the provided argument.
 // If the context has not been set, set the given context as the default.
 func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
-	v := cmd.Context().Value(ServerContextKey)
-	if v == nil {
-		v = serverCtx
+	var cmdCtx context.Context
+
+	if cmd.Context() == nil {
+		cmdCtx = context.Background()
+	} else {
+		cmdCtx = cmd.Context()
 	}
 
-	serverCtxPtr := v.(*Context)
-	*serverCtxPtr = *serverCtx
+	cmd.SetContext(context.WithValue(cmdCtx, ServerContextKey, serverCtx))
 
 	return nil
 }
@@ -339,7 +342,9 @@ func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFl
 	)
 
 	startCmd := StartCmd(appCreator)
-	addStartFlags(startCmd)
+	if addStartFlags != nil {
+		addStartFlags(startCmd)
+	}
 
 	rootCmd.AddCommand(
 		startCmd,
@@ -347,6 +352,13 @@ func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFl
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator),
 	)
+}
+
+// AddTestnetCreatorCommand allows chains to create a testnet from the state existing in their node's data directory.
+func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFlags types.ModuleInitFlags) {
+	testnetCreateCmd := InPlaceTestnetCreator(appCreator)
+	addStartFlags(testnetCreateCmd)
+	rootCmd.AddCommand(testnetCreateCmd)
 }
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go

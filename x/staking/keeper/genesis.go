@@ -28,7 +28,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
+	sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay) // TODO: remove this need for WithBlockHeight
 	ctx = sdkCtx
 
 	if err := k.Params.Set(ctx, data.Params); err != nil {
@@ -72,14 +72,14 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 		}
 
 		switch validator.GetStatus() {
-		case types.Bonded:
+		case sdk.Bonded:
 			bondedTokens = bondedTokens.Add(validator.GetTokens())
 
-		case types.Unbonding, types.Unbonded:
+		case sdk.Unbonding, sdk.Unbonded:
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
 
 		default:
-			panic("invalid validator status")
+			panic(fmt.Sprintf("invalid validator status: %v", validator.GetStatus()))
 		}
 	}
 

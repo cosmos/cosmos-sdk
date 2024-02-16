@@ -4,67 +4,69 @@ import (
 	"context"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Dependencies are passed to the constructor of a smart account.
 type Dependencies struct {
-	SchemaBuilder *collections.SchemaBuilder
-	AddressCodec  address.Codec
-}
-
-// AccountCreatorFunc is a function that creates an account.
-type AccountCreatorFunc = func(deps Dependencies) (string, Implementation, error)
-
-// AddAccount is a helper function to add a smart account to the list of smart accounts.
-// It returns a function that given an Account implementer, returns the name of the account
-// and the Implementation instance.
-func AddAccount[A Account](name string, constructor func(deps Dependencies) (A, error)) func(deps Dependencies) (string, Implementation, error) {
-	return func(deps Dependencies) (string, Implementation, error) {
-		acc, err := constructor(deps)
-		if err != nil {
-			return "", Implementation{}, err
-		}
-		impl, err := NewImplementation(acc)
-		if err != nil {
-			return "", Implementation{}, err
-		}
-		return name, impl, nil
+	SchemaBuilder    *collections.SchemaBuilder
+	AddressCodec     address.Codec
+	HeaderService    header.Service
+	GasService       gas.Service
+	LegacyStateCodec interface {
+		Marshal(gogoproto.Message) ([]byte, error)
+		Unmarshal([]byte, gogoproto.Message) error
 	}
 }
 
+// AccountCreatorFunc is a function that creates an account.
+type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
+
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
-func MakeAccountsMap(addressCodec address.Codec, accounts []AccountCreatorFunc) (map[string]Implementation, error) {
+func MakeAccountsMap(
+	cdc codec.BinaryCodec,
+	addressCodec address.Codec,
+	hs header.Service,
+	gs gas.Service,
+	accounts []AccountCreatorFunc,
+) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
 	for _, makeAccount := range accounts {
-		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(OpenKVStore)
+		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(openKVStore)
 		deps := Dependencies{
-			SchemaBuilder: stateSchemaBuilder,
-			AddressCodec:  addressCodec,
+			SchemaBuilder:    stateSchemaBuilder,
+			AddressCodec:     addressCodec,
+			HeaderService:    headerService{hs},
+			GasService:       gasService{gs},
+			LegacyStateCodec: cdc,
 		}
-		name, impl, err := makeAccount(deps)
+		name, accountInterface, err := makeAccount(deps)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create account %s: %w", name, err)
 		}
 		if _, ok := accountsMap[name]; ok {
 			return nil, fmt.Errorf("account %s is already registered", name)
 		}
-		// build schema
-		schema, err := stateSchemaBuilder.Build()
+		impl, err := newImplementation(stateSchemaBuilder, accountInterface)
 		if err != nil {
-			return nil, fmt.Errorf("failed to build schema for account %s: %w", name, err)
+			return nil, fmt.Errorf("failed to create implementation for account %s: %w", name, err)
 		}
-		impl.CollectionsSchema = schema
 		accountsMap[name] = impl
 	}
 
 	return accountsMap, nil
 }
 
-// NewImplementation creates a new Implementation instance given an Account implementer.
-func NewImplementation(account Account) (Implementation, error) {
+// newImplementation creates a new Implementation instance given an Account implementer.
+func newImplementation(schemaBuilder *collections.SchemaBuilder, account Account) (Implementation, error) {
 	// make init handler
 	ir := NewInitBuilder()
 	account.RegisterInitHandler(ir)
@@ -88,18 +90,20 @@ func NewImplementation(account Account) (Implementation, error) {
 	if err != nil {
 		return Implementation{}, err
 	}
+
+	// build schema
+	schema, err := schemaBuilder.Build()
+	if err != nil {
+		return Implementation{}, err
+	}
 	return Implementation{
 		Init:                  initHandler,
 		Execute:               executeHandler,
 		Query:                 queryHandler,
-		CollectionsSchema:     collections.Schema{},
+		CollectionsSchema:     schema,
 		InitHandlerSchema:     ir.schema,
 		QueryHandlersSchema:   qr.er.handlersSchema,
 		ExecuteHandlersSchema: er.handlersSchema,
-		DecodeExecuteRequest:  er.makeRequestDecoder(),
-		EncodeExecuteResponse: er.makeResponseEncoder(),
-		DecodeQueryRequest:    qr.er.makeRequestDecoder(),
-		EncodeQueryResponse:   qr.er.makeResponseEncoder(),
 	}, nil
 }
 
@@ -107,11 +111,11 @@ func NewImplementation(account Account) (Implementation, error) {
 // and non-generic implementation usable by the x/accounts module.
 type Implementation struct {
 	// Init defines the initialisation handler for the smart account.
-	Init func(ctx context.Context, msg any) (resp any, err error)
+	Init func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
 	// Execute defines the execution handler for the smart account.
-	Execute func(ctx context.Context, msg any) (resp any, err error)
+	Execute func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
 	// Query defines the query handler for the smart account.
-	Query func(ctx context.Context, msg any) (resp any, err error)
+	Query func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
 	// CollectionsSchema represents the state schema.
 	CollectionsSchema collections.Schema
 	// InitHandlerSchema represents the init handler schema.
@@ -120,37 +124,32 @@ type Implementation struct {
 	QueryHandlersSchema map[string]HandlerSchema
 	// ExecuteHandlersSchema is the schema of the execute handlers.
 	ExecuteHandlersSchema map[string]HandlerSchema
+}
 
-	// TODO: remove these fields and use the schemas instead
+// HasExec returns true if the account can execute the given msg.
+func (i Implementation) HasExec(m ProtoMsg) bool {
+	_, ok := i.ExecuteHandlersSchema[MessageName(m)]
+	return ok
+}
 
-	// DecodeExecuteRequest decodes an execute request coming from the message server.
-	DecodeExecuteRequest func([]byte) (any, error)
-	// EncodeExecuteResponse encodes an execute response to be sent back from the message server.
-	EncodeExecuteResponse func(any) ([]byte, error)
+// HasQuery returns true if the account can execute the given request.
+func (i Implementation) HasQuery(m ProtoMsg) bool {
+	_, ok := i.QueryHandlersSchema[MessageName(m)]
+	return ok
+}
 
-	// DecodeQueryRequest decodes a query request coming from the message server.
-	DecodeQueryRequest func([]byte) (any, error)
-	// EncodeQueryResponse encodes a query response to be sent back from the message server.
-	EncodeQueryResponse func(any) ([]byte, error)
+// HasInit returns true if the account uses the provided init message.
+func (i Implementation) HasInit(m ProtoMsg) bool {
+	return i.InitHandlerSchema.RequestSchema.Name == MessageName(m)
 }
 
 // MessageSchema defines the schema of a message.
 // A message can also define a state schema.
 type MessageSchema struct {
-	// Name identifies the message name, this must be queriable from some reflection service.
+	// Name identifies the message name, this must be queryable from some reflection service.
 	Name string
-	// TxDecode decodes into the message from transaction bytes.
-	// CONSENSUS SAFE: can be used in state machine logic.
-	TxDecode func([]byte) (any, error)
-	// TxEncode encodes the message into transaction bytes.
-	// CONSENSUS SAFE: can be used in state machine logic.
-	TxEncode func(any) ([]byte, error)
-	// HumanDecode decodes into the message from human-readable bytes.
-	// CONSENSUS UNSAFE: can be used only from clients, not state machine logic.
-	HumanDecode func([]byte) (any, error)
-	// HumanEncode encodes the message into human-readable bytes.
-	// CONSENSUS UNSAFE: can be used only from clients, not state machine logic.
-	HumanEncode func(any) ([]byte, error)
+	// New is used to create a new message instance for the schema.
+	New func() ProtoMsg
 }
 
 // HandlerSchema defines the schema of a handler.

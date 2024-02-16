@@ -31,6 +31,7 @@ type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
+	responseByRequest map[string]string
 	circuitBreaker    CircuitBreaker
 }
 
@@ -39,8 +40,10 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
-		routes:         map[string]MsgServiceHandler{},
-		hybridHandlers: map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		routes:            map[string]MsgServiceHandler{},
+		hybridHandlers:    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		responseByRequest: map[string]string{},
+		circuitBreaker:    nil,
 	}
 }
 
@@ -87,8 +90,16 @@ func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx con
 	return msr.hybridHandlers[msgName]
 }
 
+func (msr *MsgServiceRouter) ResponseNameByRequestName(msgName string) string {
+	return msr.responseByRequest[msgName]
+}
+
 func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
 	inputName, err := protocompat.RequestFullNameFromMethodDesc(sd, method)
+	if err != nil {
+		return err
+	}
+	outputName, err := protocompat.ResponseFullNameFromMethodDesc(sd, method)
 	if err != nil {
 		return err
 	}
@@ -97,6 +108,8 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 	if err != nil {
 		return err
 	}
+	// map input name to output name
+	msr.responseByRequest[string(inputName)] = string(outputName)
 	// if circuit breaker is not nil, then we decorate the hybrid handler with the circuit breaker
 	if msr.circuitBreaker == nil {
 		msr.hybridHandlers[string(inputName)] = hybridHandler

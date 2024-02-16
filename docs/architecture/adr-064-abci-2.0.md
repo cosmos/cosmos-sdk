@@ -25,7 +25,7 @@ includes `ExtendVote`, `VerifyVoteExtension` and `FinalizeBlock`.
 ABCI 2.0 continues the promised updates from ABCI++, specifically three additional
 ABCI methods that the application can implement in order to gain further control,
 insight and customization of the consensus process, unlocking many novel use-cases
-that previously not possible. We describe these three new methods below:
+that were previously not possible. We describe these three new methods below:
 
 ### `ExtendVote`
 

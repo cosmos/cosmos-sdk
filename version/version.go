@@ -71,7 +71,7 @@ type Info struct {
 	GoVersion        string     `json:"go" yaml:"go"`
 	BuildDeps        []buildDep `json:"build_deps" yaml:"build_deps"`
 	CosmosSdkVersion string     `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
-	ExtraInfo        *ExtraInfo `json:"extra_info" yaml:"extra_info"`
+	ExtraInfo        ExtraInfo  `json:"extra_info,omitempty" yaml:"extra_info,omitempty"`
 }
 
 func NewInfo() Info {

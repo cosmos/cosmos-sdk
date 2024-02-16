@@ -15,6 +15,7 @@ https://docs.buf.build/bsr/documentation.
 | Prior v0.46.0      | [Unavailable](https://github.com/bufbuild/buf/issues/1415)                                                    |
 | v0.46.x            | [8cb30a2c4de74dc9bd8d260b1e75e176](https://buf.build/cosmos/cosmos-sdk/docs/8cb30a2c4de74dc9bd8d260b1e75e176) |
 | v0.47.x            | [v0.47.0](https://buf.build/cosmos/cosmos-sdk/docs/v0.47.0)                                                   |
+| v0.50.x            | [v0.50.0](https://buf.build/cosmos/cosmos-sdk/docs/v0.50.0)                                                   |
 | Next               | [latest on buf](https://buf.build/cosmos/cosmos-sdk/commits/main)                                             |
 
 ## Generate

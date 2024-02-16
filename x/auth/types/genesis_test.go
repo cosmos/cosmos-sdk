@@ -7,12 +7,13 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/x/auth"
+	"cosmossdk.io/x/auth/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestSanitize(t *testing.T) {

@@ -14,8 +14,7 @@ import (
 func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
-	err := k.FeePool.Set(ctx, data.FeePool)
-	if err != nil {
+	if err := k.FeePool.Set(ctx, data.FeePool); err != nil {
 		panic(err)
 	}
 
@@ -47,7 +46,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 		}
 	}
 
-	if err = k.PreviousProposer.Set(ctx, previousProposer); err != nil {
+	if err := k.PreviousProposer.Set(ctx, previousProposer); err != nil {
 		panic(err)
 	}
 
@@ -128,7 +127,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 		}
 	}
 
-	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
+	moduleHoldings = moduleHoldings.Add(data.FeePool.DecimalPool...)
 	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
 
 	// check if the module account exists

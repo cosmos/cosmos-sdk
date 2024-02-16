@@ -37,8 +37,24 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 ## [Unreleased]
 
 ### Features
+* [#18552](https://github.com/cosmos/cosmos-sdk/pull/18552) Add safe arithmetic operations for `math.Int` that return an error in case of an overflow or any mishap.
 
-* [#17803](https://github.com/cosmos/cosmos-sdk/pull/17803) Add mutative api for Int.BigInt()
+* [#18421](https://github.com/cosmos/cosmos-sdk/pull/18421) Add mutative api for `LegacyDec.BigInt()`.
+
+* [#18874](https://github.com/cosmos/cosmos-sdk/pull/18874) Speedup `math.Int.Mul` by removing a duplicate overflow check
+* [#19386](https://github.com/cosmos/cosmos-sdk/pull/19386) Speedup `math.Int` overflow checks
+
+### Bug Fixes
+
+* [#18519](https://github.com/cosmos/cosmos-sdk/pull/18519) Prevent Overflow in `Dec.Ceil()`.
+
+## [math/v1.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.2.0) - 2023-11-07
+
+### Features
+
+* [#18247](https://github.com/cosmos/cosmos-sdk/pull/18247) Add mutative api for `Uint.BigInt()`.
+* [#17803](https://github.com/cosmos/cosmos-sdk/pull/17803) Add mutative api for `Int.BigInt()`.
+* [#18030](https://github.com/cosmos/cosmos-sdk/pull/18030) Add mutative api for `NewIntFromBigInt`.
 
 ### Bug Fixes
 

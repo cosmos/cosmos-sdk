@@ -3,14 +3,32 @@ package iavl
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
+	dbm "cosmossdk.io/store/v2/db"
 )
 
-func generateTree(treeType string) *IavlTree {
+func TestCommitterSuite(t *testing.T) {
+	s := &commitment.CommitStoreTestSuite{
+		NewStore: func(db store.RawDB, storeKeys []string, pruneOpts *store.PruneOptions, logger log.Logger) (*commitment.CommitStore, error) {
+			multiTrees := make(map[string]commitment.Tree)
+			cfg := DefaultConfig()
+			for _, storeKey := range storeKeys {
+				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
+				multiTrees[storeKey] = NewIavlTree(prefixDB, logger, cfg)
+			}
+			return commitment.NewCommitStore(multiTrees, db, pruneOpts, logger)
+		},
+	}
+
+	suite.Run(t, s)
+}
+
+func generateTree() *IavlTree {
 	cfg := DefaultConfig()
 	db := dbm.NewMemDB()
 	return NewIavlTree(db, log.NewNopLogger(), cfg)
@@ -18,43 +36,47 @@ func generateTree(treeType string) *IavlTree {
 
 func TestIavlTree(t *testing.T) {
 	// generate a new tree
-	tree := generateTree("iavl")
+	tree := generateTree()
 	require.NotNil(t, tree)
 
 	initVersion := tree.GetLatestVersion()
 	require.Equal(t, uint64(0), initVersion)
 
 	// write a batch of version 1
-	cs1 := store.NewChangeset()
-	cs1.Add([]byte("key1"), []byte("value1"))
-	cs1.Add([]byte("key2"), []byte("value2"))
-	cs1.Add([]byte("key3"), []byte("value3"))
-
-	err := tree.WriteBatch(cs1)
-	require.NoError(t, err)
+	require.NoError(t, tree.Set([]byte("key1"), []byte("value1")))
+	require.NoError(t, tree.Set([]byte("key2"), []byte("value2")))
+	require.NoError(t, tree.Set([]byte("key3"), []byte("value3")))
 
 	workingHash := tree.WorkingHash()
 	require.NotNil(t, workingHash)
 	require.Equal(t, uint64(0), tree.GetLatestVersion())
 
 	// commit the batch
-	commitHash, err := tree.Commit()
+	commitHash, version, err := tree.Commit()
 	require.NoError(t, err)
+	require.Equal(t, version, uint64(1))
 	require.Equal(t, workingHash, commitHash)
 	require.Equal(t, uint64(1), tree.GetLatestVersion())
 
-	// write a batch of version 2
-	cs2 := store.NewChangeset()
-	cs2.Add([]byte("key4"), []byte("value4"))
-	cs2.Add([]byte("key5"), []byte("value5"))
-	cs2.Add([]byte("key6"), []byte("value6"))
-	cs2.Add([]byte("key1"), nil) // delete key1
-	err = tree.WriteBatch(cs2)
+	// ensure we can get expected values
+	bz, err := tree.Get(1, []byte("key1"))
 	require.NoError(t, err)
+	require.Equal(t, []byte("value1"), bz)
+
+	bz, err = tree.Get(2, []byte("key1"))
+	require.Error(t, err)
+	require.Nil(t, bz)
+
+	// write a batch of version 2
+	require.NoError(t, tree.Set([]byte("key4"), []byte("value4")))
+	require.NoError(t, tree.Set([]byte("key5"), []byte("value5")))
+	require.NoError(t, tree.Set([]byte("key6"), []byte("value6")))
+	require.NoError(t, tree.Remove([]byte("key1"))) // delete key1
 	version2Hash := tree.WorkingHash()
 	require.NotNil(t, version2Hash)
-	commitHash, err = tree.Commit()
+	commitHash, version, err = tree.Commit()
 	require.NoError(t, err)
+	require.Equal(t, version, uint64(2))
 	require.Equal(t, version2Hash, commitHash)
 
 	// get proof for key1
@@ -67,12 +89,10 @@ func TestIavlTree(t *testing.T) {
 	require.NotNil(t, proof.GetNonexist())
 
 	// write a batch of version 3
-	cs3 := store.NewChangeset()
-	cs3.Add([]byte("key7"), []byte("value7"))
-	cs3.Add([]byte("key8"), []byte("value8"))
-	err = tree.WriteBatch(cs3)
+	require.NoError(t, tree.Set([]byte("key7"), []byte("value7")))
+	require.NoError(t, tree.Set([]byte("key8"), []byte("value8")))
 	require.NoError(t, err)
-	_, err = tree.Commit()
+	_, _, err = tree.Commit()
 	require.NoError(t, err)
 
 	// prune version 1

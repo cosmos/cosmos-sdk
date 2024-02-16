@@ -36,11 +36,18 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 	if err != nil {
 		return err
 	}
-	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
+
+	err = k.eventService.EventManager(ctx).Emit(&nft.EventMint{
 		ClassId: token.ClassId,
 		Id:      token.Id,
 		Owner:   recStr,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Burn defines a method for burning a nft from a specific account.
@@ -71,16 +78,23 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
+
 	ownerStr, err := k.ac.BytesToString(owner.Bytes())
 	if err != nil {
 		return err
 	}
 
-	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventBurn{
+	err = k.eventService.EventManager(ctx).Emit(&nft.EventBurn{
 		ClassId: classID,
 		Id:      nftID,
 		Owner:   ownerStr,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update defines a method for updating an exist nft
@@ -97,7 +111,7 @@ func (k Keeper) Update(ctx context.Context, token nft.NFT) error {
 	return nil
 }
 
-// Update defines a method for updating an exist nft
+// updateWithNoCheck defines a method for updating an exist nft
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it
 func (k Keeper) updateWithNoCheck(ctx context.Context, token nft.NFT) {
@@ -126,7 +140,7 @@ func (k Keeper) Transfer(ctx context.Context,
 	return nil
 }
 
-// Transfer defines a method for sending a nft from one account to another account.
+// transferWithNoCheck defines a method for sending a nft from one account to another account.
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it
 func (k Keeper) transferWithNoCheck(ctx context.Context,

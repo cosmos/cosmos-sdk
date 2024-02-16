@@ -5,9 +5,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	authtypes "cosmossdk.io/x/auth/types"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestNewModuleCrendentials(t *testing.T) {
@@ -19,13 +20,11 @@ func TestNewModuleCrendentials(t *testing.T) {
 
 	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y")
 
-	credential, err := authtypes.NewModuleCredential("group")
+	_, err = authtypes.NewModuleCredential("group")
 	require.NoError(t, err, "must be able to create a Root Module credential (see ADR-33)")
-	require.NoError(t, sdk.VerifyAddressFormat(credential.Address()))
 
-	credential, err = authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}...)
+	credential, err := authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}...)
 	require.NoError(t, err)
-	require.NoError(t, sdk.VerifyAddressFormat(credential.Address()))
 	addr, err := sdk.AccAddressFromHexUnsafe(credential.Address().String())
 	require.NoError(t, err)
 	require.Equal(t, expected.String(), addr.String())

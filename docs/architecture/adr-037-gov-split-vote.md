@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* 2020/10/28: Intial draft
+* 2020/10/28: Initial draft
 
 ## Status
 

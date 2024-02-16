@@ -3,9 +3,17 @@
 ## Create modules pages
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    MODDOC=build/modules/$(echo $D | awk -F/ '{print $NF}')
-    rm -rf $MODDOC
-    mkdir -p $MODDOC && cp -r $D/README.md "$_"
+    DIR_NAME=$(basename "$D")
+    
+    # Skip specific directories
+    if [[ "$DIR_NAME" != "counter" ]]; then
+      MODULE_DIRECTORY=build/modules/$DIR_NAME
+      rm -rf "$MODULE_DIRECTORY"
+      mkdir -p "$MODULE_DIRECTORY" 
+      if [ -f "$D"/README.md ]; then
+        cp -r "$D"/README.md "$MODULE_DIRECTORY"
+      fi
+    fi
   fi
 done
 
@@ -21,8 +29,6 @@ cat ../x/README.md | sed 's/\.\.\/\/build\/building-modules\/README\.md/\/buildi
 cp ../tools/cosmovisor/README.md ./build/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./build/tooling/02-confix.md
 cp ../tools/hubl/README.md ./build/tooling/03-hubl.md
-
-wget -x -O ./user/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmos/rosetta/main/README.md
 
 ## Add package documentation
 cp ../client/v2/README.md ./learn/advanced/17-autocli.md

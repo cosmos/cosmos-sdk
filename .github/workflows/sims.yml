@@ -19,14 +19,14 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           check-latest: true
       - run: make build
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -37,11 +37,11 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           check-latest: true
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -54,11 +54,11 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           check-latest: true
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -72,11 +72,11 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           check-latest: true
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary

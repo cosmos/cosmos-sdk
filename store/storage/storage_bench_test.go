@@ -1,7 +1,7 @@
 //go:build rocksdb
 // +build rocksdb
 
-package storage
+package storage_test
 
 import (
 	"bytes"
@@ -12,22 +12,31 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/rocksdb"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
+const (
+	storeKey1 = "store1"
+)
+
 var (
 	backends = map[string]func(dataDir string) (store.VersionedDatabase, error){
 		"rocksdb_versiondb_opts": func(dataDir string) (store.VersionedDatabase, error) {
-			return rocksdb.New(dataDir)
+			db, err := rocksdb.New(dataDir)
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 		"pebbledb_default_opts": func(dataDir string) (store.VersionedDatabase, error) {
-			return pebbledb.New(dataDir)
+			db, err := pebbledb.New(dataDir)
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 		"btree_sqlite": func(dataDir string) (store.VersionedDatabase, error) {
-			return sqlite.New(dataDir)
+			db, err := sqlite.New(dataDir)
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 	}
 	rng = rand.New(rand.NewSource(567320))
@@ -57,9 +66,9 @@ func BenchmarkGet(b *testing.B) {
 			_ = db.Close()
 		}()
 
-		cs := new(store.Changeset)
+		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
 		for i := 0; i < numKeyVals; i++ {
-			cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: keys[i], Value: vals[i]})
+			cs.AddKVPair(storeKey1, store.KVPair{Key: keys[i], Value: vals[i]})
 		}
 
 		require.NoError(b, db.ApplyChangeset(1, cs))
@@ -93,7 +102,7 @@ func BenchmarkApplyChangeset(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
 
-				cs := new(store.Changeset)
+				cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
 				for j := 0; j < 1000; j++ {
 					key := make([]byte, 128)
 					val := make([]byte, 128)
@@ -103,7 +112,7 @@ func BenchmarkApplyChangeset(b *testing.B) {
 					_, err = rng.Read(val)
 					require.NoError(b, err)
 
-					cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: key, Value: val})
+					cs.AddKVPair(storeKey1, store.KVPair{Key: key, Value: val})
 				}
 
 				b.StartTimer()
@@ -140,9 +149,9 @@ func BenchmarkIterate(b *testing.B) {
 
 		b.StopTimer()
 
-		cs := new(store.Changeset)
+		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
 		for i := 0; i < numKeyVals; i++ {
-			cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: keys[i], Value: vals[i]})
+			cs.AddKVPair(storeKey1, store.KVPair{Key: keys[i], Value: vals[i]})
 		}
 
 		require.NoError(b, db.ApplyChangeset(1, cs))

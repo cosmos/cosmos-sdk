@@ -11,12 +11,12 @@ import (
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
@@ -38,9 +38,6 @@ type AccountKeeperI interface {
 
 	// Remove an account from the store.
 	RemoveAccount(context.Context, sdk.AccountI)
-
-	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
-	IterateAccounts(context.Context, func(sdk.AccountI) bool)
 
 	// Fetch the public key of an account at a specified address
 	GetPubKey(context.Context, sdk.AccAddress) (cryptotypes.PubKey, error)

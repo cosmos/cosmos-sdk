@@ -6,7 +6,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
@@ -17,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type GenesisTestSuite struct {
@@ -48,7 +49,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.addrBytes = bz
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(key), authority.String(), ac)
+	s.keeper = keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), s.cdc, authority.String(), ac)
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {

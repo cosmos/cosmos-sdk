@@ -11,7 +11,9 @@ import (
 	"github.com/linxGnu/grocksdb"
 	"golang.org/x/exp/slices"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
 )
 
@@ -23,7 +25,7 @@ const (
 )
 
 var (
-	_ store.VersionedDatabase = (*Database)(nil)
+	_ storage.Database = (*Database)(nil)
 
 	defaultWriteOpts = grocksdb.NewDefaultWriteOptions()
 	defaultReadOpts  = grocksdb.NewDefaultReadOptions()
@@ -33,9 +35,8 @@ type Database struct {
 	storage  *grocksdb.DB
 	cfHandle *grocksdb.ColumnFamilyHandle
 
-	// tsLow reflects the full_history_ts_low CF value. Since pruning is done in
-	// a lazy manner, we use this value to prevent reads for versions that will
-	// be purged in the next compaction.
+	// tsLow reflects the full_history_ts_low CF value, which is earliest version
+	// supported
 	tsLow uint64
 }
 
@@ -74,6 +75,7 @@ func NewWithDB(storage *grocksdb.DB, cfHandle *grocksdb.ColumnFamilyHandle) (*Da
 	if len(tsLowBz) > 0 {
 		tsLow = binary.LittleEndian.Uint64(tsLowBz)
 	}
+
 	return &Database{
 		storage:  storage,
 		cfHandle: cfHandle,
@@ -90,7 +92,15 @@ func (db *Database) Close() error {
 	return nil
 }
 
+func (db *Database) NewBatch(version uint64) (store.Batch, error) {
+	return NewBatch(db, version), nil
+}
+
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
+	if version < db.tsLow {
+		return nil, store.ErrVersionPruned{EarliestVersion: db.tsLow}
+	}
+
 	return db.storage.GetCF(
 		newTSReadOptions(version),
 		db.cfHandle,
@@ -120,10 +130,6 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	if version < db.tsLow {
-		return false, nil
-	}
-
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return false, err
@@ -133,10 +139,6 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	if version < db.tsLow {
-		return nil, nil
-	}
-
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)
@@ -145,47 +147,23 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 	return copyAndFreeSlice(slice), nil
 }
 
-func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
-	b := NewBatch(db, version)
-
-	for _, kvPair := range cs.Pairs {
-		if kvPair.Value == nil {
-			if err := b.Delete(kvPair.StoreKey, kvPair.Key); err != nil {
-				return err
-			}
-		} else {
-			if err := b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value); err != nil {
-				return err
-			}
-		}
-	}
-
-	return b.Write()
-}
-
-// Prune attempts to prune all versions up to and including the provided version.
-// This is done internally by updating the full_history_ts_low RocksDB value on
-// the column families, s.t. all versions less than full_history_ts_low will be
-// dropped.
-//
-// Note, this does NOT incur an immediate full compaction, i.e. this performs a
-// lazy prune. Future compactions will honor the increased full_history_ts_low
-// and trim history when possible.
+// Prune prunes all versions up to and including the provided version argument.
+// Internally, this performs a manual compaction, the data with older timestamp
+// will be GCed by compaction.
 func (db *Database) Prune(version uint64) error {
 	tsLow := version + 1 // we increment by 1 to include the provided version
 
 	var ts [TimestampSize]byte
 	binary.LittleEndian.PutUint64(ts[:], tsLow)
-
-	if err := db.storage.IncreaseFullHistoryTsLow(db.cfHandle, ts[:]); err != nil {
-		return fmt.Errorf("failed to update column family full_history_ts_low: %w", err)
-	}
+	compactOpts := grocksdb.NewCompactRangeOptions()
+	compactOpts.SetFullHistoryTsLow(ts[:])
+	db.storage.CompactRangeCFOpt(db.cfHandle, grocksdb.Range{}, compactOpts)
 
 	db.tsLow = tsLow
 	return nil
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -201,7 +179,7 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 	return newRocksDBIterator(itr, prefix, start, end, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}

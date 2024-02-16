@@ -196,10 +196,10 @@ func (mr *MockStakingKeeperMockRecorder) ConsensusAddressCodec() *gomock.Call {
 }
 
 // Delegation mocks base method.
-func (m *MockStakingKeeper) Delegation(arg0 context.Context, arg1 types0.AccAddress, arg2 types0.ValAddress) (types.DelegationI, error) {
+func (m *MockStakingKeeper) Delegation(arg0 context.Context, arg1 types0.AccAddress, arg2 types0.ValAddress) (types0.DelegationI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delegation", arg0, arg1, arg2)
-	ret0, _ := ret[0].(types.DelegationI)
+	ret0, _ := ret[0].(types0.DelegationI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -241,7 +241,7 @@ func (mr *MockStakingKeeperMockRecorder) IsValidatorJailed(ctx, addr interface{}
 }
 
 // IterateValidators mocks base method.
-func (m *MockStakingKeeper) IterateValidators(arg0 context.Context, arg1 func(int64, types.ValidatorI) bool) error {
+func (m *MockStakingKeeper) IterateValidators(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateValidators", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -328,10 +328,10 @@ func (mr *MockStakingKeeperMockRecorder) Unjail(arg0, arg1 interface{}) *gomock.
 }
 
 // Validator mocks base method.
-func (m *MockStakingKeeper) Validator(arg0 context.Context, arg1 types0.ValAddress) (types.ValidatorI, error) {
+func (m *MockStakingKeeper) Validator(arg0 context.Context, arg1 types0.ValAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validator", arg0, arg1)
-	ret0, _ := ret[0].(types.ValidatorI)
+	ret0, _ := ret[0].(types0.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -357,10 +357,10 @@ func (mr *MockStakingKeeperMockRecorder) ValidatorAddressCodec() *gomock.Call {
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types.ValidatorI, error) {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types.ValidatorI)
+	ret0, _ := ret[0].(types0.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -369,6 +369,21 @@ func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types
 func (mr *MockStakingKeeperMockRecorder) ValidatorByConsAddr(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorByConsAddr", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorByConsAddr), arg0, arg1)
+}
+
+// ValidatorIdentifier mocks base method.
+func (m *MockStakingKeeper) ValidatorIdentifier(arg0 context.Context, arg1 types0.ConsAddress) (types0.ConsAddress, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatorIdentifier", arg0, arg1)
+	ret0, _ := ret[0].(types0.ConsAddress)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ValidatorIdentifier indicates an expected call of ValidatorIdentifier.
+func (mr *MockStakingKeeperMockRecorder) ValidatorIdentifier(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorIdentifier", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorIdentifier), arg0, arg1)
 }
 
 // MockStakingHooks is a mock of StakingHooks interface.

@@ -34,36 +34,39 @@ func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validato
 	return validator, nil
 }
 
-func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types.Validator {
-	validator, err := k.GetValidator(ctx, addr)
-	if err != nil {
-		panic(fmt.Sprintf("validator record not found for address: %X\n", addr))
-	}
-
-	return validator
-}
-
 // GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
 	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return validator, err
+	if err != nil {
+		// if the validator not found try to find it in the map of `OldToNewConsKeyMap` because validator may've rotated it's key.
+		if !errors.Is(err, collections.ErrNotFound) {
+			return types.Validator{}, err
+		}
+
+		newConsAddr, err := k.OldToNewConsKeyMap.Get(ctx, consAddr.Bytes())
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				return types.Validator{}, types.ErrNoValidatorFound
+			}
+			return types.Validator{}, err
+		}
+
+		operatorAddr, err := k.ValidatorByConsensusAddress.Get(ctx, newConsAddr)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				return types.Validator{}, types.ErrNoValidatorFound
+			}
+			return types.Validator{}, err
+		}
+
+		opAddr = operatorAddr
 	}
 
 	if opAddr == nil {
-		return validator, types.ErrNoValidatorFound
+		return types.Validator{}, types.ErrNoValidatorFound
 	}
 
 	return k.GetValidator(ctx, opAddr)
-}
-
-func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) types.Validator {
-	validator, err := k.GetValidatorByConsAddr(ctx, consAddr)
-	if err != nil {
-		panic(fmt.Errorf("validator with consensus-Address %s not found", consAddr))
-	}
-
-	return validator
 }
 
 // SetValidator sets the main record holding validator details
@@ -97,7 +100,7 @@ func (k Keeper) SetValidatorByPowerIndex(ctx context.Context, validator types.Va
 		return nil
 	}
 
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
 	if err != nil {
 		return err
@@ -107,13 +110,13 @@ func (k Keeper) SetValidatorByPowerIndex(ctx context.Context, validator types.Va
 
 // DeleteValidatorByPowerIndex deletes a record by power index
 func (k Keeper) DeleteValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 	return store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec))
 }
 
 // SetNewValidatorByPowerIndex adds new entry by power index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
 	if err != nil {
 		return err
@@ -184,8 +187,7 @@ func (k Keeper) UpdateValidatorCommission(ctx context.Context,
 	validator types.Validator, newRate math.LegacyDec,
 ) (types.Commission, error) {
 	commission := validator.Commission
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.HeaderInfo().Time
+	blockTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 
 	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
 		return commission, err
@@ -229,7 +231,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 	}
 
 	// delete the old validator record
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 	if err = k.Validators.Remove(ctx, address); err != nil {
 		return err
 	}
@@ -248,7 +250,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 	}
 
 	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, str); err != nil {
-		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
+		return fmt.Errorf("error in after validator removed hook: %w", err)
 	}
 
 	return nil
@@ -258,7 +260,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 
 // GetAllValidators gets the set of all validators with no limits, used during genesis dump
 func (k Keeper) GetAllValidators(ctx context.Context) (validators []types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 
 	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
 	if err != nil {
@@ -279,7 +281,7 @@ func (k Keeper) GetAllValidators(ctx context.Context) (validators []types.Valida
 
 // GetValidators returns a given amount of all the validators
 func (k Keeper) GetValidators(ctx context.Context, maxRetrieve uint32) (validators []types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 	validators = make([]types.Validator, maxRetrieve)
 
 	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
@@ -317,7 +319,10 @@ func (k Keeper) GetBondedValidatorsByPower(ctx context.Context) ([]types.Validat
 	i := 0
 	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
 		address := iterator.Value()
-		validator := k.mustGetValidator(ctx, address)
+		validator, err := k.GetValidator(ctx, address)
+		if err != nil {
+			return nil, fmt.Errorf("validator record not found for address: %X", address)
+		}
 
 		if validator.IsBonded() {
 			validators[i] = validator
@@ -330,7 +335,7 @@ func (k Keeper) GetBondedValidatorsByPower(ctx context.Context) ([]types.Validat
 
 // ValidatorsPowerStoreIterator returns an iterator for the current validator power store
 func (k Keeper) ValidatorsPowerStoreIterator(ctx context.Context) (corestore.Iterator, error) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 	return store.ReverseIterator(types.ValidatorsByPowerIndexKey, storetypes.PrefixEndBytes(types.ValidatorsByPowerIndexKey))
 }
 
@@ -377,13 +382,19 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 	if err != nil {
 		return nil, err
 	}
-	validators = make([]types.Validator, maxValidators)
 
 	i := 0
+	validators = make([]types.Validator, maxValidators)
+
 	err = k.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
-		// sanity check
+		// Note, we do NOT error here as the MaxValidators param may change via on-chain
+		// governance. In cases where the param is increased, this case should never
+		// be hit. In cases where the param is decreased, we will simply not return
+		// the remainder of the validator set, as the ApplyAndReturnValidatorSetUpdates
+		// call should ensure the validators past the cliff will be moved to the
+		// unbonding set.
 		if i >= int(maxValidators) {
-			panic("more validators than maxValidators found")
+			return true, nil
 		}
 
 		validator, err := k.GetValidator(ctx, key)
@@ -393,6 +404,7 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 
 		validators[i] = validator
 		i++
+
 		return false, nil
 	})
 	if err != nil {
@@ -475,9 +487,9 @@ func (k Keeper) DeleteValidatorQueue(ctx context.Context, val types.Validator) e
 // UnbondAllMatureValidators unbonds all the mature unbonding validators that
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.HeaderInfo().Time
-	blockHeight := uint64(sdkCtx.BlockHeight())
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	blockTime := headerInfo.Time
+	blockHeight := uint64(headerInfo.Height)
 
 	rng := new(collections.Range[collections.Triple[uint64, time.Time, uint64]]).
 		EndInclusive(collections.Join3(uint64(29), blockTime, blockHeight))

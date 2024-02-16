@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#15320](https://github.com/cosmos/cosmos-sdk/pull/15320) Add current sequence getter (`LastInsertedSequence`) for auto increment tables.
 
+### Improvements
+
+* Bump minimum Go version to 1.21.
+
 ### API Breaking Changes
 
 * [#15870](https://github.com/cosmos/cosmos-sdk/pull/15870) Rename the orm package to `cosmossdk.io/orm`.

@@ -13,7 +13,7 @@ chains:
       # todo: faucet seems to throw error with sdk version 0.50, still seems to work
       image: ghcr.io/cosmology-tech/starship/cosmjs-faucet:v0.31.0
       # provide more resources to faucet since the number of validators is higher
-      # only a single faucet is spun up with the genesis node, so resources wont multiply
+      # only a single faucet is spun up with the genesis node, so resources won't multiply
       # with the number of validators
       resources:
         cpu: "0.5"

@@ -28,6 +28,8 @@ const (
 	flagStatus    = "status"
 	FlagMetadata  = "metadata"
 	FlagSummary   = "summary"
+	FlagExpedited = "expedited"
+
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposal = "proposal"
 	// Deprecated: only used for v1beta1 legacy proposals.
@@ -109,7 +111,7 @@ Where proposal.json contains:
   "deposit": "10stake",
   "title": "My proposal",
   "summary": "A short summary of my proposal",
-  "expedited": false
+  "proposal_type": "standard",
 }
 
 metadata example: 
@@ -136,7 +138,7 @@ metadata example:
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.Expedited)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.proposalType)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}

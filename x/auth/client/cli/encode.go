@@ -5,9 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	authclient "cosmossdk.io/x/auth/client"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into

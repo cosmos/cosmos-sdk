@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/keeper"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
@@ -23,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
@@ -150,7 +150,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.True(t, feePool.CommunityPool.IsZero())
+	require.True(t, feePool.DecimalPool.IsZero())
 
 	_, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
 	require.ErrorIs(t, err, collections.ErrNotFound)
@@ -168,6 +168,8 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)))
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
+	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolModuleName, sdk.Coins{{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(2)}}) // 2 community pool coins
+	poolKeeper.EXPECT().SetToDistribute(ctx, gomock.Any(), gomock.Any())
 
 	votes := []comet.VoteInfo{
 		{
@@ -189,10 +191,9 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecWithPrec(490, 1)}}, val1OutstandingRewards.Rewards)
 
-	// 2 community pool coins
 	feePool, err = distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(2)}}, feePool.CommunityPool)
+	require.True(t, feePool.DecimalPool.IsZero())
 
 	// 50% commission for first proposer, (0.5 * 98%) * 100 / 2 = 23.25
 	val0Commission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
@@ -291,7 +292,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.True(t, feePool.CommunityPool.IsZero())
+	require.True(t, feePool.DecimalPool.IsZero())
 
 	_, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
 	require.ErrorIs(t, err, collections.ErrNotFound)
@@ -309,6 +310,8 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(634195840)))
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
+	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolModuleName, gomock.Any()) // something is sent to community pool
+	poolKeeper.EXPECT().SetToDistribute(ctx, gomock.Any(), gomock.Any())
 
 	votes := []comet.VoteInfo{
 		{

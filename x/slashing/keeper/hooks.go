@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/slashing/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,10 +27,10 @@ func (k Keeper) Hooks() Hooks {
 
 // AfterValidatorBonded updates the signing info start height or create a new signing info
 func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	signingInfo, err := h.k.ValidatorSigningInfo.Get(ctx, consAddr)
+	blockHeight := h.k.environment.HeaderService.GetHeaderInfo(ctx).Height
 	if err == nil {
-		signingInfo.StartHeight = sdkCtx.BlockHeight()
+		signingInfo.StartHeight = blockHeight
 	} else {
 		consStr, err := h.k.sk.ConsensusAddressCodec().BytesToString(consAddr)
 		if err != nil {
@@ -37,7 +38,7 @@ func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddres
 		}
 		signingInfo = types.NewValidatorSigningInfo(
 			consStr,
-			sdkCtx.BlockHeight(),
+			blockHeight,
 			0,
 			time.Unix(0, 0),
 			false,
@@ -97,5 +98,18 @@ func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdk
 }
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
+	return nil
+}
+
+// AfterConsensusPubKeyUpdate triggers the functions to rotate the signing-infos also sets address pubkey relation.
+func (h Hooks) AfterConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey, _ sdk.Coin) error {
+	if err := h.k.performConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey); err != nil {
+		return err
+	}
+
+	if err := h.k.AddrPubkeyRelation.Remove(ctx, oldPubKey.Address()); err != nil {
+		return err
+	}
+
 	return nil
 }

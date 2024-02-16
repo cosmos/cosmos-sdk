@@ -11,7 +11,13 @@ import (
 )
 
 const (
-	OptionEmpty      = VoteOption_VOTE_OPTION_UNSPECIFIED
+	OptionEmpty = VoteOption_VOTE_OPTION_UNSPECIFIED
+	OptionOne   = VoteOption_VOTE_OPTION_ONE
+	OptionTwo   = VoteOption_VOTE_OPTION_TWO
+	OptionThree = VoteOption_VOTE_OPTION_THREE
+	OptionFour  = VoteOption_VOTE_OPTION_FOUR
+	OptionSpam  = VoteOption_VOTE_OPTION_SPAM
+
 	OptionYes        = VoteOption_VOTE_OPTION_YES
 	OptionNo         = VoteOption_VOTE_OPTION_NO
 	OptionNoWithVeto = VoteOption_VOTE_OPTION_NO_WITH_VETO
@@ -103,7 +109,7 @@ func (v WeightedVoteOptions) String() string {
 func VoteOptionFromString(str string) (VoteOption, error) {
 	option, ok := VoteOption_value[str]
 	if !ok {
-		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes/no/no_with_veto/abstain", str)
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes,option_one/no,option_three/no_with_veto,option_four/abstain,option_two/spam", str)
 	}
 	return VoteOption(option), nil
 }
@@ -132,10 +138,11 @@ func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 
 // ValidVoteOption returns true if the vote option is valid and false otherwise.
 func ValidVoteOption(option VoteOption) bool {
-	if option == OptionYes ||
-		option == OptionAbstain ||
-		option == OptionNo ||
-		option == OptionNoWithVeto {
+	if option == OptionOne ||
+		option == OptionTwo ||
+		option == OptionThree ||
+		option == OptionFour ||
+		option == OptionSpam {
 		return true
 	}
 	return false

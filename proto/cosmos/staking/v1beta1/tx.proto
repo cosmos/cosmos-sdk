@@ -48,7 +48,7 @@ service Msg {
 
   // RotateConsPubKey defines an operation for rotating the consensus keys
   // of a validator.
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.51
   rpc RotateConsPubKey(MsgRotateConsPubKey) returns (MsgRotateConsPubKeyResponse);
 }
 
@@ -221,7 +221,8 @@ message MsgRotateConsPubKey {
   option (gogoproto.equal)           = false;
 
   string              validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
-  google.protobuf.Any new_pubkey        = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  google.protobuf.Any new_pubkey        = 2
+      [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey", (cosmos_proto.scalar) = "cosmos.PubKey"];
 }
 
 // MsgRotateConsPubKeyResponse defines the response structure for executing a

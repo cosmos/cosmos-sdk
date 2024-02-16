@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	authcodec "cosmossdk.io/x/auth/codec"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
@@ -13,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 )
 
 type config struct {

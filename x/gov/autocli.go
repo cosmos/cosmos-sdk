@@ -18,10 +18,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "Params",
 					Use:       "params",
-					Short:     "Query the parameters of the governance process",
-					Long:      "Query the parameters of the governance process. Specify specific param types (voting|tallying|deposit) to filter results.",
+					Short:     "Query the parameters of the governance module",
+				},
+				{
+					RpcMethod: "MessageBasedParams",
+					Use:       "params-by-msg-url [msg-url]",
+					Short:     "Query the governance parameters of specific message",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "params_type", Optional: true},
+						{ProtoField: "msg_url"},
 					},
 				},
 				{
@@ -131,8 +135,24 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
-					RpcMethod: "UpdateParams",
-					Skip:      true, // skipped because authority gated
+					RpcMethod:      "UpdateParams",
+					Use:            "update-params-proposal [params]",
+					Short:          "Submit a proposal to update gov module params. Note: the entire params must be provided.",
+					Long:           fmt.Sprintf("Submit a proposal to update gov module params. Note: the entire params must be provided.\n See the fields to fill in by running `%s query gov params --output json`", version.AppName),
+					Example:        fmt.Sprintf(`%s tx gov update-params-proposal '{ params }'`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
+					GovProposal:    true,
+				},
+				{
+					RpcMethod: "UpdateMessageParams",
+					Use:       "update-params-msg-url-params [msg-url] [msg-params]",
+					Short:     "Submit a proposal to update gov module message params. Note: the entire params must be provided.",
+					Example:   fmt.Sprintf(`%s tx gov update-msg-params-proposal [msg-url]'{ params }'`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "msg_url"},
+						{ProtoField: "params"},
+					},
+					GovProposal: true,
 				},
 			},
 			EnhanceCustomCommand: true, // We still have manual commands in gov that we want to keep

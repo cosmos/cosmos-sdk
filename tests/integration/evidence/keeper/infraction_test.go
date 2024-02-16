@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -16,6 +17,10 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	authsims "cosmossdk.io/x/auth/simulation"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -24,6 +29,7 @@ import (
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	minttypes "cosmossdk.io/x/mint/types"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
@@ -42,10 +48,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
@@ -73,6 +75,7 @@ type fixture struct {
 	sdkCtx sdk.Context
 	cdc    codec.Codec
 
+	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
 	evidenceKeeper *keeper.Keeper
 	slashingKeeper slashingkeeper.Keeper
@@ -94,6 +97,7 @@ func initFixture(tb testing.TB) *fixture {
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
+		pooltypes.ModuleName:           {},
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -121,11 +125,13 @@ func initFixture(tb testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
+	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger()), cdc, codec.NewLegacyAmino(), stakingKeeper, authority.String())
 
-	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec("cosmos"))
+	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(slashingKeeper.Hooks()))
+
+	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
@@ -159,6 +165,7 @@ func initFixture(tb testing.TB) *fixture {
 		app:            integrationApp,
 		sdkCtx:         sdkCtx,
 		cdc:            cdc,
+		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		evidenceKeeper: evidenceKeeper,
 		slashingKeeper: slashingKeeper,
@@ -178,7 +185,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.NilError(t, err)
 	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
-
+	f.accountKeeper.SetAccount(f.sdkCtx, f.accountKeeper.NewAccountWithAddress(f.sdkCtx, sdk.AccAddress(operatorAddr)))
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
 	// execute end-blocker and verify validator attributes
@@ -273,7 +280,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 
 	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
-
+	f.accountKeeper.SetAccount(f.sdkCtx, f.accountKeeper.NewAccountWithAddress(f.sdkCtx, sdk.AccAddress(operatorAddr)))
 	amt := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
 	// execute end-blocker and verify validator attributes
@@ -308,6 +315,123 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, val.IsJailed() == false)
 	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(valpubkey.Address())) == false)
+}
+
+func TestHandleDoubleSignAfterRotation(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Time: time.Now()})
+	populateValidators(t, f)
+
+	power := int64(100)
+	stakingParams, err := f.stakingKeeper.Params.Get(ctx)
+	assert.NilError(t, err)
+
+	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
+	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
+	f.accountKeeper.SetAccount(f.sdkCtx, f.accountKeeper.NewAccountWithAddress(f.sdkCtx, sdk.AccAddress(operatorAddr)))
+	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
+
+	// execute end-blocker and verify validator attributes
+	_, err = f.stakingKeeper.EndBlocker(ctx)
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t,
+		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
+		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),
+	)
+
+	valInfo, err := f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	consAddrBeforeRotn, err := valInfo.GetConsAddr()
+
+	assert.NilError(t, err)
+	assert.DeepEqual(t, selfDelegation, valInfo.GetBondedTokens())
+
+	NewConsPubkey := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB53")
+
+	msgServer := stakingkeeper.NewMsgServerImpl(f.stakingKeeper)
+	msg, err := stakingtypes.NewMsgRotateConsPubKey(operatorAddr.String(), NewConsPubkey)
+	assert.NilError(t, err)
+	_, err = msgServer.RotateConsPubKey(ctx, msg)
+	assert.NilError(t, err)
+
+	// execute end-blocker and verify validator attributes
+	_, err = f.stakingKeeper.EndBlocker(ctx)
+	assert.NilError(t, err)
+
+	valInfo, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	consAddrAfterRotn, err := valInfo.GetConsAddr()
+	assert.NilError(t, err)
+	assert.Equal(t, bytes.Equal(consAddrBeforeRotn, consAddrAfterRotn), false)
+
+	// handle a signature to set signing info
+	err = f.slashingKeeper.HandleValidatorSignature(ctx, NewConsPubkey.Address().Bytes(), selfDelegation.Int64(), comet.BlockIDFlagCommit)
+	assert.NilError(t, err)
+
+	// double sign less than max age
+	valInfo, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	oldTokens := valInfo.GetTokens()
+	nci := comet.Info{
+		Evidence: []comet.Evidence{{
+			Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
+			Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
+			Time:      time.Unix(0, 0),
+			Height:    0,
+		}},
+	}
+
+	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
+	assert.NilError(t, err)
+
+	// should be jailed and tombstoned
+	valInfo, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, valInfo.IsJailed())
+	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(NewConsPubkey.Address())))
+
+	// tokens should be decreased
+	valInfo, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	newTokens := valInfo.GetTokens()
+	assert.Assert(t, newTokens.LT(oldTokens))
+
+	// submit duplicate evidence
+	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
+	assert.NilError(t, err)
+
+	// tokens should be the same (capped slash)
+	valInfo, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, valInfo.GetTokens().Equal(newTokens))
+
+	// jump to past the unbonding period
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Unix(1, 0).Add(stakingParams.UnbondingTime)})
+
+	// require we cannot unjail
+	assert.Error(t, f.slashingKeeper.Unjail(ctx, operatorAddr), slashingtypes.ErrValidatorJailed.Error())
+
+	// require we be able to unbond now
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	del, _ := f.stakingKeeper.Delegations.Get(ctx, collections.Join(sdk.AccAddress(operatorAddr), operatorAddr))
+	validator, _ := f.stakingKeeper.GetValidator(ctx, operatorAddr)
+	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
+	tstaking.Ctx = ctx
+	tstaking.Denom = stakingParams.BondDenom
+	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
+
+	// query evidence from store
+	var evidences []exported.Evidence
+	assert.NilError(t, f.evidenceKeeper.Evidences.Walk(ctx, nil, func(key []byte, value exported.Evidence) (stop bool, err error) {
+		evidences = append(evidences, value)
+		return false, nil
+	}))
+	// evidences, err := f.evidenceKeeper.GetAllEvidence(ctx)
+	assert.NilError(t, err)
+	assert.Assert(t, len(evidences) == 1)
 }
 
 func populateValidators(t assert.TestingT, f *fixture) {

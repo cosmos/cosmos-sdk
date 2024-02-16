@@ -407,7 +407,7 @@ func (k Keeper) removeFromGrantQueue(ctx context.Context, grantKey []byte, grant
 }
 
 // DequeueAndDeleteExpiredGrants deletes expired grants from the state and grant queue.
-func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context) error {
+func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context, limit int) error {
 	store := k.storeService.OpenKVStore(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -417,6 +417,7 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context) error {
 	}
 	defer iterator.Close()
 
+	count := 0
 	for ; iterator.Valid(); iterator.Next() {
 		var queueItem authz.GrantQueueItem
 		if err := k.cdc.Unmarshal(iterator.Value(), &queueItem); err != nil {
@@ -428,8 +429,7 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context) error {
 			return err
 		}
 
-		err = store.Delete(iterator.Key())
-		if err != nil {
+		if err = store.Delete(iterator.Key()); err != nil {
 			return err
 		}
 
@@ -438,6 +438,12 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+		}
+
+		// limit the amount of iterations to avoid taking too much time
+		count++
+		if count == limit {
+			return nil
 		}
 	}
 

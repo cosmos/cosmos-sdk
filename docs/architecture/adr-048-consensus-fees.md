@@ -72,7 +72,7 @@ This mechanism can be easily composed with prioritization mechanisms:
 * we can add extra tiers out of a user control:
     * Example 1: user can set tier 0, 10 or 20, but the protocol will create tiers 0, 1, 2 ... 29. For example IBC transactions will go to tier `user_tier + 5`: if user selected tier 1, then the transaction will go to tier 15.
     * Example 2: we can reserve tier 4, 5, ... only for special transaction types. For example, tier 5 is reserved for evidence tx. So if submits a bank.Send transaction and set tier 5, it will be delegated to tier 3 (the max tier level available for any transaction). 
-    * Example 3: we can enforce that all transactions of a sepecific type will go to specific tier. For example, tier 100 will be reserved for evidence transactions and all evidence transactions will always go to that tier.
+    * Example 3: we can enforce that all transactions of a specific type will go to specific tier. For example, tier 100 will be reserved for evidence transactions and all evidence transactions will always go to that tier.
 
 ### `min-gas-prices`
 
@@ -201,4 +201,5 @@ If attacker spam with lower tier transactions, user can mitigate by sending high
 ## References
 
 * https://eips.ethereum.org/EIPS/eip-1559
-* https://iohk.io/en/blog/posts/2021/11/26/network-traffic-and-tiered-pricing/
+<!-- markdown-link-check-disable-next-line -->
+* https://iohk.io/en/blog/posts/2021/11/26/network-traffic-and-tiered-pricing

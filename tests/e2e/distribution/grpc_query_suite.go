@@ -20,7 +20,7 @@ type GRPCQueryTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
@@ -44,8 +44,8 @@ func (s *GRPCQueryTestSuite) TearDownSuite() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	testCases := []struct {
 		name     string
@@ -68,15 +68,15 @@ func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected, tc.respType)
 		})
 	}
 }
 
 func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	testCases := []struct {
 		name     string
@@ -92,7 +92,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
 		},
 		{
 			"gRPC request with valid validator address ",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, val.ValAddress.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, val.GetValAddress().String()),
 			false,
 			&types.QueryValidatorDistributionInfoResponse{},
 		},
@@ -103,18 +103,18 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
 		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			}
 		})
 	}
 }
 
 func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	rewards, err := sdk.ParseDecCoins("19.6stake")
 	s.Require().NoError(err)
@@ -137,7 +137,7 @@ func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 		},
 		{
 			"gRPC request params valid address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards", baseURL, val.ValAddress.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards", baseURL, val.GetValAddress().String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -156,10 +156,10 @@ func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -167,8 +167,8 @@ func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	commission, err := sdk.ParseDecCoins("9.8stake")
 	s.Require().NoError(err)
@@ -191,7 +191,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 		},
 		{
 			"gRPC request params valid address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/commission", baseURL, val.ValAddress.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/commission", baseURL, val.GetValAddress().String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -210,10 +210,10 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -221,8 +221,8 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	testCases := []struct {
 		name     string
@@ -240,21 +240,21 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 		},
 		{
 			"invalid start height",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.ValAddress.String(), "-1", "3"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.GetValAddress().String(), "-1", "3"),
 			true,
 			&types.QueryValidatorSlashesResponse{},
 			nil,
 		},
 		{
 			"invalid start height",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.ValAddress.String(), "1", "-3"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.GetValAddress().String(), "1", "-3"),
 			true,
 			&types.QueryValidatorSlashesResponse{},
 			nil,
 		},
 		{
 			"valid request get slashes",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.ValAddress.String(), "1", "3"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.GetValAddress().String(), "1", "3"),
 			false,
 			&types.QueryValidatorSlashesResponse{},
 			&types.QueryValidatorSlashesResponse{
@@ -269,10 +269,10 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -280,8 +280,8 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	rewards, err := sdk.ParseDecCoins("9.8stake")
 	s.Require().NoError(err)
@@ -304,7 +304,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseURL, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseURL, val.GetAddress().String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -312,14 +312,14 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 			&types.QueryDelegationTotalRewardsResponse{},
 			&types.QueryDelegationTotalRewardsResponse{
 				Rewards: []types.DelegationDelegatorReward{
-					types.NewDelegationDelegatorReward(val.ValAddress.String(), rewards),
+					types.NewDelegationDelegatorReward(val.GetValAddress().String(), rewards),
 				},
 				Total: rewards,
 			},
 		},
 		{
 			"wrong validator address(specific validator rewards)",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseURL, val.Address.String(), "wrongValAddress"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseURL, val.GetAddress().String(), "wrongValAddress"),
 			map[string]string{},
 			true,
 			&types.QueryDelegationTotalRewardsResponse{},
@@ -327,7 +327,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 		},
 		{
 			"valid request(specific validator rewards)",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseURL, val.Address.String(), val.ValAddress.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseURL, val.GetAddress().String(), val.GetValAddress().String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -345,10 +345,10 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -356,8 +356,8 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	testCases := []struct {
 		name     string
@@ -382,11 +382,11 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseURL, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseURL, val.GetAddress().String()),
 			false,
 			&types.QueryDelegatorValidatorsResponse{},
 			&types.QueryDelegatorValidatorsResponse{
-				Validators: []string{val.ValAddress.String()},
+				Validators: []string{val.GetValAddress().String()},
 			},
 		},
 	}
@@ -397,10 +397,10 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -408,8 +408,8 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	testCases := []struct {
 		name     string
@@ -434,11 +434,11 @@ func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseURL, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseURL, val.GetAddress().String()),
 			false,
 			&types.QueryDelegatorWithdrawAddressResponse{},
 			&types.QueryDelegatorWithdrawAddressResponse{
-				WithdrawAddress: val.Address.String(),
+				WithdrawAddress: val.GetAddress().String(),
 			},
 		},
 	}
@@ -449,10 +449,10 @@ func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})

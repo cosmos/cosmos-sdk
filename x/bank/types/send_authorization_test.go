@@ -16,11 +16,12 @@ import (
 )
 
 var (
-	coins1000   = sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
-	coins500    = sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(500)))
-	fromAddr    = sdk.AccAddress("_____from _____")
-	toAddr      = sdk.AccAddress("_______to________")
-	unknownAddr = sdk.AccAddress("_____unknown_____")
+	coins1000      = sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
+	coins500       = sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(500)))
+	toAddr         = sdk.AccAddress("_______to________")
+	fromAddrStr    = "cosmos1ta047h6lveex7mfqta047h6ln9jal0"
+	toAddrStr      = "cosmos1ta047h6lta0hgm6lta047h6lta0stgm2m3"
+	unknownAddrStr = "cosmos1ta047h6lw4hxkmn0wah97h6lta0sml880l"
 )
 
 func TestSendAuthorization(t *testing.T) {
@@ -32,9 +33,7 @@ func TestSendAuthorization(t *testing.T) {
 	t.Log("verify authorization returns valid method name")
 	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
-	send := types.NewMsgSend(fromAddr, toAddr, coins1000)
-
-	require.NoError(t, authorization.ValidateBasic())
+	send := types.NewMsgSend(fromAddrStr, toAddrStr, coins1000)
 
 	t.Log("verify updated authorization returns nil")
 	resp, err := authorization.Accept(ctx, send)
@@ -45,7 +44,7 @@ func TestSendAuthorization(t *testing.T) {
 	authorization = types.NewSendAuthorization(coins1000, nil)
 	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
-	send = types.NewMsgSend(fromAddr, toAddr, coins500)
+	send = types.NewMsgSend(fromAddrStr, toAddrStr, coins500)
 	require.NoError(t, authorization.ValidateBasic())
 	resp, err = authorization.Accept(ctx, send)
 
@@ -66,20 +65,20 @@ func TestSendAuthorization(t *testing.T) {
 	authzWithAllowList := types.NewSendAuthorization(coins1000, allowList)
 	require.Equal(t, authzWithAllowList.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
-	send = types.NewMsgSend(fromAddr, unknownAddr, coins500)
+	send = types.NewMsgSend(fromAddrStr, unknownAddrStr, coins500)
 	require.NoError(t, authzWithAllowList.ValidateBasic())
 	resp, err = authzWithAllowList.Accept(ctx, send)
 	require.False(t, resp.Accept)
 	require.False(t, resp.Delete)
 	require.Nil(t, resp.Updated)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddr))
+	require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddrStr))
 
 	t.Log("send to address in allow list")
 	authzWithAllowList = types.NewSendAuthorization(coins1000, allowList)
 	require.Equal(t, authzWithAllowList.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
-	send = types.NewMsgSend(fromAddr, allowList[0], coins500)
+	send = types.NewMsgSend(fromAddrStr, toAddrStr, coins500)
 	require.NoError(t, authzWithAllowList.ValidateBasic())
 	resp, err = authzWithAllowList.Accept(ctx, send)
 	require.NoError(t, err)
@@ -92,17 +91,17 @@ func TestSendAuthorization(t *testing.T) {
 	authzWithAllowList = types.NewSendAuthorization(coins1000, allowList)
 	require.Equal(t, authzWithAllowList.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
-	send = types.NewMsgSend(fromAddr, unknownAddr, coins1000)
+	send = types.NewMsgSend(fromAddrStr, unknownAddrStr, coins1000)
 	require.NoError(t, authzWithAllowList.ValidateBasic())
 	resp, err = authzWithAllowList.Accept(ctx, send)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddr))
+	require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddrStr))
 
 	t.Log("send everything to address in allow list")
 	authzWithAllowList = types.NewSendAuthorization(coins1000, allowList)
 	require.Equal(t, authzWithAllowList.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
-	send = types.NewMsgSend(fromAddr, allowList[0], coins1000)
+	send = types.NewMsgSend(fromAddrStr, toAddrStr, coins1000)
 	require.NoError(t, authzWithAllowList.ValidateBasic())
 	resp, err = authzWithAllowList.Accept(ctx, send)
 	require.NoError(t, err)

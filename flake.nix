@@ -14,12 +14,12 @@
       overlays.default = self: super: {
         simd = self.callPackage ./simapp { rev = self.shortRev or "dev"; };
         rocksdb = super.rocksdb.overrideAttrs (_: rec {
-          version = "8.5.3";
+          version = "8.9.1";
           src = self.fetchFromGitHub {
             owner = "facebook";
             repo = "rocksdb";
             rev = "v${version}";
-            sha256 = "sha256-Qa4bAprXptA79ilNE5KSfggEDvNFHdrvDQ6SvzWMQus=";
+            sha256 = "sha256-Pl7t4FVOvnORWFS+gjy2EEUQlPxjLukWW5I5gzCQwkI=";
           };
         });
       };

@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
@@ -17,6 +17,7 @@ type AccountKeeper interface {
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	AddressCodec() address.Codec
+	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

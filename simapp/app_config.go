@@ -1,3 +1,4 @@
+//nolint:unused,nolintlint // ignore unused code linting and directive `//nolint:unused // ignore unused code linting` is unused for linter "unused"
 package simapp
 
 import (
@@ -12,7 +13,6 @@ import (
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	crisismodulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
@@ -27,8 +27,11 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
-	"cosmossdk.io/core/appconfig"
-	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
+	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
+	authtypes "cosmossdk.io/x/auth/types"
+	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
+	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
@@ -41,8 +44,6 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
 	_ "cosmossdk.io/x/feegrant/module" // import for side-effects
-	"cosmossdk.io/x/gov"
-	govclient "cosmossdk.io/x/gov/client"
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/group"
 	_ "cosmossdk.io/x/group/module" // import for side-effects
@@ -60,16 +61,8 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	_ "github.com/cosmos/cosmos-sdk/x/crisis" // import for side-effects
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -79,6 +72,7 @@ var (
 		{Account: authtypes.FeeCollectorName},
 		{Account: distrtypes.ModuleName},
 		{Account: pooltypes.ModuleName},
+		{Account: pooltypes.StreamAccount},
 		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
@@ -100,7 +94,7 @@ var (
 	}
 
 	// application configuration (used by depinject)
-	AppConfig = depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
+	appConfig = appconfig.Compose(&appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
 				Name: runtime.ModuleName,
@@ -123,11 +117,11 @@ var (
 						authz.ModuleName,
 					},
 					EndBlockers: []string{
-						crisistypes.ModuleName,
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
+						pooltypes.ModuleName,
 					},
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -146,7 +140,6 @@ var (
 						slashingtypes.ModuleName,
 						govtypes.ModuleName,
 						minttypes.ModuleName,
-						crisistypes.ModuleName,
 						genutiltypes.ModuleName,
 						evidencetypes.ModuleName,
 						authz.ModuleName,
@@ -156,6 +149,7 @@ var (
 						upgradetypes.ModuleName,
 						vestingtypes.ModuleName,
 						circuittypes.ModuleName,
+						pooltypes.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
@@ -188,7 +182,7 @@ var (
 				Name: stakingtypes.ModuleName,
 				Config: appconfig.WrapAny(&stakingmodulev1.Module{
 					// NOTE: specifying a prefix is only necessary when using bech32 addresses
-					// If not specfied, the auth Bech32Prefix appended with "valoper" and "valcons" is used by default
+					// If not specified, the auth Bech32Prefix appended with "valoper" and "valcons" is used by default
 					Bech32PrefixValidator: "cosmosvaloper",
 					Bech32PrefixConsensus: "cosmosvalcons",
 				}),
@@ -245,10 +239,6 @@ var (
 				Config: appconfig.WrapAny(&govmodulev1.Module{}),
 			},
 			{
-				Name:   crisistypes.ModuleName,
-				Config: appconfig.WrapAny(&crisismodulev1.Module{}),
-			},
-			{
 				Name:   consensustypes.ModuleName,
 				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 			},
@@ -261,14 +251,5 @@ var (
 				Config: appconfig.WrapAny(&poolmodulev1.Module{}),
 			},
 		},
-	}),
-		depinject.Supply(
-			// supply custom module basics
-			map[string]module.AppModuleBasic{
-				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-				govtypes.ModuleName: gov.NewAppModuleBasic(
-					[]govclient.ProposalHandler{},
-				),
-			},
-		))
+	})
 )

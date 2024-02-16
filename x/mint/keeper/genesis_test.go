@@ -7,8 +7,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/mint/keeper"
 	minttestutil "cosmossdk.io/x/mint/testutil"
@@ -19,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var minterAcc = authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
@@ -56,7 +57,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(minterAcc.Name).Return(minterAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(s.sdkCtx, minterAcc.Name).Return(minterAcc)
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(key), stakingKeeper, accountKeeper, bankKeeper, "", "")
+	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), stakingKeeper, accountKeeper, bankKeeper, "", "")
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {

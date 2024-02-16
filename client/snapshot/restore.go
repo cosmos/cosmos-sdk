@@ -10,12 +10,11 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // RestoreSnapshotCmd returns a command to restore a snapshot
-func RestoreSnapshotCmd[T types.Application](appCreator servertypes.AppCreator[T]) *cobra.Command {
+func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restore <height> <format>",
 		Short: "Restore app state from local snapshot",

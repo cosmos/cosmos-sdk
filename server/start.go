@@ -116,7 +116,7 @@ type StartCmdOptions[T types.Application] struct {
 	// it's not called in stand-alone mode, only for in-process mode.
 	PostSetup func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// PostSetupStandalone can be used to setup extra services under the same cancellable context,
-	PostSetupStandalone func(app T, clientCtx client.Context, ctx context.Context, g *errgroup.Group)
+	PostSetupStandalone func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
 }
@@ -271,6 +271,12 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
+	}
+
+	if opts.PostSetup != nil {
+		if err := opts.PostSetupStandalone(app, svrCtx, clientCtx, ctx, g); err != nil {
+			return err
+		}
 	}
 
 	g.Go(func() error {

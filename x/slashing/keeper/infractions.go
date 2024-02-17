@@ -58,12 +58,14 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	signedBlocksWindow := params.SignedBlocksWindow
 
 	// Compute the relative index, so we count the blocks the validator *should*
-	// have signed. We will use the 0-value default signing info if not present,
+	// have signed.
+	// We will also use the 0-value default signing info if not present,
 	// except for start height. The index is in the range [0, SignedBlocksWindow)
 	// and is used to see if a validator signed a block at the given height, which
 	// is represented by a bit in the bitmap.
-	index := signInfo.IndexOffset % signedBlocksWindow
-	signInfo.IndexOffset++
+	// The validator start height should get mapped to index 0, so we computed index as:
+	// (height - startHeight) % signedBlocksWindow
+	index := (height - signInfo.StartHeight) % signedBlocksWindow
 
 	// determine if the validator signed the previous block
 	previous, err := k.GetMissedBlockBitmapValue(ctx, consAddr, index)
@@ -71,6 +73,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		return errors.Wrap(err, "failed to get the validator's bitmap value")
 	}
 
+	editedSignInfo := false
 	missed := signed == comet.BlockIDFlagAbsent
 	switch {
 	case !previous && missed:
@@ -81,6 +84,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		}
 
 		signInfo.MissedBlocksCounter++
+		editedSignInfo = true
 
 	case previous && !missed:
 		// Bitmap value has changed from missed to not missed, so we flip the bit
@@ -90,6 +94,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		}
 
 		signInfo.MissedBlocksCounter--
+		editedSignInfo = true
 
 	default:
 		// bitmap value at this index has not changed, no need to update counter
@@ -126,6 +131,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
+		editedSignInfo = true
 		validator, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
 		if err != nil {
 			return err
@@ -198,5 +204,8 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	}
 
 	// Set the updated signing info
-	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
+	if editedSignInfo {
+		return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
+	}
+	return nil
 }

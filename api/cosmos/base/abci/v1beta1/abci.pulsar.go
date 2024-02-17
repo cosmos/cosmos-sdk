@@ -2,8 +2,8 @@
 package abciv1beta1
 
 import (
-	abci "cosmossdk.io/api/tendermint/abci"
-	types "cosmossdk.io/api/tendermint/types"
+	abci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
+	types "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"

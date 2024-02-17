@@ -2,9 +2,9 @@
 package txv1beta1
 
 import (
+	types "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
 	v1beta11 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
-	types "cosmossdk.io/api/tendermint/types"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "google.golang.org/genproto/googleapis/api/annotations"

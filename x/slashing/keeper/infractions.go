@@ -178,8 +178,9 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 
 			// We need to reset the counter & bitmap so that the validator won't be
 			// immediately slashed for downtime upon re-bonding.
+			// We don't set the start height as this will get correctly set
+			// once they bond again in the AfterValidatorBonded hook!
 			signInfo.MissedBlocksCounter = 0
-			signInfo.IndexOffset = 0
 			err = k.DeleteMissedBlockBitmap(ctx, consAddr)
 			if err != nil {
 				return err

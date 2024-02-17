@@ -18,8 +18,8 @@ message ValidatorSigningInfo {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
   // Height at which validator was first a candidate OR was un-jailed
   int64 start_height = 2;
-  // No longer used.
-  reserved index_offset = 3;
+  // index_offset no longer used.
+  reserved 3;
   // Timestamp until which the validator is jailed due to liveness downtime.
   google.protobuf.Timestamp jailed_until = 4
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];

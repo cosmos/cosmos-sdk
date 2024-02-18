@@ -184,12 +184,28 @@ func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
 
 func (m *MM) RegisterPreMsgHandler() func(ctx context.Context, msg proto.Message) error {
 	return func(ctx context.Context, msg proto.Message) error {
+		for _, moduleName := range m.config.PreMsgHandlers {
+			if module, ok := m.modules[moduleName].(appmodule.HasPreMessageHandler); ok {
+				if err := module.PreMessageHandler(ctx, msg); err != nil {
+					return fmt.Errorf("failed to run premsg handler for %s: %w", moduleName, err)
+				}
+				return nil
+			}
+		}
 		return nil
 	}
 }
 
 func (m *MM) RegisterPostMessageHandler() func(ctx context.Context, msg proto.Message) error {
 	return func(ctx context.Context, msg proto.Message) error {
+		for _, moduleName := range m.config.PostMsgHandlers {
+			if module, ok := m.modules[moduleName].(appmodule.HasPostMessageHandler); ok {
+				if err := module.PostMessageHandler(ctx, msg); err != nil {
+					return fmt.Errorf("failed to run postmsg handler for %s: %w", moduleName, err)
+				}
+				return nil
+			}
+		}
 		return nil
 	}
 }

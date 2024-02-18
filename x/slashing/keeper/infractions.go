@@ -66,7 +66,10 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	// The validator start height should get mapped to index 0, so we computed index as:
 	// (height - startHeight) % signedBlocksWindow
 	index := (height - signInfo.StartHeight) % signedBlocksWindow
-	logger.Debug("HandleValidatorSignatureWithParams", "index", index, "height", height, "startHeight", signInfo.StartHeight, "signedBlocksWindow", signedBlocksWindow)
+	if signInfo.StartHeight > height {
+		return fmt.Errorf("invalid state, the validator %v has start height %d , which is greater than the current height %d (as parsed from the header)",
+			signInfo.Address, signInfo.StartHeight, height)
+	}
 
 	// determine if the validator signed the previous block
 	previous, err := k.GetMissedBlockBitmapValue(ctx, consAddr, index)

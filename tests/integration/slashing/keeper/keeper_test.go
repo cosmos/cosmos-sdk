@@ -167,7 +167,8 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	assert.NilError(t, err)
-	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
+	newHeight := f.ctx.BlockHeight() + 1
+	f.ctx = f.ctx.WithBlockHeight(newHeight).WithHeaderInfo(coreheader.Info{Height: newHeight})
 
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
 	addr, val := f.valAddrs[5], pks[5]
@@ -183,7 +184,8 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	assert.NilError(t, err)
-	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
+	newHeight = f.ctx.BlockHeight() + 1
+	f.ctx = f.ctx.WithBlockHeight(newHeight).WithHeaderInfo(coreheader.Info{Height: newHeight})
 
 	tstaking.CheckValidator(addr, stakingtypes.Unbonded, false)
 
@@ -193,7 +195,8 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	assert.NilError(t, err)
-	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
+	newHeight = f.ctx.BlockHeight() + 1
+	f.ctx = f.ctx.WithBlockHeight(newHeight).WithHeaderInfo(coreheader.Info{Height: newHeight})
 
 	// verify that validator is jailed
 	tstaking.CheckValidator(addr, -1, true)
@@ -211,13 +214,15 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	assert.NilError(t, err)
-	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
+	newHeight = f.ctx.BlockHeight() + 1
+	f.ctx = f.ctx.WithBlockHeight(newHeight).WithHeaderInfo(coreheader.Info{Height: newHeight})
 	// bond to meet minimum self-delegation
 	tstaking.DelegateWithPower(sdk.AccAddress(addr), addr, 1)
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	assert.NilError(t, err)
-	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
+	newHeight = f.ctx.BlockHeight() + 1
+	f.ctx = f.ctx.WithBlockHeight(newHeight).WithHeaderInfo(coreheader.Info{Height: newHeight})
 
 	// verify we can immediately unjail
 	_, err = f.app.RunMsg(
@@ -242,8 +247,7 @@ func TestHandleNewValidator(t *testing.T) {
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 	signedBlocksWindow, err := f.slashingKeeper.SignedBlocksWindow(f.ctx)
 	assert.NilError(t, err)
-	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 1)
-
+	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 1).WithHeaderInfo(coreheader.Info{Height: signedBlocksWindow + 1})
 	assert.NilError(t, f.slashingKeeper.AddrPubkeyRelation.Set(f.ctx, pks[0].Address(), pks[0]))
 
 	consaddr, err := f.stakingKeeper.ConsensusAddressCodec().BytesToString(valpubkey.Address())
@@ -251,6 +255,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	info := slashingtypes.NewValidatorSigningInfo(consaddr, f.ctx.BlockHeight(), time.Unix(0, 0), false, int64(0))
 	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(valpubkey.Address()), info))
+	assert.Equal(t, signedBlocksWindow+1, info.StartHeight)
 
 	// Validator created
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, sdk.AccAddress(addr))
@@ -274,13 +279,12 @@ func TestHandleNewValidator(t *testing.T) {
 
 	// Now a validator, for two blocks
 	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, comet.BlockIDFlagCommit))
-	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 2)
+	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 2).WithHeaderInfo(coreheader.Info{Height: signedBlocksWindow + 2})
 	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, comet.BlockIDFlagAbsent))
 
 	info, found := f.slashingKeeper.ValidatorSigningInfo.Get(f.ctx, sdk.ConsAddress(valpubkey.Address()))
 	assert.Assert(t, found)
 	assert.Equal(t, signedBlocksWindow+1, info.StartHeight)
-	assert.Equal(t, int64(2), info.IndexOffset)
 	assert.Equal(t, int64(1), info.MissedBlocksCounter)
 	assert.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 

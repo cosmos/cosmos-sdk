@@ -66,6 +66,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	// The validator start height should get mapped to index 0, so we computed index as:
 	// (height - startHeight) % signedBlocksWindow
 	index := (height - signInfo.StartHeight) % signedBlocksWindow
+	logger.Debug("HandleValidatorSignatureWithParams", "index", index, "height", height, "startHeight", signInfo.StartHeight, "signedBlocksWindow", signedBlocksWindow)
 
 	// determine if the validator signed the previous block
 	previous, err := k.GetMissedBlockBitmapValue(ctx, consAddr, index)
@@ -73,7 +74,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		return errors.Wrap(err, "failed to get the validator's bitmap value")
 	}
 
-	editedSignInfo := false
+	modifiedSignInfo := false
 	missed := signed == comet.BlockIDFlagAbsent
 	switch {
 	case !previous && missed:
@@ -84,7 +85,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		}
 
 		signInfo.MissedBlocksCounter++
-		editedSignInfo = true
+		modifiedSignInfo = true
 
 	case previous && !missed:
 		// Bitmap value has changed from missed to not missed, so we flip the bit
@@ -94,7 +95,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		}
 
 		signInfo.MissedBlocksCounter--
-		editedSignInfo = true
+		modifiedSignInfo = true
 
 	default:
 		// bitmap value at this index has not changed, no need to update counter
@@ -131,7 +132,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
-		editedSignInfo = true
+		modifiedSignInfo = true
 		validator, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
 		if err != nil {
 			return err
@@ -205,7 +206,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	}
 
 	// Set the updated signing info
-	if editedSignInfo {
+	if modifiedSignInfo {
 		return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 	}
 	return nil

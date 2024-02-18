@@ -59,12 +59,17 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 
 	// Compute the relative index, so we count the blocks the validator *should*
 	// have signed.
-	// We will also use the 0-value default signing info if not present,
-	// except for start height. The index is in the range [0, SignedBlocksWindow)
+	// We will also use the 0-value default signing info if not present.
+	// The index is in the range [0, SignedBlocksWindow)
 	// and is used to see if a validator signed a block at the given height, which
 	// is represented by a bit in the bitmap.
 	// The validator start height should get mapped to index 0, so we computed index as:
 	// (height - startHeight) % signedBlocksWindow
+	//
+	// NOTE: There is subtle different behavior between genesis validators and non-genesis validators.
+	// A genesis validator will start at index 0, whereas a non-genesis validator's startHeight will be the block
+	// they bonded on, but the first block they vote on will be one later. (And thus their first vote is at index 1)
+	// This poses no correctness issues.
 	index := (height - signInfo.StartHeight) % signedBlocksWindow
 	if signInfo.StartHeight > height {
 		return fmt.Errorf("invalid state, the validator %v has start height %d , which is greater than the current height %d (as parsed from the header)",

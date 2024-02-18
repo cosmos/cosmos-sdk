@@ -41,7 +41,7 @@ func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.Msg
 func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
-	return dva.BaseVesting.ExecuteMessages(ctx, msg, dva.GetVestingCoins)
+	return dva.BaseVesting.ExecuteMessages(ctx, msg, dva.GetVestingCoinWithDenoms)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -76,6 +76,42 @@ func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime 
 	return vestingCoins, nil
 }
 
+// GetVestCoinsInfoWithDenom returns the number of vested coin for a specific denom. If no coins are vested,
+// nil is returned.
+func (dva DelayedVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (*sdk.Coin, *sdk.Coin, error) {
+	endTime, err := dva.EndTime.Get(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	originalVestingAmt, err := dva.OriginalVesting.Get(ctx, denom)
+	if err != nil {
+		return nil, nil, err
+	}
+	originalVesting := sdk.NewCoin(denom, originalVestingAmt)
+	if err != nil {
+		return nil, nil, err
+	}
+	if blockTime.After(endTime) {
+		return &originalVesting, nil, nil
+	}
+
+	return nil, &originalVesting, nil
+}
+
+// GetVestingCoinsWithDenom returns the number of vesting coin for a specific denom. If no coins are
+// vesting, nil is returned.
+func (dva DelayedVestingAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+	vestingCoins := sdk.Coins{}
+	for _, denom := range denoms {
+		_, vestingCoin, err := dva.GetVestCoinInfoWithDenom(ctx, blockTime, denom)
+		if err != nil {
+			return nil, err
+		}
+		vestingCoins = append(vestingCoins, *vestingCoin)
+	}
+	return vestingCoins, nil
+}
+
 func (dva DelayedVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
 	*vestingtypes.QueryVestingAccountInfoResponse, error,
 ) {
@@ -101,7 +137,6 @@ func (dva DelayedVestingAccount) RegisterInitHandler(builder *accountstd.InitBui
 
 func (dva DelayedVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, dva.ExecuteMessages)
-	dva.BaseVesting.RegisterExecuteHandlers(builder)
 }
 
 func (dva DelayedVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

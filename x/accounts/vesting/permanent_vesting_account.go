@@ -41,20 +41,24 @@ func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.M
 	return resp, err
 }
 
-func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
-	*account_abstractionv1.MsgExecuteResponse, error,
-) {
-	return plva.BaseVesting.ExecuteMessages(ctx, msg, func(_ context.Context, _ time.Time) (sdk.Coins, error) {
-		originalVesting := sdk.Coins{}
-		err := plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
-			originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-			return false, nil
-		})
+// GetVestingCoins returns the total number of vesting coins. If no coins are
+// vesting, nil is returned.
+func (plva PermanentLockedAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+	vestingCoins := sdk.Coins{}
+	for _, denom := range denoms {
+		originalVestingAmt, err := plva.OriginalVesting.Get(ctx, denom)
 		if err != nil {
 			return nil, err
 		}
-		return originalVesting, nil
-	})
+		vestingCoins = append(vestingCoins, sdk.NewCoin(denom, originalVestingAmt))
+	}
+	return vestingCoins, nil
+}
+
+func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
+	*account_abstractionv1.MsgExecuteResponse, error,
+) {
+	return plva.BaseVesting.ExecuteMessages(ctx, msg, plva.GetVestingCoinWithDenoms)
 }
 
 func (plva PermanentLockedAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
@@ -85,7 +89,6 @@ func (plva PermanentLockedAccount) RegisterInitHandler(builder *accountstd.InitB
 
 func (plva PermanentLockedAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, plva.ExecuteMessages)
-	plva.BaseVesting.RegisterExecuteHandlers(builder)
 }
 
 func (plva PermanentLockedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

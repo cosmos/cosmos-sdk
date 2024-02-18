@@ -46,7 +46,7 @@ var (
 	MSG_MULTI_SEND = "/cosmos.bank.v1beta1.MsgMultiSend"
 )
 
-type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, error)
+type getVestingFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
 
 // NewBaseVesting creates a new BaseVesting object.
 func NewBaseVesting(d accountstd.Dependencies) *BaseVesting {
@@ -156,7 +156,7 @@ func (bva *BaseVesting) ExecuteMessages(
 			if err != nil {
 				return nil, err
 			}
-			vestingCoins, err := getVestingFunc(ctx, hs.Time)
+			vestingCoins, err := getVestingFunc(ctx, hs.Time, msgDelegate.Amount.Denom)
 			if err != nil {
 				return nil, err
 			}
@@ -188,7 +188,7 @@ func (bva *BaseVesting) ExecuteMessages(
 			sender := msgSend.FromAddress
 			amount := msgSend.Amount
 
-			vestingCoins, err := getVestingFunc(ctx, hs.Time)
+			vestingCoins, err := getVestingFunc(ctx, hs.Time, amount.Denoms()...)
 			if err != nil {
 				return nil, err
 			}
@@ -205,7 +205,7 @@ func (bva *BaseVesting) ExecuteMessages(
 			sender := msgMultiSend.Inputs[0].Address
 			amount := msgMultiSend.Inputs[0].Coins
 
-			vestingCoins, err := getVestingFunc(ctx, hs.Time)
+			vestingCoins, err := getVestingFunc(ctx, hs.Time, amount.Denoms()...)
 			if err != nil {
 				return nil, err
 			}
@@ -385,16 +385,6 @@ func (bva BaseVesting) checkTokensSendable(ctx context.Context, sender string, a
 	return nil
 }
 
-// this function only a placeholder so that there will be no routing err return
-// all bundler payment messages will be ignore, this is to prevent bypass vesting
-// account check for send, delegate and undelegate action when execute messages
-// by pass it in bundler. Since vesting doesn't have a handler for payBundler message,
-// this could lead to accounts keeper executes the messages directly without going
-// through vesting account ExecuteMessages handler.
-func (bva BaseVesting) payBundler(ctx context.Context, msg *account_abstractionv1.MsgPayBundler) (*account_abstractionv1.MsgPayBundlerResponse, error) {
-	return &account_abstractionv1.MsgPayBundlerResponse{}, nil
-}
-
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (bva BaseVesting) IterateCoinEntries(
 	ctx context.Context,
@@ -486,8 +476,4 @@ func (bva BaseVesting) QueryVestingAccountBaseInfo(ctx context.Context, _ *vesti
 		DelegatedFree:    delegatedFree,
 		EndTime:          &endTime,
 	}, nil
-}
-
-func (bva BaseVesting) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-	accountstd.RegisterExecuteHandler(builder, bva.payBundler)
 }

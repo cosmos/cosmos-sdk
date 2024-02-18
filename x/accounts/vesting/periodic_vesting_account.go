@@ -98,7 +98,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
-	return pva.BaseVesting.ExecuteMessages(ctx, msg, pva.GetVestingCoins)
+	return pva.BaseVesting.ExecuteMessages(ctx, msg, pva.GetVestingCoinWithDenoms)
 }
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
@@ -187,6 +187,80 @@ func (pva PeriodicVestingAccount) GetVestingCoins(ctx context.Context, blockTime
 	return vestingCoins, nil
 }
 
+// GetVestedCoins returns the total number of vested coins. If no coins are vested,
+// nil is returned.
+func (pva PeriodicVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (vestedCoin, vestingCoin *sdk.Coin, err error) {
+	// We must handle the case where the start time for a vesting account has
+	// been set into the future or when the start of the chain is not exactly
+	// known.
+	startTime, err := pva.StartTime.Get(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	endTime, err := pva.EndTime.Get(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	originalVestingAmt, err := pva.OriginalVesting.Get(ctx, denom)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	originalVesting := sdk.NewCoin(denom, originalVestingAmt)
+	if err != nil {
+		return nil, nil, err
+	}
+	if blockTime.Before(startTime) {
+		return vestedCoin, &originalVesting, nil
+	} else if blockTime.After(endTime) {
+		return &originalVesting, vestingCoin, nil
+	}
+
+	// track the start time of the next period
+	currentPeriodStartTime, err := pva.StartTime.Get(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	vested := sdk.NewCoin(denom, math.ZeroInt())
+	err = pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool, err error) {
+		x := blockTime.Sub(currentPeriodStartTime)
+		if x.Seconds() < period.Length.Seconds() {
+			return true, nil
+		}
+
+		vested = vested.Add(sdk.NewCoin(denom, period.Amount.AmountOf(denom)))
+
+		// update the start time of the next period
+		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
+		if err != nil {
+			return true, err
+		}
+		return false, nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	vesting := originalVesting.Sub(vested)
+
+	return &vested, &vesting, err
+}
+
+// GetVestingCoins returns the total number of vesting coins. If no coins are
+// vesting, nil is returned.
+func (pva PeriodicVestingAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+	vestingCoins := sdk.Coins{}
+	for _, denom := range denoms {
+		_, vestingCoin, err := pva.GetVestCoinInfoWithDenom(ctx, blockTime, denom)
+		if err != nil {
+			return nil, err
+		}
+		vestingCoins = append(vestingCoins, *vestingCoin)
+	}
+	return vestingCoins, nil
+}
+
 func (pva PeriodicVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
 	*vestingtypes.QueryVestingAccountInfoResponse, error,
 ) {
@@ -233,7 +307,6 @@ func (pva PeriodicVestingAccount) RegisterInitHandler(builder *accountstd.InitBu
 
 func (pva PeriodicVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.ExecuteMessages)
-	pva.BaseVesting.RegisterExecuteHandlers(builder)
 }
 
 func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

@@ -64,7 +64,7 @@ func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.
 func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
-	return cva.BaseVesting.ExecuteMessages(ctx, msg, cva.GetVestingCoins)
+	return cva.BaseVesting.ExecuteMessages(ctx, msg, cva.GetVestingCoinWithDenoms)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -87,6 +87,12 @@ func (cva ContinuousVestingAccount) GetVestCoinsInfo(ctx context.Context, blockT
 	var originalVesting sdk.Coins
 	err = cva.IterateCoinEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+		vestedCoin, vestingCoin, err := cva.GetVestCoinInfoWithDenom(ctx, blockTime, key)
+		if err != nil {
+			return true, err
+		}
+		vestedCoins = append(vestedCoins, *vestedCoin)
+		vestingCoins = append(vestingCoins, *vestingCoin)
 		return false, nil
 	})
 	if err != nil {
@@ -98,19 +104,47 @@ func (cva ContinuousVestingAccount) GetVestCoinsInfo(ctx context.Context, blockT
 		return originalVesting, vestingCoins, nil
 	}
 
+	return vestedCoins, vestingCoins, nil
+}
+
+// GetVestCoinsInfoWithDenom returns the number of vested coin for a specific denom. If no coins are vested,
+// nil is returned.
+func (cva ContinuousVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (vestedCoin, vestingCoin *sdk.Coin, err error) {
+	// We must handle the case where the start time for a vesting account has
+	// been set into the future or when the start of the chain is not exactly
+	// known.
+	startTime, err := cva.StartTime.Get(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	endTime, err := cva.EndTime.Get(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	originalVestingAmt, err := cva.OriginalVesting.Get(ctx, denom)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	originalVesting := sdk.NewCoin(denom, originalVestingAmt)
+	if startTime.After(blockTime) {
+		return nil, &originalVesting, nil
+	} else if endTime.Before(blockTime) {
+		return &originalVesting, nil, nil
+	}
+
 	// calculate the vesting scalar
 	x := blockTime.Unix() - startTime.Unix()
 	y := endTime.Unix() - startTime.Unix()
 	s := math.LegacyNewDec(x).Quo(math.LegacyNewDec(y))
 
-	for _, ovc := range originalVesting {
-		vestedAmt := math.LegacyNewDecFromInt(ovc.Amount).Mul(s).RoundInt()
-		vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
-	}
+	vestedAmt := math.LegacyNewDecFromInt(originalVesting.Amount).Mul(s).RoundInt()
+	vested := sdk.NewCoin(originalVesting.Denom, vestedAmt)
 
-	vestingCoins = originalVesting.Sub(vestedCoins...)
+	vesting := originalVesting.Sub(vested)
 
-	return vestedCoins, vestingCoins, nil
+	return &vested, &vesting, nil
 }
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
@@ -120,6 +154,21 @@ func (cva ContinuousVestingAccount) GetVestingCoins(ctx context.Context, blockTi
 	if err != nil {
 		return nil, err
 	}
+	return vestingCoins, nil
+}
+
+// GetVestingCoinsWithDenom returns the number of vesting coin for a specific denom. If no coins are
+// vesting, nil is returned.
+func (cva ContinuousVestingAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+	vestingCoins := sdk.Coins{}
+	for _, denom := range denoms {
+		_, vestingCoin, err := cva.GetVestCoinInfoWithDenom(ctx, blockTime, denom)
+		if err != nil {
+			return nil, err
+		}
+		vestingCoins = append(vestingCoins, *vestingCoin)
+	}
+
 	return vestingCoins, nil
 }
 
@@ -153,7 +202,6 @@ func (cva ContinuousVestingAccount) RegisterInitHandler(builder *accountstd.Init
 
 func (cva ContinuousVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, cva.ExecuteMessages)
-	cva.BaseVesting.RegisterExecuteHandlers(builder)
 }
 
 func (cva ContinuousVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

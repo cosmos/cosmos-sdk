@@ -152,5 +152,5 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 //
 // CONTRACT: this is called *before* all other modules' BeginBlock functions
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
-	return PreBlocker(ctx, am.keeper)
+	return am.keeper.PreBlocker(ctx)
 }

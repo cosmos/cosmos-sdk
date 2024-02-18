@@ -58,8 +58,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	signedBlocksWindow := params.SignedBlocksWindow
 
 	// Compute the relative index, so we count the blocks the validator *should*
-	// have signed.
-	// We will also use the 0-value default signing info if not present.
+	// have signed. We will also use the 0-value default signing info if not present.
 	// The index is in the range [0, SignedBlocksWindow)
 	// and is used to see if a validator signed a block at the given height, which
 	// is represented by a bit in the bitmap.

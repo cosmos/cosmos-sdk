@@ -53,6 +53,12 @@ message Module {
   // override_store_keys is an optional list of overrides for the module store keys
   // to be used in keeper construction.
   repeated StoreKeyConfig override_store_keys = 10;
+
+  // pre_msg_handlers specifies the module names of pre message handlers
+  repeated string pre_msg_handlers = 11;
+
+  // post_msg_handlers specifies the module names of post message handlers
+  repeated string post_msg_handlers = 12;
 }
 
 // GasConfig is the config object for gas limits.

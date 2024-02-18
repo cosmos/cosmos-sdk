@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
@@ -177,6 +178,18 @@ func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
 			}
 		}
 
+		return nil
+	}
+}
+
+func (m *MM) RegisterPreMsgHandler() func(ctx context.Context, msg proto.Message) error {
+	return func(ctx context.Context, msg proto.Message) error {
+		return nil
+	}
+}
+
+func (m *MM) RegisterPostMessageHandler() func(ctx context.Context, msg proto.Message) error {
+	return func(ctx context.Context, msg proto.Message) error {
 		return nil
 	}
 }

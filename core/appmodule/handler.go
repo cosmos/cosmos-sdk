@@ -4,11 +4,7 @@ import (
 	"context"
 
 	"google.golang.org/protobuf/proto"
-
-	"cosmossdk.io/core/transaction"
 )
-
-type Tx = transaction.Tx
 
 // Handler is the interface that wraps a handler for modules to register state transitions
 type MsgRouterBuilder interface {

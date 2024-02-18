@@ -68,7 +68,6 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	// NOTE: There is subtle different behavior between genesis validators and non-genesis validators.
 	// A genesis validator will start at index 0, whereas a non-genesis validator's startHeight will be the block
 	// they bonded on, but the first block they vote on will be one later. (And thus their first vote is at index 1)
-	// This poses no correctness issues.
 	index := (height - signInfo.StartHeight) % signedBlocksWindow
 	if signInfo.StartHeight > height {
 		return fmt.Errorf("invalid state, the validator %v has start height %d , which is greater than the current height %d (as parsed from the header)",

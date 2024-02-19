@@ -173,11 +173,13 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		return k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeTransfer,
 			event.NewAttribute(types.AttributeKeyRecipient, out.Address),
 			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-		)
+		); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -296,7 +298,6 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		event.NewAttribute(types.AttributeKeyReceiver, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 	)
-
 }
 
 // setBalance sets the coin balance for an account by address.

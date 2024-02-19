@@ -349,7 +349,6 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
 		k.logger.Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
@@ -381,14 +380,14 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	if err != nil {
 		return err
 	}
+
 	// emit mint event
-	k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinReceived,
 		event.NewAttribute(types.AttributeKeyReceiver, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
 	)
 
-	return nil
 }
 
 // BurnCoins burns coins deletes coins from the balance of an account.

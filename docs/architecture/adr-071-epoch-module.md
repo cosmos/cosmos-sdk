@@ -36,8 +36,10 @@ With the advent of propser based timestamps we can allow for modules to register
 
 ```go 
 type Module interface {
-    RegisterBlockEpochCalls() map[uint64]func() error
-    RegisterTimeEpochCalls() map[time.seconds]func() error
+    RegisterBlockBeginEpochCalls() map[uint64]func() error
+    RegisterBlockEndEpochCalls() map[uint64]func() error
+    RegisterTimeBeginEpochCalls() map[time.seconds]func() error
+    RegisterTimeEndEpochCalls() map[time.seconds]func() error
 }
 ```
 
@@ -54,7 +56,7 @@ A module will write a functions that returns an error to execute the specific lo
 
 ### Negative
 
-* Module requirements are increased. If a user wants to execute something every block and avoid the epoch module they will need to still use the spoch module
+* Module requirements are increased. If a user wants to execute something every block and avoid the epoch module they will need to still use the epoch module. 
 
 ### Neutral
 

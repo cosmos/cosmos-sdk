@@ -102,8 +102,9 @@ func LegacyNewDec(i int64) LegacyDec {
 // create a new Dec from integer with decimal place at prec
 // CONTRACT: prec <= Precision
 func LegacyNewDecWithPrec(i, prec int64) LegacyDec {
+	bi := big.NewInt(i)
 	return LegacyDec{
-		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
+		bi.Mul(bi, precisionMultiplier(prec)),
 	}
 }
 

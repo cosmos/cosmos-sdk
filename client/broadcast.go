@@ -42,7 +42,7 @@ func CheckTendermintError(err error, tx cmttypes.Tx) *sdk.TxResponse {
 
 // CheckCometError checks if the error returned from BroadcastTx is a
 // CometBFT error that is returned before the tx is submitted due to
-// precondition checks that failed. If an CometBFT error is detected, this
+// precondition checks that failed. If a CometBFT error is detected, this
 // function returns the correct code back in TxResponse.
 //
 // TODO: Avoid brittle string matching in favor of error matching. This requires

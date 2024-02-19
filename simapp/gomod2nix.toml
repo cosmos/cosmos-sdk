@@ -1,6 +1,12 @@
 schema = 3
 
 [mod]
+  [mod."buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go"]
+    version = "v1.32.0-20230509103710-5e5b9fdd0180.1"
+    hash = "sha256-+BS0SWZDFyUHohKwCt2pN3ybSR8NZ8DcfqZxhcJn4ho="
+  [mod."buf.build/gen/go/tendermint/tendermint/protocolbuffers/go"]
+    version = "v1.32.0-20231117195010-33ed361a9051.1"
+    hash = "sha256-7T1OD5XbhEPpd9GTBihHsqLNBsAAd4aaxLQ8rmWboLk="
   [mod."cloud.google.com/go"]
     version = "v0.112.0"
     hash = "sha256-lmNLoqmLURfxu+a6V/SeoP8xVn0Wi2SD7uxxAtSjm+o="
@@ -114,8 +120,8 @@ schema = 3
     version = "v1.0.0"
     hash = "sha256-3EL4xQsSpovTy/V3gwulybqSDHvuu7bPodBZib9JKAk="
   [mod."github.com/cosmos/cosmos-proto"]
-    version = "v1.0.0-beta.3"
-    hash = "sha256-V0/ZhRdqK7Cqcv8X30gr33/hlI54bRXeHhI9LZKyLt8="
+    version = "v1.0.0-beta.4"
+    hash = "sha256-5Kn82nsZfiEtuwhhLZqmMxdAY1tX/Fi3HJ0/MEaRohw="
   [mod."github.com/cosmos/go-bip39"]
     version = "v1.0.0"
     hash = "sha256-Qm2aC2vaS8tjtMUbHmlBSagOSqbduEEDwc51qvQaBmA="

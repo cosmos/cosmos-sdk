@@ -102,8 +102,9 @@ func LegacyNewDec(i int64) LegacyDec {
 // create a new Dec from integer with decimal place at prec
 // CONTRACT: prec <= Precision
 func LegacyNewDecWithPrec(i, prec int64) LegacyDec {
+	bi := big.NewInt(i)
 	return LegacyDec{
-		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
+		bi.Mul(bi, precisionMultiplier(prec)),
 	}
 }
 
@@ -734,11 +735,9 @@ func (d LegacyDec) Ceil() LegacyDec {
 	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
 
 	// no need to round with a zero remainder regardless of sign
-	if rem.Cmp(zeroInt) == 0 {
+	if rem.Sign() == 0 {
 		return LegacyNewDecFromBigInt(quo)
-	}
-
-	if rem.Sign() == -1 {
+	} else if rem.Sign() == -1 {
 		return LegacyNewDecFromBigInt(quo)
 	}
 
@@ -847,7 +846,7 @@ func (d *LegacyDec) MarshalTo(data []byte) (n int, err error) {
 		i = new(big.Int)
 	}
 
-	if i.Cmp(zeroInt) == 0 {
+	if i.Sign() == 0 {
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

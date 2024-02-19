@@ -383,8 +383,8 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 	// emit mint event
 	return k.environment.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeCoinReceived,
-		event.NewAttribute(types.AttributeKeyReceiver, addrStr),
+		types.EventTypeCoinMint,
+		event.NewAttribute(types.AttributeKeyMinter, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
 	)
 }

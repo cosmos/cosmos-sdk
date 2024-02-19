@@ -11,9 +11,10 @@ Notably, we added and fixed the following:
 
 * Adds in-place testnet CLI command for creating testnets from local state (kudos to @czarcas7ic)
 * Multiple fixes in baseapp, with fixes in `DefaultProposalHandler` and vote extensions
-* <>
+* Add a missed check in `x/auth/vesting`: [GHSA-4j93-fm92-rp4m](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-4j93-fm92-rp4m)
 
-We recommended to upgrade to this patch release as soon as possible.
+We recommended to upgrade to this patch release as soon as possible.  
+When upgrading from <= v0.50.3, please ensure that 2/3 of the validator power upgrade to v0.50.4.
 
 ## 📝 Changelog
 

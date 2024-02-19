@@ -845,7 +845,7 @@ func (d *LegacyDec) MarshalTo(data []byte) (n int, err error) {
 		i = new(big.Int)
 	}
 
-	if i.Cmp(zeroInt) == 0 {
+	if i.Sign() == 0 {
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

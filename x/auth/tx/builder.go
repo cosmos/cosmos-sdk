@@ -423,6 +423,14 @@ func (w *wrapper) GetProtoTx() *tx.Tx {
 	return w.tx
 }
 
+func (w *wrapper) GetRawTx() *tx.TxRaw {
+	return &tx.TxRaw{
+		BodyBytes:     w.bodyBz,
+		AuthInfoBytes: w.authInfoBz,
+		Signatures:    w.tx.Signatures,
+	}
+}
+
 // Deprecated: AsAny extracts proto Tx and wraps it into Any.
 // NOTE: You should probably use `GetProtoTx` if you want to serialize the transaction.
 func (w *wrapper) AsAny() *codectypes.Any {

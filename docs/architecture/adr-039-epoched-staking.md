@@ -3,6 +3,7 @@
 ## Changelog
 
 * 10-Feb-2021: Initial Draft
+* 19-Feb-2024: Status Updated 
 
 ## Authors
 
@@ -11,7 +12,7 @@
 
 ## Status
 
-Proposed
+ABANDONED
 
 ## Abstract
 

@@ -7,15 +7,15 @@ require (
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.2.0
-	github.com/cosmos/cosmos-proto v1.0.0-beta.3
+	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/google/go-cmp v0.6.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/go-amino v0.16.0
-	google.golang.org/protobuf v1.31.0
-	gotest.tools/v3 v3.5.0
-	pgregory.net/rapid v0.6.2
+	google.golang.org/protobuf v1.32.0
+	gotest.tools/v3 v3.5.1
+	pgregory.net/rapid v1.1.0
 )
 
 require (

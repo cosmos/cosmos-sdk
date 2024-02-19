@@ -28,6 +28,7 @@ COPY api/go.mod api/go.sum ./api/
 COPY core/go.mod core/go.sum ./core/
 COPY collections/go.mod collections/go.sum ./collections/
 COPY store/go.mod store/go.sum ./store/
+COPY x/accounts/go.mod x/accounts/go.sum ./x/accounts/
 COPY x/tx/go.mod x/tx/go.sum /x/tx/
 COPY x/protocolpool/go.mod x/protocolpool/go.sum ./x/protocolpool/
 COPY x/gov/go.mod x/gov/go.sum ./x/gov/

@@ -69,7 +69,7 @@ that are below the threshold `MinBalance`:
 var (
   // ...
 
-	NewAccountByAmountPrefix = collections.NewPrefix(0)
+  NewAccountByAmountPrefix = collections.NewPrefix(0)
 )
 
 type Keeper struct {

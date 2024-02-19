@@ -77,14 +77,13 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 	}
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	maccPerms := map[string][]string{}
 
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	accountKeeper := authkeeper.NewAccountKeeper(
+		env,
 		encCfg.Codec,
-		storeService,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		address.NewBech32Codec("cosmos"),
@@ -103,6 +102,7 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 			return
 		}
 
+		storeService := runtime.NewKVStoreService(key)
 		ctrl := gomock.NewController(t)
 		authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 		authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()

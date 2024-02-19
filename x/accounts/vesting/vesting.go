@@ -120,11 +120,6 @@ func (bva *BaseVesting) ExecuteMessages(
 ) (
 	*vestingtypes.MsgExecuteMessagesResponse, error,
 ) {
-	// we always want to ensure that this is called by the x/accounts module, it's the only trusted entrypoint.
-	// if we do not do this check then someone could call this method directly and bypass the authentication.
-	if !accountstd.SenderIsAccountsModule(ctx) {
-		return nil, fmt.Errorf("sender is not the x/accounts module")
-	}
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())

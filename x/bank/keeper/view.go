@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -56,10 +56,10 @@ func (b BalancesIndexes) IndexesList() []collections.Index[collections.Pair[sdk.
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	cdc          codec.BinaryCodec
-	storeService store.KVStoreService
-	ak           types.AccountKeeper
-	logger       log.Logger
+	cdc         codec.BinaryCodec
+	environment appmodule.Environment
+	ak          types.AccountKeeper
+	logger      log.Logger
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -70,11 +70,11 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, logger log.Logger) BaseViewKeeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper, logger log.Logger) BaseViewKeeper {
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := BaseViewKeeper{
 		cdc:           cdc,
-		storeService:  storeService,
+		environment:   env,
 		ak:            ak,
 		logger:        logger,
 		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
@@ -186,8 +186,7 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 	if acc != nil {
 		vacc, ok := acc.(types.VestingAccount)
 		if ok {
-			sdkCtx := sdk.UnwrapSDKContext(ctx)
-			return vacc.LockedCoins(sdkCtx.HeaderInfo().Time)
+			return vacc.LockedCoins(k.environment.HeaderService.GetHeaderInfo(ctx).Time)
 		}
 	}
 

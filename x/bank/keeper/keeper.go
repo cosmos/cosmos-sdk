@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -58,7 +59,7 @@ type BaseKeeper struct {
 
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
-	storeService           store.KVStoreService
+	environment            appmodule.Environment
 	mintCoinsRestrictionFn types.MintingRestrictionFn
 	logger                 log.Logger
 }
@@ -82,8 +83,8 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *que
 // to receive funds through direct and explicit actions, for example, by using a MsgSend or
 // by using a SendCoinsFromModuleToAccount execution.
 func NewBaseKeeper(
+	env appmodule.Environment,
 	cdc codec.BinaryCodec,
-	storeService store.KVStoreService,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
@@ -97,10 +98,10 @@ func NewBaseKeeper(
 	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeService, ak, blockedAddrs, authority, logger),
+		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority, logger),
 		ak:                     ak,
 		cdc:                    cdc,
-		storeService:           storeService,
+		environment:            env,
 		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
 		logger:                 logger,
 	}
@@ -156,10 +157,13 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	if err != nil {
 		return err
 	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinSpentEvent(delAddrStr, amt),
-	)
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinSpent,
+		event.NewAttribute(types.AttributeKeySpender, delAddrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	); err != nil {
+		return err
+	}
 
 	err = k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
@@ -345,7 +349,6 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
@@ -379,8 +382,10 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		return err
 	}
 	// emit mint event
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinMintEvent(addrStr, amounts),
+	k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinReceived,
+		event.NewAttribute(types.AttributeKeyReceiver, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
 	)
 
 	return nil
@@ -418,12 +423,11 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		return err
 	}
 	// emit burn event
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinBurnEvent(addrStr, amounts),
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinBurn,
+		event.NewAttribute(types.AttributeKeyBurner, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
 	)
-
-	return nil
 }
 
 // setSupply sets the supply for the given coin
@@ -446,8 +450,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		vacc.TrackDelegation(sdkCtx.HeaderInfo().Time, balance, amt)
+		vacc.TrackDelegation(k.environment.HeaderService.GetHeaderInfo(ctx).Time, balance, amt)
 		k.ak.SetAccount(ctx, acc)
 	}
 

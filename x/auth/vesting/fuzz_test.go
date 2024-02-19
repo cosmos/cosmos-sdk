@@ -107,8 +107,8 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 		authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 		authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 		bankKeeper := keeper.NewBaseKeeper(
+			runtime.NewEnvironment(storeService, log.NewNopLogger()),
 			encCfg.Codec,
-			storeService,
 			authKeeper,
 			map[string]bool{accAddrs[4].String(): true},
 			authtypes.NewModuleAddress(banktypes.GovModuleName).String(),

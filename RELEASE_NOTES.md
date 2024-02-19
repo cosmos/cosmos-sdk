@@ -4,9 +4,10 @@
 
 ## 🚀 Highlights
 
-This patch release includes a fix in baseapp in `DefaultProposalHandler` and <>.
+This patch release includes a fix in baseapp in `DefaultProposalHandler` and fixes [GHSA-4j93-fm92-rp4m](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-4j93-fm92-rp4m).
 
 We recommended to upgrade to this patch release as soon as possible.
+When upgrading from <= v0.47.8, please ensure that 2/3 of the validator power upgrade to v0.47.9.
 
 Curious? Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.9/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.8...v0.47.9) from last release.
 

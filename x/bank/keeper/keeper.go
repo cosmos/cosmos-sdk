@@ -387,7 +387,6 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		event.NewAttribute(types.AttributeKeyReceiver, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
 	)
-
 }
 
 // BurnCoins burns coins deletes coins from the balance of an account.

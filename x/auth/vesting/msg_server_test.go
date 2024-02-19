@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authcodec "cosmossdk.io/x/auth/codec"
@@ -43,7 +44,8 @@ type VestingTestSuite struct {
 
 func (s *VestingTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
@@ -54,8 +56,8 @@ func (s *VestingTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.bankKeeper = vestingtestutil.NewMockBankKeeper(ctrl)
 	s.accountKeeper = authkeeper.NewAccountKeeper(
+		env,
 		encCfg.Codec,
-		storeService,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),

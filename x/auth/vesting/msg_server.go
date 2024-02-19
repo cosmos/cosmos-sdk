@@ -80,8 +80,7 @@ func (s msgServer) CreateVestingAccount(ctx context.Context, msg *types.MsgCreat
 	} else {
 		start := msg.StartTime
 		if msg.StartTime == 0 {
-			sdkctx := sdk.UnwrapSDKContext(ctx)
-			start = sdkctx.HeaderInfo().Time.Unix()
+			start = s.AccountKeeper.Environment.HeaderService.GetHeaderInfo(ctx).Time.Unix()
 		}
 		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, start)
 	}

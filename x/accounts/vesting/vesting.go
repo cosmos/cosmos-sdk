@@ -13,7 +13,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -117,9 +116,9 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 // when delegate or undelegate is trigger. And check for locked coins
 // when performing a send message.
 func (bva *BaseVesting) ExecuteMessages(
-	ctx context.Context, msg *account_abstractionv1.MsgExecute, getVestingFunc getVestingFunc,
+	ctx context.Context, msg *vestingtypes.MsgExecuteMessages, getVestingFunc getVestingFunc,
 ) (
-	*account_abstractionv1.MsgExecuteResponse, error,
+	*vestingtypes.MsgExecuteMessagesResponse, error,
 ) {
 	// we always want to ensure that this is called by the x/accounts module, it's the only trusted entrypoint.
 	// if we do not do this check then someone could call this method directly and bypass the authentication.
@@ -130,16 +129,16 @@ func (bva *BaseVesting) ExecuteMessages(
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())
 	}
-	bundler, err := bva.addressCodec.StringToBytes(msg.Bundler)
+	sender, err := bva.addressCodec.StringToBytes(msg.Sender)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid bundler address: %s", err.Error())
 	}
-	if !bytes.Equal(owner, bundler) {
+	if !bytes.Equal(owner, sender) {
 		return nil, fmt.Errorf("bundler is not the owner of this vesting account")
 	}
 	hs := bva.headerService.GetHeaderInfo(ctx)
 
-	for _, m := range msg.ExecutionMessages {
+	for _, m := range msg.Messages {
 		concreteMsg, err := vestingtypes.UnpackAnyRaw(m)
 		if err != nil {
 			return nil, err
@@ -218,12 +217,12 @@ func (bva *BaseVesting) ExecuteMessages(
 	}
 
 	// execute messages
-	responses, err := accountstd.ExecModuleAnys(ctx, msg.ExecutionMessages)
+	responses, err := accountstd.ExecModuleAnys(ctx, msg.Messages)
 	if err != nil {
 		return nil, err
 	}
 
-	return &account_abstractionv1.MsgExecuteResponse{ExecutionMessagesResponse: responses}, nil
+	return &vestingtypes.MsgExecuteMessagesResponse{Responses: responses}, nil
 }
 
 // TrackDelegation tracks a delegation amount for any given vesting account type

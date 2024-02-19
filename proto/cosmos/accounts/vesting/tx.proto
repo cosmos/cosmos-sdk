@@ -2,10 +2,12 @@ syntax = "proto3";
 package cosmos.accounts.vesting;
 
 import "amino/amino.proto";
+import "google/protobuf/any.proto";
 import "cosmos/accounts/vesting/vesting.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "cosmossdk.io/x/accounts/vesting/types";
@@ -57,3 +59,16 @@ message MsgInitPeriodicVestingAccount {
 // MsgInitVestingAccountResponse defines the Msg/InitPeriodicVestingAccount
 // response type.
 message MsgInitPeriodicVestingAccountResponse {}
+
+// MsgExecuteMessages defines a message that enable vesting account to execute moule messages
+message MsgExecuteMessages {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string   sender                       = 1;
+  repeated google.protobuf.Any messages = 2;
+}
+
+// MsgExecuteMessagesResponse defines the response for MsgExecuteMessages
+message MsgExecuteMessagesResponse {
+  repeated google.protobuf.Any responses = 1;
+}

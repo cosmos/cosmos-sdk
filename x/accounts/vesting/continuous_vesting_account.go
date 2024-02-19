@@ -8,7 +8,6 @@ import (
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,8 +60,8 @@ func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.
 	return cva.BaseVesting.Init(ctx, msg)
 }
 
-func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
-	*account_abstractionv1.MsgExecuteResponse, error,
+func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
+	*vestingtypes.MsgExecuteMessagesResponse, error,
 ) {
 	return cva.BaseVesting.ExecuteMessages(ctx, msg, cva.GetVestingCoinWithDenoms)
 }

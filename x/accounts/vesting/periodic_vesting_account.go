@@ -9,7 +9,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -95,8 +94,8 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	return &vestingtypes.MsgInitPeriodicVestingAccountResponse{}, nil
 }
 
-func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
-	*account_abstractionv1.MsgExecuteResponse, error,
+func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
+	*vestingtypes.MsgExecuteMessagesResponse, error,
 ) {
 	return pva.BaseVesting.ExecuteMessages(ctx, msg, pva.GetVestingCoinWithDenoms)
 }

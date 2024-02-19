@@ -17,11 +17,11 @@ message QueryVestingAccountInfoResponse {
   repeated cosmos.base.v1beta1.Coin original_vesting = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
-  // delegated_free defines the value of the account delegated free.
+  // delegated_free defines the value of the account free delegated amount.
   repeated cosmos.base.v1beta1.Coin delegated_free = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
-  // delegated_free defines the value of the account delegated free.
+  // delegated_vesting defines the value of the account vesting delegated amount.
   repeated cosmos.base.v1beta1.Coin delegated_vesting = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 

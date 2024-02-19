@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,8 +54,8 @@ func (plva PermanentLockedAccount) GetVestingCoinWithDenoms(ctx context.Context,
 	return vestingCoins, nil
 }
 
-func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
-	*account_abstractionv1.MsgExecuteResponse, error,
+func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
+	*vestingtypes.MsgExecuteMessagesResponse, error,
 ) {
 	return plva.BaseVesting.ExecuteMessages(ctx, msg, plva.GetVestingCoinWithDenoms)
 }

@@ -7,12 +7,12 @@ import (
 	"io"
 	"math"
 
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal/encoding"
+	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -34,16 +34,24 @@ var (
 // and trees.
 type CommitStore struct {
 	logger     log.Logger
-	db         dbm.DB
+	db         store.RawDB
 	multiTrees map[string]Tree
+
+	// pruneOptions is the pruning configuration.
+	pruneOptions *store.PruneOptions
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(multiTrees map[string]Tree, db dbm.DB, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+	if pruneOpts == nil {
+		pruneOpts = store.DefaultPruneOptions()
+	}
+
 	return &CommitStore{
-		logger:     logger,
-		db:         db,
-		multiTrees: multiTrees,
+		logger:       logger,
+		db:           db,
+		multiTrees:   multiTrees,
+		pruneOptions: pruneOpts,
 	}, nil
 }
 
@@ -67,19 +75,19 @@ func (c *CommitStore) WriteBatch(cs *store.Changeset) error {
 	return nil
 }
 
-func (c *CommitStore) WorkingCommitInfo(version uint64) *store.CommitInfo {
-	storeInfos := make([]store.StoreInfo, 0, len(c.multiTrees))
+func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
+	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
-		storeInfos = append(storeInfos, store.StoreInfo{
+		storeInfos = append(storeInfos, proof.StoreInfo{
 			Name: storeKey,
-			CommitID: store.CommitID{
+			CommitID: proof.CommitID{
 				Version: version,
 				Hash:    tree.WorkingHash(),
 			},
 		})
 	}
 
-	return &store.CommitInfo{
+	return &proof.CommitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
@@ -129,7 +137,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 
 	// If the target version is greater than the latest version, it is the snapshot
 	// restore case, we should create a new commit info for the target version.
-	var cInfo *store.CommitInfo
+	var cInfo *proof.CommitInfo
 	if targetVersion > latestVersion {
 		cInfo = c.WorkingCommitInfo(targetVersion)
 	}
@@ -137,7 +145,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	return c.flushCommitInfo(targetVersion, cInfo)
 }
 
-func (c *CommitStore) GetCommitInfo(version uint64) (*store.CommitInfo, error) {
+func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 	key := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := c.db.Get(key)
 	if err != nil {
@@ -147,7 +155,7 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*store.CommitInfo, error) {
 		return nil, nil
 	}
 
-	cInfo := &store.CommitInfo{}
+	cInfo := &proof.CommitInfo{}
 	if err := cInfo.Unmarshal(value); err != nil {
 		return nil, err
 	}
@@ -155,7 +163,7 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*store.CommitInfo, error) {
 	return cInfo, nil
 }
 
-func (c *CommitStore) flushCommitInfo(version uint64, cInfo *store.CommitInfo) error {
+func (c *CommitStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) error {
 	batch := c.db.NewBatch()
 	if cInfo != nil {
 		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
@@ -180,14 +188,14 @@ func (c *CommitStore) flushCommitInfo(version uint64, cInfo *store.CommitInfo) e
 	return batch.WriteSync()
 }
 
-func (c *CommitStore) Commit(version uint64) (*store.CommitInfo, error) {
-	storeInfos := make([]store.StoreInfo, 0, len(c.multiTrees))
+func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
+	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 
 	for storeKey, tree := range c.multiTrees {
 		// If a commit event execution is interrupted, a new iavl store's version
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
-		var commitID store.CommitID
+		var commitID proof.CommitID
 		if tree.GetLatestVersion() >= version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
@@ -196,24 +204,31 @@ func (c *CommitStore) Commit(version uint64) (*store.CommitInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-			commitID = store.CommitID{
+			commitID = proof.CommitID{
 				Version: version,
 				Hash:    hash,
 			}
 		}
-		storeInfos = append(storeInfos, store.StoreInfo{
+		storeInfos = append(storeInfos, proof.StoreInfo{
 			Name:     storeKey,
 			CommitID: commitID,
 		})
 	}
 
-	cInfo := &store.CommitInfo{
+	cInfo := &proof.CommitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
 
 	if err := c.flushCommitInfo(version, cInfo); err != nil {
 		return nil, err
+	}
+
+	// Prune the old versions.
+	if prune, pruneVersion := c.pruneOptions.ShouldPrune(version); prune {
+		if err := c.Prune(pruneVersion); err != nil {
+			c.logger.Info("failed to prune SC", "prune_version", pruneVersion, "err", err)
+		}
 	}
 
 	return cInfo, nil
@@ -229,13 +244,13 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 	return nil
 }
 
-func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]store.CommitmentOp, error) {
+func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]proof.CommitmentOp, error) {
 	tree, ok := c.multiTrees[storeKey]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
 
-	proof, err := tree.GetProof(version, key)
+	iProof, err := tree.GetProof(version, key)
 	if err != nil {
 		return nil, err
 	}
@@ -246,13 +261,13 @@ func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]s
 	if cInfo == nil {
 		return nil, fmt.Errorf("commit info not found for version %d", version)
 	}
-	commitOp := store.NewIAVLCommitmentOp(key, proof)
+	commitOp := proof.NewIAVLCommitmentOp(key, iProof)
 	_, storeCommitmentOp, err := cInfo.GetStoreProof(storeKey)
 	if err != nil {
 		return nil, err
 	}
 
-	return []store.CommitmentOp{commitOp, *storeCommitmentOp}, nil
+	return []proof.CommitmentOp{commitOp, *storeCommitmentOp}, nil
 }
 
 func (c *CommitStore) Get(storeKey string, version uint64, key []byte) ([]byte, error) {

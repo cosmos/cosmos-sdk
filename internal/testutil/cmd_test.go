@@ -68,12 +68,12 @@ func TestSetArgsWithOriginalMethod(t *testing.T) {
 
 func TestSetArgsWithWrappedMethod(t *testing.T) {
 	var (
-		mockFlagWithCommaF = testutil.MockFlagsWithComma{Ary: []string{"g;m", "g;n"}}
-		mockFlagWithCommaG testutil.MockFlagsWithComma
+		mockFlagWithCommaD = testutil.MockFlagsWithComma{Ary: []string{"g;m", "g;n"}}
+		mockFlagWithCommaE testutil.MockFlagsWithComma
 	)
 	var (
-		mockFlagWithSemicolonH = testutil.MockFlagsWithSemicolon{Ary: []string{"g,m", "g,n"}}
-		mockFlagWithSemicolonI testutil.MockFlagsWithSemicolon
+		mockFlagWithSemicolonF = testutil.MockFlagsWithSemicolon{Ary: []string{"g,m", "g,n"}}
+		mockFlagWithSemicolonG testutil.MockFlagsWithSemicolon
 	)
 	getCMD := func() *cobra.Command {
 		cmd := &cobra.Command{
@@ -83,13 +83,13 @@ func TestSetArgsWithWrappedMethod(t *testing.T) {
 			},
 		}
 		f := cmd.Flags()
-		f.BoolP("a", "a", false, "check build-in pflag.Value")
-		f.IntSlice("b", []int{1, 2}, "check build-in pflag.SliceValue with default value")
-		f.IntSliceP("c", "c", nil, "check build-in pflag.SliceValue with nil default value")
-		f.Var(&mockFlagWithCommaF, "d", "check custom implementation of pflag.SliceValue with splitting by comma and default value")
-		f.VarP(&mockFlagWithCommaG, "e", "e", "check custom implementation of pflag.SliceValue with splitting by comma and nil default value")
-		f.Var(&mockFlagWithSemicolonH, "f", "check custom implementation of pflag.SliceValue with splitting by semicolon and default value")
-		f.VarP(&mockFlagWithSemicolonI, "g", "g", "check custom implementation of pflag.SliceValue with splitting by semicolon and nil default value")
+		f.BoolP("a", "a", false, "check built-in pflag.Value")
+		f.IntSlice("b", []int{1, 2}, "check built-in pflag.SliceValue with default value")
+		f.IntSliceP("c", "c", nil, "check built pflag.SliceValue with nil default value")
+		f.Var(&mockFlagWithCommaD, "d", "check custom implementation of pflag.SliceValue with splitting by comma and default value")
+		f.VarP(&mockFlagWithCommaE, "e", "e", "check custom implementation of pflag.SliceValue with splitting by comma and nil default value")
+		f.Var(&mockFlagWithSemicolonF, "f", "check custom implementation of pflag.SliceValue with splitting by semicolon and default value")
+		f.VarP(&mockFlagWithSemicolonG, "g", "g", "check custom implementation of pflag.SliceValue with splitting by semicolon and nil default value")
 		return cmd
 	}
 
@@ -110,57 +110,97 @@ func TestSetArgsWithWrappedMethod(t *testing.T) {
 		return true
 	}
 
-	resetAndSetNewArgs := func(cmd *cobra.Command, args []string) {
-		testutil.ResetArgs(cmd)
-		cmd.SetArgs(args)
+	testCases := []struct {
+		name  string
+		steps []struct {
+			args                  []string
+			expectNotDefaultFlags map[string]string
+		}
+	}{
+		{
+			name: "no args",
+			steps: []struct {
+				args                  []string
+				expectNotDefaultFlags map[string]string
+			}{
+				{
+					args:                  nil,
+					expectNotDefaultFlags: nil,
+				},
+			},
+		},
+		{
+			name: "built-in implementation of pflag.Value",
+			steps: []struct {
+				args                  []string
+				expectNotDefaultFlags map[string]string
+			}{
+				{
+					args:                  []string{"--a=true"},
+					expectNotDefaultFlags: map[string]string{"a": "true"},
+				},
+			},
+		},
+		{
+			name: "built-in implementation of pflag.SliceValue",
+			steps: []struct {
+				args                  []string
+				expectNotDefaultFlags map[string]string
+			}{
+				{
+					args:                  []string{"--b=3,4"},
+					expectNotDefaultFlags: map[string]string{"b": "[3,4]"},
+				},
+				{
+					args:                  []string{"--c=3,4"},
+					expectNotDefaultFlags: map[string]string{"c": "[3,4]"},
+				},
+			},
+		},
+		{
+			name: "custom implementation of pflag.SliceValue with comma",
+			steps: []struct {
+				args                  []string
+				expectNotDefaultFlags map[string]string
+			}{
+				{
+					args:                  []string{"--d=g;n,g;m"},
+					expectNotDefaultFlags: map[string]string{"d": "g;n,g;m"},
+				},
+				{
+					args:                  []string{"--e=g;n,g;m"},
+					expectNotDefaultFlags: map[string]string{"e": "g;n,g;m"},
+				},
+			},
+		},
+		{
+			// custom implementation of pflag.SliceValue with splitting by semicolon is not compatible with testutil.SetArgs.
+			// So `f` is changed to "g;m;g;n" (split to ["g", "m;g", "n"], and then join with ";"), not default value "g,m;g,n"
+			name: "custom implementation of pflag.SliceValue with semicolon",
+			steps: []struct {
+				args                  []string
+				expectNotDefaultFlags map[string]string
+			}{
+				{
+					args:                  []string{"--f=g,n;g,m"},
+					expectNotDefaultFlags: map[string]string{"f": "g,n;g,m"},
+				},
+				{
+					args:                  []string{"--g=g,n;g,m"},
+					expectNotDefaultFlags: map[string]string{"f": "g;m;g;n", "g": "g,n;g,m"},
+				},
+			},
+		},
 	}
 
-	resetAndSetNewArgs(cmd, []string{
-		"testcmd",
-	})
-	checkFlagsValue(cmd, nil)
-
-	resetAndSetNewArgs(cmd, []string{
-		"testcmd",
-		"--a=true",
-	})
-	checkFlagsValue(cmd, map[string]string{"a": "true"})
-
-	resetAndSetNewArgs(cmd, []string{
-		"testcmd",
-		"--b=3,4",
-	})
-	checkFlagsValue(cmd, map[string]string{"b": "[3,4]"})
-
-	resetAndSetNewArgs(cmd, []string{
-		"testcmd",
-		"--c=3,4",
-	})
-	checkFlagsValue(cmd, map[string]string{"c": "[3,4]"})
-
-	resetAndSetNewArgs(cmd, []string{
-		"testcmd",
-		"--d=g;n,g;m",
-	})
-	checkFlagsValue(cmd, map[string]string{"d": "g;n,g;m"})
-
-	resetAndSetNewArgs(cmd, []string{
-		"testcmd",
-		"--e=g;n,g;m",
-	})
-	checkFlagsValue(cmd, map[string]string{"e": "g;n,g;m"})
-
-	resetAndSetNewArgs(cmd, []string{
-		"testcmd",
-		"--f=g,n;g,m",
-	})
-	checkFlagsValue(cmd, map[string]string{"f": "g,n;g,m"})
-
-	resetAndSetNewArgs(cmd, []string{
-		"testcmd",
-		"--g=g,n;g,m",
-	})
-	// custom implementation of pflag.SliceValue with splitting by semicolon is not compatible with testutil.SetArgs.
-	// So `f` is changed to "g;m;g;n"(split to ["g", "m;g", "n"], and then join with ";"), not default value "g,m;g,n"
-	checkFlagsValue(cmd, map[string]string{"f": "g;m;g;n", "g": "g,n;g,m"})
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			for _, step := range testCase.steps {
+				testutil.ResetArgs(t, cmd)
+				args := append([]string{"testcmd"}, step.args...)
+				cmd.SetArgs(args)
+				checkFlagsValue(cmd, step.expectNotDefaultFlags)
+			}
+		})
+	}
 }

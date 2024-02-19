@@ -19,7 +19,7 @@ var (
 	NewProposerKey = collections.NewPrefix(1)
 )
 
-func MigrateStore(ctx sdk.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	store := storeService.OpenKVStore(ctx)
 	bz, err := store.Get(OldProposerKey)
 	if err != nil {

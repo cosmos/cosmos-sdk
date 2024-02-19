@@ -14,6 +14,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -98,8 +100,9 @@ func TestCreate(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			ctx := NewMockContext()
-			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
+			key := storetypes.NewKVStoreKey("test")
+			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
@@ -155,8 +158,9 @@ func TestUpdate(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			ctx := NewMockContext()
-			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
+			key := storetypes.NewKVStoreKey("test")
+			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
@@ -204,8 +208,9 @@ func TestDelete(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			ctx := NewMockContext()
-			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
+			key := storetypes.NewKVStoreKey("test")
+			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)

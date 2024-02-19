@@ -704,7 +704,7 @@ When this message is processed the following actions occur:
 
 ### MsgCancelUnbondingDelegation
 
-The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and delegate back to a previous validator.
+The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and delegate back to a previous validator. However, please note that this feature does not support canceling unbond delegations from jailed validators.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L38-L42
@@ -719,6 +719,7 @@ This message is expected to fail if:
 * the `unbondingDelegation` entry is already processed.
 * the `cancel unbonding delegation` amount is greater than the `unbondingDelegation` entry balance.
 * the `cancel unbonding delegation` height doesn't exist in the `unbondingDelegationQueue` of the delegator.
+* the `unbondingDelegation` is from a jailed validator.
 
 When this message is processed the following actions occur:
 

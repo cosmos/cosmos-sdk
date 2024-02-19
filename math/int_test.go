@@ -687,3 +687,25 @@ func BenchmarkIntSize(b *testing.B) {
 	}
 	sink = nil
 }
+
+func BenchmarkIntOverflowCheckTime(b *testing.B) {
+	ints := []*big.Int{}
+
+	for _, st := range sizeTests {
+		ii, _ := math.NewIntFromString(st.s)
+		ints = append(ints, ii.BigInt())
+	}
+	b.ResetTimer()
+
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		for j := range sizeTests {
+			got := math.NewIntFromBigIntMut(ints[j])
+			sink = got
+		}
+	}
+	if sink == nil {
+		b.Fatal("Benchmark did not run!")
+	}
+	sink = nil
+}

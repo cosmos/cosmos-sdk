@@ -136,7 +136,19 @@ simple and effective to achieve the desired outcome of minimizing state bloat.
 
 ## Further Discussions
 
-<TODO: Mention Solana's new bond curve doc>
+Given that the proposed design is slightly based on Solana's state rent mechanism,
+we can take the opportunity to discuss if there are inefficiencies that we could
+improve upon from Solan's model.
+
+Specifically, for Solana's case, developers mainly chose fully rent-exempt states,
+and as these were tied to the native coin's price, they became prohibitively
+expensive. Additionally, the need to update every rent-incurring account, a
+process that involved scanning the entire state at least once per epoch, and
+writing to many accounts once an epoch, which made the system inefficient. This
+inefficiency, coupled with low developer engagement, led to the abandonment of
+the rent concept in favor of exclusively rent-exempt account allocations.
+
+However, some, if not all, of these points may not apply to our use case.
 
 ## References
 

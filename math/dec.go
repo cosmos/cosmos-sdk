@@ -734,11 +734,9 @@ func (d LegacyDec) Ceil() LegacyDec {
 	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
 
 	// no need to round with a zero remainder regardless of sign
-	if rem.Cmp(zeroInt) == 0 {
+	if rem.Sign() == 0 {
 		return LegacyNewDecFromBigInt(quo)
-	}
-
-	if rem.Sign() == -1 {
+	} else if rem.Sign() == -1 {
 		return LegacyNewDecFromBigInt(quo)
 	}
 

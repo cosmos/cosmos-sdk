@@ -76,68 +76,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.msgServer = slashingkeeper.NewMsgServerImpl(s.slashingKeeper)
 }
 
-func (s *KeeperTestSuite) TestUnJailNotBonded() {
-	ctx := s.ctx
-
-	p := s.stakingKeeper.GetParams(ctx)
-	p.MaxValidators = 5
-	s.stakingKeeper.SetParams(ctx, p)
-
-	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 6, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
-	pks := simtestutil.CreateTestPubKeys(6)
-	tstaking := stakingtestutil.NewHelper(s.T(), ctx, s.stakingKeeper)
-
-	// create max (5) validators all with the same power
-	for i := uint32(0); i < p.MaxValidators; i++ {
-		addr, val := valAddrs[i], pks[i]
-		tstaking.CreateValidatorWithValPower(addr, val, 100, true)
-	}
-
-	staking.EndBlocker(ctx, s.stakingKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-
-	// create a 6th validator with less power than the cliff validator (won't be bonded)
-	addr, val := valAddrs[5], pks[5]
-	amt := s.stakingKeeper.TokensFromConsensusPower(ctx, 50)
-	msg := tstaking.CreateValidatorMsg(addr, val, amt)
-	msg.MinSelfDelegation = amt
-	res, err := tstaking.CreateValidatorWithMsg(sdk.WrapSDKContext(ctx), msg)
-	s.Require().NoError(err)
-	s.Require().NotNil(res)
-
-	staking.EndBlocker(ctx, s.stakingKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-
-	tstaking.CheckValidator(addr, stakingtypes.Unbonded, false)
-
-	// unbond below minimum self-delegation
-	s.Require().Equal(p.BondDenom, tstaking.Denom)
-	tstaking.Undelegate(sdk.AccAddress(addr), addr, s.stakingKeeper.TokensFromConsensusPower(ctx, 1), true)
-
-	staking.EndBlocker(ctx, s.stakingKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-
-	// verify that validator is jailed
-	tstaking.CheckValidator(addr, -1, true)
-
-	// verify we cannot unjail (yet)
-	s.Require().Error(s.slashingKeeper.Unjail(ctx, addr))
-
-	staking.EndBlocker(ctx, s.stakingKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	// bond to meet minimum self-delegation
-	tstaking.DelegateWithPower(sdk.AccAddress(addr), addr, 1)
-
-	staking.EndBlocker(ctx, s.stakingKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-
-	// verify we can immediately unjail
-	s.Require().NoError(s.slashingKeeper.Unjail(ctx, addr))
-
-	tstaking.CheckValidator(addr, -1, false)
-}
-
 // Test a new validator entering the validator set
 // Ensure that SigningInfo.StartHeight is set correctly
 // and that they are not immediately jailed

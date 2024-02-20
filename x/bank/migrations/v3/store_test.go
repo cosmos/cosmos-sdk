@@ -5,55 +5,57 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
+	// "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
+
+	// "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func TestMigrateStore(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig()
-	bankKey := sdk.NewKVStoreKey("bank")
-	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+// NOTE: The portion of v3 migration being tested here was deactivated for v0.47.x-lsm
+// func TestMigrateStore(t *testing.T) {
+// 	encCfg := moduletestutil.MakeTestEncodingConfig()
+// 	bankKey := sdk.NewKVStoreKey("bank")
+// 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
+// 	store := ctx.KVStore(bankKey)
 
-	addr := sdk.AccAddress([]byte("addr________________"))
-	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
+// 	addr := sdk.AccAddress([]byte("addr________________"))
+// 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
-	balances := sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(10000)),
-		sdk.NewCoin("bar", sdk.NewInt(20000)),
-	)
+// 	balances := sdk.NewCoins(
+// 		sdk.NewCoin("foo", sdk.NewInt(10000)),
+// 		sdk.NewCoin("bar", sdk.NewInt(20000)),
+// 	)
 
-	for _, b := range balances {
-		bz, err := encCfg.Codec.Marshal(&b)
-		require.NoError(t, err)
+// 	for _, b := range balances {
+// 		bz, err := encCfg.Codec.Marshal(&b)
+// 		require.NoError(t, err)
 
-		prefixAccStore.Set([]byte(b.Denom), bz)
-	}
+// 		prefixAccStore.Set([]byte(b.Denom), bz)
+// 	}
 
-	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
+// 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
 
-	for _, b := range balances {
-		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
-		bz := addrPrefixStore.Get([]byte(b.Denom))
-		var expected math.Int
-		require.NoError(t, expected.Unmarshal(bz))
-		require.Equal(t, expected, b.Amount)
-	}
+// 	for _, b := range balances {
+// 		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+// 		bz := addrPrefixStore.Get([]byte(b.Denom))
+// 		var expected math.Int
+// 		require.NoError(t, expected.Unmarshal(bz))
+// 		require.Equal(t, expected, b.Amount)
+// 	}
 
-	for _, b := range balances {
-		denomPrefixStore := prefix.NewStore(store, v3.CreateDenomAddressPrefix(b.Denom))
-		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
-		require.NotNil(t, bz)
-	}
-}
+// 	for _, b := range balances {
+// 		denomPrefixStore := prefix.NewStore(store, v3.CreateDenomAddressPrefix(b.Denom))
+// 		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
+// 		require.NotNil(t, bz)
+// 	}
+// }
 
 func TestMigrateDenomMetaData(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()

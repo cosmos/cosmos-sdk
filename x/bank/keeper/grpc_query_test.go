@@ -422,6 +422,7 @@ func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
 	}
 }
 
+// NOTE: DenomOwners is not implemented (returns an error) on Cosmos Hub
 func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	ctx := suite.ctx
 
@@ -456,7 +457,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 			req: &types.QueryDenomOwnersRequest{
 				Denom: "foo",
 			},
-			expPass:  true,
+			expPass:  false,
 			numAddrs: 0,
 			hasNext:  false,
 			total:    0,
@@ -469,7 +470,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 					CountTotal: true,
 				},
 			},
-			expPass:  true,
+			expPass:  false,
 			numAddrs: 6,
 			hasNext:  true,
 			total:    10,
@@ -483,7 +484,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 					CountTotal: true,
 				},
 			},
-			expPass:  true,
+			expPass:  false,
 			numAddrs: 4,
 			hasNext:  false,
 			total:    10,
@@ -493,20 +494,8 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	for name, tc := range testCases {
 		suite.Run(name, func() {
 			resp, err := suite.queryClient.DenomOwners(gocontext.Background(), tc.req)
-			if tc.expPass {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.DenomOwners, tc.numAddrs)
-				suite.Equal(tc.total, resp.Pagination.Total)
-
-				if tc.hasNext {
-					suite.NotNil(resp.Pagination.NextKey)
-				} else {
-					suite.Nil(resp.Pagination.NextKey)
-				}
-			} else {
-				suite.Require().Error(err)
-			}
+			suite.Require().Error(err)
+			suite.Require().Nil(resp)
 		})
 	}
 

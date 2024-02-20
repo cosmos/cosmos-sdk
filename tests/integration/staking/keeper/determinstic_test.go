@@ -60,7 +60,6 @@ func (s *DeterministicTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
-	// s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now()}).WithGasMeter(sdk.NewInfiniteGasMeter())
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
@@ -258,7 +257,8 @@ func (suite *DeterministicTestSuite) TestGRPCValidator() {
 		ValidatorAddr: val.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Validator, 1915, false)
+	// NOTE: gas consumption delta changed from 1915 to 1933
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Validator, 1933, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCValidators() {
@@ -281,7 +281,8 @@ func (suite *DeterministicTestSuite) TestGRPCValidators() {
 	suite.getStaticValidator()
 	suite.getStaticValidator2()
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryValidatorsRequest{}, suite.queryClient.Validators, 3525, false)
+	// NOTE: gas consumption delta changed from 3525 to 3597
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryValidatorsRequest{}, suite.queryClient.Validators, 3597, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCValidatorDelegations() {
@@ -317,7 +318,8 @@ func (suite *DeterministicTestSuite) TestGRPCValidatorDelegations() {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorDelegations, 11985, false)
+	// NOTE: gas consumption delta changed from 11985 to 12615
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorDelegations, 12615, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCValidatorUnbondingDelegations() {
@@ -390,7 +392,8 @@ func (suite *DeterministicTestSuite) TestGRPCDelegation() {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Delegation, 4635, false)
+	// NOTE: gas consumption delta changed from 4635 to 4845
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Delegation, 4845, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCUnbondingDelegation() {
@@ -457,7 +460,8 @@ func (suite *DeterministicTestSuite) TestGRPCDelegatorDelegations() {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorDelegations, 4238, false)
+	// NOTE: gas consumption delta changed from 4238 to 4448
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorDelegations, 4448, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegatorValidator() {
@@ -488,7 +492,8 @@ func (suite *DeterministicTestSuite) TestGRPCDelegatorValidator() {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidator, 3563, false)
+	// NOTE: gas consumption delta changed from 3563 to 3581
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidator, 3581, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegatorUnbondingDelegations() {
@@ -579,7 +584,8 @@ func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
 		Height: height,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.HistoricalInfo, 1930, false)
+	// NOTE: gas consumption delta changed from 1930 to 1948
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.HistoricalInfo, 1948, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegatorValidators() {
@@ -609,7 +615,9 @@ func (suite *DeterministicTestSuite) TestGRPCDelegatorValidators() {
 	suite.Require().NoError(err)
 
 	req := &stakingtypes.QueryDelegatorValidatorsRequest{DelegatorAddr: delegator1}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidators, 3166, false)
+
+	// NOTE: gas consumption delta changed from 3166 to 3184
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidators, 3184, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCPool() {
@@ -621,7 +629,9 @@ func (suite *DeterministicTestSuite) TestGRPCPool() {
 
 	suite.SetupTest() // reset
 	suite.getStaticValidator()
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryPoolRequest{}, suite.queryClient.Pool, 6185, false)
+
+	// NOTE: gas consumption delta changed from 6185 to 6377
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryPoolRequest{}, suite.queryClient.Pool, 6377, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
@@ -683,18 +693,22 @@ func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
 		DstValidatorAddr: validator2,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Redelegations, 3920, false)
+	// NOTE: gas consumption delta changed from 3920 to 3938
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Redelegations, 3938, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCParams() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		params := stakingtypes.Params{
-			BondDenom:         rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "bond-denom"),
-			UnbondingTime:     durationGenerator().Draw(t, "duration"),
-			MaxValidators:     rapid.Uint32Min(1).Draw(t, "max-validators"),
-			MaxEntries:        rapid.Uint32Min(1).Draw(t, "max-entries"),
-			HistoricalEntries: rapid.Uint32Min(1).Draw(t, "historical-entries"),
-			MinCommissionRate: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "commission"), 2),
+			BondDenom:                 rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "bond-denom"),
+			UnbondingTime:             durationGenerator().Draw(t, "duration"),
+			MaxValidators:             rapid.Uint32Min(1).Draw(t, "max-validators"),
+			MaxEntries:                rapid.Uint32Min(1).Draw(t, "max-entries"),
+			HistoricalEntries:         rapid.Uint32Min(1).Draw(t, "historical-entries"),
+			MinCommissionRate:         sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "commission"), 2),
+			ValidatorBondFactor:       sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "bond-factor"), 2),
+			GlobalLiquidStakingCap:    sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "global-liquid-staking-cap"), 2),
+			ValidatorLiquidStakingCap: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "validator-liquid-staking-cap"), 2),
 		}
 
 		err := suite.stakingKeeper.SetParams(suite.ctx, params)
@@ -704,16 +718,20 @@ func (suite *DeterministicTestSuite) TestGRPCParams() {
 	})
 
 	params := stakingtypes.Params{
-		BondDenom:         "denom",
-		UnbondingTime:     time.Hour,
-		MaxValidators:     85,
-		MaxEntries:        5,
-		HistoricalEntries: 5,
-		MinCommissionRate: sdk.NewDecWithPrec(5, 2),
+		BondDenom:                 "denom",
+		UnbondingTime:             time.Hour,
+		MaxValidators:             85,
+		MaxEntries:                5,
+		HistoricalEntries:         5,
+		MinCommissionRate:         sdk.NewDecWithPrec(5, 2),
+		ValidatorBondFactor:       sdk.NewDecWithPrec(18, 2),
+		GlobalLiquidStakingCap:    sdk.NewDecWithPrec(11, 2),
+		ValidatorLiquidStakingCap: sdk.NewDecWithPrec(2, 2),
 	}
 
 	err := suite.stakingKeeper.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryParamsRequest{}, suite.queryClient.Params, 1114, false)
+	// NOTE: gas consumption delta changed from 1114 to 1291
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryParamsRequest{}, suite.queryClient.Params, 1291, false)
 }

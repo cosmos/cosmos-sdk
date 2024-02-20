@@ -480,6 +480,7 @@ All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
 have one signer, namely the gov module account. And finally, the metadata length
 must not be larger than the `maxMetadataLen` config passed into the gov keeper.
+The `initialDeposit` must be strictly positive and conform to the accepted denom of the `MinDeposit` param.
 
 **State modifications:**
 
@@ -539,9 +540,14 @@ upon receiving txGovSubmitProposal from sender do
 
 ### Deposit
 
-Once a proposal is submitted, if
-`Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
+Once a proposal is submitted, if `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
+
+A deposit is accepted if:
+
+* The proposal exists
+* The proposal is not in the voting period
+* The deposited coins are conform to the accepted denom from the `MinDeposit` param
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L134-L147

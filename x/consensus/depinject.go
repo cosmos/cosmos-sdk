@@ -4,7 +4,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -32,7 +31,7 @@ type ModuleInputs struct {
 
 	Config       *modulev1.Module
 	Cdc          codec.Codec
-	StoreService storetypes.KVStoreService
+	Environment  appmodule.Environment
 	EventManager event.Service
 }
 
@@ -51,7 +50,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager)
+	k := keeper.NewKeeper(in.Cdc, in.Environment, authority.String(), in.EventManager)
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.ParamsStore)

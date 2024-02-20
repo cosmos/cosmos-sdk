@@ -1,18 +1,19 @@
 package keeper
 
 import (
+	"context"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Tally is a function that tallies a proposal by iterating through its votes,
 // and returns the tally result without modifying the proposal or any state.
-func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.TallyResult, error) {
+func (k Keeper) Tally(ctx context.Context, p group.Proposal, groupID uint64) (group.TallyResult, error) {
 	// If proposal has already been tallied and updated, then its status is
 	// accepted/rejected, in which case we just return the previously stored result.
 	//
@@ -22,7 +23,7 @@ func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.
 		return p.FinalTallyResult, nil
 	}
 
-	kvStore := k.storeService.OpenKVStore(ctx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(ctx)
 
 	it, err := k.voteByProposalIndex.Get(kvStore, p.Id)
 	if err != nil {

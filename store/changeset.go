@@ -126,7 +126,6 @@ func (cs *Changeset) Unmarshal(buf []byte) error {
 	}
 	buf = buf[n:]
 
-	cs.Pairs = make(map[string]KVPairs, storeCount)
 	for i := uint64(0); i < storeCount; i++ {
 		storeKey, n, err := encoding.DecodeBytes(buf)
 		if err != nil {

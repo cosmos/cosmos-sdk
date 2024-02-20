@@ -123,9 +123,9 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 				if version < toVersion {
 					targetVersion = toVersion
 				}
-				value, err := s.rootStore.Query(storeKey, targetVersion, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				res, err := s.rootStore.Query(storeKey, targetVersion, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
 				s.Require().NoError(err)
-				s.Require().NotNil(value)
+				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
 			}
 		}
 	}

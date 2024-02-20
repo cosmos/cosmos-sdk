@@ -21,7 +21,7 @@ const (
 	// defaultStorageBufferSize is the default buffer size for the storage snapshotter.
 	defaultStorageBufferSize = 1024
 
-	migrateChangesetKeyFmt = "m/cs_%x" // m/<version>
+	migrateChangesetKeyFmt = "m/cs_%x" // m/cs_<version>
 )
 
 // VersionedChangeset is a pair of version and Changeset.
@@ -39,10 +39,11 @@ type Manager struct {
 	stateCommitment *commitment.CommitStore
 
 	db              store.RawDB
+	mtx             sync.Mutex // mutex for migratedVersion
 	migratedVersion uint64
-	mtx             sync.Mutex
-	chChangeset     <-chan *VersionedChangeset
-	chDone          chan struct{}
+
+	chChangeset <-chan *VersionedChangeset
+	chDone      <-chan struct{}
 }
 
 // NewManager returns a new Manager.
@@ -57,7 +58,12 @@ func NewManager(db store.RawDB, sm *snapshots.Manager, ss *storage.StorageStore,
 }
 
 // Start starts the whole migration process.
-func (m *Manager) Start(version uint64, chChangeset <-chan *VersionedChangeset, chDone chan struct{}) error {
+// It migrates the whole state at the given version to the new store/v2 (both SC and SS).
+// It also catches up the Changesets which are committed while the migration is in progress.
+// `chChangeset` is the channel to receive the committed Changesets from the RootStore.
+// `chDone` is the channel to receive the done signal from the RootStore.
+// NOTE: It should be called by the RootStore, running in the background.
+func (m *Manager) Start(version uint64, chChangeset <-chan *VersionedChangeset, chDone <-chan struct{}) error {
 	m.chChangeset = chChangeset
 	m.chDone = chDone
 

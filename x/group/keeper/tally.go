@@ -22,7 +22,7 @@ func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.
 		return p.FinalTallyResult, nil
 	}
 
-	kvStore := k.storeService.OpenKVStore(ctx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(ctx)
 
 	it, err := k.voteByProposalIndex.Get(kvStore, p.Id)
 	if err != nil {

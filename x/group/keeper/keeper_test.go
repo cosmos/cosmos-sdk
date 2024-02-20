@@ -56,6 +56,8 @@ func (s *TestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
@@ -76,7 +78,7 @@ func (s *TestSuite) SetupTest() {
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
 	config := group.DefaultConfig()
-	s.groupKeeper = keeper.NewKeeper(storeService, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
+	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 

@@ -62,7 +62,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 
 	// Create a new group in the groupTable.
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	groupInfo := &group.GroupInfo{
 		Id:          k.groupTable.Sequence().PeekNextVal(kvStore),
 		Admin:       msg.Admin,
@@ -113,7 +113,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	action := func(g *group.GroupInfo) error {
 		totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
 		if err != nil {
@@ -238,7 +238,7 @@ func (k Keeper) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGrou
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	action := func(g *group.GroupInfo) error {
 		g.Admin = msg.NewAdmin
 		g.Version++
@@ -267,7 +267,7 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, msg *group.MsgUpdateG
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	action := func(g *group.GroupInfo) error {
 		g.Metadata = msg.Metadata
 		g.Version++
@@ -372,7 +372,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 		return nil, err
 	}
 
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 
 	// Generate account address of group policy.
 	var accountAddr sdk.AccAddress
@@ -440,7 +440,7 @@ func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpda
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupPolicy.Admin = msg.NewAdmin
 		groupPolicy.Version++
@@ -465,7 +465,7 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, msg *grou
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupInfo, err := k.getGroupInfo(ctx, groupPolicy.GroupId)
 		if err != nil {
@@ -496,7 +496,7 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, msg *grou
 func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, msg *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := msg.GetMetadata()
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupPolicy.Metadata = metadata
@@ -569,7 +569,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	policyAcc, err := k.getGroupPolicyInfo(ctx, msg.GroupPolicyAddress)
 	if err != nil {
 		return nil, errorsmod.Wrapf(err, "load group policy: %s", msg.GroupPolicyAddress)
@@ -671,7 +671,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	proposal, err := k.getProposal(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err
@@ -727,7 +727,7 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 	proposal, err := k.getProposal(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err
@@ -902,7 +902,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 			return nil, err
 		}
 	} else {
-		store := k.storeService.OpenKVStore(goCtx)
+		store := k.environment.KVStoreService.OpenKVStore(goCtx)
 		if err := k.proposalTable.Update(store, proposal.Id, &proposal); err != nil {
 			return nil, err
 		}
@@ -961,7 +961,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
-	kvStore := k.storeService.OpenKVStore(goCtx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(goCtx)
 
 	// delete group member in the groupMemberTable.
 	if err := k.groupMemberTable.Delete(kvStore, gm); err != nil {
@@ -991,7 +991,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 }
 
 func (k Keeper) getGroupMember(ctx sdk.Context, member *group.GroupMember) (*group.GroupMember, error) {
-	kvStore := k.storeService.OpenKVStore(ctx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(ctx)
 	var groupMember group.GroupMember
 	switch err := k.groupMemberTable.GetOne(kvStore,
 		orm.PrimaryKey(member), &groupMember); {
@@ -1075,7 +1075,7 @@ func (k Keeper) doUpdateGroup(ctx sdk.Context, groupID uint64, reqGroupAdmin str
 // validateDecisionPolicies loops through all decision policies from the group,
 // and calls each of their Validate() method.
 func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) error {
-	kvStore := k.storeService.OpenKVStore(ctx)
+	kvStore := k.environment.KVStoreService.OpenKVStore(ctx)
 	it, err := k.groupPolicyByGroupIndex.Get(kvStore, g.Id)
 	if err != nil {
 		return err

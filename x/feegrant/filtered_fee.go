@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -70,8 +69,8 @@ func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 }
 
 // Accept method checks for the filtered messages has valid expiry
-func (a *AllowedMsgAllowance) Accept(ctx context.Context, env appmodule.Environment, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
-	if !a.allMsgTypesAllowed(ctx, env, msgs) {
+func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
+	if !a.allMsgTypesAllowed(ctx, msgs) {
 		return false, errorsmod.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
@@ -80,7 +79,7 @@ func (a *AllowedMsgAllowance) Accept(ctx context.Context, env appmodule.Environm
 		return false, err
 	}
 
-	remove, err := allowance.Accept(ctx, env, fee, msgs)
+	remove, err := allowance.Accept(ctx, fee, msgs)
 	if err == nil && !remove {
 		if err = a.SetAllowance(allowance); err != nil {
 			return false, err
@@ -89,21 +88,22 @@ func (a *AllowedMsgAllowance) Accept(ctx context.Context, env appmodule.Environm
 	return remove, err
 }
 
-func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context, env appmodule.Environment) map[string]bool {
+func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) map[string]bool {
 	msgsMap := make(map[string]bool, len(a.AllowedMessages))
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, msg := range a.AllowedMessages {
-		env.GasService.GetGasMeter(ctx).Consume(gasCostPerIteration, "check msg")
+		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
 		msgsMap[msg] = true
 	}
 
 	return msgsMap
 }
 
-func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, env appmodule.Environment, msgs []sdk.Msg) bool {
-	msgsMap := a.allowedMsgsToMap(ctx, env)
-
+func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk.Msg) bool {
+	msgsMap := a.allowedMsgsToMap(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, msg := range msgs {
-		env.GasService.GetGasMeter(ctx).Consume(gasCostPerIteration, "check msg")
+		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
 		if !msgsMap[sdk.MsgTypeURL(msg)] {
 			return false
 		}

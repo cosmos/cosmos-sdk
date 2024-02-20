@@ -8,14 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/module"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -25,7 +23,6 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
@@ -158,7 +155,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 
 			// now try to deduct
-			removed, err := allowance.Accept(ctx, env, tc.fee, []sdk.Msg{&call})
+			removed, err := allowance.Accept(ctx, tc.fee, []sdk.Msg{&call})
 			if !tc.accept {
 				require.Error(t, err)
 				return

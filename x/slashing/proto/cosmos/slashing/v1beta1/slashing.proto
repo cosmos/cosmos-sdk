@@ -18,10 +18,10 @@ message ValidatorSigningInfo {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
   // Height at which validator was first a candidate OR was un-jailed
   int64 start_height = 2;
-  // Index which is incremented every time a validator is bonded in a block and
+  // DEPRECATED: Index which is incremented every time a validator is bonded in a block and
   // _may_ have signed a pre-commit or not. This in conjunction with the
   // signed_blocks_window param determines the index in the missed block bitmap.
-  int64 index_offset = 3;
+  int64 index_offset = 3 [deprecated = true];
   // Timestamp until which the validator is jailed due to liveness downtime.
   google.protobuf.Timestamp jailed_until = 4
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];

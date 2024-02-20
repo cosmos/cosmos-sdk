@@ -31,7 +31,7 @@ func TestDecodeStore(t *testing.T) {
 	consAddrStr1, err := addresscodec.NewBech32Codec("cosmosvalcons").BytesToString(consAddr1)
 	require.NoError(t, err)
 
-	info := types.NewValidatorSigningInfo(consAddrStr1, 0, 1, time.Now().UTC(), false, 0)
+	info := types.NewValidatorSigningInfo(consAddrStr1, 0, time.Now().UTC(), false, 0)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

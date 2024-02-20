@@ -148,8 +148,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock implements the group module's EndBlock.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return EndBlocker(c, am.keeper)
+	return am.keeper.EndBlocker(ctx)
 }
 
 // GenerateGenesisState creates a randomized GenState of the group module.

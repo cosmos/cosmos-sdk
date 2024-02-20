@@ -30,10 +30,6 @@ func (s Storage[SS, SC]) StateAt(version uint64) (store.ReaderMap, error) {
 	return actorsState[SS]{version, s.ss}, nil
 }
 
-func (s Storage[SS, SC]) StateCommit(changes []store.StateChanges) (store.Hash, error) {
-	panic("impl")
-}
-
 func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Storage[SS, SC], error) {
 	// sanity checks.
 	ssVersion, err := ss.GetLatestVersion()

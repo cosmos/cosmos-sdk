@@ -12,8 +12,4 @@ type Store interface {
 	// StateAt returns a readonly view over the provided
 	// state. Must error when the version does not exist.
 	StateAt(version uint64) (store.ReaderMap, error)
-
-	// StateCommit commits the provided changeset and returns
-	// the new state root of the state.
-	StateCommit(changes []store.StateChanges) (store.Hash, error)
 }

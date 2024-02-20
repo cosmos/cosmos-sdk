@@ -40,7 +40,7 @@ type (
 type Consensus[T transaction.Tx] struct {
 	app             appmanager.AppManager[T]
 	cfg             Config
-	store           store.Store
+	store           types.Store
 	logger          log.Logger
 	txCodec         transaction.Codec[T]
 	streaming       streaming.Manager
@@ -59,7 +59,7 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	app appmanager.AppManager[T],
 	mp mempool.Mempool[T],
-	store store.Store,
+	store types.Store,
 	cfg Config,
 ) *Consensus[T] {
 	return &Consensus[T]{

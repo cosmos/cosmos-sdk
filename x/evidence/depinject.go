@@ -4,7 +4,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/evidence/keeper"
@@ -27,8 +26,8 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
+	Environment appmodule.Environment
+	Cdc         codec.Codec
 
 	StakingKeeper  types.StakingKeeper
 	SlashingKeeper types.SlashingKeeper
@@ -43,7 +42,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec)
+	k := keeper.NewKeeper(in.Cdc, in.Environment, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec)
 	m := NewAppModule(*k)
 
 	return ModuleOutputs{EvidenceKeeper: *k, Module: m}

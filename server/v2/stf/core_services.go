@@ -102,13 +102,7 @@ func (em *eventManager) Emit(tev protoiface.MessageV1) error {
 
 // EmitKV emits a key value pair event.
 func (em *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error {
-	attributes := make([]event.Attribute, 0, len(attrs))
-
-	for _, attr := range attrs {
-		attributes = append(attributes, event.NewAttribute(attr.Key, attr.Value))
-	}
-
-	em.executionContext.events = append(em.executionContext.events, event.NewEvent(eventType, attributes...))
+	em.executionContext.events = append(em.executionContext.events, event.NewEvent(eventType, attrs...))
 	return nil
 }
 

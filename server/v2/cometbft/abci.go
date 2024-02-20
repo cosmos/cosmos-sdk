@@ -268,6 +268,9 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 	}
 
 	txs, err := c.prepareProposalHandler(ctx, c.app, req)
+	if err != nil {
+		return nil, err
+	}
 
 	// TODO add bytes method in x/tx or cachetx
 	encodedTxs := make([][]byte, len(txs))

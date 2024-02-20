@@ -11,6 +11,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// coinsTransferMsgFunc defines a function that creates a message to send coins from one
+// address to the other, and also a message that parses such  response.
+// This in most cases will be implemented as a bank.MsgSend creator, but we keep x/accounts independent of bank.
+type coinsTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
+
+type gogoProtoPlusV2 interface {
+	proto.Message
+	implementation.ProtoMsg
+}
+
 // protoV2GogoWrapper is a wrapper of a protov2 message into a gogo message.
 // this is exceptionally allowed to enable accounts to be decoupled from
 // the SDK, since x/accounts can support only protov1 in its APIs.

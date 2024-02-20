@@ -6,8 +6,8 @@ option go_package = "cosmossdk.io/x/accounts/v1";
 
 import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
-import "cosmos/accounts/v1/account_abstraction.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/tx/v1beta1/tx.proto";
 import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service for the x/accounts module.
@@ -78,12 +78,18 @@ message MsgExecuteBundle {
   // bundler defines the entity going through the standard TX flow
   // to execute one or multiple UserOperations on behalf of others.
   string bundler = 1;
-  // operations is the list of operations to be executed.
-  repeated UserOperation operations = 2;
+  // txs defines the txs to execute on behalf of other users.
+  repeated cosmos.tx.v1beta1.TxRaw txs = 2;
+}
+
+// BundledTxResponse defines the response of a bundled tx.
+message BundledTxResponse {
+  google.protobuf.Any exec_responses = 1;
+  string              error          = 2;
 }
 
 // MsgExecuteBundleResponse defines the ExecuteBundle response type for the Msg/ExecuteBundle RPC method.
 message MsgExecuteBundleResponse {
   // responses is the list of responses returned by the account implementations.
-  repeated UserOperationResponse responses = 1;
+  repeated BundledTxResponse responses = 1;
 }

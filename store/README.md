@@ -10,7 +10,9 @@ and [Store v2 Design](https://docs.google.com/document/d/1l6uXIjTPHOOWM5N4sUUmUf
 
 ## Pruning
 
-<!-- TODO -->
+The `root.Store` is NOT responsible for pruning. Rather, pruning is the responsibility
+of the underlying SS and SC layers. This means pruning can be implementation specific,
+such as being synchronous or asynchronous.
 
 ## Usage
 

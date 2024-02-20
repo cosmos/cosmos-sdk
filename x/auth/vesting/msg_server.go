@@ -80,8 +80,7 @@ func (s msgServer) CreateVestingAccount(ctx context.Context, msg *types.MsgCreat
 	} else {
 		start := msg.StartTime
 		if msg.StartTime == 0 {
-			sdkctx := sdk.UnwrapSDKContext(ctx)
-			start = sdkctx.HeaderInfo().Time.Unix()
+			start = s.AccountKeeper.Environment.HeaderService.GetHeaderInfo(ctx).Time.Unix()
 		}
 		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, start)
 	}
@@ -192,6 +191,10 @@ func (s msgServer) CreatePeriodicVestingAccount(ctx context.Context, msg *types.
 		}
 
 		totalCoins = totalCoins.Add(period.Amount...)
+	}
+
+	if s.BankKeeper.BlockedAddr(to) {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
 	if acc := s.AccountKeeper.GetAccount(ctx, to); acc != nil {

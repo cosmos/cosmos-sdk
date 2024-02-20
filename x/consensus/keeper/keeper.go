@@ -22,7 +22,6 @@ var StoreKey = "Consensus"
 
 type Keeper struct {
 	environment appmodule.Environment
-	event       event.Service
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
@@ -30,12 +29,11 @@ type Keeper struct {
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
-func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string, em event.Service) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
 		environment: env,
 		authority:   authority,
-		event:       em,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
 }
@@ -79,7 +77,7 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	if err := k.event.EventManager(ctx).EmitKV(
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		"update_consensus_params",
 		event.NewAttribute("authority", msg.Authority),
 		event.NewAttribute("parameters", consensusParams.String())); err != nil {

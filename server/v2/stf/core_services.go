@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"slices"
 
-	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/gas"
-	"cosmossdk.io/core/store"
-
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/store"
 )
 
 var _ store.KVStoreService = (*storeService)(nil)

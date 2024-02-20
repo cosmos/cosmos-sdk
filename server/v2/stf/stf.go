@@ -374,7 +374,7 @@ func applyStateChanges(dst, src store.WriterMap) error {
 	return dst.ApplyStateChanges(changes)
 }
 
-// isCtxCancelled reports if the context was cancelled.
+// isCtxCancelled reports if the context was canceled.
 func isCtxCancelled(ctx context.Context) error {
 	select {
 	case <-ctx.Done():

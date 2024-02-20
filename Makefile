@@ -425,7 +425,6 @@ proto-all: proto-format proto-lint proto-gen
 
 #? proto-gen: Generate Protobuf files
 proto-gen:
-	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protocgen.sh
 
 #? proto-swagger-gen: Generate Protobuf Swagger

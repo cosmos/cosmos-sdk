@@ -70,6 +70,7 @@ message Supply {
 
   option (cosmos_proto.implements_interface) = "cosmos.bank.v1beta1.SupplyI";
 
+  // total is the total supply of coins across the network.
   repeated cosmos.base.v1beta1.Coin total = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,

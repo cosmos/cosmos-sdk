@@ -11,6 +11,7 @@ import (
 	"github.com/linxGnu/grocksdb"
 	"golang.org/x/exp/slices"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
@@ -146,29 +147,23 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 	return copyAndFreeSlice(slice), nil
 }
 
-// Prune attempts to prune all versions up to and including the provided version.
-// This is done internally by updating the full_history_ts_low RocksDB value on
-// the column families, s.t. all versions less than full_history_ts_low will be
-// dropped.
-//
-// Note, this does NOT incur an immediate full compaction, i.e. this performs a
-// lazy prune. Future compactions will honor the increased full_history_ts_low
-// and trim history when possible.
+// Prune prunes all versions up to and including the provided version argument.
+// Internally, this performs a manual compaction, the data with older timestamp
+// will be GCed by compaction.
 func (db *Database) Prune(version uint64) error {
 	tsLow := version + 1 // we increment by 1 to include the provided version
 
 	var ts [TimestampSize]byte
 	binary.LittleEndian.PutUint64(ts[:], tsLow)
-
-	if err := db.storage.IncreaseFullHistoryTsLow(db.cfHandle, ts[:]); err != nil {
-		return fmt.Errorf("failed to update column family full_history_ts_low: %w", err)
-	}
+	compactOpts := grocksdb.NewCompactRangeOptions()
+	compactOpts.SetFullHistoryTsLow(ts[:])
+	db.storage.CompactRangeCFOpt(db.cfHandle, grocksdb.Range{}, compactOpts)
 
 	db.tsLow = tsLow
 	return nil
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -184,7 +179,7 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 	return newRocksDBIterator(itr, prefix, start, end, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}

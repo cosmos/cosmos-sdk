@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/tx/signing"
@@ -35,7 +36,7 @@ type appModule struct {
 	app *App
 }
 
-func (m appModule) RegisterServices(configurator module.Configurator) {
+func (m appModule) RegisterServices(configurator module.Configurator) { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	err := m.app.registerRuntimeServices(configurator)
 	if err != nil {
 		panic(err)
@@ -58,15 +59,15 @@ type BaseAppOption func(*baseapp.BaseApp)
 func (b BaseAppOption) IsManyPerContainerType() {}
 
 func init() {
-	appmodule.Register(&runtimev1alpha1.Module{},
-		appmodule.Provide(
+	appconfig.RegisterModule(&runtimev1alpha1.Module{},
+		appconfig.Provide(
 			ProvideApp,
 			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideGenesisTxHandler,
-			ProvideKVStoreService,
+			ProvideEnvironment,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
@@ -74,7 +75,7 @@ func init() {
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
 		),
-		appmodule.Invoke(SetupAppBuilder),
+		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 
@@ -223,9 +224,10 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
+func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder, logger log.Logger) (store.KVStoreService, appmodule.Environment) {
 	storeKey := ProvideKVStoreKey(config, key, app)
-	return kvStoreService{key: storeKey}
+	kvService := kvStoreService{key: storeKey}
+	return kvService, NewEnvironment(kvService, logger)
 }
 
 func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {

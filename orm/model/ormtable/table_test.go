@@ -742,8 +742,8 @@ func TestReadonly(t *testing.T) {
 	})
 	assert.NilError(t, err)
 	readBackend := ormtable.NewReadBackend(ormtable.ReadBackendOptions{
-		CommitmentStoreReader: dbm.NewMemDB(),
-		IndexStoreReader:      dbm.NewMemDB(),
+		CommitmentStoreReader: testkv.TestStore{Db: dbm.NewMemDB()},
+		IndexStoreReader:      testkv.TestStore{Db: dbm.NewMemDB()},
 	})
 	ctx := ormtable.WrapContextDefault(readBackend)
 	assert.ErrorIs(t, ormerrors.ReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))

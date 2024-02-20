@@ -7,32 +7,29 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
-	"cosmossdk.io/x/feegrant/simulation"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasServices         = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -49,16 +46,22 @@ func (ab AppModuleBasic) Name() string {
 	return feegrant.ModuleName
 }
 
-// RegisterServices registers a gRPC query service to respond to the
-// module-specific gRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	feegrant.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	feegrant.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	feegrant.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
+	feegrant.RegisterQueryServer(registrar, am.keeper)
+
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	err := cfg.RegisterMigration(feegrant.ModuleName, 1, m.Migrate1to2)
-	if err != nil {
-		panic(fmt.Sprintf("failed to migrate x/feegrant from version 1 to 2: %v", err))
+
+	if err := mr.Register(feegrant.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/feegrant from version 1 to 2: %w", err)
 	}
+
+	return nil
 }
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
@@ -124,9 +127,6 @@ func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKe
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -160,46 +160,4 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return EndBlocker(ctx, am.keeper)
-}
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type FeegrantInputs struct {
-	depinject.In
-
-	StoreService  store.KVStoreService
-	Cdc           codec.Codec
-	AccountKeeper feegrant.AccountKeeper
-	BankKeeper    feegrant.BankKeeper
-	Registry      cdctypes.InterfaceRegistry
-}
-
-func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper)
-	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
-	return k, m
-}
-
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the feegrant module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
-
-// RegisterStoreDecoder registers a decoder for feegrant module's types
-func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
-}
-
-// WeightedOperations returns all the feegrant module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.accountKeeper.AddressCodec(),
-	)
 }

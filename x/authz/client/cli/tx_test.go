@@ -11,17 +11,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
+	govv1 "cosmossdk.io/api/cosmos/gov/v1"
 	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/authz/client/cli"
 	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/gov"
-	govcli "cosmossdk.io/x/gov/client/cli"
-	govclitestutil "cosmossdk.io/x/gov/client/testutil"
-	govv1 "cosmossdk.io/x/gov/types/v1"
-	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -54,7 +50,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(gov.AppModuleBasic{}, bank.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(bank.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 
 	s.baseCtx = client.Context{}.
@@ -90,12 +86,6 @@ func (s *CLITestSuite) SetupSuite() {
 	// Create new account in the keyring.
 	s.grantee[0] = s.createAccount("grantee1")
 	s.msgSendExec(s.grantee[0])
-
-	// create a proposal with deposit
-	_, err := govclitestutil.MsgSubmitLegacyProposal(s.clientCtx, val[0].Address.String(),
-		"Text Proposal 1", "Where is the title!?", govv1beta1.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin("stake", govv1.DefaultMinDepositTokens).String()))
-	s.Require().NoError(err)
 
 	// Create new account in the keyring.
 	s.grantee[1] = s.createAccount("grantee2")

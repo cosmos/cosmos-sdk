@@ -9,6 +9,7 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -153,7 +154,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					[]sdk.Msg{bankMsg},
 					initialDeposit,
 					proposer.String(),
-					strings.Repeat("1", 256),
+					strings.Repeat("1", 257),
 					"Proposal",
 					"description of proposal",
 					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
@@ -298,6 +299,83 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 	}
 }
 
+// TestSubmitMultipleChoiceProposal tests only multiple choice proposal specific logic.
+// Internally the message uses MsgSubmitProposal, which is tested above.
+func (suite *KeeperTestSuite) TestSubmitMultipleChoiceProposal() {
+	suite.reset()
+	addrs := suite.addrs
+	proposer := addrs[0]
+	initialDeposit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
+
+	cases := map[string]struct {
+		preRun    func() (*v1.MsgSubmitMultipleChoiceProposal, error)
+		expErr    bool
+		expErrMsg string
+	}{
+		"empty options": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{},
+				)
+			},
+			expErr:    true,
+			expErrMsg: "vote options cannot be empty, two or more options must be provided",
+		},
+		"invalid options": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{
+						OptionOne:  "Vote for me",
+						OptionFour: "Vote for them",
+					},
+				)
+			},
+			expErr:    true,
+			expErrMsg: "if a vote option is provided, the previous one must also be provided",
+		},
+		"valid proposal": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{
+						OptionOne: "Vote for me",
+						OptionTwo: "Vote for them",
+					},
+				)
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		suite.Run(name, func() {
+			msg, err := tc.preRun()
+			suite.Require().NoError(err)
+			res, err := suite.msgSrvr.SubmitMultipleChoiceProposal(suite.ctx, msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
@@ -337,11 +415,11 @@ func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 			},
 			depositor: proposer,
 			expErr:    true,
-			expErrMsg: "not found",
+			expErrMsg: "proposal 0 doesn't exist",
 		},
 		"valid proposal but invalid proposer": {
 			preRun: func() uint64 {
-				return proposalID
+				return res.ProposalId
 			},
 			depositor: addrs[1],
 			expErr:    true,
@@ -451,6 +529,30 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 			metadata:  "",
 			expErr:    true,
 			expErrMsg: "invalid vote option",
+		},
+		"optimistic proposal: wrong vote option": {
+			preRun: func() uint64 {
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC,
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:    v1.VoteOption_VOTE_OPTION_ONE,
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "optimistic proposals can only be rejected: invalid vote option",
 		},
 		"vote on inactive proposal": {
 			preRun: func() uint64 {
@@ -638,6 +740,19 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			expErr:    true,
 			expErrMsg: `option:VOTE_OPTION_ONE weight:"-1.000000000000000000" : invalid vote option`,
 		},
+		"individual weight > 1 but weights sum == 1": {
+			preRun: func() uint64 {
+				return proposalID
+			},
+			option: v1.WeightedVoteOptions{
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDec(2)),
+				v1.NewWeightedVoteOption(v1.OptionNo, sdkmath.LegacyNewDec(-1)),
+			},
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: `option:VOTE_OPTION_ONE weight:"2.000000000000000000" : invalid vote option`,
+		},
 		"empty options": {
 			preRun: func() uint64 {
 				return proposalID
@@ -658,7 +773,31 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			expErr:    true,
 			expErrMsg: "invalid vote option",
 		},
-		"weight sum < 1": {
+		"optimistic proposal: wrong vote option": {
+			preRun: func() uint64 {
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC,
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE), // vote yes
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "optimistic proposals can only be rejected: invalid vote option",
+		},
+		"weights sum < 1": {
 			preRun: func() uint64 {
 				return proposalID
 			},
@@ -1572,7 +1711,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 				}
 			},
 			expErr:    true,
-			expErrMsg: "quorom cannot be negative",
+			expErrMsg: "quorum cannot be negative",
 		},
 		{
 			name: "quorum > 1",
@@ -1586,7 +1725,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 				}
 			},
 			expErr:    true,
-			expErrMsg: "quorom too large",
+			expErrMsg: "quorum too large",
 		},
 		{
 			name: "invalid threshold",
@@ -1725,6 +1864,144 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
+	testCases := []struct {
+		name      string
+		input     *v1.MsgUpdateMessageParams
+		expErrMsg string
+	}{
+		{
+			name: "invalid authority",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: "invalid",
+				MsgUrl:    "",
+				Params:    nil,
+			},
+			expErrMsg: "invalid authority",
+		},
+		{
+			name: "invalid msg url (valid as not checked in msg handler)",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    "invalid",
+				Params:    nil,
+			},
+			expErrMsg: "",
+		},
+		{
+			name: "empty params (valid = deleting params)",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    "",
+				Params:    nil,
+			},
+			expErrMsg: "",
+		},
+		{
+			name: "invalid quorum",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "-0.334",
+					YesQuorum:     "0.5",
+					Threshold:     "0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+			expErrMsg: "quorum cannot be negative",
+		},
+		{
+			name: "invalid yes quorum",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "0.334",
+					YesQuorum:     "-0.5",
+					Threshold:     "0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+			expErrMsg: "yes_quorum cannot be negative",
+		},
+		{
+			name: "invalid threshold",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "0.334",
+					YesQuorum:     "0.5",
+					Threshold:     "-0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+			expErrMsg: "vote threshold must be positive",
+		},
+		{
+			name: "invalid veto threshold",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "0.334",
+					YesQuorum:     "0.5",
+					Threshold:     "0.5",
+					VetoThreshold: "-0.334",
+				},
+			},
+			expErrMsg: "veto threshold must be positive",
+		},
+		{
+			name: "invalid voting period",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := -time.Hour; return &d }(),
+					Quorum:        "0.334",
+					YesQuorum:     "0.5",
+					Threshold:     "0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+			expErrMsg: "voting period must be positive",
+		},
+		{
+			name: "valid",
+			input: &v1.MsgUpdateMessageParams{
+				Authority: suite.govKeeper.GetAuthority(),
+				MsgUrl:    sdk.MsgTypeURL(&v1.MsgUpdateParams{}),
+				Params: &v1.MessageBasedParams{
+					VotingPeriod:  func() *time.Duration { d := time.Hour; return &d }(),
+					Quorum:        "0.334",
+					YesQuorum:     "0",
+					Threshold:     "0.5",
+					VetoThreshold: "0.334",
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			_, err := suite.msgSrvr.UpdateMessageParams(suite.ctx, tc.input)
+			if tc.expErrMsg != "" {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
 	baseDepositRatioDec := sdkmath.LegacyNewDec(baseDepositTestPercent).Quo(sdkmath.LegacyNewDec(100))
@@ -1793,6 +2070,85 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 				return
 			}
 			suite.Require().NoError(err)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgSudoExec() {
+	// setup for valid use case
+	params, _ := suite.govKeeper.Params.Get(suite.ctx)
+	minDeposit := params.MinDeposit
+	proposal, err := v1.NewMsgSubmitProposal([]sdk.Msg{}, minDeposit, suite.addrs[0].String(), "{\"title\":\"Proposal\", \"summary\":\"description of proposal\"}", "Proposal", "description of proposal", v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	suite.Require().NoError(err)
+	proposalResp, err := suite.msgSrvr.SubmitProposal(suite.ctx, proposal)
+	suite.Require().NoError(err)
+
+	// governance makes a random account vote on a proposal
+	// normally it isn't possible as governance isn't the signer.
+	// governance needs to sudo the vote.
+	validMsg := &v1.MsgSudoExec{Authority: suite.govKeeper.GetAuthority()}
+	_, err = validMsg.SetSudoedMsg(v1.NewMsgVote(suite.addrs[0], proposalResp.ProposalId, v1.OptionYes, ""))
+	suite.Require().NoError(err)
+
+	invalidMsg := &v1.MsgSudoExec{Authority: suite.govKeeper.GetAuthority()}
+	_, err = invalidMsg.SetSudoedMsg(&types.Any{TypeUrl: "invalid"})
+	suite.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		input     *v1.MsgSudoExec
+		expErrMsg string
+	}{
+		{
+			name:      "empty msg",
+			input:     nil,
+			expErrMsg: "sudo-ed message cannot be nil",
+		},
+		{
+			name: "empty sudoed msg",
+			input: &v1.MsgSudoExec{
+				Authority: suite.govKeeper.GetAuthority(),
+				Msg:       nil,
+			},
+			expErrMsg: "sudo-ed message cannot be nil",
+		},
+		{
+			name: "invalid authority",
+			input: &v1.MsgSudoExec{
+				Authority: "invalid",
+				Msg:       &types.Any{},
+			},
+			expErrMsg: "invalid authority",
+		},
+		{
+			name: "invalid msg (not proper sdk message)",
+			input: &v1.MsgSudoExec{
+				Authority: suite.govKeeper.GetAuthority(),
+				Msg:       &types.Any{TypeUrl: "invalid"},
+			},
+			expErrMsg: "invalid sudo-ed message",
+		},
+		{
+			name:      "invalid msg (not registered)",
+			input:     invalidMsg,
+			expErrMsg: "unrecognized message route",
+		},
+		{
+			name:  "valid",
+			input: validMsg,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			_, err := suite.msgSrvr.SudoExec(suite.ctx, tc.input)
+			if tc.expErrMsg != "" {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+			}
 		})
 	}
 }

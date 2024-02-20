@@ -2,9 +2,12 @@
 package accountsv1
 
 import (
+	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	_ "cosmossdk.io/api/cosmos/msg/v1"
+	v1beta11 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -14,11 +17,63 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_MsgInit_4_list)(nil)
+
+type _MsgInit_4_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_MsgInit_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgInit_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgInit_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgInit_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgInit_4_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgInit_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgInit_4_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgInit_4_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_MsgInit              protoreflect.MessageDescriptor
 	fd_MsgInit_sender       protoreflect.FieldDescriptor
 	fd_MsgInit_account_type protoreflect.FieldDescriptor
 	fd_MsgInit_message      protoreflect.FieldDescriptor
+	fd_MsgInit_funds        protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -27,6 +82,7 @@ func init() {
 	fd_MsgInit_sender = md_MsgInit.Fields().ByName("sender")
 	fd_MsgInit_account_type = md_MsgInit.Fields().ByName("account_type")
 	fd_MsgInit_message = md_MsgInit.Fields().ByName("message")
+	fd_MsgInit_funds = md_MsgInit.Fields().ByName("funds")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgInit)(nil)
@@ -112,6 +168,12 @@ func (x *fastReflection_MsgInit) Range(f func(protoreflect.FieldDescriptor, prot
 			return
 		}
 	}
+	if len(x.Funds) != 0 {
+		value := protoreflect.ValueOfList(&_MsgInit_4_list{list: &x.Funds})
+		if !f(fd_MsgInit_funds, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -133,6 +195,8 @@ func (x *fastReflection_MsgInit) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.AccountType != ""
 	case "cosmos.accounts.v1.MsgInit.message":
 		return x.Message != nil
+	case "cosmos.accounts.v1.MsgInit.funds":
+		return len(x.Funds) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgInit"))
@@ -155,6 +219,8 @@ func (x *fastReflection_MsgInit) Clear(fd protoreflect.FieldDescriptor) {
 		x.AccountType = ""
 	case "cosmos.accounts.v1.MsgInit.message":
 		x.Message = nil
+	case "cosmos.accounts.v1.MsgInit.funds":
+		x.Funds = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgInit"))
@@ -180,6 +246,12 @@ func (x *fastReflection_MsgInit) Get(descriptor protoreflect.FieldDescriptor) pr
 	case "cosmos.accounts.v1.MsgInit.message":
 		value := x.Message
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.accounts.v1.MsgInit.funds":
+		if len(x.Funds) == 0 {
+			return protoreflect.ValueOfList(&_MsgInit_4_list{})
+		}
+		listValue := &_MsgInit_4_list{list: &x.Funds}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgInit"))
@@ -206,6 +278,10 @@ func (x *fastReflection_MsgInit) Set(fd protoreflect.FieldDescriptor, value prot
 		x.AccountType = value.Interface().(string)
 	case "cosmos.accounts.v1.MsgInit.message":
 		x.Message = value.Message().Interface().(*anypb.Any)
+	case "cosmos.accounts.v1.MsgInit.funds":
+		lv := value.List()
+		clv := lv.(*_MsgInit_4_list)
+		x.Funds = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgInit"))
@@ -231,6 +307,12 @@ func (x *fastReflection_MsgInit) Mutable(fd protoreflect.FieldDescriptor) protor
 			x.Message = new(anypb.Any)
 		}
 		return protoreflect.ValueOfMessage(x.Message.ProtoReflect())
+	case "cosmos.accounts.v1.MsgInit.funds":
+		if x.Funds == nil {
+			x.Funds = []*v1beta1.Coin{}
+		}
+		value := &_MsgInit_4_list{list: &x.Funds}
+		return protoreflect.ValueOfList(value)
 	case "cosmos.accounts.v1.MsgInit.sender":
 		panic(fmt.Errorf("field sender of message cosmos.accounts.v1.MsgInit is not mutable"))
 	case "cosmos.accounts.v1.MsgInit.account_type":
@@ -255,6 +337,9 @@ func (x *fastReflection_MsgInit) NewField(fd protoreflect.FieldDescriptor) proto
 	case "cosmos.accounts.v1.MsgInit.message":
 		m := new(anypb.Any)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.accounts.v1.MsgInit.funds":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_MsgInit_4_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgInit"))
@@ -336,6 +421,12 @@ func (x *fastReflection_MsgInit) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Message)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if len(x.Funds) > 0 {
+			for _, e := range x.Funds {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -364,6 +455,22 @@ func (x *fastReflection_MsgInit) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Funds) > 0 {
+			for iNdEx := len(x.Funds) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Funds[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
 		}
 		if x.Message != nil {
 			encoded, err := options.Marshal(x.Message)
@@ -539,6 +646,40 @@ func (x *fastReflection_MsgInit) ProtoMethods() *protoiface.Methods {
 					x.Message = &anypb.Any{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Message); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Funds", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Funds = append(x.Funds, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Funds[len(x.Funds)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1076,11 +1217,63 @@ func (x *fastReflection_MsgInitResponse) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_MsgExecute_4_list)(nil)
+
+type _MsgExecute_4_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_MsgExecute_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgExecute_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgExecute_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgExecute_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgExecute_4_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgExecute_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgExecute_4_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgExecute_4_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_MsgExecute         protoreflect.MessageDescriptor
 	fd_MsgExecute_sender  protoreflect.FieldDescriptor
 	fd_MsgExecute_target  protoreflect.FieldDescriptor
 	fd_MsgExecute_message protoreflect.FieldDescriptor
+	fd_MsgExecute_funds   protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1089,6 +1282,7 @@ func init() {
 	fd_MsgExecute_sender = md_MsgExecute.Fields().ByName("sender")
 	fd_MsgExecute_target = md_MsgExecute.Fields().ByName("target")
 	fd_MsgExecute_message = md_MsgExecute.Fields().ByName("message")
+	fd_MsgExecute_funds = md_MsgExecute.Fields().ByName("funds")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgExecute)(nil)
@@ -1174,6 +1368,12 @@ func (x *fastReflection_MsgExecute) Range(f func(protoreflect.FieldDescriptor, p
 			return
 		}
 	}
+	if len(x.Funds) != 0 {
+		value := protoreflect.ValueOfList(&_MsgExecute_4_list{list: &x.Funds})
+		if !f(fd_MsgExecute_funds, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1195,6 +1395,8 @@ func (x *fastReflection_MsgExecute) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Target != ""
 	case "cosmos.accounts.v1.MsgExecute.message":
 		return x.Message != nil
+	case "cosmos.accounts.v1.MsgExecute.funds":
+		return len(x.Funds) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecute"))
@@ -1217,6 +1419,8 @@ func (x *fastReflection_MsgExecute) Clear(fd protoreflect.FieldDescriptor) {
 		x.Target = ""
 	case "cosmos.accounts.v1.MsgExecute.message":
 		x.Message = nil
+	case "cosmos.accounts.v1.MsgExecute.funds":
+		x.Funds = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecute"))
@@ -1242,6 +1446,12 @@ func (x *fastReflection_MsgExecute) Get(descriptor protoreflect.FieldDescriptor)
 	case "cosmos.accounts.v1.MsgExecute.message":
 		value := x.Message
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.accounts.v1.MsgExecute.funds":
+		if len(x.Funds) == 0 {
+			return protoreflect.ValueOfList(&_MsgExecute_4_list{})
+		}
+		listValue := &_MsgExecute_4_list{list: &x.Funds}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecute"))
@@ -1268,6 +1478,10 @@ func (x *fastReflection_MsgExecute) Set(fd protoreflect.FieldDescriptor, value p
 		x.Target = value.Interface().(string)
 	case "cosmos.accounts.v1.MsgExecute.message":
 		x.Message = value.Message().Interface().(*anypb.Any)
+	case "cosmos.accounts.v1.MsgExecute.funds":
+		lv := value.List()
+		clv := lv.(*_MsgExecute_4_list)
+		x.Funds = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecute"))
@@ -1293,6 +1507,12 @@ func (x *fastReflection_MsgExecute) Mutable(fd protoreflect.FieldDescriptor) pro
 			x.Message = new(anypb.Any)
 		}
 		return protoreflect.ValueOfMessage(x.Message.ProtoReflect())
+	case "cosmos.accounts.v1.MsgExecute.funds":
+		if x.Funds == nil {
+			x.Funds = []*v1beta1.Coin{}
+		}
+		value := &_MsgExecute_4_list{list: &x.Funds}
+		return protoreflect.ValueOfList(value)
 	case "cosmos.accounts.v1.MsgExecute.sender":
 		panic(fmt.Errorf("field sender of message cosmos.accounts.v1.MsgExecute is not mutable"))
 	case "cosmos.accounts.v1.MsgExecute.target":
@@ -1317,6 +1537,9 @@ func (x *fastReflection_MsgExecute) NewField(fd protoreflect.FieldDescriptor) pr
 	case "cosmos.accounts.v1.MsgExecute.message":
 		m := new(anypb.Any)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.accounts.v1.MsgExecute.funds":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_MsgExecute_4_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecute"))
@@ -1398,6 +1621,12 @@ func (x *fastReflection_MsgExecute) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Message)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if len(x.Funds) > 0 {
+			for _, e := range x.Funds {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1426,6 +1655,22 @@ func (x *fastReflection_MsgExecute) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Funds) > 0 {
+			for iNdEx := len(x.Funds) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Funds[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
 		}
 		if x.Message != nil {
 			encoded, err := options.Marshal(x.Message)
@@ -1601,6 +1846,40 @@ func (x *fastReflection_MsgExecute) ProtoMethods() *protoiface.Methods {
 					x.Message = &anypb.Any{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Message); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Funds", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Funds = append(x.Funds, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Funds[len(x.Funds)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -2077,7 +2356,7 @@ func (x *fastReflection_MsgExecuteResponse) ProtoMethods() *protoiface.Methods {
 var _ protoreflect.List = (*_MsgExecuteBundle_2_list)(nil)
 
 type _MsgExecuteBundle_2_list struct {
-	list *[]*UserOperation
+	list *[]*v1beta11.TxRaw
 }
 
 func (x *_MsgExecuteBundle_2_list) Len() int {
@@ -2093,18 +2372,18 @@ func (x *_MsgExecuteBundle_2_list) Get(i int) protoreflect.Value {
 
 func (x *_MsgExecuteBundle_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*UserOperation)
+	concreteValue := valueUnwrapped.Interface().(*v1beta11.TxRaw)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_MsgExecuteBundle_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*UserOperation)
+	concreteValue := valueUnwrapped.Interface().(*v1beta11.TxRaw)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_MsgExecuteBundle_2_list) AppendMutable() protoreflect.Value {
-	v := new(UserOperation)
+	v := new(v1beta11.TxRaw)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -2117,7 +2396,7 @@ func (x *_MsgExecuteBundle_2_list) Truncate(n int) {
 }
 
 func (x *_MsgExecuteBundle_2_list) NewElement() protoreflect.Value {
-	v := new(UserOperation)
+	v := new(v1beta11.TxRaw)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -2126,16 +2405,16 @@ func (x *_MsgExecuteBundle_2_list) IsValid() bool {
 }
 
 var (
-	md_MsgExecuteBundle            protoreflect.MessageDescriptor
-	fd_MsgExecuteBundle_bundler    protoreflect.FieldDescriptor
-	fd_MsgExecuteBundle_operations protoreflect.FieldDescriptor
+	md_MsgExecuteBundle         protoreflect.MessageDescriptor
+	fd_MsgExecuteBundle_bundler protoreflect.FieldDescriptor
+	fd_MsgExecuteBundle_txs     protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_v1_tx_proto_init()
 	md_MsgExecuteBundle = File_cosmos_accounts_v1_tx_proto.Messages().ByName("MsgExecuteBundle")
 	fd_MsgExecuteBundle_bundler = md_MsgExecuteBundle.Fields().ByName("bundler")
-	fd_MsgExecuteBundle_operations = md_MsgExecuteBundle.Fields().ByName("operations")
+	fd_MsgExecuteBundle_txs = md_MsgExecuteBundle.Fields().ByName("txs")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgExecuteBundle)(nil)
@@ -2209,9 +2488,9 @@ func (x *fastReflection_MsgExecuteBundle) Range(f func(protoreflect.FieldDescrip
 			return
 		}
 	}
-	if len(x.Operations) != 0 {
-		value := protoreflect.ValueOfList(&_MsgExecuteBundle_2_list{list: &x.Operations})
-		if !f(fd_MsgExecuteBundle_operations, value) {
+	if len(x.Txs) != 0 {
+		value := protoreflect.ValueOfList(&_MsgExecuteBundle_2_list{list: &x.Txs})
+		if !f(fd_MsgExecuteBundle_txs, value) {
 			return
 		}
 	}
@@ -2232,8 +2511,8 @@ func (x *fastReflection_MsgExecuteBundle) Has(fd protoreflect.FieldDescriptor) b
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundle.bundler":
 		return x.Bundler != ""
-	case "cosmos.accounts.v1.MsgExecuteBundle.operations":
-		return len(x.Operations) != 0
+	case "cosmos.accounts.v1.MsgExecuteBundle.txs":
+		return len(x.Txs) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecuteBundle"))
@@ -2252,8 +2531,8 @@ func (x *fastReflection_MsgExecuteBundle) Clear(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundle.bundler":
 		x.Bundler = ""
-	case "cosmos.accounts.v1.MsgExecuteBundle.operations":
-		x.Operations = nil
+	case "cosmos.accounts.v1.MsgExecuteBundle.txs":
+		x.Txs = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecuteBundle"))
@@ -2273,11 +2552,11 @@ func (x *fastReflection_MsgExecuteBundle) Get(descriptor protoreflect.FieldDescr
 	case "cosmos.accounts.v1.MsgExecuteBundle.bundler":
 		value := x.Bundler
 		return protoreflect.ValueOfString(value)
-	case "cosmos.accounts.v1.MsgExecuteBundle.operations":
-		if len(x.Operations) == 0 {
+	case "cosmos.accounts.v1.MsgExecuteBundle.txs":
+		if len(x.Txs) == 0 {
 			return protoreflect.ValueOfList(&_MsgExecuteBundle_2_list{})
 		}
-		listValue := &_MsgExecuteBundle_2_list{list: &x.Operations}
+		listValue := &_MsgExecuteBundle_2_list{list: &x.Txs}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -2301,10 +2580,10 @@ func (x *fastReflection_MsgExecuteBundle) Set(fd protoreflect.FieldDescriptor, v
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundle.bundler":
 		x.Bundler = value.Interface().(string)
-	case "cosmos.accounts.v1.MsgExecuteBundle.operations":
+	case "cosmos.accounts.v1.MsgExecuteBundle.txs":
 		lv := value.List()
 		clv := lv.(*_MsgExecuteBundle_2_list)
-		x.Operations = *clv.list
+		x.Txs = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecuteBundle"))
@@ -2325,11 +2604,11 @@ func (x *fastReflection_MsgExecuteBundle) Set(fd protoreflect.FieldDescriptor, v
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgExecuteBundle) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.MsgExecuteBundle.operations":
-		if x.Operations == nil {
-			x.Operations = []*UserOperation{}
+	case "cosmos.accounts.v1.MsgExecuteBundle.txs":
+		if x.Txs == nil {
+			x.Txs = []*v1beta11.TxRaw{}
 		}
-		value := &_MsgExecuteBundle_2_list{list: &x.Operations}
+		value := &_MsgExecuteBundle_2_list{list: &x.Txs}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.accounts.v1.MsgExecuteBundle.bundler":
 		panic(fmt.Errorf("field bundler of message cosmos.accounts.v1.MsgExecuteBundle is not mutable"))
@@ -2348,8 +2627,8 @@ func (x *fastReflection_MsgExecuteBundle) NewField(fd protoreflect.FieldDescript
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundle.bundler":
 		return protoreflect.ValueOfString("")
-	case "cosmos.accounts.v1.MsgExecuteBundle.operations":
-		list := []*UserOperation{}
+	case "cosmos.accounts.v1.MsgExecuteBundle.txs":
+		list := []*v1beta11.TxRaw{}
 		return protoreflect.ValueOfList(&_MsgExecuteBundle_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -2424,8 +2703,8 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if len(x.Operations) > 0 {
-			for _, e := range x.Operations {
+		if len(x.Txs) > 0 {
+			for _, e := range x.Txs {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -2459,9 +2738,9 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Operations) > 0 {
-			for iNdEx := len(x.Operations) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Operations[iNdEx])
+		if len(x.Txs) > 0 {
+			for iNdEx := len(x.Txs) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Txs[iNdEx])
 				if err != nil {
 					return protoiface.MarshalOutput{
 						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2565,7 +2844,7 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Operations", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Txs", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -2592,10 +2871,509 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Operations = append(x.Operations, &UserOperation{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Operations[len(x.Operations)-1]); err != nil {
+				x.Txs = append(x.Txs, &v1beta11.TxRaw{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Txs[len(x.Txs)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_BundledTxResponse                protoreflect.MessageDescriptor
+	fd_BundledTxResponse_exec_responses protoreflect.FieldDescriptor
+	fd_BundledTxResponse_error          protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_accounts_v1_tx_proto_init()
+	md_BundledTxResponse = File_cosmos_accounts_v1_tx_proto.Messages().ByName("BundledTxResponse")
+	fd_BundledTxResponse_exec_responses = md_BundledTxResponse.Fields().ByName("exec_responses")
+	fd_BundledTxResponse_error = md_BundledTxResponse.Fields().ByName("error")
+}
+
+var _ protoreflect.Message = (*fastReflection_BundledTxResponse)(nil)
+
+type fastReflection_BundledTxResponse BundledTxResponse
+
+func (x *BundledTxResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_BundledTxResponse)(x)
+}
+
+func (x *BundledTxResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_accounts_v1_tx_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_BundledTxResponse_messageType fastReflection_BundledTxResponse_messageType
+var _ protoreflect.MessageType = fastReflection_BundledTxResponse_messageType{}
+
+type fastReflection_BundledTxResponse_messageType struct{}
+
+func (x fastReflection_BundledTxResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_BundledTxResponse)(nil)
+}
+func (x fastReflection_BundledTxResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_BundledTxResponse)
+}
+func (x fastReflection_BundledTxResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_BundledTxResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_BundledTxResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_BundledTxResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_BundledTxResponse) Type() protoreflect.MessageType {
+	return _fastReflection_BundledTxResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_BundledTxResponse) New() protoreflect.Message {
+	return new(fastReflection_BundledTxResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_BundledTxResponse) Interface() protoreflect.ProtoMessage {
+	return (*BundledTxResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_BundledTxResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ExecResponses != nil {
+		value := protoreflect.ValueOfMessage(x.ExecResponses.ProtoReflect())
+		if !f(fd_BundledTxResponse_exec_responses, value) {
+			return
+		}
+	}
+	if x.Error != "" {
+		value := protoreflect.ValueOfString(x.Error)
+		if !f(fd_BundledTxResponse_error, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_BundledTxResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
+		return x.ExecResponses != nil
+	case "cosmos.accounts.v1.BundledTxResponse.error":
+		return x.Error != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.BundledTxResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.v1.BundledTxResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BundledTxResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
+		x.ExecResponses = nil
+	case "cosmos.accounts.v1.BundledTxResponse.error":
+		x.Error = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.BundledTxResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.v1.BundledTxResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_BundledTxResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
+		value := x.ExecResponses
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.accounts.v1.BundledTxResponse.error":
+		value := x.Error
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.BundledTxResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.v1.BundledTxResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BundledTxResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
+		x.ExecResponses = value.Message().Interface().(*anypb.Any)
+	case "cosmos.accounts.v1.BundledTxResponse.error":
+		x.Error = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.BundledTxResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.v1.BundledTxResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BundledTxResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
+		if x.ExecResponses == nil {
+			x.ExecResponses = new(anypb.Any)
+		}
+		return protoreflect.ValueOfMessage(x.ExecResponses.ProtoReflect())
+	case "cosmos.accounts.v1.BundledTxResponse.error":
+		panic(fmt.Errorf("field error of message cosmos.accounts.v1.BundledTxResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.BundledTxResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.v1.BundledTxResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_BundledTxResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
+		m := new(anypb.Any)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.accounts.v1.BundledTxResponse.error":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.BundledTxResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.v1.BundledTxResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_BundledTxResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.v1.BundledTxResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_BundledTxResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BundledTxResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_BundledTxResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_BundledTxResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*BundledTxResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.ExecResponses != nil {
+			l = options.Size(x.ExecResponses)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Error)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*BundledTxResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Error) > 0 {
+			i -= len(x.Error)
+			copy(dAtA[i:], x.Error)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Error)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.ExecResponses != nil {
+			encoded, err := options.Marshal(x.ExecResponses)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*BundledTxResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BundledTxResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BundledTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExecResponses", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.ExecResponses == nil {
+					x.ExecResponses = &anypb.Any{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ExecResponses); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Error = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2635,7 +3413,7 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 var _ protoreflect.List = (*_MsgExecuteBundleResponse_1_list)(nil)
 
 type _MsgExecuteBundleResponse_1_list struct {
-	list *[]*UserOperationResponse
+	list *[]*BundledTxResponse
 }
 
 func (x *_MsgExecuteBundleResponse_1_list) Len() int {
@@ -2651,18 +3429,18 @@ func (x *_MsgExecuteBundleResponse_1_list) Get(i int) protoreflect.Value {
 
 func (x *_MsgExecuteBundleResponse_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*UserOperationResponse)
+	concreteValue := valueUnwrapped.Interface().(*BundledTxResponse)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_MsgExecuteBundleResponse_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*UserOperationResponse)
+	concreteValue := valueUnwrapped.Interface().(*BundledTxResponse)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_MsgExecuteBundleResponse_1_list) AppendMutable() protoreflect.Value {
-	v := new(UserOperationResponse)
+	v := new(BundledTxResponse)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -2675,7 +3453,7 @@ func (x *_MsgExecuteBundleResponse_1_list) Truncate(n int) {
 }
 
 func (x *_MsgExecuteBundleResponse_1_list) NewElement() protoreflect.Value {
-	v := new(UserOperationResponse)
+	v := new(BundledTxResponse)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -2703,7 +3481,7 @@ func (x *MsgExecuteBundleResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgExecuteBundleResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_accounts_v1_tx_proto_msgTypes[5]
+	mi := &file_cosmos_accounts_v1_tx_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2868,7 +3646,7 @@ func (x *fastReflection_MsgExecuteBundleResponse) Mutable(fd protoreflect.FieldD
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundleResponse.responses":
 		if x.Responses == nil {
-			x.Responses = []*UserOperationResponse{}
+			x.Responses = []*BundledTxResponse{}
 		}
 		value := &_MsgExecuteBundleResponse_1_list{list: &x.Responses}
 		return protoreflect.ValueOfList(value)
@@ -2886,7 +3664,7 @@ func (x *fastReflection_MsgExecuteBundleResponse) Mutable(fd protoreflect.FieldD
 func (x *fastReflection_MsgExecuteBundleResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundleResponse.responses":
-		list := []*UserOperationResponse{}
+		list := []*BundledTxResponse{}
 		return protoreflect.ValueOfList(&_MsgExecuteBundleResponse_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -3086,7 +3864,7 @@ func (x *fastReflection_MsgExecuteBundleResponse) ProtoMethods() *protoiface.Met
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Responses = append(x.Responses, &UserOperationResponse{})
+				x.Responses = append(x.Responses, &BundledTxResponse{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Responses[len(x.Responses)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -3151,6 +3929,9 @@ type MsgInit struct {
 	AccountType string `protobuf:"bytes,2,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
 	// message is the message to be sent to the account.
 	Message *anypb.Any `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	// funds contains the coins that the account wants to
+	// send alongside the request.
+	Funds []*v1beta1.Coin `protobuf:"bytes,4,rep,name=funds,proto3" json:"funds,omitempty"`
 }
 
 func (x *MsgInit) Reset() {
@@ -3190,6 +3971,13 @@ func (x *MsgInit) GetAccountType() string {
 func (x *MsgInit) GetMessage() *anypb.Any {
 	if x != nil {
 		return x.Message
+	}
+	return nil
+}
+
+func (x *MsgInit) GetFunds() []*v1beta1.Coin {
+	if x != nil {
+		return x.Funds
 	}
 	return nil
 }
@@ -3252,6 +4040,9 @@ type MsgExecute struct {
 	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
 	// message is the message to be sent to the account.
 	Message *anypb.Any `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	// funds contains the coins that the account wants to
+	// send alongside the request.
+	Funds []*v1beta1.Coin `protobuf:"bytes,4,rep,name=funds,proto3" json:"funds,omitempty"`
 }
 
 func (x *MsgExecute) Reset() {
@@ -3291,6 +4082,13 @@ func (x *MsgExecute) GetTarget() string {
 func (x *MsgExecute) GetMessage() *anypb.Any {
 	if x != nil {
 		return x.Message
+	}
+	return nil
+}
+
+func (x *MsgExecute) GetFunds() []*v1beta1.Coin {
+	if x != nil {
+		return x.Funds
 	}
 	return nil
 }
@@ -3341,8 +4139,8 @@ type MsgExecuteBundle struct {
 	// bundler defines the entity going through the standard TX flow
 	// to execute one or multiple UserOperations on behalf of others.
 	Bundler string `protobuf:"bytes,1,opt,name=bundler,proto3" json:"bundler,omitempty"`
-	// operations is the list of operations to be executed.
-	Operations []*UserOperation `protobuf:"bytes,2,rep,name=operations,proto3" json:"operations,omitempty"`
+	// txs defines the txs to execute on behalf of other users.
+	Txs []*v1beta11.TxRaw `protobuf:"bytes,2,rep,name=txs,proto3" json:"txs,omitempty"`
 }
 
 func (x *MsgExecuteBundle) Reset() {
@@ -3372,11 +4170,55 @@ func (x *MsgExecuteBundle) GetBundler() string {
 	return ""
 }
 
-func (x *MsgExecuteBundle) GetOperations() []*UserOperation {
+func (x *MsgExecuteBundle) GetTxs() []*v1beta11.TxRaw {
 	if x != nil {
-		return x.Operations
+		return x.Txs
 	}
 	return nil
+}
+
+// BundledTxResponse defines the response of a bundled tx.
+type BundledTxResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ExecResponses *anypb.Any `protobuf:"bytes,1,opt,name=exec_responses,json=execResponses,proto3" json:"exec_responses,omitempty"`
+	Error         string     `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+}
+
+func (x *BundledTxResponse) Reset() {
+	*x = BundledTxResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_accounts_v1_tx_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *BundledTxResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BundledTxResponse) ProtoMessage() {}
+
+// Deprecated: Use BundledTxResponse.ProtoReflect.Descriptor instead.
+func (*BundledTxResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_accounts_v1_tx_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *BundledTxResponse) GetExecResponses() *anypb.Any {
+	if x != nil {
+		return x.ExecResponses
+	}
+	return nil
+}
+
+func (x *BundledTxResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
 }
 
 // MsgExecuteBundleResponse defines the ExecuteBundle response type for the Msg/ExecuteBundle RPC method.
@@ -3386,13 +4228,13 @@ type MsgExecuteBundleResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// responses is the list of responses returned by the account implementations.
-	Responses []*UserOperationResponse `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
+	Responses []*BundledTxResponse `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
 }
 
 func (x *MsgExecuteBundleResponse) Reset() {
 	*x = MsgExecuteBundleResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_accounts_v1_tx_proto_msgTypes[5]
+		mi := &file_cosmos_accounts_v1_tx_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3406,10 +4248,10 @@ func (*MsgExecuteBundleResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgExecuteBundleResponse.ProtoReflect.Descriptor instead.
 func (*MsgExecuteBundleResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_v1_tx_proto_rawDescGZIP(), []int{5}
+	return file_cosmos_accounts_v1_tx_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *MsgExecuteBundleResponse) GetResponses() []*UserOperationResponse {
+func (x *MsgExecuteBundleResponse) GetResponses() []*BundledTxResponse {
 	if x != nil {
 		return x.Responses
 	}
@@ -3425,81 +4267,100 @@ var file_cosmos_accounts_v1_tx_proto_rawDesc = []byte{
 	0x31, 0x1a, 0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
 	0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6d, 0x73, 0x67, 0x2f, 0x76, 0x31, 0x2f, 0x6d, 0x73, 0x67, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x2c, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x5f, 0x61, 0x62, 0x73, 0x74, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x81, 0x01, 0x0a, 0x07, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x12,
-	0x16, 0x0a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x12, 0x21, 0x0a, 0x0c, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x61,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x2e, 0x0a, 0x07, 0x6d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f,
-	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e,
-	0x79, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a,
-	0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x22, 0x6c, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x49, 0x6e,
-	0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x61, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x72, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x79, 0x0a, 0x0a, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63,
-	0x75, 0x74, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x74,
-	0x61, 0x72, 0x67, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x61, 0x72,
-	0x67, 0x65, 0x74, 0x12, 0x2e, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72,
-	0x22, 0x46, 0x0a, 0x12, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
-	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08,
-	0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x7d, 0x0a, 0x10, 0x4d, 0x73, 0x67, 0x45,
-	0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x18, 0x0a, 0x07,
-	0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x62,
-	0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x12, 0x41, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x55, 0x73, 0x65, 0x72, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f,
-	0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07,
-	0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x22, 0x63, 0x0a, 0x18, 0x4d, 0x73, 0x67, 0x45, 0x78,
-	0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x47, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73,
-	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72,
-	0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x52, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x32, 0x8e, 0x02, 0x0a,
-	0x03, 0x4d, 0x73, 0x67, 0x12, 0x48, 0x0a, 0x04, 0x49, 0x6e, 0x69, 0x74, 0x12, 0x1b, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x1a, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x51,
-	0x0a, 0x07, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x12, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x1a, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61,
+	0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x78,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x78, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67,
+	0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xe4, 0x01, 0x0a, 0x07, 0x4d, 0x73, 0x67, 0x49,
+	0x6e, 0x69, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x12, 0x21, 0x0a, 0x0c, 0x61,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x2e,
+	0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x61,
+	0x0a, 0x05, 0x66, 0x75, 0x6e, 0x64, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf,
+	0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74,
+	0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x05, 0x66, 0x75, 0x6e, 0x64,
+	0x73, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x22, 0x6c,
+	0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x27, 0x0a, 0x0f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x08, 0x72, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41,
+	0x6e, 0x79, 0x52, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xdc, 0x01, 0x0a,
+	0x0a, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73,
+	0x65, 0x6e, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x65, 0x6e,
+	0x64, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x2e, 0x0a, 0x07, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41,
+	0x6e, 0x79, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x61, 0x0a, 0x05, 0x66,
+	0x75, 0x6e, 0x64, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65,
+	0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x05, 0x66, 0x75, 0x6e, 0x64, 0x73, 0x3a, 0x0b,
+	0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x22, 0x46, 0x0a, 0x12, 0x4d,
 	0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x63, 0x0a, 0x0d, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64,
-	0x6c, 0x65, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75,
-	0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbb, 0x01,
-	0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02,
-	0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
-	0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x65, 0x12, 0x30, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x66, 0x0a, 0x10, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
+	0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c,
+	0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65,
+	0x72, 0x12, 0x2a, 0x0a, 0x03, 0x74, 0x78, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x54, 0x78, 0x52, 0x61, 0x77, 0x52, 0x03, 0x74, 0x78, 0x73, 0x3a, 0x0c, 0x82,
+	0xe7, 0xb0, 0x2a, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x22, 0x66, 0x0a, 0x11, 0x42,
+	0x75, 0x6e, 0x64, 0x6c, 0x65, 0x64, 0x54, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x3b, 0x0a, 0x0e, 0x65, 0x78, 0x65, 0x63, 0x5f, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x0d,
+	0x65, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x12, 0x14, 0x0a,
+	0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x65, 0x72,
+	0x72, 0x6f, 0x72, 0x22, 0x5f, 0x0a, 0x18, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
+	0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x43, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x64, 0x54,
+	0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x73, 0x32, 0x8e, 0x02, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x48, 0x0a, 0x04,
+	0x49, 0x6e, 0x69, 0x74, 0x12, 0x1b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69,
+	0x74, 0x1a, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x51, 0x0a, 0x07, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
+	0x65, 0x12, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
+	0x65, 0x1a, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
+	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x63, 0x0a, 0x0d, 0x45, 0x78, 0x65,
+	0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e,
+	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65,
+	0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65,
+	0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
+	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbb, 0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31,
+	0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31,
+	0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41,
+	0x58, 0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31,
+	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a,
+	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3514,36 +4375,40 @@ func file_cosmos_accounts_v1_tx_proto_rawDescGZIP() []byte {
 	return file_cosmos_accounts_v1_tx_proto_rawDescData
 }
 
-var file_cosmos_accounts_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_cosmos_accounts_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_cosmos_accounts_v1_tx_proto_goTypes = []interface{}{
 	(*MsgInit)(nil),                  // 0: cosmos.accounts.v1.MsgInit
 	(*MsgInitResponse)(nil),          // 1: cosmos.accounts.v1.MsgInitResponse
 	(*MsgExecute)(nil),               // 2: cosmos.accounts.v1.MsgExecute
 	(*MsgExecuteResponse)(nil),       // 3: cosmos.accounts.v1.MsgExecuteResponse
 	(*MsgExecuteBundle)(nil),         // 4: cosmos.accounts.v1.MsgExecuteBundle
-	(*MsgExecuteBundleResponse)(nil), // 5: cosmos.accounts.v1.MsgExecuteBundleResponse
-	(*anypb.Any)(nil),                // 6: google.protobuf.Any
-	(*UserOperation)(nil),            // 7: cosmos.accounts.v1.UserOperation
-	(*UserOperationResponse)(nil),    // 8: cosmos.accounts.v1.UserOperationResponse
+	(*BundledTxResponse)(nil),        // 5: cosmos.accounts.v1.BundledTxResponse
+	(*MsgExecuteBundleResponse)(nil), // 6: cosmos.accounts.v1.MsgExecuteBundleResponse
+	(*anypb.Any)(nil),                // 7: google.protobuf.Any
+	(*v1beta1.Coin)(nil),             // 8: cosmos.base.v1beta1.Coin
+	(*v1beta11.TxRaw)(nil),           // 9: cosmos.tx.v1beta1.TxRaw
 }
 var file_cosmos_accounts_v1_tx_proto_depIdxs = []int32{
-	6, // 0: cosmos.accounts.v1.MsgInit.message:type_name -> google.protobuf.Any
-	6, // 1: cosmos.accounts.v1.MsgInitResponse.response:type_name -> google.protobuf.Any
-	6, // 2: cosmos.accounts.v1.MsgExecute.message:type_name -> google.protobuf.Any
-	6, // 3: cosmos.accounts.v1.MsgExecuteResponse.response:type_name -> google.protobuf.Any
-	7, // 4: cosmos.accounts.v1.MsgExecuteBundle.operations:type_name -> cosmos.accounts.v1.UserOperation
-	8, // 5: cosmos.accounts.v1.MsgExecuteBundleResponse.responses:type_name -> cosmos.accounts.v1.UserOperationResponse
-	0, // 6: cosmos.accounts.v1.Msg.Init:input_type -> cosmos.accounts.v1.MsgInit
-	2, // 7: cosmos.accounts.v1.Msg.Execute:input_type -> cosmos.accounts.v1.MsgExecute
-	4, // 8: cosmos.accounts.v1.Msg.ExecuteBundle:input_type -> cosmos.accounts.v1.MsgExecuteBundle
-	1, // 9: cosmos.accounts.v1.Msg.Init:output_type -> cosmos.accounts.v1.MsgInitResponse
-	3, // 10: cosmos.accounts.v1.Msg.Execute:output_type -> cosmos.accounts.v1.MsgExecuteResponse
-	5, // 11: cosmos.accounts.v1.Msg.ExecuteBundle:output_type -> cosmos.accounts.v1.MsgExecuteBundleResponse
-	9, // [9:12] is the sub-list for method output_type
-	6, // [6:9] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	7,  // 0: cosmos.accounts.v1.MsgInit.message:type_name -> google.protobuf.Any
+	8,  // 1: cosmos.accounts.v1.MsgInit.funds:type_name -> cosmos.base.v1beta1.Coin
+	7,  // 2: cosmos.accounts.v1.MsgInitResponse.response:type_name -> google.protobuf.Any
+	7,  // 3: cosmos.accounts.v1.MsgExecute.message:type_name -> google.protobuf.Any
+	8,  // 4: cosmos.accounts.v1.MsgExecute.funds:type_name -> cosmos.base.v1beta1.Coin
+	7,  // 5: cosmos.accounts.v1.MsgExecuteResponse.response:type_name -> google.protobuf.Any
+	9,  // 6: cosmos.accounts.v1.MsgExecuteBundle.txs:type_name -> cosmos.tx.v1beta1.TxRaw
+	7,  // 7: cosmos.accounts.v1.BundledTxResponse.exec_responses:type_name -> google.protobuf.Any
+	5,  // 8: cosmos.accounts.v1.MsgExecuteBundleResponse.responses:type_name -> cosmos.accounts.v1.BundledTxResponse
+	0,  // 9: cosmos.accounts.v1.Msg.Init:input_type -> cosmos.accounts.v1.MsgInit
+	2,  // 10: cosmos.accounts.v1.Msg.Execute:input_type -> cosmos.accounts.v1.MsgExecute
+	4,  // 11: cosmos.accounts.v1.Msg.ExecuteBundle:input_type -> cosmos.accounts.v1.MsgExecuteBundle
+	1,  // 12: cosmos.accounts.v1.Msg.Init:output_type -> cosmos.accounts.v1.MsgInitResponse
+	3,  // 13: cosmos.accounts.v1.Msg.Execute:output_type -> cosmos.accounts.v1.MsgExecuteResponse
+	6,  // 14: cosmos.accounts.v1.Msg.ExecuteBundle:output_type -> cosmos.accounts.v1.MsgExecuteBundleResponse
+	12, // [12:15] is the sub-list for method output_type
+	9,  // [9:12] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_accounts_v1_tx_proto_init() }
@@ -3551,7 +4416,6 @@ func file_cosmos_accounts_v1_tx_proto_init() {
 	if File_cosmos_accounts_v1_tx_proto != nil {
 		return
 	}
-	file_cosmos_accounts_v1_account_abstraction_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_accounts_v1_tx_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgInit); i {
@@ -3614,6 +4478,18 @@ func file_cosmos_accounts_v1_tx_proto_init() {
 			}
 		}
 		file_cosmos_accounts_v1_tx_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BundledTxResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_accounts_v1_tx_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgExecuteBundleResponse); i {
 			case 0:
 				return &v.state
@@ -3632,7 +4508,7 @@ func file_cosmos_accounts_v1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_accounts_v1_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -7,20 +7,17 @@ import (
 
 	"github.com/cockroachdb/pebble"
 
-	"cosmossdk.io/store/v2"
+	corestore "cosmossdk.io/core/store"
 )
 
-var _ store.Iterator = (*iterator)(nil)
+var _ corestore.Iterator = (*iterator)(nil)
 
 // iterator implements the store.Iterator interface. It wraps a PebbleDB iterator
 // with added MVCC key handling logic. The iterator will iterate over the key space
 // in the provided domain for a given version. If a key has been written at the
 // provided version, that key/value pair will be iterated over. Otherwise, the
 // latest version for that key/value pair will be iterated over s.t. it's less
-// than the provided version. Note:
-//
-// - The start key must not be empty.
-// - Currently, reverse iteration is NOT supported.
+// than the provided version.
 type iterator struct {
 	source             *pebble.Iterator
 	prefix, start, end []byte
@@ -50,19 +47,6 @@ func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte
 		valid = src.First()
 	}
 
-	if valid {
-		// The first key may not represent the desired target version, so seek to
-		// the correct location by moving the cursor to the first key < version + 1.
-		firstKey, _, ok := SplitMVCCKey(src.Key())
-		if !ok {
-			// XXX: This should not happen as that would indicate we have a malformed
-			// MVCC key.
-			valid = false
-		} else {
-			valid = src.SeekLT(MVCCEncode(firstKey, version+1))
-		}
-	}
-
 	itr := &iterator{
 		source:  src,
 		prefix:  prefix,
@@ -73,12 +57,32 @@ func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte
 		reverse: reverse,
 	}
 
-	// The cursor might now be pointing at a key/value pair that is tombstoned.
-	// If so, we must move the cursor.
-	if itr.valid && itr.cursorTombstoned() {
-		itr.valid = itr.Next()
-	}
+	if valid {
+		currKey, currKeyVersion, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC value.
+			panic(fmt.Sprintf("invalid PebbleDB MVCC value: %s", itr.source.Key()))
+		}
 
+		curKeyVersionDecoded, err := decodeUint64Ascending(currKeyVersion)
+		if err != nil {
+			itr.valid = false
+			return itr
+		}
+
+		// We need to check whether initial key iterator visits has a version <= requested
+		// version. If larger version, call next to find another key which does.
+		if curKeyVersionDecoded > itr.version {
+			itr.Next()
+		} else {
+			// If version is less, seek to the largest version of that key <= requested
+			// iterator version. It is guaranteed this won't move the iterator to a key
+			// that is invalid since curKeyVersionDecoded <= requested iterator version,
+			// so there exists at least one version of currKey SeekLT may move to.
+			itr.valid = itr.source.SeekLT(MVCCEncode(currKey, itr.version+1))
+		}
+	}
 	return itr
 }
 
@@ -115,56 +119,12 @@ func (itr *iterator) Value() []byte {
 	return slices.Clone(val)
 }
 
-func (itr *iterator) Next() bool {
-	var next bool
+func (itr *iterator) Next() {
 	if itr.reverse {
-		currKey, _, ok := SplitMVCCKey(itr.source.Key())
-		if !ok {
-			// XXX: This should not happen as that would indicate we have a malformed
-			// MVCC key.
-			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
-		}
-
-		// Since PebbleDB has no PrevPrefix API, we must manually seek to the next
-		// key that is lexicographically less than the current key.
-		next = itr.source.SeekLT(MVCCEncode(currKey, 0))
+		itr.nextReverse()
 	} else {
-		// move the cursor to the next key
-		next = itr.source.NextPrefix()
+		itr.nextForward()
 	}
-
-	// First move the iterator to the next prefix, which may not correspond to the
-	// desired version for that key, e.g. if the key was written at a later version,
-	// so we seek back to the latest desired version, s.t. the version is <= itr.version.
-	if next {
-		nextKey, _, ok := SplitMVCCKey(itr.source.Key())
-		if !ok {
-			// XXX: This should not happen as that would indicate we have a malformed
-			// MVCC key.
-			itr.valid = false
-			return itr.valid
-		}
-		if !bytes.HasPrefix(nextKey, itr.prefix) {
-			// the next key must have itr.prefix as the prefix
-			itr.valid = false
-			return itr.valid
-		}
-
-		// Move the iterator to the closest version to the desired version, so we
-		// append the current iterator key to the prefix and seek to that key.
-		itr.valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
-
-		// The cursor might now be pointing at a key/value pair that is tombstoned.
-		// If so, we must move the cursor.
-		if itr.valid && itr.cursorTombstoned() {
-			itr.valid = itr.Next()
-		}
-
-		return itr.valid
-	}
-
-	itr.valid = false
-	return itr.valid
 }
 
 func (itr *iterator) Valid() bool {
@@ -195,10 +155,12 @@ func (itr *iterator) Error() error {
 	return itr.source.Error()
 }
 
-func (itr *iterator) Close() {
-	_ = itr.source.Close()
+func (itr *iterator) Close() error {
+	err := itr.source.Close()
 	itr.source = nil
 	itr.valid = false
+
+	return err
 }
 
 func (itr *iterator) assertIsValid() {
@@ -297,4 +259,168 @@ func (itr *iterator) DebugRawIterate() {
 			valid = false
 		}
 	}
+}
+
+func (itr *iterator) nextForward() {
+	if !itr.source.Valid() {
+		itr.valid = false
+		return
+	}
+
+	currKey, _, ok := SplitMVCCKey(itr.source.Key())
+	if !ok {
+		// XXX: This should not happen as that would indicate we have a malformed
+		// MVCC key.
+		panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+	}
+
+	next := itr.source.NextPrefix()
+
+	// First move the iterator to the next prefix, which may not correspond to the
+	// desired version for that key, e.g. if the key was written at a later version,
+	// so we seek back to the latest desired version, s.t. the version is <= itr.version.
+	if next {
+		nextKey, _, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC key.
+			itr.valid = false
+			return
+		}
+
+		if !bytes.HasPrefix(nextKey, itr.prefix) {
+			// the next key must have itr.prefix as the prefix
+			itr.valid = false
+			return
+		}
+
+		// Move the iterator to the closest version to the desired version, so we
+		// append the current iterator key to the prefix and seek to that key.
+		itr.valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
+
+		tmpKey, tmpKeyVersion, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC key.
+			itr.valid = false
+			return
+		}
+
+		// There exists cases where the SeekLT() call moved us back to the same key
+		// we started at, so we must move to next key, i.e. two keys forward.
+		if bytes.Equal(tmpKey, currKey) {
+			if itr.source.NextPrefix() {
+				itr.nextForward()
+
+				_, tmpKeyVersion, ok = SplitMVCCKey(itr.source.Key())
+				if !ok {
+					// XXX: This should not happen as that would indicate we have a malformed
+					// MVCC key.
+					itr.valid = false
+					return
+				}
+
+			} else {
+				itr.valid = false
+				return
+			}
+		}
+
+		// We need to verify that every Next call either moves the iterator to a key
+		// whose version is less than or equal to requested iterator version, or
+		// exhausts the iterator.
+		tmpKeyVersionDecoded, err := decodeUint64Ascending(tmpKeyVersion)
+		if err != nil {
+			itr.valid = false
+			return
+		}
+
+		// If iterator is at a entry whose version is higher than requested version,
+		// call nextForward again.
+		if tmpKeyVersionDecoded > itr.version {
+			itr.nextForward()
+		}
+
+		// The cursor might now be pointing at a key/value pair that is tombstoned.
+		// If so, we must move the cursor.
+		if itr.valid && itr.cursorTombstoned() {
+			itr.nextForward()
+		}
+
+		return
+	}
+
+	itr.valid = false
+}
+
+func (itr *iterator) nextReverse() {
+	if !itr.source.Valid() {
+		itr.valid = false
+		return
+	}
+
+	currKey, _, ok := SplitMVCCKey(itr.source.Key())
+	if !ok {
+		// XXX: This should not happen as that would indicate we have a malformed
+		// MVCC key.
+		panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+	}
+
+	next := itr.source.SeekLT(MVCCEncode(currKey, 0))
+
+	// First move the iterator to the next prefix, which may not correspond to the
+	// desired version for that key, e.g. if the key was written at a later version,
+	// so we seek back to the latest desired version, s.t. the version is <= itr.version.
+	if next {
+		nextKey, _, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC key.
+			itr.valid = false
+			return
+		}
+
+		if !bytes.HasPrefix(nextKey, itr.prefix) {
+			// the next key must have itr.prefix as the prefix
+			itr.valid = false
+			return
+		}
+
+		// Move the iterator to the closest version to the desired version, so we
+		// append the current iterator key to the prefix and seek to that key.
+		itr.valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
+
+		_, tmpKeyVersion, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC key.
+			itr.valid = false
+			return
+		}
+
+		// We need to verify that every Next call either moves the iterator to a key
+		// whose version is less than or equal to requested iterator version, or
+		// exhausts the iterator.
+		tmpKeyVersionDecoded, err := decodeUint64Ascending(tmpKeyVersion)
+		if err != nil {
+			itr.valid = false
+			return
+		}
+
+		// If iterator is at a entry whose version is higher than requested version,
+		// call nextReverse again.
+		if tmpKeyVersionDecoded > itr.version {
+			itr.nextReverse()
+		}
+
+		// The cursor might now be pointing at a key/value pair that is tombstoned.
+		// If so, we must move the cursor.
+		if itr.valid && itr.cursorTombstoned() {
+			itr.nextReverse()
+		}
+
+		return
+	}
+
+	itr.valid = false
 }

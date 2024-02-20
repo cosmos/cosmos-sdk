@@ -41,6 +41,12 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 * [#18421](https://github.com/cosmos/cosmos-sdk/pull/18421) Add mutative api for `LegacyDec.BigInt()`.
 
+* [#18874](https://github.com/cosmos/cosmos-sdk/pull/18874) Speedup `math.Int.Mul` by removing a duplicate overflow check
+* [#19386](https://github.com/cosmos/cosmos-sdk/pull/19386) Speedup `math.Int` overflow checks
+* [#19466](https://github.com/cosmos/cosmos-sdk/pull/19466) Speedup `math.NewLegacyDec` by one heap allocation
+* [#19467](https://github.com/cosmos/cosmos-sdk/pull/19467) Slightly speedup `math.LegacyDec` `Ceil` and `MarshalTo` methods
+* [#19479](https://github.com/cosmos/cosmos-sdk/pull/19479) Speedup `math.LegacyDec` functions that involve `math.Int` by removing a heap allocation. (`Ceil`, `TruncateInt`, `NewLegacyDecFromInt`)
+
 ### Bug Fixes
 
 * [#18519](https://github.com/cosmos/cosmos-sdk/pull/18519) Prevent Overflow in `Dec.Ceil()`.

@@ -15,7 +15,6 @@ import (
 type AccountKeeper interface {
 	AddressCodec() address.Codec
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -53,6 +52,10 @@ type StakingKeeper interface {
 
 	// IsValidatorJailed returns if the validator is jailed.
 	IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bool, error)
+
+	// ValidatorIdentifier maps the new cons key to previous cons key (which is the address before the rotation).
+	// (that is: newConsKey -> oldConsKey)
+	ValidatorIdentifier(context.Context, sdk.ConsAddress) (sdk.ConsAddress, error)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

@@ -25,10 +25,10 @@ const (
 	// GovModuleName is the name of the gov module
 	GovModuleName = "gov"
 
-	// distributionModuleName duplicates the distribution module's name to avoid a cyclic dependency with x/distribution.
+	// PoolModuleName duplicates the Protocolpool module's name to avoid a cyclic dependency with x/protocolpool.
 	// It should be synced with the distribution module's name if it is ever changed.
 	// See: https://github.com/cosmos/cosmos-sdk/blob/912390d5fc4a32113ea1aacc98b77b2649aea4c2/x/distribution/types/keys.go#L15
-	DistributionModuleName = "distribution"
+	PoolModuleName = "protocolpool"
 )
 
 var (
@@ -46,8 +46,8 @@ var (
 	UnbondingDelegationByValIndexKey = collections.NewPrefix(51) // prefix for each key for an unbonding-delegation, by validator operator
 
 	RedelegationKey              = collections.NewPrefix(52) // key for a redelegation
-	RedelegationByValSrcIndexKey = collections.NewPrefix(53) // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey = collections.NewPrefix(54) // prefix for each key for an redelegation, by destination validator operator
+	RedelegationByValSrcIndexKey = collections.NewPrefix(53) // prefix for each key for a redelegation, by source validator operator
+	RedelegationByValDstIndexKey = collections.NewPrefix(54) // prefix for each key for a redelegation, by destination validator operator
 
 	UnbondingIDKey    = collections.NewPrefix(55) // key for the counter for the incrementing id for UnbondingOperations
 	UnbondingIndexKey = collections.NewPrefix(56) // prefix for an index for looking up unbonding operations by their IDs
@@ -68,7 +68,8 @@ var (
 	BlockConsPubKeyRotationHistoryKey           = collections.NewPrefix(102) // prefix for consPubkey rotation history by height
 	ValidatorConsensusKeyRotationRecordQueueKey = collections.NewPrefix(103) // this key is used to set the unbonding period time on each rotation
 	ValidatorConsensusKeyRotationRecordIndexKey = collections.NewPrefix(104) // this key is used to restrict the validator next rotation within waiting (unbonding) period
-	RotatedConsKeyMapIndex                      = collections.NewPrefix(105) // prefix for rotated cons address to new cons address
+	NewToOldConsKeyMap                          = collections.NewPrefix(105) // prefix for rotated cons address to new cons address
+	OldToNewConsKeyMap                          = collections.NewPrefix(106) // prefix for rotated cons address to new cons address
 )
 
 // UnbondingType defines the type of unbonding operation

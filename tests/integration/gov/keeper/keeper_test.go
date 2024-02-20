@@ -41,6 +41,7 @@ type fixture struct {
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
 
+	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
 	govKeeper     *keeper.Keeper
@@ -62,6 +63,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	maccPerms := map[string][]string{
 		pooltypes.ModuleName:           {},
+		pooltypes.StreamAccount:        {},
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -69,8 +71,8 @@ func initFixture(tb testing.TB) *fixture {
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -82,17 +84,17 @@ func initFixture(tb testing.TB) *fixture {
 		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
+	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
 
 	// set default staking params
 	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
@@ -152,6 +154,7 @@ func initFixture(tb testing.TB) *fixture {
 		ctx:               sdkCtx,
 		queryClient:       queryClient,
 		legacyQueryClient: legacyQueryClient,
+		accountKeeper:     accountKeeper,
 		bankKeeper:        bankKeeper,
 		stakingKeeper:     stakingKeeper,
 		govKeeper:         govKeeper,

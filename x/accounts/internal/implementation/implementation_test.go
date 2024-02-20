@@ -11,7 +11,7 @@ import (
 )
 
 func TestImplementation(t *testing.T) {
-	impl, err := newImplementation(collections.NewSchemaBuilderFromAccessor(OpenKVStore), TestAccount{})
+	impl, err := newImplementation(collections.NewSchemaBuilderFromAccessor(openKVStore), TestAccount{})
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -55,5 +55,25 @@ func TestImplementation(t *testing.T) {
 	t.Run("query - unknown message", func(t *testing.T) {
 		_, err := impl.Query(ctx, &types.Int32Value{Value: 1})
 		require.ErrorIs(t, err, errInvalidMessage)
+	})
+
+	t.Run("Has* methods", func(t *testing.T) {
+		ok := impl.HasExec(&types.StringValue{})
+		require.True(t, ok)
+
+		ok = impl.HasExec(&types.Duration{})
+		require.False(t, ok)
+
+		ok = impl.HasQuery(&types.StringValue{})
+		require.True(t, ok)
+
+		ok = impl.HasQuery(&types.Duration{})
+		require.False(t, ok)
+
+		ok = impl.HasInit(&types.StringValue{})
+		require.True(t, ok)
+
+		ok = impl.HasInit(&types.Duration{})
+		require.False(t, ok)
 	})
 }

@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/orm/internal/testkv"
 	"cosmossdk.io/orm/internal/testpb"
 	"cosmossdk.io/orm/model/ormtable"
@@ -238,18 +239,19 @@ func getBalance(store kv.Store, address, denom string) (*testpb.Balance, error) 
 }
 
 func BenchmarkManualInsertMemory(b *testing.B) {
-	benchManual(b, func() (dbm.DB, error) {
-		return dbm.NewMemDB(), nil
+	benchManual(b, func() (store.KVStore, error) {
+		return testkv.TestStore{Db: dbm.NewMemDB()}, nil
 	})
 }
 
 func BenchmarkManualInsertLevelDB(b *testing.B) {
-	benchManual(b, func() (dbm.DB, error) {
-		return dbm.NewGoLevelDB("test", b.TempDir(), nil)
+	benchManual(b, func() (store.KVStore, error) {
+		db, err := dbm.NewGoLevelDB("test", b.TempDir(), nil)
+		return testkv.TestStore{Db: db}, err
 	})
 }
 
-func benchManual(b *testing.B, newStore func() (dbm.DB, error)) {
+func benchManual(b *testing.B, newStore func() (store.KVStore, error)) {
 	b.Helper()
 	b.Run("insert", func(b *testing.B) {
 		b.StopTimer()
@@ -284,7 +286,7 @@ func benchManual(b *testing.B, newStore func() (dbm.DB, error)) {
 	})
 }
 
-func benchManualInsert(b *testing.B, store kv.Store) {
+func benchManualInsert(b *testing.B, store store.KVStore) {
 	b.Helper()
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, insertBalance(store, &testpb.Balance{
@@ -295,7 +297,7 @@ func benchManualInsert(b *testing.B, store kv.Store) {
 	}
 }
 
-func benchManualUpdate(b *testing.B, store kv.Store) {
+func benchManualUpdate(b *testing.B, store store.KVStore) {
 	b.Helper()
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, updateBalance(store, &testpb.Balance{
@@ -306,7 +308,7 @@ func benchManualUpdate(b *testing.B, store kv.Store) {
 	}
 }
 
-func benchManualDelete(b *testing.B, store kv.Store) {
+func benchManualDelete(b *testing.B, store store.KVStore) {
 	b.Helper()
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, deleteBalance(store, &testpb.Balance{
@@ -316,7 +318,7 @@ func benchManualDelete(b *testing.B, store kv.Store) {
 	}
 }
 
-func benchManualGet(b *testing.B, store kv.Store) {
+func benchManualGet(b *testing.B, store store.KVStore) {
 	b.Helper()
 	for i := 0; i < b.N; i++ {
 		balance, err := getBalance(store, fmt.Sprintf("acct%d", i), "bar")

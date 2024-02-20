@@ -3,10 +3,10 @@ package orm
 import (
 	"encoding/binary"
 
+	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
+	"cosmossdk.io/x/group/internal/orm/prefixstore"
 )
 
 // sequenceStorageKey is a fix key to read/ write data on the storage layer
@@ -25,25 +25,37 @@ func NewSequence(prefix byte) Sequence {
 
 // NextVal increments and persists the counter by one and returns the value.
 func (s Sequence) NextVal(store storetypes.KVStore) uint64 {
-	pStore := prefix.NewStore(store, []byte{s.prefix})
-	v := pStore.Get(sequenceStorageKey)
+	pStore := prefixstore.New(store, []byte{s.prefix})
+	v, err := pStore.Get(sequenceStorageKey)
+	if err != nil {
+		panic(err)
+	}
 	seq := DecodeSequence(v)
 	seq++
-	pStore.Set(sequenceStorageKey, EncodeSequence(seq))
+	err = pStore.Set(sequenceStorageKey, EncodeSequence(seq))
+	if err != nil {
+		panic(err)
+	}
 	return seq
 }
 
 // CurVal returns the last value used. 0 if none.
 func (s Sequence) CurVal(store storetypes.KVStore) uint64 {
-	pStore := prefix.NewStore(store, []byte{s.prefix})
-	v := pStore.Get(sequenceStorageKey)
+	pStore := prefixstore.New(store, []byte{s.prefix})
+	v, err := pStore.Get(sequenceStorageKey)
+	if err != nil {
+		panic(err)
+	}
 	return DecodeSequence(v)
 }
 
 // PeekNextVal returns the CurVal + increment step. Not persistent.
 func (s Sequence) PeekNextVal(store storetypes.KVStore) uint64 {
-	pStore := prefix.NewStore(store, []byte{s.prefix})
-	v := pStore.Get(sequenceStorageKey)
+	pStore := prefixstore.New(store, []byte{s.prefix})
+	v, err := pStore.Get(sequenceStorageKey)
+	if err != nil {
+		panic(err)
+	}
 	return DecodeSequence(v) + 1
 }
 
@@ -54,12 +66,16 @@ func (s Sequence) PeekNextVal(store storetypes.KVStore) uint64 {
 // It is recommended to call this method only for a sequence start value other than `1` as the
 // method consumes unnecessary gas otherwise. A scenario would be an import from genesis.
 func (s Sequence) InitVal(store storetypes.KVStore, seq uint64) error {
-	pStore := prefix.NewStore(store, []byte{s.prefix})
-	if pStore.Has(sequenceStorageKey) {
+	pStore := prefixstore.New(store, []byte{s.prefix})
+	has, err := pStore.Has(sequenceStorageKey)
+	if err != nil {
+		return err
+	}
+
+	if has {
 		return errorsmod.Wrap(errors.ErrORMUniqueConstraint, "already initialized")
 	}
-	pStore.Set(sequenceStorageKey, EncodeSequence(seq))
-	return nil
+	return pStore.Set(sequenceStorageKey, EncodeSequence(seq))
 }
 
 // DecodeSequence converts the binary representation into an Uint64 value.

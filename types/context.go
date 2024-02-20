@@ -26,6 +26,7 @@ const (
 	ExecModePrepareProposal
 	ExecModeProcessProposal
 	ExecModeVoteExtension
+	ExecModeVerifyVoteExtension
 	ExecModeFinalize
 )
 
@@ -48,8 +49,8 @@ type Context struct {
 	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.51
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
-	checkTx              bool
-	recheckTx            bool // if recheckTx == true, then checkTx must also be true
+	checkTx              bool // Deprecated: use execMode instead, will be removed after 0.51
+	recheckTx            bool // if recheckTx == true, then checkTx must also be true // Deprecated: use execMode instead, will be removed after 0.51
 	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
 	execMode             ExecMode
 	minGasPrice          DecCoins
@@ -77,8 +78,8 @@ func (c Context) Logger() log.Logger                            { return c.logge
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
 func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool                               { return c.checkTx }
-func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
+func (c Context) IsCheckTx() bool                               { return c.checkTx }   // Deprecated: use execMode instead
+func (c Context) IsReCheckTx() bool                             { return c.recheckTx } // Deprecated: use execMode instead
 func (c Context) IsSigverifyTx() bool                           { return c.sigverifyTx }
 func (c Context) ExecMode() ExecMode                            { return c.execMode }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }

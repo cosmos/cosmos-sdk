@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
@@ -54,7 +55,6 @@ func (s *TestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 
@@ -73,7 +73,8 @@ func (s *TestSuite) SetupTest() {
 
 	s.accountKeeper = accountKeeper
 
-	nftKeeper := keeper.NewKeeper(storeService, s.encCfg.Codec, accountKeeper, bankKeeper)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	nftKeeper := keeper.NewKeeper(env, s.encCfg.Codec, accountKeeper, bankKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)
 

@@ -221,7 +221,8 @@ message MsgRotateConsPubKey {
   option (gogoproto.equal)           = false;
 
   string              validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
-  google.protobuf.Any new_pubkey        = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  google.protobuf.Any new_pubkey        = 2
+      [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey", (cosmos_proto.scalar) = "cosmos.PubKey"];
 }
 
 // MsgRotateConsPubKeyResponse defines the response structure for executing a

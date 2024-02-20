@@ -3,9 +3,6 @@ package accounts
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
@@ -34,7 +31,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	}
 
 	// run account creation logic
-	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg)
+	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg, request.Funds)
 	if err != nil {
 		return nil, err
 	}
@@ -45,14 +42,10 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 		return nil, err
 	}
 
-	eventManager := m.k.eventService.EventManager(ctx)
+	eventManager := m.k.environment.EventService.EventManager(ctx)
 	err = eventManager.EmitKV(
-		ctx,
 		"account_creation",
-		event.Attribute{
-			Key:   "address",
-			Value: accAddrString,
-		},
+		event.NewAttribute("address", accAddrString),
 	)
 	if err != nil {
 		return nil, err
@@ -87,7 +80,7 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	}
 
 	// run account execution logic
-	resp, err := m.k.Execute(ctx, targetAddr, senderAddr, req)
+	resp, err := m.k.Execute(ctx, targetAddr, senderAddr, req, execute.Funds)
 	if err != nil {
 		return nil, err
 	}
@@ -103,5 +96,5 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 }
 
 func (m msgServer) ExecuteBundle(ctx context.Context, req *v1.MsgExecuteBundle) (*v1.MsgExecuteBundleResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	panic("impl")
 }

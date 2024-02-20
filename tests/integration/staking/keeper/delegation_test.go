@@ -66,7 +66,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	totalUnbonded := math.NewInt(0)
 	for i := int64(0); i < int64(maxEntries); i++ {
 		var err error
-		ctx = ctx.WithBlockHeight(i)
+		ctx = ctx.WithHeaderInfo(header.Info{Height: i})
 		var amount math.Int
 		completionTime, amount, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
 		assert.NilError(t, err)
@@ -95,6 +95,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	// mature unbonding delegations
 	ctx = ctx.WithHeaderInfo(header.Info{Time: completionTime})
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addrDel)
+	f.accountKeeper.SetAccount(ctx, acc)
 	_, err = f.stakingKeeper.CompleteUnbonding(ctx, addrDel, addrVal)
 	assert.NilError(t, err)
 

@@ -7,18 +7,15 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
-	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/client/cli"
 	"cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/simulation"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -34,11 +31,12 @@ var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
 )
 
 type AppModule struct {
@@ -59,9 +57,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 		registry:       registry,
 	}
 }
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
@@ -131,16 +126,21 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 	return cdc.MustMarshalJSON(gs)
 }
 
-// RegisterServices registers a gRPC query service to respond to the
-// module-specific gRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	group.RegisterMsgServer(cfg.MsgServer(), am.keeper)
-	group.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	group.RegisterMsgServer(registrar, am.keeper)
+	group.RegisterQueryServer(registrar, am.keeper)
 
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(group.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err))
+	if err := mr.Register(group.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err)
 	}
+
+	return nil
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
@@ -151,10 +151,6 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	c := sdk.UnwrapSDKContext(ctx)
 	return EndBlocker(c, am.keeper)
 }
-
-// ____________________________________________________________________________
-
-// AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the group module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
@@ -173,50 +169,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type GroupInputs struct {
-	depinject.In
-
-	Config           *modulev1.Module
-	Key              *store.KVStoreKey
-	Cdc              codec.Codec
-	AccountKeeper    group.AccountKeeper
-	BankKeeper       group.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter baseapp.MessageRouter
-}
-
-type GroupOutputs struct {
-	depinject.Out
-
-	GroupKeeper keeper.Keeper
-	Module      appmodule.AppModule
-}
-
-func ProvideModule(in GroupInputs) GroupOutputs {
-	k := keeper.NewKeeper(in.Key,
-		in.Cdc,
-		in.MsgServiceRouter,
-		in.AccountKeeper,
-		group.Config{
-			MaxExecutionPeriod:    in.Config.MaxExecutionPeriod.AsDuration(),
-			MaxMetadataLen:        in.Config.MaxMetadataLen,
-			MaxProposalTitleLen:   in.Config.MaxProposalTitleLen,
-			MaxProposalSummaryLen: in.Config.MaxProposalSummaryLen,
-		},
-	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return GroupOutputs{GroupKeeper: k, Module: m}
 }

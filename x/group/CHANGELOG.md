@@ -32,6 +32,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#19489](https://github.com/cosmos/cosmos-sdk/pull/19489) `appmodule.Environment` is received on the Keeper to get access to different application services.
+
 ### API Breaking Changes
 
 * [#19410](https://github.com/cosmos/cosmos-sdk/pull/19410) Migrate to Store Service.

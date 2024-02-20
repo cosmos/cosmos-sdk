@@ -89,7 +89,7 @@ Some CometBFT RPC endpoints are directly related to the Cosmos SDK:
     * `/store/{path}`: this will query the store directly.
     * `/p2p/filter/addr/{port}`: this will return a filtered list of the node's P2P peers by address port.
     * `/p2p/filter/id/{id}`: this will return a filtered list of the node's P2P peers by ID.
-* `/broadcast_tx_{aync,async,commit}`: these 3 endpoint will broadcast a transaction to other peers. CLI, gRPC and REST expose [a way to broadcast transations](./01-transactions.md#broadcasting-the-transaction), but they all use these 3 CometBFT RPCs under the hood.
+* `/broadcast_tx_{sync,async,commit}`: these 3 endpoints will broadcast a transaction to other peers. CLI, gRPC and REST expose [a way to broadcast transactions](./01-transactions.md#broadcasting-the-transaction), but they all use these 3 CometBFT RPCs under the hood.
 
 ## Comparison Table
 

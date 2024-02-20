@@ -14,8 +14,16 @@ type Events struct {
 	Events []Event
 }
 
+func NewEvents(events ...Event) Events {
+	return Events{Events: events}
+}
+
 // Event defines how an event will emitted
 type Event struct {
 	Type       string
 	Attributes []Attribute
+}
+
+func NewEvent(ty string, attrs ...Attribute) Event {
+	return Event{Type: ty, Attributes: attrs}
 }

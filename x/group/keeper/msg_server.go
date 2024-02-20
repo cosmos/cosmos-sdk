@@ -789,7 +789,7 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 // doTallyAndUpdate performs a tally, and, if the tally result is final, then:
 // - updates the proposal's `Status` and `FinalTallyResult` fields,
 // - prune all the votes.
-func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, groupInfo group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
+func (k Keeper) doTallyAndUpdate(ctx context.Context, p *group.Proposal, groupInfo group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy, err := policyInfo.GetDecisionPolicy()
 	if err != nil {
 		return err
@@ -807,7 +807,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, groupInfo g
 
 	// If the result was final (i.e. enough votes to pass) or if the voting
 	// period ended, then we consider the proposal as final.
-	if isFinal := result.Final || ctx.HeaderInfo().Time.After(p.VotingPeriodEnd); isFinal {
+	if isFinal := result.Final || k.environment.HeaderService.GetHeaderInfo(ctx).Time.After(p.VotingPeriodEnd); isFinal {
 		if err := k.pruneVotes(ctx, p.Id); err != nil {
 			return err
 		}
@@ -873,7 +873,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", proposal.Id, err.Error())
-			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", proposal.Id)
+			k.Logger().Info("proposal execution failed", "cause", err, "proposalID", proposal.Id)
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			flush()

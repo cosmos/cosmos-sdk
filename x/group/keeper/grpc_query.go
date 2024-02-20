@@ -31,7 +31,7 @@ func (k Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfoRe
 }
 
 // getGroupInfo gets the group info of the given group id.
-func (k Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error) {
+func (k Keeper) getGroupInfo(ctx context.Context, id uint64) (group.GroupInfo, error) {
 	var obj group.GroupInfo
 	_, err := k.groupTable.GetOne(k.environment.KVStoreService.OpenKVStore(ctx), id, &obj)
 	return obj, err
@@ -54,7 +54,7 @@ func (k Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroup
 }
 
 // getGroupPolicyInfo gets the group policy info of the given account address.
-func (k Keeper) getGroupPolicyInfo(ctx sdk.Context, accountAddress string) (group.GroupPolicyInfo, error) {
+func (k Keeper) getGroupPolicyInfo(ctx context.Context, accountAddress string) (group.GroupPolicyInfo, error) {
 	var obj group.GroupPolicyInfo
 	return obj, k.groupPolicyTable.GetOne(k.environment.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}), &obj)
 }

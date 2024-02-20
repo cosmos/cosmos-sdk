@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -235,8 +236,8 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, router baseapp.Messag
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
+func (k Keeper) Logger() log.Logger {
+	return k.environment.Logger.With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
 
 // GetGroupSequence returns the current value of the group table sequence
@@ -250,7 +251,7 @@ func (k Keeper) GetGroupPolicySeq(ctx sdk.Context) uint64 {
 }
 
 // proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.
-func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals []group.Proposal, err error) {
+func (k Keeper) proposalsByVPEnd(ctx context.Context, endTime time.Time) (proposals []group.Proposal, err error) {
 	timeBytes := sdk.FormatTimeBytes(endTime)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(k.environment.KVStoreService.OpenKVStore(ctx), nil, timeBytes)
 	if err != nil {
@@ -283,13 +284,13 @@ func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals 
 }
 
 // pruneProposal deletes a proposal from state.
-func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
+func (k Keeper) pruneProposal(ctx context.Context, proposalID uint64) error {
 	err := k.proposalTable.Delete(k.environment.KVStoreService.OpenKVStore(ctx), proposalID)
 	if err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
+	k.Logger().Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
 	return nil
 }
 
@@ -340,7 +341,7 @@ func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccA
 }
 
 // pruneVotes prunes all votes for a proposal from state.
-func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
+func (k Keeper) pruneVotes(ctx context.Context, proposalID uint64) error {
 	votes, err := k.votesByProposal(ctx, proposalID)
 	if err != nil {
 		return err
@@ -358,7 +359,7 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 }
 
 // votesByProposal returns all votes for a given proposal.
-func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vote, error) {
+func (k Keeper) votesByProposal(ctx context.Context, proposalID uint64) ([]group.Vote, error) {
 	it, err := k.voteByProposalIndex.Get(k.environment.KVStoreService.OpenKVStore(ctx), proposalID)
 	if err != nil {
 		return nil, err
@@ -383,8 +384,9 @@ func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vot
 // PruneProposals prunes all proposals that are expired, i.e. whose
 // `voting_period + max_execution_period` is greater than the current block
 // time.
-func (k Keeper) PruneProposals(ctx sdk.Context) error {
-	proposals, err := k.proposalsByVPEnd(ctx, ctx.HeaderInfo().Time.Add(-k.config.MaxExecutionPeriod))
+func (k Keeper) PruneProposals(ctx context.Context, env appmodule.Environment) error {
+	endTime := env.HeaderService.GetHeaderInfo(ctx).Time.Add(-k.config.MaxExecutionPeriod)
+	proposals, err := k.proposalsByVPEnd(ctx, endTime)
 	if err != nil {
 		return nil
 	}
@@ -396,12 +398,13 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 			return err
 		}
 		// Emit event for proposal finalized with its result
-		if err := ctx.EventManager().EmitTypedEvent(
+		if err := k.environment.EventService.EventManager(ctx).Emit(
 			&group.EventProposalPruned{
 				ProposalId:  proposal.Id,
 				Status:      proposal.Status,
 				TallyResult: &proposal.FinalTallyResult,
-			}); err != nil {
+			},
+		); err != nil {
 			return err
 		}
 	}
@@ -412,8 +415,8 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 // TallyProposalsAtVPEnd iterates over all proposals whose voting period
 // has ended, tallies their votes, prunes them, and updates the proposal's
 // `FinalTallyResult` field.
-func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
-	proposals, err := k.proposalsByVPEnd(ctx, ctx.HeaderInfo().Time)
+func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context, env appmodule.Environment) error {
+	proposals, err := k.proposalsByVPEnd(ctx, env.HeaderService.GetHeaderInfo(ctx).Time)
 	if err != nil {
 		return nil
 	}
@@ -438,11 +441,12 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return err
 			}
 			// Emit event for proposal finalized with its result
-			if err := ctx.EventManager().EmitTypedEvent(
+			if err := k.environment.EventService.EventManager(ctx).Emit(
 				&group.EventProposalPruned{
 					ProposalId: proposal.Id,
 					Status:     proposal.Status,
-				}); err != nil {
+				},
+			); err != nil {
 				return err
 			}
 		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {

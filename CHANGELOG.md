@@ -42,7 +42,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
-* (x/consensus) [#19488](https://github.com/cosmos/cosmos-sdk/pull/19488) Consensus module creation takes `appmodule.Environment` instead of individual services.
 * (types) [#19164](https://github.com/cosmos/cosmos-sdk/pull/19164) Add a ValueCodec for the math.Uint type that can be used in collections maps.
 * (types) [#19281](https://github.com/cosmos/cosmos-sdk/pull/19281) Added a new method, `IsGT`, for `types.Coin`. This method is used to check if a `types.Coin` is greater than another `types.Coin`.
 * (client) [#18557](https://github.com/cosmos/cosmos-sdk/pull/18557) Add `--qrcode` flag to `keys show` command to support displaying keys address QR code.
@@ -97,6 +96,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### API Breaking Changes
 
+* (x/consensus) [#19488](https://github.com/cosmos/cosmos-sdk/pull/19488) Consensus module creation takes `appmodule.Environment` instead of individual services.
 * (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `x/genutil` now handles the application export. `server.AddCommands` does not take an `AppExporter` but instead `genutilcli.Commands` does.
 * (x/gov/testutil) [#17986](https://github.com/cosmos/cosmos-sdk/pull/18036) `MsgDeposit` has been removed because of AutoCLI migration.
 * (x/staking/testutil) [#17986](https://github.com/cosmos/cosmos-sdk/pull/17986) `MsgRedelegateExec`, `MsgUnbondExec` has been removed because of AutoCLI migration.

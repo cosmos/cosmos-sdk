@@ -79,3 +79,6 @@ engine can be seen as the the main entry point to using SS.
 Higher up the stack, there should exist a `RootStore` implementation. The `RootStore`
 is meant to encapsulate both an SS backend and an SC backend. The SS backend is
 defined by this `StorageStore` implementation.
+
+In short, initialize your SS engine of choice and then provide that to `NewStorageStore`
+which will further be provided to `RootStore` as the SS backend.

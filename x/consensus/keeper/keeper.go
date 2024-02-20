@@ -89,7 +89,6 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 // SetParams sets the consensus parameters on init of a chain. This is a consensus message. It can only be called by the consensus server
 func (k Keeper) SetParams(ctx context.Context, req *types.ConMsgParams) (*types.ConMsgParamsResponse, error) {
-
 	consensusParams, err := req.ToProtoConsensusParams()
 	if err != nil {
 		return nil, err

@@ -1,6 +1,8 @@
 package store
 
 import (
+	ics23 "github.com/cosmos/ics23/go"
+
 	"cosmossdk.io/core/store"
 )
 
@@ -23,6 +25,17 @@ type Store interface {
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
 	StateCommit(changes []StateChanges) (Hash, error)
+
+	// Query performs a query on the store using the given parameters.
+	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
+}
+
+type QueryResult interface {
+	Key() []byte
+	Value() []byte
+	Version() uint64
+	Proof() *ics23.CommitmentProof
+	ProofType() string
 }
 
 // ReaderMap represents a readonly view over all the accounts state.

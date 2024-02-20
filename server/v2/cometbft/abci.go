@@ -40,7 +40,7 @@ type (
 type Consensus[T transaction.Tx] struct {
 	app             appmanager.AppManager[T]
 	cfg             Config
-	store           types.Store
+	store           store.Store
 	logger          log.Logger
 	txCodec         transaction.Codec[T]
 	streaming       streaming.Manager

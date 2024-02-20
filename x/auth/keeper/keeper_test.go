@@ -3,9 +3,11 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
@@ -48,6 +50,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
@@ -61,8 +64,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
+		env,
 		suite.encCfg.Codec,
-		storeService,
 		types.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
@@ -107,7 +110,8 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	}
 
 	ctx := suite.ctx
-	suite.accountKeeper.InitGenesis(ctx, genState)
+	err := suite.accountKeeper.InitGenesis(ctx, genState)
+	require.NoError(suite.T(), err)
 
 	params := suite.accountKeeper.GetParams(ctx)
 	suite.Require().Equal(genState.Params.MaxMemoCharacters, params.MaxMemoCharacters, "MaxMemoCharacters")
@@ -153,9 +157,15 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		genState.Accounts = append(genState.Accounts, codectypes.UnsafePackAny(acct))
 	}
 
-	suite.accountKeeper.InitGenesis(ctx, genState)
+	err = suite.accountKeeper.InitGenesis(ctx, genState)
+	require.NoError(suite.T(), err)
 
-	keeperAccts := suite.accountKeeper.GetAllAccounts(ctx)
+	var keeperAccts []sdk.AccountI
+	err = suite.accountKeeper.Accounts.Walk(ctx, nil, func(_ sdk.AccAddress, value sdk.AccountI) (stop bool, err error) {
+		keeperAccts = append(keeperAccts, value)
+		return false, nil
+	})
+	require.NoError(suite.T(), err)
 	// len(accts)+1 because we initialize fee_collector account after the genState accounts
 	suite.Require().Equal(len(keeperAccts), len(accts)+1, "number of accounts in the keeper vs in genesis state")
 	for i, genAcct := range accts {
@@ -200,9 +210,15 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		},
 	}
 
-	suite.accountKeeper.InitGenesis(ctx, genState)
+	err = suite.accountKeeper.InitGenesis(ctx, genState)
+	require.NoError(suite.T(), err)
 
-	keeperAccts = suite.accountKeeper.GetAllAccounts(ctx)
+	keeperAccts = nil
+	err = suite.accountKeeper.Accounts.Walk(ctx, nil, func(_ sdk.AccAddress, value sdk.AccountI) (stop bool, err error) {
+		keeperAccts = append(keeperAccts, value)
+		return false, nil
+	})
+	require.NoError(suite.T(), err)
 	// len(genState.Accounts)+1 because we initialize fee_collector as account number 1 (last)
 	suite.Require().Equal(len(keeperAccts), len(genState.Accounts)+1, "number of accounts in the keeper vs in genesis state")
 

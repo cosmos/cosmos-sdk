@@ -3,32 +3,25 @@ package root
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"slices"
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/kv/branch"
-	"cosmossdk.io/store/v2/kv/trace"
 	"cosmossdk.io/store/v2/metrics"
-	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/proof"
 )
-
-// defaultStoreKey defines the default store key used for the single SC backend.
-// Note, however, this store key is essentially irrelevant as it's not exposed
-// to the user and it only needed to fulfill usage of StoreInfo during Commit.
-const defaultStoreKey = "default"
 
 var _ store.RootStore = (*Store)(nil)
 
 // Store defines the SDK's default RootStore implementation. It contains a single
-// State Storage (SS) backend and a single State Commitment (SC) backend. Note,
-// this means all store keys are ignored and commitments exist in a single commitment
-// tree.
+// State Storage (SS) backend and a single State Commitment (SC) backend. The SC
+// backend may or may not support multiple store keys and is implementation
+// dependent.
 type Store struct {
 	logger         log.Logger
 	initialVersion uint64
@@ -39,27 +32,14 @@ type Store struct {
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
 
-	// rootKVStore reflects the root BranchedKVStore that is used to accumulate writes
-	// and branch off of.
-	rootKVStore store.BranchedKVStore
-
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
 	commitHeader *coreheader.Info
 
 	// lastCommitInfo reflects the last version/hash that has been committed
-	lastCommitInfo *store.CommitInfo
+	lastCommitInfo *proof.CommitInfo
 
 	// workingHash defines the current (yet to be committed) hash
 	workingHash []byte
-
-	// traceWriter defines a writer for store tracing operation
-	traceWriter io.Writer
-
-	// traceContext defines the tracing context, if any, for trace operations
-	traceContext store.TraceContext
-
-	// pruningManager manages pruning of the SS and SC backends
-	pruningManager *pruning.Manager
 
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
 	telemetry metrics.StoreMetrics
@@ -69,26 +49,13 @@ func New(
 	logger log.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
-	ssOpts, scOpts pruning.Options,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
-	rootKVStore, err := branch.New(defaultStoreKey, ss)
-	if err != nil {
-		return nil, err
-	}
-
-	pruningManager := pruning.NewManager(logger, ss, sc)
-	pruningManager.SetStorageOptions(ssOpts)
-	pruningManager.SetCommitmentOptions(scOpts)
-	pruningManager.Start()
-
 	return &Store{
 		logger:          logger.With("module", "root_store"),
 		initialVersion:  1,
 		stateStore:      ss,
 		stateCommitment: sc,
-		rootKVStore:     rootKVStore,
-		pruningManager:  pruningManager,
 		telemetry:       m,
 	}, nil
 }
@@ -104,8 +71,6 @@ func (s *Store) Close() (err error) {
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
 
-	s.pruningManager.Stop()
-
 	return err
 }
 
@@ -119,15 +84,39 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
-// GetSCStore returns the store's state commitment (SC) backend.
-func (s *Store) GetSCStore() store.Committer {
+func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
+	v, err := s.GetLatestVersion()
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return v, NewReadOnlyAdapter(v, s), nil
+}
+
+func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
+	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
+	// we should add a VersionExists() method to the VersionedDatabase interface.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/19091
+	if cInfo, err := s.stateCommitment.GetCommitInfo(v); err != nil || cInfo == nil {
+		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	}
+
+	return NewReadOnlyAdapter(v, s), nil
+}
+
+func (s *Store) GetStateStorage() store.VersionedDatabase {
+	return s.stateStore
+}
+
+func (s *Store) GetStateCommitment() store.Committer {
 	return s.stateCommitment
 }
 
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
-func (s *Store) LastCommitID() (store.CommitID, error) {
+func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if s.lastCommitInfo != nil {
 		return s.lastCommitInfo.CommitID(), nil
 	}
@@ -139,20 +128,20 @@ func (s *Store) LastCommitID() (store.CommitID, error) {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 	latestVersion, err := s.stateStore.GetLatestVersion()
 	if err != nil {
-		return store.CommitID{}, err
+		return proof.CommitID{}, err
 	}
 
 	// sanity check: ensure integrity of latest version against SC
 	scVersion, err := s.stateCommitment.GetLatestVersion()
 	if err != nil {
-		return store.CommitID{}, err
+		return proof.CommitID{}, err
 	}
 
 	if scVersion != latestVersion {
-		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
+		return proof.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
 
-	return store.CommitID{Version: latestVersion}, nil
+	return proof.CommitID{Version: latestVersion}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -170,12 +159,27 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "query")
+		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
 	val, err := s.stateStore.Get(storeKey, version, key)
-	if err != nil {
-		return store.QueryResult{}, err
+	if err != nil || val == nil {
+		// fallback to querying SC backend if not found in SS backend
+		//
+		// Note, this should only used during migration, i.e. while SS and IAVL v2
+		// are being asynchronously synced.
+		if val == nil {
+			bz, scErr := s.stateCommitment.Get(storeKey, version, key)
+			if scErr != nil {
+				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", scErr)
+			}
+
+			val = bz
+		}
+
+		if err != nil {
+			return store.QueryResult{}, fmt.Errorf("failed to query SS store: %w", err)
+		}
 	}
 
 	result := store.QueryResult{
@@ -185,41 +189,19 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	if prove {
-		proof, err := s.stateCommitment.GetProof(storeKey, version, key)
+		result.ProofOps, err = s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
-			return store.QueryResult{}, err
+			return store.QueryResult{}, fmt.Errorf("failed to get SC store proof: %w", err)
 		}
-
-		result.Proof = store.NewIAVLCommitmentOp(key, proof)
 	}
 
 	return result, nil
 }
 
-// GetKVStore returns the store's root KVStore. Any writes to this store without
-// branching will be committed to SC and SS upon Commit(). Branching will create
-// a branched KVStore that allow writes to be discarded and propagated to the
-// root KVStore using Write().
-func (s *Store) GetKVStore(_ string) store.KVStore {
-	if s.TracingEnabled() {
-		return trace.New(s.rootKVStore, s.traceWriter, s.traceContext)
-	}
-
-	return s.rootKVStore
-}
-
-func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
-	if s.TracingEnabled() {
-		return trace.New(s.rootKVStore, s.traceWriter, s.traceContext)
-	}
-
-	return s.rootKVStore
-}
-
 func (s *Store) LoadLatestVersion() error {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
+		defer s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
 	}
 
 	lv, err := s.GetLatestVersion()
@@ -233,7 +215,7 @@ func (s *Store) LoadLatestVersion() error {
 func (s *Store) LoadVersion(version uint64) error {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "load_version")
+		defer s.telemetry.MeasureSince(now, "root_store", "load_version")
 	}
 
 	return s.loadVersion(version)
@@ -241,12 +223,6 @@ func (s *Store) LoadVersion(version uint64) error {
 
 func (s *Store) loadVersion(v uint64) error {
 	s.logger.Debug("loading version", "version", v)
-
-	// Reset the root KVStore s.t. the latest version is v. Any writes will
-	// overwrite existing versions.
-	if err := s.rootKVStore.Reset(v); err != nil {
-		return err
-	}
 
 	if err := s.stateCommitment.LoadVersion(v); err != nil {
 		return fmt.Errorf("failed to load SS version %d: %w", v, err)
@@ -256,43 +232,13 @@ func (s *Store) loadVersion(v uint64) error {
 	s.commitHeader = nil
 
 	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
-	s.lastCommitInfo = &store.CommitInfo{Version: v}
+	s.lastCommitInfo = &proof.CommitInfo{Version: v}
 
 	return nil
 }
 
-func (s *Store) SetTracingContext(tc store.TraceContext) {
-	s.traceContext = tc
-}
-
-func (s *Store) SetTracer(w io.Writer) {
-	s.traceWriter = w
-}
-
-func (s *Store) TracingEnabled() bool {
-	return s.traceWriter != nil
-}
-
 func (s *Store) SetCommitHeader(h *coreheader.Info) {
 	s.commitHeader = h
-}
-
-// Branch a copy of the Store with a branched underlying root KVStore. Any call
-// to GetKVStore and GetBranchedKVStore returns the branched KVStore.
-func (s *Store) Branch() store.BranchedRootStore {
-	branch := s.rootKVStore.Branch()
-
-	return &Store{
-		logger:          s.logger,
-		initialVersion:  s.initialVersion,
-		stateStore:      s.stateStore,
-		stateCommitment: s.stateCommitment,
-		rootKVStore:     branch,
-		commitHeader:    s.commitHeader,
-		lastCommitInfo:  s.lastCommitInfo,
-		traceWriter:     s.traceWriter,
-		traceContext:    s.traceContext,
-	}
 }
 
 // WorkingHash returns the working hash of the root store. Note, WorkingHash()
@@ -302,14 +248,14 @@ func (s *Store) Branch() store.BranchedRootStore {
 // If working hash is nil, then we need to compute and set it on the root store
 // by constructing a CommitInfo object, which in turn creates and writes a batch
 // of the current changeset to the SC tree.
-func (s *Store) WorkingHash() ([]byte, error) {
+func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "working_hash")
+		defer s.telemetry.MeasureSince(now, "root_store", "working_hash")
 	}
 
 	if s.workingHash == nil {
-		if err := s.writeSC(); err != nil {
+		if err := s.writeSC(cs); err != nil {
 			return nil, err
 		}
 
@@ -319,22 +265,15 @@ func (s *Store) WorkingHash() ([]byte, error) {
 	return slices.Clone(s.workingHash), nil
 }
 
-func (s *Store) Write() {
-	s.rootKVStore.Write()
-}
-
 // Commit commits all state changes to the underlying SS and SC backends. Note,
-// at the time of Commit(), we expect WorkingHash() to have already been called,
-// which internally sets the working hash, retrieved by writing a batch of the
-// changeset to the SC tree, and CommitInfo on the root store. The changeset is
-// retrieved from the rootKVStore and represents the entire set of writes to be
-// committed. The same changeset is used to flush writes to the SS backend.
-//
-// Note, Commit() commits SC and SC synchronously.
-func (s *Store) Commit() ([]byte, error) {
+// at the time of Commit(), we expect WorkingHash() to have already been called
+// with the same Changeset, which internally sets the working hash, retrieved by
+// writing a batch of the changeset to the SC tree, and CommitInfo on the root
+// store.
+func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "commit")
+		defer s.telemetry.MeasureSince(now, "root_store", "commit")
 	}
 
 	if s.workingHash == nil {
@@ -347,42 +286,63 @@ func (s *Store) Commit() ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
-	changeset := s.rootKVStore.GetChangeset()
+	eg := new(errgroup.Group)
 
-	// commit SS
-	if err := s.stateStore.ApplyChangeset(version, changeset); err != nil {
-		return nil, fmt.Errorf("failed to commit SS: %w", err)
-	}
+	// commit SS async
+	eg.Go(func() error {
+		if err := s.stateStore.ApplyChangeset(version, cs); err != nil {
+			return fmt.Errorf("failed to commit SS: %w", err)
+		}
 
-	// commit SC
-	if err := s.commitSC(); err != nil {
-		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
+		return nil
+	})
+
+	// commit SC async
+	eg.Go(func() error {
+		if err := s.commitSC(cs); err != nil {
+			return fmt.Errorf("failed to commit SC: %w", err)
+		}
+
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
 	}
 
 	if s.commitHeader != nil {
 		s.lastCommitInfo.Timestamp = s.commitHeader.Time
 	}
 
-	if err := s.rootKVStore.Reset(version); err != nil {
-		return nil, fmt.Errorf("failed to reset root KVStore: %w", err)
-	}
-
 	s.workingHash = nil
-
-	// prune SS and SC
-	s.pruningManager.Prune(version)
 
 	return s.lastCommitInfo.Hash(), nil
 }
 
-// writeSC gets the current changeset from the rootKVStore and writes that as a
-// batch to the underlying SC tree, which allows us to retrieve the working hash
-// of the SC tree. Finally, we construct a *CommitInfo and return the hash.
-// Note, this should only be called once per block!
-func (s *Store) writeSC() error {
-	changeSet := s.rootKVStore.GetChangeset()
+// Prune prunes the root store to the provided version.
+func (s *Store) Prune(version uint64) error {
+	if s.telemetry != nil {
+		now := time.Now()
+		defer s.telemetry.MeasureSince(now, "root_store", "prune")
+	}
 
-	if err := s.stateCommitment.WriteBatch(changeSet); err != nil {
+	if err := s.stateStore.Prune(version); err != nil {
+		return fmt.Errorf("failed to prune SS store: %w", err)
+	}
+
+	if err := s.stateCommitment.Prune(version); err != nil {
+		return fmt.Errorf("failed to prune SC store: %w", err)
+	}
+
+	return nil
+}
+
+// writeSC accepts a Changeset and writes that as a batch to the underlying SC
+// tree, which allows us to retrieve the working hash of the SC tree. Finally,
+// we construct a *CommitInfo and set that as lastCommitInfo. Note, this should
+// only be called once per block!
+func (s *Store) writeSC(cs *store.Changeset) error {
+	if err := s.stateCommitment.WriteBatch(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
 
@@ -402,10 +362,7 @@ func (s *Store) writeSC() error {
 		version = previousHeight + 1
 	}
 
-	s.lastCommitInfo = &store.CommitInfo{
-		Version:    version,
-		StoreInfos: s.stateCommitment.WorkingStoreInfos(version),
-	}
+	s.lastCommitInfo = s.stateCommitment.WorkingCommitInfo(version)
 
 	return nil
 }
@@ -414,18 +371,15 @@ func (s *Store) writeSC() error {
 // should have already been written to the SC via WorkingHash(). This method
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
-func (s *Store) commitSC() error {
-	commitStoreInfos, err := s.stateCommitment.Commit()
+func (s *Store) commitSC(cs *store.Changeset) error {
+	cInfo, err := s.stateCommitment.Commit(s.lastCommitInfo.Version)
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
 
-	commitHash := store.CommitInfo{
-		Version:    s.lastCommitInfo.Version,
-		StoreInfos: commitStoreInfos,
-	}.Hash()
+	commitHash := cInfo.Hash()
 
-	workingHash, err := s.WorkingHash()
+	workingHash, err := s.WorkingHash(cs)
 	if err != nil {
 		return fmt.Errorf("failed to get working hash: %w", err)
 	}

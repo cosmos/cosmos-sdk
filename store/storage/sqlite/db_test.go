@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 )
@@ -20,7 +21,7 @@ func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
 			db, err := New(dir)
-			return storage.NewStorageStore(db), err
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 		EmptyBatchSize: 0,
 	}
@@ -61,7 +62,6 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, iter.Error())
 
 	// seek past domain, which should make the iterator invalid and produce an error
-	require.False(t, iter.Next())
 	require.False(t, iter.Valid())
 
 	// reverse iterator with with a start and end domain
@@ -82,7 +82,6 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, iter2.Error())
 
 	// seek past domain, which should make the iterator invalid and produce an error
-	require.False(t, iter2.Next())
 	require.False(t, iter2.Valid())
 
 	// start must be <= end

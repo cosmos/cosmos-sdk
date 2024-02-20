@@ -6,16 +6,12 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
-	store "cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
 	"cosmossdk.io/x/slashing/types"
-	staking "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,10 +27,11 @@ var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodule.HasMigrations   = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the slashing module.
@@ -110,28 +107,33 @@ func NewAppModule(
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
 
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+
+	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
 	}
 
-	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %w", types.ModuleName, err)
 	}
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
+
+	if err := mr.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %w", types.ModuleName, err)
 	}
+
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the slashing module. It returns
@@ -180,58 +182,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
 	)
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	LegacyAmino  *codec.LegacyAmino
-	Registry     cdctypes.InterfaceRegistry
-
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Keeper keeper.Keeper
-	Module appmodule.AppModule
-	Hooks  staking.StakingHooksWrapper
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	authStr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(fmt.Errorf("unable to decode authority in slashing: %w", err))
-	}
-
-	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.StoreService, in.StakingKeeper, authStr)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.Registry)
-	return ModuleOutputs{
-		Keeper: k,
-		Module: m,
-		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-	}
 }

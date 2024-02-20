@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	"cosmossdk.io/x/auth/tx"
-	txmodule "cosmossdk.io/x/auth/tx/config"
+	authtxconfig "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -79,7 +79,7 @@ func NewRootCmd() *cobra.Command {
 				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 				txConfigOpts := tx.ConfigOptions{
 					EnabledSignModes:           enabledSignModes,
-					TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
+					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
 				}
 				txConfig, err := tx.NewTxConfigWithOptions(
 					initClientCtx.Codec,
@@ -108,7 +108,7 @@ func NewRootCmd() *cobra.Command {
 	// autocli opts
 	customClientTemplate, customClientConfig := initClientConfig()
 	var err error
-	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	initClientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}

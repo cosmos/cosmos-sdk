@@ -67,7 +67,7 @@ type MsgSubmitProposal struct {
 	// proposal_type defines the type of proposal
 	// When not set defaults to PROPOSAL_TYPE_STANDARD
 	//
-	// Since: cosmos-sdk 0.51
+	// Since: x/gov v1.0.0
 	ProposalType ProposalType `protobuf:"varint,8,opt,name=proposal_type,json=proposalType,proto3,enum=cosmos.gov.v1.ProposalType" json:"proposal_type,omitempty"`
 }
 
@@ -844,6 +844,359 @@ func (m *MsgCancelProposalResponse) GetCanceledHeight() uint64 {
 	return 0
 }
 
+// MsgSubmitMultipleChoiceProposal defines a message to submit a multiple choice proposal.
+//
+// Since: x/gov 1.0.0
+type MsgSubmitMultipleChoiceProposal struct {
+	// initial_deposit is the deposit value that must be paid at proposal submission.
+	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=initial_deposit,json=initialDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_deposit"`
+	// proposer is the account address of the proposer.
+	Proposer string `protobuf:"bytes,2,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	// metadata is any arbitrary metadata attached to the proposal.
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// title is the title of the proposal.
+	Title string `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	// summary is the summary of the proposal
+	Summary string `protobuf:"bytes,5,opt,name=summary,proto3" json:"summary,omitempty"`
+	// vote_options defines the vote options for the proposal.
+	VoteOptions *ProposalVoteOptions `protobuf:"bytes,6,opt,name=vote_options,json=voteOptions,proto3" json:"vote_options,omitempty"`
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) Reset()         { *m = MsgSubmitMultipleChoiceProposal{} }
+func (m *MsgSubmitMultipleChoiceProposal) String() string { return proto.CompactTextString(m) }
+func (*MsgSubmitMultipleChoiceProposal) ProtoMessage()    {}
+func (*MsgSubmitMultipleChoiceProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{14}
+}
+func (m *MsgSubmitMultipleChoiceProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSubmitMultipleChoiceProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSubmitMultipleChoiceProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSubmitMultipleChoiceProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSubmitMultipleChoiceProposal.Merge(m, src)
+}
+func (m *MsgSubmitMultipleChoiceProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSubmitMultipleChoiceProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSubmitMultipleChoiceProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSubmitMultipleChoiceProposal proto.InternalMessageInfo
+
+func (m *MsgSubmitMultipleChoiceProposal) GetInitialDeposit() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.InitialDeposit
+	}
+	return nil
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) GetProposer() string {
+	if m != nil {
+		return m.Proposer
+	}
+	return ""
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) GetMetadata() string {
+	if m != nil {
+		return m.Metadata
+	}
+	return ""
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) GetSummary() string {
+	if m != nil {
+		return m.Summary
+	}
+	return ""
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) GetVoteOptions() *ProposalVoteOptions {
+	if m != nil {
+		return m.VoteOptions
+	}
+	return nil
+}
+
+// MsgSubmitMultipleChoiceProposalResponse defines the Msg/SubmitMultipleChoiceProposal response type.
+//
+// Since: x/gov 1.0.0
+type MsgSubmitMultipleChoiceProposalResponse struct {
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+}
+
+func (m *MsgSubmitMultipleChoiceProposalResponse) Reset() {
+	*m = MsgSubmitMultipleChoiceProposalResponse{}
+}
+func (m *MsgSubmitMultipleChoiceProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSubmitMultipleChoiceProposalResponse) ProtoMessage()    {}
+func (*MsgSubmitMultipleChoiceProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{15}
+}
+func (m *MsgSubmitMultipleChoiceProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSubmitMultipleChoiceProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSubmitMultipleChoiceProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSubmitMultipleChoiceProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSubmitMultipleChoiceProposalResponse.Merge(m, src)
+}
+func (m *MsgSubmitMultipleChoiceProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSubmitMultipleChoiceProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSubmitMultipleChoiceProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSubmitMultipleChoiceProposalResponse proto.InternalMessageInfo
+
+func (m *MsgSubmitMultipleChoiceProposalResponse) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+// MsgUpdateMessageParams defines the Msg/UpdateMessageParams response type.
+//
+// Since: x/gov 1.0.0
+type MsgUpdateMessageParams struct {
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// msg_url is the url of the message to be updated.
+	MsgUrl string `protobuf:"bytes,2,opt,name=msg_url,json=msgUrl,proto3" json:"msg_url,omitempty"`
+	// params are the new params to be set for the message.
+	Params *MessageBasedParams `protobuf:"bytes,3,opt,name=params,proto3" json:"params,omitempty"`
+}
+
+func (m *MsgUpdateMessageParams) Reset()         { *m = MsgUpdateMessageParams{} }
+func (m *MsgUpdateMessageParams) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMessageParams) ProtoMessage()    {}
+func (*MsgUpdateMessageParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{16}
+}
+func (m *MsgUpdateMessageParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMessageParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMessageParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMessageParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMessageParams.Merge(m, src)
+}
+func (m *MsgUpdateMessageParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMessageParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMessageParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMessageParams proto.InternalMessageInfo
+
+func (m *MsgUpdateMessageParams) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateMessageParams) GetMsgUrl() string {
+	if m != nil {
+		return m.MsgUrl
+	}
+	return ""
+}
+
+func (m *MsgUpdateMessageParams) GetParams() *MessageBasedParams {
+	if m != nil {
+		return m.Params
+	}
+	return nil
+}
+
+// MsgUpdateMessageParamsResponse defines the Msg/UpdateMessageParams response type.
+//
+// Since: x/gov 1.0.0
+type MsgUpdateMessageParamsResponse struct {
+}
+
+func (m *MsgUpdateMessageParamsResponse) Reset()         { *m = MsgUpdateMessageParamsResponse{} }
+func (m *MsgUpdateMessageParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMessageParamsResponse) ProtoMessage()    {}
+func (*MsgUpdateMessageParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{17}
+}
+func (m *MsgUpdateMessageParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMessageParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMessageParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMessageParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMessageParamsResponse.Merge(m, src)
+}
+func (m *MsgUpdateMessageParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMessageParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMessageParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMessageParamsResponse proto.InternalMessageInfo
+
+// MsgSudoExec defines a message to execute an inner message as the governance module.
+//
+// Since: x/gov 1.0.0
+type MsgSudoExec struct {
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// msg is the arbitrary message to be executed.
+	Msg *types.Any `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+}
+
+func (m *MsgSudoExec) Reset()         { *m = MsgSudoExec{} }
+func (m *MsgSudoExec) String() string { return proto.CompactTextString(m) }
+func (*MsgSudoExec) ProtoMessage()    {}
+func (*MsgSudoExec) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{18}
+}
+func (m *MsgSudoExec) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSudoExec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSudoExec.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSudoExec) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSudoExec.Merge(m, src)
+}
+func (m *MsgSudoExec) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSudoExec) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSudoExec.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSudoExec proto.InternalMessageInfo
+
+func (m *MsgSudoExec) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgSudoExec) GetMsg() *types.Any {
+	if m != nil {
+		return m.Msg
+	}
+	return nil
+}
+
+// MsgSudoExecResponse defines the Msg/SudoExec response type.
+//
+// Since: x/gov 1.0.0
+type MsgSudoExecResponse struct {
+	// result is the response data from the executed message.
+	Result []byte `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+}
+
+func (m *MsgSudoExecResponse) Reset()         { *m = MsgSudoExecResponse{} }
+func (m *MsgSudoExecResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSudoExecResponse) ProtoMessage()    {}
+func (*MsgSudoExecResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{19}
+}
+func (m *MsgSudoExecResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSudoExecResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSudoExecResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSudoExecResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSudoExecResponse.Merge(m, src)
+}
+func (m *MsgSudoExecResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSudoExecResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSudoExecResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSudoExecResponse proto.InternalMessageInfo
+
+func (m *MsgSudoExecResponse) GetResult() []byte {
+	if m != nil {
+		return m.Result
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*MsgSubmitProposal)(nil), "cosmos.gov.v1.MsgSubmitProposal")
 	proto.RegisterType((*MsgSubmitProposalResponse)(nil), "cosmos.gov.v1.MsgSubmitProposalResponse")
@@ -859,82 +1212,104 @@ func init() {
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "cosmos.gov.v1.MsgUpdateParamsResponse")
 	proto.RegisterType((*MsgCancelProposal)(nil), "cosmos.gov.v1.MsgCancelProposal")
 	proto.RegisterType((*MsgCancelProposalResponse)(nil), "cosmos.gov.v1.MsgCancelProposalResponse")
+	proto.RegisterType((*MsgSubmitMultipleChoiceProposal)(nil), "cosmos.gov.v1.MsgSubmitMultipleChoiceProposal")
+	proto.RegisterType((*MsgSubmitMultipleChoiceProposalResponse)(nil), "cosmos.gov.v1.MsgSubmitMultipleChoiceProposalResponse")
+	proto.RegisterType((*MsgUpdateMessageParams)(nil), "cosmos.gov.v1.MsgUpdateMessageParams")
+	proto.RegisterType((*MsgUpdateMessageParamsResponse)(nil), "cosmos.gov.v1.MsgUpdateMessageParamsResponse")
+	proto.RegisterType((*MsgSudoExec)(nil), "cosmos.gov.v1.MsgSudoExec")
+	proto.RegisterType((*MsgSudoExecResponse)(nil), "cosmos.gov.v1.MsgSudoExecResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/gov/v1/tx.proto", fileDescriptor_9ff8f4a63b6fc9a9) }
 
 var fileDescriptor_9ff8f4a63b6fc9a9 = []byte{
-	// 1114 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xcb, 0x6f, 0xdc, 0x44,
-	0x18, 0xcf, 0xe4, 0xb5, 0xc9, 0xe4, 0xa5, 0x8c, 0xb6, 0xad, 0xe3, 0x16, 0xef, 0xd6, 0x45, 0xb0,
-	0x4a, 0x89, 0xcd, 0x06, 0x52, 0xa1, 0xa5, 0x42, 0x74, 0xc3, 0xab, 0x12, 0x81, 0xca, 0x2d, 0x45,
-	0x42, 0x48, 0x91, 0xb3, 0x1e, 0x1c, 0xab, 0x6b, 0x8f, 0xb5, 0x33, 0xbb, 0xca, 0xde, 0x10, 0xc7,
-	0x9c, 0x7a, 0xe6, 0x2f, 0x40, 0x9c, 0x72, 0xe8, 0xad, 0x27, 0x6e, 0x15, 0xa7, 0x8a, 0x13, 0xa7,
-	0x16, 0x25, 0x82, 0x20, 0xf8, 0x23, 0x40, 0x33, 0x1e, 0x7b, 0xfd, 0xca, 0xa6, 0x70, 0xe8, 0x65,
-	0xd7, 0xf3, 0xbd, 0xe6, 0xfb, 0xfd, 0xbe, 0x6f, 0xbe, 0x19, 0x78, 0xb1, 0x43, 0xa8, 0x4f, 0xa8,
-	0xe9, 0x92, 0x81, 0x39, 0x68, 0x9a, 0xec, 0xc0, 0x08, 0x7b, 0x84, 0x11, 0xb4, 0x14, 0xc9, 0x0d,
-	0x97, 0x0c, 0x8c, 0x41, 0x53, 0xd5, 0xa4, 0xd9, 0x9e, 0x4d, 0xb1, 0x39, 0x68, 0xee, 0x61, 0x66,
-	0x37, 0xcd, 0x0e, 0xf1, 0x82, 0xc8, 0x5c, 0xbd, 0x94, 0x0d, 0xc3, 0xbd, 0x22, 0x45, 0xd5, 0x25,
-	0x2e, 0x11, 0x9f, 0x26, 0xff, 0x92, 0xd2, 0xb5, 0xc8, 0x7c, 0x37, 0x52, 0xc8, 0xad, 0xa4, 0xca,
-	0x25, 0xc4, 0xed, 0x62, 0x53, 0xac, 0xf6, 0xfa, 0xdf, 0x98, 0x76, 0x30, 0xcc, 0x6d, 0xe2, 0x53,
-	0x97, 0x6f, 0xe2, 0x53, 0x57, 0x2a, 0x56, 0x6d, 0xdf, 0x0b, 0x88, 0x29, 0x7e, 0xa5, 0xa8, 0x96,
-	0x0f, 0xc3, 0x3c, 0x1f, 0x53, 0x66, 0xfb, 0x61, 0x64, 0xa0, 0xff, 0x3d, 0x05, 0x57, 0x77, 0xa8,
-	0x7b, 0xb7, 0xbf, 0xe7, 0x7b, 0xec, 0x4e, 0x8f, 0x84, 0x84, 0xda, 0x5d, 0xf4, 0x26, 0x9c, 0xf3,
-	0x31, 0xa5, 0xb6, 0x8b, 0xa9, 0x02, 0xea, 0x53, 0x8d, 0x85, 0xcd, 0xaa, 0x11, 0x45, 0x32, 0xe2,
-	0x48, 0xc6, 0xad, 0x60, 0x68, 0x25, 0x56, 0xe8, 0x10, 0xc0, 0x15, 0x2f, 0xf0, 0x98, 0x67, 0x77,
-	0x77, 0x1d, 0x1c, 0x12, 0xea, 0x31, 0x65, 0x52, 0x78, 0xae, 0x19, 0x12, 0x18, 0x27, 0xcd, 0x90,
-	0xa4, 0x19, 0xdb, 0xc4, 0x0b, 0xda, 0x1f, 0x3d, 0x79, 0x56, 0x9b, 0xf8, 0xf1, 0x79, 0xad, 0xe1,
-	0x7a, 0x6c, 0xbf, 0xbf, 0x67, 0x74, 0x88, 0x2f, 0x59, 0x90, 0x7f, 0x1b, 0xd4, 0x79, 0x60, 0xb2,
-	0x61, 0x88, 0xa9, 0x70, 0xa0, 0xdf, 0x9f, 0x1e, 0xad, 0x2f, 0x76, 0xb1, 0x6b, 0x77, 0x86, 0xbb,
-	0x9c, 0x76, 0xfa, 0xc3, 0xe9, 0xd1, 0x3a, 0xb0, 0x96, 0xe5, 0xce, 0x1f, 0x44, 0x1b, 0xa3, 0xb7,
-	0xe1, 0x5c, 0x28, 0xa0, 0xe0, 0x9e, 0x32, 0x55, 0x07, 0x8d, 0xf9, 0xb6, 0xf2, 0xcb, 0xa3, 0x8d,
-	0xaa, 0xcc, 0xe3, 0x96, 0xe3, 0xf4, 0x30, 0xa5, 0x77, 0x59, 0xcf, 0x0b, 0x5c, 0x2b, 0xb1, 0x44,
-	0x2a, 0x07, 0xcd, 0x6c, 0xc7, 0x66, 0xb6, 0x32, 0xcd, 0xbd, 0xac, 0x64, 0x8d, 0xaa, 0x70, 0x86,
-	0x79, 0xac, 0x8b, 0x95, 0x19, 0xa1, 0x88, 0x16, 0x48, 0x81, 0x15, 0xda, 0xf7, 0x7d, 0xbb, 0x37,
-	0x54, 0x66, 0x85, 0x3c, 0x5e, 0xa2, 0x3a, 0x9c, 0xc7, 0x07, 0x21, 0x76, 0x3c, 0x86, 0x1d, 0xa5,
-	0x52, 0x07, 0x8d, 0xb9, 0xf6, 0xa4, 0x02, 0xac, 0x91, 0x10, 0xbd, 0x0f, 0x97, 0x42, 0x49, 0xf7,
-	0x2e, 0x47, 0xa8, 0xcc, 0xd5, 0x41, 0x63, 0x79, 0xf3, 0xb2, 0x91, 0xe9, 0x38, 0x23, 0x2e, 0xc9,
-	0xbd, 0x61, 0x88, 0xad, 0xc5, 0x30, 0xb5, 0x6a, 0x35, 0xbf, 0x3b, 0x3d, 0x5a, 0x4f, 0xd2, 0x3f,
-	0x3c, 0x3d, 0x5a, 0xaf, 0xa5, 0x58, 0x1b, 0x34, 0xcd, 0x42, 0x5d, 0xf5, 0x9b, 0x70, 0xad, 0x20,
-	0xb4, 0x30, 0x0d, 0x49, 0x40, 0x31, 0xaa, 0xc1, 0x85, 0x24, 0x23, 0xcf, 0x51, 0x40, 0x1d, 0x34,
-	0xa6, 0x2d, 0x18, 0x8b, 0x6e, 0x3b, 0xfa, 0x63, 0x00, 0xab, 0x3b, 0xd4, 0xfd, 0xf0, 0x00, 0x77,
-	0x3e, 0x15, 0x35, 0xd8, 0x26, 0x01, 0xc3, 0x01, 0x43, 0x9f, 0xc1, 0x4a, 0x27, 0xfa, 0x14, 0x5e,
-	0x67, 0x74, 0x4b, 0x5b, 0xfb, 0xf9, 0xd1, 0x86, 0x9a, 0x81, 0x17, 0xf7, 0x82, 0xf0, 0xb5, 0xe2,
-	0x20, 0xe8, 0x0a, 0x9c, 0xb7, 0xfb, 0x6c, 0x9f, 0xf4, 0x3c, 0x36, 0x54, 0x26, 0x05, 0xb3, 0x23,
-	0x41, 0x6b, 0x8b, 0xe3, 0x1e, 0xad, 0x39, 0x70, 0xbd, 0x00, 0xbc, 0x90, 0xa4, 0xae, 0xc1, 0x2b,
-	0x65, 0xf2, 0x18, 0xbe, 0xfe, 0x3b, 0x80, 0x95, 0x1d, 0xea, 0xde, 0x27, 0x0c, 0xa3, 0xad, 0x12,
-	0x2a, 0xda, 0xd5, 0xbf, 0x9e, 0xd5, 0xd2, 0xe2, 0xa8, 0xf7, 0x52, 0x04, 0x21, 0x03, 0xce, 0x0c,
-	0x08, 0xc3, 0xbd, 0x28, 0xe7, 0x31, 0x4d, 0x17, 0x99, 0xa1, 0x26, 0x9c, 0x25, 0x21, 0xf3, 0x48,
-	0x20, 0xba, 0x74, 0x79, 0x74, 0x54, 0x64, 0xf1, 0x79, 0x2e, 0x9f, 0x0b, 0x03, 0x4b, 0x1a, 0x8e,
-	0x6b, 0xd2, 0xd6, 0xab, 0x9c, 0x98, 0x28, 0x34, 0x27, 0xe5, 0x42, 0x81, 0x14, 0x1e, 0x4f, 0x5f,
-	0x85, 0x2b, 0xf2, 0x33, 0x81, 0xfe, 0x0f, 0x48, 0x64, 0x5f, 0x62, 0xcf, 0xdd, 0xe7, 0xfd, 0xf9,
-	0x92, 0x28, 0x78, 0x17, 0x56, 0x22, 0x64, 0x54, 0x99, 0x12, 0xe3, 0xe2, 0x6a, 0x8e, 0x83, 0x38,
-	0xa1, 0x14, 0x17, 0xb1, 0xc7, 0x58, 0x32, 0xde, 0xc8, 0x92, 0xf1, 0x4a, 0x29, 0x19, 0x71, 0x70,
-	0x7d, 0x0d, 0x5e, 0xca, 0x89, 0x12, 0x72, 0xfe, 0x00, 0x10, 0xee, 0x50, 0x37, 0x9e, 0x2d, 0xff,
-	0x93, 0x97, 0x1b, 0x70, 0x5e, 0x8e, 0x45, 0x72, 0x3e, 0x37, 0x23, 0x53, 0x74, 0x13, 0xce, 0xda,
-	0x3e, 0xe9, 0x07, 0x4c, 0xd2, 0x33, 0x66, 0x9a, 0xce, 0xf3, 0x69, 0x1a, 0xed, 0x2c, 0x7d, 0x5a,
-	0xd7, 0xc5, 0x51, 0x49, 0xa2, 0x71, 0x22, 0x94, 0x02, 0x11, 0x12, 0x99, 0x5e, 0x85, 0x68, 0xb4,
-	0x4a, 0xe0, 0x3f, 0x8e, 0x7a, 0xe3, 0x8b, 0xd0, 0xb1, 0x19, 0xbe, 0x63, 0xf7, 0x6c, 0x9f, 0x72,
-	0x30, 0xa3, 0xf3, 0x09, 0xce, 0x03, 0x93, 0x98, 0xa2, 0x77, 0xe0, 0x6c, 0x28, 0x22, 0x08, 0x06,
-	0x16, 0x36, 0x2f, 0xe4, 0x87, 0x9d, 0x50, 0x66, 0x80, 0x44, 0xf6, 0xad, 0x1b, 0xc5, 0x33, 0x7f,
-	0x2d, 0x05, 0xe4, 0x20, 0xbe, 0x71, 0x73, 0x99, 0xca, 0xba, 0xa6, 0x45, 0x09, 0xb0, 0x43, 0x20,
-	0x6e, 0xbe, 0x6d, 0x3b, 0xe8, 0xe0, 0x6e, 0xea, 0xe6, 0x2b, 0x29, 0xef, 0x4a, 0xae, 0xbc, 0x99,
-	0xca, 0xa6, 0x2f, 0x9b, 0xc9, 0x17, 0xbd, 0x6c, 0x5a, 0x4b, 0x99, 0xe1, 0xad, 0xff, 0x04, 0xc4,
-	0x64, 0xce, 0x26, 0x93, 0x4c, 0xe6, 0xff, 0x9e, 0xd4, 0x6d, 0xb8, 0xd4, 0x11, 0xb1, 0xb0, 0xb3,
-	0xcb, 0xaf, 0x7c, 0x49, 0xb8, 0x5a, 0x98, 0xcb, 0xf7, 0xe2, 0xf7, 0x40, 0x7b, 0x8e, 0xb3, 0xfe,
-	0xf0, 0x79, 0x0d, 0x58, 0x8b, 0xb1, 0x2b, 0x57, 0xa2, 0xd7, 0xe1, 0x4a, 0x12, 0x6a, 0x5f, 0x1c,
-	0x0e, 0x31, 0xad, 0xa6, 0xad, 0xe5, 0x58, 0xfc, 0x89, 0x90, 0x6e, 0xfe, 0x39, 0x0d, 0xa7, 0x76,
-	0xa8, 0x8b, 0xbe, 0x86, 0xcb, 0xb9, 0xe7, 0x44, 0x3d, 0x57, 0xe7, 0xc2, 0x1d, 0xa4, 0x36, 0xce,
-	0xb3, 0x48, 0xb8, 0xc0, 0x70, 0xb5, 0x78, 0x01, 0x5d, 0x2b, 0xba, 0x17, 0x8c, 0xd4, 0xeb, 0x2f,
-	0x60, 0x94, 0x6c, 0xf3, 0x1e, 0x9c, 0x16, 0x37, 0xc1, 0xc5, 0xa2, 0x13, 0x97, 0xab, 0x5a, 0xb9,
-	0x3c, 0xf1, 0xbf, 0x0f, 0x17, 0x33, 0xe3, 0xf4, 0x0c, 0xfb, 0x58, 0xaf, 0xbe, 0x36, 0x5e, 0x9f,
-	0xc4, 0xfd, 0x18, 0x56, 0xe2, 0x49, 0xb4, 0x56, 0x74, 0x91, 0x2a, 0xf5, 0xea, 0x99, 0xaa, 0x74,
-	0x82, 0x99, 0x33, 0x5d, 0x92, 0x60, 0x5a, 0x5f, 0x96, 0x60, 0xd9, 0xb1, 0xe2, 0xd5, 0xcf, 0x1d,
-	0xa9, 0x92, 0xea, 0x67, 0x2d, 0xca, 0xaa, 0x5f, 0x7e, 0x12, 0xd4, 0x99, 0x6f, 0xf9, 0x58, 0x68,
-	0x6f, 0x3d, 0x39, 0xd6, 0xc0, 0xd3, 0x63, 0x0d, 0xfc, 0x76, 0xac, 0x81, 0x87, 0x27, 0xda, 0xc4,
-	0xd3, 0x13, 0x6d, 0xe2, 0xd7, 0x13, 0x6d, 0xe2, 0xab, 0xcb, 0x51, 0x24, 0xea, 0x3c, 0x30, 0x3c,
-	0x22, 0xe7, 0x82, 0x78, 0x40, 0xf2, 0xe7, 0xfa, 0xac, 0x68, 0xfb, 0xb7, 0xfe, 0x0d, 0x00, 0x00,
-	0xff, 0xff, 0x46, 0x1f, 0x89, 0xe5, 0xee, 0x0b, 0x00, 0x00,
+	// 1362 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcd, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0xc6, 0x89, 0x9d, 0x4c, 0xbe, 0x94, 0xad, 0x9b, 0x6c, 0xb6, 0xc5, 0x76, 0xb7, 0x40,
+	0xad, 0x94, 0xac, 0x71, 0xa0, 0x15, 0x84, 0x0a, 0x51, 0x87, 0x02, 0xad, 0x30, 0x54, 0xdb, 0x0f,
+	0x24, 0x84, 0x64, 0x6d, 0xbc, 0xc3, 0x66, 0x55, 0xef, 0xce, 0xca, 0x33, 0xb6, 0xe2, 0x1b, 0xe2,
+	0xd0, 0x43, 0x4f, 0x3d, 0xf7, 0x2f, 0x40, 0x3d, 0xe5, 0x90, 0x5b, 0x4f, 0xdc, 0xaa, 0x9e, 0x2a,
+	0x4e, 0x9c, 0x5a, 0xd4, 0x0a, 0x22, 0xc1, 0x1f, 0x01, 0x9a, 0xd9, 0xd9, 0xf1, 0x7e, 0xd9, 0x49,
+	0x8b, 0x84, 0xb8, 0xd8, 0x3b, 0xef, 0x6b, 0xde, 0xfb, 0xbd, 0x37, 0xef, 0x3d, 0xb0, 0xd2, 0x46,
+	0xd8, 0x45, 0xb8, 0x66, 0xa3, 0x7e, 0xad, 0x5f, 0xaf, 0x91, 0x3d, 0xdd, 0xef, 0x22, 0x82, 0xe4,
+	0x85, 0x80, 0xae, 0xdb, 0xa8, 0xaf, 0xf7, 0xeb, 0x6a, 0x89, 0x8b, 0xed, 0x98, 0x18, 0xd6, 0xfa,
+	0xf5, 0x1d, 0x48, 0xcc, 0x7a, 0xad, 0x8d, 0x1c, 0x2f, 0x10, 0x57, 0x57, 0xe3, 0x66, 0xa8, 0x56,
+	0xc0, 0x28, 0xda, 0xc8, 0x46, 0xec, 0xb3, 0x46, 0xbf, 0x38, 0x75, 0x2d, 0x10, 0x6f, 0x05, 0x0c,
+	0x7e, 0x15, 0x67, 0xd9, 0x08, 0xd9, 0x1d, 0x58, 0x63, 0xa7, 0x9d, 0xde, 0xf7, 0x35, 0xd3, 0x1b,
+	0x24, 0x2e, 0x71, 0xb1, 0x4d, 0x2f, 0x71, 0xb1, 0xcd, 0x19, 0xcb, 0xa6, 0xeb, 0x78, 0xa8, 0xc6,
+	0x7e, 0x39, 0xa9, 0x9c, 0x34, 0x43, 0x1c, 0x17, 0x62, 0x62, 0xba, 0x7e, 0x20, 0xa0, 0xfd, 0x95,
+	0x03, 0xcb, 0x4d, 0x6c, 0xdf, 0xe8, 0xed, 0xb8, 0x0e, 0xb9, 0xde, 0x45, 0x3e, 0xc2, 0x66, 0x47,
+	0x7e, 0x17, 0xcc, 0xb8, 0x10, 0x63, 0xd3, 0x86, 0x58, 0x91, 0x2a, 0xb9, 0xea, 0xdc, 0x66, 0x51,
+	0x0f, 0x2c, 0xe9, 0xa1, 0x25, 0xfd, 0xb2, 0x37, 0x30, 0x84, 0x94, 0x7c, 0x4f, 0x02, 0x4b, 0x8e,
+	0xe7, 0x10, 0xc7, 0xec, 0xb4, 0x2c, 0xe8, 0x23, 0xec, 0x10, 0x65, 0x92, 0x69, 0xae, 0xe9, 0x3c,
+	0x30, 0x0a, 0x9a, 0xce, 0x41, 0xd3, 0xb7, 0x91, 0xe3, 0x35, 0x3e, 0x7b, 0xfc, 0xac, 0x3c, 0xf1,
+	0xf0, 0x79, 0xb9, 0x6a, 0x3b, 0x64, 0xb7, 0xb7, 0xa3, 0xb7, 0x91, 0xcb, 0x51, 0xe0, 0x7f, 0x1b,
+	0xd8, 0xba, 0x53, 0x23, 0x03, 0x1f, 0x62, 0xa6, 0x80, 0x1f, 0x1c, 0xee, 0xaf, 0xcf, 0x77, 0xa0,
+	0x6d, 0xb6, 0x07, 0x2d, 0x0a, 0x3b, 0xfe, 0xe9, 0x70, 0x7f, 0x5d, 0x32, 0x16, 0xf9, 0xcd, 0x9f,
+	0x06, 0x17, 0xcb, 0xef, 0x83, 0x19, 0x9f, 0x85, 0x02, 0xbb, 0x4a, 0xae, 0x22, 0x55, 0x67, 0x1b,
+	0xca, 0x2f, 0x07, 0x1b, 0x45, 0xee, 0xc7, 0x65, 0xcb, 0xea, 0x42, 0x8c, 0x6f, 0x90, 0xae, 0xe3,
+	0xd9, 0x86, 0x90, 0x94, 0x55, 0x1a, 0x34, 0x31, 0x2d, 0x93, 0x98, 0xca, 0x14, 0xd5, 0x32, 0xc4,
+	0x59, 0x2e, 0x82, 0x69, 0xe2, 0x90, 0x0e, 0x54, 0xa6, 0x19, 0x23, 0x38, 0xc8, 0x0a, 0x28, 0xe0,
+	0x9e, 0xeb, 0x9a, 0xdd, 0x81, 0x92, 0x67, 0xf4, 0xf0, 0x28, 0x57, 0xc0, 0x2c, 0xdc, 0xf3, 0xa1,
+	0xe5, 0x10, 0x68, 0x29, 0x85, 0x8a, 0x54, 0x9d, 0x69, 0x4c, 0x2a, 0x92, 0x31, 0x24, 0xca, 0x9f,
+	0x80, 0x05, 0x9f, 0xc3, 0xdd, 0xa2, 0x11, 0x2a, 0x33, 0x15, 0xa9, 0xba, 0xb8, 0x79, 0x4a, 0x8f,
+	0x55, 0x9c, 0x1e, 0xa6, 0xe4, 0xe6, 0xc0, 0x87, 0xc6, 0xbc, 0x1f, 0x39, 0x6d, 0xd5, 0x7f, 0x3c,
+	0xdc, 0x5f, 0x17, 0xee, 0xdf, 0x3b, 0xdc, 0x5f, 0x2f, 0x47, 0x50, 0xeb, 0xd7, 0x6b, 0xa9, 0xbc,
+	0x6a, 0x97, 0xc0, 0x5a, 0x8a, 0x68, 0x40, 0xec, 0x23, 0x0f, 0x43, 0xb9, 0x0c, 0xe6, 0x84, 0x47,
+	0x8e, 0xa5, 0x48, 0x15, 0xa9, 0x3a, 0x65, 0x80, 0x90, 0x74, 0xd5, 0xd2, 0x1e, 0x49, 0xa0, 0xd8,
+	0xc4, 0xf6, 0x95, 0x3d, 0xd8, 0xfe, 0x92, 0xe5, 0x60, 0x1b, 0x79, 0x04, 0x7a, 0x44, 0xfe, 0x0a,
+	0x14, 0xda, 0xc1, 0x27, 0xd3, 0x1a, 0x51, 0x2d, 0x8d, 0xd2, 0x93, 0x83, 0x0d, 0x35, 0x16, 0x5e,
+	0x58, 0x0b, 0x4c, 0xd7, 0x08, 0x8d, 0xc8, 0xa7, 0xc1, 0xac, 0xd9, 0x23, 0xbb, 0xa8, 0xeb, 0x90,
+	0x81, 0x32, 0xc9, 0x90, 0x1d, 0x12, 0xb6, 0x2e, 0xd0, 0xb8, 0x87, 0x67, 0x1a, 0xb8, 0x96, 0x0a,
+	0x3c, 0xe5, 0xa4, 0x56, 0x02, 0xa7, 0xb3, 0xe8, 0x61, 0xf8, 0xda, 0xef, 0x12, 0x28, 0x34, 0xb1,
+	0x7d, 0x1b, 0x11, 0x28, 0x5f, 0xc8, 0x80, 0xa2, 0x51, 0xfc, 0xf3, 0x59, 0x39, 0x4a, 0x0e, 0x6a,
+	0x2f, 0x02, 0x90, 0xac, 0x83, 0xe9, 0x3e, 0x22, 0xb0, 0x1b, 0xf8, 0x3c, 0xa6, 0xe8, 0x02, 0x31,
+	0xb9, 0x0e, 0xf2, 0xc8, 0x27, 0x0e, 0xf2, 0x58, 0x95, 0x2e, 0x0e, 0x9f, 0x0a, 0x4f, 0x3e, 0xf5,
+	0xe5, 0x6b, 0x26, 0x60, 0x70, 0xc1, 0x71, 0x45, 0xba, 0xf5, 0x26, 0x05, 0x26, 0x30, 0x4d, 0x41,
+	0x39, 0x99, 0x02, 0x85, 0xda, 0xd3, 0x96, 0xc1, 0x12, 0xff, 0x14, 0xa1, 0xff, 0x2d, 0x09, 0xda,
+	0x37, 0xd0, 0xb1, 0x77, 0x69, 0x7d, 0xfe, 0x47, 0x10, 0x7c, 0x04, 0x0a, 0x41, 0x64, 0x58, 0xc9,
+	0xb1, 0x76, 0x71, 0x26, 0x81, 0x41, 0xe8, 0x50, 0x04, 0x8b, 0x50, 0x63, 0x2c, 0x18, 0xef, 0xc4,
+	0xc1, 0x78, 0x23, 0x13, 0x8c, 0xd0, 0xb8, 0xb6, 0x06, 0x56, 0x13, 0x24, 0x01, 0xce, 0x1f, 0x12,
+	0x00, 0x4d, 0x6c, 0x87, 0xbd, 0xe5, 0x35, 0x71, 0xb9, 0x08, 0x66, 0x79, 0x5b, 0x44, 0x47, 0x63,
+	0x33, 0x14, 0x95, 0x2f, 0x81, 0xbc, 0xe9, 0xa2, 0x9e, 0x47, 0x38, 0x3c, 0x63, 0xba, 0xe9, 0x2c,
+	0xed, 0xa6, 0xc1, 0xcd, 0x5c, 0x67, 0xeb, 0x3c, 0x7b, 0x2a, 0xc2, 0x1a, 0x05, 0x42, 0x49, 0x01,
+	0xc1, 0x23, 0xd3, 0x8a, 0x40, 0x1e, 0x9e, 0x44, 0xf8, 0x8f, 0x82, 0xda, 0xb8, 0xe5, 0x5b, 0x26,
+	0x81, 0xd7, 0xcd, 0xae, 0xe9, 0x62, 0x1a, 0xcc, 0xf0, 0x7d, 0x4a, 0x47, 0x05, 0x23, 0x44, 0xe5,
+	0x0f, 0x40, 0xde, 0x67, 0x16, 0x18, 0x02, 0x73, 0x9b, 0x27, 0x93, 0xcd, 0x8e, 0x31, 0x63, 0x81,
+	0x04, 0xf2, 0x5b, 0x17, 0xd3, 0x6f, 0xfe, 0x6c, 0x24, 0x90, 0xbd, 0x70, 0xe2, 0x26, 0x3c, 0xe5,
+	0x79, 0x8d, 0x92, 0x44, 0x60, 0xf7, 0x24, 0x36, 0xf9, 0xb6, 0x4d, 0xaf, 0x0d, 0x3b, 0x91, 0xc9,
+	0x97, 0x91, 0xde, 0xa5, 0x44, 0x7a, 0x63, 0x99, 0x8d, 0x0e, 0x9b, 0xc9, 0xe3, 0x0e, 0x9b, 0xad,
+	0x85, 0x58, 0xf3, 0xd6, 0x7e, 0x96, 0x58, 0x67, 0x8e, 0x3b, 0x23, 0x3a, 0xf3, 0xab, 0x3b, 0x75,
+	0x15, 0x2c, 0xb4, 0x99, 0x2d, 0x68, 0xb5, 0xe8, 0xc8, 0xe7, 0x80, 0xab, 0xa9, 0xbe, 0x7c, 0x33,
+	0xdc, 0x07, 0x1a, 0x33, 0x14, 0xf5, 0xfb, 0xcf, 0xcb, 0x92, 0x31, 0x1f, 0xaa, 0x52, 0xa6, 0x7c,
+	0x0e, 0x2c, 0x09, 0x53, 0xbb, 0xec, 0x71, 0xb0, 0x6e, 0x35, 0x65, 0x2c, 0x86, 0xe4, 0x2f, 0x18,
+	0x55, 0xbb, 0x9b, 0x03, 0x65, 0x31, 0x5d, 0x9a, 0xbd, 0x0e, 0x71, 0xfc, 0x0e, 0xdc, 0xde, 0x45,
+	0x4e, 0x1b, 0x0a, 0x78, 0xb3, 0xd6, 0x04, 0xe9, 0xff, 0xb0, 0x26, 0x4c, 0xbe, 0xd6, 0x9a, 0x90,
+	0x1b, 0xb5, 0x26, 0x4c, 0x8d, 0x58, 0x13, 0xa6, 0xe3, 0x6b, 0xc2, 0x15, 0x30, 0x4f, 0x3b, 0x54,
+	0x2b, 0x6c, 0x81, 0x79, 0x96, 0x25, 0x6d, 0xc4, 0x0e, 0x30, 0x6c, 0x81, 0xd8, 0x98, 0xeb, 0x0f,
+	0x0f, 0xc9, 0x62, 0xba, 0x06, 0xce, 0x1d, 0x91, 0x87, 0xe3, 0xcf, 0xfc, 0x03, 0x09, 0xac, 0x88,
+	0x17, 0xd4, 0x0c, 0xb6, 0xbd, 0x7f, 0xd9, 0x05, 0x56, 0x41, 0xc1, 0xc5, 0x76, 0xab, 0xd7, 0xed,
+	0xf0, 0xd9, 0x9e, 0x77, 0xb1, 0x7d, 0xab, 0xdb, 0x91, 0x3f, 0x14, 0xed, 0x21, 0xc7, 0x70, 0x48,
+	0x8e, 0x02, 0x7e, 0x7d, 0xc3, 0xc4, 0xd0, 0xe2, 0x8f, 0x39, 0xec, 0x0f, 0x8b, 0xf1, 0xfe, 0xa0,
+	0x55, 0x40, 0x29, 0xdb, 0x6b, 0xf1, 0xfc, 0x1f, 0x48, 0x60, 0x8e, 0xa1, 0x64, 0x21, 0xba, 0x13,
+	0xbc, 0x76, 0x34, 0xdb, 0x20, 0xe7, 0x62, 0x9b, 0xbf, 0xaf, 0xec, 0xbd, 0xe7, 0xd4, 0x93, 0x83,
+	0x8d, 0xd5, 0xac, 0xea, 0x6e, 0x62, 0xdb, 0xa0, 0xda, 0x29, 0xf7, 0x37, 0xc0, 0x89, 0x88, 0x6f,
+	0x22, 0x5b, 0x2b, 0x20, 0xdf, 0x85, 0xb8, 0xd7, 0x09, 0xd6, 0xac, 0x79, 0x83, 0x9f, 0x36, 0x1f,
+	0x16, 0x40, 0xae, 0x89, 0x6d, 0xf9, 0x3b, 0xb0, 0x98, 0x58, 0xe4, 0x2b, 0x49, 0x08, 0x93, 0xdb,
+	0x9f, 0x5a, 0x3d, 0x4a, 0x42, 0xdc, 0x0e, 0xc1, 0x72, 0x7a, 0xf5, 0x3b, 0x9b, 0x56, 0x4f, 0x09,
+	0xa9, 0xe7, 0x8f, 0x21, 0x24, 0xae, 0xf9, 0x18, 0x4c, 0xb1, 0x1d, 0x6c, 0x25, 0xad, 0x44, 0xe9,
+	0x6a, 0x29, 0x9b, 0x2e, 0xf4, 0x6f, 0x83, 0xf9, 0xd8, 0x22, 0x33, 0x42, 0x3e, 0xe4, 0xab, 0x6f,
+	0x8f, 0xe7, 0x0b, 0xbb, 0x9f, 0x83, 0x42, 0xd8, 0x38, 0xd6, 0xd2, 0x2a, 0x9c, 0xa5, 0x9e, 0x19,
+	0xc9, 0x8a, 0x3a, 0x18, 0x9b, 0xa6, 0x19, 0x0e, 0x46, 0xf9, 0x59, 0x0e, 0x66, 0x0d, 0x34, 0x9a,
+	0xfd, 0xc4, 0x30, 0xcb, 0xc8, 0x7e, 0x5c, 0x22, 0x2b, 0xfb, 0x23, 0x66, 0xd0, 0x5d, 0x09, 0x9c,
+	0x1e, 0xdb, 0xda, 0xf5, 0x51, 0x85, 0x94, 0x2d, 0xaf, 0x5e, 0x7c, 0x35, 0x79, 0xe1, 0xc8, 0x1d,
+	0x70, 0x22, 0xab, 0x1b, 0xbd, 0x35, 0x0a, 0xa5, 0x98, 0x98, 0xba, 0x71, 0x2c, 0x31, 0x71, 0xd9,
+	0x35, 0x30, 0x23, 0x3a, 0x84, 0x9a, 0xe5, 0x70, 0xc0, 0x53, 0xb5, 0xd1, 0xbc, 0xd0, 0x96, 0x3a,
+	0xfd, 0x03, 0x9d, 0x42, 0x8d, 0x0b, 0x8f, 0x5f, 0x94, 0xa4, 0xa7, 0x2f, 0x4a, 0xd2, 0x6f, 0x2f,
+	0x4a, 0xd2, 0xfd, 0x97, 0xa5, 0x89, 0xa7, 0x2f, 0x4b, 0x13, 0xbf, 0xbe, 0x2c, 0x4d, 0x7c, 0x7b,
+	0x2a, 0xb0, 0x81, 0xad, 0x3b, 0xba, 0x83, 0xf8, 0x4e, 0xc3, 0xa6, 0x5a, 0xad, 0x5f, 0xdf, 0xc9,
+	0xb3, 0x96, 0xf2, 0xde, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x1d, 0x5a, 0x98, 0xb8, 0xaa, 0x10,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -969,6 +1344,19 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.50
 	CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error)
+	// SubmitMultipleChoiceProposal defines a method to create new multiple choice proposal.
+	//
+	// Since: x/gov 1.0.0
+	SubmitMultipleChoiceProposal(ctx context.Context, in *MsgSubmitMultipleChoiceProposal, opts ...grpc.CallOption) (*MsgSubmitMultipleChoiceProposalResponse, error)
+	// UpdateMessageParams defines a method to create or update message params when used in a governance proposal.
+	//
+	// Since: x/gov 1.0.0
+	UpdateMessageParams(ctx context.Context, in *MsgUpdateMessageParams, opts ...grpc.CallOption) (*MsgUpdateMessageParamsResponse, error)
+	// SudoExec defines a method to execute an inner message as the governance module.
+	// It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
+	//
+	// Since: x/gov 1.0.0
+	SudoExec(ctx context.Context, in *MsgSudoExec, opts ...grpc.CallOption) (*MsgSudoExecResponse, error)
 }
 
 type msgClient struct {
@@ -1042,6 +1430,33 @@ func (c *msgClient) CancelProposal(ctx context.Context, in *MsgCancelProposal, o
 	return out, nil
 }
 
+func (c *msgClient) SubmitMultipleChoiceProposal(ctx context.Context, in *MsgSubmitMultipleChoiceProposal, opts ...grpc.CallOption) (*MsgSubmitMultipleChoiceProposalResponse, error) {
+	out := new(MsgSubmitMultipleChoiceProposalResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/SubmitMultipleChoiceProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMessageParams(ctx context.Context, in *MsgUpdateMessageParams, opts ...grpc.CallOption) (*MsgUpdateMessageParamsResponse, error) {
+	out := new(MsgUpdateMessageParamsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/UpdateMessageParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SudoExec(ctx context.Context, in *MsgSudoExec, opts ...grpc.CallOption) (*MsgSudoExecResponse, error) {
+	out := new(MsgSudoExecResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/SudoExec", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// SubmitProposal defines a method to create new proposal given the messages.
@@ -1064,6 +1479,19 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.50
 	CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error)
+	// SubmitMultipleChoiceProposal defines a method to create new multiple choice proposal.
+	//
+	// Since: x/gov 1.0.0
+	SubmitMultipleChoiceProposal(context.Context, *MsgSubmitMultipleChoiceProposal) (*MsgSubmitMultipleChoiceProposalResponse, error)
+	// UpdateMessageParams defines a method to create or update message params when used in a governance proposal.
+	//
+	// Since: x/gov 1.0.0
+	UpdateMessageParams(context.Context, *MsgUpdateMessageParams) (*MsgUpdateMessageParamsResponse, error)
+	// SudoExec defines a method to execute an inner message as the governance module.
+	// It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
+	//
+	// Since: x/gov 1.0.0
+	SudoExec(context.Context, *MsgSudoExec) (*MsgSudoExecResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -1090,6 +1518,15 @@ func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateP
 }
 func (*UnimplementedMsgServer) CancelProposal(ctx context.Context, req *MsgCancelProposal) (*MsgCancelProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelProposal not implemented")
+}
+func (*UnimplementedMsgServer) SubmitMultipleChoiceProposal(ctx context.Context, req *MsgSubmitMultipleChoiceProposal) (*MsgSubmitMultipleChoiceProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitMultipleChoiceProposal not implemented")
+}
+func (*UnimplementedMsgServer) UpdateMessageParams(ctx context.Context, req *MsgUpdateMessageParams) (*MsgUpdateMessageParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMessageParams not implemented")
+}
+func (*UnimplementedMsgServer) SudoExec(ctx context.Context, req *MsgSudoExec) (*MsgSudoExecResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SudoExec not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1222,6 +1659,60 @@ func _Msg_CancelProposal_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SubmitMultipleChoiceProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSubmitMultipleChoiceProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SubmitMultipleChoiceProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Msg/SubmitMultipleChoiceProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SubmitMultipleChoiceProposal(ctx, req.(*MsgSubmitMultipleChoiceProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMessageParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMessageParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMessageParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Msg/UpdateMessageParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMessageParams(ctx, req.(*MsgUpdateMessageParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SudoExec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSudoExec)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SudoExec(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Msg/SudoExec",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SudoExec(ctx, req.(*MsgSudoExec))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.gov.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -1253,6 +1744,18 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelProposal",
 			Handler:    _Msg_CancelProposal_Handler,
+		},
+		{
+			MethodName: "SubmitMultipleChoiceProposal",
+			Handler:    _Msg_SubmitMultipleChoiceProposal_Handler,
+		},
+		{
+			MethodName: "UpdateMessageParams",
+			Handler:    _Msg_UpdateMessageParams_Handler,
+		},
+		{
+			MethodName: "SudoExec",
+			Handler:    _Msg_SudoExec_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1806,6 +2309,255 @@ func (m *MsgCancelProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSubmitMultipleChoiceProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.VoteOptions != nil {
+		{
+			size, err := m.VoteOptions.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Summary) > 0 {
+		i -= len(m.Summary)
+		copy(dAtA[i:], m.Summary)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Summary)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Metadata) > 0 {
+		i -= len(m.Metadata)
+		copy(dAtA[i:], m.Metadata)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Metadata)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Proposer) > 0 {
+		i -= len(m.Proposer)
+		copy(dAtA[i:], m.Proposer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Proposer)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.InitialDeposit) > 0 {
+		for iNdEx := len(m.InitialDeposit) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.InitialDeposit[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSubmitMultipleChoiceProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSubmitMultipleChoiceProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSubmitMultipleChoiceProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMessageParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMessageParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMessageParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Params != nil {
+		{
+			size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.MsgUrl) > 0 {
+		i -= len(m.MsgUrl)
+		copy(dAtA[i:], m.MsgUrl)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.MsgUrl)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMessageParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMessageParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMessageParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSudoExec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSudoExec) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSudoExec) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Msg != nil {
+		{
+			size, err := m.Msg.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSudoExecResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSudoExecResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSudoExecResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Result) > 0 {
+		i -= len(m.Result)
+		copy(dAtA[i:], m.Result)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Result)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -2049,6 +2801,113 @@ func (m *MsgCancelProposalResponse) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	if m.CanceledHeight != 0 {
 		n += 1 + sovTx(uint64(m.CanceledHeight))
+	}
+	return n
+}
+
+func (m *MsgSubmitMultipleChoiceProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.InitialDeposit) > 0 {
+		for _, e := range m.InitialDeposit {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	l = len(m.Proposer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Metadata)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Summary)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.VoteOptions != nil {
+		l = m.VoteOptions.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSubmitMultipleChoiceProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		n += 1 + sovTx(uint64(m.ProposalId))
+	}
+	return n
+}
+
+func (m *MsgUpdateMessageParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.MsgUrl)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Params != nil {
+		l = m.Params.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateMessageParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSudoExec) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Msg != nil {
+		l = m.Msg.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSudoExecResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Result)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
 }
@@ -3551,6 +4410,725 @@ func (m *MsgCancelProposalResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSubmitMultipleChoiceProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSubmitMultipleChoiceProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSubmitMultipleChoiceProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InitialDeposit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InitialDeposit = append(m.InitialDeposit, types1.Coin{})
+			if err := m.InitialDeposit[len(m.InitialDeposit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proposer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proposer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Metadata = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Summary", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Summary = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VoteOptions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.VoteOptions == nil {
+				m.VoteOptions = &ProposalVoteOptions{}
+			}
+			if err := m.VoteOptions.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSubmitMultipleChoiceProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSubmitMultipleChoiceProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSubmitMultipleChoiceProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMessageParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMessageParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMessageParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Params == nil {
+				m.Params = &MessageBasedParams{}
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMessageParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMessageParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMessageParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSudoExec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSudoExec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSudoExec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Msg == nil {
+				m.Msg = &types.Any{}
+			}
+			if err := m.Msg.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSudoExecResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSudoExecResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSudoExecResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Result = append(m.Result[:0], dAtA[iNdEx:postIndex]...)
+			if m.Result == nil {
+				m.Result = []byte{}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

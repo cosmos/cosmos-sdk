@@ -20,6 +20,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func getKeyring(chainName string) (sdkkeyring.Keyring, error) {
@@ -96,19 +97,28 @@ func KeyringCmd(chainName string) *cobra.Command {
 				return err
 			}
 
-			addressCodec, validatorAddressCodec, consensusAddressCodec, err := getAddressCodecFromConfig(cfg, chainName)
+			// addressCodec, validatorAddressCodec, consensusAddressCodec, err := getAddressCodecFromConfig(cfg, chainName)
+			// if err != nil {
+			// 	return err
+			// }
+
+			addressPrefix, validatorAddressPrefix, consensusAddressPrefix, err := getAddressPrefixFromConfig(cfg, chainName)
 			if err != nil {
 				return err
 			}
+
+			types.GetConfig().SetBech32PrefixForAccount(addressPrefix, addressPrefix+types.PrefixPublic)
+			types.GetConfig().SetBech32PrefixForValidator(validatorAddressPrefix, validatorAddressPrefix+types.PrefixPublic)
+			types.GetConfig().SetBech32PrefixForConsensusNode(consensusAddressPrefix, consensusAddressPrefix+types.PrefixPublic)
 
 			clientCtx := client.Context{}.
 				WithKeyring(kr).
 				WithCodec(cdc).
 				WithKeyringDir(keyringDir).
-				WithInput(inBuf).
-				WithAddressCodec(addressCodec).
-				WithValidatorAddressCodec(validatorAddressCodec).
-				WithConsensusAddressCodec(consensusAddressCodec)
+				WithInput(inBuf)
+			// WithAddressCodec(addressCodec).
+			// WithValidatorAddressCodec(validatorAddressCodec).
+			// WithConsensusAddressCodec(consensusAddressCodec)
 
 			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &clientCtx))
 			if err := client.SetCmdClientContext(cmd, clientCtx); err != nil {

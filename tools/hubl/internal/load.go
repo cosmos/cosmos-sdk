@@ -17,8 +17,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
 
+	authv1betav1 "cosmossdk.io/api/cosmos/auth/v1beta1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/tools/hubl/internal/config"
 )
@@ -188,15 +188,15 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 
 // getAddressPrefix returns the address prefix of the chain.
 func getAddressPrefix(ctx context.Context, conn grpc.ClientConnInterface) (string, error) {
-	reflectionClient := reflectionv2alpha1.NewReflectionServiceClient(conn)
-	resp, err := reflectionClient.GetConfigurationDescriptor(ctx, &reflectionv2alpha1.GetConfigurationDescriptorRequest{})
+	authClient := authv1betav1.NewQueryClient(conn)
+	resp, err := authClient.Bech32Prefix(ctx, &authv1betav1.Bech32PrefixRequest{})
 	if err != nil {
 		return "", err
 	}
 
-	if resp == nil || resp.Config == nil || resp.Config.Bech32AccountAddressPrefix == "" {
+	if resp == nil || resp.Bech32Prefix == "" {
 		return "", cockroachdberrors.New("bech32 account address prefix is not set")
 	}
 
-	return resp.Config.Bech32AccountAddressPrefix, nil
+	return resp.Bech32Prefix, nil
 }

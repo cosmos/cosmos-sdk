@@ -23,7 +23,8 @@ var _ FeeAllowanceI = (*PeriodicAllowance)(nil)
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
 func (a *PeriodicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
-	blockTime := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.HeaderInfo().Time
 
 	if a.Basic.Expiration != nil && blockTime.After(*a.Basic.Expiration) {
 		return true, errorsmod.Wrap(ErrFeeLimitExpired, "absolute limit")
@@ -70,9 +71,9 @@ func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time) {
 
 	// If we are within the period, step from expiration (eg. if you always do one tx per day, it will always reset the same time)
 	// If we are more then one period out (eg. no activity in a week), reset is one period from this time
-	a.PeriodReset = a.PeriodReset.Add(a.Period)
+	_ = a.UpdatePeriodReset(a.PeriodReset)
 	if blockTime.After(a.PeriodReset) {
-		a.PeriodReset = blockTime.Add(a.Period)
+		_ = a.UpdatePeriodReset(blockTime)
 	}
 }
 
@@ -112,4 +113,10 @@ func (a PeriodicAllowance) ValidateBasic() error {
 // ExpiresAt returns the expiry time of the PeriodicAllowance.
 func (a PeriodicAllowance) ExpiresAt() (*time.Time, error) {
 	return a.Basic.ExpiresAt()
+}
+
+// UpdatePeriodReset update "PeriodReset" of the PeriodicAllowance.
+func (a *PeriodicAllowance) UpdatePeriodReset(validTime time.Time) error {
+	a.PeriodReset = validTime.Add(a.Period)
+	return nil
 }

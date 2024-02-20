@@ -169,6 +169,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolModuleName, sdk.Coins{{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(2)}}) // 2 community pool coins
+	poolKeeper.EXPECT().SetToDistribute(ctx, gomock.Any(), gomock.Any())
 
 	votes := []comet.VoteInfo{
 		{
@@ -310,6 +311,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolModuleName, gomock.Any()) // something is sent to community pool
+	poolKeeper.EXPECT().SetToDistribute(ctx, gomock.Any(), gomock.Any())
 
 	votes := []comet.VoteInfo{
 		{

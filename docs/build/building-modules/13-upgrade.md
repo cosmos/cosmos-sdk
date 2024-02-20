@@ -49,6 +49,8 @@ Since these migrations are functions that need access to a Keeper's store, use a
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/migrations.go
 ```
 
+<!-- TODO v0.51: explain the new way with core -->
+
 ## Writing Migration Scripts
 
 To define the functionality that takes place during an upgrade, write a migration script and place the functions in a `migrations/` directory. For example, to write migration scripts for the bank module, place the functions in `x/bank/migrations/`. Use the recommended naming convention for these functions. For example, `v2bank` is the script that migrates the package `x/bank/migrations/v2`:

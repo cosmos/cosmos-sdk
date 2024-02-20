@@ -3589,6 +3589,166 @@ paths:
           type: boolean
       tags:
         - Query
+  /cosmos/bank/v1beta1/denom_owners_by_query:
+    get:
+      summary: >-
+        DenomOwners queries for all account addresses that own a particular
+        token
+
+        denomination.
+      operationId: DenomOwnersByQuery
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              denom_owners:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      description: >-
+                        address defines the address that owns a particular
+                        denomination.
+                    balance:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  description: >-
+                    DenomOwner defines structure representing an account that
+                    owns or holds a
+
+                    particular denominated token. It contains the account
+                    address and account
+
+                    balance of the denominated token.
+
+
+                    Since: cosmos-sdk 0.46
+              pagination:
+                description: pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryDenomOwnersByQueryResponse defines the RPC response of a
+              DenomOwnersByQuery RPC query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: denom
+          description: >-
+            denom defines the coin denomination to query all account holders
+            for.
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
   /cosmos/bank/v1beta1/denoms_metadata:
     get:
       summary: |-
@@ -14281,12 +14441,15 @@ paths:
                       period.
                   burn_vote_quorum:
                     type: boolean
+                    description: 'Since: cosmos-sdk 0.47'
                     title: burn deposits if a proposal does not meet quorum
                   burn_proposal_deposit_prevote:
                     type: boolean
+                    description: 'Since: cosmos-sdk 0.47'
                     title: burn deposits if the proposal does not enter voting period
                   burn_vote_veto:
                     type: boolean
+                    description: 'Since: cosmos-sdk 0.47'
                     title: burn deposits if quorum with vote type no_veto is met
                   min_deposit_ratio:
                     type: string
@@ -14301,6 +14464,41 @@ paths:
 
 
                       Since: cosmos-sdk 0.50
+                  proposal_cancel_max_period:
+                    type: string
+                    description: >-
+                      proposal_cancel_max_period defines how far in the voting
+                      period a proposer can cancel a proposal.
+
+                      If the proposal is cancelled before the max cancel period,
+                      the deposit will be returned/burn to the
+
+                      depositors, according to the proposal_cancel_ratio and
+                      proposal_cancel_dest parameters.
+
+                      After the max cancel period, the proposal cannot be
+                      cancelled anymore.
+                  optimistic_authorized_addresses:
+                    type: array
+                    items:
+                      type: string
+                    description: 'Since: x/gov v1.0.0'
+                    title: >-
+                      optimistic_authorized_addresses is an optional governance
+                      parameter that limits the authorized accounts than can
+
+                      submit optimistic proposals
+                  optimistic_rejected_threshold:
+                    type: string
+                    description: >-
+                      optimistic rejected threshold defines at which percentage
+                      of NO votes, the optimistic proposal should fail and be
+
+                      converted to a standard proposal. The threshold is
+                      expressed as a percentage of the total bonded tokens.
+
+
+                      Since: x/gov v1.0.0
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -14756,6 +14954,11 @@ paths:
                           description: >-
                             no_with_veto_count is the number of no with veto
                             votes on a proposal.
+                        spam_count:
+                          type: string
+                          description: >-
+                            spam_count is the number of spam votes on a
+                            proposal.
                     submit_time:
                       type: string
                       format: date-time
@@ -14817,12 +15020,25 @@ paths:
                       title: proposer is the address of the proposal sumbitter
                     expedited:
                       type: boolean
-                      description: 'Since: cosmos-sdk 0.50'
+                      description: |-
+                        Since: cosmos-sdk 0.50
+                        Deprecated: Use ProposalType instead.
                       title: expedited defines if the proposal is expedited
                     failed_reason:
                       type: string
                       description: 'Since: cosmos-sdk 0.50'
                       title: failed_reason defines the reason why the proposal failed
+                    proposal_type:
+                      description: 'Since: cosmos-sdk 0.51'
+                      title: proposal_type defines the type of the proposal
+                      type: string
+                      enum:
+                        - PROPOSAL_TYPE_UNSPECIFIED
+                        - PROPOSAL_TYPE_STANDARD
+                        - PROPOSAL_TYPE_MULTIPLE_CHOICE
+                        - PROPOSAL_TYPE_OPTIMISTIC
+                        - PROPOSAL_TYPE_EXPEDITED
+                      default: PROPOSAL_TYPE_UNSPECIFIED
                   description: >-
                     Proposal defines the core field members of a governance
                     proposal.
@@ -15384,6 +15600,9 @@ paths:
                         description: >-
                           no_with_veto_count is the number of no with veto votes
                           on a proposal.
+                      spam_count:
+                        type: string
+                        description: spam_count is the number of spam votes on a proposal.
                   submit_time:
                     type: string
                     format: date-time
@@ -15444,12 +15663,25 @@ paths:
                     title: proposer is the address of the proposal sumbitter
                   expedited:
                     type: boolean
-                    description: 'Since: cosmos-sdk 0.50'
+                    description: |-
+                      Since: cosmos-sdk 0.50
+                      Deprecated: Use ProposalType instead.
                     title: expedited defines if the proposal is expedited
                   failed_reason:
                     type: string
                     description: 'Since: cosmos-sdk 0.50'
                     title: failed_reason defines the reason why the proposal failed
+                  proposal_type:
+                    description: 'Since: cosmos-sdk 0.51'
+                    title: proposal_type defines the type of the proposal
+                    type: string
+                    enum:
+                      - PROPOSAL_TYPE_UNSPECIFIED
+                      - PROPOSAL_TYPE_STANDARD
+                      - PROPOSAL_TYPE_MULTIPLE_CHOICE
+                      - PROPOSAL_TYPE_OPTIMISTIC
+                      - PROPOSAL_TYPE_EXPEDITED
+                    default: PROPOSAL_TYPE_UNSPECIFIED
                 description: >-
                   Proposal defines the core field members of a governance
                   proposal.
@@ -16280,6 +16512,9 @@ paths:
                     description: >-
                       no_with_veto_count is the number of no with veto votes on
                       a proposal.
+                  spam_count:
+                    type: string
+                    description: spam_count is the number of spam votes on a proposal.
             description: >-
               QueryTallyResultResponse is the response type for the Query/Tally
               RPC method.
@@ -16521,10 +16756,15 @@ paths:
                             type: string
                             enum:
                               - VOTE_OPTION_UNSPECIFIED
+                              - VOTE_OPTION_ONE
                               - VOTE_OPTION_YES
+                              - VOTE_OPTION_TWO
                               - VOTE_OPTION_ABSTAIN
+                              - VOTE_OPTION_THREE
                               - VOTE_OPTION_NO
+                              - VOTE_OPTION_FOUR
                               - VOTE_OPTION_NO_WITH_VETO
+                              - VOTE_OPTION_SPAM
                             default: VOTE_OPTION_UNSPECIFIED
                           weight:
                             type: string
@@ -16863,10 +17103,15 @@ paths:
                           type: string
                           enum:
                             - VOTE_OPTION_UNSPECIFIED
+                            - VOTE_OPTION_ONE
                             - VOTE_OPTION_YES
+                            - VOTE_OPTION_TWO
                             - VOTE_OPTION_ABSTAIN
+                            - VOTE_OPTION_THREE
                             - VOTE_OPTION_NO
+                            - VOTE_OPTION_FOUR
                             - VOTE_OPTION_NO_WITH_VETO
+                            - VOTE_OPTION_SPAM
                           default: VOTE_OPTION_UNSPECIFIED
                         weight:
                           type: string
@@ -30320,6 +30565,7 @@ paths:
       summary: >-
         BalancebyQueryString queries the number of NFTs of a given class owned
         by the owner, same as balanceOf in ERC721
+      description: 'Since: nft v0.1.1'
       operationId: BalanceByQueryString
       responses:
         '200':
@@ -30333,6 +30579,7 @@ paths:
                 title: >-
                   amount is the number of all NFTs of a given class owned by the
                   owner
+            description: 'Since: nft v0.1.1'
             title: >-
               QueryBalanceByQueryStringResponse is the response type for the
               Query/Balance RPC method
@@ -30776,6 +31023,7 @@ paths:
   /cosmos/nft/v1beta1/class:
     get:
       summary: Class queries an NFT class based on its id
+      description: 'Since: nft v0.1.1'
       operationId: ClassByQueryString
       responses:
         '200':
@@ -31001,6 +31249,7 @@ paths:
                     title: >-
                       data is the app specific metadata of the NFT class.
                       Optional
+            description: 'Since: nft v0.1.1'
             title: >-
               QueryClassByQueryStringResponse is the response type for the
               Query/Class RPC method
@@ -32155,6 +32404,7 @@ paths:
   /cosmos/nft/v1beta1/nft:
     get:
       summary: NFTByQueryString queries an NFT based on its class and id.
+      description: 'Since: nft v0.1.1'
       operationId: NFTByQueryString
       responses:
         '200':
@@ -32363,6 +32613,7 @@ paths:
                           }
                     title: data is an app specific data of the NFT. Optional
                 description: NFT defines the NFT.
+            description: 'Since: nft v0.1.1'
             title: >-
               QueryNFTByQueryStringResponse is the response type for the
               Query/NFT RPC method
@@ -33504,6 +33755,7 @@ paths:
       summary: >-
         OwnerByQueryString queries the owner of the NFT based on its class and
         id, same as ownerOf in ERC721
+      description: 'Since: nft v0.1.1'
       operationId: OwnerByQueryString
       responses:
         '200':
@@ -33514,6 +33766,7 @@ paths:
               owner:
                 type: string
                 title: owner is the owner address of the nft
+            description: 'Since: nft v0.1.1'
             title: >-
               QueryOwnerByQueryStringResponse is the response type for the
               Query/Owner RPC method
@@ -33956,6 +34209,7 @@ paths:
       summary: >-
         SupplyByQueryString queries the number of NFTs from the given class,
         same as totalSupply of ERC721.
+      description: 'Since: nft v0.1.1'
       operationId: SupplyByQueryString
       responses:
         '200':
@@ -33967,6 +34221,7 @@ paths:
                 type: string
                 format: uint64
                 title: amount is the number of all NFTs from the given class
+            description: 'Since: nft v0.1.1'
             title: >-
               QuerySupplyByQueryStringResponse is the response type for the
               Query/Supply RPC method
@@ -42218,6 +42473,65 @@ definitions:
       Query/DenomMetadata RPC
 
       method.
+  cosmos.bank.v1beta1.QueryDenomOwnersByQueryResponse:
+    type: object
+    properties:
+      denom_owners:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+              description: address defines the address that owns a particular denomination.
+            balance:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+          description: >-
+            DenomOwner defines structure representing an account that owns or
+            holds a
+
+            particular denominated token. It contains the account address and
+            account
+
+            balance of the denominated token.
+
+
+            Since: cosmos-sdk 0.46
+      pagination:
+        description: pagination defines the pagination in the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: >-
+      QueryDenomOwnersByQueryResponse defines the RPC response of a
+      DenomOwnersByQuery RPC query.
   cosmos.bank.v1beta1.QueryDenomOwnersResponse:
     type: object
     properties:
@@ -51350,12 +51664,15 @@ definitions:
         description: Minimum expedited deposit for a proposal to enter voting period.
       burn_vote_quorum:
         type: boolean
+        description: 'Since: cosmos-sdk 0.47'
         title: burn deposits if a proposal does not meet quorum
       burn_proposal_deposit_prevote:
         type: boolean
+        description: 'Since: cosmos-sdk 0.47'
         title: burn deposits if the proposal does not enter voting period
       burn_vote_veto:
         type: boolean
+        description: 'Since: cosmos-sdk 0.47'
         title: burn deposits if quorum with vote type no_veto is met
       min_deposit_ratio:
         type: string
@@ -51370,6 +51687,40 @@ definitions:
 
 
           Since: cosmos-sdk 0.50
+      proposal_cancel_max_period:
+        type: string
+        description: >-
+          proposal_cancel_max_period defines how far in the voting period a
+          proposer can cancel a proposal.
+
+          If the proposal is cancelled before the max cancel period, the deposit
+          will be returned/burn to the
+
+          depositors, according to the proposal_cancel_ratio and
+          proposal_cancel_dest parameters.
+
+          After the max cancel period, the proposal cannot be cancelled anymore.
+      optimistic_authorized_addresses:
+        type: array
+        items:
+          type: string
+        description: 'Since: x/gov v1.0.0'
+        title: >-
+          optimistic_authorized_addresses is an optional governance parameter
+          that limits the authorized accounts than can
+
+          submit optimistic proposals
+      optimistic_rejected_threshold:
+        type: string
+        description: >-
+          optimistic rejected threshold defines at which percentage of NO votes,
+          the optimistic proposal should fail and be
+
+          converted to a standard proposal. The threshold is expressed as a
+          percentage of the total bonded tokens.
+
+
+          Since: x/gov v1.0.0
     description: |-
       Params defines the parameters for the x/gov module.
 
@@ -51586,6 +51937,9 @@ definitions:
             description: >-
               no_with_veto_count is the number of no with veto votes on a
               proposal.
+          spam_count:
+            type: string
+            description: spam_count is the number of spam votes on a proposal.
       submit_time:
         type: string
         format: date-time
@@ -51637,12 +51991,25 @@ definitions:
         title: proposer is the address of the proposal sumbitter
       expedited:
         type: boolean
-        description: 'Since: cosmos-sdk 0.50'
+        description: |-
+          Since: cosmos-sdk 0.50
+          Deprecated: Use ProposalType instead.
         title: expedited defines if the proposal is expedited
       failed_reason:
         type: string
         description: 'Since: cosmos-sdk 0.50'
         title: failed_reason defines the reason why the proposal failed
+      proposal_type:
+        description: 'Since: cosmos-sdk 0.51'
+        title: proposal_type defines the type of the proposal
+        type: string
+        enum:
+          - PROPOSAL_TYPE_UNSPECIFIED
+          - PROPOSAL_TYPE_STANDARD
+          - PROPOSAL_TYPE_MULTIPLE_CHOICE
+          - PROPOSAL_TYPE_OPTIMISTIC
+          - PROPOSAL_TYPE_EXPEDITED
+        default: PROPOSAL_TYPE_UNSPECIFIED
     description: Proposal defines the core field members of a governance proposal.
   cosmos.gov.v1.ProposalStatus:
     type: string
@@ -51668,6 +52035,26 @@ definitions:
       been rejected.
        - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
       failed.
+  cosmos.gov.v1.ProposalType:
+    type: string
+    enum:
+      - PROPOSAL_TYPE_UNSPECIFIED
+      - PROPOSAL_TYPE_STANDARD
+      - PROPOSAL_TYPE_MULTIPLE_CHOICE
+      - PROPOSAL_TYPE_OPTIMISTIC
+      - PROPOSAL_TYPE_EXPEDITED
+    default: PROPOSAL_TYPE_UNSPECIFIED
+    description: >-
+      ProposalType enumerates the valid proposal types.
+
+      All proposal types are v1.Proposal which have different voting periods or
+      tallying logic.
+
+       - PROPOSAL_TYPE_UNSPECIFIED: PROPOSAL_TYPE_UNSPECIFIED defines no proposal type, which fallback to PROPOSAL_TYPE_STANDARD.
+       - PROPOSAL_TYPE_STANDARD: PROPOSAL_TYPE_STANDARD defines the type for a standard proposal.
+       - PROPOSAL_TYPE_MULTIPLE_CHOICE: PROPOSAL_TYPE_MULTIPLE_CHOICE defines the type for a multiple choice proposal.
+       - PROPOSAL_TYPE_OPTIMISTIC: PROPOSAL_TYPE_OPTIMISTIC defines the type for an optimistic proposal.
+       - PROPOSAL_TYPE_EXPEDITED: PROPOSAL_TYPE_EXPEDITED defines the type for an expedited proposal.
   cosmos.gov.v1.QueryConstitutionResponse:
     type: object
     properties:
@@ -51952,12 +52339,15 @@ definitions:
             description: Minimum expedited deposit for a proposal to enter voting period.
           burn_vote_quorum:
             type: boolean
+            description: 'Since: cosmos-sdk 0.47'
             title: burn deposits if a proposal does not meet quorum
           burn_proposal_deposit_prevote:
             type: boolean
+            description: 'Since: cosmos-sdk 0.47'
             title: burn deposits if the proposal does not enter voting period
           burn_vote_veto:
             type: boolean
+            description: 'Since: cosmos-sdk 0.47'
             title: burn deposits if quorum with vote type no_veto is met
           min_deposit_ratio:
             type: string
@@ -51972,6 +52362,41 @@ definitions:
 
 
               Since: cosmos-sdk 0.50
+          proposal_cancel_max_period:
+            type: string
+            description: >-
+              proposal_cancel_max_period defines how far in the voting period a
+              proposer can cancel a proposal.
+
+              If the proposal is cancelled before the max cancel period, the
+              deposit will be returned/burn to the
+
+              depositors, according to the proposal_cancel_ratio and
+              proposal_cancel_dest parameters.
+
+              After the max cancel period, the proposal cannot be cancelled
+              anymore.
+          optimistic_authorized_addresses:
+            type: array
+            items:
+              type: string
+            description: 'Since: x/gov v1.0.0'
+            title: >-
+              optimistic_authorized_addresses is an optional governance
+              parameter that limits the authorized accounts than can
+
+              submit optimistic proposals
+          optimistic_rejected_threshold:
+            type: string
+            description: >-
+              optimistic rejected threshold defines at which percentage of NO
+              votes, the optimistic proposal should fail and be
+
+              converted to a standard proposal. The threshold is expressed as a
+              percentage of the total bonded tokens.
+
+
+              Since: x/gov v1.0.0
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.gov.v1.QueryProposalResponse:
     type: object
@@ -52198,6 +52623,9 @@ definitions:
                 description: >-
                   no_with_veto_count is the number of no with veto votes on a
                   proposal.
+              spam_count:
+                type: string
+                description: spam_count is the number of spam votes on a proposal.
           submit_time:
             type: string
             format: date-time
@@ -52252,12 +52680,25 @@ definitions:
             title: proposer is the address of the proposal sumbitter
           expedited:
             type: boolean
-            description: 'Since: cosmos-sdk 0.50'
+            description: |-
+              Since: cosmos-sdk 0.50
+              Deprecated: Use ProposalType instead.
             title: expedited defines if the proposal is expedited
           failed_reason:
             type: string
             description: 'Since: cosmos-sdk 0.50'
             title: failed_reason defines the reason why the proposal failed
+          proposal_type:
+            description: 'Since: cosmos-sdk 0.51'
+            title: proposal_type defines the type of the proposal
+            type: string
+            enum:
+              - PROPOSAL_TYPE_UNSPECIFIED
+              - PROPOSAL_TYPE_STANDARD
+              - PROPOSAL_TYPE_MULTIPLE_CHOICE
+              - PROPOSAL_TYPE_OPTIMISTIC
+              - PROPOSAL_TYPE_EXPEDITED
+            default: PROPOSAL_TYPE_UNSPECIFIED
         description: Proposal defines the core field members of a governance proposal.
     description: >-
       QueryProposalResponse is the response type for the Query/Proposal RPC
@@ -52492,6 +52933,9 @@ definitions:
                   description: >-
                     no_with_veto_count is the number of no with veto votes on a
                     proposal.
+                spam_count:
+                  type: string
+                  description: spam_count is the number of spam votes on a proposal.
             submit_time:
               type: string
               format: date-time
@@ -52546,12 +52990,25 @@ definitions:
               title: proposer is the address of the proposal sumbitter
             expedited:
               type: boolean
-              description: 'Since: cosmos-sdk 0.50'
+              description: |-
+                Since: cosmos-sdk 0.50
+                Deprecated: Use ProposalType instead.
               title: expedited defines if the proposal is expedited
             failed_reason:
               type: string
               description: 'Since: cosmos-sdk 0.50'
               title: failed_reason defines the reason why the proposal failed
+            proposal_type:
+              description: 'Since: cosmos-sdk 0.51'
+              title: proposal_type defines the type of the proposal
+              type: string
+              enum:
+                - PROPOSAL_TYPE_UNSPECIFIED
+                - PROPOSAL_TYPE_STANDARD
+                - PROPOSAL_TYPE_MULTIPLE_CHOICE
+                - PROPOSAL_TYPE_OPTIMISTIC
+                - PROPOSAL_TYPE_EXPEDITED
+              default: PROPOSAL_TYPE_UNSPECIFIED
           description: Proposal defines the core field members of a governance proposal.
         description: proposals defines all the requested governance proposals.
       pagination:
@@ -52597,6 +53054,9 @@ definitions:
             description: >-
               no_with_veto_count is the number of no with veto votes on a
               proposal.
+          spam_count:
+            type: string
+            description: spam_count is the number of spam votes on a proposal.
     description: >-
       QueryTallyResultResponse is the response type for the Query/Tally RPC
       method.
@@ -52625,10 +53085,15 @@ definitions:
                   type: string
                   enum:
                     - VOTE_OPTION_UNSPECIFIED
+                    - VOTE_OPTION_ONE
                     - VOTE_OPTION_YES
+                    - VOTE_OPTION_TWO
                     - VOTE_OPTION_ABSTAIN
+                    - VOTE_OPTION_THREE
                     - VOTE_OPTION_NO
+                    - VOTE_OPTION_FOUR
                     - VOTE_OPTION_NO_WITH_VETO
+                    - VOTE_OPTION_SPAM
                   default: VOTE_OPTION_UNSPECIFIED
                 weight:
                   type: string
@@ -52673,10 +53138,15 @@ definitions:
                     type: string
                     enum:
                       - VOTE_OPTION_UNSPECIFIED
+                      - VOTE_OPTION_ONE
                       - VOTE_OPTION_YES
+                      - VOTE_OPTION_TWO
                       - VOTE_OPTION_ABSTAIN
+                      - VOTE_OPTION_THREE
                       - VOTE_OPTION_NO
+                      - VOTE_OPTION_FOUR
                       - VOTE_OPTION_NO_WITH_VETO
+                      - VOTE_OPTION_SPAM
                     default: VOTE_OPTION_UNSPECIFIED
                   weight:
                     type: string
@@ -52748,6 +53218,9 @@ definitions:
       no_with_veto_count:
         type: string
         description: no_with_veto_count is the number of no with veto votes on a proposal.
+      spam_count:
+        type: string
+        description: spam_count is the number of spam votes on a proposal.
     description: TallyResult defines a standard tally for a governance proposal.
   cosmos.gov.v1.Vote:
     type: object
@@ -52771,10 +53244,15 @@ definitions:
               type: string
               enum:
                 - VOTE_OPTION_UNSPECIFIED
+                - VOTE_OPTION_ONE
                 - VOTE_OPTION_YES
+                - VOTE_OPTION_TWO
                 - VOTE_OPTION_ABSTAIN
+                - VOTE_OPTION_THREE
                 - VOTE_OPTION_NO
+                - VOTE_OPTION_FOUR
                 - VOTE_OPTION_NO_WITH_VETO
+                - VOTE_OPTION_SPAM
               default: VOTE_OPTION_UNSPECIFIED
             weight:
               type: string
@@ -52795,20 +53273,30 @@ definitions:
     type: string
     enum:
       - VOTE_OPTION_UNSPECIFIED
+      - VOTE_OPTION_ONE
       - VOTE_OPTION_YES
+      - VOTE_OPTION_TWO
       - VOTE_OPTION_ABSTAIN
+      - VOTE_OPTION_THREE
       - VOTE_OPTION_NO
+      - VOTE_OPTION_FOUR
       - VOTE_OPTION_NO_WITH_VETO
+      - VOTE_OPTION_SPAM
     default: VOTE_OPTION_UNSPECIFIED
     description: >-
       VoteOption enumerates the valid vote options for a given governance
       proposal.
 
        - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-       - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-       - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-       - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-       - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+       - VOTE_OPTION_ONE: VOTE_OPTION_ONE defines the first proposal vote option.
+       - VOTE_OPTION_YES: VOTE_OPTION_YES defines the yes proposal vote option.
+       - VOTE_OPTION_TWO: VOTE_OPTION_TWO defines the second proposal vote option.
+       - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines the abstain proposal vote option.
+       - VOTE_OPTION_THREE: VOTE_OPTION_THREE defines the third proposal vote option.
+       - VOTE_OPTION_NO: VOTE_OPTION_NO defines the no proposal vote option.
+       - VOTE_OPTION_FOUR: VOTE_OPTION_FOUR defines the fourth proposal vote option.
+       - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines the no with veto proposal vote option.
+       - VOTE_OPTION_SPAM: VOTE_OPTION_SPAM defines the spam proposal vote option.
   cosmos.gov.v1.VotingParams:
     type: object
     properties:
@@ -52826,10 +53314,15 @@ definitions:
         type: string
         enum:
           - VOTE_OPTION_UNSPECIFIED
+          - VOTE_OPTION_ONE
           - VOTE_OPTION_YES
+          - VOTE_OPTION_TWO
           - VOTE_OPTION_ABSTAIN
+          - VOTE_OPTION_THREE
           - VOTE_OPTION_NO
+          - VOTE_OPTION_FOUR
           - VOTE_OPTION_NO_WITH_VETO
+          - VOTE_OPTION_SPAM
         default: VOTE_OPTION_UNSPECIFIED
       weight:
         type: string
@@ -55060,8 +55553,8 @@ definitions:
                     type: string
                     format: uint64
                   title: >-
-                    list of unbonding ids, each uniquely identifying an unbonding
-                    of this validator
+                    list of unbonding ids, each uniquely identifying an
+                    unbonding of this validator
               description: >-
                 Validator defines a validator, together with the total amount of
                 the
@@ -57597,23 +58090,28 @@ definitions:
             type: string
             description: >-
               if unset, the first signer is responsible for paying the fees. If
-              set, the specified account must pay the fees.
+              set, the
 
-              the payer must be a tx signer (and thus have signed this field in
-              AuthInfo).
+              specified account must pay the fees. the payer must be a tx signer
+              (and
 
-              setting this field does *not* change the ordering of required
-              signers for the transaction.
+              thus have signed this field in AuthInfo). setting this field does
+              *not*
+
+              change the ordering of required signers for the transaction.
           granter:
             type: string
             title: >-
               if set, the fee payer (either the first signer or the value of the
-              payer field) requests that a fee grant be used
+              payer
 
-              to pay fees instead of the fee payer's own balance. If an
-              appropriate fee grant does not exist or the chain does
+              field) requests that a fee grant be used to pay fees instead of
+              the fee
 
-              not support fee grants, this will fail
+              payer's own balance. If an appropriate fee grant does not exist or
+              the
+
+              chain does not support fee grants, this will fail
       tip:
         description: >-
           Tip is the optional tip used for transactions fees paid in another
@@ -58050,23 +58548,27 @@ definitions:
         type: string
         description: >-
           if unset, the first signer is responsible for paying the fees. If set,
-          the specified account must pay the fees.
+          the
 
-          the payer must be a tx signer (and thus have signed this field in
-          AuthInfo).
+          specified account must pay the fees. the payer must be a tx signer
+          (and
 
-          setting this field does *not* change the ordering of required signers
-          for the transaction.
+          thus have signed this field in AuthInfo). setting this field does
+          *not*
+
+          change the ordering of required signers for the transaction.
       granter:
         type: string
         title: >-
           if set, the fee payer (either the first signer or the value of the
-          payer field) requests that a fee grant be used
+          payer
 
-          to pay fees instead of the fee payer's own balance. If an appropriate
-          fee grant does not exist or the chain does
+          field) requests that a fee grant be used to pay fees instead of the
+          fee
 
-          not support fee grants, this will fail
+          payer's own balance. If an appropriate fee grant does not exist or the
+
+          chain does not support fee grants, this will fail
     description: >-
       Fee includes the amount of coins paid in fees and the maximum
 
@@ -60297,13 +60799,48 @@ definitions:
               called memo,
 
               but should be called `note` instead (see
+
               https://github.com/cosmos/cosmos-sdk/issues/9122).
           timeout_height:
             type: string
             format: uint64
-            title: |-
-              timeout is the block height after which this transaction will not
-              be processed by the chain
+            description: >-
+              timeout_height is the block height after which this transaction
+              will not
+
+              be processed by the chain.
+
+
+              Note, if unordered=true this value MUST be set
+
+              and will act as a short-lived TTL in which the transaction is
+              deemed valid
+
+              and kept in memory to prevent duplicates.
+          unordered:
+            type: boolean
+            description: >-
+              unordered, when set to true, indicates that the transaction
+              signer(s)
+
+              intend for the transaction to be evaluated and executed in an
+              un-ordered
+
+              fashion. Specifically, the account's nonce will NOT be checked or
+
+              incremented, which allows for fire-and-forget as well as
+              concurrent
+
+              transaction execution.
+
+
+              Note, when set to true, the existing 'timeout_height' value must
+              be set and
+
+              will be used to correspond to a height in which the transaction is
+              deemed
+
+              valid.
           extension_options:
             type: array
             items:
@@ -60892,13 +61429,46 @@ definitions:
           memo,
 
           but should be called `note` instead (see
+
           https://github.com/cosmos/cosmos-sdk/issues/9122).
       timeout_height:
         type: string
         format: uint64
-        title: |-
-          timeout is the block height after which this transaction will not
-          be processed by the chain
+        description: >-
+          timeout_height is the block height after which this transaction will
+          not
+
+          be processed by the chain.
+
+
+          Note, if unordered=true this value MUST be set
+
+          and will act as a short-lived TTL in which the transaction is deemed
+          valid
+
+          and kept in memory to prevent duplicates.
+      unordered:
+        type: boolean
+        description: >-
+          unordered, when set to true, indicates that the transaction signer(s)
+
+          intend for the transaction to be evaluated and executed in an
+          un-ordered
+
+          fashion. Specifically, the account's nonce will NOT be checked or
+
+          incremented, which allows for fire-and-forget as well as concurrent
+
+          transaction execution.
+
+
+          Note, when set to true, the existing 'timeout_height' value must be
+          set and
+
+          will be used to correspond to a height in which the transaction is
+          deemed
+
+          valid.
       extension_options:
         type: array
         items:
@@ -63669,6 +64239,7 @@ definitions:
         type: string
         format: uint64
         title: amount is the number of all NFTs of a given class owned by the owner
+    description: 'Since: nft v0.1.1'
     title: >-
       QueryBalanceByQueryStringResponse is the response type for the
       Query/Balance RPC method
@@ -63883,6 +64454,7 @@ definitions:
                     "value": "1.212s"
                   }
             title: data is the app specific metadata of the NFT class. Optional
+    description: 'Since: nft v0.1.1'
     title: >-
       QueryClassByQueryStringResponse is the response type for the Query/Class
       RPC method
@@ -64516,6 +65088,7 @@ definitions:
                   }
             title: data is an app specific data of the NFT. Optional
         description: NFT defines the NFT.
+    description: 'Since: nft v0.1.1'
     title: >-
       QueryNFTByQueryStringResponse is the response type for the Query/NFT RPC
       method
@@ -64940,6 +65513,7 @@ definitions:
       owner:
         type: string
         title: owner is the owner address of the nft
+    description: 'Since: nft v0.1.1'
     title: >-
       QueryOwnerByQueryStringResponse is the response type for the Query/Owner
       RPC method
@@ -64957,6 +65531,7 @@ definitions:
         type: string
         format: uint64
         title: amount is the number of all NFTs from the given class
+    description: 'Since: nft v0.1.1'
     title: >-
       QuerySupplyByQueryStringResponse is the response type for the Query/Supply
       RPC method

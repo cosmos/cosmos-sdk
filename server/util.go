@@ -215,13 +215,15 @@ func GetServerContextFromCmd(cmd *cobra.Command) *Context {
 // SetCmdServerContext sets a command's Context value to the provided argument.
 // If the context has not been set, set the given context as the default.
 func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
-	v := cmd.Context().Value(ServerContextKey)
-	if v == nil {
-		v = serverCtx
+	var cmdCtx context.Context
+
+	if cmd.Context() == nil {
+		cmdCtx = context.Background()
+	} else {
+		cmdCtx = cmd.Context()
 	}
 
-	serverCtxPtr := v.(*Context)
-	*serverCtxPtr = *serverCtx
+	cmd.SetContext(context.WithValue(cmdCtx, ServerContextKey, serverCtx))
 
 	return nil
 }
@@ -350,6 +352,13 @@ func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFl
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator),
 	)
+}
+
+// AddTestnetCreatorCommand allows chains to create a testnet from the state existing in their node's data directory.
+func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFlags types.ModuleInitFlags) {
+	testnetCreateCmd := InPlaceTestnetCreator(appCreator)
+	addStartFlags(testnetCreateCmd)
+	rootCmd.AddCommand(testnetCreateCmd)
 }
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go

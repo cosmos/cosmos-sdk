@@ -139,7 +139,7 @@ message Proposal {
 
   // proposal_type defines the type of the proposal
   //
-  // Since: cosmos-sdk 0.51
+  // Since: x/gov v1.0.0
   ProposalType proposal_type = 16;
 }
 
@@ -164,18 +164,50 @@ enum ProposalStatus {
   PROPOSAL_STATUS_FAILED = 5;
 }
 
+// ProposalVoteOptions defines the stringified vote options for proposals.
+// This allows to support multiple choice options for a given proposal.
+//
+// Since: x/gov v1.0.0
+message ProposalVoteOptions {
+  // option_one is the first option of the proposal
+  string option_one = 1;
+
+  // option_two is the second option of the proposal
+  string option_two = 2;
+
+  // option_three is the third option of the proposal
+  string option_three = 3;
+
+  // option_four is the fourth option of the proposal
+  string option_four = 4;
+
+  // option_spam is always present for all proposals.
+  string option_spam = 5;
+}
+
 // TallyResult defines a standard tally for a governance proposal.
 message TallyResult {
   // yes_count is the number of yes votes on a proposal.
-  string yes_count = 1 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 1
+  string yes_count = 1 [(cosmos_proto.scalar) = "cosmos.Int", deprecated = true]; // option 1
   // abstain_count is the number of abstain votes on a proposal.
-  string abstain_count = 2 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 2
+  string abstain_count = 2 [(cosmos_proto.scalar) = "cosmos.Int", deprecated = true]; // option 2
   // no_count is the number of no votes on a proposal.
-  string no_count = 3 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 3
+  string no_count = 3 [(cosmos_proto.scalar) = "cosmos.Int", deprecated = true]; // option 3
   // no_with_veto_count is the number of no with veto votes on a proposal.
-  string no_with_veto_count = 4 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 4
+  string no_with_veto_count = 4 [(cosmos_proto.scalar) = "cosmos.Int", deprecated = true]; // option 4
+  // option_one_count corresponds to the number of votes for option one (= yes_count for non multiple choice proposals).
+  string option_one_count = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  // option_two_count corresponds to the number of votes for option two (= abstain_count for non multiple choice
+  // proposals).
+  string option_two_count = 6 [(cosmos_proto.scalar) = "cosmos.Int"];
+  // option_three_count corresponds to the number of votes for option three (= no_count for non multiple choice
+  // proposals).
+  string option_three_count = 7 [(cosmos_proto.scalar) = "cosmos.Int"];
+  // option_four_count corresponds to the number of votes for option four (= no_with_veto_count for non multiple choice
+  // proposals).
+  string option_four_count = 8 [(cosmos_proto.scalar) = "cosmos.Int"];
   // spam_count is the number of spam votes on a proposal.
-  string spam_count = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string spam_count = 9 [(cosmos_proto.scalar) = "cosmos.Int"];
 }
 
 // Vote defines a vote on a governance proposal.
@@ -242,7 +274,7 @@ message Params {
   // Minimum deposit for a proposal to enter voting period.
   repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
-  // Maximum period for Atom holders to deposit on a proposal. Initial value: 2
+  // Maximum period for stake holders to deposit on a proposal. Initial value: 2
   // months.
   google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true];
 
@@ -314,6 +346,8 @@ message Params {
   // If the proposal is cancelled before the max cancel period, the deposit will be returned/burn to the
   // depositors, according to the proposal_cancel_ratio and proposal_cancel_dest parameters.
   // After the max cancel period, the proposal cannot be cancelled anymore.
+  //
+  // Since: x/gov v1.0.0
   string proposal_cancel_max_period = 17 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
   // optimistic_authorized_addresses is an optional governance parameter that limits the authorized accounts than can
@@ -327,4 +361,33 @@ message Params {
   //
   // Since: x/gov v1.0.0
   string optimistic_rejected_threshold = 19 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // yes_quorum defines the minimum percentage of Yes votes in quorum for proposal to pass.
+  // Default value: 0 (disabled).
+  //
+  // Since: x/gov v1.0.0
+  string yes_quorum = 20 [(cosmos_proto.scalar) = "cosmos.Dec"];
+}
+
+// MessageBasedParams defines the parameters of specific messages in a proposal.
+// It is used to define the parameters of a proposal that is based on a specific message.
+// Once a message has message based params, it only supports a standard proposal type.
+//
+// Since: x/gov v1.0.0
+message MessageBasedParams {
+  // Duration of the voting period.
+  google.protobuf.Duration voting_period = 1 [(gogoproto.stdduration) = true];
+
+  // Minimum percentage of total stake needed to vote for a result to be considered valid.
+  string quorum = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // yes_quorum defines the minimum percentage of Yes votes in quorum for proposal to pass.
+  // If zero then the yes_quorum is disabled.
+  string yes_quorum = 20 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // Minimum proportion of Yes votes for proposal to pass.
+  string threshold = 3 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // Minimum value of Veto votes to Total votes ratio for proposal to be vetoed.
+  string veto_threshold = 4 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

@@ -3,7 +3,8 @@ package store
 import (
 	"io"
 
-	ics23 "github.com/cosmos/ics23/go"
+	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/store/v2/proof"
 )
 
 // Reader wraps the Has and Get method of a backing data store.
@@ -38,7 +39,7 @@ type Writer interface {
 type Database interface {
 	Reader
 	Writer
-	IteratorCreator
+	corestore.IteratorCreator
 	io.Closer
 }
 
@@ -50,8 +51,8 @@ type VersionedDatabase interface {
 	GetLatestVersion() (uint64, error)
 	SetLatestVersion(version uint64) error
 
-	Iterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
-	ReverseIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
+	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 
 	ApplyChangeset(version uint64, cs *Changeset) error
 
@@ -67,13 +68,35 @@ type VersionedDatabase interface {
 
 // Committer defines an API for committing state.
 type Committer interface {
+	// WriteBatch writes a batch of key-value pairs to the tree.
 	WriteBatch(cs *Changeset) error
-	WorkingStoreInfos(version uint64) []StoreInfo
+
+	// WorkingCommitInfo returns the CommitInfo for the working tree.
+	WorkingCommitInfo(version uint64) *proof.CommitInfo
+
+	// GetLatestVersion returns the latest version.
 	GetLatestVersion() (uint64, error)
+
+	// LoadVersion loads the tree at the given version.
 	LoadVersion(targetVersion uint64) error
-	Commit() ([]StoreInfo, error)
+
+	// Commit commits the working tree to the database.
+	Commit(version uint64) (*proof.CommitInfo, error)
+
+	// GetProof returns the proof of existence or non-existence for the given key.
+	GetProof(storeKey string, version uint64, key []byte) ([]proof.CommitmentOp, error)
+
+	// Get returns the value for the given key at the given version.
+	//
+	// NOTE: This method only exists to support migration from IAVL v0/v1 to v2.
+	// Once migration is complete, this method should be removed and/or not used.
+	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+
+	// SetInitialVersion sets the initial version of the tree.
 	SetInitialVersion(version uint64) error
-	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
+
+	// GetCommitInfo returns the CommitInfo for the given version.
+	GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be
@@ -83,4 +106,45 @@ type Committer interface {
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer
+}
+
+// RawDB is the main interface for all key-value database backends. DBs are concurrency-safe.
+// Callers must call Close on the database when done.
+//
+// Keys cannot be nil or empty, while values cannot be nil. Keys and values should be considered
+// read-only, both when returned and when given, and must be copied before they are modified.
+type RawDB interface {
+	// Get fetches the value of the given key, or nil if it does not exist.
+	// CONTRACT: key, value readonly []byte
+	Get([]byte) ([]byte, error)
+
+	// Has checks if a key exists.
+	// CONTRACT: key, value readonly []byte
+	Has(key []byte) (bool, error)
+
+	// Iterator returns an iterator over a domain of keys, in ascending order. The caller must call
+	// Close when done. End is exclusive, and start must be less than end. A nil start iterates
+	// from the first key, and a nil end iterates to the last key (inclusive). Empty keys are not
+	// valid.
+	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+	// CONTRACT: start, end readonly []byte
+	Iterator(start, end []byte) (corestore.Iterator, error)
+
+	// ReverseIterator returns an iterator over a domain of keys, in descending order. The caller
+	// must call Close when done. End is exclusive, and start must be less than end. A nil end
+	// iterates from the last key (inclusive), and a nil start iterates to the first key (inclusive).
+	// Empty keys are not valid.
+	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+	// CONTRACT: start, end readonly []byte
+	ReverseIterator(start, end []byte) (corestore.Iterator, error)
+
+	// Close closes the database connection.
+	Close() error
+
+	// NewBatch creates a batch for atomic updates. The caller must call Batch.Close.
+	NewBatch() RawBatch
+
+	// NewBatchWithSize create a new batch for atomic updates, but with pre-allocated size.
+	// This will does the same thing as NewBatch if the batch implementation doesn't support pre-allocation.
+	NewBatchWithSize(int) RawBatch
 }

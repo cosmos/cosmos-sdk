@@ -30,7 +30,7 @@ func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
 
-// NewAllowedMsgFeeAllowance creates new filtered fee allowance.
+// NewAllowedMsgAllowance creates new filtered fee allowance.
 func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*AllowedMsgAllowance, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
@@ -70,7 +70,7 @@ func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 
 // Accept method checks for the filtered messages has valid expiry
 func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
-	if !a.allMsgTypesAllowed(sdk.UnwrapSDKContext(ctx), msgs) {
+	if !a.allMsgTypesAllowed(ctx, msgs) {
 		return false, errorsmod.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
@@ -88,21 +88,22 @@ func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []
 	return remove, err
 }
 
-func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx sdk.Context) map[string]bool {
+func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) map[string]bool {
 	msgsMap := make(map[string]bool, len(a.AllowedMessages))
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, msg := range a.AllowedMessages {
-		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
+		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
 		msgsMap[msg] = true
 	}
 
 	return msgsMap
 }
 
-func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.Msg) bool {
+func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk.Msg) bool {
 	msgsMap := a.allowedMsgsToMap(ctx)
-
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, msg := range msgs {
-		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
+		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
 		if !msgsMap[sdk.MsgTypeURL(msg)] {
 			return false
 		}
@@ -135,4 +136,13 @@ func (a *AllowedMsgAllowance) ExpiresAt() (*time.Time, error) {
 		return nil, err
 	}
 	return allowance.ExpiresAt()
+}
+
+// UpdatePeriodReset update "PeriodReset" of the AllowedMsgAllowance.
+func (a *AllowedMsgAllowance) UpdatePeriodReset(validTime time.Time) error {
+	allowance, err := a.GetAllowance()
+	if err != nil {
+		return err
+	}
+	return allowance.UpdatePeriodReset(validTime)
 }

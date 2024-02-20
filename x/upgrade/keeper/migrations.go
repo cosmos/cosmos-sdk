@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -9,7 +10,6 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -28,11 +28,11 @@ func NewMigrator(keeper *Keeper) Migrator {
 }
 
 // Migrate1to2 migrates from version 1 to 2.
-func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return migrateDoneUpgradeKeys(ctx, m.keeper.storeService)
+func (m Migrator) Migrate1to2(ctx context.Context) error {
+	return migrateDoneUpgradeKeys(ctx, m.keeper.environment.KVStoreService)
 }
 
-func migrateDoneUpgradeKeys(ctx sdk.Context, storeService storetypes.KVStoreService) error {
+func migrateDoneUpgradeKeys(ctx context.Context, storeService storetypes.KVStoreService) error {
 	store := storeService.OpenKVStore(ctx)
 	oldDoneStore := prefix.NewStore(runtime.KVStoreAdapter(store), []byte{types.DoneByte})
 	oldDoneStoreIter := oldDoneStore.Iterator(nil, nil)
@@ -57,16 +57,16 @@ func migrateDoneUpgradeKeys(ctx sdk.Context, storeService storetypes.KVStoreServ
 // Migrate2to3 migrates from version 2 to 3.
 // It takes the legacy protocol version and if it exists, uses it to set
 // the app version (of the baseapp)
-func (m Migrator) Migrate2to3(ctx sdk.Context) error {
+func (m Migrator) Migrate2to3(ctx context.Context) error {
 	return migrateAppVersion(ctx, m.keeper)
 }
 
-func migrateAppVersion(ctx sdk.Context, keeper *Keeper) error {
+func migrateAppVersion(ctx context.Context, keeper *Keeper) error {
 	if keeper.versionModifier == nil {
 		return fmt.Errorf("version modifier is not set")
 	}
 
-	store := keeper.storeService.OpenKVStore(ctx)
+	store := keeper.environment.KVStoreService.OpenKVStore(ctx)
 	// if the key was never set then we don't need to migrate anything
 	exists, err := store.Has([]byte{LegacyProtocolVersionByte})
 	if err != nil {

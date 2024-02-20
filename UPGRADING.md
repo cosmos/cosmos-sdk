@@ -5,10 +5,6 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
-### Params
-
-* Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
-
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
@@ -37,9 +33,114 @@ clientCtx = clientCtx.
 
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
 
+### Core
+
+`appmodule.Environment` interface was introduced to fetch different services from the application. This can be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services. It needs to be passed into a module at instantiation. 
+
+Circuit Breaker is used as an example. 
+
+```go
+app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey])), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
+```
+
+#### Unordered Transactions
+
+The Cosmos SDK now supports unordered transactions. This means that transactions
+can be executed in any order and doesn't require the client to deal with or manage
+nonces. This also means the order of execution is not guaranteed. To enable unordered
+transactions in your application:
+
+* Update the `App` constructor to create, load, and save the unordered transaction
+  manager.
+
+	```go
+	func NewApp(...) *App {
+		// ...
+
+		// create, start, and load the unordered tx manager
+		utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
+		app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
+		app.UnorderedTxManager.Start()
+
+		if err := app.UnorderedTxManager.OnInit(); err != nil {
+			panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
+		}
+	}
+	```
+
+* Add the decorator to the existing AnteHandler chain, which should be as early
+  as possible.
+
+	```go
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewSetUpContextDecorator(),
+		// ...
+		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, app.UnorderedTxManager),
+		// ...
+	}
+
+	return sdk.ChainAnteDecorators(anteDecorators...), nil
+	```
+
+* If the App has a SnapshotManager defined, you must also register the extension
+  for the TxManager.
+
+	```go
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(unorderedtx.NewSnapshotter(app.UnorderedTxManager))
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+	```
+
+* Create or update the App's `Close()` method to close the unordered tx manager.
+  Note, this is critical as it ensures the manager's state is written to file
+  such that when the node restarts, it can recover the state to provide replay
+  protection.
+
+	```go
+	func (app *App) Close() error {
+		// ...
+
+		// close the unordered tx manager
+		if e := app.UnorderedTxManager.Close(); e != nil {
+			err = errors.Join(err, e)
+		}
+
+		return err
+	}
+	```
+
+To submit an unordered transaction, the client must set the `unordered` flag to
+`true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
+used as a TTL for the transaction and is used to provide replay protection. See
+[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md)
+for more details.
+
+### Protobuf
+
+The `cosmossdk.io/api/tendermint` package has been removed as CometBFT now publishes its protos to `buf.build/tendermint` and `buf.build/cometbft`.
+There is no longer a need for the Cosmos SDK to host these protos for itself and its dependencies.
+That package containing proto v2 generated code, but the SDK now uses [buf generated go SDK instead](https://buf.build/docs/bsr/generated-sdks/go).
+If you were depending on `cosmossdk.io/api/tendermint`, please use the buf generated go SDK instead, or ask CometBFT host the generated proto v2 code.
+
 ### Modules
 
 #### `**all**`
+
+##### Params
+
+Previous module migrations have been removed. It is required to migrate to v0.50 prior to upgrading to v0.51 for not missing any module migrations.
+
+##### Core API
+
+Core API has been introduces for modules in v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
+
+##### Dependency Injection
+
+Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appconfig`.
+All modules using dependency injection must update their imports.
 
 ##### Genesis Interface
 
@@ -59,14 +160,13 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 
 ##### Migration to Collections
 
-Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/packages/collections).
+Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/build/packages/collections).
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
 #### `x/auth`
 
 Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`
-
 
 #### `x/authz`
 
@@ -102,14 +202,13 @@ Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/sl
 
 Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
 
-
 #### `x/params`
 
 A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
 
 #### `x/protocolpool`
 
-Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x
+Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x.
 
 Example:
 
@@ -197,7 +296,7 @@ is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
 ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
 methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
 allows an application to define handlers for these methods via `ExtendVoteHandler`
-and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/abci/03-vote-extensions)
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/abci/vote-extensions)
 for more info.
 
 #### Set PreBlocker
@@ -553,7 +652,7 @@ Read more on those interfaces [here](https://docs.cosmos.network/v0.50/building-
 
 * `GetSigners()` is no longer required to be implemented on `Msg` types. The SDK will automatically infer the signers from the `Signer` field on the message. The signer field is required on all messages unless using a custom signer function.
 
-To find out more please read the [signer field](../../build/building-modules/05-protobuf-annotations.md#signer) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation.
+To find out more please read the [signer field](https://github.com/cosmos/cosmos-sdk/blob/main/docs/build/building-modules/05-protobuf-annotations.md) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation.
 <!-- Link to docs once redeployed -->
 
 #### `x/auth`
@@ -685,7 +784,7 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
+SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/build/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go).
 The previous behavior, without the dependency injection framework, is still present in [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go) and is not going anywhere.
 

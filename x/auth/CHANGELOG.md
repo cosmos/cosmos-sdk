@@ -27,16 +27,34 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#18641](https://github.com/cosmos/cosmos-sdk/pull/18641) Support the ability to broadcast unordered transactions per ADR-070. See UPGRADING.md for more details on integration.
 * [#18281](https://github.com/cosmos/cosmos-sdk/pull/18281) Support broadcasting multiple transactions.
+* (vesting) [#17810](https://github.com/cosmos/cosmos-sdk/pull/17810) Add the ability to specify a start time for continuous vesting accounts.
 
 ### Improvements
 
 * [#18780](https://github.com/cosmos/cosmos-sdk/pull/18780) Move sig verification out of the for loop, into the authenticate method.
+* [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist. 
+    * When signing a transaction with an account that has not been created accountnumber 0 must be used
+
+### CLI Breaking Changes
+
+* (vesting) [#18100](https://github.com/cosmos/cosmos-sdk/pull/18100) `appd tx vesting create-vesting-account` takes an amount of coin as last argument instead of second. Coins are space separated.
 
 ### API Breaking Changes
+
+* [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
+* [#19161](https://github.com/cosmos/cosmos-sdk/pull/19161) Remove `simulate` from `SetGasMeter`
+* [#19363](https://github.com/cosmos/cosmos-sdk/pull/19363) Remove `IterateAccounts` and `GetAllAccounts` methods from the AccountKeeper interface and Keeper.
+* [#19290](https://github.com/cosmos/cosmos-sdk/issues/19290) Pass `appmodule.Environment` to NewKeeper instead of passing individual services. 
 
 ### Consensus Breaking Changes
 
 * [#18817](https://github.com/cosmos/cosmos-sdk/pull/18817) SigVerification, GasConsumption, IncreaseSequence ante decorators have all been joined into one SigVerification decorator. Gas consumption during TX validation flow has reduced.
+* [#19093](https://github.com/cosmos/cosmos-sdk/pull/19093) SetPubKeyDecorator was merged into SigVerification, gas consumption is almost halved for a simple tx.
 
 ### Bug Fixes
+
+* [#19148](https://github.com/cosmos/cosmos-sdk/pull/19148) Checks the consumed gas for verifying a multisig pubKey signature during simulation.
+* [#19239](https://github.com/cosmos/cosmos-sdk/pull/19239) Sets from flag in multi-sign command to avoid no key name provided error.
+* [#19099](https://github.com/cosmos/cosmos-sdk/pull/19099) `verifyIsOnCurve` now checks if we are simulating to avoid malformed public key error.

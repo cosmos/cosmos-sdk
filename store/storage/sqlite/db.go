@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 )
@@ -59,7 +60,7 @@ func New(dataDir string) (*Database, error) {
 
 	stmt := `
 	CREATE TABLE IF NOT EXISTS state_storage (
-		id integer not null primary key, 
+		id integer not null primary key,
 		store_key varchar not null,
 		key varchar not null,
 		value varchar not null,
@@ -214,7 +215,7 @@ func (db *Database) Prune(version uint64) error {
 	return nil
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -226,7 +227,7 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 	return newIterator(db, storeKey, version, start, end, false)
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}

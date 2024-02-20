@@ -137,7 +137,19 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
 		}
 		if err != nil {
-			return false, err
+			// in case of an error, log it and emit an event
+			// we do not want to halt the chain if the refund/burn fails
+			// as it could happen due to a governance mistake (governance has let a proposal pass that sends gov funds that were from proposal deposits)
+
+			keeper.Logger(ctx).Error("failed to refund or burn deposits", "error", err)
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventTypeProposalDeposit,
+					sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
+					sdk.NewAttribute(types.AttributeKeyProposalDepositError, "failed to refund or burn deposits"),
+					sdk.NewAttribute("error", err.Error()),
+				),
+			)
 		}
 
 		if err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
@@ -233,8 +245,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		proposal.FinalTallyResult = &tallyResults
 
-		err = keeper.SetProposal(ctx, proposal)
-		if err != nil {
+		if err = keeper.Proposals.Set(ctx, proposal.Id, proposal); err != nil {
 			return false, err
 		}
 
@@ -267,10 +278,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		return false, nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // executes handle(msg) and recovers from panic.
@@ -298,7 +306,7 @@ func failUnsupportedProposal(
 	proposal.FailedReason = fmt.Sprintf("proposal failed because it cannot be processed by gov: %s", errMsg)
 	proposal.Messages = nil // clear out the messages
 
-	if err := keeper.SetProposal(ctx, proposal); err != nil {
+	if err := keeper.Proposals.Set(ctx, proposal.Id, proposal); err != nil {
 		return err
 	}
 

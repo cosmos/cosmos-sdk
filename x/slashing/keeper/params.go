@@ -20,12 +20,7 @@ func (k Keeper) MinSignedPerWindow(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 
-	signedBlocksWindow := params.SignedBlocksWindow
-	minSignedPerWindow := params.MinSignedPerWindow
-
-	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
-	//       less than 1.
-	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64(), nil
+	return params.MinSignedPerWindowInt(), nil
 }
 
 // DowntimeJailDuration - Downtime unbond duration

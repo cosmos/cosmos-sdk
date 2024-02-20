@@ -36,11 +36,18 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 	if err != nil {
 		return err
 	}
-	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
+
+	err = k.eventService.EventManager(ctx).Emit(&nft.EventMint{
 		ClassId: token.ClassId,
 		Id:      token.Id,
 		Owner:   recStr,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Burn defines a method for burning a nft from a specific account.
@@ -71,16 +78,23 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
+
 	ownerStr, err := k.ac.BytesToString(owner.Bytes())
 	if err != nil {
 		return err
 	}
 
-	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventBurn{
+	err = k.eventService.EventManager(ctx).Emit(&nft.EventBurn{
 		ClassId: classID,
 		Id:      nftID,
 		Owner:   ownerStr,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update defines a method for updating an exist nft

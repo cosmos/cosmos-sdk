@@ -5,8 +5,12 @@ import (
 	"encoding/binary"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var AccountStatePrefix = collections.NewPrefix(255)
@@ -23,10 +27,19 @@ type contextValue struct {
 	store             store.KVStore         // store is the prefixed store for the account.
 	sender            []byte                // sender is the address of the entity invoking the account action.
 	whoami            []byte                // whoami is the address of the account being invoked.
-	originalContext   context.Context       // originalContext that was used to build the account context.
+	funds             sdk.Coins             // funds reports the coins sent alongside the request.
+	parentContext     context.Context       // parentContext that was used to build the account context.
 	moduleExec        ModuleExecFunc        // moduleExec is a function that executes a module message, when the resp type is known.
 	moduleExecUntyped ModuleExecUntypedFunc // moduleExecUntyped is a function that executes a module message, when the resp type is unknown.
 	moduleQuery       ModuleQueryFunc       // moduleQuery is a function that queries a module.
+}
+
+func addCtx(ctx context.Context, value contextValue) context.Context {
+	return context.WithValue(ctx, contextKey{}, value)
+}
+
+func getCtx(ctx context.Context) contextValue {
+	return ctx.Value(contextKey{}).(contextValue)
 }
 
 // MakeAccountContext creates a new account execution context given:
@@ -42,17 +55,19 @@ func MakeAccountContext(
 	accNumber uint64,
 	accountAddr []byte,
 	sender []byte,
+	funds sdk.Coins,
 	moduleExec ModuleExecFunc,
 	moduleExecUntyped ModuleExecUntypedFunc,
 	moduleQuery ModuleQueryFunc,
 ) context.Context {
-	return context.WithValue(ctx, contextKey{}, contextValue{
+	return addCtx(ctx, contextValue{
 		store:             makeAccountStore(ctx, storeSvc, accNumber),
 		sender:            sender,
 		whoami:            accountAddr,
-		originalContext:   ctx,
-		moduleExecUntyped: moduleExecUntyped,
+		funds:             funds,
+		parentContext:     ctx,
 		moduleExec:        moduleExec,
+		moduleExecUntyped: moduleExecUntyped,
 		moduleQuery:       moduleQuery,
 	})
 }
@@ -69,9 +84,9 @@ func makeAccountStore(ctx context.Context, storeSvc store.KVStoreService, accNum
 // ExecModuleUntyped can be used to execute a message towards a module, when the response type is unknown.
 func ExecModuleUntyped(ctx context.Context, msg ProtoMsg) (ProtoMsg, error) {
 	// get sender
-	v := ctx.Value(contextKey{}).(contextValue)
+	v := getCtx(ctx)
 
-	resp, err := v.moduleExecUntyped(v.originalContext, v.whoami, msg)
+	resp, err := v.moduleExecUntyped(v.parentContext, v.whoami, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -82,11 +97,11 @@ func ExecModuleUntyped(ctx context.Context, msg ProtoMsg) (ProtoMsg, error) {
 // ExecModule can be used to execute a message towards a module.
 func ExecModule[Resp any, RespProto ProtoMsgG[Resp], Req any, ReqProto ProtoMsgG[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
 	// get sender
-	v := ctx.Value(contextKey{}).(contextValue)
+	v := getCtx(ctx)
 
 	// execute module, unwrapping the original context.
 	resp := RespProto(new(Resp))
-	err := v.moduleExec(v.originalContext, v.whoami, msg, resp)
+	err := v.moduleExec(v.parentContext, v.whoami, msg, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -98,26 +113,59 @@ func ExecModule[Resp any, RespProto ProtoMsgG[Resp], Req any, ReqProto ProtoMsgG
 func QueryModule[Resp any, RespProto ProtoMsgG[Resp], Req any, ReqProto ProtoMsgG[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
 	// we do not need to check the sender in a query because it is not a state transition.
 	// we also unwrap the original context.
-	v := ctx.Value(contextKey{}).(contextValue)
+	v := getCtx(ctx)
 	resp := RespProto(new(Resp))
-	err := v.moduleQuery(v.originalContext, req, resp)
+	err := v.moduleQuery(v.parentContext, req, resp)
 	if err != nil {
 		return nil, err
 	}
 	return resp, nil
 }
 
-// OpenKVStore returns the prefixed store for the account given the context.
-func OpenKVStore(ctx context.Context) store.KVStore {
-	return ctx.Value(contextKey{}).(contextValue).store
-}
+// openKVStore returns the prefixed store for the account given the context.
+func openKVStore(ctx context.Context) store.KVStore { return getCtx(ctx).store }
 
 // Sender returns the address of the entity invoking the account action.
 func Sender(ctx context.Context) []byte {
-	return ctx.Value(contextKey{}).(contextValue).sender
+	return getCtx(ctx).sender
 }
 
 // Whoami returns the address of the account being invoked.
 func Whoami(ctx context.Context) []byte {
-	return ctx.Value(contextKey{}).(contextValue).whoami
+	return getCtx(ctx).whoami
 }
+
+// Funds returns the funds associated with the execution context.
+func Funds(ctx context.Context) sdk.Coins { return getCtx(ctx).funds }
+
+type headerService struct{ hs header.Service }
+
+func (h headerService) GetHeaderInfo(ctx context.Context) header.Info {
+	return h.hs.GetHeaderInfo(getParentContext(ctx))
+}
+
+var _ gas.Service = (*gasService)(nil)
+
+type gasService struct{ gs gas.Service }
+
+func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
+	return g.gs.GetGasMeter(getParentContext(ctx))
+}
+
+func (g gasService) GetBlockGasMeter(ctx context.Context) gas.Meter {
+	return g.gs.GetBlockGasMeter(getParentContext(ctx))
+}
+
+func (g gasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.Context {
+	v := getCtx(ctx)
+	v.parentContext = g.gs.WithGasMeter(v.parentContext, meter)
+	return context.WithValue(v.parentContext, contextKey{}, v)
+}
+
+func (g gasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) context.Context {
+	v := getCtx(ctx)
+	v.parentContext = g.gs.WithBlockGasMeter(v.parentContext, meter)
+	return addCtx(v.parentContext, v)
+}
+
+func getParentContext(ctx context.Context) context.Context { return getCtx(ctx).parentContext }

@@ -6,12 +6,9 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/simulation"
 	"cosmossdk.io/x/mint/types"
@@ -30,10 +27,11 @@ var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodule.HasMigrations   = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the mint module.
@@ -111,23 +109,26 @@ func NewAppModule(
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
-// RegisterServices registers a gRPC query service to respond to the
-// module-specific gRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(registrar, keeper.NewQueryServerImpl(am.keeper))
 
+	return nil
+}
+
+// RegisterMigrations registers module migrations.
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
 	}
+
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the mint module. It returns
@@ -151,7 +152,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper, am.inflationCalculator)
+	return am.keeper.BeginBlocker(ctx, am.inflationCalculator)
 }
 
 // AppModuleSimulation functions
@@ -174,68 +175,4 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations doesn't return any mint module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	ModuleKey              depinject.OwnModuleKey
-	Config                 *modulev1.Module
-	StoreService           store.KVStoreService
-	Cdc                    codec.Codec
-	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
-
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	MintKeeper keeper.Keeper
-	Module     appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	feeCollectorName := in.Config.FeeCollectorName
-	if feeCollectorName == "" {
-		feeCollectorName = authtypes.FeeCollectorName
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(err)
-	}
-
-	k := keeper.NewKeeper(
-		in.Cdc,
-		in.StoreService,
-		in.StakingKeeper,
-		in.AccountKeeper,
-		in.BankKeeper,
-		feeCollectorName,
-		as,
-	)
-
-	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn)
-
-	return ModuleOutputs{MintKeeper: k, Module: m}
 }

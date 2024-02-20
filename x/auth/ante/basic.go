@@ -26,7 +26,7 @@ func NewValidateBasicDecorator() ValidateBasicDecorator {
 
 func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// no need to validate basic on recheck tx, call next antehandler
-	if ctx.IsReCheckTx() {
+	if ctx.ExecMode() == sdk.ExecModeReCheck {
 		return next(ctx, tx, simulate)
 	}
 
@@ -101,7 +101,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*storetypes.Gas(len(ctx.TxBytes())), "txSize")
 
 	// simulate gas cost for signatures in simulate mode
-	if simulate {
+	if ctx.ExecMode() == sdk.ExecModeSimulate {
 		// in simulate mode, each element should be a nil signature
 		sigs, err := sigTx.GetSignaturesV2()
 		if err != nil {
@@ -109,12 +109,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		}
 		n := len(sigs)
 
-		signers, err := sigTx.GetSigners()
-		if err != nil {
-			return sdk.Context{}, err
-		}
-
-		for i, signer := range signers {
+		for i, signer := range sigs {
 			// if signature is already filled in, no need to simulate gas cost
 			if i < n && !isIncompleteSignature(sigs[i].Data) {
 				continue
@@ -122,13 +117,11 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			var pubkey cryptotypes.PubKey
 
-			acc := cgts.ak.GetAccount(ctx, signer)
-
 			// use placeholder simSecp256k1Pubkey if sig is nil
-			if acc == nil || acc.GetPubKey() == nil {
+			if signer.PubKey == nil {
 				pubkey = simSecp256k1Pubkey
 			} else {
-				pubkey = acc.GetPubKey()
+				pubkey = signer.PubKey
 			}
 
 			// use stdsignature to mock the size of a full signature

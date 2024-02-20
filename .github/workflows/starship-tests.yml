@@ -1,8 +1,9 @@
 name: Starship E2E Tests
 # E2E tests using Starship, run on a schedule
 on:
-  schedule:
-    - cron: "0 */6 * * *" # every 6 hours
+  # schedule:
+  #   - cron: "0 */6 * * *" # every 6 hours
+  workflow_dispatch:
 
 permissions:
   contents: read

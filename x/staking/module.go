@@ -4,30 +4,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
+	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
-	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 const (
@@ -37,13 +30,15 @@ const (
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
 	_ module.HasABCIGenesis      = AppModule{}
 	_ module.HasABCIEndBlock     = AppModule{}
+	_ depinject.OnePerModuleType = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodule.HasMigrations   = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the staking module.
@@ -118,9 +113,6 @@ func NewAppModule(
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -130,24 +122,29 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	querier := keeper.Querier{Keeper: am.keeper}
-	types.RegisterQueryServer(cfg.QueryServer(), querier)
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
 
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err)
 	}
-	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err)
 	}
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
+	if err := mr.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err)
 	}
-	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err))
+	if err := mr.Register(types.ModuleName, 4, m.Migrate4to5); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err)
 	}
+
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the staking module.
@@ -177,121 +174,4 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
 	return am.keeper.EndBlocker(ctx)
-}
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(InvokeSetStakingHooks),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config                *modulev1.Module
-	ValidatorAddressCodec runtime.ValidatorAddressCodec
-	ConsensusAddressCodec runtime.ConsensusAddressCodec
-	AccountKeeper         types.AccountKeeper
-	BankKeeper            types.BankKeeper
-	Cdc                   codec.Codec
-	StoreService          store.KVStoreService
-}
-
-// Dependency Injection Outputs
-type ModuleOutputs struct {
-	depinject.Out
-
-	StakingKeeper *keeper.Keeper
-	Module        appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(err)
-	}
-
-	k := keeper.NewKeeper(
-		in.Cdc,
-		in.StoreService,
-		in.AccountKeeper,
-		in.BankKeeper,
-		as,
-		in.ValidatorAddressCodec,
-		in.ConsensusAddressCodec,
-	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
-	return ModuleOutputs{StakingKeeper: k, Module: m}
-}
-
-func InvokeSetStakingHooks(
-	config *modulev1.Module,
-	keeper *keeper.Keeper,
-	stakingHooks map[string]types.StakingHooksWrapper,
-) error {
-	// all arguments to invokers are optional
-	if keeper == nil || config == nil {
-		return nil
-	}
-
-	modNames := maps.Keys(stakingHooks)
-	order := config.HooksOrder
-	if len(order) == 0 {
-		order = modNames
-		sort.Strings(order)
-	}
-
-	if len(order) != len(modNames) {
-		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
-	}
-
-	if len(modNames) == 0 {
-		return nil
-	}
-
-	var multiHooks types.MultiStakingHooks
-	for _, modName := range order {
-		hook, ok := stakingHooks[modName]
-		if !ok {
-			return fmt.Errorf("can't find staking hooks for module %s", modName)
-		}
-
-		multiHooks = append(multiHooks, hook)
-	}
-
-	keeper.SetHooks(multiHooks)
-	return nil
-}
-
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the staking module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
-
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
-}
-
-// RegisterStoreDecoder registers a decoder for staking module's types
-func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
-}
-
-// WeightedOperations returns the all the staking module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper,
-	)
 }

@@ -48,22 +48,29 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema       collections.Schema
+	Schema collections.Schema
+	// Constitution value: constitution
 	Constitution collections.Item[string]
-	Params       collections.Item[v1.Params]
+	// Params stores the governance parameters
+	Params collections.Item[v1.Params]
+	// MessageBasedParams store message-based governance parameters
+	// key:proposal-msg-url | value MessageBasedParams
+	MessageBasedParams collections.Map[string, v1.MessageBasedParams]
 	// Deposits key: proposalID+depositorAddr | value: Deposit
 	Deposits collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
 	// Votes key: proposalID+voterAddr | value: Vote
-	Votes      collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
+	Votes collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
+	// ProposalID is a counter for proposals. It tracks the next proposal ID to be issued.
 	ProposalID collections.Sequence
 	// Proposals key:proposalID | value: Proposal
 	Proposals collections.Map[uint64, v1.Proposal]
+	// ProposalVoteOptions key: proposalID | value:
+	// This is used to store multiple choice vote options
+	ProposalVoteOptions collections.Map[uint64, v1.ProposalVoteOptions]
 	// ActiveProposalsQueue key: votingEndTime+proposalID | value: proposalID
 	ActiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
 	// InactiveProposalsQueue key: depositEndTime+proposalID | value: proposalID
 	InactiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
-	// VotingPeriodProposals key: proposalID | value: proposalStatus (votingPeriod or not)
-	VotingPeriodProposals collections.Map[uint64, []byte] // TODO(tip): this could be a keyset or index.
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -119,13 +126,14 @@ func NewKeeper(
 		authority:              authority,
 		Constitution:           collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                 collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
+		MessageBasedParams:     collections.NewMap(sb, types.MessageBasedParamsKey, "proposal_messaged_based_params", collections.StringKey, codec.CollValue[v1.MessageBasedParams](cdc)),
 		Deposits:               collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		Votes:                  collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		ProposalID:             collections.NewSequence(sb, types.ProposalIDKey, "proposal_id"),
 		Proposals:              collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](cdc)),
+		ProposalVoteOptions:    collections.NewMap(sb, types.ProposalVoteOptionsKeyPrefix, "proposal_vote_options", collections.Uint64Key, codec.CollValue[v1.ProposalVoteOptions](cdc)),
 		ActiveProposalsQueue:   collections.NewMap(sb, types.ActiveProposalQueuePrefix, "active_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value),     // sdk.TimeKey is needed to retain state compatibility
 		InactiveProposalsQueue: collections.NewMap(sb, types.InactiveProposalQueuePrefix, "inactive_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value), // sdk.TimeKey is needed to retain state compatibility
-		VotingPeriodProposals:  collections.NewMap(sb, types.VotingPeriodProposalKeyPrefix, "voting_period_proposals", collections.Uint64Key, collections.BytesValue),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -135,7 +143,7 @@ func NewKeeper(
 	return k
 }
 
-// Hooks gets the hooks for governance *Keeper {
+// Hooks gets the hooks for governance Keeper
 func (k *Keeper) Hooks() types.GovHooks {
 	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set

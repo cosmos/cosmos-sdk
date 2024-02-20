@@ -38,7 +38,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 				proposal, err := f.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 				assert.NilError(t, err)
 				proposal.Status = v1.StatusVotingPeriod
-				err = f.govKeeper.SetProposal(ctx, proposal)
+				err = f.govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 				assert.NilError(t, err)
 				assert.NilError(t, f.govKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 				assert.NilError(t, f.govKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))

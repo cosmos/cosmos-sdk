@@ -140,7 +140,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 
 		var totalTxGas uint64
 		for _, tx := range txs {
-			_, err := app.ValidateTx(ctx, tx, corecontext.ExecModePrepareProposal)
+			_, err := app.ValidateTx(ctx, tx, corecontext.ExecModeProcessProposal)
 			if err != nil {
 				return fmt.Errorf("failed to validate tx: %w", err)
 			}

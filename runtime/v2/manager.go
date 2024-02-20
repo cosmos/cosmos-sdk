@@ -16,6 +16,7 @@ import (
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/protocompat"
@@ -84,7 +85,7 @@ func (m *MM) BeginBlock() func(ctx context.Context) error {
 }
 
 // EndBlock runs the end-block logic of all modules and tx validator updates
-func (m *MM) EndBlock() (endblock func(ctx context.Context) error, valupdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)) {
+func (m *MM) EndBlock() (endblock func(ctx context.Context) error, valupdate func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error)) {
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	endBlock := func(ctx context.Context) error {
@@ -118,12 +119,12 @@ func (m *MM) EndBlock() (endblock func(ctx context.Context) error, valupdate fun
 		return nil
 	}
 
-	valUpdate := func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
-		valUpdates := []appmodule.ValidatorUpdate{}
+	valUpdate := func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) {
+		valUpdates := []appmodulev2.ValidatorUpdate{}
 
 		// get validator updates of legacy modules using HasABCIEndBlock
 		for i, v := range validatorUpdates {
-			valUpdates[i] = appmodule.ValidatorUpdate{
+			valUpdates[i] = appmodulev2.ValidatorUpdate{
 				PubKey: v.PubKey.GetEd25519(),
 				Power:  v.Power,
 			}
@@ -131,7 +132,7 @@ func (m *MM) EndBlock() (endblock func(ctx context.Context) error, valupdate fun
 
 		// get validator updates of modules implementing directly the new HasUpdateValidators interface
 		for _, v := range m.modules {
-			if module, ok := v.(appmodule.HasUpdateValidators); ok {
+			if module, ok := v.(appmodulev2.HasUpdateValidators); ok {
 				up, err := module.UpdateValidators(ctx)
 				if err != nil {
 					return nil, err
@@ -170,7 +171,7 @@ func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error 
 func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
 	return func(ctx context.Context, tx transaction.Tx) error {
 		for _, moduleName := range m.config.TxValidation {
-			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[transaction.Tx]); ok {
+			if module, ok := m.modules[moduleName].(appmodulev2.HasTxValidation[transaction.Tx]); ok {
 				if err := module.TxValidator(ctx, tx); err != nil {
 					return fmt.Errorf("failed to run txvalidator for %s: %w", moduleName, err)
 				}

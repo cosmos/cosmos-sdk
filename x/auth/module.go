@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/auth/ante"
@@ -36,10 +37,10 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 
-	_ appmodule.AppModule                       = AppModule{}
-	_ appmodule.HasTxValidation[transaction.Tx] = AppModule{}
-	_ appmodule.HasServices                     = AppModule{}
-	_ appmodule.HasMigrations                   = AppModule{}
+	_ appmodule.AppModule                         = AppModule{}
+	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
+	_ appmodule.HasServices                       = AppModule{}
+	_ appmodule.HasMigrations                     = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the auth module.

@@ -15,6 +15,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
@@ -247,7 +248,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	// Run migrations only for "mock" module. We exclude it from
 	// the VersionMap to simulate upgrading with a new module.
 	_, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(),
-		module.VersionMap{
+		appmodulev2.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
 			"authz":        authzmodule.AppModule{}.ConsensusVersion(),
@@ -279,7 +280,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	vm, err := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	require.NoError(t, err)
 	for v, i := range app.ModuleManager.Modules {
-		if i, ok := i.(module.HasConsensusVersion); ok {
+		if i, ok := i.(appmodulev2.HasConsensusVersion); ok {
 			require.Equal(t, vm[v], i.ConsensusVersion())
 		}
 	}

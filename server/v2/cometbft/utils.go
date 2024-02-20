@@ -20,7 +20,7 @@ import (
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	sdkabci "cosmossdk.io/api/tendermint/abci"
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/server/v2/core/appmanager"
@@ -124,7 +124,7 @@ func finalizeBlockResponse(
 	return resp, nil
 }
 
-func intoABCIValidatorUpdates(updates []appmodule.ValidatorUpdate) []abci.ValidatorUpdate {
+func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.ValidatorUpdate {
 	valsetUpdates := make([]abci.ValidatorUpdate, len(updates))
 
 	for i := range updates {

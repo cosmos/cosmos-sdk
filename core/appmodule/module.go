@@ -3,8 +3,9 @@ package appmodule
 import (
 	"context"
 
-	"cosmossdk.io/core/appmodule/v2"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/core/appmodule/v2"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis

@@ -12,7 +12,7 @@ type (
 	Handler = func(ctx context.Context, msg Message) (msgResp Message, err error)
 	// PostMsgHandler runs after Handler, only if Handler does not error. If PostMsgHandler errors
 	// then the execution is reverted.
-	PostMsgHandler = func(ctx context.Context, msg Message, msgResp Message) error
+	PostMsgHandler = func(ctx context.Context, msg, msgResp Message) error
 )
 
 // RegisterHandler is a helper function that modules can use to not lose type safety when registering handlers to the
@@ -86,7 +86,7 @@ func RegisterPostHandler[Req, Resp Message](
 	router PostMsgRouter,
 	handler func(ctx context.Context, msg Req, msgResp Resp) error,
 ) {
-	untypedHandler := func(ctx context.Context, m Message, mResp Message) error {
+	untypedHandler := func(ctx context.Context, m, mResp Message) error {
 		typed, ok := m.(Req)
 		if !ok {
 			return fmt.Errorf("unexpected type %T, wanted: %T", m, *new(Req))

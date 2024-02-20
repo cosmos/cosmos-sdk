@@ -96,7 +96,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### State Machine Breaking
 
-* (x/staking) [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In a undelegation or redelegation if the shares being un/re-delegated left correspond to less than 1 token (in base denom) the entire delegation gets removed.
+* (x/staking) [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In a undelegation or redelegation if the shares being left delegated correspond to less than 1 token (in base denom) the entire delegation gets removed.
 
 ### API Breaking Changes
 

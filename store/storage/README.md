@@ -67,7 +67,13 @@ Iterate/backend_rocksdb_versiondb_opts-10          778ms ± 0%
 
 ## Pruning
 
-<!-- TODO -->
+Pruning is an implementation and responsibility of the underlying SS backend.
+Specifically, the `StorageStore` accepts `store.PruneOptions` which defines the
+pruning configuration. During `ApplyChangeset`, the `StorageStore` will check if
+pruning should occur based on the current height being committed. If so, it will
+delegate a `Prune` call on the underlying SS backend, which can be defined specific
+to the implementation, e.g. asynchronous or synchronous.
+
 
 ## State Sync
 
@@ -88,9 +94,9 @@ accept this `Database` type, e.g. RocksDB.
 The `StorageStore` interface is an abstraction or wrapper around the backing SS
 engine can be seen as the the main entry point to using SS.
 
-Higher up the stack, there should exist a `RootStore` implementation. The `RootStore`
+Higher up the stack, there should exist a `root.Store` implementation. The `root.Store`
 is meant to encapsulate both an SS backend and an SC backend. The SS backend is
 defined by this `StorageStore` implementation.
 
 In short, initialize your SS engine of choice and then provide that to `NewStorageStore`
-which will further be provided to `RootStore` as the SS backend.
+which will further be provided to `root.Store` as the SS backend.

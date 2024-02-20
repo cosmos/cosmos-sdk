@@ -2,9 +2,9 @@ package appmanager
 
 import (
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/appmanager/store"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/stf"
-	"cosmossdk.io/server/v2/core/store"
 )
 
 type Builder[T transaction.Tx] struct {

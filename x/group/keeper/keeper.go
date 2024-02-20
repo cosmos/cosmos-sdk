@@ -296,7 +296,7 @@ func (k Keeper) pruneProposal(ctx context.Context, proposalID uint64) error {
 
 // abortProposals iterates through all proposals by group policy index
 // and marks submitted proposals as aborted.
-func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
+func (k Keeper) abortProposals(ctx context.Context, groupPolicyAddr sdk.AccAddress) error {
 	proposals, err := k.proposalsByGroupPolicy(ctx, groupPolicyAddr)
 	if err != nil {
 		return err
@@ -317,7 +317,7 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 }
 
 // proposalsByGroupPolicy returns all proposals for a given group policy.
-func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
+func (k Keeper) proposalsByGroupPolicy(ctx context.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
 	proposalIt, err := k.proposalByGroupPolicyIndex.Get(k.environment.KVStoreService.OpenKVStore(ctx), groupPolicyAddr.Bytes())
 	if err != nil {
 		return nil, err

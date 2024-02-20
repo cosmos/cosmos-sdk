@@ -811,7 +811,7 @@ func SimulateMsgTokenizeShares(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		if totalStaked.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "cannot happened - no validators bonded if stake is 0.0"), nil, nil // skip
 		}
-		totalLiquidStaked := sdk.NewDecFromInt(k.GetTotalLiquidStakedTokens(ctx))
+		totalLiquidStaked := sdk.NewDecFromInt(k.GetTotalLiquidStakedTokens(ctx).Add(tokenizeShareAmt))
 		liquidStakedPercent := totalLiquidStaked.Quo(totalStaked)
 		if liquidStakedPercent.GT(params.GlobalLiquidStakingCap) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "global liquid staking cap exceeded"), nil, nil

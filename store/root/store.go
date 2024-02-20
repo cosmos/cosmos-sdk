@@ -50,7 +50,8 @@ type Store struct {
 	migrationManager *migration.Manager
 	// chChangeset reflects the channel used to send the changeset to the migration manager
 	chChangeset chan *migration.VersionedChangeset
-	// chDone reflects the channel used to signal the migration manager that the migration is done
+	// chDone reflects the channel used to signal the migration manager that the migration
+	// is done
 	chDone chan struct{}
 	// isMigrating reflects whether the store is currently migrating
 	isMigrating bool
@@ -128,30 +129,15 @@ func (s *Store) GetStateCommitment() store.Committer {
 
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
-// latest version set, which is based off of the SS view.
+// latest version set, which is based off of the SC view.
 func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if s.lastCommitInfo != nil {
 		return s.lastCommitInfo.CommitID(), nil
 	}
 
-	// XXX/TODO: We cannot use SS to get the latest version when lastCommitInfo
-	// is nil if SS is flushed asynchronously. This is because the latest version
-	// in SS might not be the latest version in the SC stores.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
-	latestVersion, err := s.stateStorage.GetLatestVersion()
+	latestVersion, err := s.stateCommitment.GetLatestVersion()
 	if err != nil {
 		return proof.CommitID{}, err
-	}
-
-	// sanity check: ensure integrity of latest version against SC
-	scVersion, err := s.stateCommitment.GetLatestVersion()
-	if err != nil {
-		return proof.CommitID{}, err
-	}
-
-	if scVersion != latestVersion {
-		return proof.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
 
 	return proof.CommitID{Version: latestVersion}, nil
@@ -271,12 +257,11 @@ func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 		// if migration is in progress, send the changeset to the migration manager
 		if s.isMigrating {
 			// if the migration manager has already migrated to the version, close the
-			// channels and replace the state storage and commitment
+			// channels and replace the state commitment
 			if s.migrationManager.GetMigratedVersion() == s.lastCommitInfo.Version {
 				close(s.chDone)
 				close(s.chChangeset)
 				s.isMigrating = false
-				s.stateStorage = s.migrationManager.GetStateStorage()
 				s.stateCommitment = s.migrationManager.GetStateCommitment()
 			} else {
 				s.chChangeset <- &migration.VersionedChangeset{Version: s.lastCommitInfo.Version + 1, Changeset: cs}
@@ -319,7 +304,8 @@ func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 	// commit SS async
 	eg.Go(func() error {
 		// if we're migrating, we don't want to commit to the state storage
-		if s.stateStorage == nil {
+		// to avoid parallel writes
+		if s.isMigrating {
 			return nil
 		}
 
@@ -370,17 +356,18 @@ func (s *Store) Prune(version uint64) error {
 	return nil
 }
 
-// StartMigration starts the migration process. It sets the migration manager
-// and initializes the channels. An error is returned if migration is already in
-// progress.
+// StartMigration starts the migration process and initializes the channels.
+// An error is returned if migration is already in progress.
 // NOTE: This method should only be called once after loadVersion.
 func (s *Store) StartMigration() error {
 	if s.isMigrating {
 		return fmt.Errorf("migration already in progress")
 	}
 
-	// buffer the changeset channel to avoid blocking
+	// buffer at most 1 changeset, if the receiver is behind attempting to buffer
+	// more than 1 will block.
 	s.chChangeset = make(chan *migration.VersionedChangeset, 1)
+	// it is used to signal the migration manager that the migration is done
 	s.chDone = make(chan struct{})
 
 	s.isMigrating = true

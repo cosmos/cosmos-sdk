@@ -41,8 +41,23 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
 	}
-	commitStore, err := commitment.NewCommitStore(multiTrees, mdb, nil, noopLog)
+	orgSC, err := commitment.NewCommitStore(multiTrees, mdb, nil, noopLog)
 	s.Require().NoError(err)
+
+	// apply changeset against the original store
+	toVersion := uint64(100)
+	keyCount := 10
+	for version := uint64(1); version <= toVersion; version++ {
+		cs := store.NewChangeset()
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				cs.Add(storeKey, []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)))
+			}
+		}
+		s.Require().NoError(orgSC.WriteBatch(cs))
+		_, err = orgSC.Commit(version)
+		s.Require().NoError(err)
+	}
 
 	// create a new storage and commitment stores
 	sqliteDB, err := sqlite.New(s.T().TempDir())
@@ -58,37 +73,27 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 
 	snapshotsStore, err := snapshots.NewStore(dbm.NewMemDB(), s.T().TempDir())
 	s.Require().NoError(err)
-	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), commitStore, nil, nil, noopLog)
+	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, nil, noopLog)
 	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, ss, sc, noopLog)
 
 	// assume no storage store, simulate the migration process
-	s.rootStore, err = New(noopLog, nil, commitStore, migrationManager, nil)
+	s.rootStore, err = New(noopLog, ss, orgSC, migrationManager, nil)
 	s.Require().NoError(err)
 }
 
 func (s *MigrateStoreTestSuite) TestMigrateState() {
-	// apply changeset against the original store
-	toVersion := uint64(100)
-	keyCount := 10
-	for version := uint64(1); version <= toVersion; version++ {
-		cs := store.NewChangeset()
-		for _, storeKey := range storeKeys {
-			for i := 0; i < keyCount; i++ {
-				cs.Add(storeKey, []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)))
-			}
-		}
-		_, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
-		_, err = s.rootStore.Commit(cs)
-		s.Require().NoError(err)
-	}
+	err := s.rootStore.LoadLatestVersion()
+	s.Require().NoError(err)
+	originalLatestVersion, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
 
 	// start the migration process
 	s.rootStore.StartMigration()
 
 	// continue to apply changeset against the original store
 	latestVersion := uint64(0)
-	for version := toVersion + 1; ; version++ {
+	keyCount := 10
+	for version := originalLatestVersion + 1; ; version++ {
 		cs := store.NewChangeset()
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
@@ -100,9 +105,11 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 		_, err = s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 
-		// check if the migration is complete
-		if s.rootStore.GetStateStorage() != nil {
-			latestVersion = version
+		// check if the migration is completed
+		ver, err := s.rootStore.GetStateStorage().GetLatestVersion()
+		s.Require().NoError(err)
+		if ver == version {
+			latestVersion = ver
 			break
 		}
 
@@ -120,8 +127,8 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				targetVersion := version
-				if version < toVersion {
-					targetVersion = toVersion
+				if version < originalLatestVersion {
+					targetVersion = originalLatestVersion
 				}
 				res, err := s.rootStore.Query(storeKey, targetVersion, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
 				s.Require().NoError(err)

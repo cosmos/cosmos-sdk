@@ -82,7 +82,7 @@ func (ss *StorageStore) ApplyChangeset(version uint64, cs *store.Changeset) erro
 		}
 	}
 
-	return nil
+	return ss.db.SetLatestVersion(version)
 }
 
 // GetLatestVersion returns the latest version of the store.

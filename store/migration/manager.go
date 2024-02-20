@@ -80,11 +80,6 @@ func (m *Manager) Start(version uint64, chChangeset <-chan *VersionedChangeset, 
 	return m.Sync()
 }
 
-// GetStateStorage returns the state storage.
-func (m *Manager) GetStateStorage() *storage.StorageStore {
-	return m.stateStorage
-}
-
 // GetStateCommitment returns the state commitment.
 func (m *Manager) GetStateCommitment() *commitment.CommitStore {
 	return m.stateCommitment

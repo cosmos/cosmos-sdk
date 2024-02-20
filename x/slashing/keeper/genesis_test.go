@@ -23,9 +23,9 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	consStr2, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(consAddr2)
 	require.NoError(err)
 
-	info1 := types.NewValidatorSigningInfo(consStr1, int64(4), int64(3),
+	info1 := types.NewValidatorSigningInfo(consStr1, int64(4),
 		time.Now().UTC().Add(100000000000), false, int64(10))
-	info2 := types.NewValidatorSigningInfo(consStr2, int64(5), int64(4),
+	info2 := types.NewValidatorSigningInfo(consStr2, int64(5),
 		time.Now().UTC().Add(10000000000), false, int64(10))
 
 	s.Require().NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr1, info1))

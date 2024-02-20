@@ -165,10 +165,13 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 
 		// emit the events from the dispatched actions
 		for i = range msgResp.Events {
-			k.environment.EventService.EventManager(ctx).EmitKV(
+			err := k.environment.EventService.EventManager(ctx).EmitKV(
 				"dispatch actions",
 				event.NewAttribute("authz_msg_index", strconv.Itoa(i)),
 			)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 	}

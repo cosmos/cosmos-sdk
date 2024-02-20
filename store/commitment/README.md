@@ -26,6 +26,14 @@ given SC backend which supports this.
 
 See this [section](https://docs.google.com/document/d/1l6uXIjTPHOOWM5N4sUUmUfCZvePoa5SNfIEtmgvgQSU/edit#heading=h.7l0i621y5vgm) for specifics on SC benchmarks on various implementations.
 
+## Pruning
+
+<!-- TODO -->
+
+## State Sync
+
+<!-- TODO -->
+
 ## Usage
 
 Similar to the `storage` package, the `commitment` package is designed to be used

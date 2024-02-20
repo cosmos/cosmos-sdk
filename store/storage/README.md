@@ -65,6 +65,14 @@ Iterate/backend_btree_sqlite-10                    1.59s ± 0%
 Iterate/backend_rocksdb_versiondb_opts-10          778ms ± 0%
 ```
 
+## Pruning
+
+<!-- TODO -->
+
+## State Sync
+
+<!-- TODO -->
+
 ## Usage
 
 An SS backend is meant to be used within a broader store implementation, as it

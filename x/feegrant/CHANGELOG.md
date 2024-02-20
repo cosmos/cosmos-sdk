@@ -55,5 +55,3 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17869](https://github.com/cosmos/cosmos-sdk/pull/17869) `NewGrant`, `NewMsgGrantAllowance` & `NewMsgRevokeAllowance` takes strings instead of `sdk.AccAddress`
 * [#16535](https://github.com/cosmos/cosmos-sdk/pull/16535) Use collections for `FeeAllowance`, `FeeAllowanceQueue`.
 * [#18815](https://github.com/cosmos/cosmos-sdk/pull/18815) Add the implementation of the `UpdatePeriodReset` interface to update the value of the `PeriodReset` field.
-* [#19450](https://github.com/cosmos/cosmos-sdk/pull/19450) Migrate to use `appmodule.Environment` instead of passing individual services. 
-* [#19450](https://github.com/cosmos/cosmos-sdk/pull/19450)  `FeeAllowanceI.Accept` takes `appmodule.Environment` instead of unwraping context.

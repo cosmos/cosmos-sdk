@@ -77,3 +77,8 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+// RegisterConsensusMessages registers the consensus module's messages.
+func (am AppModule) RegisterConsensusMessages(builder any) {
+	// std.RegisterConsensusHandler(builder ,am.keeper.SetParams) // TODO uncomment when api is available
+}

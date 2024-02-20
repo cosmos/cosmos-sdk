@@ -27,3 +27,9 @@ given SC backend which supports this.
 See this [section](https://docs.google.com/document/d/1l6uXIjTPHOOWM5N4sUUmUfCZvePoa5SNfIEtmgvgQSU/edit#heading=h.7l0i621y5vgm) for specifics on SC benchmarks on various implementations.
 
 ## Usage
+
+Similar to the `storage` package, the `commitment` package is designed to be used
+in a broader store implementation, i.e. it fulfills the role of the SC backend.
+Specifically, it provides a `CommitStore` type which accepts a `store.RawDB` and
+a mapping from store key, a string meant to represent a single module, to a `Tree`,
+which reflects the commitment structure.

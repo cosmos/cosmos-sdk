@@ -82,7 +82,7 @@ func (ss *StorageStore) ApplyChangeset(version uint64, cs *store.Changeset) erro
 		}
 	}
 
-	return ss.db.SetLatestVersion(version)
+	return nil
 }
 
 // GetLatestVersion returns the latest version of the store.
@@ -134,6 +134,9 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) 
 			if err := b.Write(); err != nil {
 				return err
 			}
+			if err := b.Reset(); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -143,7 +146,7 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) 
 		}
 	}
 
-	return ss.db.SetLatestVersion(version)
+	return nil
 }
 
 // Close closes the store.

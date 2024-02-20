@@ -23,19 +23,21 @@ type batchOp struct {
 }
 
 type Batch struct {
+	db      *sql.DB
 	tx      *sql.Tx
 	ops     []batchOp
 	size    int
 	version uint64
 }
 
-func NewBatch(storage *sql.DB, version uint64) (*Batch, error) {
-	tx, err := storage.Begin()
+func NewBatch(db *sql.DB, version uint64) (*Batch, error) {
+	tx, err := db.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 
 	return &Batch{
+		db:      db,
 		tx:      tx,
 		ops:     make([]batchOp, 0),
 		version: version,
@@ -46,10 +48,18 @@ func (b *Batch) Size() int {
 	return b.size
 }
 
-func (b *Batch) Reset() {
+func (b *Batch) Reset() error {
 	b.ops = nil
 	b.ops = make([]batchOp, 0)
 	b.size = 0
+
+	tx, err := b.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	b.tx = tx
+	return nil
 }
 
 func (b *Batch) Set(storeKey string, key, value []byte) error {

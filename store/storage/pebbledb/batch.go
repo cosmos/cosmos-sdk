@@ -41,8 +41,9 @@ func (b *Batch) Size() int {
 	return b.batch.Len()
 }
 
-func (b *Batch) Reset() {
+func (b *Batch) Reset() error {
 	b.batch.Reset()
+	return nil
 }
 
 func (b *Batch) set(storeKey string, tombstone uint64, key, value []byte) error {

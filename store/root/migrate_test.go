@@ -33,19 +33,19 @@ func TestMigrateStoreTestSuite(t *testing.T) {
 }
 
 func (s *MigrateStoreTestSuite) SetupTest() {
-	noopLog := log.NewNopLogger()
+	testLog := log.NewTestLogger(s.T())
 
 	mdb := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, testLog, iavl.DefaultConfig())
 	}
-	orgSC, err := commitment.NewCommitStore(multiTrees, mdb, nil, noopLog)
+	orgSC, err := commitment.NewCommitStore(multiTrees, mdb, nil, testLog)
 	s.Require().NoError(err)
 
 	// apply changeset against the original store
-	toVersion := uint64(100)
+	toVersion := uint64(200)
 	keyCount := 10
 	for version := uint64(1); version <= toVersion; version++ {
 		cs := store.NewChangeset()
@@ -62,22 +62,22 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	// create a new storage and commitment stores
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, nil, noopLog)
+	ss := storage.NewStorageStore(sqliteDB, nil, testLog)
 
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
-		multiTrees1[storeKey] = iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+		multiTrees1[storeKey] = iavl.NewIavlTree(dbm.NewMemDB(), testLog, iavl.DefaultConfig())
 	}
-	sc, err := commitment.NewCommitStore(multiTrees1, dbm.NewMemDB(), nil, noopLog)
+	sc, err := commitment.NewCommitStore(multiTrees1, dbm.NewMemDB(), nil, testLog)
 	s.Require().NoError(err)
 
 	snapshotsStore, err := snapshots.NewStore(dbm.NewMemDB(), s.T().TempDir())
 	s.Require().NoError(err)
-	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, nil, noopLog)
-	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, ss, sc, noopLog)
+	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, nil, testLog)
+	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, ss, sc, testLog)
 
 	// assume no storage store, simulate the migration process
-	s.rootStore, err = New(noopLog, ss, orgSC, migrationManager, nil)
+	s.rootStore, err = New(testLog, ss, orgSC, migrationManager, nil)
 	s.Require().NoError(err)
 }
 

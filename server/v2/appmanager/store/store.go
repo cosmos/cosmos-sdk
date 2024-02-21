@@ -1,17 +1,15 @@
 package store
 
 import (
-	"fmt"
 	"sync/atomic"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/core/store"
-	storev2 "cosmossdk.io/store/v2"
 )
 
-var _ Store = (*Storage[storev2.VersionedDatabase])(nil)
+var _ Store = (*Storage[Database])(nil)
 
-type Storage[SS storev2.VersionedDatabase] struct {
+type Storage[SS Database] struct {
 	ss SS
 
 	// we use latest to keep track of the last height. Reading using atomics is way
@@ -29,18 +27,11 @@ func (s Storage[SS]) StateAt(version uint64) (store.ReaderMap, error) {
 	return actorsState[SS]{version, s.ss}, nil
 }
 
-func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Storage[SS], error) {
+func New[SS Database](ss SS) (Storage[SS], error) {
 	// sanity checks.
 	ssVersion, err := ss.GetLatestVersion()
 	if err != nil {
 		return Storage[SS]{}, err
-	}
-	scVersion, err := sc.GetLatestVersion()
-	if err != nil {
-		return Storage[SS]{}, err
-	}
-	if scVersion != ssVersion {
-		return Storage[SS]{}, fmt.Errorf("data corruption, sc version %d, ss version %d", scVersion, ssVersion)
 	}
 
 	s := Storage[SS]{
@@ -51,7 +42,7 @@ func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Stor
 	return s, nil
 }
 
-type actorsState[SS storev2.VersionedDatabase] struct {
+type actorsState[SS Database] struct {
 	version uint64
 	ss      SS
 }
@@ -64,7 +55,7 @@ func (a actorsState[SS]) GetReader(address []byte) (store.Reader, error) {
 	}, nil
 }
 
-type state[SS storev2.VersionedDatabase] struct {
+type state[SS Database] struct {
 	version  uint64
 	storeKey string
 	ss       SS

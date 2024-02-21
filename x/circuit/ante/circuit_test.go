@@ -61,8 +61,8 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		allowed bool
 	}{
 		{msg: &cbtypes.MsgAuthorizeCircuitBreaker{
-			Grantee: "cosmos1fghij",
-			Granter: "cosmos1abcde",
+			Grantee: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			Granter: "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc",
 		}, allowed: true},
 		{msg: testdata.NewTestMsg(addr1), allowed: false},
 	}

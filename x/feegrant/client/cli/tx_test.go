@@ -84,15 +84,10 @@ func (s *CLITestSuite) SetupSuite() {
 	}
 	s.clientCtx = ctxGen()
 
-	if testing.Short() {
-		s.T().Skip("skipping test in unit-tests mode.")
-	}
-
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
 
 	granter := accounts[0].Address
 	grantee := accounts[1].Address
-
 	s.createGrant(granter, grantee)
 
 	granteeStr, err := s.baseCtx.AddressCodec.BytesToString(grantee)

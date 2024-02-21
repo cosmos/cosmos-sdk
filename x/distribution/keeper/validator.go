@@ -155,6 +155,7 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 		panic(fmt.Sprintf("fraction must be >=0 and <=1, current fraction: %v", fraction))
 	}
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
 		return err
@@ -173,8 +174,7 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 	}
 
 	slashEvent := types.NewValidatorSlashEvent(newPeriod, fraction)
-	height := uint64(k.environment.HeaderService.GetHeaderInfo(ctx).Height)
-
+	height := uint64(sdkCtx.BlockHeight())
 	return k.ValidatorSlashEvents.Set(
 		ctx,
 		collections.Join3[sdk.ValAddress, uint64, uint64](

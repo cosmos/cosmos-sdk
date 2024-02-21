@@ -126,10 +126,10 @@ func (bva *BaseVesting) ExecuteMessages(
 	}
 	sender, err := bva.addressCodec.StringToBytes(msg.Sender)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid bundler address: %s", err.Error())
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err.Error())
 	}
 	if !bytes.Equal(owner, sender) {
-		return nil, fmt.Errorf("bundler is not the owner of this vesting account")
+		return nil, fmt.Errorf("sender is not the owner of this vesting account")
 	}
 	hs := bva.headerService.GetHeaderInfo(ctx)
 

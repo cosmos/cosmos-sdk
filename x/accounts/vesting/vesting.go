@@ -70,7 +70,7 @@ type BaseVesting struct {
 	DelegatedVesting collections.Map[string, math.Int]
 	addressCodec     address.Codec
 	headerService    header.Service
-	// Vesting end time, as unix timestamp (in seconds).
+	// Vesting end time.
 	EndTime collections.Item[time.Time]
 }
 
@@ -388,11 +388,7 @@ func (bva BaseVesting) IterateCoinEntries(
 	err := entries.Walk(ctx, nil, func(key string, value math.Int) (stop bool, err error) {
 		return cb(key, value)
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)

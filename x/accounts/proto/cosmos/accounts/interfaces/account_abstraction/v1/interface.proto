@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package cosmos.accounts.interfaces.account_abstraction.v1;
+
+import "cosmos/tx/v1beta1/tx.proto";
+
+option go_package = "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1";
+
+// MsgAuthenticate is a message that an x/account account abstraction implementer
+// must handle to authenticate a transaction. Always ensure the caller is the Accounts module.
+message MsgAuthenticate {
+  // bundler defines the address of the bundler that sent the operation.
+  // NOTE: in case the operation was sent directly by the user, this field will reflect
+  // the user address.
+  string bundler = 1;
+  // raw_tx defines the raw version of the tx, this is useful to compute the signature quickly.
+  cosmos.tx.v1beta1.TxRaw raw_tx = 2;
+  // tx defines the decoded version of the tx, coming from raw_tx.
+  cosmos.tx.v1beta1.Tx tx = 3;
+  // signer_index defines the index of the signer in the tx.
+  // Specifically this can be used to extract the signature at the correct
+  // index.
+  uint32 signer_index = 4;
+}
+
+// MsgAuthenticateResponse is the response to MsgAuthenticate.
+// The authentication either fails or succeeds, this is why
+// there are no auxiliary fields to the response.
+message MsgAuthenticateResponse {}
+
+// QueryAuthenticationMethods is a query that an x/account account abstraction implementer
+// must handle to return the authentication methods that the account supports.
+message QueryAuthenticationMethods {}
+
+// QueryAuthenticationMethodsResponse is the response to QueryAuthenticationMethods.
+message QueryAuthenticationMethodsResponse {
+  // authentication_methods are the authentication methods that the account supports.
+  repeated string authentication_methods = 1;
+}

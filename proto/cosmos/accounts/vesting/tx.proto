@@ -60,7 +60,7 @@ message MsgInitPeriodicVestingAccount {
 // response type.
 message MsgInitPeriodicVestingAccountResponse {}
 
-// MsgExecuteMessages defines a message that enable vesting account to execute moule messages
+// MsgExecuteMessages defines a message that enable vesting account to execute module messages
 message MsgExecuteMessages {
   option (cosmos.msg.v1.signer) = "sender";
 

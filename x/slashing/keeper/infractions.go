@@ -58,12 +58,21 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	signedBlocksWindow := params.SignedBlocksWindow
 
 	// Compute the relative index, so we count the blocks the validator *should*
-	// have signed. We will use the 0-value default signing info if not present,
-	// except for start height. The index is in the range [0, SignedBlocksWindow)
+	// have signed. We will also use the 0-value default signing info if not present.
+	// The index is in the range [0, SignedBlocksWindow)
 	// and is used to see if a validator signed a block at the given height, which
 	// is represented by a bit in the bitmap.
-	index := signInfo.IndexOffset % signedBlocksWindow
-	signInfo.IndexOffset++
+	// The validator start height should get mapped to index 0, so we computed index as:
+	// (height - startHeight) % signedBlocksWindow
+	//
+	// NOTE: There is subtle different behavior between genesis validators and non-genesis validators.
+	// A genesis validator will start at index 0, whereas a non-genesis validator's startHeight will be the block
+	// they bonded on, but the first block they vote on will be one later. (And thus their first vote is at index 1)
+	index := (height - signInfo.StartHeight) % signedBlocksWindow
+	if signInfo.StartHeight > height {
+		return fmt.Errorf("invalid state, the validator %v has start height %d , which is greater than the current height %d (as parsed from the header)",
+			signInfo.Address, signInfo.StartHeight, height)
+	}
 
 	// determine if the validator signed the previous block
 	previous, err := k.GetMissedBlockBitmapValue(ctx, consAddr, index)
@@ -71,6 +80,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		return errors.Wrap(err, "failed to get the validator's bitmap value")
 	}
 
+	modifiedSignInfo := false
 	missed := signed == comet.BlockIDFlagAbsent
 	switch {
 	case !previous && missed:
@@ -81,6 +91,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		}
 
 		signInfo.MissedBlocksCounter++
+		modifiedSignInfo = true
 
 	case previous && !missed:
 		// Bitmap value has changed from missed to not missed, so we flip the bit
@@ -90,6 +101,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		}
 
 		signInfo.MissedBlocksCounter--
+		modifiedSignInfo = true
 
 	default:
 		// bitmap value at this index has not changed, no need to update counter
@@ -126,6 +138,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
+		modifiedSignInfo = true
 		validator, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
 		if err != nil {
 			return err
@@ -172,8 +185,9 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 
 			// We need to reset the counter & bitmap so that the validator won't be
 			// immediately slashed for downtime upon re-bonding.
+			// We don't set the start height as this will get correctly set
+			// once they bond again in the AfterValidatorBonded hook!
 			signInfo.MissedBlocksCounter = 0
-			signInfo.IndexOffset = 0
 			err = k.DeleteMissedBlockBitmap(ctx, consAddr)
 			if err != nil {
 				return err
@@ -198,5 +212,8 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	}
 
 	// Set the updated signing info
-	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
+	if modifiedSignInfo {
+		return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
+	}
+	return nil
 }

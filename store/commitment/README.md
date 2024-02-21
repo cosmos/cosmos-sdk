@@ -32,7 +32,11 @@ See this [section](https://docs.google.com/document/d/1l6uXIjTPHOOWM5N4sUUmUfCZv
 
 ## State Sync
 
-<!-- TODO -->
+State commitment (SC) does not have a direct notion of state sync. Rather,
+`snapshots.Manager` is responsible for creating and restoring snapshots of the
+entire state. The `snapshots.Manager` has a `CommitSnapshotter` field which is
+fulfilled by the `CommitStore` type, specifically it implements the `Snapshot`
+and `Restore` methods.
 
 ## Usage
 

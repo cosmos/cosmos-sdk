@@ -77,7 +77,12 @@ to the implementation, e.g. asynchronous or synchronous.
 
 ## State Sync
 
-<!-- TODO -->
+State storage (SS) does not have a direct notion of state sync. Rather, `snapshots.Manager`
+is responsible for creating and restoring snapshots of the entire state. The
+`snapshots.Manager` has a `StorageSnapshotter` field which is fulfilled by the
+`StorageStore` type, specifically it implements the `Restore` method. The `Restore`
+method reads off of a provided channel and writes key/value pairs directly to a
+batch object which is committed to the underlying SS engine.
 
 ## Non-Consensus Data
 

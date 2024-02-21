@@ -93,7 +93,8 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
-	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	now := sdkCtx.HeaderInfo().Time
 
 	for i, msg := range msgs {
 		signers, _, err := k.cdc.GetMsgV1Signers(msg)
@@ -127,7 +128,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 				return nil, err
 			}
 
-			resp, err := authorization.Accept(ctx, msg)
+			resp, err := authorization.Accept(sdkCtx, msg)
 			if err != nil {
 				return nil, err
 			}
@@ -155,7 +156,6 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
 		}
 
-		sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO: remove after baseapp's MsgServiceRouter migrates to use context.Context
 		msgResp, err := handler(sdkCtx, msg)
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message %v", msg)

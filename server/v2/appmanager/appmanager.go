@@ -26,10 +26,6 @@ type AppManager[T transaction.Tx] struct {
 	stf            stf.STF[T] // consider if instead of having an interface (which is boxed?), we could have another type Parameter defining STF.
 }
 
-// TODO add initgenesis and figure out how to use it
-// TODO make sure to provide defaults for handlers and configs
-// TODO: handle multimessage txs
-
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
 func (a AppManager[T]) BuildBlock(ctx context.Context, height, maxBlockBytes uint64) ([]T, error) {
 	latestVersion, currentState, err := a.db.StateLatest()

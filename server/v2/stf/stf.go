@@ -27,7 +27,7 @@ type STF[T transaction.Tx] struct {
 	doEndBlock        func(ctx context.Context) error
 	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)
 
-	doTxValidation func(ctx context.Context, tx T) error // TODO: rewrite antehandlers remove simulate
+	doTxValidation func(ctx context.Context, tx T) error
 	postTxExec     func(ctx context.Context, tx T, success bool) error
 
 	branch           func(state store.ReaderMap) store.WriterMap // branch is a function that given a readonly state it returns a writable version of it.
@@ -165,7 +165,7 @@ func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit, execMode)
 
-	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
+	// atomic execution of the all messages in a transaction,
 	msgsResp, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
@@ -210,7 +210,6 @@ func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint
 }
 
 // runTxMsgs will execute the messages contained in the TX with the provided state.
-// TODO: multimessage both atomic and non atomic
 func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode) ([]transaction.Type, error) {
 	execCtx := s.makeContext(ctx, tx.GetSenders(), state, gasLimit, execMode)
 	msgs := tx.GetMessages()
@@ -238,7 +237,6 @@ func (s STF[T]) preBlock(ctx context.Context, state store.WriterMap, txs []T) ([
 			coreevent.Attribute{Key: "mode", Value: "PreBlock"},
 		)
 	}
-	// TODO: update consensus module to accept consensus messages (facu)
 
 	return pbCtx.events, nil
 }
@@ -339,7 +337,6 @@ func (s STF[T]) clone() STF[T] {
 }
 
 // executionContext is a struct that holds the context for the execution of a tx.
-// TODO: look if we are missing anything here
 type executionContext struct {
 	context.Context
 
@@ -347,6 +344,8 @@ type executionContext struct {
 	meter  gas.Meter
 	events []event.Event
 	sender []transaction.Identity
+	// TODO: add headerservice
+	// branchdb?
 }
 
 func (s STF[T]) makeContext(
@@ -375,7 +374,7 @@ func applyStateChanges(dst, src store.WriterMap) error {
 	return dst.ApplyStateChanges(changes)
 }
 
-// isCtxCancelled reports if the context was cancelled.
+// isCtxCancelled reports if the context was canceled.
 func isCtxCancelled(ctx context.Context) error {
 	select {
 	case <-ctx.Done():

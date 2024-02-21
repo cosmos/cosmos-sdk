@@ -45,8 +45,7 @@ func NewGasMeterService() gas.Service {
 	return gasService{}
 }
 
-type gasService struct {
-}
+type gasService struct{}
 
 func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
 	return ctx.(*executionContext).meter

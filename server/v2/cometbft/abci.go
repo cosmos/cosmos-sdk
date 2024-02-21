@@ -388,7 +388,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 		StateChanges: stateChanges,
 	})
 
-	cp, err := c.GetConsensusParams(ctx)
+	cp, err := c.GetConsensusParams(ctx) // we get the consensus params from the latest state because we committed state above
 	if err != nil {
 		return nil, err
 	}

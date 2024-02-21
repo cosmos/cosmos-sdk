@@ -33,8 +33,7 @@ var DefaultConfig = StoreConfig{
 	IterNextCostFlat: 30,
 }
 
-type NoOpMeter struct {
-}
+type NoOpMeter struct{}
 
 func (n NoOpMeter) Consumed() coregas.Gas { return 0 }
 

@@ -3,6 +3,9 @@ package keeper
 import (
 	context "context"
 
+	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -79,4 +82,18 @@ func (k *Keeper) GetAuthority() []byte {
 func (k *Keeper) IsAllowed(ctx context.Context, msgURL string) (bool, error) {
 	has, err := k.DisableList.Has(ctx, msgURL)
 	return !has, err
+}
+
+func (k *Keeper) IsAllowedPreMessageHook(ctx context.Context, msg proto.Message) error {
+	_, err := k.IsAllowed(ctx, msgTypeURL(msg))
+	return err
+}
+
+// MsgTypeURL returns the TypeURL of a `sdk.Msg`.
+func msgTypeURL(msg proto.Message) string {
+	if m, ok := msg.(protov2.Message); ok {
+		return "/" + string(m.ProtoReflect().Descriptor().FullName())
+	}
+
+	return "/" + proto.MessageName(msg)
 }

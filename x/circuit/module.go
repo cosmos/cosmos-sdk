@@ -117,3 +117,7 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
+
+func RegisterPreMessageHooks(builder any) {
+	// TODO: register type
+}

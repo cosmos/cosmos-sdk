@@ -129,13 +129,27 @@ func intoABCIValidatorUpdates(updates []appmodule.ValidatorUpdate) []abci.Valida
 
 	for i := range updates {
 		valsetUpdates[i] = abci.ValidatorUpdate{
-			// PubKey: cmtcrypto.PublicKey{
-			// 	Sum: &cmtcrypto.PublicKey_Ed25519{ // TODO: check if this is ok, i didn't find a way to check the pubkey type
-			// 		Ed25519: updates[i].PubKey,
-			// 	},
-			// }, // TODO uncomment
+			PubKey: cmtcrypto.PublicKey{
+				Sum: &cmtcrypto.PublicKey_Ed25519{ // by default we set ed25519
+					Ed25519: updates[i].PubKey,
+				},
+			}, 
 			Power: updates[i].Power,
 		}
+
+		if updates[i].PubKeyType == "secp256k1" {
+			valsetUpdates[i].PubKey =  cmtcrypto.PublicKey{
+				Sum: &cmtcrypto.PublicKey_Secp256k1{ 
+					Secp256k1: updates[i].PubKey,
+				},
+			}, 
+		} else if updates[i].PubKeyType == "sr25519" {
+			valsetUpdates[i].PubKey =  cmtcrypto.PublicKey{
+				Sum: &cmtcrypto.PublicKey_Sr25519{ 
+					Sr25519: updates[i].PubKey,
+				},
+			}, 
+		} 
 	}
 
 	return valsetUpdates
@@ -324,8 +338,7 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.RequestFinalizeBloc
 	return nil
 }
 
-// TODO: implement this, only from committed state, there's no need to get it from
-// uncommitted store because we are committing before responding to FinalizeBlock.
+// GetConsensusParams makes a query to the consensus module in order to get the latest consensus parameters from committed state
 func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	cs := &cmtproto.ConsensusParams{}
 	latestVersion, err := c.store.LatestVersion()
@@ -339,7 +352,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 		return nil, fmt.Errorf("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
-		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds) // TODO verify this conversion
+		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds) 
 		cs = &types1.ConsensusParams{
 			Block: &types1.BlockParams{
 				MaxBytes: r.Params.Block.MaxBytes,

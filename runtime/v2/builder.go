@@ -10,10 +10,12 @@ import (
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	"cosmossdk.io/server/v2/stf/branch"
+
+	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
-type branchFunc func(state store.GetReader) store.GetWriter
+type branchFunc func(state store.ReaderMap) store.WriterMap
 
 // AppBuilder is a type that is injected into a container by the runtime module
 // (as *AppBuilder) which can be used to create an app which is compatible with
@@ -34,48 +36,30 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 // RegisterModules registers the provided modules with the module manager and
 // the basic module manager. This is the primary hook for integrating with
 // modules which are not registered using the app config.
-func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error {
+func (a *AppBuilder) RegisterModules(modules ...sdkmodule.AppModule) error { // TODO use directly appmodule.AppModule and remove app module basic
 	for _, appModule := range modules {
 		name := appModule.Name()
 		if _, ok := a.app.moduleManager.modules[name]; ok {
-			return fmt.Errorf("AppModule named %q already exists", name)
+			return fmt.Errorf("module named %q already exists", name)
 		}
 
 		a.app.moduleManager.modules[name] = appModule
 		appModule.RegisterInterfaces(a.app.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.app.amino)
-
-		// if module, ok := appModule.(module.HasServices); ok {
-		// 	module.RegisterServices(a.app.configurator)
-		// } else if module, ok := appModule.(appmodule.HasServices); ok {
-		// 	if err := module.RegisterServices(a.app.configurator); err != nil {
-		// 		return err
-		// 	}
-		// }
-
-		// moduleMsgRouter := _newModuleMsgRouter(name, s.msgRouterBuilder)
-		// m.RegisterMsgHandlers(moduleMsgRouter)
-		// m.RegisterPreMsgHandler(moduleMsgRouter)
-		// m.RegisterPostMsgHandler(moduleMsgRouter)
-		// // build query handler
-		// moduleQueryRouter := _newModuleMsgRouter(name, s.queryRouterBuilder)
-		// m.RegisterQueryHandler(moduleQueryRouter)
 	}
 
 	return nil
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(store store.Store, opts ...AppBuilderOption) (*App, error) {
+func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
 		opt(a)
 	}
 
 	// default branch
 	if a.branch == nil {
-		// a.branch = func(state store.GetReader) store.GetWriter {
-		// 	return branch.NewStore(state)
-		// }
+		a.branch = branch.DefaultNewWriterMap
 	}
 
 	// default tx validator
@@ -83,7 +67,7 @@ func (a *AppBuilder) Build(store store.Store, opts ...AppBuilderOption) (*App, e
 		a.txValidator = a.app.moduleManager.TxValidation()
 	}
 
-	if err := a.app.moduleManager.RegisterMsgs(a.app.msgRouterBuilder); err != nil {
+	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
 		return nil, err
 	}
 
@@ -104,7 +88,7 @@ func (a *AppBuilder) Build(store store.Store, opts ...AppBuilderOption) (*App, e
 		valUpdate,
 		a.branch,
 	)
-	a.app.store = store
+	a.app.db = db
 
 	return a.app, nil
 }

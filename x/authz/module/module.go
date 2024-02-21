@@ -7,6 +7,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/errors"
@@ -26,10 +27,11 @@ var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodule.HasMigrations   = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the authz module.
@@ -42,16 +44,21 @@ func (AppModuleBasic) Name() string {
 	return authz.ModuleName
 }
 
-// RegisterServices registers a gRPC query service to respond to the
-// module-specific gRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	authz.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	authz.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	authz.RegisterQueryServer(registrar, am.keeper)
+	authz.RegisterMsgServer(registrar, am.keeper)
+
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	err := cfg.RegisterMigration(authz.ModuleName, 1, m.Migrate1to2)
-	if err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", authz.ModuleName, err))
+	if err := mr.Register(authz.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", authz.ModuleName, err)
 	}
+
+	return nil
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.

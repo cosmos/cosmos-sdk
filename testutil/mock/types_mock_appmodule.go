@@ -43,20 +43,6 @@ func (m *MockAppModuleWithAllExtensions) EXPECT() *MockAppModuleWithAllExtension
 	return m.recorder
 }
 
-// ConsensusVersion mocks base method.
-func (m *MockAppModuleWithAllExtensions) ConsensusVersion() uint64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConsensusVersion")
-	ret0, _ := ret[0].(uint64)
-	return ret0
-}
-
-// ConsensusVersion indicates an expected call of ConsensusVersion.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) ConsensusVersion() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusVersion", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).ConsensusVersion))
-}
-
 // DefaultGenesis mocks base method.
 func (m *MockAppModuleWithAllExtensions) DefaultGenesis(arg0 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
@@ -245,20 +231,6 @@ func NewMockAppModuleWithAllExtensionsABCI(ctrl *gomock.Controller) *MockAppModu
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAppModuleWithAllExtensionsABCI) EXPECT() *MockAppModuleWithAllExtensionsABCIMockRecorder {
 	return m.recorder
-}
-
-// ConsensusVersion mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) ConsensusVersion() uint64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConsensusVersion")
-	ret0, _ := ret[0].(uint64)
-	return ret0
-}
-
-// ConsensusVersion indicates an expected call of ConsensusVersion.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) ConsensusVersion() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusVersion", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).ConsensusVersion))
 }
 
 // DefaultGenesis mocks base method.
@@ -467,6 +439,20 @@ func (mr *MockCoreAppModuleMockRecorder) BeginBlock(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginBlock", reflect.TypeOf((*MockCoreAppModule)(nil).BeginBlock), arg0)
 }
 
+// ConsensusVersion mocks base method.
+func (m *MockCoreAppModule) ConsensusVersion() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConsensusVersion")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// ConsensusVersion indicates an expected call of ConsensusVersion.
+func (mr *MockCoreAppModuleMockRecorder) ConsensusVersion() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusVersion", reflect.TypeOf((*MockCoreAppModule)(nil).ConsensusVersion))
+}
+
 // DefaultGenesis mocks base method.
 func (m *MockCoreAppModule) DefaultGenesis(arg0 appmodule.GenesisTarget) error {
 	m.ctrl.T.Helper()
@@ -624,6 +610,20 @@ func (m *MockCoreAppModuleWithPreBlock) BeginBlock(arg0 context.Context) error {
 func (mr *MockCoreAppModuleWithPreBlockMockRecorder) BeginBlock(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginBlock", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).BeginBlock), arg0)
+}
+
+// ConsensusVersion mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) ConsensusVersion() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConsensusVersion")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// ConsensusVersion indicates an expected call of ConsensusVersion.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) ConsensusVersion() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusVersion", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).ConsensusVersion))
 }
 
 // DefaultGenesis mocks base method.

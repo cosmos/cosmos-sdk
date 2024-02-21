@@ -1,23 +1,23 @@
 package gas
 
 import (
-	"cosmossdk.io/server/v2/core/stf"
+	coregas "cosmossdk.io/core/gas"
 	"cosmossdk.io/server/v2/core/store"
 )
 
 // DefaultWrapWithGasMeter defines the default wrap with gas meter function in stf. In case
 // the meter sets as limit stf.NoGasLimit, then a fast path is taken and the store.WriterMap
 // is returned.
-func DefaultWrapWithGasMeter(meter stf.GasMeter, state store.WriterMap) store.WriterMap {
-	if meter.Limit() == stf.NoGasLimit {
+func DefaultWrapWithGasMeter(meter coregas.Meter, state store.WriterMap) store.WriterMap {
+	if meter.Limit() == coregas.NoGasLimit {
 		return state
 	}
 	return NewMeteredWriterMap(DefaultConfig, meter, state)
 }
 
-// DefaultGetMeter returns the default gas meter. In case it is stf.NoGasLimit a NoOpMeter is returned.
-func DefaultGetMeter(gasLimit uint64) stf.GasMeter {
-	if gasLimit == stf.NoGasLimit {
+// DefaultGetMeter returns the default gas meter. In case it is coregas.NoGasLimit a NoOpMeter is returned.
+func DefaultGetMeter(gasLimit uint64) coregas.Meter {
+	if gasLimit == coregas.NoGasLimit {
 		return NoOpMeter{}
 	}
 	return NewMeter(gasLimit)
@@ -33,13 +33,12 @@ var DefaultConfig = StoreConfig{
 	IterNextCostFlat: 30,
 }
 
-type NoOpMeter struct {
-}
+type NoOpMeter struct{}
 
-func (n NoOpMeter) GasConsumed() stf.Gas { return 0 }
+func (n NoOpMeter) Consumed() coregas.Gas { return 0 }
 
-func (n NoOpMeter) Limit() stf.Gas { return stf.NoGasLimit }
+func (n NoOpMeter) Limit() coregas.Gas { return coregas.NoGasLimit }
 
-func (n NoOpMeter) ConsumeGas(_ stf.Gas, _ string) error { return nil }
+func (n NoOpMeter) Consume(_ coregas.Gas, _ string) error { return nil }
 
-func (n NoOpMeter) RefundGas(_ stf.Gas, _ string) error { return nil }
+func (n NoOpMeter) Refund(_ coregas.Gas, _ string) error { return nil }

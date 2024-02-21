@@ -89,6 +89,50 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(int64(0), resPower)
 }
 
+func (s *KeeperTestSuite) TestGetLastValidators() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	params, err := keeper.Params.Get(ctx)
+	require.NoError(err)
+
+	params.MaxValidators = 50
+	require.NoError(keeper.Params.Set(ctx, params))
+
+	// construct 50 validators all with equal power of 100
+	var validators [50]stakingtypes.Validator
+	for i := 0; i < 50; i++ {
+		validators[i] = testutil.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
+		validators[i].Status = stakingtypes.Unbonded
+		validators[i].Tokens = math.ZeroInt()
+		tokens := keeper.TokensFromConsensusPower(ctx, 100)
+
+		validators[i], _ = validators[i].AddTokensFromDel(tokens)
+		require.Equal(keeper.TokensFromConsensusPower(ctx, 100), validators[i].Tokens)
+
+		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
+
+		validators[i] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[i], true)
+		require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[i]))
+
+		resVal, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[i].Address().Bytes()))
+		require.NoError(err)
+		require.True(validators[i].MinEqual(&resVal))
+	}
+
+	res, err := keeper.GetLastValidators(ctx)
+	require.NoError(err)
+	require.Len(res, 50)
+
+	// reduce max validators to 30 and ensure we only get 30 back
+	params.MaxValidators = 30
+	require.NoError(keeper.Params.Set(ctx, params))
+
+	res, err = keeper.GetLastValidators(ctx)
+	require.NoError(err)
+	require.Len(res, 30)
+}
+
 // This function tests UpdateValidator, GetValidator, GetLastValidators, RemoveValidator
 func (s *KeeperTestSuite) TestValidatorBasics() {
 	ctx, keeper := s.ctx, s.stakingKeeper
@@ -379,6 +423,7 @@ func (s *KeeperTestSuite) TestValidatorToken() {
 	require.True(validator.Tokens.IsZero())
 }
 
+// TestUnbondingValidator tests the functionality of unbonding a validator.
 func (s *KeeperTestSuite) TestUnbondingValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
@@ -390,7 +435,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 
 	// set unbonding validator
 	endTime := time.Now()
-	endHeight := ctx.BlockHeight() + 10
+	endHeight := ctx.HeaderInfo().Height + 10
 	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()}))
 
 	resVals, err := keeper.GetUnbondingValidators(ctx, endTime, endHeight)
@@ -417,12 +462,12 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	require.Equal(valAddr.String(), resVals[0])
 
 	// check unbonding mature validators
-	ctx = ctx.WithBlockHeight(endHeight).WithHeaderInfo(header.Info{Time: endTime})
+	ctx = ctx.WithHeaderInfo(header.Info{Height: endHeight, Time: endTime})
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
 
 	require.NoError(keeper.SetValidator(ctx, validator))
-	ctx = ctx.WithBlockHeight(endHeight).WithHeaderInfo(header.Info{Time: endTime})
+	ctx = ctx.WithHeaderInfo(header.Info{Height: endHeight, Time: endTime})
 
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "unexpected validator in unbonding queue; status was not unbonding")

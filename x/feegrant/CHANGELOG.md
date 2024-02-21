@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Consens Breaking Changes
+
+* [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist
+
 ### Features
 
 * [#14649](https://github.com/cosmos/cosmos-sdk/pull/14649) The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
@@ -46,3 +50,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#15347](https://github.com/cosmos/cosmos-sdk/pull/15347) `ValidateBasic` is treated as a no op now with with acceptance of RFC001
 * [#17869](https://github.com/cosmos/cosmos-sdk/pull/17869) `NewGrant`, `NewMsgGrantAllowance` & `NewMsgRevokeAllowance` takes strings instead of `sdk.AccAddress`
 * [#16535](https://github.com/cosmos/cosmos-sdk/pull/16535) Use collections for `FeeAllowance`, `FeeAllowanceQueue`.
+* [#18815](https://github.com/cosmos/cosmos-sdk/pull/18815) Add the implementation of the `UpdatePeriodReset` interface to update the value of the `PeriodReset` field.

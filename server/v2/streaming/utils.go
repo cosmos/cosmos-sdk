@@ -1,6 +1,6 @@
 package streaming
 
-import "cosmossdk.io/server/v2/core/event"
+import "cosmossdk.io/core/event"
 
 func IntoStreamingEvents(events []event.Event) []*Event {
 	streamingEvents := make([]*Event, len(events))

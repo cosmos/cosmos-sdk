@@ -305,7 +305,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	return &v1.MsgDepositResponse{}, nil
 }
 
-// UpdateParams implements the MsgServer.UpdateParams method.
+// UpdateParams implements the v1.UpdateParams method.
 func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*v1.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
@@ -320,6 +320,82 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*
 	}
 
 	return &v1.MsgUpdateParamsResponse{}, nil
+}
+
+// UpdateMessageParams implements the v1.MsgServer method
+func (k msgServer) UpdateMessageParams(ctx context.Context, msg *v1.MsgUpdateMessageParams) (*v1.MsgUpdateMessageParamsResponse, error) {
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+
+	// delete the message params if the params are empty
+	if msg.Params == nil || *msg.Params == (v1.MessageBasedParams{}) {
+		if err := k.MessageBasedParams.Remove(ctx, msg.MsgUrl); err != nil {
+			return nil, err
+		}
+
+		return &v1.MsgUpdateMessageParamsResponse{}, nil
+	}
+
+	if err := msg.Params.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	// note: we don't need to validate the message URL here, as it is gov gated
+	// a chain may want to configure proposal messages before having an upgrade
+	// adding new messages.
+
+	if err := k.MessageBasedParams.Set(ctx, msg.MsgUrl, *msg.Params); err != nil {
+		return nil, err
+	}
+
+	return &v1.MsgUpdateMessageParamsResponse{}, nil
+}
+
+// SudoExec implements the v1.MsgServer method
+func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSudoExecResponse, error) {
+	if msg == nil || msg.Msg == nil {
+		return nil, errors.Wrap(govtypes.ErrInvalidProposal, "sudo-ed message cannot be nil")
+	}
+
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+
+	sudoedMsg, err := msg.GetSudoedMsg()
+	if err != nil {
+		return nil, errors.Wrapf(govtypes.ErrInvalidProposal, "invalid sudo-ed message: %s", err)
+	}
+
+	// check if the message implements the HasValidateBasic interface
+	if m, ok := sudoedMsg.(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return nil, errors.Wrapf(govtypes.ErrInvalidProposal, "invalid sudo-ed message: %s", err)
+		}
+	}
+
+	handler := k.router.Handler(sudoedMsg)
+	if handler == nil {
+		return nil, errors.Wrapf(govtypes.ErrInvalidProposal, "unrecognized message route: %s", sdk.MsgTypeURL(sudoedMsg))
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	msgResp, err := handler(sdkCtx, sudoedMsg)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
+	}
+
+	// emit the events from the executed message
+	events := msgResp.Events
+	sdkEvents := make([]sdk.Event, 0, len(events))
+	for _, event := range events {
+		sdkEvents = append(sdkEvents, sdk.Event(event))
+	}
+	sdkCtx.EventManager().EmitEvents(sdkEvents)
+
+	return &v1.MsgSudoExecResponse{
+		Result: msgResp.Data,
+	}, nil
 }
 
 type legacyMsgServer struct {

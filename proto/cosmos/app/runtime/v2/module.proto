@@ -43,12 +43,16 @@ message Module {
   // if it is specified.
   repeated string export_genesis = 7;
 
+  // order_migrations defines the order in which module migrations are performed.
+  // If this is left empty, it uses the default migration order (alphabeticaly).
+  repeated string order_migrations = 8;
+
   // GasConfig is the config object for gas limits.
-  GasConfig gas_config = 8;
+  GasConfig gas_config = 9;
 
   // override_store_keys is an optional list of overrides for the module store keys
   // to be used in keeper construction.
-  repeated StoreKeyConfig override_store_keys = 9;
+  repeated StoreKeyConfig override_store_keys = 10;
 }
 
 // GasConfig is the config object for gas limits.

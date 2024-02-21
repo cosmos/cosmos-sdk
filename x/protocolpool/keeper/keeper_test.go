@@ -7,7 +7,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -23,12 +25,16 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-var poolAcc = authtypes.NewEmptyModuleAccount(types.ModuleName)
+var (
+	poolAcc   = authtypes.NewEmptyModuleAccount(types.ModuleName)
+	streamAcc = authtypes.NewEmptyModuleAccount(types.StreamAccount)
+)
 
 type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx           sdk.Context
+	environment   appmodule.Environment
 	poolKeeper    poolkeeper.Keeper
 	authKeeper    *pooltestutil.MockAccountKeeper
 	bankKeeper    *pooltestutil.MockBankKeeper
@@ -41,6 +47,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	environment := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
@@ -50,6 +57,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper := pooltestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	accountKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress())
 	s.authKeeper = accountKeeper
 
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
@@ -61,7 +69,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		environment,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -69,6 +77,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	)
 	s.ctx = ctx
 	s.poolKeeper = poolKeeper
+	s.environment = environment
 
 	types.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
@@ -87,6 +96,14 @@ func (s *KeeperTestSuite) mockWithdrawContinuousFund() {
 	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, gomock.Any()).Return(distrBal).AnyTimes()
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	s.stakingKeeper.EXPECT().BondDenom(s.ctx).AnyTimes()
+}
+
+func (s *KeeperTestSuite) mockStreamFunds() {
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	s.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
+	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolAcc.GetAddress()).Return(distrBal).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {

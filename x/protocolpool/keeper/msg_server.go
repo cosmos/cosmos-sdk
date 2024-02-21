@@ -121,6 +121,22 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
+	// Check if total funds percentage exceeds 100%
+	// If exceeds, we should not setup continuous fund proposal.
+	totalStreamFundsPercentage := math.ZeroInt()
+	err = k.Keeper.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	percentage := msg.Percentage.MulInt64(100)
+	totalStreamFundsPercentage = totalStreamFundsPercentage.Add(percentage.TruncateInt())
+	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
+		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %v", totalStreamFundsPercentage.Sub(percentage.TruncateInt()))
+	}
+
 	// Create continuous fund proposal
 	cf := types.ContinuousFund{
 		Recipient:  msg.Recipient,
@@ -135,7 +151,6 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Set recipient fund percentage & distribution
-	percentage := cf.Percentage.MulInt64(100)
 	err = k.RecipientFundPercentage.Set(ctx, recipient, percentage.TruncateInt())
 	if err != nil {
 		return nil, err
@@ -166,8 +181,6 @@ func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWit
 }
 
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
@@ -177,8 +190,8 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, err
 	}
 
-	canceledHeight := sdkCtx.BlockHeight()
-	canceledTime := sdkCtx.BlockTime()
+	canceledHeight := k.environment.HeaderService.GetHeaderInfo(ctx).Height
+	canceledTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 
 	found, err := k.ContinuousFund.Has(ctx, recipient)
 	if !found {

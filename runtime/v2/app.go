@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // App is a wrapper around AppManager and ModuleManager that can be used in hybrid
@@ -34,10 +33,11 @@ type App struct {
 	// app manager dependencies
 	stf                 *stf.STF[transaction.Tx]
 	msgRouterBuilder    *stf.MsgRouterBuilder
+	queryRouterBuilder  *stf.MsgRouterBuilder
 	mempool             mempool.Mempool[transaction.Tx]
 	prepareBlockHandler coreappmanager.PrepareHandler[transaction.Tx]
 	verifyBlockHandler  coreappmanager.ProcessHandler[transaction.Tx]
-	store               store.Store
+	db                  store.Store
 
 	// app configuration
 	logger    log.Logger
@@ -45,12 +45,11 @@ type App struct {
 	appConfig *appv1alpha1.Config
 
 	// modules configuration
-	configurator      module.Configurator
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
-	moduleManager     *MMv2
+	moduleManager     *MM
 }
 
 // RegisterStores registers the provided store keys.
@@ -81,7 +80,7 @@ func (a *App) Load() error {
 
 	appManagerBuilder := appmanager.Builder[transaction.Tx]{
 		STF:                 a.stf,
-		DB:                  a.store,
+		DB:                  a.db,
 		ValidateTxGasLimit:  a.config.GasConfig.ValidateTxGasLimit,
 		QueryGasLimit:       a.config.GasConfig.QueryGasLimit,
 		SimulationGasLimit:  a.config.GasConfig.SimulationGasLimit,
@@ -93,15 +92,9 @@ func (a *App) Load() error {
 	if err != nil {
 		return err
 	}
-
 	a.AppManager = appManager
 
 	return nil
-}
-
-// Configurator returns the app's configurator.
-func (a *App) Configurator() module.Configurator {
-	return a.configurator
 }
 
 // LoadHeight loads a particular height
@@ -125,6 +118,3 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 
 	return a.storeKeys[i]
 }
-
-// TODO
-// Genesis (NO BASIC MANAGER), Migrations

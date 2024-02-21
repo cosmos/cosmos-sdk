@@ -20,8 +20,8 @@ var (
 
 func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 	invalidCoin := sdk.NewInt64Coin("foo", 0)
-	startTime := suite.ctx.BlockTime().Add(10 * time.Second)
-	invalidStartTime := suite.ctx.BlockTime().Add(-15 * time.Second)
+	startTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(10 * time.Second)
+	invalidStartTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(-15 * time.Second)
 	period := time.Duration(60) * time.Second
 	zeroPeriod := time.Duration(0) * time.Second
 	testCases := map[string]struct {
@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 }
 
 func (suite *KeeperTestSuite) TestMsgClaimBudget() {
-	startTime := suite.ctx.BlockTime().Add(-70 * time.Second)
+	startTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(-70 * time.Second)
 	period := time.Duration(60) * time.Second
 
 	testCases := map[string]struct {
@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 		},
 		"claiming before start time": {
 			preRun: func() {
-				startTime := suite.ctx.BlockTime().Add(3600 * time.Second)
+				startTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(3600 * time.Second)
 				// Prepare the budget proposal with a future start time
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 		},
 		"budget period has not passed": {
 			preRun: func() {
-				startTime := suite.ctx.BlockTime().Add(-50 * time.Second)
+				startTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(-50 * time.Second)
 				// Prepare the budget proposal with start time and a short period
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 		"valid double claim attempt": {
 			preRun: func() {
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				startTimeBeforeMonth := suite.ctx.BlockTime().Add(time.Duration(-oneMonthInSeconds) * time.Second)
+				startTimeBeforeMonth := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(-oneMonthInSeconds) * time.Second)
 				oneMonthPeriod := time.Duration(oneMonthInSeconds) * time.Second
 				// Prepare the budget proposal with valid start time and period of 1 month (in seconds)
 				budget := types.Budget{
@@ -265,7 +265,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				suite.Require().NoError(err)
 
 				// Create a new context with an updated block time to simulate a delay
-				newBlockTime := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				newBlockTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{
 					Time: newBlockTime,
 				})
@@ -296,7 +296,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				suite.Require().NoError(err)
 
 				// Create a new context with an updated block time to simulate a delay
-				newBlockTime := suite.ctx.BlockTime().Add(60 * time.Second)
+				newBlockTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(60 * time.Second)
 				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{
 					Time: newBlockTime,
 				})
@@ -364,7 +364,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:  recipient.String(),
 					Percentage: percentage,
@@ -399,9 +399,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 
 				// Set ToDistribute
-				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				suite.stakingKeeper.EXPECT().BondDenom(suite.ctx).Return("stake", nil).AnyTimes()
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+				err = suite.poolKeeper.ToDistribute.Set(suite.ctx, math.NewInt(100000))
 				suite.Require().NoError(err)
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
@@ -412,7 +410,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
-				expiry := suite.ctx.BlockTime().Add(time.Duration(-1) * time.Second)
+				expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(-1) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:  recipient.String(),
 					Percentage: percentage,
@@ -431,7 +429,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:  recipient.String(),
 					Percentage: percentage,
@@ -471,6 +469,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.mockStreamFunds()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
@@ -483,7 +482,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:  recipient.String(),
 					Percentage: percentage,
@@ -499,6 +498,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.mockStreamFunds()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
@@ -512,7 +512,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				percentage, err := math.LegacyNewDecFromStr("0.3")
 				suite.Require().NoError(err)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:  recipient.String(),
 					Percentage: percentage,
@@ -565,6 +565,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.mockStreamFunds()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
@@ -613,10 +614,11 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 	suite.Require().NoError(err)
 	negativePercentage, err := math.LegacyNewDecFromStr("-0.2")
 	suite.Require().NoError(err)
-	invalidExpirty := suite.ctx.BlockTime().Add(-15 * time.Second)
+	invalidExpirty := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(-15 * time.Second)
 	oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-	expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+	expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 	testCases := map[string]struct {
+		preRun    func()
 		input     *types.MsgCreateContinuousFund
 		expErr    bool
 		expErrMsg string
@@ -700,11 +702,39 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 			},
 			expErr: false,
 		},
+		"total funds percentage > 100": {
+			preRun: func() {
+				percentage, err := math.LegacyNewDecFromStr("0.9")
+				recipient2 := sdk.AccAddress([]byte("recipientAddr2___________________"))
+				suite.Require().NoError(err)
+				cf := types.ContinuousFund{
+					Recipient:  recipient2.String(),
+					Percentage: percentage,
+					Expiry:     &time.Time{},
+				}
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient2, cf)
+				suite.Require().NoError(err)
+				intPercentage := percentage.MulInt64(100)
+				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient2, intPercentage.TruncateInt())
+				suite.Require().NoError(err)
+			},
+			input: &types.MsgCreateContinuousFund{
+				Authority:  suite.poolKeeper.GetAuthority(),
+				Recipient:  recipientAddr.String(),
+				Percentage: percentage,
+				Expiry:     &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: 90",
+		},
 	}
 
 	for name, tc := range testCases {
 		suite.Run(name, func() {
 			suite.SetupTest()
+			if tc.preRun != nil {
+				tc.preRun()
+			}
 
 			_, err := suite.msgServer.CreateContinuousFund(suite.ctx, tc.input)
 			if tc.expErr {
@@ -717,6 +747,10 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 	}
 }
 
+// TestCancelContinuousFund tests the cancellation of a continuous fund.
+// It verifies various scenarios such as canceling a fund with an empty recipient,
+// canceling a fund with no recipient found, canceling a fund with unclaimed funds for the recipient,
+// and canceling a fund with no errors.
 func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 	recipient2 := sdk.AccAddress([]byte("recipientAddr2___________________"))
 
@@ -733,7 +767,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:  "",
 					Percentage: percentage,
@@ -756,7 +790,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:  recipientAddr.String(),
 					Percentage: percentage,
@@ -792,6 +826,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 
 				// Set ToDistribute
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.mockStreamFunds()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 
@@ -815,7 +850,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				expiry := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:  recipientAddr.String(),
 					Percentage: percentage,

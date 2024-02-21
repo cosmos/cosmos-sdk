@@ -3,22 +3,22 @@ package mock
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 func StateCommitment(_ *testing.T) storev2.Committer {
-	db := dbm.NewMemDB()
+	db := db.NewMemDB()
 	tree := iavl.NewIavlTree(db, logger{}, iavl.DefaultConfig())
 
-	sc, _ := commitment.NewCommitStore(map[string]commitment.Tree{"": tree}, logger{})
+	sc, _ := commitment.NewCommitStore(map[string]commitment.Tree{"": tree}, db, logger{})
 	return sc
 }
 

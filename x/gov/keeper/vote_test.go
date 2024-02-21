@@ -32,7 +32,7 @@ func TestVotes(t *testing.T) {
 	require.Error(t, govKeeper.AddVote(ctx, 10, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""), "invalid proposal ID")
 
 	proposal.Status = v1.StatusVotingPeriod
-	err = govKeeper.SetProposal(ctx, proposal)
+	err = govKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	require.NoError(t, err)
 
 	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(invalidOption), ""), "invalid option")
@@ -107,6 +107,31 @@ func TestVotes(t *testing.T) {
 	require.ErrorIs(t, err, collections.ErrNotFound)
 }
 
+func TestVotes_Optimisic(t *testing.T) {
+	govKeeper, mocks, _, ctx := setupGovKeeper(t)
+	authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000))
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	proposal, err := govKeeper.SubmitProposal(ctx, nil, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC)
+	require.NoError(t, err)
+
+	proposal.Status = v1.StatusVotingPeriod
+	require.NoError(t, govKeeper.Proposals.Set(ctx, proposal.Id, proposal))
+
+	proposalID := proposal.Id
+
+	// invalid options
+	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(invalidOption), ""), "invalid option")
+	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""), "invalid option")
+	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), "invalid option"))
+	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionNoWithVeto), ""), "invalid option")
+	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionSpam), ""), "invalid option")
+
+	// valid options
+	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
+}
+
 func TestVotes_MultipleChoiceProposal(t *testing.T) {
 	govKeeper, mocks, _, ctx := setupGovKeeper(t)
 	authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
@@ -123,7 +148,7 @@ func TestVotes_MultipleChoiceProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	proposal.Status = v1.StatusVotingPeriod
-	require.NoError(t, govKeeper.SetProposal(ctx, proposal))
+	require.NoError(t, govKeeper.Proposals.Set(ctx, proposal.Id, proposal))
 
 	proposalID := proposal.Id
 

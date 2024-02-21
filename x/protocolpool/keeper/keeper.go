@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -20,7 +20,7 @@ import (
 )
 
 type Keeper struct {
-	storeService  storetypes.KVStoreService
+	environment   appmodule.Environment
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
@@ -41,17 +41,21 @@ type Keeper struct {
 	ToDistribute collections.Item[math.Int]
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
+func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
-	sb := collections.NewSchemaBuilder(storeService)
+	// ensure stream account is set
+	if addr := ak.GetModuleAddress(types.StreamAccount); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.StreamAccount))
+	}
+
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	keeper := Keeper{
-		storeService:              storeService,
+		environment:               env,
 		authKeeper:                ak,
 		bankKeeper:                bk,
 		stakingKeeper:             sk,
@@ -80,8 +84,7 @@ func (k Keeper) GetAuthority() string {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx context.Context) log.Logger {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.Logger().With(log.ModuleKey, "x/"+types.ModuleName)
+	return k.environment.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 }
 
 // FundCommunityPool allows an account to directly fund the community fund pool.
@@ -95,7 +98,13 @@ func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coin
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 
-// GetCommunityPool get the community pool balance.
+// DistributeFromStreamFunds distributes funds from the protocolpool's stream module account to
+// a receiver address.
+func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.StreamAccount, receiveAddr, amount)
+}
+
+// GetCommunityPool gets the community pool balance.
 func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	if moduleAccount == nil {
@@ -105,7 +114,6 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 }
 
 func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAddress) (sdk.Coin, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	cf, err := k.ContinuousFund.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -113,7 +121,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		}
 		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipient.String())
 	}
-	if cf.Expiry != nil && cf.Expiry.Before(sdkCtx.HeaderInfo().Time) {
+	if cf.Expiry != nil && cf.Expiry.Before(k.environment.HeaderService.GetHeaderInfo(ctx).Time) {
 		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipient.String())
 	}
 
@@ -155,7 +163,7 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAdd
 
 	// Distribute funds to the recipient from pool module account
 	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
-	err = k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
+	err = k.DistributeFromStreamFunds(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %v", recipient.String(), err)
 	}
@@ -188,10 +196,46 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
+	totalStreamFundsPercentage := math.ZeroInt()
+	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
+		return false, nil
+	})
+	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
+		return fmt.Errorf("total funds percentage cannot exceed 100")
+	}
+	if err != nil {
+		return err
+	}
+
+	// send streaming funds to the stream module account
+	if err := k.sendFundsToStreamModule(ctx, denom, totalStreamFundsPercentage); err != nil {
+		return err
+	}
+
 	err = k.ToDistribute.Set(ctx, amount.AmountOf(denom))
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %v", err)
 	}
+	return nil
+}
+
+func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, percentage math.Int) error {
+	totalPoolAmt, err := k.GetCommunityPool(ctx)
+	if err != nil {
+		return err
+	}
+
+	poolAmt := totalPoolAmt.AmountOf(denom)
+	poolAmtDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, poolAmt))
+	amt := poolAmtDec.MulDec(math.LegacyNewDecFromIntWithPrec(percentage, 2))
+	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, amt.AmountOf(denom).TruncateInt()))
+
+	// Send streaming funds to the StreamModuleAccount
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -279,8 +323,6 @@ func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amoun
 }
 
 func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	budget, err := k.BudgetProposal.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -302,7 +344,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 		}
 	}
 
-	currentTime := sdkCtx.BlockTime()
+	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	startTime := budget.StartTime
 
 	// Check if the start time is reached
@@ -369,7 +411,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 		return nil, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
-	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
+	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	if bp.StartTime.IsZero() || bp.StartTime == nil {
 		bp.StartTime = &currentTime
 	}
@@ -412,7 +454,7 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	}
 
 	// Validate expiry
-	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
+	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	if msg.Expiry != nil && msg.Expiry.Compare(currentTime) == -1 {
 		return fmt.Errorf("expiry time cannot be less than the current block time")
 	}

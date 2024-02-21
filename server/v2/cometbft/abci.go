@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
-	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/streaming"
@@ -92,11 +91,8 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 	if err != nil {
 		return nil, err
 	}
-	var execMode corecontext.ExecMode
-	if req.Type == abci.CheckTxType_Recheck {
-		execMode = corecontext.ExecModeReCheck
-	}
-	resp, err := c.app.ValidateTx(ctx, decodedTx, execMode)
+
+	resp, err := c.app.ValidateTx(ctx, decodedTx)
 	if err != nil {
 		return nil, err
 	}

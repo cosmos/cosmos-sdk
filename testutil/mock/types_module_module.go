@@ -503,43 +503,6 @@ func (mr *MockHasServicesMockRecorder) RegisterServices(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockHasServices)(nil).RegisterServices), arg0)
 }
 
-// MockHasConsensusVersion is a mock of HasConsensusVersion interface.
-type MockHasConsensusVersion struct {
-	ctrl     *gomock.Controller
-	recorder *MockHasConsensusVersionMockRecorder
-}
-
-// MockHasConsensusVersionMockRecorder is the mock recorder for MockHasConsensusVersion.
-type MockHasConsensusVersionMockRecorder struct {
-	mock *MockHasConsensusVersion
-}
-
-// NewMockHasConsensusVersion creates a new mock instance.
-func NewMockHasConsensusVersion(ctrl *gomock.Controller) *MockHasConsensusVersion {
-	mock := &MockHasConsensusVersion{ctrl: ctrl}
-	mock.recorder = &MockHasConsensusVersionMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockHasConsensusVersion) EXPECT() *MockHasConsensusVersionMockRecorder {
-	return m.recorder
-}
-
-// ConsensusVersion mocks base method.
-func (m *MockHasConsensusVersion) ConsensusVersion() uint64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConsensusVersion")
-	ret0, _ := ret[0].(uint64)
-	return ret0
-}
-
-// ConsensusVersion indicates an expected call of ConsensusVersion.
-func (mr *MockHasConsensusVersionMockRecorder) ConsensusVersion() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusVersion", reflect.TypeOf((*MockHasConsensusVersion)(nil).ConsensusVersion))
-}
-
 // MockHasABCIEndBlock is a mock of HasABCIEndBlock interface.
 type MockHasABCIEndBlock struct {
 	ctrl     *gomock.Controller

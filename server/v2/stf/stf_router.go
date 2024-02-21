@@ -36,9 +36,11 @@ func NewMsgRouterBuilder() *MsgRouterBuilder {
 }
 
 type MsgRouterBuilder struct {
-	handlers     map[string]MsgHandler
-	preHandlers  map[string][]PreMsgHandler
-	postHandlers map[string][]PostMsgHandler
+	handlers           map[string]MsgHandler
+	globalPreHandlers  []PreMsgHandler
+	preHandlers        map[string][]PreMsgHandler // TODO document how to do ordering, if needed
+	postHandlers       map[string][]PostMsgHandler
+	globalPostHandlers []PostMsgHandler
 }
 
 func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler MsgHandler) error {
@@ -50,6 +52,10 @@ func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler MsgHandler) e
 	return nil
 }
 
+func (b *MsgRouterBuilder) RegisterGlobalPreHandler(handler PreMsgHandler) {
+	b.globalPreHandlers = append(b.globalPreHandlers, handler)
+}
+
 func (b *MsgRouterBuilder) RegisterPreHandler(msgType string, handler PreMsgHandler) {
 	b.preHandlers[msgType] = append(b.preHandlers[msgType], handler)
 }
@@ -58,15 +64,40 @@ func (b *MsgRouterBuilder) RegisterPostHandler(msgType string, handler PostMsgHa
 	b.postHandlers[msgType] = append(b.postHandlers[msgType], handler)
 }
 
+func (b *MsgRouterBuilder) RegisterGlobalPostHandler(handler PostMsgHandler) {
+	b.globalPostHandlers = append(b.globalPostHandlers, handler)
+}
+
 func (b *MsgRouterBuilder) Build() (MsgHandler, error) {
 	handlers := make(map[string]MsgHandler)
+
+	globalPreHandler := func(ctx context.Context, msg transaction.Type) error {
+		for _, h := range b.globalPreHandlers {
+			err := h(ctx, msg)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	globalPostHandler := func(ctx context.Context, msg, msgResp transaction.Type) error {
+		for _, h := range b.globalPostHandlers {
+			err := h(ctx, msg, msgResp)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	for msgType, handler := range b.handlers {
 		// find pre handler
 		preHandlers := b.preHandlers[msgType]
 		// find post handler
 		postHandlers := b.postHandlers[msgType]
 		// build the handler
-		handlers[msgType] = buildHandler(handler, preHandlers, postHandlers)
+		handlers[msgType] = buildHandler(handler, preHandlers, globalPreHandler, postHandlers, globalPostHandler)
 	}
 	// TODO: add checks for when a pre handler/post handler is registered but there is no matching handler.
 
@@ -81,7 +112,7 @@ func (b *MsgRouterBuilder) Build() (MsgHandler, error) {
 	}, nil
 }
 
-func buildHandler(handler MsgHandler, preHandlers []PreMsgHandler, postHandlers []PostMsgHandler) MsgHandler {
+func buildHandler(handler MsgHandler, preHandlers []PreMsgHandler, globalPreHandler PreMsgHandler, postHandlers []PostMsgHandler, globalPostHandler PostMsgHandler) MsgHandler {
 	return func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
 		if len(preHandlers) != 0 {
 			for _, preHandler := range preHandlers {
@@ -89,6 +120,10 @@ func buildHandler(handler MsgHandler, preHandlers []PreMsgHandler, postHandlers 
 					return nil, err
 				}
 			}
+		}
+		err = globalPreHandler(ctx, msg)
+		if err != nil {
+			return nil, err
 		}
 		msgResp, err = handler(ctx, msg)
 		if err != nil {
@@ -102,6 +137,7 @@ func buildHandler(handler MsgHandler, preHandlers []PreMsgHandler, postHandlers 
 				}
 			}
 		}
-		return msgResp, nil
+		err = globalPostHandler(ctx, msg, msgResp)
+		return msgResp, err
 	}
 }

@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
-	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/proof"
 )
 
 var _ store.RootStore = (*Store)(nil)
@@ -35,13 +36,10 @@ type Store struct {
 	commitHeader *coreheader.Info
 
 	// lastCommitInfo reflects the last version/hash that has been committed
-	lastCommitInfo *store.CommitInfo
+	lastCommitInfo *proof.CommitInfo
 
 	// workingHash defines the current (yet to be committed) hash
 	workingHash []byte
-
-	// pruningManager manages pruning of the SS and SC backends
-	pruningManager *pruning.Manager
 
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
 	telemetry metrics.StoreMetrics
@@ -51,20 +49,13 @@ func New(
 	logger log.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
-	ssOpts, scOpts pruning.Options,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
-	pruningManager := pruning.NewManager(logger, ss, sc)
-	pruningManager.SetStorageOptions(ssOpts)
-	pruningManager.SetCommitmentOptions(scOpts)
-	pruningManager.Start()
-
 	return &Store{
 		logger:          logger.With("module", "root_store"),
 		initialVersion:  1,
 		stateStore:      ss,
 		stateCommitment: sc,
-		pruningManager:  pruningManager,
 		telemetry:       m,
 	}, nil
 }
@@ -79,8 +70,6 @@ func (s *Store) Close() (err error) {
 	s.stateCommitment = nil
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
-
-	s.pruningManager.Stop()
 
 	return err
 }
@@ -105,13 +94,13 @@ func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
 }
 
 func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
-	// TODO(bez): Ensure the version <v> exists. We can utilize the GetCommitInfo()
-	// SC method once available.
+	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
+	// we should add a VersionExists() method to the VersionedDatabase interface.
 	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/pull/18736
-	// if err := s.stateCommitment.GetCommitInfo(v); err != nil {
-	// 	return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
-	// }
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/19091
+	if cInfo, err := s.stateCommitment.GetCommitInfo(v); err != nil || cInfo == nil {
+		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	}
 
 	return NewReadOnlyAdapter(v, s), nil
 }
@@ -127,7 +116,7 @@ func (s *Store) GetStateCommitment() store.Committer {
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
-func (s *Store) LastCommitID() (store.CommitID, error) {
+func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if s.lastCommitInfo != nil {
 		return s.lastCommitInfo.CommitID(), nil
 	}
@@ -139,20 +128,20 @@ func (s *Store) LastCommitID() (store.CommitID, error) {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 	latestVersion, err := s.stateStore.GetLatestVersion()
 	if err != nil {
-		return store.CommitID{}, err
+		return proof.CommitID{}, err
 	}
 
 	// sanity check: ensure integrity of latest version against SC
 	scVersion, err := s.stateCommitment.GetLatestVersion()
 	if err != nil {
-		return store.CommitID{}, err
+		return proof.CommitID{}, err
 	}
 
 	if scVersion != latestVersion {
-		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
+		return proof.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
 
-	return store.CommitID{Version: latestVersion}, nil
+	return proof.CommitID{Version: latestVersion}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -170,12 +159,27 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "query")
+		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
 	val, err := s.stateStore.Get(storeKey, version, key)
-	if err != nil {
-		return store.QueryResult{}, err
+	if err != nil || val == nil {
+		// fallback to querying SC backend if not found in SS backend
+		//
+		// Note, this should only used during migration, i.e. while SS and IAVL v2
+		// are being asynchronously synced.
+		if val == nil {
+			bz, scErr := s.stateCommitment.Get(storeKey, version, key)
+			if scErr != nil {
+				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", scErr)
+			}
+
+			val = bz
+		}
+
+		if err != nil {
+			return store.QueryResult{}, fmt.Errorf("failed to query SS store: %w", err)
+		}
 	}
 
 	result := store.QueryResult{
@@ -185,12 +189,10 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	if prove {
-		proof, err := s.stateCommitment.GetProof(storeKey, version, key)
+		result.ProofOps, err = s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
-			return store.QueryResult{}, err
+			return store.QueryResult{}, fmt.Errorf("failed to get SC store proof: %w", err)
 		}
-
-		result.Proof = store.NewIAVLCommitmentOp(key, proof)
 	}
 
 	return result, nil
@@ -199,7 +201,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 func (s *Store) LoadLatestVersion() error {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
+		defer s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
 	}
 
 	lv, err := s.GetLatestVersion()
@@ -213,7 +215,7 @@ func (s *Store) LoadLatestVersion() error {
 func (s *Store) LoadVersion(version uint64) error {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "load_version")
+		defer s.telemetry.MeasureSince(now, "root_store", "load_version")
 	}
 
 	return s.loadVersion(version)
@@ -230,7 +232,7 @@ func (s *Store) loadVersion(v uint64) error {
 	s.commitHeader = nil
 
 	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
-	s.lastCommitInfo = &store.CommitInfo{Version: v}
+	s.lastCommitInfo = &proof.CommitInfo{Version: v}
 
 	return nil
 }
@@ -249,7 +251,7 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "working_hash")
+		defer s.telemetry.MeasureSince(now, "root_store", "working_hash")
 	}
 
 	if s.workingHash == nil {
@@ -271,7 +273,7 @@ func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		s.telemetry.MeasureSince(now, "root_store", "commit")
+		defer s.telemetry.MeasureSince(now, "root_store", "commit")
 	}
 
 	if s.workingHash == nil {
@@ -284,14 +286,28 @@ func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
-	// commit SS
-	if err := s.stateStore.ApplyChangeset(version, cs); err != nil {
-		return nil, fmt.Errorf("failed to commit SS: %w", err)
-	}
+	eg := new(errgroup.Group)
 
-	// commit SC
-	if err := s.commitSC(cs); err != nil {
-		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
+	// commit SS async
+	eg.Go(func() error {
+		if err := s.stateStore.ApplyChangeset(version, cs); err != nil {
+			return fmt.Errorf("failed to commit SS: %w", err)
+		}
+
+		return nil
+	})
+
+	// commit SC async
+	eg.Go(func() error {
+		if err := s.commitSC(cs); err != nil {
+			return fmt.Errorf("failed to commit SC: %w", err)
+		}
+
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
 	}
 
 	if s.commitHeader != nil {
@@ -300,10 +316,25 @@ func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 
 	s.workingHash = nil
 
-	// prune SS and SC
-	s.pruningManager.Prune(version)
-
 	return s.lastCommitInfo.Hash(), nil
+}
+
+// Prune prunes the root store to the provided version.
+func (s *Store) Prune(version uint64) error {
+	if s.telemetry != nil {
+		now := time.Now()
+		defer s.telemetry.MeasureSince(now, "root_store", "prune")
+	}
+
+	if err := s.stateStore.Prune(version); err != nil {
+		return fmt.Errorf("failed to prune SS store: %w", err)
+	}
+
+	if err := s.stateCommitment.Prune(version); err != nil {
+		return fmt.Errorf("failed to prune SC store: %w", err)
+	}
+
+	return nil
 }
 
 // writeSC accepts a Changeset and writes that as a batch to the underlying SC
@@ -331,10 +362,7 @@ func (s *Store) writeSC(cs *store.Changeset) error {
 		version = previousHeight + 1
 	}
 
-	s.lastCommitInfo = &store.CommitInfo{
-		Version:    version,
-		StoreInfos: s.stateCommitment.WorkingStoreInfos(version),
-	}
+	s.lastCommitInfo = s.stateCommitment.WorkingCommitInfo(version)
 
 	return nil
 }
@@ -344,15 +372,12 @@ func (s *Store) writeSC(cs *store.Changeset) error {
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
 func (s *Store) commitSC(cs *store.Changeset) error {
-	commitStoreInfos, err := s.stateCommitment.Commit()
+	cInfo, err := s.stateCommitment.Commit(s.lastCommitInfo.Version)
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
 
-	commitHash := (&store.CommitInfo{
-		Version:    s.lastCommitInfo.Version,
-		StoreInfos: commitStoreInfos,
-	}).Hash()
+	commitHash := cInfo.Hash()
 
 	workingHash, err := s.WorkingHash(cs)
 	if err != nil {

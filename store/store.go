@@ -6,6 +6,7 @@ import (
 	coreheader "cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/metrics"
+	"cosmossdk.io/store/v2/proof"
 )
 
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
@@ -65,7 +66,11 @@ type RootStore interface {
 	Commit(cs *Changeset) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
-	LastCommitID() (CommitID, error)
+	LastCommitID() (proof.CommitID, error)
+
+	// Prune prunes the RootStore to the provided version. It is used to remove
+	// old versions of the RootStore by the CLI.
+	Prune(version uint64) error
 
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
@@ -104,8 +109,8 @@ type ReadOnlyRootStore interface {
 
 // QueryResult defines the response type to performing a query on a RootStore.
 type QueryResult struct {
-	Key     []byte
-	Value   []byte
-	Version uint64
-	Proof   CommitmentOp
+	Key      []byte
+	Value    []byte
+	Version  uint64
+	ProofOps []proof.CommitmentOp
 }

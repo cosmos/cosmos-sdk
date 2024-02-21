@@ -216,15 +216,6 @@ type HasServices interface {
 	RegisterServices(Configurator)
 }
 
-// HasConsensusVersion is the interface for declaring a module consensus version.
-type HasConsensusVersion interface {
-	// ConsensusVersion is a sequence number for state-breaking change of the
-	// module. It should be incremented on each consensus-breaking change
-	// introduced by the module. To avoid wrong/empty versions, the initial version
-	// should be set to 1.
-	ConsensusVersion() uint64
-}
-
 // HasABCIEndblock is a released typo of HasABCIEndBlock.
 // Deprecated: use HasABCIEndBlock instead.
 type HasABCIEndblock HasABCIEndBlock
@@ -467,6 +458,13 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 			}
 		}
 
+		if module, ok := module.(appmodule.HasMigrations); ok {
+			err := module.RegisterMigrations(cfg)
+			if err != nil {
+				return err
+			}
+		}
+
 		if cfg.Error() != nil {
 			return cfg.Error()
 		}
@@ -637,10 +635,7 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 }
 
 // MigrationHandler is the migration function that each module registers.
-type MigrationHandler func(sdk.Context) error
-
-// VersionMap is a map of moduleName -> version
-type VersionMap map[string]uint64
+type MigrationHandler func(ctx sdk.Context) error
 
 // RunMigrations performs in-place store migrations for all modules. This
 // function MUST be called inside an x/upgrade UpgradeHandler.
@@ -693,7 +688,7 @@ type VersionMap map[string]uint64
 //	})
 //
 // Please also refer to https://docs.cosmos.network/main/core/upgrade for more information.
-func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
+func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
 	c, ok := cfg.(*configurator)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", &configurator{}, cfg)
@@ -704,12 +699,12 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	updatedVM := VersionMap{}
+	updatedVM := appmodule.VersionMap{}
 	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := uint64(0)
-		if module, ok := module.(HasConsensusVersion); ok {
+		if module, ok := module.(appmodule.HasConsensusVersion); ok {
 			toVersion = module.ConsensusVersion()
 		}
 
@@ -733,8 +728,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 			}
 			if module, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
 				moduleValUpdates := module.InitGenesis(sdkCtx, c.cdc, module.DefaultGenesis(c.cdc))
-				// The module manager assumes only one module will update the
-				// validator set, and it can't be a new module.
+				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
 					return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis update is already set by another module")
 				}
@@ -856,11 +850,11 @@ func (m *Manager) PrepareCheckState(ctx sdk.Context) error {
 }
 
 // GetVersionMap gets consensus version from all modules
-func (m *Manager) GetVersionMap() VersionMap {
-	vermap := make(VersionMap)
+func (m *Manager) GetVersionMap() appmodule.VersionMap {
+	vermap := make(appmodule.VersionMap)
 	for name, v := range m.Modules {
 		version := uint64(0)
-		if v, ok := v.(HasConsensusVersion); ok {
+		if v, ok := v.(appmodule.HasConsensusVersion); ok {
 			version = v.ConsensusVersion()
 		}
 		name := name

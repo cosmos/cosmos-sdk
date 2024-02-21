@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
 	coreheader "cosmossdk.io/core/header"
@@ -12,13 +11,15 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/pruning"
+	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
 const (
-	testStoreKey = "test_store_key"
+	testStoreKey  = "test_store_key"
+	testStoreKey2 = "test_store_key2"
+	testStoreKey3 = "test_store_key3"
 )
 
 type RootStoreTestSuite struct {
@@ -36,13 +37,15 @@ func (s *RootStoreTestSuite) SetupTest() {
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB)
+	ss := storage.NewStorageStore(sqliteDB, nil, noopLog)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, noopLog)
+	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), nil, noopLog)
 	s.Require().NoError(err)
 
-	rs, err := New(noopLog, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	rs, err := New(noopLog, ss, sc, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
@@ -96,9 +99,64 @@ func (s *RootStoreTestSuite) TestQuery() {
 	// ensure the proof is non-nil for the corresponding version
 	result, err := s.rootStore.Query(testStoreKey, 1, []byte("foo"), true)
 	s.Require().NoError(err)
-	s.Require().NotNil(result.Proof.Proof)
-	s.Require().Equal([]byte("foo"), result.Proof.Proof.GetExist().Key)
-	s.Require().Equal([]byte("bar"), result.Proof.Proof.GetExist().Value)
+	s.Require().NotNil(result.ProofOps)
+	s.Require().Equal([]byte("foo"), result.ProofOps[0].Key)
+}
+
+func (s *RootStoreTestSuite) TestGetFallback() {
+	sc := s.rootStore.GetStateCommitment()
+
+	// create a changeset and commit it to SC ONLY
+	cs := store.NewChangeset()
+	cs.Add(testStoreKey, []byte("foo"), []byte("bar"))
+
+	err := sc.WriteBatch(cs)
+	s.Require().NoError(err)
+
+	ci := sc.WorkingCommitInfo(1)
+	_, err = sc.Commit(ci.Version)
+	s.Require().NoError(err)
+
+	// ensure we can query for the key, which should fallback to SC
+	qResult, err := s.rootStore.Query(testStoreKey, 1, []byte("foo"), false)
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("bar"), qResult.Value)
+
+	// non-existent key
+	qResult, err = s.rootStore.Query(testStoreKey, 1, []byte("non_existent_key"), false)
+	s.Require().NoError(err)
+	s.Require().Nil(qResult.Value)
+}
+
+func (s *RootStoreTestSuite) TestQueryProof() {
+	cs := store.NewChangeset()
+	// testStoreKey
+	cs.Add(testStoreKey, []byte("key1"), []byte("value1"))
+	cs.Add(testStoreKey, []byte("key2"), []byte("value2"))
+	// testStoreKey2
+	cs.Add(testStoreKey2, []byte("key3"), []byte("value3"))
+	// testStoreKey3
+	cs.Add(testStoreKey3, []byte("key4"), []byte("value4"))
+
+	// commit
+	_, err := s.rootStore.WorkingHash(cs)
+	s.Require().NoError(err)
+	_, err = s.rootStore.Commit(cs)
+	s.Require().NoError(err)
+
+	// query proof for testStoreKey
+	result, err := s.rootStore.Query(testStoreKey, 1, []byte("key1"), true)
+	s.Require().NoError(err)
+	s.Require().NotNil(result.ProofOps)
+	cInfo, err := s.rootStore.GetStateCommitment().GetCommitInfo(1)
+	s.Require().NoError(err)
+	storeHash := cInfo.GetStoreCommitID(testStoreKey).Hash
+	treeRoots, err := result.ProofOps[0].Run([][]byte{[]byte("value1")})
+	s.Require().NoError(err)
+	s.Require().Equal(treeRoots[0], storeHash)
+	expRoots, err := result.ProofOps[1].Run([][]byte{storeHash})
+	s.Require().NoError(err)
+	s.Require().Equal(expRoots[0], cInfo.Hash())
 }
 
 func (s *RootStoreTestSuite) TestLoadVersion() {

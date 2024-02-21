@@ -11,6 +11,8 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -27,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -36,11 +39,14 @@ type appModule struct {
 	app *App
 }
 
-func (m appModule) RegisterServices(configurator module.Configurator) {
-	err := m.app.registerRuntimeServices(configurator)
+func (m appModule) RegisterServices(configurator module.Configurator) { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+	autocliv1.RegisterQueryServer(configurator.QueryServer(), services.NewAutoCLIQueryService(m.app.ModuleManager.Modules))
+
+	reflectionSvc, err := services.NewReflectionService()
 	if err != nil {
 		panic(err)
 	}
+	reflectionv1.RegisterReflectionServiceServer(configurator.QueryServer(), reflectionSvc)
 }
 
 func (m appModule) IsOnePerModuleType() {}
@@ -67,7 +73,7 @@ func init() {
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideGenesisTxHandler,
-			ProvideKVStoreService,
+			ProvideEnvironment,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
@@ -224,9 +230,10 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
+func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder, logger log.Logger) (store.KVStoreService, appmodule.Environment) {
 	storeKey := ProvideKVStoreKey(config, key, app)
-	return kvStoreService{key: storeKey}
+	kvService := kvStoreService{key: storeKey}
+	return kvService, NewEnvironment(kvService, logger)
 }
 
 func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {

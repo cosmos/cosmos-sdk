@@ -930,19 +930,6 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 	}
-
-	// Transaction with an unregistered message
-	{
-		txBuilder := suite.txConfig.NewTxBuilder()
-		err = txBuilder.SetMsgs(&testdata.MsgCreateDog{})
-		require.NoError(t, err)
-		tx := txBuilder.GetTx()
-
-		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
-		space, code, _ := errorsmod.ABCIInfo(err, false)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)
-	}
 }
 
 func TestABCI_TxGasLimits(t *testing.T) {

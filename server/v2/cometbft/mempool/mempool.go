@@ -39,3 +39,22 @@ var (
 	ErrTxNotFound           = errors.New("tx not found in mempool")
 	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
 )
+
+var _ Mempool[transaction.Tx] = NoOpMempool[transaction.Tx]{}
+
+type NoOpMempool[T transaction.Tx] struct{}
+
+// Insert implements Mempool.
+func (NoOpMempool[T]) Insert(context.Context, T) error {
+	panic("unimplemented")
+}
+
+// Remove implements Mempool.
+func (NoOpMempool[T]) Remove([]T) error {
+	panic("unimplemented")
+}
+
+// Select implements Mempool.
+func (NoOpMempool[T]) Select(context.Context, []T) Iterator[T] {
+	panic("unimplemented")
+}

@@ -70,7 +70,8 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 		// requested from CometBFT, which, by default, should be in FIFO order.
 		//
 		// Note, we still need to ensure the transactions returned respect req.MaxTxBytes.
-		if h.mempool == nil {
+		_, isNoOp := h.mempool.(mempool.NoOpMempool[T])
+		if h.mempool == nil || isNoOp {
 			for _, tx := range txs {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(abciReq.MaxTxBytes), maxBlockGas, tx)
 				if stop {
@@ -113,7 +114,8 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) error {
 		// If the mempool is nil we simply return ACCEPT,
 		// because PrepareProposal may have included txs that could fail verification.
-		if h.mempool == nil {
+		_, isNoOp := h.mempool.(mempool.NoOpMempool[T])
+		if h.mempool == nil || isNoOp {
 			return nil
 		}
 

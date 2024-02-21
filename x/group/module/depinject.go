@@ -5,7 +5,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/keeper"
 
@@ -30,7 +29,7 @@ type GroupInputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
-	Key              *store.KVStoreKey
+	Environment      appmodule.Environment
 	Cdc              codec.Codec
 	AccountKeeper    group.AccountKeeper
 	BankKeeper       group.BankKeeper
@@ -46,7 +45,7 @@ type GroupOutputs struct {
 }
 
 func ProvideModule(in GroupInputs) GroupOutputs {
-	k := keeper.NewKeeper(in.Key,
+	k := keeper.NewKeeper(in.Environment,
 		in.Cdc,
 		in.MsgServiceRouter,
 		in.AccountKeeper,

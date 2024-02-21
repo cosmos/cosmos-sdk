@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
 	groupmath "cosmossdk.io/x/group/internal/math"
@@ -26,16 +26,18 @@ func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 // GroupTotalWeightInvariant checks that group's TotalWeight must be equal to the sum of its members.
 func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		msg, broken := GroupTotalWeightInvariantHelper(ctx, keeper.key, keeper.groupTable, keeper.groupMemberByGroupIndex)
+		msg, broken := GroupTotalWeightInvariantHelper(ctx, keeper.environment.KVStoreService, keeper.groupTable, keeper.groupMemberByGroupIndex)
 		return sdk.FormatInvariant(group.ModuleName, weightInvariant, msg), broken
 	}
 }
 
-func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, groupTable orm.AutoUInt64Table, groupMemberByGroupIndex orm.Index) (string, bool) {
+func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KVStoreService, groupTable orm.AutoUInt64Table, groupMemberByGroupIndex orm.Index) (string, bool) {
 	var msg string
 	var broken bool
 
-	groupIt, err := groupTable.PrefixScan(ctx.KVStore(key), 1, math.MaxUint64)
+	kvStore := storeService.OpenKVStore(ctx)
+
+	groupIt, err := groupTable.PrefixScan(kvStore, 1, math.MaxUint64)
 	if err != nil {
 		msg += fmt.Sprintf("PrefixScan failure on group table\n%v\n", err)
 		return msg, broken
@@ -69,7 +71,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			return msg, broken
 		}
 
-		memIt, err := groupMemberByGroupIndex.Get(ctx.KVStore(key), groupInfo.Id)
+		memIt, err := groupMemberByGroupIndex.Get(kvStore, groupInfo.Id)
 		if err != nil {
 			msg += fmt.Sprintf("error while returning group member iterator for group with ID %d\n%v\n", groupInfo.Id, err)
 			return msg, broken

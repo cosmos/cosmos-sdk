@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -42,6 +43,7 @@ func initKeeper(t *testing.T) *fixture {
 	)
 
 	key := storetypes.NewKVStoreKey(group.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
@@ -67,7 +69,9 @@ func initKeeper(t *testing.T) *fixture {
 	accountKeeper.EXPECT().NewAccount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	accountKeeper.EXPECT().SetAccount(gomock.Any(), gomock.Any()).AnyTimes()
 
-	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+
+	groupKeeper = groupkeeper.NewKeeper(env, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
 	group.RegisterQueryServer(queryHelper, groupKeeper)
 	queryClient := group.NewQueryClient(queryHelper)

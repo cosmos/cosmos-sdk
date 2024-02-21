@@ -505,10 +505,6 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	fc := f
 	from := clientCtx.FromAddress
 
-	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
-		return fc, err
-	}
-
 	initNum, initSeq := fc.accountNumber, fc.sequence
 	if initNum == 0 || initSeq == 0 {
 		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(clientCtx, from)

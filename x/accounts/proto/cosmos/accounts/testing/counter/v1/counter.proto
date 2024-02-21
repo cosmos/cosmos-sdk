@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package cosmos.accounts.testing.counter.v1;
+
+option go_package = "cosmossdk.io/x/accounts/testing/counter/v1";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+
+// MsgInit defines a message which initializes the counter with a given amount.
+message MsgInit {
+  // initial_value is the initial amount to set the counter to.
+  uint64 initial_value = 1;
+}
+
+// MsgInitResponse defines the MsgInit response type.
+message MsgInitResponse {}
+
+// MsgIncreaseCounter defines a message which increases the counter by a given amount.
+message MsgIncreaseCounter {
+  // amount is the amount to increase the counter by.
+  uint64 amount = 1;
+}
+
+// MsgIncreaseCounterResponse defines the MsgIncreaseCounter response type.
+// Returns the new counter value.
+message MsgIncreaseCounterResponse {
+  // new_amount defines the new counter value after the increase.
+  uint64 new_amount = 1;
+}
+
+// MsgTestDependencies is used to test the dependencies.
+message MsgTestDependencies {}
+
+// MsgTestDependenciesResponse is used to test the dependencies.
+message MsgTestDependenciesResponse {
+  // chain_id is used to test that the header service correctly works.
+  string chain_id = 1;
+  // address is used to test address codec.
+  string address = 2;
+  // before_gas is used to test the gas meter reporting.
+  uint64 before_gas = 3;
+  // after_gas is used to test gas meter increasing.
+  uint64 after_gas = 4;
+  // funds reports the funds from the implementation.Funds method.
+  repeated cosmos.base.v1beta1.Coin funds = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// QueryCounterRequest is used to query the counter value.
+message QueryCounterRequest {}
+
+// QueryCounterResponse returns the counter value.
+message QueryCounterResponse {
+  // value defines the value of the counter.
+  uint64 value = 1;
+}

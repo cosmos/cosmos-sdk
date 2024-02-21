@@ -181,8 +181,6 @@ func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWit
 }
 
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
@@ -192,8 +190,8 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, err
 	}
 
-	canceledHeight := sdkCtx.BlockHeight()
-	canceledTime := sdkCtx.BlockTime()
+	canceledHeight := k.environment.HeaderService.GetHeaderInfo(ctx).Height
+	canceledTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 
 	found, err := k.ContinuousFund.Has(ctx, recipient)
 	if !found {

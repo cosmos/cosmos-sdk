@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
@@ -42,9 +43,9 @@ func (s *VestingAccountTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
 
 	// gomock initializations
 	ctrl := gomock.NewController(&testing.T{})
@@ -60,8 +61,8 @@ func (s *VestingAccountTestSuite) SetupTest() {
 	}
 
 	s.accountKeeper = keeper.NewAccountKeeper(
-		encCfg.Codec,
 		env,
+		encCfg.Codec,
 		authtypes.ProtoBaseAccount,
 		acctsModKeeper,
 		maccPerms,

@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/x/auth/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -53,7 +52,7 @@ func (ms msgServer) NonAtomicExec(goCtx context.Context, msg *types.MsgNonAtomic
 	}, nil
 }
 
-func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+func (ms msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if ms.ak.authority != msg.Authority {
 		return nil, fmt.Errorf(
 			"expected authority account as only signer for proposal message; invalid authority; expected %s, got %s",
@@ -64,7 +63,6 @@ func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdatePara
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := ms.ak.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
 	}

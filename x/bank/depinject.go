@@ -3,7 +3,6 @@ package bank
 import (
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
@@ -28,10 +27,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	StoreService store.KVStoreService
-	Logger       log.Logger
+	Config      *modulev1.Module
+	Cdc         codec.Codec
+	Environment appmodule.Environment
+	Logger      log.Logger
 
 	AccountKeeper types.AccountKeeper
 }
@@ -79,8 +78,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	bankKeeper := keeper.NewBaseKeeper(
+		in.Environment,
 		in.Cdc,
-		in.StoreService,
 		in.AccountKeeper,
 		blockedAddresses,
 		authStr,

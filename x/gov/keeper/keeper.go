@@ -71,8 +71,6 @@ type Keeper struct {
 	ActiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
 	// InactiveProposalsQueue key: depositEndTime+proposalID | value: proposalID
 	InactiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
-	// VotingPeriodProposals key: proposalID | value: proposalStatus (votingPeriod or not)
-	VotingPeriodProposals collections.Map[uint64, []byte] // TODO(tip): this could be a keyset or index.
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -136,7 +134,6 @@ func NewKeeper(
 		ProposalVoteOptions:    collections.NewMap(sb, types.ProposalVoteOptionsKeyPrefix, "proposal_vote_options", collections.Uint64Key, codec.CollValue[v1.ProposalVoteOptions](cdc)),
 		ActiveProposalsQueue:   collections.NewMap(sb, types.ActiveProposalQueuePrefix, "active_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value),     // sdk.TimeKey is needed to retain state compatibility
 		InactiveProposalsQueue: collections.NewMap(sb, types.InactiveProposalQueuePrefix, "inactive_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value), // sdk.TimeKey is needed to retain state compatibility
-		VotingPeriodProposals:  collections.NewMap(sb, types.VotingPeriodProposalKeyPrefix, "voting_period_proposals", collections.Uint64Key, collections.BytesValue),
 	}
 	schema, err := sb.Build()
 	if err != nil {

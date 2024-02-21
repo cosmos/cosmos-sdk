@@ -83,8 +83,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey])),
 		authtypes.ProtoBaseAccount,
 		acctsModKeeper,
 		maccPerms,
@@ -97,8 +97,9 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := keeper.NewBaseKeeper(
+
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
@@ -231,7 +232,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	assert.NilError(t, err)
 
 	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 2032, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 1777, false)
 }
 
 func TestGRPCQueryTotalSupply(t *testing.T) {

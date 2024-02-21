@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
@@ -34,7 +35,7 @@ type DeterministicTestSuite struct {
 	accountNumberLanes uint64
 
 	key            *storetypes.KVStoreKey
-	env            appmodule.Environment
+	environment    appmodule.Environment
 	ctx            sdk.Context
 	queryClient    types.QueryClient
 	accountKeeper  keeper.AccountKeeper
@@ -58,10 +59,10 @@ func (suite *DeterministicTestSuite) SetupTest() {
 
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
-
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key))
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -78,8 +79,8 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		suite.encCfg.Codec,
 		env,
+		suite.encCfg.Codec,
 		types.ProtoBaseAccount,
 		suite.acctsModKeeper,
 		maccPerms,
@@ -93,7 +94,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	suite.key = key
-	suite.env = env
+	suite.environment = env
 	suite.maccPerms = maccPerms
 	suite.accountNumberLanes = 1
 }
@@ -299,8 +300,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 		}
 
 		ak := keeper.NewAccountKeeper(
+			suite.environment,
 			suite.encCfg.Codec,
-			suite.env,
 			types.ProtoBaseAccount,
 			suite.acctsModKeeper,
 			maccPerms,
@@ -347,8 +348,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 		maccPerms[mName] = mPerms
 
 		ak := keeper.NewAccountKeeper(
+			suite.environment,
 			suite.encCfg.Codec,
-			suite.env,
 			types.ProtoBaseAccount,
 			suite.acctsModKeeper,
 			maccPerms,

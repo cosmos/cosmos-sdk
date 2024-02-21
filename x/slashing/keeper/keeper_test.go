@@ -10,6 +10,7 @@ import (
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -44,6 +45,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(slashingtypes.StoreKey)
 	s.key = key
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
@@ -59,9 +61,9 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.ctx = ctx
 	s.slashingKeeper = slashingkeeper.NewKeeper(
+		env,
 		encCfg.Codec,
 		encCfg.Amino,
-		storeService,
 		s.stakingKeeper,
 		authStr,
 	)

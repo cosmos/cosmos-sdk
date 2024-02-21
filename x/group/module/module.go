@@ -7,6 +7,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -30,11 +31,12 @@ var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
 )
 
 type AppModule struct {
@@ -124,16 +126,21 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 	return cdc.MustMarshalJSON(gs)
 }
 
-// RegisterServices registers a gRPC query service to respond to the
-// module-specific gRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	group.RegisterMsgServer(cfg.MsgServer(), am.keeper)
-	group.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	group.RegisterMsgServer(registrar, am.keeper)
+	group.RegisterQueryServer(registrar, am.keeper)
 
+	return nil
+}
+
+func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(group.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err))
+	if err := mr.Register(group.ModuleName, 1, m.Migrate1to2); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err)
 	}
+
+	return nil
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
@@ -141,13 +148,8 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock implements the group module's EndBlock.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return EndBlocker(c, am.keeper)
+	return am.keeper.EndBlocker(ctx)
 }
-
-// ____________________________________________________________________________
-
-// AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the group module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {

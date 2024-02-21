@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/types"
@@ -84,8 +83,8 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 type AccountKeeper struct {
 	addressCodec address.Codec
 
-	storeService      store.KVStoreService
-	cdc               codec.Codec
+	Environment       appmodule.Environment
+	cdc               codec.BinaryCodec
 	permAddrs         map[string]types.PermissionsForAddress
 	bech32Prefix      string
 	AccountsModKeeper types.AccountsModKeeper
@@ -114,7 +113,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.Codec, env appmodule.Environment, proto func() sdk.AccountI, accountsModKeeper types.AccountsModKeeper,
+	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI, accountsModKeeper types.AccountsModKeeper,
 	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -122,14 +121,12 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	storeService := env.KVStoreService
-
-	sb := collections.NewSchemaBuilder(storeService)
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	ak := AccountKeeper{
 		addressCodec:      ac,
 		bech32Prefix:      bech32Prefix,
-		storeService:      storeService,
+		Environment:       env,
 		proto:             proto,
 		cdc:               cdc,
 		AccountsModKeeper: accountsModKeeper,
@@ -160,7 +157,7 @@ func (ak AccountKeeper) AddressCodec() address.Codec {
 
 // Logger returns a module-specific logger.
 func (ak AccountKeeper) Logger(ctx context.Context) log.Logger {
-	return sdk.UnwrapSDKContext(ctx).Logger().With("module", "x/"+types.ModuleName)
+	return ak.Environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // GetPubKey Returns the PubKey of the account at address

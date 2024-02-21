@@ -4391,6 +4391,7 @@ type Supply struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// total is the total supply of coins across the network.
 	Total []*v1beta1.Coin `protobuf:"bytes,1,rep,name=total,proto3" json:"total,omitempty"`
 }
 

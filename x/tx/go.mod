@@ -21,6 +21,8 @@ require (
 )
 
 require (
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -34,3 +36,5 @@ require (
 	google.golang.org/grpc v1.61.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace cosmossdk.io/api => ../../api

@@ -29,7 +29,7 @@ type ModuleInputs struct {
 
 	Environment      appmodule.Environment
 	Cdc              codec.Codec
-	evidenceHandlers []eviclient.EvidenceHandler `optional:"true"`
+	EvidenceHandlers []eviclient.EvidenceHandler `optional:"true"`
 
 	StakingKeeper  types.StakingKeeper
 	SlashingKeeper types.SlashingKeeper
@@ -45,7 +45,7 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Environment, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec)
-	m := NewAppModule(*k, in.evidenceHandlers...)
+	m := NewAppModule(*k, in.EvidenceHandlers...)
 
 	return ModuleOutputs{EvidenceKeeper: *k, Module: m}
 }

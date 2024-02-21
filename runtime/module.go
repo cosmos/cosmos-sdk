@@ -14,7 +14,6 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -66,12 +65,11 @@ func init() {
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
-			ProvideModuleManager,
 			ProvideGenesisTxHandler,
 			ProvideEnvironment,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
-			ProvideEventService,
+			ProvideModuleManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
 		),
@@ -121,14 +119,14 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 type AppInputs struct {
 	depinject.In
 
+	Logger            log.Logger
 	AppConfig         *appv1alpha1.Config
 	Config            *runtimev1alpha1.Module
 	AppBuilder        *AppBuilder
-	Modules           map[string]appmodule.AppModule
+	ModuleManager     *module.Manager
 	BaseAppOptions    []BaseAppOption
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       *codec.LegacyAmino
-	Logger            log.Logger
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -137,8 +135,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.config = inputs.Config
 	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
-	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
-
+	app.ModuleManager = inputs.ModuleManager
 	app.ModuleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
@@ -207,8 +204,8 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideModuleManager(app *AppBuilder) *module.Manager {
-	return app.app.ModuleManager
+func ProvideModuleManager(modules map[string]appmodule.AppModule) *module.Manager {
+	return module.NewManagerFromMap(modules)
 }
 
 func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
@@ -229,10 +226,6 @@ func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.M
 func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
 	storeKey := ProvideTransientStoreKey(key, app)
 	return transientStoreService{key: storeKey}
-}
-
-func ProvideEventService() event.Service {
-	return EventService{}
 }
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {

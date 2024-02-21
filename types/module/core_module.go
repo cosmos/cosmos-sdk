@@ -21,11 +21,12 @@ import (
 var (
 	_ appmodule.AppModule = coreAppModuleAdaptor{}
 
-	_ HasName        = coreAppModuleAdaptor{}
-	_ HasAminoCodec  = coreAppModuleAdaptor{}
-	_ HasGRPCGateway = coreAppModuleAdaptor{}
-	_ HasABCIGenesis = coreAppModuleAdaptor{}
-	_ HasServices    = coreAppModuleAdaptor{}
+	_ HasName               = coreAppModuleAdaptor{}
+	_ HasAminoCodec         = coreAppModuleAdaptor{}
+	_ HasGRPCGateway        = coreAppModuleAdaptor{}
+	_ HasRegisterInterfaces = coreAppModuleAdaptor{}
+	_ HasABCIGenesis        = coreAppModuleAdaptor{}
+	_ HasServices           = coreAppModuleAdaptor{}
 )
 
 // CoreAppModuleAdaptor wraps the core API module as an AppModule that this version of the SDK can use.

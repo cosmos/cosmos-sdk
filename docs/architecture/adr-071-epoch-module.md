@@ -32,14 +32,18 @@ This simplifies the need for their to be ordering in begin/endblock because the 
 
 ### Module Registration
 
-With the advent of propser based timestamps we can allow for modules to register logic to be executed not only at block intervals but also at time intervals. This will allow for more complex systems to be built.
+With the advent of propser based timestamps we can allow for modules to register logic to be executed based on a time. This will allow for more complex systems to be built.
+
+```proto
+message EpochInfo{
+
+}
+```
 
 ```go 
 type Module interface {
-    RegisterBlockBeginEpochCalls() map[uint64]func() error
-    RegisterBlockEndEpochCalls() map[uint64]func() error
-    RegisterTimeBeginEpochCalls() map[time.seconds]func() error
-    RegisterTimeEndEpochCalls() map[time.seconds]func() error
+    RegisterBeginEpochCalls() map[time.seconds]func() error
+    RegisterEndEpochCalls() map[time.seconds]func() error
 }
 ```
 

@@ -231,6 +231,10 @@ func ProvideEnvironment(config *runtimev2.Module, key depinject.ModuleKey, app *
 	transientService := stf.NewTransientStoreService([]byte(transientStoreKey.Name()))
 
 	env := appmodule.Environment{
+		BranchService:   nil,
+		EventService:    stf.NewEventService(),
+		GasService:      stf.NewGasMeterService(),
+		HeaderService:   nil,
 		KVStoreService:  kvService,
 		MemStoreService: memService,
 	}

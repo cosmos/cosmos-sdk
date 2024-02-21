@@ -51,7 +51,7 @@ func (e Events) EmitKV(eventType string, attrs ...event.Attribute) error {
 }
 
 // Emit emits an typed event that is defined in the protobuf file.
-// In the future these events will be added to consensus.
+// These events will not be added to consensus.
 func (e Events) EmitNonConsensus(event protoiface.MessageV1) error {
 	return e.EventManagerI.EmitTypedEvent(event)
 }

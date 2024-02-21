@@ -9,8 +9,8 @@ import (
 
 func NewWriterMap(
 	state store.ReaderMap,
-	branch func(readonlyState store.Reader) store.Writer) store.WriterMap {
-
+	branch func(readonlyState store.Reader) store.Writer,
+) store.WriterMap {
 	return WriterMap{
 		state:               state,
 		branchedWriterState: make(map[string]store.Writer),

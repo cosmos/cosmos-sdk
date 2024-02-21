@@ -132,7 +132,7 @@ func LegacyNewDecFromInt(i Int) LegacyDec {
 // CONTRACT: prec <= Precision
 func LegacyNewDecFromIntWithPrec(i Int, prec int64) LegacyDec {
 	return LegacyDec{
-		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
+		new(big.Int).Mul(i.BigIntMut(), precisionMultiplier(prec)),
 	}
 }
 
@@ -351,7 +351,7 @@ func (d LegacyDec) MulInt(i Int) LegacyDec {
 }
 
 func (d LegacyDec) MulIntMut(i Int) LegacyDec {
-	d.i.Mul(d.i, i.BigInt())
+	d.i.Mul(d.i, i.BigIntMut())
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -434,7 +434,7 @@ func (d LegacyDec) QuoInt(i Int) LegacyDec {
 }
 
 func (d LegacyDec) QuoIntMut(i Int) LegacyDec {
-	d.i.Quo(d.i, i.BigInt())
+	d.i.Quo(d.i, i.BigIntMut())
 	return d
 }
 
@@ -692,7 +692,7 @@ func (d LegacyDec) RoundInt64() int64 {
 
 // RoundInt round the decimal using bankers rounding
 func (d LegacyDec) RoundInt() Int {
-	return NewIntFromBigInt(chopPrecisionAndRoundNonMutative(d.i))
+	return NewIntFromBigIntMut(chopPrecisionAndRoundNonMutative(d.i))
 }
 
 // chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
@@ -718,7 +718,7 @@ func (d LegacyDec) TruncateInt64() int64 {
 
 // TruncateInt truncates the decimals from the number and returns an Int
 func (d LegacyDec) TruncateInt() Int {
-	return NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.i))
+	return NewIntFromBigIntMut(chopPrecisionAndTruncateNonMutative(d.i))
 }
 
 // TruncateDec truncates the decimals from the number and returns a Dec

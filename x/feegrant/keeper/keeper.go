@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/ante"
@@ -20,10 +21,10 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc          codec.BinaryCodec
-	storeService store.KVStoreService
-	authKeeper   feegrant.AccountKeeper
-	Schema       collections.Schema
+	cdc         codec.BinaryCodec
+	environment appmodule.Environment
+	authKeeper  feegrant.AccountKeeper
+	Schema      collections.Schema
 	// FeeAllowance key: grantee+granter | value: Grant
 	FeeAllowance collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
 	// FeeAllowanceQueue key: expiration time+grantee+granter | value: bool
@@ -33,13 +34,13 @@ type Keeper struct {
 var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a feegrant Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feegrant.AccountKeeper) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak feegrant.AccountKeeper) Keeper {
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	return Keeper{
-		cdc:          cdc,
-		storeService: storeService,
-		authKeeper:   ak,
+		cdc:         cdc,
+		environment: env,
+		authKeeper:  ak,
 		FeeAllowance: collections.NewMap(
 			sb,
 			feegrant.FeeAllowanceKeyPrefix,
@@ -75,8 +76,8 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 	}
 
 	// expiration shouldn't be in the past.
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.HeaderInfo().Time
+
+	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	if exp != nil && exp.Before(now) {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 	}
@@ -116,15 +117,11 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		return err
 	}
 
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			feegrant.EventTypeSetFeeGrant,
-			sdk.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
-			sdk.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
-		),
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		feegrant.EventTypeSetFeeGrant,
+		event.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
+		event.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
 	)
-
-	return nil
 }
 
 // UpdateAllowance updates the existing grant.
@@ -152,15 +149,11 @@ func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 		return err
 	}
 
-	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
-		sdk.NewEvent(
-			feegrant.EventTypeUpdateFeeGrant,
-			sdk.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
-			sdk.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
-		),
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		feegrant.EventTypeUpdateFeeGrant,
+		event.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
+		event.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
 	)
-
-	return nil
 }
 
 // revokeAllowance removes an existing grant
@@ -194,14 +187,11 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 		return err
 	}
 
-	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
-		sdk.NewEvent(
-			feegrant.EventTypeRevokeFeeGrant,
-			sdk.NewAttribute(feegrant.AttributeKeyGranter, granterStr),
-			sdk.NewAttribute(feegrant.AttributeKeyGrantee, granteeStr),
-		),
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		feegrant.EventTypeRevokeFeeGrant,
+		event.NewAttribute(feegrant.AttributeKeyGranter, granterStr),
+		event.NewAttribute(feegrant.AttributeKeyGrantee, granteeStr),
 	)
-	return nil
 }
 
 // GetAllowance returns the allowance between the granter and grantee.
@@ -245,26 +235,25 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 	if remove && err == nil {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
 		_ = k.revokeAllowance(ctx, granter, grantee)
-		emitUseGrantEvent(ctx, granterStr, granteeStr)
 
-		return nil
+		return k.emitUseGrantEvent(ctx, granterStr, granteeStr)
 	}
 	if err != nil {
 		return err
 	}
-	emitUseGrantEvent(ctx, granterStr, granteeStr)
+	if err := k.emitUseGrantEvent(ctx, granterStr, granteeStr); err != nil {
+		return err
+	}
 
 	// if fee allowance is accepted, store the updated state of the allowance
 	return k.UpdateAllowance(ctx, granter, grantee, grant)
 }
 
-func emitUseGrantEvent(ctx context.Context, granter, grantee string) {
-	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
-		sdk.NewEvent(
-			feegrant.EventTypeUseFeeGrant,
-			sdk.NewAttribute(feegrant.AttributeKeyGranter, granter),
-			sdk.NewAttribute(feegrant.AttributeKeyGrantee, grantee),
-		),
+func (k *Keeper) emitUseGrantEvent(ctx context.Context, granter, grantee string) error {
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		feegrant.EventTypeUseFeeGrant,
+		event.NewAttribute(feegrant.AttributeKeyGranter, granter),
+		event.NewAttribute(feegrant.AttributeKeyGrantee, grantee),
 	)
 }
 
@@ -309,7 +298,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
-	exp := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
+	exp := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
 	count := 0
 

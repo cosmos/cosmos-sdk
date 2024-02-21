@@ -20,7 +20,6 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 	bi := sdk.UnwrapSDKContext(ctx).CometInfo()
 
 	evidences := bi.Evidence
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, evidence := range evidences {
 		switch evidence.Type {
 		// It's still ongoing discussion how should we treat and slash attacks with
@@ -32,7 +31,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 				return err
 			}
 		default:
-			k.Logger(sdkCtx).Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
+			k.Logger().Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
 		}
 	}
 	return nil

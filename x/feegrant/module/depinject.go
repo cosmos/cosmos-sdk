@@ -3,7 +3,6 @@ package module
 import (
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/feegrant"
@@ -30,7 +29,7 @@ func init() {
 type FeegrantInputs struct {
 	depinject.In
 
-	StoreService  store.KVStoreService
+	Environment   appmodule.Environment
 	Cdc           codec.Codec
 	AccountKeeper feegrant.AccountKeeper
 	BankKeeper    feegrant.BankKeeper
@@ -38,7 +37,7 @@ type FeegrantInputs struct {
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper)
+	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
 	return k, m
 }

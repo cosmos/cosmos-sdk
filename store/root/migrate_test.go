@@ -34,12 +34,13 @@ func TestMigrateStoreTestSuite(t *testing.T) {
 
 func (s *MigrateStoreTestSuite) SetupTest() {
 	testLog := log.NewTestLogger(s.T())
+	nopLog := log.NewNopLogger()
 
 	mdb := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, testLog, iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
 	orgSC, err := commitment.NewCommitStore(multiTrees, mdb, nil, testLog)
 	s.Require().NoError(err)
@@ -66,7 +67,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
-		multiTrees1[storeKey] = iavl.NewIavlTree(dbm.NewMemDB(), testLog, iavl.DefaultConfig())
+		multiTrees1[storeKey] = iavl.NewIavlTree(dbm.NewMemDB(), nopLog, iavl.DefaultConfig())
 	}
 	sc, err := commitment.NewCommitStore(multiTrees1, dbm.NewMemDB(), nil, testLog)
 	s.Require().NoError(err)

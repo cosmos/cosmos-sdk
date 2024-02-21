@@ -25,6 +25,7 @@ require (
 	github.com/cometbft/cometbft v0.38.5
 	github.com/cosmos/gogoproto v1.4.11
 	google.golang.org/protobuf v1.32.0
+	github.com/cosmos/ics23/go v0.10.0
 )
 
 require (
@@ -33,7 +34,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cometbft/cometbft-db v0.9.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
-	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect

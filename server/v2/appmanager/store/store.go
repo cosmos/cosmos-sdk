@@ -9,11 +9,10 @@ import (
 	storev2 "cosmossdk.io/store/v2"
 )
 
-var _ Store = (*Storage[storev2.VersionedDatabase, storev2.Committer])(nil)
+var _ Store = (*Storage[storev2.VersionedDatabase])(nil)
 
-type Storage[SS storev2.VersionedDatabase, SC storev2.Committer] struct {
+type Storage[SS storev2.VersionedDatabase] struct {
 	ss SS
-	sc SC
 
 	// we use latest to keep track of the last height. Reading using atomics is way
 	// cheaper than reading it from SS or SC everytime, it is also implementation
@@ -21,32 +20,31 @@ type Storage[SS storev2.VersionedDatabase, SC storev2.Committer] struct {
 	latest *atomic.Uint64
 }
 
-func (s Storage[SS, SC]) StateLatest() (uint64, store.ReaderMap, error) {
+func (s Storage[SS]) StateLatest() (uint64, store.ReaderMap, error) {
 	latest := s.latest.Load()
 	return latest, actorsState[SS]{latest, s.ss}, nil
 }
 
-func (s Storage[SS, SC]) StateAt(version uint64) (store.ReaderMap, error) {
+func (s Storage[SS]) StateAt(version uint64) (store.ReaderMap, error) {
 	return actorsState[SS]{version, s.ss}, nil
 }
 
-func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Storage[SS, SC], error) {
+func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Storage[SS], error) {
 	// sanity checks.
 	ssVersion, err := ss.GetLatestVersion()
 	if err != nil {
-		return Storage[SS, SC]{}, err
+		return Storage[SS]{}, err
 	}
 	scVersion, err := sc.GetLatestVersion()
 	if err != nil {
-		return Storage[SS, SC]{}, err
+		return Storage[SS]{}, err
 	}
 	if scVersion != ssVersion {
-		return Storage[SS, SC]{}, fmt.Errorf("data corruption, sc version %d, ss version %d", scVersion, ssVersion)
+		return Storage[SS]{}, fmt.Errorf("data corruption, sc version %d, ss version %d", scVersion, ssVersion)
 	}
 
-	s := Storage[SS, SC]{
+	s := Storage[SS]{
 		ss:     ss,
-		sc:     sc,
 		latest: new(atomic.Uint64),
 	}
 	s.latest.Store(ssVersion)

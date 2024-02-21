@@ -94,7 +94,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{},
-		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
+		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModule{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 
@@ -196,7 +196,7 @@ func newAny(t *testing.T, msg proto.Message) *anypb.Any {
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
-		vesting.AppModuleBasic{}, gov.AppModuleBasic{})
+		vesting.AppModuleBasic{}, gov.AppModule{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
@@ -499,7 +499,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 
 func TestSendAuthorization(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
-		distribution.AppModuleBasic{}, bank.AppModuleBasic{})
+		distribution.AppModuleBasic{}, bank.AppModule{})
 
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
@@ -548,7 +548,7 @@ func TestSendAuthorization(t *testing.T) {
 }
 
 func TestDecimalMutation(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{})
+	encCfg := testutil.MakeTestEncodingConfig(staking.AppModule{})
 	rates := &stakingtypes.CommissionRates{}
 	rateBz, _ := encCfg.Amino.MarshalJSON(rates)
 	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))

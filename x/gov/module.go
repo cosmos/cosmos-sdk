@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/client/cli"
@@ -30,10 +29,13 @@ import (
 const ConsensusVersion = 6
 
 var (
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasGenesis          = AppModule{}
-	_ module.HasInvariants       = AppModule{}
+	_ module.HasName               = AppModule{}
+	_ module.HasAminoCodec         = AppModule{}
+	_ module.HasGRPCGateway        = AppModule{}
+	_ module.HasRegisterInterfaces = AppModule{}
+	_ module.AppModuleSimulation   = AppModule{}
+	_ module.HasGenesis            = AppModule{}
+	_ module.HasInvariants         = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
@@ -41,49 +43,65 @@ var (
 	_ appmodule.HasMigrations = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the gov module.
-type AppModuleBasic struct {
+// AppModule implements an application module for the gov module.
+type AppModule struct {
 	cdc                    codec.Codec
-	legacyProposalHandlers []govclient.ProposalHandler // legacy proposal handlers which live in governance cli and rest
-	ac                     address.Codec
+	legacyProposalHandlers []govclient.ProposalHandler
+
+	keeper        *keeper.Keeper
+	accountKeeper govtypes.AccountKeeper
+	bankKeeper    govtypes.BankKeeper
+	poolKeeper    govtypes.PoolKeeper
 }
 
-// NewAppModuleBasic creates a new AppModuleBasic object
-func NewAppModuleBasic(legacyProposalHandlers []govclient.ProposalHandler) AppModuleBasic {
-	return AppModuleBasic{
+// NewAppModule creates a new AppModule object
+func NewAppModule(
+	cdc codec.Codec, keeper *keeper.Keeper,
+	ak govtypes.AccountKeeper, bk govtypes.BankKeeper,
+	pk govtypes.PoolKeeper, legacyProposalHandlers ...govclient.ProposalHandler,
+) AppModule {
+	return AppModule{
+		cdc:                    cdc,
 		legacyProposalHandlers: legacyProposalHandlers,
+		keeper:                 keeper,
+		accountKeeper:          ak,
+		bankKeeper:             bk,
+		poolKeeper:             pk,
 	}
 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the gov module's name.
-func (AppModuleBasic) Name() string {
+func (AppModule) Name() string {
 	return govtypes.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	v1beta1.RegisterLegacyAminoCodec(cdc)
 	v1.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the gov
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(v1.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the gov module.
-func (am AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data v1.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", govtypes.ModuleName, err)
 	}
 
-	return v1.ValidateGenesis(am.ac, &data)
+	return v1.ValidateGenesis(am.accountKeeper.AddressCodec(), &data)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := v1.RegisterQueryHandlerClient(context.Background(), mux, v1.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -93,8 +111,8 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 }
 
 // GetTxCmd returns the root tx command for the gov module.
-func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
-	legacyProposalCLIHandlers := getProposalCLIHandlers(ab.legacyProposalHandlers)
+func (am AppModule) GetTxCmd() *cobra.Command {
+	legacyProposalCLIHandlers := getProposalCLIHandlers(am.legacyProposalHandlers)
 
 	return cli.NewTxCmd(legacyProposalCLIHandlers)
 }
@@ -108,37 +126,10 @@ func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Comma
 }
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	v1.RegisterInterfaces(registry)
 	v1beta1.RegisterInterfaces(registry)
 }
-
-// AppModule implements an application module for the gov module.
-type AppModule struct {
-	AppModuleBasic
-
-	keeper        *keeper.Keeper
-	accountKeeper govtypes.AccountKeeper
-	bankKeeper    govtypes.BankKeeper
-	poolKeeper    govtypes.PoolKeeper
-}
-
-// NewAppModule creates a new AppModule object
-func NewAppModule(
-	cdc codec.Codec, keeper *keeper.Keeper,
-	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, pk govtypes.PoolKeeper,
-) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
-		keeper:         keeper,
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		poolKeeper:     pk,
-	}
-}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
 
 // RegisterInvariants registers module invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {

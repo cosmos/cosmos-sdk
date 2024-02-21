@@ -46,7 +46,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)

@@ -60,7 +60,7 @@ func TestCLITestSuite(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.encCfg = testutilmod.MakeTestEncodingConfig(module.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(module.AppModule{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).

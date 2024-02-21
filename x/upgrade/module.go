@@ -130,19 +130,9 @@ func (am AppModule) InitGenesis(ctx context.Context, _ codec.JSONCodec, _ json.R
 	}
 }
 
-// DefaultGenesis is an empty object
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
-	return []byte("{}")
-}
-
-// ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, _ json.RawMessage) error {
-	return nil
-}
-
 // ExportGenesis is always empty, as InitGenesis does nothing either
 func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.RawMessage {
-	return am.DefaultGenesis(cdc)
+	return []byte("{}")
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

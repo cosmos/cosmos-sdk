@@ -111,7 +111,7 @@ func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	t.Helper()
 	s := TestSuite{}
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
@@ -458,7 +458,7 @@ func TestBinaryVersion(t *testing.T) {
 func TestDowngradeVerification(t *testing.T) {
 	// could not use setupTest() here, because we have to use the same key
 	// for the two keepers.
-	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())

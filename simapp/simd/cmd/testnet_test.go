@@ -39,7 +39,7 @@ func Test_TestnetCmd(t *testing.T) {
 	)
 
 	home := t.TempDir()
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, staking.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, staking.AppModule{})
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)

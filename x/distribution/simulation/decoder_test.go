@@ -24,7 +24,7 @@ var (
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	cdc := encodingConfig.Codec
 
 	dec := simulation.NewDecodeStore(cdc)

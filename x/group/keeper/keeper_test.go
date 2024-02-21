@@ -55,7 +55,7 @@ func (s *TestSuite) SetupTest() {
 	storeService := runtime.NewKVStoreService(key)
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{}, bank.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{}, bank.AppModule{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())

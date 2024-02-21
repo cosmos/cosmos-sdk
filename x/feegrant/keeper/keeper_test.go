@@ -44,7 +44,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addrs = simtestutil.CreateIncrementalAccounts(20)
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(suite.T())

@@ -24,7 +24,7 @@ import (
 )
 
 func TestMigration(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{}, bank.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{}, bank.AppModule{})
 	cdc := encodingConfig.Codec
 
 	authzKey := storetypes.NewKVStoreKey("authz")

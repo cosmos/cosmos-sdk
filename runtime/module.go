@@ -71,7 +71,6 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
-			ProvideBasicManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
 		),
@@ -111,7 +110,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
-		basicManager:      module.BasicManager{},
 		msgServiceRouter:  msgServiceRouter,
 	}
 	appBuilder := &AppBuilder{app}
@@ -122,15 +120,14 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 type AppInputs struct {
 	depinject.In
 
-	AppConfig          *appv1alpha1.Config
-	Config             *runtimev1alpha1.Module
-	AppBuilder         *AppBuilder
-	Modules            map[string]appmodule.AppModule
-	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
-	BaseAppOptions     []BaseAppOption
-	InterfaceRegistry  codectypes.InterfaceRegistry
-	LegacyAmino        *codec.LegacyAmino
-	Logger             log.Logger
+	AppConfig         *appv1alpha1.Config
+	Config            *runtimev1alpha1.Module
+	AppBuilder        *AppBuilder
+	Modules           map[string]appmodule.AppModule
+	BaseAppOptions    []BaseAppOption
+	InterfaceRegistry codectypes.InterfaceRegistry
+	LegacyAmino       *codec.LegacyAmino
+	Logger            log.Logger
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -141,19 +138,8 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.logger = inputs.Logger
 	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 
-	for name, mod := range inputs.Modules {
-		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
-			app.basicManager[name] = customBasicMod
-			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
-			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-			continue
-		}
-
-		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
-		app.basicManager[name] = coreAppModuleBasic
-		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
-		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-	}
+	app.ModuleManager.RegisterInterfaces(inputs.InterfaceRegistry)
+	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
 func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
@@ -242,10 +228,6 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
-}
-
-func ProvideBasicManager(app *AppBuilder) module.BasicManager {
-	return app.app.basicManager
 }
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {

@@ -8,7 +8,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
@@ -28,8 +27,8 @@ const (
 )
 
 var (
-	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasName             = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
@@ -37,53 +36,8 @@ var (
 	_ appmodule.HasMigrations = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the auth module.
-type AppModuleBasic struct {
-	ac address.Codec
-}
-
-// Name returns the auth module's name.
-func (AppModuleBasic) Name() string {
-	return types.ModuleName
-}
-
-// RegisterLegacyAminoCodec registers the auth module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the auth
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the auth module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return types.ValidateGenesis(data)
-}
-
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
-}
-
-// RegisterInterfaces registers interfaces and implementations of the auth module.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
-}
-
 // AppModule implements an application module for the auth module.
 type AppModule struct {
-	AppModuleBasic
-
 	accountKeeper     keeper.AccountKeeper
 	randGenAccountsFn types.RandomGenesisAccountsFn
 }
@@ -94,10 +48,47 @@ func (am AppModule) IsAppModule() {}
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
-		AppModuleBasic:    AppModuleBasic{ac: accountKeeper.AddressCodec()},
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 	}
+}
+
+// Name returns the auth module's name.
+func (AppModule) Name() string {
+	return types.ModuleName
+}
+
+// RegisterLegacyAminoCodec registers the auth module's types for the given codec.
+func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
+
+// DefaultGenesis returns default genesis state as raw bytes for the auth
+// module.
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the auth module.
+func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(data)
+}
+
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.
+func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
+}
+
+// RegisterInterfaces registers interfaces and implementations of the auth module.
+func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 // RegisterServices registers module services.

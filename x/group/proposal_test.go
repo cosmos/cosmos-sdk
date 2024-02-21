@@ -16,7 +16,7 @@ import (
 // This test serves as a showcase that we need to be careful when unmarshalling
 // multiple times into the same reference.
 func TestGogoUnmarshalProposal(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 	cdc := encodingConfig.Codec
 
 	p1 := group.Proposal{Proposers: []string{"foo"}}

@@ -17,7 +17,7 @@ import (
 )
 
 func TestGetCommandEncode(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
 	txConfig := encodingConfig.TxConfig
 	cdc := encodingConfig.Codec
 
@@ -47,7 +47,7 @@ func TestGetCommandEncode(t *testing.T) {
 }
 
 func TestGetCommandDecode(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
 	txConfig := encodingConfig.TxConfig
 	cdc := encodingConfig.Codec
 

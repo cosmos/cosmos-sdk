@@ -32,7 +32,6 @@ require (
 require cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 
 require (
-	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.0 // indirect

@@ -43,9 +43,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// Deprecated: use the embed extension interfaces instead, when needed.
+type AppModuleBasic interface {
+	HasName
+	HasRegisterInterfaces
+	HasGRPCGateway
+	HasAminoCodec
+}
+
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
-// Deprecated: use appmodule.AppModule with a combination of extension interfaes interfaces instead.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaces interfaces instead.
 type AppModule interface {
 	appmodule.AppModule
 

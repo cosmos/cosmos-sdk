@@ -70,7 +70,7 @@ type BaseVesting struct {
 	DelegatedVesting collections.Map[string, math.Int]
 	addressCodec     address.Codec
 	headerService    header.Service
-	// Vesting end time, as unix timestamp (in seconds).
+	// Vesting end time.
 	EndTime collections.Item[time.Time]
 }
 

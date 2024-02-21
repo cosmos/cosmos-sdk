@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package cosmos.accounts.defaults.base.v1;
+
+option go_package = "cosmossdk.io/x/accounts/defaults/base/v1";
+
+// MsgInit is used to initialize a base account.
+message MsgInit {
+  // pub_key defines the secp256k1 pubkey for the account.
+  bytes pub_key = 1;
+}
+
+// MsgInitResponse is the response returned after base account initialization.
+// This is empty.
+message MsgInitResponse {}
+
+// MsgSwapPubKey is used to change the pubkey for the account.
+message MsgSwapPubKey {
+  // new_pub_key defines the secp256k1 pubkey to swap the account to.
+  bytes new_pub_key = 1;
+}
+
+// MsgSwapPubKeyResponse is the response for the MsgSwapPubKey message.
+// This is empty.
+message MsgSwapPubKeyResponse {}
+
+// QuerySequence is the request for the account sequence.
+message QuerySequence {}
+
+// QuerySequenceResponse returns the sequence of the account.
+message QuerySequenceResponse {
+  // sequence is the current sequence of the account.
+  uint64 sequence = 1;
+}

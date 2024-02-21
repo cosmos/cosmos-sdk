@@ -15,6 +15,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
@@ -54,6 +55,9 @@ type Consensus[T transaction.Tx] struct {
 	// otherwise it will be empty and we will need to query the app for the last
 	// committed block. TODO(tip): check if concurrency is really needed
 	lastCommittedBlock atomic.Pointer[BlockData]
+
+	prepareProposalHandler handlers.PrepareHandler[T]
+	processProposalHandler handlers.ProcessHandler[T]
 }
 
 func NewConsensus[T transaction.Tx](
@@ -259,14 +263,7 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	cp, err := c.GetConsensusParams(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO check if we call this method when state is not committed
-
-	txs, err := c.app.BuildBlock(ctx, int64ToUint64(req.Height), int64ToUint64(cp.Block.MaxBytes))
+	txs, err := c.prepareProposalHandler(ctx, c.app, req)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +293,15 @@ func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestPro
 		decodedTxs = append(decodedTxs, decTx)
 	}
 
-	err := c.app.VerifyBlock(ctx, uint64(req.Height), decodedTxs)
+	err := c.processProposalHandler(ctx, c.app, decodedTxs, req)
+	if err != nil {
+		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
+		return &abci.ResponseProcessProposal{
+			Status: abci.ResponseProcessProposal_REJECT,
+		}, nil
+	}
+
+	err = c.app.VerifyBlock(ctx, uint64(req.Height), decodedTxs)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseProcessProposal{

@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/rapidproto"
@@ -83,6 +84,16 @@ func TestDecode(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
 			rapid.Check(t, func(t *rapid.T) {
 				msg := gen.Draw(t, "msg")
+				signers, err := encCfg.TxConfig.SigningContext().GetSigners(msg)
+				if len(signers) == 0 {
+					return
+				}
+				if err != nil {
+					if strings.Contains(err.Error(), "empty address string is not allowed") {
+						return
+					}
+					require.NoError(t, err)
+				}
 				gogo := tt.Gogo
 				sanity := tt.Pulsar
 

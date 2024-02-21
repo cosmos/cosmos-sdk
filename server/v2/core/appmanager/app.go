@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/store"
 )
 
@@ -34,7 +34,7 @@ type BlockRequest[T any] struct {
 	Time              time.Time
 	Hash              []byte
 	Txs               []T
-	ConsensusMessages []Type //
+	ConsensusMessages []Type
 }
 
 type BlockResponse struct {

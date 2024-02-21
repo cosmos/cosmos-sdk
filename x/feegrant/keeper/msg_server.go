@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -94,13 +94,12 @@ func (k msgServer) PruneAllowances(ctx context.Context, req *feegrant.MsgPruneAl
 		return nil, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			feegrant.EventTypePruneFeeGrant,
-			sdk.NewAttribute(feegrant.AttributeKeyPruner, req.Pruner),
-		),
-	)
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		feegrant.EventTypePruneFeeGrant,
+		event.NewAttribute(feegrant.AttributeKeyPruner, req.Pruner),
+	); err != nil {
+		return nil, err
+	}
 
 	return &feegrant.MsgPruneAllowancesResponse{}, nil
 }

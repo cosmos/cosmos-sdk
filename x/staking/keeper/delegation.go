@@ -1195,11 +1195,15 @@ func (k Keeper) ValidateUnbondAmount(
 		return shares, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid shares amount")
 	}
 
-	// Cap the shares at the delegation's shares. Shares being greater could occur
-	// due to rounding, however we don't want to truncate the shares or take the
-	// minimum because we want to allow for the full withdraw of shares from a
-	// delegation.
-	if shares.GT(delShares) {
+	// Depending on the share, amount can be smaller than unit amount(1stake).
+	// If the remain amount after unbonding is smaller than the minimum share,
+	// it's completely unbonded to avoid leaving dust shares.
+	tolerance, err := validator.SharesFromTokens(math.OneInt())
+	if err != nil {
+		return shares, err
+	}
+
+	if delShares.Sub(shares).LT(tolerance) {
 		shares = delShares
 	}
 

@@ -623,7 +623,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	thresholdDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows":{"voting_period":"40000s"}}`)
 	percentageDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "windows":{"voting_period":"40000s"}}`)
 
-	cmd := groupcli.MsgUpdateGroupPolicyDecisionPolicyCmd(addresscodec.NewBech32Codec("cosmos"))
+	cmd := groupcli.MsgUpdateGroupPolicyDecisionPolicyCmd()
 	cmd.SetOutput(io.Discard)
 
 	testCases := []struct {

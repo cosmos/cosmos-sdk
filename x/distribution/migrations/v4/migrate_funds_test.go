@@ -34,7 +34,7 @@ func TestFundsMigration(t *testing.T) {
 	)
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
-	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, distribution.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{}, distribution.AppModule{})
 	ctx := sdk.NewContext(cms, true, logger)
 
 	maccPerms := map[string][]string{

@@ -63,7 +63,7 @@ type deterministicFixture struct {
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	t.Helper()
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModule{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{}).Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)

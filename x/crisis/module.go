@@ -72,22 +72,6 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the crisis
-// module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the crisis module.
-func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return types.ValidateGenesis(&data)
-}
-
 // RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
 func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -106,6 +90,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
+// RegisterMigrations registers the crisis module migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 
@@ -116,8 +101,22 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	return nil
 }
 
-// InitGenesis performs genesis initialization for the crisis module. It returns
-// no validator updates.
+// DefaultGenesis returns default genesis state as raw bytes for the crisis module.
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the crisis module.
+func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(&data)
+}
+
+// InitGenesis performs genesis initialization for the crisis module.
 func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	start := time.Now()
 	var genesisState types.GenesisState
@@ -130,14 +129,13 @@ func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data j
 	}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the crisis
-// module.
+// ExportGenesis returns the exported genesis state as raw bytes for the crisis  module.
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the crisis module. It returns no validator

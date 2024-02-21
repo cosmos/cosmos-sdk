@@ -84,7 +84,7 @@ The Cosmos SDK uses Protobuf definitions to generate client and server code:
 
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer` implementation in `RegisterServices` method from the [`AppModule` interface](./01-module-manager.md#appmodule).
 
-In order for clients (CLI and grpc-gateway) to have these URLs registered, the Cosmos SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](01-module-manager.md#appmodulebasic) method, using the proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
+In order for clients (CLI and grpc-gateway) to have these URLs registered, the Cosmos SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](01-module-manager.md#hasregisterinterfaces) method, using the proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
 
 
 ## Queries

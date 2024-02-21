@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -51,13 +50,11 @@ type AppModule struct {
 
 func (m AppModule) IsAppModule() {}
 
-func (m AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+func (AppModule) Name() string { return ModuleName }
 
 func (m AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, v1.MsgServiceDesc())
 }
-
-func (m AppModule) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // App module services
 
@@ -99,8 +96,6 @@ func (m AppModule) ExportGenesis(ctx context.Context, jsonCodec codec.JSONCodec)
 	}
 	return jsonCodec.MustMarshalJSON(gs)
 }
-
-func (AppModule) Name() string { return ModuleName }
 
 func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.TxCmd(ModuleName)

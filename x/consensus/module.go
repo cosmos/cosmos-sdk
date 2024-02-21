@@ -34,6 +34,14 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+	return AppModule{
+		cdc:    cdc,
+		keeper: keeper,
+	}
+}
+
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModule) IsAppModule() {}
 
@@ -62,14 +70,6 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	types.RegisterMsgServer(registrar, am.keeper)
 	types.RegisterQueryServer(registrar, am.keeper)
 	return nil
-}
-
-// NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
-	return AppModule{
-		cdc:    cdc,
-		keeper: keeper,
-	}
 }
 
 // ConsensusVersion implements HasConsensusVersion.

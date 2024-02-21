@@ -10,12 +10,6 @@ const (
 
 	// StoreKey is the store key string for supply
 	StoreKey = ModuleName
-
-	// RouterKey is the message route for supply
-	RouterKey = ModuleName
-
-	// QuerierRoute is the querier route for supply
-	QuerierRoute = ModuleName
 )
 
 var (

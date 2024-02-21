@@ -29,7 +29,7 @@ import (
 func Example() {
 	// in this example we are testing the integration of the following modules:
 	// - mint, which directly depends on auth, bank and staking
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, mint.AppModule{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, mint.AppModule{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 

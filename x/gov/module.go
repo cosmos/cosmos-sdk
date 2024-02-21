@@ -84,22 +84,6 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	v1.RegisterLegacyAminoCodec(cdc)
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the gov
-// module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(v1.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the gov module.
-func (am AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data v1.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", govtypes.ModuleName, err)
-	}
-
-	return v1.ValidateGenesis(am.accountKeeper.AddressCodec(), &data)
-}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := v1.RegisterQueryHandlerClient(context.Background(), mux, v1.NewQueryClient(clientCtx)); err != nil {
@@ -148,6 +132,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
+// RegisterMigrations registers module migrations
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 	if err := mr.Register(govtypes.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -173,16 +158,29 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	return nil
 }
 
-// InitGenesis performs genesis initialization for the gov module. It returns
-// no validator updates.
+// DefaultGenesis returns default genesis state as raw bytes for the gov module.
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(v1.DefaultGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the gov module.
+func (am AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var data v1.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", govtypes.ModuleName, err)
+	}
+
+	return v1.ValidateGenesis(am.accountKeeper.AddressCodec(), &data)
+}
+
+// InitGenesis performs genesis initialization for the gov module.
 func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState v1.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the gov
-// module.
+// ExportGenesis returns the exported genesis state as raw bytes for the gov module.
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs, err := ExportGenesis(ctx, am.keeper)
 	if err != nil {
@@ -191,11 +189,10 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 	return cdc.MustMarshalJSON(gs)
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// EndBlock returns the end blocker for the gov module. It returns no validator
-// updates.
+// EndBlock returns the end blocker for the gov module.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	c := sdk.UnwrapSDKContext(ctx)
 	return EndBlocker(c, am.keeper)

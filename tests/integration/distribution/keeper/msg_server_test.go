@@ -66,7 +66,7 @@ func initFixture(t *testing.T) *fixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, pooltypes.StoreKey, stakingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}, protocolpool.AppModule{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, distribution.AppModule{}, protocolpool.AppModule{}).Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)

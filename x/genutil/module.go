@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -94,8 +94,8 @@ func (am AppModule) GenTxValidator() types.MessageValidator {
 	return am.genTxValidator
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // RegisterInterfaces implements module.AppModule.
-func (AppModule) RegisterInterfaces(types.InterfaceRegistry) {}
+func (AppModule) RegisterInterfaces(codectypes.InterfaceRegistry) {}

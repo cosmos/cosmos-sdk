@@ -40,7 +40,7 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 	}
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // Name returns the consensus module's name.

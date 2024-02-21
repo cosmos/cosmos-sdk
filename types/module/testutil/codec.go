@@ -12,7 +12,7 @@ import (
 )
 
 // TestEncodingConfig defines an encoding configuration that is used for testing
-// purposes. Note, MakeTestEncodingConfig takes a series of AppModuleBasic types
+// purposes. Note, MakeTestEncodingConfig takes a series of AppModule types
 // which should only contain the relevant module being tested and any potential
 // dependencies.
 type TestEncodingConfig struct {

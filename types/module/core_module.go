@@ -135,12 +135,11 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, cdc codec.JSONCod
 	return nil
 }
 
-// Name implements AppModuleBasic
+// Name implements HasName
 func (c coreAppModuleAdaptor) Name() string {
 	return c.name
 }
 
-// GetQueryCmd implements AppModuleBasic
 func (c coreAppModuleAdaptor) GetQueryCmd() *cobra.Command {
 	if mod, ok := c.module.(interface {
 		GetQueryCmd() *cobra.Command
@@ -151,7 +150,6 @@ func (c coreAppModuleAdaptor) GetQueryCmd() *cobra.Command {
 	return nil
 }
 
-// GetTxCmd implements AppModuleBasic
 func (c coreAppModuleAdaptor) GetTxCmd() *cobra.Command {
 	if mod, ok := c.module.(interface {
 		GetTxCmd() *cobra.Command
@@ -162,7 +160,7 @@ func (c coreAppModuleAdaptor) GetTxCmd() *cobra.Command {
 	return nil
 }
 
-// RegisterGRPCGatewayRoutes implements AppModuleBasic
+// RegisterGRPCGatewayRoutes implements HasGRPCGateway
 func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
 	if mod, ok := c.module.(interface {
 		RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux)
@@ -171,7 +169,7 @@ func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux 
 	}
 }
 
-// RegisterInterfaces implements AppModuleBasic
+// RegisterInterfaces implements HasRegisterInterfaces
 func (c coreAppModuleAdaptor) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	if mod, ok := c.module.(interface {
 		RegisterInterfaces(registry codectypes.InterfaceRegistry)
@@ -180,7 +178,7 @@ func (c coreAppModuleAdaptor) RegisterInterfaces(registry codectypes.InterfaceRe
 	}
 }
 
-// RegisterLegacyAminoCodec implements AppModuleBasic
+// RegisterLegacyAminoCodec implements HasAminoCodec
 func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
 	if mod, ok := c.module.(interface {
 		RegisterLegacyAminoCodec(amino *codec.LegacyAmino)

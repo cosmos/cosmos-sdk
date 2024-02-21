@@ -56,7 +56,7 @@ The usage of extension interfaces allows modules to define only the functionalit
 
 * `RegisterLegacyAminoCodec(*codec.LegacyAmino)`: Registers the `amino` codec for the module, which is used to marshal and unmarshal structs to/from `[]byte` in order to persist them in the module's `KVStore`.
 
-### `HasRegisterInfaces`
+### `HasRegisterInterfaces`
 
 ```go reference
 // TODO
@@ -228,6 +228,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.
 * `PrepareCheckState(context.Context)`: This method gives module developers the option to implement logic that is automatically triggered during [`Commit'](../../learn/advanced/00-baseapp.md#commit) of each block using the [`checkState`](../../learn/advanced/00-baseapp.md#state-updates) of the next block. Implement empty if no logic needs to be triggered during `Commit` of each block for this module.
 
 ### Implementing the Application Module Interfaces
+
+// TODO reword!
 
 Typically, the various application module interfaces are implemented in a file called `module.go`, located in the module's folder (e.g. `./x/module/module.go`).
 

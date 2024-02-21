@@ -168,6 +168,7 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 // MinimumAppConfig defines the minimum of modules required for a call to New to succeed
 func MinimumAppConfig() depinject.Config {
 	return configurator.NewAppConfig(
+		configurator.AccountsModule(),
 		configurator.AuthModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),

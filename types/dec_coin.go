@@ -631,13 +631,15 @@ func (coins DecCoins) Sort() DecCoins {
 // invalid. An empty string is considered invalid.
 func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	coinStr = strings.TrimSpace(coinStr)
+	amountStart, amountEnd, denomEnd, isValid := MatchDecCoin([]byte(coinStr))
 
-	matches := reDecCoin.FindStringSubmatch(coinStr)
-	if matches == nil {
+	if !isValid {
 		return DecCoin{}, fmt.Errorf("invalid decimal coin expression: %s", coinStr)
 	}
 
-	amountStr, denomStr := matches[1], matches[2]
+	// Extract amount and denomination using the positions returned by MatchDecCoin
+	amountStr := coinStr[amountStart:amountEnd]
+	denomStr := coinStr[amountEnd : denomEnd+1]
 
 	amount, err := math.LegacyNewDecFromStr(amountStr)
 	if err != nil {

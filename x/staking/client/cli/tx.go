@@ -155,7 +155,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newMinSelfDelegation = &msb
 			}
 
-			valAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			valAddr, err := clientCtx.ValidatorAddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}

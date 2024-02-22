@@ -5,7 +5,6 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
-	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -32,11 +31,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	LegacyAmino  *codec.LegacyAmino
-	Registry     cdctypes.InterfaceRegistry
+	Config      *modulev1.Module
+	Environment appmodule.Environment
+	Cdc         codec.Codec
+	LegacyAmino *codec.LegacyAmino
+	Registry    cdctypes.InterfaceRegistry
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -63,7 +62,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(fmt.Errorf("unable to decode authority in slashing: %w", err))
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.StoreService, in.StakingKeeper, authStr)
+	k := keeper.NewKeeper(in.Environment, in.Cdc, in.LegacyAmino, in.StakingKeeper, authStr)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.Registry)
 	return ModuleOutputs{
 		Keeper: k,

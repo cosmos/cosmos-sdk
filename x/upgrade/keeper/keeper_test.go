@@ -43,9 +43,10 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	s.key = key
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 10})
@@ -68,7 +69,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	s.Require().NoError(err)
 	s.encodedAuthority = authority
-	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, s.encCfg.Codec, homeDir, s.baseApp, authority)
+	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority)
 
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
@@ -252,7 +253,8 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	s.Require().False(ok)
 	skip := map[int64]bool{skipOne: true}
 	storeService := runtime.NewKVStoreService(s.key)
-	upgradeKeeper := keeper.NewKeeper(skip, storeService, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority)
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
 }

@@ -98,6 +98,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 
 	var signers [][]byte
 	var msgs []proto.Message
+	seenSigners := map[string]struct{}{}
 	for _, anyMsg := range body.Messages {
 		msg, signerErr := anyutil.Unpack(anyMsg, fileResolver, d.signingCtx.TypeResolver())
 		if signerErr != nil {
@@ -108,7 +109,14 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		if signerErr != nil {
 			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
 		}
-		signers = append(signers, ss...)
+		for _, s := range ss {
+			_, seen := seenSigners[string(s)]
+			if seen {
+				continue
+			}
+			signers = append(signers, s)
+			seenSigners[string(s)] = struct{}{}
+		}
 	}
 
 	return &DecodedTx{

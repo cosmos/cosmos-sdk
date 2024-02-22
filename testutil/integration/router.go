@@ -52,8 +52,7 @@ func NewIntegrationApp(
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
-	basicModuleManager := module.NewBasicManagerFromManager(moduleManager, nil)
-	basicModuleManager.RegisterInterfaces(interfaceRegistry)
+	moduleManager.RegisterInterfaces(interfaceRegistry)
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
@@ -82,7 +81,7 @@ func NewIntegrationApp(
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
+		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger()), authtypes.NewModuleAddress("gov").String())
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 
 		if err := bApp.LoadLatestVersion(); err != nil {

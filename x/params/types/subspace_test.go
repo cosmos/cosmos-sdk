@@ -38,7 +38,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(paramsmodule.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(paramsmodule.AppModule{})
 	suite.cdc = encodingConfig.Codec
 	suite.amino = encodingConfig.Amino
 

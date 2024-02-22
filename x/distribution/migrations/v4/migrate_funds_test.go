@@ -34,7 +34,7 @@ func TestFundsMigration(t *testing.T) {
 	)
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
-	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{}, distribution.AppModule{})
 	ctx := sdk.NewContext(cms, true, logger)
 
 	maccPerms := map[string][]string{
@@ -46,8 +46,8 @@ func TestFundsMigration(t *testing.T) {
 
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encCfg.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -57,8 +57,8 @@ func TestFundsMigration(t *testing.T) {
 
 	// create bank keeper
 	bankKeeper := bankkeeper.NewBaseKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		encCfg.Codec,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		map[string]bool{},
 		authority.String(),

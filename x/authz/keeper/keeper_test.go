@@ -51,7 +51,7 @@ func (s *TestSuite) SetupTest() {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
 
 	s.baseApp = baseapp.NewBaseApp(
 		"authz",

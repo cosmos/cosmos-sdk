@@ -38,7 +38,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())

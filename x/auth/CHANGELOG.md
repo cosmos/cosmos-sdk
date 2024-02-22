@@ -34,6 +34,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#18780](https://github.com/cosmos/cosmos-sdk/pull/18780) Move sig verification out of the for loop, into the authenticate method.
+* [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist. 
+    * When signing a transaction with an account that has not been created accountnumber 0 must be used
 
 ### CLI Breaking Changes
 
@@ -41,18 +43,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-<<<<<<< HEAD
-* [#19050](https://github.com/cosmos/cosmos-sdk/pull/19050) Remove priority from `TxFeeChecker` signature. Priority is a mempool concern and should not be part of the `TxFeeChecker` interface.
-* [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`.
-* [#19161](https://github.com/cosmos/cosmos-sdk/pull/19161) Remove `simulate` from `SetGasMeter`
-* [#19363](https://github.com/cosmos/cosmos-sdk/pull/19363) Remove `IterateAccounts` and `GetAllAccounts` methods from the AccountKeeper interface and Keeper.
-||||||| d23733e16c
-* [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
-=======
 * [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
 * [#19161](https://github.com/cosmos/cosmos-sdk/pull/19161) Remove `simulate` from `SetGasMeter`
 * [#19363](https://github.com/cosmos/cosmos-sdk/pull/19363) Remove `IterateAccounts` and `GetAllAccounts` methods from the AccountKeeper interface and Keeper.
->>>>>>> main
+* [#19290](https://github.com/cosmos/cosmos-sdk/issues/19290) Pass `appmodule.Environment` to NewKeeper instead of passing individual services. 
 
 ### Consensus Breaking Changes
 
@@ -60,16 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19093](https://github.com/cosmos/cosmos-sdk/pull/19093) SetPubKeyDecorator was merged into SigVerification, gas consumption is almost halved for a simple tx.
 
 ### Bug Fixes
-<<<<<<< HEAD
 
 * [#19148](https://github.com/cosmos/cosmos-sdk/pull/19148) Checks the consumed gas for verifying a multisig pubKey signature during simulation.
 * [#19239](https://github.com/cosmos/cosmos-sdk/pull/19239) Sets from flag in multi-sign command to avoid no key name provided error.
 * [#19099](https://github.com/cosmos/cosmos-sdk/pull/19099) `verifyIsOnCurve` now checks if we are simulating to avoid malformed public key error.
-||||||| d23733e16c
-=======
-
-* [#19148](https://github.com/cosmos/cosmos-sdk/pull/19148) Checks the consumed gas for verifying a multisig pubKey signature during simulation.
-* [#19239](https://github.com/cosmos/cosmos-sdk/pull/19239) Sets from flag in multi-sign command to avoid no key name provided error.
-* [#19099](https://github.com/cosmos/cosmos-sdk/pull/19099) `verifyIsOnCurve` now checks if we are simulating to avoid malformed public key error.
-
->>>>>>> main

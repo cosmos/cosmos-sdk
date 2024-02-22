@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -42,7 +43,7 @@ func initFixture(t *testing.T) *genesisFixture {
 	t.Helper()
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
@@ -50,7 +51,7 @@ func initFixture(t *testing.T) *genesisFixture {
 
 	return &genesisFixture{
 		ctx:            testCtx.Ctx,
-		feegrantKeeper: keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper),
+		feegrantKeeper: keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), encCfg.Codec, accountKeeper),
 		accountKeeper:  accountKeeper,
 	}
 }

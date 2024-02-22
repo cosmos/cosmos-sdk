@@ -90,7 +90,7 @@ func TestBeginBlocker(t *testing.T) {
 	info, err := slashingKeeper.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(pk.Address()))
 	require.NoError(t, err)
 	require.Equal(t, ctx.HeaderInfo().Height, info.StartHeight)
-	require.Equal(t, int64(1), info.IndexOffset)
+	require.Equal(t, int64(0), info.IndexOffset)
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 	require.Equal(t, int64(0), info.MissedBlocksCounter)
 
@@ -110,7 +110,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.NoError(t, err)
 	// for 50 blocks, mark the validator as having not signed
 	for ; height < ((signedBlocksWindow * 2) - minSignedPerWindow + 1); height++ {
-		ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height}).WithBlockHeight(height).WithCometInfo(comet.Info{
+		ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height}).WithCometInfo(comet.Info{
 			LastCommit: comet.CommitInfo{Votes: []comet.VoteInfo{{
 				Validator:   abciVal,
 				BlockIDFlag: comet.BlockIDFlagAbsent,

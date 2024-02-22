@@ -6,7 +6,6 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/server/v2/core => ./core
 	cosmossdk.io/server/v2/stf => ./stf
-	cosmossdk.io/store/v2 => ../../store
 )
 
 require (

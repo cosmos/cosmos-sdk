@@ -21,46 +21,7 @@ type AppManager[T transaction.Tx] struct {
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
 	importState func(ctx context.Context, src map[string]io.Reader) error
 
-	prepareHandler appmanager.PrepareHandler[T]
-	processHandler appmanager.ProcessHandler[T]
-	stf            stf.STF[T] // consider if instead of having an interface (which is boxed?), we could have another type Parameter defining STF.
-}
-
-// BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
-func (a AppManager[T]) BuildBlock(ctx context.Context, height, maxBlockBytes uint64) ([]T, error) {
-	latestVersion, currentState, err := a.db.StateLatest()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create new state for height %d: %w", height, err)
-	}
-
-	if latestVersion+1 != height {
-		return nil, fmt.Errorf("invalid BuildBlock height wanted %d, got %d", latestVersion+1, height)
-	}
-
-	txs, err := a.prepareHandler(ctx, currentState)
-	if err != nil {
-		return nil, err
-	}
-
-	return txs, nil
-}
-
-func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) error {
-	latestVersion, currentState, err := a.db.StateLatest()
-	if err != nil {
-		return fmt.Errorf("unable to create new state for height %d: %w", height, err)
-	}
-
-	if latestVersion+1 != height {
-		return fmt.Errorf("invalid VerifyBlock height wanted %d, got %d", latestVersion+1, height)
-	}
-
-	err = a.processHandler(ctx, txs, currentState)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	stf stf.STF[T] // consider if instead of having an interface (which is boxed?), we could have another type Parameter defining STF.
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T]) (*appmanager.BlockResponse, corestore.WriterMap, error) {

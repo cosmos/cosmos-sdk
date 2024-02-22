@@ -8,6 +8,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -133,23 +134,17 @@ func intoABCIValidatorUpdates(updates []appmodule.ValidatorUpdate) []abci.Valida
 				Sum: &cmtcrypto.PublicKey_Ed25519{ // by default we set ed25519
 					Ed25519: updates[i].PubKey,
 				},
-			}, 
+			},
 			Power: updates[i].Power,
 		}
 
 		if updates[i].PubKeyType == "secp256k1" {
-			valsetUpdates[i].PubKey =  cmtcrypto.PublicKey{
-				Sum: &cmtcrypto.PublicKey_Secp256k1{ 
-					Secp256k1: updates[i].PubKey,
+			valsetUpdates[i].PubKey = cmtcrypto.PublicKey{
+				Sum: &cmtcrypto.PublicKey_Secp256K1{
+					Secp256K1: updates[i].PubKey,
 				},
-			}, 
-		} else if updates[i].PubKeyType == "sr25519" {
-			valsetUpdates[i].PubKey =  cmtcrypto.PublicKey{
-				Sum: &cmtcrypto.PublicKey_Sr25519{ 
-					Sr25519: updates[i].PubKey,
-				},
-			}, 
-		} 
+			}
+		}
 	}
 
 	return valsetUpdates
@@ -352,7 +347,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 		return nil, fmt.Errorf("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
-		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds) 
+		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds)
 		cs = &types1.ConsensusParams{
 			Block: &types1.BlockParams{
 				MaxBytes: r.Params.Block.MaxBytes,

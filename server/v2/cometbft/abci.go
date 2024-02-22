@@ -263,7 +263,18 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	txs, err := c.prepareProposalHandler(ctx, c.app, req)
+	decodedTxs := make([]T, len(req.Txs))
+	for _, tx := range req.Txs {
+		decTx, err := c.txCodec.Decode(tx)
+		if err != nil {
+			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
+			// continue even if tx decoding fails
+			c.logger.Error("failed to decode tx", "err", err)
+		}
+		decodedTxs = append(decodedTxs, decTx)
+	}
+
+	txs, err := c.prepareProposalHandler(ctx, c.app, decodedTxs, req)
 	if err != nil {
 		return nil, err
 	}
@@ -294,14 +305,6 @@ func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestPro
 	}
 
 	err := c.processProposalHandler(ctx, c.app, decodedTxs, req)
-	if err != nil {
-		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
-		return &abci.ResponseProcessProposal{
-			Status: abci.ResponseProcessProposal_REJECT,
-		}, nil
-	}
-
-	err = c.app.VerifyBlock(ctx, uint64(req.Height), decodedTxs)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseProcessProposal{

@@ -8,7 +8,7 @@ replace (
 	cosmossdk.io/server/v2/appmanager => ../appmanager
 	cosmossdk.io/server/v2/core => ../core
 	cosmossdk.io/server/v2/stf => ../stf
-	cosmossdk.io/store/v2 => ../../../store/v2
+	cosmossdk.io/store/v2 => ../../../store
 	github.com/cometbft/cometbft/api => github.com/cometbft/cometbft/api v1.0.0-alpha.1
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240125174944-11ba4961dae9
 )

@@ -8,9 +8,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
-	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/mempool"
-	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 
@@ -31,13 +28,10 @@ type App struct {
 	*appmanager.AppManager[transaction.Tx]
 
 	// app manager dependencies
-	stf                 *stf.STF[transaction.Tx]
-	msgRouterBuilder    *stf.MsgRouterBuilder
-	queryRouterBuilder  *stf.MsgRouterBuilder
-	mempool             mempool.Mempool[transaction.Tx]
-	prepareBlockHandler coreappmanager.PrepareHandler[transaction.Tx]
-	verifyBlockHandler  coreappmanager.ProcessHandler[transaction.Tx]
-	db                  store.Store
+	stf                *stf.STF[transaction.Tx]
+	msgRouterBuilder   *stf.MsgRouterBuilder
+	queryRouterBuilder *stf.MsgRouterBuilder
+	db                 Store
 
 	// app configuration
 	logger    log.Logger
@@ -65,27 +59,13 @@ func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load() error {
-	// set defaults
-	if a.mempool == nil {
-		// a.mempool = mempool.NewBasicMempool()
-	}
-
-	if a.prepareBlockHandler == nil {
-		// a.prepareBlockHandler = appmanager.DefaultPrepareBlockHandler
-	}
-
-	if a.verifyBlockHandler == nil {
-		// a.verifyBlockHandler = appmanager.DefaultProcessBlockHandler
-	}
 
 	appManagerBuilder := appmanager.Builder[transaction.Tx]{
-		STF:                 a.stf,
-		DB:                  a.db,
-		ValidateTxGasLimit:  a.config.GasConfig.ValidateTxGasLimit,
-		QueryGasLimit:       a.config.GasConfig.QueryGasLimit,
-		SimulationGasLimit:  a.config.GasConfig.SimulationGasLimit,
-		PrepareBlockHandler: a.prepareBlockHandler,
-		VerifyBlockHandler:  a.verifyBlockHandler,
+		STF:                a.stf,
+		DB:                 a.db,
+		ValidateTxGasLimit: a.config.GasConfig.ValidateTxGasLimit,
+		QueryGasLimit:      a.config.GasConfig.QueryGasLimit,
+		SimulationGasLimit: a.config.GasConfig.SimulationGasLimit,
 	}
 
 	appManager, err := appManagerBuilder.Build()

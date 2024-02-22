@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/gogoproto/proto" // TODO: use protov2
+
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	abci "cosmossdk.io/api/tendermint/abci"
-	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"google.golang.org/protobuf/proto"
 )
 
 // PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations
@@ -23,7 +23,7 @@ type PrepareHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, 
 type ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) error
 
 type AppManager[T transaction.Tx] interface {
-	ValidateTx(ctx context.Context, tx T, execMode corecontext.ExecMode) (appmanager.TxResult, error)
+	ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error)
 	Query(ctx context.Context, version uint64, request appmanager.Type) (response appmanager.Type, err error)
 }
 
@@ -41,7 +41,6 @@ func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *Default
 
 func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
-
 		abciReq, ok := req.(*abci.RequestPrepareProposal)
 		if !ok {
 			return nil, fmt.Errorf("invalid request type: %T", req)
@@ -90,7 +89,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 			// which calls mempool.Insert, in theory everything in the pool should be
 			// valid. But some mempool implementations may insert invalid txs, so we
 			// check again.
-			_, err := app.ValidateTx(ctx, memTx, corecontext.ExecModePrepareProposal)
+			_, err := app.ValidateTx(ctx, memTx)
 			if err != nil {
 				err := h.mempool.Remove([]T{memTx})
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
@@ -142,14 +141,14 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 
 		var totalTxGas uint64
 		for _, tx := range txs {
-			_, err := app.ValidateTx(ctx, tx, corecontext.ExecModeProcessProposal)
+			_, err := app.ValidateTx(ctx, tx)
 			if err != nil {
 				return fmt.Errorf("failed to validate tx: %w", err)
 			}
 
 			if maxBlockGas > 0 {
 				totalTxGas += tx.GetGasLimit()
-				if totalTxGas > uint64(maxBlockGas) {
+				if totalTxGas > maxBlockGas {
 					return fmt.Errorf("total tx gas %d exceeds max block gas %d", totalTxGas, maxBlockGas)
 				}
 			}

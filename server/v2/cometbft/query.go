@@ -8,8 +8,8 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
-	"cosmossdk.io/server/v2/core/store"
 )
 
 func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error) {
@@ -37,7 +37,13 @@ func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error
 	return nil, errorsmod.Wrap(cometerrors.ErrUnknownRequest, "expected second parameter to be 'filter'")
 }
 
-// TODO godoc
+// handlerQueryApp handles the query requests for the application.
+// It expects the path parameter to have at least two elements.
+// The second element of the path can be either 'simulate' or 'version'.
+// If the second element is 'simulate', it decodes the request data into a transaction,
+// simulates the transaction using the application, and returns the simulation result.
+// If the second element is 'version', it returns the version of the application.
+// If the second element is neither 'simulate' nor 'version', it returns an error indicating an unknown query.
 func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 	if len(path) < 2 {
 		return nil, errorsmod.Wrap(
@@ -80,7 +86,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 	return nil, errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query: %s", path)
 }
 
-func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+func (c *Consensus[T]) handleQueryStore(path []string, st types.Store, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 	req.Path = "/" + strings.Join(path[1:], "/")
 	if req.Height <= 1 && req.Prove {
 		return nil, errorsmod.Wrap(

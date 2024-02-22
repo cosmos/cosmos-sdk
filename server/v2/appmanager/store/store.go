@@ -1,89 +1,74 @@
 package store
 
 import (
-	"fmt"
 	"sync/atomic"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/core/store"
-	storev2 "cosmossdk.io/store/v2"
 )
 
-var _ store.Store = (*Store[storev2.VersionedDatabase, storev2.Committer])(nil)
+var _ Store = (*Storage[Database])(nil)
 
-type Store[SS storev2.VersionedDatabase, SC storev2.Committer] struct {
-	ss SS
-	sc SC
+type Storage[DB Database] struct {
+	db DB
 
 	// we use latest to keep track of the last height. Reading using atomics is way
-	// cheaper than reading it from SS or SC everytime, it is also implementation
+	// cheaper than reading it from DB or SC everytime, it is also implementation
 	// dependent.
 	latest *atomic.Uint64
 }
 
-func (s Store[SS, SC]) StateLatest() (uint64, store.ReaderMap, error) {
+func (s Storage[DB]) StateLatest() (uint64, store.ReaderMap, error) {
 	latest := s.latest.Load()
-	return latest, actorsState[SS]{latest, s.ss}, nil
+	return latest, actorsState[DB]{latest, s.db}, nil
 }
 
-func (s Store[SS, SC]) StateAt(version uint64) (store.ReaderMap, error) {
-	return actorsState[SS]{version, s.ss}, nil
+func (s Storage[DB]) StateAt(version uint64) (store.ReaderMap, error) {
+	return actorsState[DB]{version, s.db}, nil
 }
 
-func (s Store[SS, SC]) StateCommit(changes []store.StateChanges) (store.Hash, error) {
-	panic("impl")
-}
-
-func New[SS storev2.VersionedDatabase, SC storev2.Committer](ss SS, sc SC) (Store[SS, SC], error) {
+func New[DB Database](db DB) (Storage[DB], error) {
 	// sanity checks.
-	ssVersion, err := ss.GetLatestVersion()
+	dbVersion, err := db.GetLatestVersion()
 	if err != nil {
-		return Store[SS, SC]{}, err
-	}
-	scVersion, err := sc.GetLatestVersion()
-	if err != nil {
-		return Store[SS, SC]{}, err
-	}
-	if scVersion != ssVersion {
-		return Store[SS, SC]{}, fmt.Errorf("data corruption, sc version %d, ss version %d", scVersion, ssVersion)
+		return Storage[DB]{}, err
 	}
 
-	s := Store[SS, SC]{
-		ss:     ss,
-		sc:     sc,
+	s := Storage[DB]{
+		db:     db,
 		latest: new(atomic.Uint64),
 	}
-	s.latest.Store(ssVersion)
+	s.latest.Store(dbVersion)
 	return s, nil
 }
 
-type actorsState[SS storev2.VersionedDatabase] struct {
+type actorsState[DB Database] struct {
 	version uint64
-	ss      SS
+	db      DB
 }
 
-func (a actorsState[SS]) GetReader(address []byte) (store.Reader, error) {
-	return state[SS]{
+func (a actorsState[DB]) GetReader(address []byte) (store.Reader, error) {
+	return state[DB]{
 		version:  a.version,
 		storeKey: string(address),
-		ss:       a.ss,
+		db:       a.db,
 	}, nil
 }
 
-type state[SS storev2.VersionedDatabase] struct {
+type state[DB Database] struct {
 	version  uint64
 	storeKey string
-	ss       SS
+	db       DB
 }
 
-func (s state[SS]) Has(key []byte) (bool, error) { return s.ss.Has(s.storeKey, s.version, key) }
+func (s state[DB]) Has(key []byte) (bool, error) { return s.db.Has(s.storeKey, s.version, key) }
 
-func (s state[SS]) Get(bytes []byte) ([]byte, error) { return s.ss.Get(s.storeKey, s.version, bytes) }
+func (s state[DB]) Get(bytes []byte) ([]byte, error) { return s.db.Get(s.storeKey, s.version, bytes) }
 
-func (s state[SS]) Iterator(start, end []byte) (corestore.Iterator, error) {
-	return s.ss.Iterator(s.storeKey, s.version, start, end)
+func (s state[DB]) Iterator(start, end []byte) (corestore.Iterator, error) {
+	return s.db.Iterator(s.storeKey, s.version, start, end)
 }
 
-func (s state[SS]) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
-	return s.ss.ReverseIterator(s.storeKey, s.version, start, end)
+func (s state[DB]) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
+	return s.db.ReverseIterator(s.storeKey, s.version, start, end)
 }

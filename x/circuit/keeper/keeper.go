@@ -3,6 +3,8 @@ package keeper
 import (
 	context "context"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -79,4 +81,9 @@ func (k *Keeper) GetAuthority() []byte {
 func (k *Keeper) IsAllowed(ctx context.Context, msgURL string) (bool, error) {
 	has, err := k.DisableList.Has(ctx, msgURL)
 	return !has, err
+}
+
+func (k *Keeper) IsAllowedPreMessageHook(ctx context.Context, msg proto.Message) error {
+	_, err := k.IsAllowed(ctx, appmodule.MsgTypeURL(msg))
+	return err
 }

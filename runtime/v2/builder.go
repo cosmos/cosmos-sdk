@@ -6,11 +6,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/transaction"
-	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -51,7 +50,7 @@ func (a *AppBuilder) RegisterModules(modules ...sdkmodule.AppModule) error { // 
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, error) {
+func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -95,24 +94,6 @@ func (a *AppBuilder) Build(db store.Store, opts ...AppBuilderOption) (*App, erro
 // AppBuilderOption is a function that can be passed to AppBuilder.Build to
 // customize the resulting app.
 type AppBuilderOption func(*AppBuilder)
-
-func AppBuilderWithMempool(mempool mempool.Mempool[transaction.Tx]) AppBuilderOption {
-	return func(a *AppBuilder) {
-		a.app.mempool = mempool
-	}
-}
-
-func AppBuilderWithPrepareBlockHandler(handler coreappmanager.PrepareHandler[transaction.Tx]) AppBuilderOption {
-	return func(a *AppBuilder) {
-		a.app.prepareBlockHandler = handler
-	}
-}
-
-func AppBuilderWithVerifyBlockHandler(handler coreappmanager.ProcessHandler[transaction.Tx]) AppBuilderOption {
-	return func(a *AppBuilder) {
-		a.app.verifyBlockHandler = handler
-	}
-}
 
 func AppBuilderWithBranch(branch branchFunc) AppBuilderOption {
 	return func(a *AppBuilder) {

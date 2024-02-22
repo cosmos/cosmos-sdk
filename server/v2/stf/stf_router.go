@@ -24,8 +24,6 @@ type PostMsgHandler = func(ctx context.Context, msg, msgResp transaction.Type) (
 
 type QueryHandler = MsgHandler
 
-// TODO: make a case for *, listen to all messages
-
 // NewMsgRouterBuilder is a router that routes messages to their respective handlers.
 func NewMsgRouterBuilder() *MsgRouterBuilder {
 	return &MsgRouterBuilder{
@@ -38,7 +36,7 @@ func NewMsgRouterBuilder() *MsgRouterBuilder {
 type MsgRouterBuilder struct {
 	handlers           map[string]MsgHandler
 	globalPreHandlers  []PreMsgHandler
-	preHandlers        map[string][]PreMsgHandler // TODO document how to do ordering, if needed
+	preHandlers        map[string][]PreMsgHandler
 	postHandlers       map[string][]PostMsgHandler
 	globalPostHandlers []PostMsgHandler
 }

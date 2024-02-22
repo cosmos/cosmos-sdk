@@ -1,5 +1,7 @@
 package cometbft
 
+// TODO: implement the server (facu)
+
 // import (
 // 	"context"
 // 	"fmt"

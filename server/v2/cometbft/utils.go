@@ -8,6 +8,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -22,9 +23,9 @@ import (
 	sdkabci "cosmossdk.io/api/tendermint/abci"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/event"
 )
 
 // parseQueryRequest parses a RequestQuery into a proto.Message, if it is a proto query
@@ -129,12 +130,20 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 
 	for i := range updates {
 		valsetUpdates[i] = abci.ValidatorUpdate{
-			// PubKey: cmtcrypto.PublicKey{
-			// 	Sum: &cmtcrypto.PublicKey_Ed25519{ // TODO: check if this is ok, i didn't find a way to check the pubkey type
-			// 		Ed25519: updates[i].PubKey,
-			// 	},
-			// }, // TODO uncomment
+			PubKey: cmtcrypto.PublicKey{
+				Sum: &cmtcrypto.PublicKey_Ed25519{ // by default we set ed25519
+					Ed25519: updates[i].PubKey,
+				},
+			},
 			Power: updates[i].Power,
+		}
+
+		if updates[i].PubKeyType == "secp256k1" {
+			valsetUpdates[i].PubKey = cmtcrypto.PublicKey{
+				Sum: &cmtcrypto.PublicKey_Secp256K1{
+					Secp256K1: updates[i].PubKey,
+				},
+			}
 		}
 	}
 
@@ -324,8 +333,7 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.RequestFinalizeBloc
 	return nil
 }
 
-// TODO: implement this, only from committed state, there's no need to get it from
-// uncommitted store because we are committing before responding to FinalizeBlock.
+// GetConsensusParams makes a query to the consensus module in order to get the latest consensus parameters from committed state
 func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	cs := &cmtproto.ConsensusParams{}
 	latestVersion, err := c.store.LatestVersion()
@@ -339,7 +347,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 		return nil, fmt.Errorf("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
-		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds) // TODO verify this conversion
+		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds)
 		cs = &types1.ConsensusParams{
 			Block: &types1.BlockParams{
 				MaxBytes: r.Params.Block.MaxBytes,

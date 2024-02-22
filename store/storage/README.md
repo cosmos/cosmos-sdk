@@ -41,9 +41,12 @@ and does not require CGO.
 
 ### SQLite (Btree)
 
-The SQLite implementation is a native Go SS implementation. It fully supports the
-`VersionedDatabase` API and the implementation is relatively straightforward and
-easy to understand as it’s SQL-based.
+The SQLite implementation is another CGO-based SS implementation. It fully supports
+the `VersionedDatabase` API. The implementation is relatively straightforward and
+easy to understand as it’s entirely SQL-based. However, benchmarks show that this
+options is least performant, even for reads. This SS backend has a lot of promise,
+but needs more benchmarking and potential SQL optimizations, like dedicated tables
+for certain aspects of state, e.g. latest state, to be extremely performant.
 
 ## Benchmarks
 

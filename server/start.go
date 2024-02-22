@@ -857,21 +857,15 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	block.LastCommit.Signatures[0].Signature = vote.Signature
 	block.LastCommit.Signatures = []cmttypes.CommitSig{block.LastCommit.Signatures[0]}
 
-	// Create a commit signed from our validator and save it
-	seenCommit := cmttypes.Commit{
-		Height:  state.LastBlockHeight,
-		Round:   vote.Round,
-		BlockID: state.LastBlockID,
-		Signatures: []cmttypes.CommitSig{
-			{
-				BlockIDFlag:      cmttypes.BlockIDFlagCommit,
-				Signature:        vote.Signature,
-				ValidatorAddress: validatorAddress,
-				Timestamp:        vote.Timestamp,
-			},
-		},
-	}
-	err = blockStore.SaveSeenCommit(state.LastBlockHeight, &seenCommit)
+	// Load the seenCommit of the lastBlockHeight and modify it to be signed from our validator
+	seenCommit := blockStore.LoadSeenCommit(state.LastBlockHeight)
+	seenCommit.BlockID = state.LastBlockID
+	seenCommit.Round = vote.Round
+	seenCommit.Signatures[0].Signature = vote.Signature
+	seenCommit.Signatures[0].ValidatorAddress = validatorAddress
+	seenCommit.Signatures[0].Timestamp = vote.Timestamp
+	seenCommit.Signatures = []cmttypes.CommitSig{seenCommit.Signatures[0]}
+	err = blockStore.SaveSeenCommit(state.LastBlockHeight, seenCommit)
 	if err != nil {
 		return nil, err
 	}

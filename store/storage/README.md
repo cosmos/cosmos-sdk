@@ -11,7 +11,7 @@ RDBMS system.
 
 The responsibility and functions of SS include the following:
 
-* Provided fast and efficient queries for versioned raw key/value pairs
+* Provide fast and efficient queries for versioned raw key/value pairs
 * Provide versioned CRUD operations
 * Provide versioned batching functionality
 * Provide versioned iteration (forward and reverse) functionality

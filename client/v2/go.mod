@@ -3,7 +3,7 @@ module cosmossdk.io/client/v2
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
+	cosmossdk.io/api v0.7.3
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
@@ -28,6 +28,7 @@ require (
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/math v1.2.0 // indirect
 	cosmossdk.io/store v1.0.2 // indirect
+	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -45,6 +46,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
+	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft v0.38.5 // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -164,13 +166,15 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
-require cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
-
-require github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
+require (
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
+)
 
 replace github.com/cosmos/cosmos-sdk => ./../../
 
 replace (
+	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ./../../core
 	cosmossdk.io/depinject => ./../../depinject
 	cosmossdk.io/x/accounts => ./../../x/accounts

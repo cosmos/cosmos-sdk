@@ -3,7 +3,7 @@ module cosmossdk.io/x/upgrade
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
+	cosmossdk.io/api v0.7.3
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.1
@@ -31,6 +31,8 @@ require (
 )
 
 require (
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute v1.23.4 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
@@ -201,6 +203,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
+	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/accounts => ../accounts

@@ -31,7 +31,7 @@ type MintTestSuite struct {
 }
 
 func (suite *MintTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))

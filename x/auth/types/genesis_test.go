@@ -54,7 +54,7 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 }
 
 func TestGenesisAccountIterator(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
 	cdc := encodingConfig.Codec
 
 	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))

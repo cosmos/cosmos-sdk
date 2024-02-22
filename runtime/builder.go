@@ -18,7 +18,7 @@ type AppBuilder struct {
 	app *App
 }
 
-// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+// DefaultGenesis returns a default genesis from the registered modules.
 func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 	return a.app.DefaultGenesis()
 }

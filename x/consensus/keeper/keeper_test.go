@@ -69,6 +69,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Block:     defaultConsensusParams.Block,
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
+					Abci:      defaultConsensusParams.Abci,
 				}
 				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
@@ -79,6 +80,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 					Version:   defaultConsensusParams.Version,
+					Abci:      defaultConsensusParams.Abci,
 				},
 			},
 			true,

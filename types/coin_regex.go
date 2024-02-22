@@ -181,13 +181,14 @@ _again:
     return false
 }
 
-func MatchDecCoin(data []byte) (amountStart, amountEnd, denomEnd int, isValid bool) {
+func MatchDecCoin(data []byte) (amountStart, amountEnd, denomStart, denomEnd int, isValid bool) {
+
     
-//line coin_regex.rl:43
+//line coin_regex.rl:44
     
-//line coin_regex.go:189
+//line coin_regex.go:190
 var _dec_coin_actions []byte = []byte{
-	0, 1, 0, 1, 1, 1, 2, 
+	0, 1, 0, 1, 1, 1, 2, 1, 3, 
 }
 
 var _dec_coin_key_offsets []int16 = []int16{
@@ -497,7 +498,7 @@ var _dec_coin_trans_targs []byte = []byte{
 }
 
 var _dec_coin_trans_actions []byte = []byte{
-	1, 0, 1, 0, 0, 0, 0, 0, 
+	1, 0, 1, 0, 0, 0, 5, 0, 
 	3, 3, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
@@ -518,23 +519,23 @@ var _dec_coin_trans_actions []byte = []byte{
 }
 
 var _dec_coin_eof_actions []byte = []byte{
-	0, 0, 0, 0, 0, 0, 3, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 5, 5, 5, 
-	5, 5, 5, 5, 5, 3, 
+	0, 0, 0, 0, 0, 0, 3, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 7, 7, 7, 
+	7, 7, 7, 7, 7, 3, 
 }
 
 const dec_coin_start int = 1
@@ -544,10 +545,10 @@ const dec_coin_error int = 0
 const dec_coin_en_main int = 1
 
 
-//line coin_regex.rl:44
+//line coin_regex.rl:45
 
     // Initialize positions and validity flag
-    amountStart, amountEnd, denomEnd = -1, -1, -1
+    amountStart, amountEnd, denomStart, denomEnd = -1, -1, -1, -1
     isValid = false
 
     // Ragel state variables
@@ -555,12 +556,12 @@ const dec_coin_en_main int = 1
     p, pe, eof = 0, len(data), len(data)
 
     
-//line coin_regex.go:559
+//line coin_regex.go:560
 	{
 	cs = dec_coin_start
 	}
 
-//line coin_regex.go:564
+//line coin_regex.go:565
 	{
 	var _klen int
 	var _trans int
@@ -640,16 +641,21 @@ _match:
 		_acts++
 		switch _dec_coin_actions[_acts-1] {
 		case 0:
-//line coin_regex.rl:54
+//line coin_regex.rl:55
 
             amountStart = p;
         
 		case 1:
-//line coin_regex.rl:57
+//line coin_regex.rl:58
 
             amountEnd = p;
         
-//line coin_regex.go:653
+		case 2:
+//line coin_regex.rl:61
+
+            denomStart =  p-1;
+        
+//line coin_regex.go:659
 		}
 	}
 
@@ -669,16 +675,16 @@ _again:
 			__acts++
 			switch _dec_coin_actions[__acts-1] {
 			case 1:
-//line coin_regex.rl:57
+//line coin_regex.rl:58
 
             amountEnd = p;
         
-			case 2:
-//line coin_regex.rl:60
+			case 3:
+//line coin_regex.rl:64
 
             denomEnd = p-1; // Adjusted to exclude space if present
         
-//line coin_regex.go:682
+//line coin_regex.go:688
 			}
 		}
 	}
@@ -686,11 +692,11 @@ _again:
 	_out: {}
 	}
 
-//line coin_regex.rl:77
+//line coin_regex.rl:82
 
 
     isValid = (cs >= 6);
 
     // Return the captured positions and validity
-    return amountStart, amountEnd, denomEnd, isValid
+    return amountStart, amountEnd, denomStart, denomEnd, isValid
 }

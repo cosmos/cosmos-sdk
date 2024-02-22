@@ -38,12 +38,13 @@ func MatchDenom(data []byte) bool {
     return false
 }
 
-func MatchDecCoin(data []byte) (amountStart, amountEnd, denomEnd int, isValid bool) {
+func MatchDecCoin(data []byte) (amountStart, amountEnd, denomStart, denomEnd int, isValid bool) {
+
     %% machine dec_coin;
     %% write data;
 
     // Initialize positions and validity flag
-    amountStart, amountEnd, denomEnd = -1, -1, -1
+    amountStart, amountEnd, denomStart, denomEnd = -1, -1, -1, -1
     isValid = false
 
     // Ragel state variables
@@ -57,6 +58,9 @@ func MatchDecCoin(data []byte) (amountStart, amountEnd, denomEnd int, isValid bo
         action EndAmount {
             amountEnd = p;
         }
+        action StartDenom {
+            denomStart =  p-1;
+        }
         action EndDenom {
             denomEnd = p-1; // Adjusted to exclude space if present
         }
@@ -68,7 +72,8 @@ func MatchDecCoin(data []byte) (amountStart, amountEnd, denomEnd int, isValid bo
 
         dec_amt = (digit+ >StartAmount ('.' digit+)? %EndAmount) | ('.' >StartAmount digit+ %EndAmount);
 
-        denom = [a-zA-Z] (alnum | special){2,127} %EndDenom;
+        
+        denom = [a-zA-Z] (alnum | special){2,127} >StartDenom %EndDenom;
 
         main := dec_amt (space* denom)?;
 
@@ -79,5 +84,5 @@ func MatchDecCoin(data []byte) (amountStart, amountEnd, denomEnd int, isValid bo
     isValid = (cs >= %%{ write first_final; }%%);
 
     // Return the captured positions and validity
-    return amountStart, amountEnd, denomEnd, isValid
+    return amountStart, amountEnd, denomStart, denomEnd, isValid
 }

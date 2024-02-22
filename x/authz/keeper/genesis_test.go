@@ -49,7 +49,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())

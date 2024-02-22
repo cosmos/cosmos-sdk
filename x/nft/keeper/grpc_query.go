@@ -239,7 +239,7 @@ func (k Keeper) Classes(ctx context.Context, r *nft.QueryClassesRequest) (*nft.Q
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	classStore := prefix.NewStore(runtime.KVStoreAdapter(store), ClassKey)
 
 	var classes []*nft.Class

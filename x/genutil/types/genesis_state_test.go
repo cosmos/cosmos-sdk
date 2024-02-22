@@ -48,7 +48,7 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
 	require.NoError(t, err)
 
-	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, genutil.AppModuleBasic{}).TxConfig
+	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModule{}, genutil.AppModule{}).TxConfig
 	txBuilder := txConfig.NewTxBuilder()
 	require.NoError(t, txBuilder.SetMsgs(msg1, msg2))
 
@@ -64,7 +64,7 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 
 	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()).String(), desc, nil, nil)
 
-	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, genutil.AppModuleBasic{}).TxConfig
+	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModule{}, genutil.AppModule{}).TxConfig
 	txBuilder := txConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(msg1)
 	require.NoError(t, err)

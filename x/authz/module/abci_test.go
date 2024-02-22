@@ -30,7 +30,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	key := storetypes.NewKVStoreKey(keeper.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
 	ctx := testCtx.Ctx
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 

@@ -23,7 +23,7 @@ import (
 )
 
 func TestMigration(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 	cdc := encodingConfig.Codec
 	ac := addresscodec.NewBech32Codec("cosmos")
 

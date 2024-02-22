@@ -8,7 +8,7 @@ import (
 )
 
 func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, error) {
-	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil {
+	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil || msg.Abci == nil {
 		return cmtproto.ConsensusParams{}, errors.New("all parameters must be present")
 	}
 

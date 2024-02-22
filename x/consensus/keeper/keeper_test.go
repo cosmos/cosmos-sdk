@@ -150,6 +150,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    false,
 			expErrMsg: "",
@@ -161,6 +162,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "block.MaxBytes must be -1 or greater than 0. Got -10",
@@ -172,6 +174,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "invalid authority",
@@ -183,6 +186,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  nil,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "all parameters must be present",
@@ -194,6 +198,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     nil,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "all parameters must be present",
@@ -205,6 +210,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: nil,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "all parameters must be present",
@@ -244,6 +250,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "valid params",
 			input: &types.ConMsgParams{
+				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
@@ -255,6 +262,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "invalid  params",
 			input: &types.ConMsgParams{
+				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
 				Validator: defaultConsensusParams.Validator,
@@ -266,6 +274,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "nil version params",
 			input: &types.ConMsgParams{
+				Abci:      defaultConsensusParams.Abci,
 				Version:   nil,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
@@ -277,6 +286,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "nil evidence params",
 			input: &types.ConMsgParams{
+				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
@@ -288,6 +298,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "nil block params",
 			input: &types.ConMsgParams{
+				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     nil,
 				Validator: defaultConsensusParams.Validator,
@@ -299,6 +310,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "nil validator params",
 			input: &types.ConMsgParams{
+				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,
 				Validator: nil,
@@ -327,6 +339,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 				s.Require().Equal(tc.input.Block, res.Params.Block)
 				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)
 				s.Require().Equal(tc.input.Validator, res.Params.Validator)
+				s.Require().Equal(tc.input.Version, res.Params.Version)
 			}
 		})
 	}

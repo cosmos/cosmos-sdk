@@ -117,8 +117,7 @@ func (k Keeper) PruneExpiredGrants(ctx context.Context, msg *authz.MsgPruneExpir
 		return nil, err
 	}
 
-	err := k.environment.EventService.EventManager(ctx).Emit(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner})
-	if err != nil {
+	if err := k.environment.EventService.EventManager(ctx).Emit(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner}); err != nil {
 		return nil, err
 	}
 

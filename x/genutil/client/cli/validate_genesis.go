@@ -49,8 +49,10 @@ func ValidateGenesisCmd(mm *module.Manager) *cobra.Command {
 				return fmt.Errorf("error unmarshalling genesis doc %s: %w", genesis, err)
 			}
 
-			if err = mm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
-				return fmt.Errorf("error validating genesis file %s: %w", genesis, err)
+			if mm != nil {
+				if err = mm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
+					return fmt.Errorf("error validating genesis file %s: %w", genesis, err)
+				}
 			}
 
 			fmt.Fprintf(cmd.OutOrStdout(), "File at %s is a valid genesis file\n", genesis)

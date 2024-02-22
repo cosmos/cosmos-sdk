@@ -21,6 +21,7 @@ import (
 	db "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/abci/server"
 	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -742,7 +743,7 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	// Depending on how the node was stopped, the application height can differ from the blockStore height.
 	// This height difference changes how we go about modifying the state.
 	clientCreator := proxy.NewLocalClientCreator(testnetApp)
-	metrics := node.DefaultMetricsProvider(config.Instrumentation)
+	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
 	_, _, _, _, proxyMetrics := metrics(genDoc.ChainID) //nolint:dogsled
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
@@ -762,13 +763,21 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	var block *cmttypes.Block
 	switch {
 	case appHeight == blockStore.Height():
-		// This state occurs when we stop the node with the halt height flag, and need to handle differently
-		state.LastBlockHeight++
 		block = blockStore.LoadBlock(blockStore.Height())
-		block.AppHash = appHash
-		state.AppHash = appHash
+		// If the state's last blockstore height does not match the app and blockstore height, we likely stopped with the halt height flag.
+		if state.LastBlockHeight != appHeight {
+			state.LastBlockHeight = appHeight
+			block.AppHash = appHash
+			state.AppHash = appHash
+		} else {
+			// Node was likely stopped via SIGTERM, delete the next block's seen commit
+			err := blockStoreDB.Delete([]byte(fmt.Sprintf("SC:%v", blockStore.Height()+1)))
+			if err != nil {
+				return nil, err
+			}
+		}
 	case blockStore.Height() > state.LastBlockHeight:
-		// This state occurs when we kill the node
+		// This state usually occurs when we gracefully stop the node.
 		err = blockStore.DeleteLatestBlock()
 		if err != nil {
 			return nil, err

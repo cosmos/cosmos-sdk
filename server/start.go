@@ -797,30 +797,24 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	appHash := res.LastBlockAppHash
 	appHeight := res.LastBlockHeight
 
-	// Delete the walDir and recreate the folder.
-	// These write ahead logs cause edge cases and serve no purpose for the testnet.
-	walDir := fmt.Sprintf("%s/cs.wal", config.DBDir())
-	err = os.RemoveAll(walDir)
-	if err != nil {
-		return nil, err
-	}
-	err = os.MkdirAll(walDir, 0o755)
-	if err != nil {
-		return nil, err
-	}
-
 	var block *cmttypes.Block
 	switch {
 	case appHeight == blockStore.Height():
 		block = blockStore.LoadBlock(blockStore.Height())
 		// If the state's last blockstore height does not match the app and blockstore height, we likely stopped with the halt height flag.
 		if state.LastBlockHeight != appHeight {
-			state.LastBlockHeight++
+			state.LastBlockHeight = appHeight
 			block.AppHash = appHash
 			state.AppHash = appHash
+		} else {
+			// Node was likely stopped via SIGTERM, delete the next block's seen commit
+			err := blockStoreDB.Delete([]byte(fmt.Sprintf("SC:%v", blockStore.Height()+1)))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case blockStore.Height() > state.LastBlockHeight:
-		// This state usually occurs when we sig kill the node.
+		// This state usually occurs when we gracefully stop the node.
 		err = blockStore.DeleteLatestBlock()
 		if err != nil {
 			return nil, err

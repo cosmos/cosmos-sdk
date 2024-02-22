@@ -37,7 +37,7 @@ func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
 	mockclientCtx := client.Context{}.
 		WithTxConfig(encCfg.TxConfig)
 
@@ -61,8 +61,8 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		allowed bool
 	}{
 		{msg: &cbtypes.MsgAuthorizeCircuitBreaker{
-			Grantee: "cosmos1qk93t4j0yyzgqgt6k5qf8deh8fq6smpn3ntu3x",
-			Granter: "cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts",
+			Grantee: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			Granter: "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc",
 		}, allowed: true},
 		{msg: testdata.NewTestMsg(addr1), allowed: false},
 	}

@@ -47,7 +47,6 @@ type App struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
-	basicManager      module.BasicManager
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
@@ -67,14 +66,12 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 			return fmt.Errorf("AppModule named %q already exists", name)
 		}
 
-		if _, ok := a.basicManager[name]; ok {
-			return fmt.Errorf("AppModuleBasic named %q already exists", name)
-		}
-
 		a.ModuleManager.Modules[name] = appModule
-		a.basicManager[name] = appModule
 		appModule.RegisterInterfaces(a.interfaceRegistry)
-		appModule.RegisterLegacyAminoCodec(a.amino)
+
+		if mod, ok := appModule.(module.HasAminoCodec); ok {
+			mod.RegisterLegacyAminoCodec(a.amino)
+		}
 
 		if mod, ok := appModule.(module.HasServices); ok {
 			mod.RegisterServices(a.configurator)
@@ -208,7 +205,7 @@ func (a *App) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConfig) {
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
-	a.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	a.ModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
@@ -242,9 +239,9 @@ func (a *App) LoadHeight(height int64) error {
 	return a.LoadVersion(height)
 }
 
-// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+// DefaultGenesis returns a default genesis from the registered AppModule's.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.basicManager.DefaultGenesis(a.cdc)
+	return a.ModuleManager.DefaultGenesis(a.cdc)
 }
 
 // GetStoreKeys returns all the stored store keys.

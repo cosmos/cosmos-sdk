@@ -48,7 +48,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())

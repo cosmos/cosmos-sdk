@@ -32,7 +32,7 @@ var (
 )
 
 func TestAuxTxBuilder(t *testing.T) {
-	counterModule := counter.AppModuleBasic{}
+	counterModule := counter.AppModule{}
 	cdc := moduletestutil.MakeTestEncodingConfig(counterModule).Codec
 	reg := codectypes.NewInterfaceRegistry()
 

@@ -43,10 +43,10 @@ import (
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.
 func TestDecode(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
-		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
-		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{},
-		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
+		auth.AppModule{}, authzmodule.AppModule{}, bank.AppModule{}, consensus.AppModule{},
+		distribution.AppModule{}, evidence.AppModule{}, feegrantmodule.AppModule{},
+		gov.AppModule{}, groupmodule.AppModule{}, mint.AppModule{},
+		slashing.AppModule{}, staking.AppModule{}, upgrade.AppModule{}, vesting.AppModule{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
 	fee := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))

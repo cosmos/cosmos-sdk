@@ -61,7 +61,7 @@ func TestCLITestSuite(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.encCfg = testutilmod.MakeTestEncodingConfig(module.AppModuleBasic{}, gov.AppModule{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(module.AppModule{}, gov.AppModule{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
@@ -85,15 +85,10 @@ func (s *CLITestSuite) SetupSuite() {
 	}
 	s.clientCtx = ctxGen()
 
-	if testing.Short() {
-		s.T().Skip("skipping test in unit-tests mode.")
-	}
-
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
 
 	granter := accounts[0].Address
 	grantee := accounts[1].Address
-
 	s.createGrant(granter, grantee)
 
 	granteeStr, err := s.baseCtx.AddressCodec.BytesToString(grantee)

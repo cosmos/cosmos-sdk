@@ -39,7 +39,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	keys := storetypes.NewKVStoreKeys(countertypes.StoreKey)
 	cms := integration.CreateMultiStore(keys, logger)
 	s.ctx = sdk.NewContext(cms, true, logger)
-	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModuleBasic{})
+	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModule{})
 	s.cdc = cfg.Codec
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, cfg.InterfaceRegistry)

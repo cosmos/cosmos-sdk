@@ -9,6 +9,6 @@ import (
 // The identifier is used to determine which module genesis information belongs
 // to so it may be appropriately routed during init chain.
 // Within this application default genesis information is retrieved from
-// the ModuleBasicManager which populates json from each BasicModule
+// the module manager which populates json from each module
 // object provided to it during init.
 type GenesisState map[string]json.RawMessage

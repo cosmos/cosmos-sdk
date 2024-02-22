@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -25,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/registry"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -61,7 +61,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
-	return registry.MergedProtoRegistry()
+	return gogoproto.HybridResolver
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {

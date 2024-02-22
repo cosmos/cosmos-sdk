@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
 
@@ -26,7 +25,7 @@ const (
 var errZeroGroupID = errors.New("group id cannot be 0")
 
 // TxCmd returns a root CLI command handler for all x/group transaction commands.
-func TxCmd(name string, ac address.Codec) *cobra.Command {
+func TxCmd(name string) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        name,
 		Short:                      "Group transaction subcommands",
@@ -40,7 +39,7 @@ func TxCmd(name string, ac address.Codec) *cobra.Command {
 		MsgUpdateGroupMembersCmd(),
 		MsgCreateGroupWithPolicyCmd(),
 		MsgCreateGroupPolicyCmd(),
-		MsgUpdateGroupPolicyDecisionPolicyCmd(ac),
+		MsgUpdateGroupPolicyDecisionPolicyCmd(),
 		MsgSubmitProposalCmd(),
 		NewCmdDraftProposal(),
 	)
@@ -373,7 +372,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 // MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
 //
 // This command is being handled better here, not converting to autocli
-func MsgUpdateGroupPolicyDecisionPolicyCmd(ac address.Codec) *cobra.Command {
+func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy-json-file]",
 		Short: "Update a group policy's decision policy",
@@ -394,7 +393,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd(ac address.Codec) *cobra.Command {
 				return err
 			}
 
-			accountAddress, err := ac.StringToBytes(args[1])
+			accountAddress, err := clientCtx.AddressCodec.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}

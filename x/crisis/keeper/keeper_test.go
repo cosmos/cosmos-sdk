@@ -26,7 +26,7 @@ func TestLogger(t *testing.T) {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModule{})
 	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 
 	require.Equal(t,
@@ -40,7 +40,7 @@ func TestInvariants(t *testing.T) {
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModule{})
 	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 	require.Equal(t, keeper.InvCheckPeriod(), uint(5))
 
@@ -57,7 +57,7 @@ func TestAssertInvariants(t *testing.T) {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModule{})
 	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 
 	keeper.RegisterRoute("testModule", "testRoute1", func(sdk.Context) (string, bool) { return "", false })

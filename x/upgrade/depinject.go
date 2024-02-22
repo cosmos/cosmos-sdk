@@ -6,7 +6,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -37,7 +36,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config             *modulev1.Module
-	StoreService       store.KVStoreService
+	Environment        appmodule.Environment
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
 	AppVersionModifier baseapp.AppVersionModifier
@@ -72,14 +71,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	auth, err := in.AddressCodec.BytesToString(authority)
+	authorityStr, err := in.AddressCodec.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.StoreService, in.Cdc, homePath, in.AppVersionModifier, auth)
-	m := NewAppModule(k, in.AddressCodec)
+	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, authorityStr)
+	m := NewAppModule(k)
 
 	return ModuleOutputs{UpgradeKeeper: k, Module: m}
 }

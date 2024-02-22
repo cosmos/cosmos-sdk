@@ -24,10 +24,7 @@ import (
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	"cosmossdk.io/x/gov"
-	govclient "cosmossdk.io/x/gov/client"
 	govkeeper "cosmossdk.io/x/gov/keeper"
-	govtypes "cosmossdk.io/x/gov/types"
 	groupkeeper "cosmossdk.io/x/group/keeper"
 	mintkeeper "cosmossdk.io/x/mint/keeper"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
@@ -47,8 +44,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -105,17 +100,7 @@ func init() {
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
-		// appconfig.LoadYAML(AppConfigYAML),
-		appConfig,
-		depinject.Supply(
-			// supply custom module basics
-			map[string]module.AppModuleBasic{
-				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-				govtypes.ModuleName: gov.NewAppModuleBasic(
-					[]govclient.ProposalHandler{},
-				),
-			},
-		),
+		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
 	)
 }
 

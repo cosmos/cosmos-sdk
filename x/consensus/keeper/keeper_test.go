@@ -7,6 +7,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 
@@ -32,9 +33,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, env, authtypes.NewModuleAddress("gov").String())
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper

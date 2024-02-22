@@ -318,7 +318,9 @@ func (s *TxConfigTestSuite) TestWrapTxBuilder() {
 	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
 
-	newTxBldr, err := s.TxConfig.WrapTxBuilder(txBuilder.GetTx())
+	tx := txBuilder.GetTx()
+	newTxBldr, err := s.TxConfig.WrapTxBuilder(tx)
 	s.Require().NoError(err)
-	s.Require().Equal(txBuilder, newTxBldr)
+	txBuilder.SetFeePayer(tx.FeePayer()) // NOTE: fee payer will be populated even if empty.
+	s.Require().Equal(txBuilder.GetTx(), newTxBldr.GetTx())
 }

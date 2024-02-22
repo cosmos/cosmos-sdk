@@ -37,7 +37,7 @@ func TestGenesisTestSuite(t *testing.T) {
 func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.ModuleName)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModule{})
 
 	sdkCtx := testCtx.Ctx
 	s.ctx = sdkCtx

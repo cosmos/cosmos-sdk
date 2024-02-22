@@ -9,8 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
@@ -32,7 +33,7 @@ type DeterministicTestSuite struct {
 	accountNumberLanes uint64
 
 	key           *storetypes.KVStoreKey
-	storeService  corestore.KVStoreService
+	environment   appmodule.Environment
 	ctx           sdk.Context
 	queryClient   types.QueryClient
 	accountKeeper keeper.AccountKeeper
@@ -51,11 +52,12 @@ func TestDeterministicTestSuite(t *testing.T) {
 }
 
 func (suite *DeterministicTestSuite) SetupTest() {
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
 
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
@@ -69,8 +71,8 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
+		env,
 		suite.encCfg.Codec,
-		storeService,
 		types.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
@@ -83,7 +85,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	suite.key = key
-	suite.storeService = storeService
+	suite.environment = env
 	suite.maccPerms = maccPerms
 	suite.accountNumberLanes = 1
 }
@@ -289,8 +291,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 		}
 
 		ak := keeper.NewAccountKeeper(
+			suite.environment,
 			suite.encCfg.Codec,
-			suite.storeService,
 			types.ProtoBaseAccount,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
@@ -336,8 +338,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 		maccPerms[mName] = mPerms
 
 		ak := keeper.NewAccountKeeper(
+			suite.environment,
 			suite.encCfg.Codec,
-			suite.storeService,
 			types.ProtoBaseAccount,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),

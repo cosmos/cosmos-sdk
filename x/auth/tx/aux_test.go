@@ -38,6 +38,7 @@ var (
 // Then it tests integrating the 2 AuxSignerData into a
 // client.TxBuilder created by the fee payer.
 func TestBuilderWithAux(t *testing.T) {
+	t.Skip("restore when we re-enable aux on the TX builder")
 	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig

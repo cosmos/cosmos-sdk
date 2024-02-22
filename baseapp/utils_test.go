@@ -352,6 +352,7 @@ func setFailOnHandler(t *testing.T, cfg client.TxConfig, tx signing.Tx, fail boo
 		msgs[i] = &baseapptestutil.MsgCounter{
 			Counter:       msg.(*baseapptestutil.MsgCounter).Counter,
 			FailOnHandler: fail,
+			Signer:        sdk.AccAddress("addr").String(),
 		}
 	}
 
@@ -367,7 +368,9 @@ func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 	builder.SetMemo(tx.GetMemo())
 
 	msgs := tx.GetMsgs()
-	msgs = append(msgs, &baseapptestutil.MsgCounter2{})
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{
+		Signer: sdk.AccAddress("wonky").String(),
+	})
 
 	err := builder.SetMsgs(msgs...)
 	require.NoError(t, err)

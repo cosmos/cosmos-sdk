@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -22,12 +23,15 @@ import (
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
 type MM struct {
 	logger             log.Logger
+	cdc                codec.Codec
 	config             *runtimev2.Module
 	modules            map[string]appmodule.AppModule
 	migrationRegistrar *migrationRegistrar
@@ -35,7 +39,12 @@ type MM struct {
 
 // NewModuleManager is the constructor for the module manager
 // It handles all the interactions between the modules and the application
-func NewModuleManager(logger log.Logger, config *runtimev2.Module, modules map[string]appmodule.AppModule) *MM {
+func NewModuleManager(
+	logger log.Logger,
+	cdc codec.Codec,
+	config *runtimev2.Module,
+	modules map[string]appmodule.AppModule,
+) *MM {
 	modulesName := maps.Keys(modules)
 
 	// TODO: check for missing modules
@@ -63,10 +72,67 @@ func NewModuleManager(logger log.Logger, config *runtimev2.Module, modules map[s
 
 	return &MM{
 		logger:             logger,
+		cdc:                cdc,
 		config:             config,
 		modules:            modules,
 		migrationRegistrar: newMigrationRegistrar(),
 	}
+}
+
+// RegisterLegacyAminoCodec registers all module codecs
+func (m *MM) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	for _, b := range m.modules {
+		if mod, ok := b.(sdkmodule.HasAminoCodec); ok {
+			mod.RegisterLegacyAminoCodec(cdc)
+		}
+	}
+}
+
+// RegisterInterfaces registers all module interface types
+func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	for _, b := range m.modules {
+		if mod, ok := b.(sdkmodule.HasRegisterInterfaces); ok {
+			mod.RegisterInterfaces(registry)
+		}
+	}
+}
+
+// DefaultGenesis provides default genesis information for all modules
+func (m *MM) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
+	genesisData := make(map[string]json.RawMessage)
+	for _, b := range m.modules {
+		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+			genesisData[mod.Name()] = mod.DefaultGenesis(cdc)
+		} else if mod, ok := b.(sdkmodule.HasName); ok {
+			genesisData[mod.Name()] = []byte("{}")
+		}
+	}
+
+	return genesisData
+}
+
+// ValidateGenesis performs genesis state validation for all modules
+func (m *MM) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
+	for _, b := range m.modules {
+		// first check if the module is an adapted Core API Module
+		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[mod.Name()]); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// InitGenesis performs init genesis functionality for modules.
+func (m *MM) InitGenesis() {
+	panic("implement me")
+}
+
+// ExportGenesis performs export genesis functionality for modules
+func (m *MM) ExportGenesis() {
+	panic("implement me")
 }
 
 // BeginBlock runs the begin-block logic of all modules
@@ -208,15 +274,15 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodule.VersionMap) (ap
 			}
 		} else {
 			m.logger.Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if _, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
-				// module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+			if mod, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
+				mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
 			}
-			if _, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
-				// moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+			if mod, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
+				moduleValUpdates := mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
-				// if len(moduleValUpdates) > 0 {
-				// 	return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
-				// }
+				if len(moduleValUpdates) > 0 {
+					return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
+				}
 			}
 		}
 

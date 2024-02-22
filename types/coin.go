@@ -847,11 +847,11 @@ func ValidateDenom(denom string) error {
 	data := []byte(denom)
 
 	// Call the Ragel-generated function.
-	if MatchDenom(data) {
-		return nil
-	} else {
+	if !MatchDenom(data) {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
+
+	return nil
 }
 
 func mustValidateDenom(denom string) {

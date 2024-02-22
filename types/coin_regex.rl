@@ -1,5 +1,13 @@
 package types
 
+// Regex parsing of denoms were as the following
+// reDnmString = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+// reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
+// reSpc       = `[[:space:]]*`
+
+// reDnm = regexp.MustCompile(fmt.Sprintf(`^%s$`, coinDenomRegex()))
+// reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, coinDenomRegex()))
+
 func MatchDenom(data []byte) bool {
 %% machine scanner;
 %% write data;

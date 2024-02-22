@@ -37,7 +37,7 @@ func TestMigrateTestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(vesting.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(vesting.AppModule{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).

@@ -458,7 +458,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	serverCtx.Config.SetRoot(tempDir)
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	cmd := genutilcli.InitCmd(module.NewBasicManager())
+	cmd := genutilcli.InitCmd(module.NewManager())
 	cmd.SetArgs([]string{"appnode-test"})
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)

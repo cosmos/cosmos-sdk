@@ -34,9 +34,7 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	distTxCmd.AddCommand(
-		NewWithdrawAllRewardsCmd(),
-	)
+	distTxCmd.AddCommand(NewWithdrawAllRewardsCmd())
 
 	return distTxCmd
 }

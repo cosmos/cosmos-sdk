@@ -37,17 +37,11 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 		return err
 	}
 
-	err = k.eventService.EventManager(ctx).Emit(&nft.EventMint{
+	return k.env.EventService.EventManager(ctx).Emit(&nft.EventMint{
 		ClassId: token.ClassId,
 		Id:      token.Id,
 		Owner:   recStr,
 	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Burn defines a method for burning a nft from a specific account.
@@ -84,17 +78,11 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 		return err
 	}
 
-	err = k.eventService.EventManager(ctx).Emit(&nft.EventBurn{
+	return k.env.EventService.EventManager(ctx).Emit(&nft.EventBurn{
 		ClassId: classID,
 		Id:      nftID,
 		Owner:   ownerStr,
 	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Update defines a method for updating an exist nft
@@ -195,7 +183,7 @@ func (k Keeper) GetNFTsOfClass(ctx context.Context, classID string) (nfts []nft.
 
 // GetOwner returns the owner information of the specified nft
 func (k Keeper) GetOwner(ctx context.Context, classID, nftID string) sdk.AccAddress {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	bz, err := store.Get(ownerStoreKey(classID, nftID))
 	if err != nil {
 		panic(err)
@@ -211,7 +199,7 @@ func (k Keeper) GetBalance(ctx context.Context, classID string, owner sdk.AccAdd
 
 // GetTotalSupply returns the number of all nfts under the specified classID
 func (k Keeper) GetTotalSupply(ctx context.Context, classID string) uint64 {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	bz, err := store.Get(classTotalSupply(classID))
 	if err != nil {
 		panic(err)
@@ -232,7 +220,7 @@ func (k Keeper) setNFT(ctx context.Context, token nft.NFT) {
 }
 
 func (k Keeper) setOwner(ctx context.Context, classID, nftID string, owner sdk.AccAddress) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	err := store.Set(ownerStoreKey(classID, nftID), owner.Bytes())
 	if err != nil {
 		panic(err)
@@ -243,7 +231,7 @@ func (k Keeper) setOwner(ctx context.Context, classID, nftID string, owner sdk.A
 }
 
 func (k Keeper) deleteOwner(ctx context.Context, classID, nftID string, owner sdk.AccAddress) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	err := store.Delete(ownerStoreKey(classID, nftID))
 	if err != nil {
 		panic(err)
@@ -253,18 +241,18 @@ func (k Keeper) deleteOwner(ctx context.Context, classID, nftID string, owner sd
 }
 
 func (k Keeper) getNFTStore(ctx context.Context, classID string) prefix.Store {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	return prefix.NewStore(runtime.KVStoreAdapter(store), nftStoreKey(classID))
 }
 
 func (k Keeper) getClassStoreByOwner(ctx context.Context, owner sdk.AccAddress, classID string) prefix.Store {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	key := nftOfClassByOwnerStoreKey(owner, classID)
 	return prefix.NewStore(runtime.KVStoreAdapter(store), key)
 }
 
 func (k Keeper) prefixStoreNftOfClassByOwner(ctx context.Context, owner sdk.AccAddress) prefix.Store {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	key := prefixNftOfClassByOwnerStoreKey(owner)
 	return prefix.NewStore(runtime.KVStoreAdapter(store), key)
 }
@@ -280,7 +268,7 @@ func (k Keeper) decrTotalSupply(ctx context.Context, classID string) {
 }
 
 func (k Keeper) updateTotalSupply(ctx context.Context, classID string, supply uint64) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	supplyKey := classTotalSupply(classID)
 	err := store.Set(supplyKey, sdk.Uint64ToBigEndian(supply))
 	if err != nil {

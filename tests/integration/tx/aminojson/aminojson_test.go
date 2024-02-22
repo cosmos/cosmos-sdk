@@ -92,10 +92,10 @@ import (
 // by the mutation of genOpts passed to the generator.
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
-		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
-		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{},
-		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
+		auth.AppModule{}, authzmodule.AppModule{}, bank.AppModule{}, consensus.AppModule{},
+		distribution.AppModule{}, evidence.AppModule{}, feegrantmodule.AppModule{},
+		gov.AppModule{}, groupmodule.AppModule{}, mint.AppModule{},
+		slashing.AppModule{}, staking.AppModule{}, upgrade.AppModule{}, vesting.AppModule{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 
@@ -208,9 +208,9 @@ func newAny(t *testing.T, msg proto.Message) *anypb.Any {
 
 // TestAminoJSON_LegacyParity tests that the Encoder encoder produces the same output as the Encoder encoder.
 func TestAminoJSON_LegacyParity(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
-		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
-		vesting.AppModuleBasic{}, gov.AppModuleBasic{})
+	encCfg := testutil.MakeTestEncodingConfig(auth.AppModule{}, authzmodule.AppModule{},
+		bank.AppModule{}, distribution.AppModule{}, slashing.AppModule{}, staking.AppModule{},
+		vesting.AppModule{}, gov.AppModule{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
@@ -512,8 +512,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 }
 
 func TestSendAuthorization(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
-		distribution.AppModuleBasic{}, bank.AppModuleBasic{})
+	encCfg := testutil.MakeTestEncodingConfig(auth.AppModule{}, authzmodule.AppModule{},
+		distribution.AppModule{}, bank.AppModule{})
 
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
@@ -562,7 +562,7 @@ func TestSendAuthorization(t *testing.T) {
 }
 
 func TestDecimalMutation(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{})
+	encCfg := testutil.MakeTestEncodingConfig(staking.AppModule{})
 	rates := &stakingtypes.CommissionRates{}
 	rateBz, _ := encCfg.Amino.MarshalJSON(rates)
 	require.Equal(t, `{"rate":"0","max_rate":"0","max_change_rate":"0"}`, string(rateBz))

@@ -14,7 +14,6 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -70,8 +69,7 @@ func init() {
 			ProvideEnvironment,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
-			ProvideEventService,
-			ProvideBasicManager,
+			ProvideModuleManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
 		),
@@ -111,7 +109,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
-		basicManager:      module.BasicManager{},
 		msgServiceRouter:  msgServiceRouter,
 	}
 	appBuilder := &AppBuilder{app}
@@ -122,15 +119,14 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 type AppInputs struct {
 	depinject.In
 
-	AppConfig          *appv1alpha1.Config
-	Config             *runtimev1alpha1.Module
-	AppBuilder         *AppBuilder
-	Modules            map[string]appmodule.AppModule
-	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
-	BaseAppOptions     []BaseAppOption
-	InterfaceRegistry  codectypes.InterfaceRegistry
-	LegacyAmino        *codec.LegacyAmino
-	Logger             log.Logger
+	Logger            log.Logger
+	AppConfig         *appv1alpha1.Config
+	Config            *runtimev1alpha1.Module
+	AppBuilder        *AppBuilder
+	ModuleManager     *module.Manager
+	BaseAppOptions    []BaseAppOption
+	InterfaceRegistry codectypes.InterfaceRegistry
+	LegacyAmino       *codec.LegacyAmino
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -139,21 +135,9 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.config = inputs.Config
 	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
-	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
-
-	for name, mod := range inputs.Modules {
-		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
-			app.basicManager[name] = customBasicMod
-			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
-			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-			continue
-		}
-
-		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
-		app.basicManager[name] = coreAppModuleBasic
-		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
-		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-	}
+	app.ModuleManager = inputs.ModuleManager
+	app.ModuleManager.RegisterInterfaces(inputs.InterfaceRegistry)
+	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
 func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
@@ -220,6 +204,10 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
+func ProvideModuleManager(modules map[string]appmodule.AppModule) *module.Manager {
+	return module.NewManagerFromMap(modules)
+}
+
 func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
@@ -238,14 +226,6 @@ func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.M
 func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
 	storeKey := ProvideTransientStoreKey(key, app)
 	return transientStoreService{key: storeKey}
-}
-
-func ProvideEventService() event.Service {
-	return EventService{}
-}
-
-func ProvideBasicManager(app *AppBuilder) module.BasicManager {
-	return app.app.basicManager
 }
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {

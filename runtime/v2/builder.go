@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
@@ -26,24 +27,30 @@ type AppBuilder struct {
 	txValidator func(ctx context.Context, tx transaction.Tx) error
 }
 
-// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+// DefaultGenesis returns a default genesis from the registered AppModule's.
 func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
-	panic("not implemented")
+	return a.app.moduleManager.DefaultGenesis(a.app.cdc)
 }
 
-// RegisterModules registers the provided modules with the module manager and
-// the basic module manager. This is the primary hook for integrating with
-// modules which are not registered using the app config.
-func (a *AppBuilder) RegisterModules(modules ...sdkmodule.AppModule) error { // TODO use directly appmodule.AppModule and remove app module basic
+// RegisterModules registers the provided modules with the module manager.
+// This is the primary hook for integrating with modules which are not registered using the app config.
+func (a *AppBuilder) RegisterModules(modules ...appmodule.AppModule) error {
 	for _, appModule := range modules {
-		name := appModule.Name()
-		if _, ok := a.app.moduleManager.modules[name]; ok {
-			return fmt.Errorf("module named %q already exists", name)
-		}
+		if mod, ok := appModule.(sdkmodule.HasName); ok {
+			name := mod.Name()
+			if _, ok := a.app.moduleManager.modules[name]; ok {
+				return fmt.Errorf("module named %q already exists", name)
+			}
+			a.app.moduleManager.modules[name] = appModule
 
-		a.app.moduleManager.modules[name] = appModule
-		appModule.RegisterInterfaces(a.app.interfaceRegistry)
-		appModule.RegisterLegacyAminoCodec(a.app.amino)
+			if mod, ok := appModule.(sdkmodule.HasRegisterInterfaces); ok {
+				mod.RegisterInterfaces(a.app.interfaceRegistry)
+			}
+
+			if mod, ok := appModule.(sdkmodule.HasAminoCodec); ok {
+				mod.RegisterLegacyAminoCodec(a.app.amino)
+			}
+		}
 	}
 
 	return nil

@@ -236,7 +236,7 @@ func (s *MempoolTestSuite) TestSampleTxs() {
 }
 
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
-	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModuleBasic{})
+	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModule{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
 }
 

@@ -38,7 +38,7 @@ type VestingAccountTestSuite struct {
 }
 
 func (s *VestingAccountTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModule{})
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())

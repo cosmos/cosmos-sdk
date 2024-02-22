@@ -52,8 +52,7 @@ func NewIntegrationApp(
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
-	basicModuleManager := module.NewBasicManagerFromManager(moduleManager, nil)
-	basicModuleManager.RegisterInterfaces(interfaceRegistry)
+	moduleManager.RegisterInterfaces(interfaceRegistry)
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))

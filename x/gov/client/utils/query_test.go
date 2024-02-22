@@ -54,7 +54,7 @@ func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*coretypes.R
 }
 
 func TestGetPaginatedVotes(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(gov.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(gov.AppModule{})
 
 	type testCase struct {
 		description string

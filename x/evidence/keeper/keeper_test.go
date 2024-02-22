@@ -84,7 +84,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	evidenceKeeper.SetRouter(router)
 
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModule{})
 
 	suite.accountKeeper = accountKeeper
 

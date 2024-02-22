@@ -51,7 +51,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(bank.AppModuleBasic{}, authz.AppModule{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(bank.AppModule{}, authz.AppModule{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 
 	s.baseCtx = client.Context{}.

@@ -111,7 +111,7 @@ func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	t.Helper()
 	s := TestSuite{}
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
@@ -133,7 +133,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
-	s.preModule = upgrade.NewAppModule(s.keeper, addresscodec.NewBech32Codec("cosmos"))
+	s.preModule = upgrade.NewAppModule(s.keeper)
 	return &s
 }
 
@@ -458,7 +458,7 @@ func TestBinaryVersion(t *testing.T) {
 func TestDowngradeVerification(t *testing.T) {
 	// could not use setupTest() here, because we have to use the same key
 	// for the two keepers.
-	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
@@ -471,7 +471,7 @@ func TestDowngradeVerification(t *testing.T) {
 	require.NoError(t, err)
 
 	k := keeper.NewKeeper(env, skip, encCfg.Codec, t.TempDir(), nil, authority)
-	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
+	m := upgrade.NewAppModule(k)
 
 	// submit a plan.
 	planName := "downgrade"
@@ -520,7 +520,7 @@ func TestDowngradeVerification(t *testing.T) {
 
 		// downgrade. now keeper does not have the handler.
 		k := keeper.NewKeeper(env, skip, encCfg.Codec, t.TempDir(), nil, authority)
-		m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
+		m := upgrade.NewAppModule(k)
 
 		// assertions
 		lastAppliedPlan, _, err := k.GetLastCompletedUpgrade(ctx)

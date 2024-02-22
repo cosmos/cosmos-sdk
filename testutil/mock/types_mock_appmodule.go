@@ -17,7 +17,6 @@ import (
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
-	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
 // MockAppModuleWithAllExtensions is a mock of AppModuleWithAllExtensions interface.
@@ -150,18 +149,6 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).Name))
 }
 
-// RegisterGRPCGatewayRoutes mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
-}
-
-// RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
-}
-
 // RegisterInterfaces mocks base method.
 func (m *MockAppModuleWithAllExtensions) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 	m.ctrl.T.Helper()
@@ -184,18 +171,6 @@ func (m *MockAppModuleWithAllExtensions) RegisterInvariants(arg0 types1.Invarian
 func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterInvariants), arg0)
-}
-
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // RegisterServices mocks base method.
@@ -356,18 +331,6 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).Name))
 }
 
-// RegisterGRPCGatewayRoutes mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
-}
-
-// RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
-}
-
 // RegisterInterfaces mocks base method.
 func (m *MockAppModuleWithAllExtensionsABCI) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
 	m.ctrl.T.Helper()
@@ -390,18 +353,6 @@ func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types1.Inva
 func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterInvariants), arg0)
-}
-
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // RegisterServices mocks base method.

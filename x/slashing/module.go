@@ -24,9 +24,12 @@ import (
 const ConsensusVersion = 4
 
 var (
-	_ module.AppModuleBasic      = AppModule{}
-	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasGenesis          = AppModule{}
+	_ module.HasName               = AppModule{}
+	_ module.HasAminoCodec         = AppModule{}
+	_ module.HasGRPCGateway        = AppModule{}
+	_ module.HasRegisterInterfaces = AppModule{}
+	_ module.AppModuleSimulation   = AppModule{}
+	_ module.HasGenesis            = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
@@ -34,53 +37,9 @@ var (
 	_ appmodule.HasMigrations   = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the slashing module.
-type AppModuleBasic struct {
-	cdc codec.Codec
-}
-
-// Name returns the slashing module's name.
-func (AppModuleBasic) Name() string {
-	return types.ModuleName
-}
-
-// RegisterLegacyAminoCodec registers the slashing module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
-}
-
-// RegisterInterfaces registers the module's interface types
-func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the slashing
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the slashing module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return types.ValidateGenesis(data)
-}
-
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
-}
-
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
-	AppModuleBasic
-
+	cdc      codec.Codec
 	registry cdctypes.InterfaceRegistry
 
 	keeper        keeper.Keeper
@@ -99,16 +58,39 @@ func NewAppModule(
 	registry cdctypes.InterfaceRegistry,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         keeper,
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		stakingKeeper:  sk,
+		cdc:           cdc,
+		registry:      registry,
+		keeper:        keeper,
+		accountKeeper: ak,
+		bankKeeper:    bk,
+		stakingKeeper: sk,
 	}
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
+func (AppModule) IsAppModule() {}
+
+// Name returns the slashing module's name.
+func (AppModule) Name() string {
+	return types.ModuleName
+}
+
+// RegisterLegacyAminoCodec registers the slashing module's types for the given codec.
+func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
+
+// RegisterInterfaces registers the module's interface types
+func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+}
+
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
+func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
+}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
@@ -118,6 +100,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
+// RegisterMigrations registers module migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 
@@ -136,22 +119,35 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	return nil
 }
 
-// InitGenesis performs genesis initialization for the slashing module. It returns
-// no validator updates.
+// DefaultGenesis returns default genesis state as raw bytes for the slashing module.
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the slashing module.
+func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(data)
+}
+
+// InitGenesis performs genesis initialization for the slashing module.
 func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	am.keeper.InitGenesis(ctx, am.stakingKeeper, &genesisState)
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the slashing
-// module.
+// ExportGenesis returns the exported genesis state as raw bytes for the slashing module.
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the slashing module.

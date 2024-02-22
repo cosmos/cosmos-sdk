@@ -34,9 +34,9 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-var testMbm = module.NewBasicManager(
-	staking.AppModuleBasic{},
-	genutil.AppModuleBasic{},
+var testMbm = module.NewManager(
+	staking.AppModule{},
+	genutil.AppModule{},
 )
 
 func TestInitCmd(t *testing.T) {

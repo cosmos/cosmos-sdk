@@ -3,7 +3,9 @@ package tx
 import (
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	authcodec "cosmossdk.io/x/auth/codec"
+	txdecode "cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
@@ -24,6 +26,7 @@ type config struct {
 	jsonEncoder    sdk.TxEncoder
 	protoCodec     codec.Codec
 	signingContext *txsigning.Context
+	txDecoder      *txdecode.Decoder
 }
 
 // ConfigOptions define the configuration of a TxConfig when calling NewTxConfigWithOptions.
@@ -172,18 +175,6 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		jsonDecoder: configOptions.JSONDecoder,
 		jsonEncoder: configOptions.JSONEncoder,
 	}
-	if configOptions.ProtoDecoder == nil {
-		txConfig.decoder = DefaultTxDecoder(protoCodec)
-	}
-	if configOptions.ProtoEncoder == nil {
-		txConfig.encoder = DefaultTxEncoder()
-	}
-	if configOptions.JSONDecoder == nil {
-		txConfig.jsonDecoder = DefaultJSONTxDecoder(protoCodec)
-	}
-	if configOptions.JSONEncoder == nil {
-		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
-	}
 
 	var err error
 	if configOptions.SigningContext == nil {
@@ -201,6 +192,25 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 			return nil, err
 		}
 	}
+
+	if configOptions.ProtoDecoder == nil {
+		dec, err := txdecode.NewDecoder(txdecode.Options{SigningContext: configOptions.SigningContext})
+		if err != nil {
+			return nil, err
+		}
+		txConfig.decoder = txV2toInterface(configOptions.SigningOptions.AddressCodec, protoCodec, dec)
+		txConfig.txDecoder = dec
+	}
+	if configOptions.ProtoEncoder == nil {
+		txConfig.encoder = DefaultTxEncoder()
+	}
+	if configOptions.JSONDecoder == nil {
+		txConfig.jsonDecoder = DefaultJSONTxDecoder(configOptions.SigningOptions.AddressCodec, protoCodec, txConfig.txDecoder)
+	}
+	if configOptions.JSONEncoder == nil {
+		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
+	}
+
 	txConfig.signingContext = configOptions.SigningContext
 
 	if configOptions.SigningHandler != nil {
@@ -217,17 +227,17 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {
-	return newBuilder(g.protoCodec)
+	return newBuilder(g.signingContext.AddressCodec(), g.txDecoder, g.protoCodec)
 }
 
 // WrapTxBuilder returns a builder from provided transaction
 func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
-	newBuilder, ok := newTx.(*wrapper)
+	gogoTx, ok := newTx.(*gogoTxWrapper)
 	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, newTx)
+		return nil, fmt.Errorf("expected %T, got %T", &gogoTxWrapper{}, newTx)
 	}
 
-	return newBuilder, nil
+	return newBuilderFromDecodedTx(g.signingContext.AddressCodec(), g.txDecoder, g.protoCodec, gogoTx)
 }
 
 func (g config) SignModeHandler() *txsigning.HandlerMap {
@@ -252,4 +262,14 @@ func (g config) TxJSONDecoder() sdk.TxDecoder {
 
 func (g config) SigningContext() *txsigning.Context {
 	return g.signingContext
+}
+
+func txV2toInterface(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *txdecode.Decoder) func([]byte) (sdk.Tx, error) {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		decodedTx, err := decoder.Decode(txBytes)
+		if err != nil {
+			return nil, err
+		}
+		return newWrapperFromDecodedTx(addrCodec, cdc, decodedTx)
+	}
 }

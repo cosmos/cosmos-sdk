@@ -56,7 +56,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, gov.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{}, gov.AppModule{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
@@ -982,6 +982,7 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 }
 
 func (s *CLITestSuite) TestAuxSigner() {
+	s.T().Skip("re-enable this when we bring back sign mode aux client testing")
 	val0Coin := sdk.NewCoin("testtoken", math.NewInt(10))
 
 	testCases := []struct {

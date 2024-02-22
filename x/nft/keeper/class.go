@@ -19,7 +19,7 @@ func (k Keeper) SaveClass(ctx context.Context, class nft.Class) error {
 	if err != nil {
 		return errors.Wrap(err, "Marshal nft.Class failed")
 	}
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	return store.Set(classStoreKey(class.Id), bz)
 }
 
@@ -32,13 +32,13 @@ func (k Keeper) UpdateClass(ctx context.Context, class nft.Class) error {
 	if err != nil {
 		return errors.Wrap(err, "Marshal nft.Class failed")
 	}
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	return store.Set(classStoreKey(class.Id), bz)
 }
 
 // GetClass defines a method for returning the class information of the specified id
 func (k Keeper) GetClass(ctx context.Context, classID string) (nft.Class, bool) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	var class nft.Class
 
 	bz, err := store.Get(classStoreKey(classID))
@@ -55,7 +55,7 @@ func (k Keeper) GetClass(ctx context.Context, classID string) (nft.Class, bool) 
 
 // GetClasses defines a method for returning all classes information
 func (k Keeper) GetClasses(ctx context.Context) (classes []*nft.Class) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), ClassKey)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -68,7 +68,7 @@ func (k Keeper) GetClasses(ctx context.Context) (classes []*nft.Class) {
 
 // HasClass determines whether the specified classID exist
 func (k Keeper) HasClass(ctx context.Context, classID string) bool {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.env.KVStoreService.OpenKVStore(ctx)
 	has, err := store.Has(classStoreKey(classID))
 	if err != nil {
 		panic(err)

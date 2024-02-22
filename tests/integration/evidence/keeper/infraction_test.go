@@ -87,7 +87,7 @@ func initFixture(tb testing.TB) *fixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, consensusparamtypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, evidence.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, evidence.AppModule{}).Codec
 
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -203,7 +203,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	consaddrStr, err := f.stakingKeeper.ConsensusAddressCodec().BytesToString(valpubkey.Address())
 	assert.NilError(t, err)
-	info := slashingtypes.NewValidatorSigningInfo(consaddrStr, f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	info := slashingtypes.NewValidatorSigningInfo(consaddrStr, f.sdkCtx.BlockHeight(), time.Unix(0, 0), false, int64(0))
 	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.sdkCtx, sdk.ConsAddress(valpubkey.Address()), info)
 	assert.NilError(t, err)
 	// handle a signature to set signing info

@@ -2,14 +2,14 @@ package wrapper
 
 import (
 	tdbm "github.com/cometbft/cometbft-db"
-	cdbm "github.com/cosmos/cosmos-db"
+	iavldb "github.com/cosmos/iavl/db"
 )
 
 type DBWrapper struct {
 	db tdbm.DB
 }
 
-func NewCosmosDB(db tdbm.DB) cdbm.DB {
+func NewIAVLDB(db tdbm.DB) iavldb.DB {
 	return &DBWrapper{db: db}
 }
 
@@ -37,21 +37,21 @@ func (db *DBWrapper) DeleteSync(key []byte) error {
 	return db.db.DeleteSync(key)
 }
 
-func (db *DBWrapper) Iterator(start, end []byte) (cdbm.Iterator, error) {
+func (db *DBWrapper) Iterator(start, end []byte) (iavldb.Iterator, error) {
 	it, err := db.db.Iterator(start, end)
-	return it.(cdbm.Iterator), err
+	return it.(iavldb.Iterator), err
 }
 
-func (db *DBWrapper) ReverseIterator(start, end []byte) (cdbm.Iterator, error) {
+func (db *DBWrapper) ReverseIterator(start, end []byte) (iavldb.Iterator, error) {
 	it, err := db.db.ReverseIterator(start, end)
-	return it.(cdbm.Iterator), err
+	return it.(iavldb.Iterator), err
 }
 
-func (db *DBWrapper) NewBatch() cdbm.Batch {
+func (db *DBWrapper) NewBatch() iavldb.Batch {
 	return NewCosmosBatch(db.db.NewBatch())
 }
 
-func (db *DBWrapper) NewBatchWithSize(size int) cdbm.Batch {
+func (db *DBWrapper) NewBatchWithSize(size int) iavldb.Batch {
 	return NewCosmosBatch(db.db.NewBatch())
 }
 
@@ -71,7 +71,7 @@ type BatchWrapper struct {
 	batch tdbm.Batch
 }
 
-func NewCosmosBatch(batch tdbm.Batch) cdbm.Batch {
+func NewCosmosBatch(batch tdbm.Batch) iavldb.Batch {
 	return &BatchWrapper{batch: batch}
 }
 

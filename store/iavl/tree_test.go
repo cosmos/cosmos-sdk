@@ -13,7 +13,7 @@ import (
 
 func TestImmutableTreePanics(t *testing.T) {
 	t.Parallel()
-	db := wrapper.NewCosmosDB(dbm.NewMemDB())
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
 	immTree := iavl.NewImmutableTree(db, 100, false, log.NewNopLogger())
 	it := &immutableTree{immTree}
 	require.Panics(t, func() { it.Set([]byte{}, []byte{}) })

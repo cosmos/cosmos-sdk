@@ -54,7 +54,7 @@ func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.Commit
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
 func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool) (types.CommitKVStore, error) {
-	tree := iavl.NewMutableTree(wrapper.NewCosmosDB(db), cacheSize, disableFastNode, clog.NewNopLogger(), iavl.InitialVersionOption(initialVersion))
+	tree := iavl.NewMutableTree(wrapper.NewIAVLDB(db), cacheSize, disableFastNode, clog.NewNopLogger(), iavl.InitialVersionOption(initialVersion))
 
 	isUpgradeable, err := tree.IsUpgradeable()
 	if err != nil {

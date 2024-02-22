@@ -92,7 +92,7 @@ func testPrefixStore(t *testing.T, baseStore types.KVStore, prefix []byte) {
 }
 
 func TestIAVLStorePrefix(t *testing.T) {
-	db := wrapper.NewCosmosDB(dbm.NewMemDB())
+	db := wrapper.NewIAVLDB(dbm.NewMemDB())
 	tree := tiavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 	iavlStore := iavl.UnsafeNewStore(tree)
 

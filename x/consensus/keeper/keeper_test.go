@@ -239,6 +239,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		})
 	}
 }
+
 func (s *KeeperTestSuite) TestSetParams() {
 	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
 	testCases := []struct {

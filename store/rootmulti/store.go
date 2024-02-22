@@ -138,6 +138,7 @@ func (rs *Store) GetPruning() pruningtypes.PruningOptions {
 // Note, calling SetPruning on the root store prior to LoadVersion or
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
 func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
+	rs.logger.Info("setting pruning options", "strategy", pruningOpts.Strategy, "pruningOpts", pruningOpts)
 	rs.pruningManager.SetOptions(pruningOpts)
 }
 
@@ -625,6 +626,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 func (rs *Store) handlePruning(version int64) error {
 	rs.pruningManager.HandleHeight(version - 1) // we should never prune the current version.
 	if !rs.pruningManager.ShouldPruneAtHeight(version) {
+		rs.logger.Info("pruning skipped", "height", version, "pruningOpts", rs.pruningManager.GetOptions())
 		return nil
 	}
 	rs.logger.Info("prune start", "height", version)
@@ -643,7 +645,7 @@ func (rs *Store) pruneStores() error {
 		return nil
 	}
 
-	rs.logger.Debug("pruning heights", "heights", pruningHeights)
+	rs.logger.Info("pruning heights", "heights", pruningHeights)
 
 	for key, store := range rs.stores {
 		// If the store is wrapped with an inter-block cache, we must first unwrap
@@ -654,7 +656,7 @@ func (rs *Store) pruneStores() error {
 
 		store = rs.GetCommitKVStore(key)
 
-		err := store.(*iavl.Store).DeleteVersions(pruningHeights...)
+		err := store.(*iavl_v2.Store).DeleteVersions(pruningHeights...)
 		if err == nil {
 			continue
 		}

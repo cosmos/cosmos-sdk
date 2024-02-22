@@ -47,9 +47,10 @@ func LoadStoreWithInitialVersion(v2RootPath string, key types.StoreKey, id types
 	}
 
 	tree := iavl.NewTree(sql, pool, iavl.TreeOptions{
-		StateStorage: true,
-		MetricsProxy: &telemetry.GlobalMetricProxy{},
-		HeightFilter: 1,
+		StateStorage:       true,
+		CheckpointInterval: 1000,
+		MetricsProxy:       &telemetry.GlobalMetricProxy{},
+		HeightFilter:       1,
 	})
 	if key.Name() == "ibc" {
 		err = tree.LoadVersion(id.Version)
@@ -59,12 +60,9 @@ func LoadStoreWithInitialVersion(v2RootPath string, key types.StoreKey, id types
 	if err != nil {
 		return nil, err
 	}
-	if err = sql.WarmLeaves(); err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
+	//if err = sql.WarmLeaves(); err != nil {
+	//	return nil, err
+	//}
 	return &Store{*tree}, nil
 }
 
@@ -173,4 +171,14 @@ func (s *Store) ReverseIterator(start, end []byte) types.Iterator {
 		panic(err)
 	}
 	return itr
+}
+
+func (s *Store) DeleteVersions(versions ...int64) error {
+	max := versions[0]
+	for _, v := range versions {
+		if v > max {
+			max = v
+		}
+	}
+	return s.Tree.DeleteVersionsTo(max)
 }

@@ -28,8 +28,8 @@ type AppBuilder struct {
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModule's.
-func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.moduleManager.DefaultGenesis(a.cdc)
+func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
+	return a.app.moduleManager.DefaultGenesis(a.app.cdc)
 }
 
 // RegisterModules registers the provided modules with the module manager.

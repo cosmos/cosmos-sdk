@@ -139,8 +139,8 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
-func ProvideModuleManager(logger log.Logger, config *runtimev2.Module, modules map[string]appmodule.AppModule) *MM {
-	return NewModuleManager(logger, config, modules)
+func ProvideModuleManager(logger log.Logger, cdc codec.Codec, config *runtimev2.Module, modules map[string]appmodule.AppModule) *MM {
+	return NewModuleManager(logger, cdc, config, modules)
 }
 
 func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {

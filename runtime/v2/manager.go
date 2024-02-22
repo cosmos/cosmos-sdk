@@ -30,6 +30,7 @@ import (
 
 type MM struct {
 	logger             log.Logger
+	cdc                codec.Codec
 	config             *runtimev2.Module
 	modules            map[string]appmodule.AppModule
 	migrationRegistrar *migrationRegistrar
@@ -37,7 +38,12 @@ type MM struct {
 
 // NewModuleManager is the constructor for the module manager
 // It handles all the interactions between the modules and the application
-func NewModuleManager(logger log.Logger, config *runtimev2.Module, modules map[string]appmodule.AppModule) *MM {
+func NewModuleManager(
+	logger log.Logger,
+	cdc codec.Codec,
+	config *runtimev2.Module,
+	modules map[string]appmodule.AppModule,
+) *MM {
 	modulesName := maps.Keys(modules)
 
 	// TODO: check for missing modules
@@ -65,6 +71,7 @@ func NewModuleManager(logger log.Logger, config *runtimev2.Module, modules map[s
 
 	return &MM{
 		logger:             logger,
+		cdc:                cdc,
 		config:             config,
 		modules:            modules,
 		migrationRegistrar: newMigrationRegistrar(),
@@ -256,15 +263,15 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodule.VersionMap) (ap
 			}
 		} else {
 			m.logger.Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if _, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
-				// module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+			if mod, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
+				mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
 			}
-			if _, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
-				// moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+			if mod, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
+				moduleValUpdates := mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
-				// if len(moduleValUpdates) > 0 {
-				// 	return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
-				// }
+				if len(moduleValUpdates) > 0 {
+					return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
+				}
 			}
 		}
 

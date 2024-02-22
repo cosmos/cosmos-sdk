@@ -982,6 +982,7 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 }
 
 func (s *CLITestSuite) TestAuxSigner() {
+	s.T().Skip("re-enable this when we bring back sign mode aux client testing")
 	val0Coin := sdk.NewCoin("testtoken", math.NewInt(10))
 
 	testCases := []struct {

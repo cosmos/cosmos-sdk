@@ -8,15 +8,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	authclient "cosmossdk.io/x/auth/client"
 	authtest "cosmossdk.io/x/auth/client/testutil"
 	"cosmossdk.io/x/auth/migrations/legacytx"
-	authtx "cosmossdk.io/x/auth/tx"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -158,7 +156,7 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
-	protoTx, err := txBuilderToProtoTx(txBuilder)
+	protoTx, err := txBuilder.GetTx().(interface{ AsTx() (*tx.Tx, error) }).AsTx()
 	s.Require().NoError(err)
 	// Encode the txBuilder to txBytes.
 	txBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -205,7 +203,7 @@ func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
 	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
-	protoTx, err := txBuilderToProtoTx(txBuilder)
+	protoTx, err := txBuilder.GetTx().(interface{ AsTx() (*tx.Tx, error) }).AsTx()
 	s.Require().NoError(err)
 	// Encode the txBuilder to txBytes.
 	txBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -759,7 +757,7 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 func (s *E2ETestSuite) TestTxEncode_GRPC() {
 	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
-	protoTx, err := txBuilderToProtoTx(txBuilder)
+	protoTx, err := txBuilder.GetTx().(interface{ AsTx() (*tx.Tx, error) }).AsTx()
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -796,7 +794,7 @@ func (s *E2ETestSuite) TestTxEncode_GRPC() {
 func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
 	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
-	protoTx, err := txBuilderToProtoTx(txBuilder)
+	protoTx, err := txBuilder.GetTx().(interface{ AsTx() (*tx.Tx, error) }).AsTx()
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -835,7 +833,8 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 
-	encodedTx, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
+	goodTx := txBuilder.GetTx()
+	encodedTx, err := val.GetClientCtx().TxConfig.TxEncoder()(goodTx)
 	s.Require().NoError(err)
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -864,13 +863,33 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res.GetTx())
 
-				txb := authtx.WrapTx(res.Tx)
-				tx, err := val.GetClientCtx().TxConfig.TxEncoder()(txb.GetTx())
+				txb := wrapTx(s.T(), s.cfg.TxConfig, res.Tx)
+				gotTx := txb.GetTx()
+				gotEncoded, err := val.GetClientCtx().TxConfig.TxEncoder()(gotTx)
 				s.Require().NoError(err)
-				s.Require().Equal(encodedTx, tx)
+				s.Require().Equal(encodedTx, gotEncoded)
 			}
 		})
 	}
+}
+
+func wrapTx(t *testing.T, conf client.TxConfig, dTx *tx.Tx) client.TxBuilder {
+	t.Helper()
+	bodyBytes, err := dTx.Body.Marshal()
+	require.NoError(t, err)
+	authInfoBytes, err := dTx.AuthInfo.Marshal()
+	require.NoError(t, err)
+	rawTxBytes, err := (&tx.TxRaw{
+		BodyBytes:     bodyBytes,
+		AuthInfoBytes: authInfoBytes,
+		Signatures:    dTx.Signatures,
+	}).Marshal()
+	require.NoError(t, err)
+	dec, err := conf.TxDecoder()(rawTxBytes)
+	require.NoError(t, err)
+	bld, err := conf.WrapTxBuilder(dec)
+	require.NoError(t, err)
+	return bld
 }
 
 func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
@@ -907,9 +926,10 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 				err := val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 
-				txb := authtx.WrapTx(result.Tx)
+				txb := wrapTx(s.T(), s.cfg.TxConfig, result.Tx)
 				tx, err := val.GetClientCtx().TxConfig.TxEncoder()(txb.GetTx())
 				s.Require().NoError(err)
+				s.T().Log(len(tx), len(encodedTxBytes))
 				s.Require().Equal(encodedTxBytes, tx)
 			}
 		})
@@ -1111,6 +1131,7 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
+	txBuilder.SetFeePayer(val.GetAddress())
 	signers, err := txBuilder.GetTx().GetSigners()
 	s.Require().NoError(err)
 	s.Require().Equal([][]byte{val.GetAddress()}, signers)
@@ -1127,24 +1148,4 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	s.Require().NoError(err)
 
 	return txBuilder
-}
-
-// protoTxProvider is a type which can provide a proto transaction. It is a
-// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
-// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field.
-type protoTxProvider interface {
-	GetProtoTx() *tx.Tx
-}
-
-// txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
-// Deprecated: It's used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field and for testing the TxEncode endpoint.
-func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) {
-	protoProvider, ok := txBuilder.(protoTxProvider)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
-	}
-
-	return protoProvider.GetProtoTx(), nil
 }

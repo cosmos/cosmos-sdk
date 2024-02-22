@@ -17,13 +17,13 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 var (
@@ -56,6 +56,7 @@ func TestSlashingMsgs(t *testing.T) {
 		stakingKeeper  *stakingkeeper.Keeper
 		bankKeeper     bankkeeper.Keeper
 		slashingKeeper keeper.Keeper
+		txConfig       client.TxConfig
 	)
 
 	app, err := sims.SetupWithConfiguration(
@@ -70,7 +71,7 @@ func TestSlashingMsgs(t *testing.T) {
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &stakingKeeper, &bankKeeper, &slashingKeeper)
+		startupCfg, &stakingKeeper, &bankKeeper, &slashingKeeper, &txConfig)
 	require.NoError(t, err)
 
 	baseApp := app.BaseApp
@@ -91,7 +92,6 @@ func TestSlashingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	headerInfo := header.Info{Height: app.LastBlockHeight() + 1}
-	txConfig := moduletestutil.MakeTestTxConfig()
 	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))

@@ -97,6 +97,6 @@ func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
 	return nil
 }
 
-func (h Hooks) BeforeTokenizeShareRecordRemoved(_ sdk.Context, _ uint64) error {
+func (h Hooks) BeforeTokenizeShareRecordRemoved(_ context.Context, _ uint64) error {
 	return nil
 }

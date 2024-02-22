@@ -51,18 +51,21 @@ func (k Keeper) PowerReduction(ctx context.Context) math.Int {
 }
 
 // Validator bond factor for all validators
-func (k Keeper) ValidatorBondFactor(ctx sdk.Context) (res math.LegacyDec) {
-	return k.GetParams(ctx).ValidatorBondFactor
+func (k Keeper) ValidatorBondFactor(ctx context.Context) (math.LegacyDec, error) {
+	params, err := k.GetParams(ctx)
+	return params.ValidatorBondFactor, err
 }
 
 // Global liquid staking cap across all liquid staking providers
-func (k Keeper) GlobalLiquidStakingCap(ctx sdk.Context) (res math.LegacyDec) {
-	return k.GetParams(ctx).GlobalLiquidStakingCap
+func (k Keeper) GlobalLiquidStakingCap(ctx context.Context) (math.LegacyDec, error) {
+	params, err := k.GetParams(ctx)
+	return params.GlobalLiquidStakingCap, err
 }
 
 // Liquid staking cap for each validator
-func (k Keeper) ValidatorLiquidStakingCap(ctx sdk.Context) (res math.LegacyDec) {
-	return k.GetParams(ctx).ValidatorLiquidStakingCap
+func (k Keeper) ValidatorLiquidStakingCap(ctx context.Context) (math.LegacyDec, error) {
+	params, err := k.GetParams(ctx)
+	return params.ValidatorLiquidStakingCap, err
 }
 
 // MinCommissionRate - Minimum validator commission rate

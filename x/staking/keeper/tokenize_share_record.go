@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -13,24 +14,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) GetLastTokenizeShareRecordID(ctx sdk.Context) uint64 {
+func (k Keeper) GetLastTokenizeShareRecordID(ctx context.Context) uint64 {
 	store := k.storeService.OpenKVStore(ctx)
-	bytes := store.Get(types.LastTokenizeShareRecordIDKey)
+	bytes, err := store.Get(types.LastTokenizeShareRecordIDKey)
+	if err != nil {
+		panic(err)
+	}
+
 	if bytes == nil {
 		return 0
 	}
 	return sdk.BigEndianToUint64(bytes)
 }
 
-func (k Keeper) SetLastTokenizeShareRecordID(ctx sdk.Context, id uint64) {
+func (k Keeper) SetLastTokenizeShareRecordID(ctx context.Context, id uint64) {
 	store := k.storeService.OpenKVStore(ctx)
 	store.Set(types.LastTokenizeShareRecordIDKey, sdk.Uint64ToBigEndian(id))
 }
 
-func (k Keeper) GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShareRecord types.TokenizeShareRecord, err error) {
+func (k Keeper) GetTokenizeShareRecord(ctx context.Context, id uint64) (tokenizeShareRecord types.TokenizeShareRecord, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 
-	bz := store.Get(types.GetTokenizeShareRecordByIndexKey(id))
+	bz, err := store.Get(types.GetTokenizeShareRecordByIndexKey(id))
+	if err != nil {
+		return tokenizeShareRecord, err
+	}
+
 	if bz == nil {
 		return tokenizeShareRecord, errorsmod.Wrap(types.ErrTokenizeShareRecordNotExists, fmt.Sprintf("tokenizeShareRecord %d does not exist", id))
 	}
@@ -39,7 +48,7 @@ func (k Keeper) GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShar
 	return tokenizeShareRecord, nil
 }
 
-func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []types.TokenizeShareRecord) {
+func (k Keeper) GetTokenizeShareRecordsByOwner(ctx context.Context, owner sdk.AccAddress) (tokenizeShareRecords []types.TokenizeShareRecord) {
 	store := k.storeService.OpenKVStore(ctx)
 
 	it := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.GetTokenizeShareRecordIdsByOwnerPrefix(owner))
@@ -58,9 +67,13 @@ func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAdd
 	return
 }
 
-func (k Keeper) GetTokenizeShareRecordByDenom(ctx sdk.Context, denom string) (types.TokenizeShareRecord, error) {
+func (k Keeper) GetTokenizeShareRecordByDenom(ctx context.Context, denom string) (types.TokenizeShareRecord, error) {
 	store := k.storeService.OpenKVStore(ctx)
-	bz := store.Get(types.GetTokenizeShareRecordIDByDenomKey(denom))
+	bz, err := store.Get(types.GetTokenizeShareRecordIDByDenomKey(denom))
+	if err != nil {
+		return types.TokenizeShareRecord{}, err
+	}
+
 	if bz == nil {
 		return types.TokenizeShareRecord{}, fmt.Errorf("tokenize share record not found from denom: %s", denom)
 	}
@@ -71,7 +84,7 @@ func (k Keeper) GetTokenizeShareRecordByDenom(ctx sdk.Context, denom string) (ty
 	return k.GetTokenizeShareRecord(ctx, id.Value)
 }
 
-func (k Keeper) GetAllTokenizeShareRecords(ctx sdk.Context) (tokenizeShareRecords []types.TokenizeShareRecord) {
+func (k Keeper) GetAllTokenizeShareRecords(ctx context.Context) (tokenizeShareRecords []types.TokenizeShareRecord) {
 	store := k.storeService.OpenKVStore(ctx)
 
 	it := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.TokenizeShareRecordPrefix)
@@ -86,8 +99,13 @@ func (k Keeper) GetAllTokenizeShareRecords(ctx sdk.Context) (tokenizeShareRecord
 	return
 }
 
-func (k Keeper) AddTokenizeShareRecord(ctx sdk.Context, tokenizeShareRecord types.TokenizeShareRecord) error {
-	if k.hasTokenizeShareRecord(ctx, tokenizeShareRecord.Id) {
+func (k Keeper) AddTokenizeShareRecord(ctx context.Context, tokenizeShareRecord types.TokenizeShareRecord) error {
+	hasRecord, err := k.hasTokenizeShareRecord(ctx, tokenizeShareRecord.Id)
+	if err != nil {
+		return err
+	}
+
+	if hasRecord {
 		return errorsmod.Wrapf(types.ErrTokenizeShareRecordAlreadyExists, "TokenizeShareRecord already exists: %d", tokenizeShareRecord.Id)
 	}
 
@@ -104,7 +122,7 @@ func (k Keeper) AddTokenizeShareRecord(ctx sdk.Context, tokenizeShareRecord type
 	return nil
 }
 
-func (k Keeper) DeleteTokenizeShareRecord(ctx sdk.Context, recordID uint64) error {
+func (k Keeper) DeleteTokenizeShareRecord(ctx context.Context, recordID uint64) error {
 	record, err := k.GetTokenizeShareRecord(ctx, recordID)
 	if err != nil {
 		return err
@@ -121,31 +139,31 @@ func (k Keeper) DeleteTokenizeShareRecord(ctx sdk.Context, recordID uint64) erro
 	return nil
 }
 
-func (k Keeper) hasTokenizeShareRecord(ctx sdk.Context, id uint64) bool {
+func (k Keeper) hasTokenizeShareRecord(ctx context.Context, id uint64) (bool, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Has(types.GetTokenizeShareRecordByIndexKey(id))
 }
 
-func (k Keeper) setTokenizeShareRecord(ctx sdk.Context, tokenizeShareRecord types.TokenizeShareRecord) {
+func (k Keeper) setTokenizeShareRecord(ctx context.Context, tokenizeShareRecord types.TokenizeShareRecord) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := k.cdc.MustMarshal(&tokenizeShareRecord)
 
 	store.Set(types.GetTokenizeShareRecordByIndexKey(tokenizeShareRecord.Id), bz)
 }
 
-func (k Keeper) setTokenizeShareRecordWithOwner(ctx sdk.Context, owner sdk.AccAddress, id uint64) {
+func (k Keeper) setTokenizeShareRecordWithOwner(ctx context.Context, owner sdk.AccAddress, id uint64) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 
 	store.Set(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, id), bz)
 }
 
-func (k Keeper) deleteTokenizeShareRecordWithOwner(ctx sdk.Context, owner sdk.AccAddress, id uint64) {
+func (k Keeper) deleteTokenizeShareRecordWithOwner(ctx context.Context, owner sdk.AccAddress, id uint64) {
 	store := k.storeService.OpenKVStore(ctx)
 	store.Delete(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, id))
 }
 
-func (k Keeper) setTokenizeShareRecordWithDenom(ctx sdk.Context, denom string, id uint64) {
+func (k Keeper) setTokenizeShareRecordWithDenom(ctx context.Context, denom string, id uint64) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 

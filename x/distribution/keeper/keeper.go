@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+	goerrors "errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/errors"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 
@@ -13,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper of the distribution store
@@ -217,7 +220,7 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 	return k.FeePool.Set(ctx, feePool)
 }
 
-func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordID uint64) error {
+func (k Keeper) WithdrawSingleShareRecordReward(ctx context.Context, recordID uint64) error {
 	record, err := k.stakingKeeper.GetTokenizeShareRecord(ctx, recordID)
 	if err != nil {
 		return err
@@ -233,11 +236,30 @@ func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordID uint64
 		return err
 	}
 
-	val := k.stakingKeeper.Validator(ctx, valAddr)
-	del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
-	if val != nil && del != nil {
+	validatorFound := true
+	_, err = k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		if !goerrors.Is(err, stakingtypes.ErrNoValidatorFound) {
+			return err
+		}
+
+		validatorFound = false
+	}
+
+	delegationFound := true
+	_, err = k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+	if err != nil {
+		if !goerrors.Is(err, stakingtypes.ErrNoDelegation) {
+			return err
+		}
+
+		delegationFound = false
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if validatorFound && delegationFound {
 		// withdraw rewards into reward module account and send it to reward owner
-		cacheCtx, write := ctx.CacheContext()
+		cacheCtx, write := sdkCtx.CacheContext()
 		_, err = k.WithdrawDelegationRewards(cacheCtx, record.GetModuleAddress(), valAddr)
 		if err != nil {
 			return err
@@ -253,7 +275,7 @@ func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordID uint64
 			return err
 		}
 
-		ctx.EventManager().EmitEvent(
+		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeWithdrawTokenizeShareReward,
 				sdk.NewAttribute(types.AttributeKeyWithdrawAddress, owner.String()),
@@ -275,19 +297,27 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 		return nil, types.ErrNotTokenizeShareRecordOwner
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(record.Validator)
 	if err != nil {
 		return nil, err
 	}
 
-	val := k.stakingKeeper.Validator(ctx, valAddr)
-	if val == nil {
+	val, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
 		return nil, err
 	}
 
-	del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
-	if del == nil {
+	if val == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, record.Validator)
+	}
+
+	del, err := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+	if err != nil {
 		return nil, err
+	}
+
+	if del == nil {
+		return nil, errors.Wrapf(types.ErrNoDelegationExists, record.GetModuleAddress().String())
 	}
 
 	// withdraw rewards into reward module account and send it to reward owner
@@ -328,13 +358,21 @@ func (k Keeper) WithdrawAllTokenizeShareRecordReward(ctx sdk.Context, ownerAddr 
 			return nil, err
 		}
 
-		val := k.stakingKeeper.Validator(ctx, valAddr)
-		if val == nil {
+		val, err := k.stakingKeeper.Validator(ctx, valAddr)
+		if !goerrors.Is(err, stakingtypes.ErrNoValidatorFound) {
+			return nil, err
+		}
+
+		if err != nil || val == nil {
 			continue
 		}
 
-		del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
-		if del == nil {
+		del, err := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+		if !goerrors.Is(err, stakingtypes.ErrNoDelegation) {
+			return nil, err
+		}
+
+		if err != nil || del == nil {
 			continue
 		}
 

@@ -157,7 +157,7 @@ func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gom
 }
 
 // SendCoins mocks base method.
-func (m *MockBankKeeper) SendCoins(ctx types.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoins", ctx, fromAddr, toAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -309,10 +309,10 @@ func (mr *MockStakingKeeperMockRecorder) GetAllSDKDelegations(ctx interface{}) *
 }
 
 // GetAllTokenizeShareRecords mocks base method.
-func (m *MockStakingKeeper) GetAllTokenizeShareRecords(ctx types.Context) []types1.TokenizeShareRecord {
+func (m *MockStakingKeeper) GetAllTokenizeShareRecords(ctx context.Context) []types0.TokenizeShareRecord {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllTokenizeShareRecords", ctx)
-	ret0, _ := ret[0].([]types1.TokenizeShareRecord)
+	ret0, _ := ret[0].([]types0.TokenizeShareRecord)
 	return ret0
 }
 
@@ -338,10 +338,10 @@ func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomo
 }
 
 // GetTokenizeShareRecord mocks base method.
-func (m *MockStakingKeeper) GetTokenizeShareRecord(ctx types.Context, id uint64) (types1.TokenizeShareRecord, error) {
+func (m *MockStakingKeeper) GetTokenizeShareRecord(ctx context.Context, id uint64) (types0.TokenizeShareRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTokenizeShareRecord", ctx, id)
-	ret0, _ := ret[0].(types1.TokenizeShareRecord)
+	ret0, _ := ret[0].(types0.TokenizeShareRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -353,10 +353,10 @@ func (mr *MockStakingKeeperMockRecorder) GetTokenizeShareRecord(ctx, id interfac
 }
 
 // GetTokenizeShareRecordsByOwner mocks base method.
-func (m *MockStakingKeeper) GetTokenizeShareRecordsByOwner(ctx types.Context, owner types.AccAddress) []types1.TokenizeShareRecord {
+func (m *MockStakingKeeper) GetTokenizeShareRecordsByOwner(ctx context.Context, owner types.AccAddress) []types0.TokenizeShareRecord {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTokenizeShareRecordsByOwner", ctx, owner)
-	ret0, _ := ret[0].([]types1.TokenizeShareRecord)
+	ret0, _ := ret[0].([]types0.TokenizeShareRecord)
 	return ret0
 }
 

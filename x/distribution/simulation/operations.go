@@ -296,6 +296,7 @@ func SimulateMsgWithdrawTokenizeShareRecordReward(txConfig client.TxConfig, ak t
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgWithdrawTokenizeShareRecordReward{})
 		rewardOwner, _ := simtypes.RandomAcc(r, accs)
 
 		records := sk.GetAllTokenizeShareRecords(ctx)
@@ -311,10 +312,15 @@ func SimulateMsgWithdrawTokenizeShareRecordReward(txConfig client.TxConfig, ak t
 
 		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
 		if rewardOwner.PrivKey == nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawTokenizeShareRecordReward, "account private key is nil"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "account private key is nil"), nil, nil
 		}
 
-		msg := types.NewMsgWithdrawAllTokenizeShareRecordReward(rewardOwner.Address)
+		rewardOwnerAddr, err := ak.AddressCodec().BytesToString(rewardOwner.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error converting reward owner address"), nil, err
+		}
+
+		msg := types.NewMsgWithdrawAllTokenizeShareRecordReward(rewardOwnerAddr)
 
 		account := ak.GetAccount(ctx, rewardOwner.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -325,7 +331,6 @@ func SimulateMsgWithdrawTokenizeShareRecordReward(txConfig client.TxConfig, ak t
 			TxGen:           txConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      rewardOwner,
 			AccountKeeper:   ak,

@@ -242,11 +242,15 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 }
 
 func TestInitExportLiquidStakingGenesis(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+	ctx := f.sdkCtx
 
-	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 2, sdk.OneInt())
+	addresses := simtestutil.AddTestAddrs(f.bankKeeper, f.stakingKeeper, ctx, 2, math.OneInt())
 	addrAcc1, addrAcc2 := addresses[0], addresses[1]
+
+	validators, err := f.stakingKeeper.GetAllValidators(ctx)
+	require.NoError(t, err)
 
 	// Mock out a genesis state
 	inGenesisState := types.GenesisState{
@@ -256,7 +260,7 @@ func TestInitExportLiquidStakingGenesis(t *testing.T) {
 			{Id: 2, Owner: addrAcc2.String(), ModuleAccount: "module2", Validator: "val2"},
 		},
 		LastTokenizeShareRecordId: 2,
-		TotalLiquidStakedTokens:   sdk.NewInt(1_000_000),
+		TotalLiquidStakedTokens:   math.NewInt(1_000_000),
 		TokenizeShareLocks: []types.TokenizeShareLock{
 			{
 				Address: addrAcc1.String(),
@@ -270,12 +274,12 @@ func TestInitExportLiquidStakingGenesis(t *testing.T) {
 		},
 		// Ensure that the bonded pool balance matches the bonded coins by passing existing validators
 		// Note: the above wasn't required in v0.45.16-ics-lsm
-		Validators: app.StakingKeeper.GetAllValidators(ctx),
+		Validators: validators,
 	}
 
 	// Call init and then export genesis - confirming the same state is returned
-	app.StakingKeeper.InitGenesis(ctx, &inGenesisState)
-	outGenesisState := app.StakingKeeper.ExportGenesis(ctx)
+	f.stakingKeeper.InitGenesis(ctx, &inGenesisState)
+	outGenesisState := f.stakingKeeper.ExportGenesis(ctx)
 
 	require.ElementsMatch(t, inGenesisState.TokenizeShareRecords, outGenesisState.TokenizeShareRecords,
 		"tokenize share records")

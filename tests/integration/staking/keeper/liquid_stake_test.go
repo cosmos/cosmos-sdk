@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -21,19 +21,21 @@ import (
 
 // Helper function to clear the Bonded pool balances before a unit test
 func clearPoolBalance(t *testing.T, sk keeper.Keeper, ak accountkeeper.AccountKeeper, bk bankkeeper.Keeper, ctx sdk.Context) {
-	bondDenom := sk.BondDenom(ctx)
+	bondDenom, err := sk.BondDenom(ctx)
+	require.NoError(t, err)
 	initialBondedBalance := bk.GetBalance(ctx, ak.GetModuleAddress(types.BondedPoolName), bondDenom)
 
-	err := bk.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, minttypes.ModuleName, sdk.NewCoins(initialBondedBalance))
+	err = bk.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, minttypes.ModuleName, sdk.NewCoins(initialBondedBalance))
 	require.NoError(t, err, "no error expected when clearing bonded pool balance")
 }
 
 // Helper function to fund the Bonded pool balances before a unit test
 func fundPoolBalance(t *testing.T, sk keeper.Keeper, bk bankkeeper.Keeper, ctx sdk.Context, amount math.Int) {
-	bondDenom := sk.BondDenom(ctx)
+	bondDenom, err := sk.BondDenom(ctx)
+	require.NoError(t, err)
 	bondedPoolCoin := sdk.NewCoin(bondDenom, amount)
 
-	err := bk.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(bondedPoolCoin))
+	err = bk.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(bondedPoolCoin))
 	require.NoError(t, err, "no error expected when minting")
 
 	err = bk.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.BondedPoolName, sdk.NewCoins(bondedPoolCoin))
@@ -72,11 +74,11 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 		&stakingKeeper,
 	)
 	require.NoError(t, err)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	testCases := []struct {
 		name             string
-		globalLiquidCap  sdk.Dec
+		globalLiquidCap  math.LegacyDec
 		totalLiquidStake math.Int
 		totalStake       math.Int
 		newLiquidStake   math.Int
@@ -88,10 +90,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 1
 			// => Total Liquid Stake: 5+1=6, Total Stake: 95+1=96 => 6/96 = 6% < 10% cap
 			name:             "10 percent cap _ native delegation _ delegation below cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
-			totalLiquidStake: sdk.NewInt(5),
-			totalStake:       sdk.NewInt(95),
-			newLiquidStake:   sdk.NewInt(1),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.1"),
+			totalLiquidStake: math.NewInt(5),
+			totalStake:       math.NewInt(95),
+			newLiquidStake:   math.NewInt(1),
 			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
@@ -100,10 +102,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 5
 			// => Total Liquid Stake: 5+5=10, Total Stake: 95+5=100 => 10/100 = 10% == 10% cap
 			name:             "10 percent cap _ native delegation _ delegation equals cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
-			totalLiquidStake: sdk.NewInt(5),
-			totalStake:       sdk.NewInt(95),
-			newLiquidStake:   sdk.NewInt(5),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.1"),
+			totalLiquidStake: math.NewInt(5),
+			totalStake:       math.NewInt(95),
+			newLiquidStake:   math.NewInt(5),
 			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
@@ -112,10 +114,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 6
 			// => Total Liquid Stake: 5+6=11, Total Stake: 95+6=101 => 11/101 = 11% > 10% cap
 			name:             "10 percent cap _ native delegation _ delegation exceeds cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
-			totalLiquidStake: sdk.NewInt(5),
-			totalStake:       sdk.NewInt(95),
-			newLiquidStake:   sdk.NewInt(6),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.1"),
+			totalLiquidStake: math.NewInt(5),
+			totalStake:       math.NewInt(95),
+			newLiquidStake:   math.NewInt(6),
 			tokenizingShares: false,
 			expectedExceeds:  true,
 		},
@@ -124,10 +126,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 29
 			// => Total Liquid Stake: 20+29=49, Total Stake: 220+29=249 => 49/249 = 19% < 20% cap
 			name:             "20 percent cap _ native delegation _ delegation below cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
-			totalLiquidStake: sdk.NewInt(20),
-			totalStake:       sdk.NewInt(220),
-			newLiquidStake:   sdk.NewInt(29),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.20"),
+			totalLiquidStake: math.NewInt(20),
+			totalStake:       math.NewInt(220),
+			newLiquidStake:   math.NewInt(29),
 			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
@@ -136,10 +138,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 30
 			// => Total Liquid Stake: 20+30=50, Total Stake: 220+30=250 => 50/250 = 20% == 20% cap
 			name:             "20 percent cap _ native delegation _ delegation equals cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
-			totalLiquidStake: sdk.NewInt(20),
-			totalStake:       sdk.NewInt(220),
-			newLiquidStake:   sdk.NewInt(30),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.20"),
+			totalLiquidStake: math.NewInt(20),
+			totalStake:       math.NewInt(220),
+			newLiquidStake:   math.NewInt(30),
 			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
@@ -148,10 +150,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 31
 			// => Total Liquid Stake: 20+31=51, Total Stake: 220+31=251 => 51/251 = 21% > 20% cap
 			name:             "20 percent cap _ native delegation _ delegation exceeds cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
-			totalLiquidStake: sdk.NewInt(20),
-			totalStake:       sdk.NewInt(220),
-			newLiquidStake:   sdk.NewInt(31),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.20"),
+			totalLiquidStake: math.NewInt(20),
+			totalStake:       math.NewInt(220),
+			newLiquidStake:   math.NewInt(31),
 			tokenizingShares: false,
 			expectedExceeds:  true,
 		},
@@ -160,10 +162,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 0, Total Stake: 100, New Liquid Stake: 50
 			// => Total Liquid Stake: 0+50=50, Total Stake: 100+50=150 => 50/150 = 33% < 50% cap
 			name:             "50 percent cap _ native delegation _ delegation below cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.5"),
-			totalLiquidStake: sdk.NewInt(0),
-			totalStake:       sdk.NewInt(100),
-			newLiquidStake:   sdk.NewInt(50),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.5"),
+			totalLiquidStake: math.NewInt(0),
+			totalStake:       math.NewInt(100),
+			newLiquidStake:   math.NewInt(50),
 			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
@@ -172,10 +174,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 0, Total Stake: 100, New Liquid Stake: 50
 			// => 50 / 100 = 50% == 50% cap
 			name:             "50 percent cap _ tokenized delegation _ delegation equals cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.5"),
-			totalLiquidStake: sdk.NewInt(0),
-			totalStake:       sdk.NewInt(100),
-			newLiquidStake:   sdk.NewInt(50),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.5"),
+			totalLiquidStake: math.NewInt(0),
+			totalStake:       math.NewInt(100),
+			newLiquidStake:   math.NewInt(50),
 			tokenizingShares: true,
 			expectedExceeds:  false,
 		},
@@ -184,10 +186,10 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 0, Total Stake: 100, New Liquid Stake: 51
 			// => Total Liquid Stake: 0+51=51, Total Stake: 100+51=151 => 51/151 = 33% < 50% cap
 			name:             "50 percent cap _ native delegation _ delegation below cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.5"),
-			totalLiquidStake: sdk.NewInt(0),
-			totalStake:       sdk.NewInt(100),
-			newLiquidStake:   sdk.NewInt(51),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.5"),
+			totalLiquidStake: math.NewInt(0),
+			totalStake:       math.NewInt(100),
+			newLiquidStake:   math.NewInt(51),
 			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
@@ -196,30 +198,30 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Total Liquid Stake: 0, Total Stake: 100, New Liquid Stake: 51
 			// => 51 / 100 = 51% > 50% cap
 			name:             "50 percent cap _  tokenized delegation _delegation exceeds cap",
-			globalLiquidCap:  sdk.MustNewDecFromStr("0.5"),
-			totalLiquidStake: sdk.NewInt(0),
-			totalStake:       sdk.NewInt(100),
-			newLiquidStake:   sdk.NewInt(51),
+			globalLiquidCap:  math.LegacyMustNewDecFromStr("0.5"),
+			totalLiquidStake: math.NewInt(0),
+			totalStake:       math.NewInt(100),
+			newLiquidStake:   math.NewInt(51),
 			tokenizingShares: true,
 			expectedExceeds:  true,
 		},
 		{
 			// Cap of 0% - everything should exceed
 			name:             "0 percent cap",
-			globalLiquidCap:  sdk.ZeroDec(),
-			totalLiquidStake: sdk.NewInt(0),
-			totalStake:       sdk.NewInt(1_000_000),
-			newLiquidStake:   sdk.NewInt(1),
+			globalLiquidCap:  math.LegacyZeroDec(),
+			totalLiquidStake: math.NewInt(0),
+			totalStake:       math.NewInt(1_000_000),
+			newLiquidStake:   math.NewInt(1),
 			tokenizingShares: false,
 			expectedExceeds:  true,
 		},
 		{
 			// Cap of 100% - nothing should exceed
 			name:             "100 percent cap",
-			globalLiquidCap:  sdk.OneDec(),
-			totalLiquidStake: sdk.NewInt(1),
-			totalStake:       sdk.NewInt(1),
-			newLiquidStake:   sdk.NewInt(1_000_000),
+			globalLiquidCap:  math.LegacyOneDec(),
+			totalLiquidStake: math.NewInt(1),
+			totalStake:       math.NewInt(1),
+			newLiquidStake:   math.NewInt(1_000_000),
 			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
@@ -228,7 +230,8 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Update the global liquid staking cap
-			params := stakingKeeper.GetParams(ctx)
+			params, err := stakingKeeper.GetParams(ctx)
+			require.NoError(t, err)
 			params.GlobalLiquidStakingCap = tc.globalLiquidCap
 			stakingKeeper.SetParams(ctx, params)
 
@@ -240,7 +243,8 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			fundPoolBalance(t, *stakingKeeper, bankKeeper, ctx, tc.totalStake)
 
 			// Check if the new tokens would exceed the global cap
-			actualExceeds := stakingKeeper.CheckExceedsGlobalLiquidStakingCap(ctx, tc.newLiquidStake, tc.tokenizingShares)
+			actualExceeds, err := stakingKeeper.CheckExceedsGlobalLiquidStakingCap(ctx, tc.newLiquidStake, tc.tokenizingShares)
+			require.NoError(t, err)
 			require.Equal(t, tc.expectedExceeds, actualExceeds, tc.name)
 		})
 	}
@@ -260,11 +264,11 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 		&stakingKeeper,
 	)
 	require.NoError(t, err)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
-	intitialTotalLiquidStaked := sdk.NewInt(100)
-	increaseAmount := sdk.NewInt(10)
-	poolBalance := sdk.NewInt(200)
+	intitialTotalLiquidStaked := math.NewInt(100)
+	increaseAmount := math.NewInt(10)
+	poolBalance := math.NewInt(200)
 
 	// Set the total staked and total liquid staked amounts
 	// which are required components when checking the global cap
@@ -274,8 +278,9 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 	stakingKeeper.SetTotalLiquidStakedTokens(ctx, intitialTotalLiquidStaked)
 
 	// Set the global cap such that a small delegation would exceed the cap
-	params := stakingKeeper.GetParams(ctx)
-	params.GlobalLiquidStakingCap = sdk.MustNewDecFromStr("0.0001")
+	params, err := stakingKeeper.GetParams(ctx)
+	require.NoError(t, err)
+	params.GlobalLiquidStakingCap = math.LegacyMustNewDecFromStr("0.0001")
 	stakingKeeper.SetParams(ctx, params)
 
 	// Attempt to increase the total liquid stake again, it should error since
@@ -285,7 +290,7 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 	require.Equal(t, intitialTotalLiquidStaked, stakingKeeper.GetTotalLiquidStakedTokens(ctx))
 
 	// Now relax the cap so that the increase succeeds
-	params.GlobalLiquidStakingCap = sdk.MustNewDecFromStr("0.99")
+	params.GlobalLiquidStakingCap = math.LegacyMustNewDecFromStr("0.99")
 	stakingKeeper.SetParams(ctx, params)
 
 	// Confirm the total increased
@@ -296,38 +301,40 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 
 // Test RefreshTotalLiquidStaked
 func TestRefreshTotalLiquidStaked(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	t.Parallel()
+	f := initFixture(t)
+	app, ctx := f.app, f.sdkCtx
 
 	var (
-		accountKeeper = app.AccountKeeper
-		stakingKeeper = app.StakingKeeper
+		accountKeeper = f.accountKeeper
+		stakingKeeper = f.stakingKeeper
 	)
 
 	// Set an arbitrary total liquid staked tokens amount that will get overwritten by the refresh
-	stakingKeeper.SetTotalLiquidStakedTokens(ctx, sdk.NewInt(999))
+	stakingKeeper.SetTotalLiquidStakedTokens(ctx, math.NewInt(999))
 
 	// Add validator's with various exchange rates
 	validators := []types.Validator{
 		{
 			// Exchange rate of 1
 			OperatorAddress: "valA",
-			Tokens:          sdk.NewInt(100),
-			DelegatorShares: sdk.NewDec(100),
-			LiquidShares:    sdk.NewDec(100), // should be overwritten
+			Tokens:          math.NewInt(100),
+			DelegatorShares: math.LegacyNewDec(100),
+			LiquidShares:    math.LegacyNewDec(100), // should be overwritten
 		},
 		{
 			// Exchange rate of 0.9
 			OperatorAddress: "valB",
-			Tokens:          sdk.NewInt(90),
-			DelegatorShares: sdk.NewDec(100),
-			LiquidShares:    sdk.NewDec(200), // should be overwritten
+			Tokens:          math.NewInt(90),
+			DelegatorShares: math.LegacyNewDec(100),
+			LiquidShares:    math.LegacyNewDec(200), // should be overwritten
 		},
 		{
 			// Exchange rate of 0.75
 			OperatorAddress: "valC",
-			Tokens:          sdk.NewInt(75),
-			DelegatorShares: sdk.NewDec(100),
-			LiquidShares:    sdk.NewDec(300), // should be overwritten
+			Tokens:          math.NewInt(75),
+			DelegatorShares: math.LegacyNewDec(100),
+			LiquidShares:    math.LegacyNewDec(300), // should be overwritten
 		},
 	}
 
@@ -338,10 +345,10 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 	//   ValB: 860 + 580 = 1,440
 	//   ValC: 900 + 100 = 1,000
 	expectedTotalLiquidStaked := int64(2771)
-	expectedValidatorLiquidShares := map[string]sdk.Dec{
-		"valA": sdk.NewDec(725),
-		"valB": sdk.NewDec(1440),
-		"valC": sdk.NewDec(1000),
+	expectedValidatorLiquidShares := map[string]math.LegacyDec{
+		"valA": math.LegacyNewDec(725),
+		"valB": math.LegacyNewDec(1440),
+		"valC": math.LegacyNewDec(1000),
 	}
 
 	delegations := []struct {
@@ -356,7 +363,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delA",
 				ValidatorAddress: "valA",
-				Shares:           sdk.NewDec(100),
+				Shares:           math.LegacyNewDec(100),
 			},
 		},
 		{
@@ -364,7 +371,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delA",
 				ValidatorAddress: "valB",
-				Shares:           sdk.NewDec(860),
+				Shares:           math.LegacyNewDec(860),
 			},
 		},
 		{
@@ -372,7 +379,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delA",
 				ValidatorAddress: "valC",
-				Shares:           sdk.NewDec(750),
+				Shares:           math.LegacyNewDec(750),
 			},
 		},
 		// Delegator B - Liquid staking provider, tokens included in total
@@ -383,7 +390,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delB-LSTP",
 				ValidatorAddress: "valA",
-				Shares:           sdk.NewDec(400),
+				Shares:           math.LegacyNewDec(400),
 			},
 		},
 		{
@@ -392,7 +399,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delB-LSTP",
 				ValidatorAddress: "valB",
-				Shares:           sdk.NewDec(860),
+				Shares:           math.LegacyNewDec(860),
 			},
 		},
 		{
@@ -401,7 +408,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delB-LSTP",
 				ValidatorAddress: "valC",
-				Shares:           sdk.NewDec(900),
+				Shares:           math.LegacyNewDec(900),
 			},
 		},
 		// Delegator C - Tokenized shares, tokens included in total
@@ -412,7 +419,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valA",
-				Shares:           sdk.NewDec(325),
+				Shares:           math.LegacyNewDec(325),
 			},
 		},
 		{
@@ -421,7 +428,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valB",
-				Shares:           sdk.NewDec(580),
+				Shares:           math.LegacyNewDec(580),
 			},
 		},
 		{
@@ -430,13 +437,13 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valC",
-				Shares:           sdk.NewDec(100),
+				Shares:           math.LegacyNewDec(100),
 			},
 		},
 	}
 
 	// Create validators based on the above (must use an actual validator address)
-	addresses := simapp.AddTestAddrsIncremental(app, ctx, 5, app.StakingKeeper.TokensFromConsensusPower(ctx, 300))
+	addresses := simapp.AddTestAddrsIncremental(app, ctx, 5, f.stakingKeeper.TokensFromConsensusPower(ctx, 300))
 	validatorAddresses := map[string]sdk.ValAddress{
 		"valA": sdk.ValAddress(addresses[0]),
 		"valB": sdk.ValAddress(addresses[1]),
@@ -444,7 +451,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 	}
 	for _, validator := range validators {
 		validator.OperatorAddress = validatorAddresses[validator.OperatorAddress].String()
-		app.StakingKeeper.SetValidator(ctx, validator)
+		f.stakingKeeper.SetValidator(ctx, validator)
 	}
 
 	// Create the delegations based on the above (must use actual delegator addresses)
@@ -462,23 +469,23 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 		delegation := delegationCase.delegation
 		delegation.DelegatorAddress = delegatorAddress.String()
 		delegation.ValidatorAddress = validatorAddresses[delegation.ValidatorAddress].String()
-		app.StakingKeeper.SetDelegation(ctx, delegation)
+		f.stakingKeeper.SetDelegation(ctx, delegation)
 	}
 
 	// Refresh the total liquid staked and validator liquid shares
-	err := app.StakingKeeper.RefreshTotalLiquidStaked(ctx)
+	err := f.stakingKeeper.RefreshTotalLiquidStaked(ctx)
 	require.NoError(t, err, "no error expected when refreshing total liquid staked")
 
 	// Check the total liquid staked and liquid shares by validator
-	actualTotalLiquidStaked := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx)
+	actualTotalLiquidStaked := f.stakingKeeper.GetTotalLiquidStakedTokens(ctx)
 	require.Equal(t, expectedTotalLiquidStaked, actualTotalLiquidStaked.Int64(), "total liquid staked tokens")
 
 	for _, moniker := range []string{"valA", "valB", "valC"} {
 		address := validatorAddresses[moniker]
 		expectedLiquidShares := expectedValidatorLiquidShares[moniker]
 
-		actualValidator, found := app.StakingKeeper.GetValidator(ctx, address)
-		require.True(t, found, "validator %s should have been found after refresh", moniker)
+		actualValidator, err := f.stakingKeeper.GetValidator(ctx, address)
+		require.True(t, !errors.Is(err, types.ErrNoValidatorFound), "validator %s should have been found after refresh", moniker)
 
 		actualLiquidShares := actualValidator.LiquidShares
 		require.Equal(t, expectedLiquidShares.TruncateInt64(), actualLiquidShares.TruncateInt64(),

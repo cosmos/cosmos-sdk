@@ -204,7 +204,8 @@ func (s *KeeperTestSuite) TestCheckExceedsValidatorBondCap() {
 			}
 
 			// Check whether the cap is exceeded
-			actualExceeds := keeper.CheckExceedsValidatorBondCap(ctx, validator, tc.newShares)
+			actualExceeds, err := keeper.CheckExceedsValidatorBondCap(ctx, validator, tc.newShares)
+			require.NoError(err)
 			require.Equal(tc.expectedExceeds, actualExceeds, tc.name)
 		})
 	}
@@ -385,7 +386,8 @@ func (s *KeeperTestSuite) TestCheckExceedsValidatorLiquidStakingCap() {
 			}
 
 			// Check whether the cap is exceeded
-			actualExceeds := keeper.CheckExceedsValidatorLiquidStakingCap(ctx, validator, tc.newLiquidShares, tc.tokenizingShares)
+			actualExceeds, err := keeper.CheckExceedsValidatorLiquidStakingCap(ctx, validator, tc.newLiquidShares, tc.tokenizingShares)
+			require.NoError(err)
 			require.Equal(tc.expectedExceeds, actualExceeds, tc.name)
 		})
 	}
@@ -779,24 +781,29 @@ func (s *KeeperTestSuite) TestTokenizeShareAuthorizationQueue() {
 
 	// Now we'll remove items from the queue sequentially
 	// First check with a block time before the first expiration - it should remove no addresses
-	actualAddresses := keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["-1"])
+	actualAddresses, err := keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["-1"])
+	require.NoError(err)
 	require.Equal(expectedUnlockedAddresses["-1"], actualAddresses, "no addresses unlocked from time -1")
 
 	// Then pass in (time 0 + unbonding time) - it should remove the first address
-	actualAddresses = keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["0"])
+	actualAddresses, err = keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["0"])
+	require.NoError(err)
 	require.Equal(expectedUnlockedAddresses["0"], actualAddresses, "one address unlocked from time 0")
 
 	// Now pass in (time 1 + unbonding time) - it should remove no addresses since
 	// the address at time 0 was already removed
-	actualAddresses = keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["1"])
+	actualAddresses, err = keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["1"])
+	require.NoError(err)
 	require.Equal(expectedUnlockedAddresses["1"], actualAddresses, "no addresses unlocked from time 1")
 
 	// Now pass in (time 2.5 + unbonding time) - it should remove the three addresses from time 2
-	actualAddresses = keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["2.5"])
+	actualAddresses, err = keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["2.5"])
+	require.NoError(err)
 	require.Equal(expectedUnlockedAddresses["2.5"], actualAddresses, "addresses unlocked from time 2.5")
 
 	// Finally pass in a block time far in the future, which should remove all the remaining locks
-	actualAddresses = keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["10"])
+	actualAddresses, err = keeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["10"])
+	require.NoError(err)
 	require.Equal(expectedUnlockedAddresses["10"], actualAddresses, "addresses unlocked from time 10")
 }
 

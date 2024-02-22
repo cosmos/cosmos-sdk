@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -353,13 +354,11 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 			"invalid shares amount",
 		)
 	}
-	srcDelegation, found := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
-	if !found {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"delegation with delegator %s not found for validator %s",
-			msg.DelegatorAddress, msg.ValidatorSrcAddress,
-		)
+	srcDelegation, err := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
+	if err != nil {
+		return nil, sdkerrors.ErrNotFound.Wrapf(
+			"delegation with delegator %s not found for validator %s. error: %s",
+			msg.DelegatorAddress, msg.ValidatorSrcAddress, err)
 	}
 
 	srcShares, err := k.ValidateUnbondAmount(
@@ -485,13 +484,11 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 		return nil, err
 	}
 
-	delegation, found := k.GetDelegation(ctx, delegatorAddress, addr)
-	if !found {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"delegation with delegator %s not found for validator %s",
-			msg.DelegatorAddress, msg.ValidatorAddress,
-		)
+	delegation, err := k.GetDelegation(ctx, delegatorAddress, addr)
+	if err != nil {
+		return nil, sdkerrors.ErrNotFound.Wrapf(
+			"delegation with delegator %s not found for validator %s. error: %s",
+			msg.DelegatorAddress, msg.ValidatorAddress, err)
 	}
 
 	// if this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
@@ -989,8 +986,13 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	}
 
 	// Note: since delegation object has been changed from unbond call, it gets latest delegation
-	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
-	if !found {
+	_, err = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
+	if !errors.Is(err, types.ErrNoDelegation) {
+		return nil, err
+	}
+
+	// this err will be ErrNoDelegation
+	if err != nil {
 		if k.hooks != nil {
 			if err := k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id); err != nil {
 				return nil, err
@@ -1140,7 +1142,10 @@ func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEna
 	}
 
 	// Otherwise queue the unlock
-	completionTime := k.QueueTokenizeSharesAuthorization(ctx, delegator)
+	completionTime, err := k.QueueTokenizeSharesAuthorization(ctx, delegator)
+	if err != nil {
+		panic(err)
+	}
 
 	return &types.MsgEnableTokenizeSharesResponse{CompletionTime: completionTime}, nil
 }

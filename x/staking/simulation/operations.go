@@ -508,7 +508,12 @@ func SimulateMsgUndelegate(
 				return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to calculate shares from tokens"), nil, nil
 			}
 
-			maxValTotalShare := val.ValidatorBondShares.Sub(shares).Mul(k.ValidatorBondFactor(ctx))
+			validatorBondFactor, err := k.ValidatorBondFactor(ctx)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validator bond factor"), nil, err
+			}
+
+			maxValTotalShare := val.ValidatorBondShares.Sub(shares).Mul(validatorBondFactor)
 			if val.LiquidShares.GT(maxValTotalShare) {
 				return simtypes.NoOpMsg(types.ModuleName, msgType, "unbonding validator bond exceeds cap"), nil, nil
 			}
@@ -755,7 +760,12 @@ func SimulateMsgBeginRedelegate(
 
 		// if delegation is a validator bond, make sure the decrease wont cause the validator bond cap to be exceeded
 		if delegation.ValidatorBond {
-			maxValTotalShare := srcVal.ValidatorBondShares.Sub(shares).Mul(k.ValidatorBondFactor(ctx))
+			validatorBondFactor, err := k.ValidatorBondFactor(ctx)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validator bond factor"), nil, err
+			}
+
+			maxValTotalShare := srcVal.ValidatorBondShares.Sub(shares).Mul(validatorBondFactor)
 			if srcVal.LiquidShares.GT(maxValTotalShare) {
 				return simtypes.NoOpMsg(types.ModuleName, msgType, "source validator bond exceeds cap"), nil, nil
 			}

@@ -77,6 +77,7 @@ func initFixture(t testing.TB) *fixture {
 		distrtypes.ModuleName:          {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		minttypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -117,6 +118,8 @@ func initFixture(t testing.TB) *fixture {
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
 
+	stakingKeeper.SetHooks(distrKeeper.Hooks())
+
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
@@ -146,9 +149,25 @@ func initFixture(t testing.TB) *fixture {
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
+	// set default staking params
+	assert.NilError(t, stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams()))
+
+	// reset fee pool
+	assert.NilError(t, distrKeeper.FeePool.Set(ctx, distrtypes.InitialFeePool()))
+	assert.NilError(t, distrKeeper.Params.Set(ctx, distrtypes.DefaultParams()))
+
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
+
+	// add accounts and set total supply
+	totalSupplyAmt := initAmt.MulRaw(int64(len(PKS)))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
+	assert.NilError(t, bankKeeper.MintCoins(sdkCtx, minttypes.ModuleName, totalSupply))
+
+	for _, addr := range PKS {
+		assert.NilError(t, bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, minttypes.ModuleName, (sdk.AccAddress)(addr.Address()), initCoins))
+	}
 
 	return &fixture{
 		app:           integrationApp,

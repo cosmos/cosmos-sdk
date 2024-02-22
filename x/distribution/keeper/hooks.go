@@ -162,7 +162,7 @@ func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddres
 }
 
 // Withdraw rewards before removing record
-func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordID uint64) error {
+func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx context.Context, recordID uint64) error {
 	err := h.k.WithdrawSingleShareRecordReward(ctx, recordID)
 	if err != nil {
 		h.k.Logger(ctx).Error(err.Error())

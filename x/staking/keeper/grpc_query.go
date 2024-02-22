@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
@@ -721,8 +722,8 @@ func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllT
 
 	var records []types.TokenizeShareRecord
 
-	store := ctx.KVStore(k.storeKey)
-	valStore := prefix.NewStore(store, types.TokenizeShareRecordPrefix)
+	store := k.storeService.OpenKVStore(ctx)
+	valStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.TokenizeShareRecordPrefix)
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var tokenizeShareRecord types.TokenizeShareRecord
 		if err := k.cdc.Unmarshal(value, &tokenizeShareRecord); err != nil {
@@ -763,7 +764,7 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	records := k.GetAllTokenizeShareRecords(ctx)
-	totalTokenizeShared := sdk.ZeroInt()
+	totalTokenizeShared := math.ZeroInt()
 
 	for _, record := range records {
 		moduleAcc := record.GetModuleAddress()
@@ -772,21 +773,27 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 			return nil, err
 		}
 
-		validator, found := k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
+		validator, err := k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return nil, err
 		}
 
-		delegation, found := k.GetDelegation(ctx, moduleAcc, valAddr)
-		if !found {
-			return nil, types.ErrNoDelegation
+		delegation, err := k.GetDelegation(ctx, moduleAcc, valAddr)
+		if err != nil {
+			return nil, err
 		}
 
 		tokens := validator.TokensFromShares(delegation.Shares)
 		totalTokenizeShared = totalTokenizeShared.Add(tokens.RoundInt())
 	}
+
+	bondDenom, err := k.BondDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.QueryTotalTokenizeSharedAssetsResponse{
-		Value: sdk.NewCoin(k.BondDenom(ctx), totalTokenizeShared),
+		Value: sdk.NewCoin(bondDenom, totalTokenizeShared),
 	}, nil
 }
 

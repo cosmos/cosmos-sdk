@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"time"
 
 	"cosmossdk.io/math"
@@ -11,7 +12,7 @@ import (
 )
 
 // SetTotalLiquidStakedTokens stores the total outstanding tokens owned by a liquid staking provider
-func (k Keeper) SetTotalLiquidStakedTokens(ctx sdk.Context, tokens math.Int) {
+func (k Keeper) SetTotalLiquidStakedTokens(ctx context.Context, tokens math.Int) {
 	store := k.storeService.OpenKVStore(ctx)
 
 	tokensBz, err := tokens.Marshal()
@@ -24,9 +25,12 @@ func (k Keeper) SetTotalLiquidStakedTokens(ctx sdk.Context, tokens math.Int) {
 
 // GetTotalLiquidStakedTokens returns the total outstanding tokens owned by a liquid staking provider
 // Returns zero if the total liquid stake amount has not been initialized
-func (k Keeper) GetTotalLiquidStakedTokens(ctx sdk.Context) math.Int {
+func (k Keeper) GetTotalLiquidStakedTokens(ctx context.Context) math.Int {
 	store := k.storeService.OpenKVStore(ctx)
-	tokensBz := store.Get(types.TotalLiquidStakedTokensKey)
+	tokensBz, err := store.Get(types.TotalLiquidStakedTokensKey)
+	if err != nil {
+		panic(err)
+	}
 
 	if tokensBz == nil {
 		return math.ZeroInt()
@@ -63,15 +67,23 @@ func (k Keeper) DelegatorIsLiquidStaker(delegatorAddress sdk.AccAddress) bool {
 // the tokens are already included in the bonded pool
 // If the delegation's shares are not bonded (e.g. normal delegation),
 // we need to add the tokens to the current bonded pool balance to get the total staked
-func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens math.Int, sharesAlreadyBonded bool) bool {
-	liquidStakingCap := k.GlobalLiquidStakingCap(ctx)
+func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx context.Context, tokens math.Int, sharesAlreadyBonded bool) (bool, error) {
+	liquidStakingCap, err := k.GlobalLiquidStakingCap(ctx)
+	if err != nil {
+		return false, err
+	}
+
 	liquidStakedAmount := k.GetTotalLiquidStakedTokens(ctx)
 
 	// Determine the total stake from the balance of the bonded pool
 	// If this is not a tokenized delegation, we need to add the tokens to the pool balance since
 	// they would not have been counted yet
 	// If this is for a tokenized delegation, the tokens are already included in the pool balance
-	totalStakedAmount := k.TotalBondedTokens(ctx)
+	totalStakedAmount, err := k.TotalBondedTokens(ctx)
+	if err != nil {
+		return false, err
+	}
+
 	if !sharesAlreadyBonded {
 		totalStakedAmount = totalStakedAmount.Add(tokens)
 	}
@@ -81,20 +93,25 @@ func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens math.
 	updatedLiquidStaked := math.LegacyNewDecFromInt(liquidStakedAmount.Add(tokens))
 	liquidStakePercent := updatedLiquidStaked.Quo(math.LegacyNewDecFromInt(totalStakedAmount))
 
-	return liquidStakePercent.GT(liquidStakingCap)
+	return liquidStakePercent.GT(liquidStakingCap), nil
 }
 
 // CheckExceedsValidatorBondCap checks if a liquid delegation to a validator would cause
 // the liquid shares to exceed the validator bond factor
 // A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
 // Returns true if the cap is exceeded
-func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, validator types.Validator, shares math.LegacyDec) bool {
-	validatorBondFactor := k.ValidatorBondFactor(ctx)
+func (k Keeper) CheckExceedsValidatorBondCap(ctx context.Context, validator types.Validator, shares math.LegacyDec) (bool, error) {
+	validatorBondFactor, err := k.ValidatorBondFactor(ctx)
+	if err != nil {
+		return false, err
+	}
+
 	if validatorBondFactor.Equal(types.ValidatorBondCapDisabled) {
-		return false
+		return false, nil
 	}
 	maxValLiquidShares := validator.ValidatorBondShares.Mul(validatorBondFactor)
-	return validator.LiquidShares.Add(shares).GT(maxValLiquidShares)
+
+	return validator.LiquidShares.Add(shares).GT(maxValLiquidShares), nil
 }
 
 // CheckExceedsValidatorLiquidStakingCap checks if a liquid delegation could cause the
@@ -105,7 +122,7 @@ func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, validator types.Va
 // If the liquid delegation's shares are not bonded (e.g. normal delegation),
 // we need to add the shares to the current validator's delegator shares to get the total shares
 // Returns true if the cap is exceeded
-func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx sdk.Context, validator types.Validator, shares sdk.Dec, sharesAlreadyBonded bool) bool {
+func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx context.Context, validator types.Validator, shares math.LegacyDec, sharesAlreadyBonded bool) (bool, error) {
 	updatedLiquidShares := validator.LiquidShares.Add(shares)
 
 	updatedTotalShares := validator.DelegatorShares
@@ -114,9 +131,12 @@ func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx sdk.Context, validator
 	}
 
 	liquidStakePercent := updatedLiquidShares.Quo(updatedTotalShares)
-	liquidStakingCap := k.ValidatorLiquidStakingCap(ctx)
+	liquidStakingCap, err := k.ValidatorLiquidStakingCap(ctx)
+	if err != nil {
+		return false, err
+	}
 
-	return liquidStakePercent.GT(liquidStakingCap)
+	return liquidStakePercent.GT(liquidStakingCap), nil
 }
 
 // SafelyIncreaseTotalLiquidStakedTokens increments the total liquid staked tokens
@@ -124,8 +144,13 @@ func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx sdk.Context, validator
 //
 // The percentage of liquid staked tokens must be less than the GlobalLiquidStakingCap:
 // (TotalLiquidStakedTokens / TotalStakedTokens) <= GlobalLiquidStakingCap
-func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount math.Int, sharesAlreadyBonded bool) error {
-	if k.CheckExceedsGlobalLiquidStakingCap(ctx, amount, sharesAlreadyBonded) {
+func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx context.Context, amount math.Int, sharesAlreadyBonded bool) error {
+	exceedsCap, err := k.CheckExceedsGlobalLiquidStakingCap(ctx, amount, sharesAlreadyBonded)
+	if err != nil {
+		return err
+	}
+
+	if exceedsCap {
 		return types.ErrGlobalLiquidStakingCapExceeded
 	}
 
@@ -134,7 +159,7 @@ func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount ma
 }
 
 // DecreaseTotalLiquidStakedTokens decrements the total liquid staked tokens
-func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount math.Int) error {
+func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx context.Context, amount math.Int) error {
 	totalLiquidStake := k.GetTotalLiquidStakedTokens(ctx)
 	if amount.GT(totalLiquidStake) {
 		return types.ErrTotalLiquidStakedUnderflow
@@ -150,17 +175,28 @@ func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount math.Int
 // and the total liquid staked shares cannot exceed the validator bond cap
 //  1. (TotalLiquidStakedTokens / TotalStakedTokens) <= ValidatorLiquidStakingCap
 //  2. LiquidShares <= (ValidatorBondShares * ValidatorBondFactor)
-func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, valAddress sdk.ValAddress, shares math.LegacyDec, sharesAlreadyBonded bool) (types.Validator, error) {
+func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx context.Context, valAddress sdk.ValAddress, shares math.LegacyDec, sharesAlreadyBonded bool) (types.Validator, error) {
 	validator, err := k.GetValidator(ctx, valAddress)
 	if err != nil {
 		return validator, err
 	}
 
 	// Confirm the validator bond factor and validator liquid staking cap will not be exceeded
-	if k.CheckExceedsValidatorBondCap(ctx, validator, shares) {
+	exceedsValidatorBondCap, err := k.CheckExceedsValidatorBondCap(ctx, validator, shares)
+	if err != nil {
+		return validator, err
+	}
+
+	if exceedsValidatorBondCap {
 		return validator, types.ErrInsufficientValidatorBondShares
 	}
-	if k.CheckExceedsValidatorLiquidStakingCap(ctx, validator, shares, sharesAlreadyBonded) {
+
+	exceedsValidatorLiquidStakingCap, err := k.CheckExceedsValidatorLiquidStakingCap(ctx, validator, shares, sharesAlreadyBonded)
+	if err != nil {
+		return validator, err
+	}
+
+	if exceedsValidatorLiquidStakingCap {
 		return validator, types.ErrValidatorLiquidStakingCapExceeded
 	}
 
@@ -172,7 +208,7 @@ func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, valAddress 
 }
 
 // DecreaseValidatorLiquidShares decrements the liquid shares on a validator
-func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, valAddress sdk.ValAddress, shares math.LegacyDec) (types.Validator, error) {
+func (k Keeper) DecreaseValidatorLiquidShares(ctx context.Context, valAddress sdk.ValAddress, shares math.LegacyDec) (types.Validator, error) {
 	validator, err := k.GetValidator(ctx, valAddress)
 	if err != nil {
 		return validator, err
@@ -190,7 +226,7 @@ func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, valAddress sdk.Va
 
 // Increase validator bond shares increments the validator's self bond
 // in the event that the delegation amount on a validator bond delegation is increased
-func (k Keeper) IncreaseValidatorBondShares(ctx sdk.Context, valAddress sdk.ValAddress, shares math.LegacyDec) error {
+func (k Keeper) IncreaseValidatorBondShares(ctx context.Context, valAddress sdk.ValAddress, shares math.LegacyDec) error {
 	validator, err := k.GetValidator(ctx, valAddress)
 	if err != nil {
 		return err
@@ -205,14 +241,18 @@ func (k Keeper) IncreaseValidatorBondShares(ctx sdk.Context, valAddress sdk.ValA
 // SafelyDecreaseValidatorBond decrements the validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
 // set by validator bond factor
-func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, valAddress sdk.ValAddress, shares math.LegacyDec) error {
+func (k Keeper) SafelyDecreaseValidatorBond(ctx context.Context, valAddress sdk.ValAddress, shares math.LegacyDec) error {
 	validator, err := k.GetValidator(ctx, valAddress)
 	if err != nil {
 		return err
 	}
 
 	// Check if the decreased self bond will cause the validator bond threshold to be exceeded
-	validatorBondFactor := k.ValidatorBondFactor(ctx)
+	validatorBondFactor, err := k.ValidatorBondFactor(ctx)
+	if err != nil {
+		return err
+	}
+
 	validatorBondEnabled := !validatorBondFactor.Equal(types.ValidatorBondCapDisabled)
 	maxValTotalShare := validator.ValidatorBondShares.Sub(shares).Mul(validatorBondFactor)
 
@@ -231,21 +271,21 @@ func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, valAddress sdk.ValA
 // The tokenize share lock store is implemented by keying on the account address
 // and storing a timestamp as the value. The timestamp is empty when the lock is
 // set and gets populated with the unlock completion time once the unlock has started
-func (k Keeper) AddTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) {
+func (k Keeper) AddTokenizeSharesLock(ctx context.Context, address sdk.AccAddress) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetTokenizeSharesLockKey(address)
 	store.Set(key, sdk.FormatTimeBytes(time.Time{}))
 }
 
 // Removes the tokenize share lock for an account to enable tokenizing shares
-func (k Keeper) RemoveTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) {
+func (k Keeper) RemoveTokenizeSharesLock(ctx context.Context, address sdk.AccAddress) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetTokenizeSharesLockKey(address)
 	store.Delete(key)
 }
 
 // Updates the timestamp associated with a lock to the time at which the lock expires
-func (k Keeper) SetTokenizeSharesUnlockTime(ctx sdk.Context, address sdk.AccAddress, completionTime time.Time) {
+func (k Keeper) SetTokenizeSharesUnlockTime(ctx context.Context, address sdk.AccAddress, completionTime time.Time) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetTokenizeSharesLockKey(address)
 	store.Set(key, sdk.FormatTimeBytes(completionTime))
@@ -254,14 +294,18 @@ func (k Keeper) SetTokenizeSharesUnlockTime(ctx sdk.Context, address sdk.AccAddr
 // Checks if there is currently a tokenize share lock for a given account
 // Returns the status indicating whether the account is locked, unlocked,
 // or as a lock expiring. If the lock is expiring, the expiration time is returned
-func (k Keeper) GetTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) (status types.TokenizeShareLockStatus, unlockTime time.Time) {
+func (k Keeper) GetTokenizeSharesLock(ctx context.Context, address sdk.AccAddress) (status types.TokenizeShareLockStatus, unlockTime time.Time) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetTokenizeSharesLockKey(address)
-	bz := store.Get(key)
+	bz, err := store.Get(key)
+	if err != nil {
+		panic(err)
+	}
+
 	if len(bz) == 0 {
 		return types.TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED, time.Time{}
 	}
-	unlockTime, err := sdk.ParseTimeBytes(bz)
+	unlockTime, err = sdk.ParseTimeBytes(bz)
 	if err != nil {
 		panic(err)
 	}
@@ -272,7 +316,7 @@ func (k Keeper) GetTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) (
 }
 
 // Returns all tokenize share locks
-func (k Keeper) GetAllTokenizeSharesLocks(ctx sdk.Context) (tokenizeShareLocks []types.TokenizeShareLock) {
+func (k Keeper) GetAllTokenizeSharesLocks(ctx context.Context) (tokenizeShareLocks []types.TokenizeShareLock) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	iterator := storetypes.KVStorePrefixIterator(store, types.TokenizeSharesLockPrefix)
@@ -306,7 +350,7 @@ func (k Keeper) GetAllTokenizeSharesLocks(ctx sdk.Context) (tokenizeShareLocks [
 }
 
 // Stores a list of addresses pending tokenize share unlocking at the same time
-func (k Keeper) SetPendingTokenizeShareAuthorizations(ctx sdk.Context, completionTime time.Time, authorizations types.PendingTokenizeShareAuthorizations) {
+func (k Keeper) SetPendingTokenizeShareAuthorizations(ctx context.Context, completionTime time.Time, authorizations types.PendingTokenizeShareAuthorizations) {
 	store := k.storeService.OpenKVStore(ctx)
 	timeKey := types.GetTokenizeShareAuthorizationTimeKey(completionTime)
 	bz := k.cdc.MustMarshal(&authorizations)
@@ -314,11 +358,14 @@ func (k Keeper) SetPendingTokenizeShareAuthorizations(ctx sdk.Context, completio
 }
 
 // Returns a list of addresses pending tokenize share unlocking at the same time
-func (k Keeper) GetPendingTokenizeShareAuthorizations(ctx sdk.Context, completionTime time.Time) types.PendingTokenizeShareAuthorizations {
+func (k Keeper) GetPendingTokenizeShareAuthorizations(ctx context.Context, completionTime time.Time) types.PendingTokenizeShareAuthorizations {
 	store := k.storeService.OpenKVStore(ctx)
 
 	timeKey := types.GetTokenizeShareAuthorizationTimeKey(completionTime)
-	bz := store.Get(timeKey)
+	bz, err := store.Get(timeKey)
+	if err != nil {
+		panic(err)
+	}
 
 	authorizations := types.PendingTokenizeShareAuthorizations{Addresses: []string{}}
 	if len(bz) == 0 {
@@ -332,9 +379,16 @@ func (k Keeper) GetPendingTokenizeShareAuthorizations(ctx sdk.Context, completio
 // Inserts the address into a queue where it will sit for 1 unbonding period
 // before the tokenize share lock is removed
 // Returns the completion time
-func (k Keeper) QueueTokenizeSharesAuthorization(ctx sdk.Context, address sdk.AccAddress) time.Time {
-	params := k.GetParams(ctx)
-	completionTime := ctx.BlockTime().Add(params.UnbondingTime)
+func (k Keeper) QueueTokenizeSharesAuthorization(ctx context.Context, address sdk.AccAddress) (time.Time, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockTime()
+
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return blockTime, err
+	}
+
+	completionTime := blockTime.Add(params.UnbondingTime)
 
 	// Append the address to the list of addresses that also unlock at this time
 	authorizations := k.GetPendingTokenizeShareAuthorizations(ctx, completionTime)
@@ -343,11 +397,11 @@ func (k Keeper) QueueTokenizeSharesAuthorization(ctx sdk.Context, address sdk.Ac
 	k.SetPendingTokenizeShareAuthorizations(ctx, completionTime, authorizations)
 	k.SetTokenizeSharesUnlockTime(ctx, address, completionTime)
 
-	return completionTime
+	return completionTime, nil
 }
 
 // Cancels a pending tokenize share authorization by removing the lock from the queue
-func (k Keeper) CancelTokenizeShareLockExpiration(ctx sdk.Context, address sdk.AccAddress, completionTime time.Time) {
+func (k Keeper) CancelTokenizeShareLockExpiration(ctx context.Context, address sdk.AccAddress, completionTime time.Time) {
 	authorizations := k.GetPendingTokenizeShareAuthorizations(ctx, completionTime)
 
 	updatedAddresses := []string{}
@@ -363,16 +417,20 @@ func (k Keeper) CancelTokenizeShareLockExpiration(ctx sdk.Context, address sdk.A
 
 // Unlocks all queued tokenize share authorizations that have matured
 // (i.e. have waited the full unbonding period)
-func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.Time) (unlockedAddresses []string) {
+func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx context.Context, blockTime time.Time) ([]string, error) {
 	store := k.storeService.OpenKVStore(ctx)
 
 	// iterators all time slices from time 0 until the current block time
 	prefixEnd := storetypes.InclusiveEndBytes(types.GetTokenizeShareAuthorizationTimeKey(blockTime))
-	iterator := store.Iterator(types.TokenizeSharesUnlockQueuePrefix, prefixEnd)
+	iterator, err := store.Iterator(types.TokenizeSharesUnlockQueuePrefix, prefixEnd)
 	defer iterator.Close()
 
+	if err != nil {
+		return []string{}, err
+	}
+
 	// collect all unlocked addresses
-	unlockedAddresses = []string{}
+	unlockedAddresses := []string{}
 	keys := [][]byte{}
 	for ; iterator.Valid(); iterator.Next() {
 		authorizations := types.PendingTokenizeShareAuthorizations{}
@@ -391,7 +449,7 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 		k.RemoveTokenizeSharesLock(ctx, sdk.MustAccAddressFromBech32(unlockedAddress))
 	}
 
-	return unlockedAddresses
+	return unlockedAddresses, nil
 }
 
 // Calculates and sets the global liquid staked tokens and liquid shares by validator
@@ -400,7 +458,7 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 // ICA accounts, as well as tokenized delegations which are owned by module accounts
 // under the hood
 // This function must be called in the upgrade handler which onboards LSM
-func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
+func (k Keeper) RefreshTotalLiquidStaked(ctx context.Context) error {
 	validators, err := k.GetAllValidators(ctx)
 	if err != nil {
 		return err

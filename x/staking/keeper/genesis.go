@@ -240,7 +240,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 			completionTime := tokenizeShareLock.CompletionTime
 
 			authorizations := k.GetPendingTokenizeShareAuthorizations(ctx, completionTime)
-			authorizations.Addresses = append(authorizations.Addresses, address.String())
+			authorizations.Addresses = append(authorizations.Addresses, sdk.AccAddress(address).String())
 
 			k.SetPendingTokenizeShareAuthorizations(ctx, completionTime, authorizations)
 			k.SetTokenizeSharesUnlockTime(ctx, address, completionTime)

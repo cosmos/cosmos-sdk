@@ -188,8 +188,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return fmt.Errorf("error creating tx builder: %w", err)
 			}
 
-			err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true, true)
-			if err != nil {
+			if err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true, true); err != nil {
 				return errors.Wrap(err, "failed to sign std tx")
 			}
 
@@ -201,7 +200,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				}
 			}
 
-			if err := writeSignedGenTx(clientCtx, outputDocument, stdTx); err != nil {
+			if err := writeSignedGenTx(clientCtx, outputDocument, txBuilder.GetTx()); err != nil {
 				return errors.Wrap(err, "failed to write signed gen tx")
 			}
 

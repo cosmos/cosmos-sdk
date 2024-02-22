@@ -124,6 +124,16 @@ func (m *MM) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConf
 	return nil
 }
 
+// InitGenesis performs init genesis functionality for modules.
+func (m *MM) InitGenesis() {
+	panic("implement me")
+}
+
+// ExportGenesis performs export genesis functionality for modules
+func (m *MM) ExportGenesis() {
+	panic("implement me")
+}
+
 // BeginBlock runs the begin-block logic of all modules
 func (m *MM) BeginBlock() func(ctx context.Context) error {
 	return func(ctx context.Context) error {

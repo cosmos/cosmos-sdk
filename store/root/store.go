@@ -263,6 +263,7 @@ func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 				close(s.chChangeset)
 				s.isMigrating = false
 				s.stateCommitment = s.migrationManager.GetStateCommitment()
+				s.logger.Info("migration completed", "version", s.lastCommitInfo.Version)
 			} else {
 				s.chChangeset <- &migration.VersionedChangeset{Version: s.lastCommitInfo.Version + 1, Changeset: cs}
 			}
@@ -374,6 +375,7 @@ func (s *Store) StartMigration() error {
 
 	go func() {
 		version := s.lastCommitInfo.Version
+		s.logger.Info("starting migration", "version", version)
 		if err := s.migrationManager.Start(version, s.chChangeset, s.chDone); err != nil {
 			s.logger.Error("failed to start migration", "err", err)
 		}

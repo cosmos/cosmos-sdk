@@ -92,13 +92,13 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	s.rootStore.StartMigration()
 
 	// continue to apply changeset against the original store
-	latestVersion := uint64(0)
+	latestVersion := originalLatestVersion + 1
 	keyCount := 10
-	for version := originalLatestVersion + 1; ; version++ {
+	for ; latestVersion < 2*originalLatestVersion; latestVersion++ {
 		cs := store.NewChangeset()
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				cs.Add(storeKey, []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)))
+				cs.Add(storeKey, []byte(fmt.Sprintf("key-%d-%d", latestVersion, i)), []byte(fmt.Sprintf("value-%d-%d", latestVersion, i)))
 			}
 		}
 		_, err := s.rootStore.WorkingHash(cs)
@@ -109,8 +109,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 		// check if the migration is completed
 		ver, err := s.rootStore.GetStateStorage().GetLatestVersion()
 		s.Require().NoError(err)
-		if ver == version {
-			latestVersion = ver
+		if ver == latestVersion {
 			break
 		}
 

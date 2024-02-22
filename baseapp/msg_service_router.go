@@ -33,6 +33,17 @@ type MsgServiceRouter struct {
 	circuitBreaker    CircuitBreaker
 }
 
+type IMsgServiceRouter interface {
+	SetCircuit(cb CircuitBreaker)
+	Handler(msg sdk.Msg) MsgServiceHandler
+	HandlerByTypeURL(typeURL string) MsgServiceHandler
+	HybridHandlerByMsgName(msgName string) func(context.Context, protoiface.MessageV1, protoiface.MessageV1) error
+	RegisterService(sd *grpc.ServiceDesc, handler interface{})
+	SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry)
+}
+
+var _ IMsgServiceRouter = &MsgServiceRouter{}
+
 var _ gogogrpc.Server = &MsgServiceRouter{}
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.

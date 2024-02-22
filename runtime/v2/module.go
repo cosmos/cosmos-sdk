@@ -30,7 +30,6 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
@@ -70,6 +69,7 @@ func init() {
 			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
 			ProvideEnvironment,
+			ProvideModuleManager,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
@@ -120,14 +120,13 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 type AppInputs struct {
 	depinject.In
 
-	AppConfig          *appv1alpha1.Config
-	Config             *runtimev2.Module
-	AppBuilder         *AppBuilder
-	Modules            map[string]appmodule.AppModule
-	CustomModuleBasics map[string]sdkmodule.AppModuleBasic `optional:"true"`
-	InterfaceRegistry  codectypes.InterfaceRegistry
-	LegacyAmino        *codec.LegacyAmino
-	Logger             log.Logger
+	AppConfig         *appv1alpha1.Config
+	Config            *runtimev2.Module
+	AppBuilder        *AppBuilder
+	ModuleManager     *MM
+	InterfaceRegistry codectypes.InterfaceRegistry
+	LegacyAmino       *codec.LegacyAmino
+	Logger            log.Logger
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -135,19 +134,13 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.config = inputs.Config
 	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
-	app.moduleManager = NewModuleManager(app.logger, inputs.Config, inputs.Modules)
+	app.moduleManager = inputs.ModuleManager
+	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistry)
+	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+}
 
-	for name, mod := range inputs.Modules {
-		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
-			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
-			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-			continue
-		}
-
-		coreAppModuleBasic := sdkmodule.CoreAppModuleBasicAdaptor(name, mod)
-		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
-		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-	}
+func ProvideModuleManager(logger log.Logger, config *runtimev2.Module, modules map[string]appmodule.AppModule) *MM {
+	return NewModuleManager(logger, config, modules)
 }
 
 func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {

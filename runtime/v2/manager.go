@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -21,7 +22,9 @@ import (
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -66,6 +69,52 @@ func NewModuleManager(logger log.Logger, config *runtimev2.Module, modules map[s
 		modules:            modules,
 		migrationRegistrar: newMigrationRegistrar(),
 	}
+}
+
+// RegisterLegacyAminoCodec registers all module codecs
+func (m *MM) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	for _, b := range m.modules {
+		if mod, ok := b.(sdkmodule.HasAminoCodec); ok {
+			mod.RegisterLegacyAminoCodec(cdc)
+		}
+	}
+}
+
+// RegisterInterfaces registers all module interface types
+func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	for _, b := range m.modules {
+		if mod, ok := b.(sdkmodule.HasRegisterInterfaces); ok {
+			mod.RegisterInterfaces(registry)
+		}
+	}
+}
+
+// DefaultGenesis provides default genesis information for all modules
+func (m *MM) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
+	genesisData := make(map[string]json.RawMessage)
+	for _, b := range m.modules {
+		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+			genesisData[mod.Name()] = mod.DefaultGenesis(cdc)
+		} else if mod, ok := b.(sdkmodule.HasName); ok {
+			genesisData[mod.Name()] = []byte("{}")
+		}
+	}
+
+	return genesisData
+}
+
+// ValidateGenesis performs genesis state validation for all modules
+func (m *MM) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
+	for _, b := range m.modules {
+		// first check if the module is an adapted Core API Module
+		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[mod.Name()]); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // BeginBlock runs the begin-block logic of all modules

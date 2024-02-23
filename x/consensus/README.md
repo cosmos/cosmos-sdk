@@ -17,10 +17,6 @@ Functionality to modify CometBFT's ABCI consensus params.
 * [Consensus Messages](#consensus-messages)
 * [Events](#events)
     * [Message Events](#message-events)
-    * [Keeper Events](#keeper-events)
-* [Parameters](#parameters)
-    * [SendEnabled](#sendenabled)
-    * [DefaultSendEnabled](#defaultsendenabled)
 
 
 ## State
@@ -29,7 +25,7 @@ The `x/consensus` module keeps state of the consensus params from cometbft.:
 
 ## Params
 
-The bank module stores it's params in state with the prefix of `0x05`,
+The consensus module stores it's params in state with the prefix of `0x05`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x05 | ProtocolBuffer(cometbft.ConsensusParams)`

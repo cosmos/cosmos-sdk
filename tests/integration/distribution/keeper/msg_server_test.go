@@ -160,15 +160,6 @@ func initFixture(t testing.TB) *fixture {
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
 
-	// add accounts and set total supply
-	totalSupplyAmt := initAmt.MulRaw(int64(len(PKS)))
-	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
-	assert.NilError(t, bankKeeper.MintCoins(sdkCtx, minttypes.ModuleName, totalSupply))
-
-	for _, addr := range PKS {
-		assert.NilError(t, bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, minttypes.ModuleName, (sdk.AccAddress)(addr.Address()), initCoins))
-	}
-
 	return &fixture{
 		app:           integrationApp,
 		sdkCtx:        sdkCtx,
@@ -181,6 +172,17 @@ func initFixture(t testing.TB) *fixture {
 		stakingKeeper: stakingKeeper,
 		addr:          addr,
 		valAddr:       valAddr,
+	}
+}
+
+func fundAccounts(t testing.TB, ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
+	// add accounts and set total supply
+	totalSupplyAmt := initAmt.MulRaw(int64(len(PKS)))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
+	require.NoError(t, bankKeeper.MintCoins(ctx, minttypes.ModuleName, totalSupply))
+
+	for _, addr := range PKS {
+		require.NoError(t, bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, (sdk.AccAddress)(addr.Address()), initCoins))
 	}
 }
 

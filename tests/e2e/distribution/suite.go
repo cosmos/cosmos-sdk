@@ -397,10 +397,10 @@ func (s *E2ETestSuite) TestNewWithdrawAllTokenizeShareRecordRewardCmd() {
 		{
 			"valid transaction of withdraw tokenize share record reward",
 			[]string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},
@@ -410,7 +410,7 @@ func (s *E2ETestSuite) TestNewWithdrawAllTokenizeShareRecordRewardCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewWithdrawAllTokenizeShareRecordRewardCmd()
+			cmd := cli.NewWithdrawAllTokenizeShareRecordRewardCmd(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

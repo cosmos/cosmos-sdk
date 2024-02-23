@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/errors"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 
@@ -226,12 +225,13 @@ func (k Keeper) WithdrawSingleShareRecordReward(ctx context.Context, recordID ui
 		return err
 	}
 
-	owner, err := sdk.AccAddressFromBech32(record.Owner)
+	ownerAddr, err := k.authKeeper.AddressCodec().StringToBytes(record.Owner)
 	if err != nil {
 		return err
 	}
+	owner := sdk.AccAddress(ownerAddr)
 
-	valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(record.Validator)
 	if err != nil {
 		return err
 	}
@@ -302,22 +302,14 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 		return nil, err
 	}
 
-	val, err := k.stakingKeeper.Validator(ctx, valAddr)
+	_, err = k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	if val == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, record.Validator)
-	}
-
-	del, err := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+	_, err = k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
 	if err != nil {
 		return nil, err
-	}
-
-	if del == nil {
-		return nil, errors.Wrapf(types.ErrNoDelegationExists, record.GetModuleAddress().String())
 	}
 
 	// withdraw rewards into reward module account and send it to reward owner
@@ -353,26 +345,28 @@ func (k Keeper) WithdrawAllTokenizeShareRecordReward(ctx sdk.Context, ownerAddr 
 	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
 
 	for _, record := range records {
-		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(record.Validator)
 		if err != nil {
 			return nil, err
 		}
 
-		val, err := k.stakingKeeper.Validator(ctx, valAddr)
-		if !goerrors.Is(err, stakingtypes.ErrNoValidatorFound) {
+		_, err = k.stakingKeeper.Validator(ctx, valAddr)
+		if err != nil && !goerrors.Is(err, stakingtypes.ErrNoValidatorFound) {
 			return nil, err
 		}
 
-		if err != nil || val == nil {
+		// if the error is ErrNoValidatorFound
+		if err != nil {
 			continue
 		}
 
-		del, err := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
-		if !goerrors.Is(err, stakingtypes.ErrNoDelegation) {
+		_, err = k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+		if err != nil && !goerrors.Is(err, stakingtypes.ErrNoDelegation) {
 			return nil, err
 		}
 
-		if err != nil || del == nil {
+		// if the error is ErrNoDelegation
+		if err != nil {
 			continue
 		}
 

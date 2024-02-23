@@ -1103,7 +1103,7 @@ func SimulateMsgRedeemTokensforShares(txGen client.TxConfig, ak types.AccountKee
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "empty balance in tokens"), nil, nil
 		}
 
-		valAddress, err := sdk.ValAddressFromBech32(tokenizeShareRecord.Validator)
+		valAddress, err := k.ValidatorAddressCodec().StringToBytes(tokenizeShareRecord.Validator)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "invalid validator address"), nil, fmt.Errorf("invalid validator address")
 		}

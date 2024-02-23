@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -56,7 +56,7 @@ func createTokenizeShareModuleAccount(recordID uint64) sdk.AccAddress {
 // Used to differentiate against liquid staking provider module account
 func createBaseAccount(ak accountkeeper.AccountKeeper, ctx sdk.Context, accountName string) sdk.AccAddress {
 	baseAccountAddress := sdk.AccAddress(accountName)
-	ak.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(baseAccountAddress))
+	ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, baseAccountAddress))
 	return baseAccountAddress
 }
 
@@ -68,7 +68,8 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 		stakingKeeper *keeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(
+		depinject.Configs(testutil.AppConfig, depinject.Supply(log.NewNopLogger())),
 		&accountKeeper,
 		&bankKeeper,
 		&stakingKeeper,
@@ -258,7 +259,8 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 		stakingKeeper *keeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(
+		depinject.Configs(testutil.AppConfig, depinject.Supply(log.NewNopLogger())),
 		&accountKeeper,
 		&bankKeeper,
 		&stakingKeeper,
@@ -303,7 +305,7 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 func TestRefreshTotalLiquidStaked(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	app, ctx := f.app, f.sdkCtx
+	ctx := f.sdkCtx
 
 	var (
 		accountKeeper = f.accountKeeper
@@ -443,7 +445,7 @@ func TestRefreshTotalLiquidStaked(t *testing.T) {
 	}
 
 	// Create validators based on the above (must use an actual validator address)
-	addresses := simapp.AddTestAddrsIncremental(app, ctx, 5, f.stakingKeeper.TokensFromConsensusPower(ctx, 300))
+	addresses := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 5, f.stakingKeeper.TokensFromConsensusPower(ctx, 300))
 	validatorAddresses := map[string]sdk.ValAddress{
 		"valA": sdk.ValAddress(addresses[0]),
 		"valB": sdk.ValAddress(addresses[1]),

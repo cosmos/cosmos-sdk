@@ -423,11 +423,11 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx context.Context, blockTime t
 	// iterators all time slices from time 0 until the current block time
 	prefixEnd := storetypes.InclusiveEndBytes(types.GetTokenizeShareAuthorizationTimeKey(blockTime))
 	iterator, err := store.Iterator(types.TokenizeSharesUnlockQueuePrefix, prefixEnd)
-	defer iterator.Close()
-
 	if err != nil {
 		return []string{}, err
 	}
+
+	defer iterator.Close()
 
 	// collect all unlocked addresses
 	unlockedAddresses := []string{}
@@ -446,7 +446,11 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx context.Context, blockTime t
 
 	// remove the lock from each unlocked address
 	for _, unlockedAddress := range unlockedAddresses {
-		k.RemoveTokenizeSharesLock(ctx, sdk.MustAccAddressFromBech32(unlockedAddress))
+		unlockedAddr, err := k.authKeeper.AddressCodec().StringToBytes(unlockedAddress)
+		if err != nil {
+			return unlockedAddresses, err
+		}
+		k.RemoveTokenizeSharesLock(ctx, unlockedAddr)
 	}
 
 	return unlockedAddresses, nil
@@ -478,7 +482,7 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx context.Context) error {
 	// Sum up the total liquid tokens and increment each validator's liquid shares
 	totalLiquidStakedTokens := math.ZeroInt()
 	for _, delegation := range delegations {
-		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 		if err != nil {
 			return err
 		}
@@ -488,7 +492,7 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx context.Context) error {
 		// Consequently, the global number of liquid staked tokens, and the total
 		// liquid shares on the validator should be incremented
 		if k.DelegatorIsLiquidStaker(delegatorAddress) {
-			validatorAddress, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+			validatorAddress, err := k.ValidatorAddressCodec().StringToBytes(delegation.ValidatorAddress)
 			if err != nil {
 				return err
 			}

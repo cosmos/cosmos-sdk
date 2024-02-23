@@ -239,11 +239,15 @@ func validateAmount(amount sdk.Coins) error {
 func (k msgServer) WithdrawTokenizeShareRecordReward(goCtx context.Context, msg *types.MsgWithdrawTokenizeShareRecordReward) (*types.MsgWithdrawTokenizeShareRecordRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	ownerAddr, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	ownerAddr, err := k.authKeeper.AddressCodec().StringToBytes(msg.OwnerAddress)
 	if err != nil {
 		return nil, err
 	}
 	amount, err := k.Keeper.WithdrawTokenizeShareRecordReward(ctx, ownerAddr, msg.RecordId)
+	if err != nil {
+		return nil, err
+	}
+
 	defer func() {
 		for _, a := range amount {
 			if a.Amount.IsInt64() {
@@ -263,7 +267,7 @@ func (k msgServer) WithdrawTokenizeShareRecordReward(goCtx context.Context, msg 
 func (k msgServer) WithdrawAllTokenizeShareRecordReward(goCtx context.Context, msg *types.MsgWithdrawAllTokenizeShareRecordReward) (*types.MsgWithdrawAllTokenizeShareRecordRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	ownerAddr, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	ownerAddr, err := k.authKeeper.AddressCodec().StringToBytes(msg.OwnerAddress)
 	if err != nil {
 		return nil, err
 	}

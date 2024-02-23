@@ -753,7 +753,7 @@ func (mr *MockStakingHooksMockRecorder) BeforeDelegationSharesModified(ctx, delA
 }
 
 // BeforeTokenizeShareRecordRemoved mocks base method.
-func (m *MockStakingHooks) BeforeTokenizeShareRecordRemoved(ctx types.Context, recordID uint64) error {
+func (m *MockStakingHooks) BeforeTokenizeShareRecordRemoved(ctx context.Context, recordID uint64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BeforeTokenizeShareRecordRemoved", ctx, recordID)
 	ret0, _ := ret[0].(error)

@@ -64,5 +64,5 @@ func MsgTokenizeSharesExec(clientCtx client.Context, from fmt.Stringer, valAddre
 
 	args = append(args, commonArgs...)
 	args = append(args, extraArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewTokenizeSharesCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewTokenizeSharesCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos")), args)
 }

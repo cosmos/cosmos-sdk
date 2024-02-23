@@ -1,21 +1,23 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -43,7 +45,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
 	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 5)
 
-	assert.NilError(t, banktestutil.FundModuleAccount(f.bankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 	f.accountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	moduleBalance := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
@@ -189,18 +191,22 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 }
 
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+
 	var (
-		stakingKeeper = app.StakingKeeper
+		stakingKeeper = f.stakingKeeper
 	)
 
-	liquidStakingCapStrict := sdk.ZeroDec()
-	liquidStakingCapConservative := sdk.MustNewDecFromStr("0.8")
-	liquidStakingCapDisabled := sdk.OneDec()
+	liquidStakingCapStrict := math.LegacyZeroDec()
+	liquidStakingCapConservative := math.LegacyMustNewDecFromStr("0.8")
+	liquidStakingCapDisabled := math.LegacyOneDec()
 
-	validatorBondStrict := sdk.OneDec()
-	validatorBondConservative := sdk.NewDec(10)
-	validatorBondDisabled := sdk.NewDec(-1)
+	validatorBondStrict := math.LegacyOneDec()
+	validatorBondConservative := math.LegacyNewDec(10)
+	validatorBondDisabled := math.LegacyNewDec(-1)
 
 	testCases := []struct {
 		name                          string
@@ -210,10 +216,10 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		redeemAmount                  math.Int
 		targetVestingDelAfterShare    math.Int
 		targetVestingDelAfterRedeem   math.Int
-		globalLiquidStakingCap        sdk.Dec
-		slashFactor                   sdk.Dec
-		validatorLiquidStakingCap     sdk.Dec
-		validatorBondFactor           sdk.Dec
+		globalLiquidStakingCap        math.LegacyDec
+		slashFactor                   math.LegacyDec
+		validatorLiquidStakingCap     math.LegacyDec
+		validatorBondFactor           math.LegacyDec
 		validatorBondDelegation       bool
 		validatorBondDelegatorIndex   int
 		delegatorIsLSTP               bool
@@ -224,11 +230,11 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	}{
 		{
 			name:                          "full amount tokenize and redeem",
-			vestingAmount:                 sdk.NewInt(0),
+			vestingAmount:                 math.NewInt(0),
 			delegationAmount:              stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  stakingKeeper.TokensFromConsensusPower(ctx, 20),
-			slashFactor:                   sdk.ZeroDec(),
+			slashFactor:                   math.LegacyZeroDec(),
 			globalLiquidStakingCap:        liquidStakingCapDisabled,
 			validatorLiquidStakingCap:     liquidStakingCapDisabled,
 			validatorBondFactor:           validatorBondDisabled,
@@ -240,11 +246,11 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                          "full amount tokenize and partial redeem",
-			vestingAmount:                 sdk.NewInt(0),
+			vestingAmount:                 math.NewInt(0),
 			delegationAmount:              stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                   sdk.ZeroDec(),
+			slashFactor:                   math.LegacyZeroDec(),
 			globalLiquidStakingCap:        liquidStakingCapDisabled,
 			validatorLiquidStakingCap:     liquidStakingCapDisabled,
 			validatorBondFactor:           validatorBondDisabled,
@@ -256,11 +262,11 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                          "partial amount tokenize and full redeem",
-			vestingAmount:                 sdk.NewInt(0),
+			vestingAmount:                 math.NewInt(0),
 			delegationAmount:              stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                  stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                   sdk.ZeroDec(),
+			slashFactor:                   math.LegacyZeroDec(),
 			globalLiquidStakingCap:        liquidStakingCapDisabled,
 			validatorLiquidStakingCap:     liquidStakingCapDisabled,
 			validatorBondFactor:           validatorBondDisabled,
@@ -272,11 +278,11 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                          "tokenize and redeem with slash",
-			vestingAmount:                 sdk.NewInt(0),
+			vestingAmount:                 math.NewInt(0),
 			delegationAmount:              stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                   sdk.MustNewDecFromStr("0.1"),
+			slashFactor:                   math.LegacyMustNewDecFromStr("0.1"),
 			globalLiquidStakingCap:        liquidStakingCapDisabled,
 			validatorLiquidStakingCap:     liquidStakingCapDisabled,
 			validatorBondFactor:           validatorBondDisabled,
@@ -288,11 +294,11 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                      "over tokenize",
-			vestingAmount:             sdk.NewInt(0),
+			vestingAmount:             math.NewInt(0),
 			delegationAmount:          stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:       stakingKeeper.TokensFromConsensusPower(ctx, 30),
 			redeemAmount:              stakingKeeper.TokensFromConsensusPower(ctx, 20),
-			slashFactor:               sdk.ZeroDec(),
+			slashFactor:               math.LegacyZeroDec(),
 			globalLiquidStakingCap:    liquidStakingCapDisabled,
 			validatorLiquidStakingCap: liquidStakingCapDisabled,
 			validatorBondFactor:       validatorBondDisabled,
@@ -302,11 +308,11 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                      "over redeem",
-			vestingAmount:             sdk.NewInt(0),
+			vestingAmount:             math.NewInt(0),
 			delegationAmount:          stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:       stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:              stakingKeeper.TokensFromConsensusPower(ctx, 40),
-			slashFactor:               sdk.ZeroDec(),
+			slashFactor:               math.LegacyZeroDec(),
 			globalLiquidStakingCap:    liquidStakingCapDisabled,
 			validatorLiquidStakingCap: liquidStakingCapDisabled,
 			validatorBondFactor:       validatorBondDisabled,
@@ -320,7 +326,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			delegationAmount:            stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:         stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 20),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapDisabled,
 			validatorLiquidStakingCap:   liquidStakingCapDisabled,
 			validatorBondFactor:         validatorBondDisabled,
@@ -337,7 +343,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapDisabled,
 			validatorLiquidStakingCap:   liquidStakingCapDisabled,
 			validatorBondFactor:         validatorBondDisabled,
@@ -354,7 +360,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapDisabled,
 			validatorLiquidStakingCap:   liquidStakingCapDisabled,
 			validatorBondFactor:         validatorBondConservative,
@@ -372,7 +378,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapDisabled,
 			validatorLiquidStakingCap:   liquidStakingCapDisabled,
 			validatorBondFactor:         validatorBondStrict,
@@ -389,7 +395,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapDisabled,
 			validatorLiquidStakingCap:   liquidStakingCapDisabled,
 			validatorBondFactor:         validatorBondConservative,
@@ -407,7 +413,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapStrict,
 			validatorLiquidStakingCap:   liquidStakingCapDisabled,
 			validatorBondFactor:         validatorBondDisabled,
@@ -425,7 +431,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapConservative,
 			validatorLiquidStakingCap:   liquidStakingCapDisabled,
 			validatorBondFactor:         validatorBondDisabled,
@@ -443,7 +449,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapDisabled,
 			validatorLiquidStakingCap:   liquidStakingCapStrict,
 			validatorBondFactor:         validatorBondDisabled,
@@ -461,7 +467,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapDisabled,
 			validatorLiquidStakingCap:   liquidStakingCapConservative,
 			validatorBondFactor:         validatorBondDisabled,
@@ -479,7 +485,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapConservative,
 			validatorLiquidStakingCap:   liquidStakingCapConservative,
 			validatorBondFactor:         validatorBondConservative,
@@ -491,13 +497,13 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                        "delegator is a liquid staking provider - accounting should not update",
-			vestingAmount:               sdk.ZeroInt(),
+			vestingAmount:               math.ZeroInt(),
 			delegationAmount:            stakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:         stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  stakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: stakingKeeper.TokensFromConsensusPower(ctx, 10),
-			slashFactor:                 sdk.ZeroDec(),
+			slashFactor:                 math.LegacyZeroDec(),
 			globalLiquidStakingCap:      liquidStakingCapConservative,
 			validatorLiquidStakingCap:   liquidStakingCapConservative,
 			validatorBondFactor:         validatorBondConservative,
@@ -512,11 +518,14 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, app, ctx := createTestInput(t)
+			t.Parallel()
+			f := initFixture(t)
+
+			ctx := f.sdkCtx
 			var (
-				bankKeeper    = app.BankKeeper
-				accountKeeper = app.AccountKeeper
-				stakingKeeper = app.StakingKeeper
+				bankKeeper    = f.bankKeeper
+				accountKeeper = f.accountKeeper
+				stakingKeeper = f.stakingKeeper
 			)
 			addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -526,8 +535,10 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			icaAccountAddress := createICAAccount(ctx, accountKeeper)
 
 			// Fund module account
-			delegationCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), tc.delegationAmount)
-			err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
+			bondDenom, err := stakingKeeper.BondDenom(ctx)
+			require.NoError(t, err)
+			delegationCoin := sdk.NewCoin(bondDenom, tc.delegationAmount)
+			err = bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
 			require.NoError(t, err)
 			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegationCoin))
 			require.NoError(t, err)
@@ -539,21 +550,23 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			}
 
 			// set validator bond factor and global liquid staking cap
-			params := stakingKeeper.GetParams(ctx)
+			params, err := stakingKeeper.GetParams(ctx)
+			require.NoError(t, err)
 			params.ValidatorBondFactor = tc.validatorBondFactor
 			params.GlobalLiquidStakingCap = tc.globalLiquidStakingCap
 			params.ValidatorLiquidStakingCap = tc.validatorLiquidStakingCap
 			stakingKeeper.SetParams(ctx, params)
 
 			// set the total liquid staked tokens
-			stakingKeeper.SetTotalLiquidStakedTokens(ctx, sdk.ZeroInt())
+			stakingKeeper.SetTotalLiquidStakedTokens(ctx, math.ZeroInt())
 
 			if !tc.vestingAmount.IsZero() {
 				// create vesting account
 				pubkey := secp256k1.GenPrivKey().PubKey()
 				baseAcc := authtypes.NewBaseAccount(addrAcc2, pubkey, 0, 0)
 				initialVesting := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tc.vestingAmount))
-				baseVestingWithCoins := vestingtypes.NewBaseVestingAccount(baseAcc, initialVesting, ctx.BlockTime().Unix()+86400*365)
+				baseVestingWithCoins, err := vestingtypes.NewBaseVestingAccount(baseAcc, initialVesting, ctx.BlockTime().Unix()+86400*365)
+				require.NoError(t, err)
 				delayedVestingAccount := vestingtypes.NewDelayedVestingAccountRaw(baseVestingWithCoins)
 				accountKeeper.SetAccount(ctx, delayedVestingAccount)
 			}
@@ -564,16 +577,16 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			// Create Validators and Delegation
 			val1 := testutil.NewValidator(t, addrVal1, pk1)
 			val1.Status = stakingtypes.Bonded
-			app.StakingKeeper.SetValidator(ctx, val1)
-			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-			err = app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			stakingKeeper.SetValidator(ctx, val1)
+			stakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+			err = stakingKeeper.SetValidatorByConsAddr(ctx, val1)
 			require.NoError(t, err)
 
 			val2 := testutil.NewValidator(t, addrVal2, pk2)
 			val2.Status = stakingtypes.Bonded
-			app.StakingKeeper.SetValidator(ctx, val2)
-			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
-			err = app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+			stakingKeeper.SetValidator(ctx, val2)
+			stakingKeeper.SetValidatorByPowerIndex(ctx, val2)
+			err = stakingKeeper.SetValidatorByConsAddr(ctx, val2)
 			require.NoError(t, err)
 
 			// Delegate from both the main delegator as well as a random account so there is a
@@ -584,28 +597,28 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			// apply TM updates
 			applyValidatorSetUpdates(t, ctx, stakingKeeper, -1)
 
-			_, found := stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
-			require.True(t, found, "delegation not found after delegate")
+			_, err = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
+			require.NoError(t, err, "delegation not found after delegate")
 
 			lastRecordID := stakingKeeper.GetLastTokenizeShareRecordID(ctx)
-			oldValidator, found := stakingKeeper.GetValidator(ctx, addrVal1)
-			require.True(t, found)
+			oldValidator, err := stakingKeeper.GetValidator(ctx, addrVal1)
+			require.NoError(t, err)
 
 			msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 			if tc.validatorBondDelegation {
 				err := delegateCoinsFromAccount(ctx, *stakingKeeper, addrs[tc.validatorBondDelegatorIndex], tc.delegationAmount, val1)
 				require.NoError(t, err)
-				_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+				_, err = msgServer.ValidatorBond(ctx, &types.MsgValidatorBond{
 					DelegatorAddress: addrs[tc.validatorBondDelegatorIndex].String(),
 					ValidatorAddress: addrVal1.String(),
 				})
 				require.NoError(t, err)
 			}
 
-			resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+			resp, err := msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 				DelegatorAddress:    delegatorAccount.String(),
 				ValidatorAddress:    addrVal1.String(),
-				Amount:              sdk.NewCoin(stakingKeeper.BondDenom(ctx), tc.tokenizeShareAmount),
+				Amount:              sdk.NewCoin(bondDenom, tc.tokenizeShareAmount),
 				TokenizedShareOwner: delegatorAccount.String(),
 			})
 			if tc.expTokenizeErr {
@@ -618,8 +631,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.Equal(t, lastRecordID+1, stakingKeeper.GetLastTokenizeShareRecordID(ctx))
 
 			// ensure validator's total tokens is consistent
-			newValidator, found := stakingKeeper.GetValidator(ctx, addrVal1)
-			require.True(t, found)
+			newValidator, err := stakingKeeper.GetValidator(ctx, addrVal1)
+			require.NoError(t, err)
 			require.Equal(t, oldValidator.Tokens, newValidator.Tokens)
 
 			// if the delegator was not a provider, check that the total liquid staked and validator liquid shares increased
@@ -636,58 +649,58 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			if tc.vestingAmount.IsPositive() {
 				acc := accountKeeper.GetAccount(ctx, addrAcc2)
 				vestingAcc := acc.(vesting.VestingAccount)
-				require.Equal(t, vestingAcc.GetDelegatedVesting().AmountOf(stakingKeeper.BondDenom(ctx)).String(), tc.targetVestingDelAfterShare.String())
+				require.Equal(t, vestingAcc.GetDelegatedVesting().AmountOf(bondDenom).String(), tc.targetVestingDelAfterShare.String())
 			}
 
 			if tc.prevAccountDelegationExists {
-				_, found = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
-				require.True(t, found, "delegation found after partial tokenize share")
+				_, err = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
+				require.NoError(t, err, "delegation found after partial tokenize share")
 			} else {
-				_, found = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
-				require.False(t, found, "delegation found after full tokenize share")
+				_, err = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
+				require.NoError(t, err, "delegation found after full tokenize share")
 			}
 
 			shareToken := bankKeeper.GetBalance(ctx, delegatorAccount, resp.Amount.Denom)
 			require.Equal(t, resp.Amount, shareToken)
-			_, found = stakingKeeper.GetValidator(ctx, addrVal1)
-			require.True(t, found, true, "validator not found")
+			_, err = stakingKeeper.GetValidator(ctx, addrVal1)
+			require.NoError(t, err, "validator not found")
 
 			records := stakingKeeper.GetAllTokenizeShareRecords(ctx)
 			require.Len(t, records, 1)
-			delegation, found := stakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
-			require.True(t, found, "delegation not found from tokenize share module account after tokenize share")
+			delegation, err := stakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
+			require.NoError(t, err, "delegation not found from tokenize share module account after tokenize share")
 
 			// slash before redeem
-			slashedTokens := sdk.ZeroInt()
+			slashedTokens := math.ZeroInt()
 			redeemedShares := tc.redeemAmount
 			redeemedTokens := tc.redeemAmount
 			if tc.slashFactor.IsPositive() {
 				consAddr, err := val1.GetConsAddr()
 				require.NoError(t, err)
 				ctx = ctx.WithBlockHeight(100)
-				val1, found = stakingKeeper.GetValidator(ctx, addrVal1)
-				require.True(t, found)
+				val1, err = stakingKeeper.GetValidator(ctx, addrVal1)
+				require.NoError(t, err)
 				power := stakingKeeper.TokensToConsensusPower(ctx, val1.Tokens)
 				stakingKeeper.Slash(ctx, consAddr, 10, power, tc.slashFactor)
-				slashedTokens = sdk.NewDecFromInt(val1.Tokens).Mul(tc.slashFactor).TruncateInt()
+				slashedTokens = math.LegacyNewDecFromInt(val1.Tokens).Mul(tc.slashFactor).TruncateInt()
 
 				val1, _ := stakingKeeper.GetValidator(ctx, addrVal1)
-				redeemedTokens = val1.TokensFromShares(sdk.NewDecFromInt(redeemedShares)).TruncateInt()
+				redeemedTokens = val1.TokensFromShares(math.LegacyNewDecFromInt(redeemedShares)).TruncateInt()
 			}
 
 			// get delegator balance and delegation
-			bondDenomAmountBefore := bankKeeper.GetBalance(ctx, delegatorAccount, stakingKeeper.BondDenom(ctx))
-			val1, found = stakingKeeper.GetValidator(ctx, addrVal1)
-			require.True(t, found)
-			delegation, found = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
-			if !found {
-				delegation = types.Delegation{Shares: sdk.ZeroDec()}
+			bondDenomAmountBefore := bankKeeper.GetBalance(ctx, delegatorAccount, bondDenom)
+			val1, err = stakingKeeper.GetValidator(ctx, addrVal1)
+			require.NoError(t, err)
+			delegation, err = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
+			if errors.Is(err, stakingtypes.ErrNoDelegation) {
+				delegation = types.Delegation{Shares: math.LegacyZeroDec()}
 			}
 			delAmountBefore := val1.TokensFromShares(delegation.Shares)
-			oldValidator, found = stakingKeeper.GetValidator(ctx, addrVal1)
-			require.True(t, found)
+			oldValidator, err = stakingKeeper.GetValidator(ctx, addrVal1)
+			require.NoError(t, err)
 
-			_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+			_, err = msgServer.RedeemTokensForShares(ctx, &types.MsgRedeemTokensForShares{
 				DelegatorAddress: delegatorAccount.String(),
 				Amount:           sdk.NewCoin(resp.Amount.Denom, tc.redeemAmount),
 			})
@@ -698,8 +711,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.NoError(t, err)
 
 			// ensure validator's total tokens is consistent
-			newValidator, found = stakingKeeper.GetValidator(ctx, addrVal1)
-			require.True(t, found)
+			newValidator, err = stakingKeeper.GetValidator(ctx, addrVal1)
+			require.NoError(t, err)
 			require.Equal(t, oldValidator.Tokens, newValidator.Tokens)
 
 			// if the delegator was not a liquid staking provider, check that the total liquid staked
@@ -707,7 +720,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			totalLiquidTokensAfterRedemption := stakingKeeper.GetTotalLiquidStakedTokens(ctx)
 			validatorLiquidSharesAfterRedemption := newValidator.LiquidShares
 			expectedLiquidTokens := totalLiquidTokensAfterTokenization.Sub(redeemedTokens).Sub(slashedTokens)
-			expectedLiquidShares := validatorLiquidSharesAfterTokenization.Sub(sdk.NewDecFromInt(redeemedShares))
+			expectedLiquidShares := validatorLiquidSharesAfterTokenization.Sub(math.LegacyNewDecFromInt(redeemedShares))
 			if !tc.delegatorIsLSTP {
 				require.Equal(t, expectedLiquidTokens.String(), totalLiquidTokensAfterRedemption.String(), "total liquid tokens after redemption")
 				require.Equal(t, expectedLiquidShares.String(), validatorLiquidSharesAfterRedemption.String(), "validator liquid shares after tokenization")
@@ -719,44 +732,44 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			if tc.vestingAmount.IsPositive() {
 				acc := accountKeeper.GetAccount(ctx, addrAcc2)
 				vestingAcc := acc.(vesting.VestingAccount)
-				require.Equal(t, vestingAcc.GetDelegatedVesting().AmountOf(stakingKeeper.BondDenom(ctx)).String(), tc.targetVestingDelAfterRedeem.String())
+				require.Equal(t, vestingAcc.GetDelegatedVesting().AmountOf(bondDenom).String(), tc.targetVestingDelAfterRedeem.String())
 			}
 
-			expectedDelegatedShares := sdk.NewDecFromInt(tc.delegationAmount.Sub(tc.tokenizeShareAmount).Add(tc.redeemAmount))
-			delegation, found = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
-			require.True(t, found, "delegation not found after redeem tokens")
+			expectedDelegatedShares := math.LegacyNewDecFromInt(tc.delegationAmount.Sub(tc.tokenizeShareAmount).Add(tc.redeemAmount))
+			delegation, err = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
+			require.NoError(t, err, "delegation not found after redeem tokens")
 			require.Equal(t, delegatorAccount.String(), delegation.DelegatorAddress)
 			require.Equal(t, addrVal1.String(), delegation.ValidatorAddress)
 			require.Equal(t, expectedDelegatedShares, delegation.Shares, "delegation shares after redeem")
 
 			// check delegator balance is not changed
-			bondDenomAmountAfter := bankKeeper.GetBalance(ctx, delegatorAccount, stakingKeeper.BondDenom(ctx))
+			bondDenomAmountAfter := bankKeeper.GetBalance(ctx, delegatorAccount, bondDenom)
 			require.Equal(t, bondDenomAmountAfter.Amount.String(), bondDenomAmountBefore.Amount.String())
 
 			// get delegation amount is changed correctly
-			val1, found = stakingKeeper.GetValidator(ctx, addrVal1)
-			require.True(t, found)
-			delegation, found = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
-			if !found {
-				delegation = types.Delegation{Shares: sdk.ZeroDec()}
+			val1, err = stakingKeeper.GetValidator(ctx, addrVal1)
+			require.NoError(t, err)
+			delegation, err = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
+			if errors.Is(err, stakingtypes.ErrNoDelegation) {
+				delegation = types.Delegation{Shares: math.LegacyZeroDec()}
 			}
 			delAmountAfter := val1.TokensFromShares(delegation.Shares)
-			require.Equal(t, delAmountAfter.String(), delAmountBefore.Add(sdk.NewDecFromInt(tc.redeemAmount).Mul(sdk.OneDec().Sub(tc.slashFactor))).String())
+			require.Equal(t, delAmountAfter.String(), delAmountBefore.Add(math.LegacyNewDecFromInt(tc.redeemAmount).Mul(math.LegacyOneDec().Sub(tc.slashFactor))).String())
 
 			shareToken = bankKeeper.GetBalance(ctx, delegatorAccount, resp.Amount.Denom)
 			require.Equal(t, shareToken.Amount.String(), tc.tokenizeShareAmount.Sub(tc.redeemAmount).String())
-			_, found = stakingKeeper.GetValidator(ctx, addrVal1)
-			require.True(t, found, true, "validator not found")
+			_, err = stakingKeeper.GetValidator(ctx, addrVal1)
+			require.NoError(t, err, "validator not found")
 
 			if tc.recordAccountDelegationExists {
-				_, found = stakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
-				require.True(t, found, "delegation not found from tokenize share module account after redeem partial amount")
+				_, err = stakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
+				require.NoError(t, err, "delegation not found from tokenize share module account after redeem partial amount")
 
 				records = stakingKeeper.GetAllTokenizeShareRecords(ctx)
 				require.Len(t, records, 1)
 			} else {
-				_, found = stakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
-				require.False(t, found, "delegation found from tokenize share module account after redeem full amount")
+				_, err = stakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
+				require.True(t, errors.Is(err, stakingtypes.ErrNoDelegation), "delegation found from tokenize share module account after redeem full amount")
 
 				records = stakingKeeper.GetAllTokenizeShareRecords(ctx)
 				require.Len(t, records, 0)
@@ -772,18 +785,18 @@ func setupTestTokenizeAndRedeemConversion(
 	bk bankkeeper.Keeper,
 	ctx sdk.Context,
 ) (delAddress sdk.AccAddress, valAddress sdk.ValAddress) {
-	addresses := simtestutil.AddTestAddrs(bk, sk, ctx, 2, sdk.NewInt(1_000_000))
+	addresses := simtestutil.AddTestAddrs(bk, sk, ctx, 2, math.NewInt(1_000_000))
 
 	pubKeys := simtestutil.CreateTestPubKeys(1)
 
 	delegatorAddress := addresses[0]
 	validatorAddress := sdk.ValAddress(addresses[1])
 
-	validator, err := stakingtypes.NewValidator(validatorAddress, pubKeys[0], stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(validatorAddress.String(), pubKeys[0], stakingtypes.Description{})
 	require.NoError(t, err)
-	validator.DelegatorShares = sdk.NewDec(1_000_000)
-	validator.Tokens = sdk.NewInt(1_000_000)
-	validator.LiquidShares = sdk.NewDec(0)
+	validator.DelegatorShares = math.LegacyNewDec(1_000_000)
+	validator.Tokens = math.NewInt(1_000_000)
+	validator.LiquidShares = math.LegacyNewDec(0)
 	validator.Status = types.Bonded
 
 	sk.SetValidator(ctx, validator)
@@ -796,11 +809,11 @@ func setupTestTokenizeAndRedeemConversion(
 // We'll do this in a way such that the exchange rate is not an even integer
 // and the shares associated with a delegation will have a long decimal
 func simulateSlashWithImprecision(t *testing.T, sk keeper.Keeper, ctx sdk.Context, valAddress sdk.ValAddress) {
-	validator, found := sk.GetValidator(ctx, valAddress)
-	require.True(t, found)
+	validator, err := sk.GetValidator(ctx, valAddress)
+	require.NoError(t, err)
 
-	slashMagnitude := sdk.MustNewDecFromStr("0.1111111111")
-	slashTokens := sdk.NewDecFromInt(validator.Tokens).Mul(slashMagnitude).TruncateInt()
+	slashMagnitude := math.LegacyMustNewDecFromStr("0.1111111111")
+	slashTokens := math.LegacyNewDecFromInt(validator.Tokens).Mul(slashMagnitude).TruncateInt()
 	validator.Tokens = validator.Tokens.Sub(slashTokens)
 
 	sk.SetValidator(ctx, validator)
@@ -811,34 +824,39 @@ func simulateSlashWithImprecision(t *testing.T, sk keeper.Keeper, ctx sdk.Contex
 // Note, in this example, there 2 tokens are lost during the decimal to int conversion
 // during the unbonding step within tokenization and redemption
 func TestTokenizeAndRedeemConversion_SlashBeforeDelegation(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
 	var (
-		stakingKeeper = app.StakingKeeper
-		bankKeeper    = app.BankKeeper
+		stakingKeeper = f.stakingKeeper
+		bankKeeper    = f.bankKeeper
 	)
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 	delegatorAddress, validatorAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
 
 	// slash the validator
 	simulateSlashWithImprecision(t, *stakingKeeper, ctx, validatorAddress)
-	validator, found := stakingKeeper.GetValidator(ctx, validatorAddress)
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidator(ctx, validatorAddress)
+	require.NoError(t, err)
 
 	// Delegate and confirm the delegation record was created
-	delegateAmount := sdk.NewInt(1000)
-	delegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
-	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+	delegateAmount := math.NewInt(1000)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
+	delegateCoin := sdk.NewCoin(bondDenom, delegateAmount)
+	_, err = msgServer.Delegate(ctx, &types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAddress.String(),
 		Amount:           delegateCoin,
 	})
 	require.NoError(t, err, "no error expected when delegating")
 
-	delegation, found := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
-	require.True(t, found, "delegation should have been found")
+	delegation, err := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
+	require.NoError(t, err, "delegation should have been found")
 
 	// Tokenize the full delegation amount
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    delegatorAddress.String(),
 		ValidatorAddress:    validatorAddress.String(),
 		Amount:              delegateCoin,
@@ -854,7 +872,7 @@ func TestTokenizeAndRedeemConversion_SlashBeforeDelegation(t *testing.T) {
 	require.Equal(t, expectedShareTokens, shareToken.Amount.Int64(), "share token amount")
 
 	// Redeem the share tokens
-	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+	_, err = msgServer.RedeemTokensForShares(ctx, &types.MsgRedeemTokensForShares{
 		DelegatorAddress: delegatorAddress.String(),
 		Amount:           shareToken,
 	})
@@ -862,8 +880,8 @@ func TestTokenizeAndRedeemConversion_SlashBeforeDelegation(t *testing.T) {
 
 	// Confirm (almost) the full delegation was recovered - minus the 2 tokens from the precision error
 	// (1 occurs during tokenization, and 1 occurs during redemption)
-	newDelegation, found := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
-	require.True(t, found)
+	newDelegation, err := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
+	require.NoError(t, err)
 
 	endDelegationTokens := validator.TokensFromShares(newDelegation.Shares).TruncateInt().Int64()
 	expectedDelegationTokens := delegateAmount.Int64() - 2
@@ -875,37 +893,42 @@ func TestTokenizeAndRedeemConversion_SlashBeforeDelegation(t *testing.T) {
 // Note, in this example, there 1 token lost during the decimal to int conversion
 // during the unbonding step within tokenization
 func TestTokenizeAndRedeemConversion_SlashBeforeTokenization(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
 	var (
-		stakingKeeper = app.StakingKeeper
-		bankKeeper    = app.BankKeeper
+		stakingKeeper = f.stakingKeeper
+		bankKeeper    = f.bankKeeper
 	)
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 	delegatorAddress, validatorAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
 
 	// Delegate and confirm the delegation record was created
-	delegateAmount := sdk.NewInt(1000)
-	delegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
-	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+	delegateAmount := math.NewInt(1000)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
+	delegateCoin := sdk.NewCoin(bondDenom, delegateAmount)
+	_, err = msgServer.Delegate(ctx, &types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAddress.String(),
 		Amount:           delegateCoin,
 	})
 	require.NoError(t, err, "no error expected when delegating")
 
-	_, found := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
-	require.True(t, found, "delegation should have been found")
+	_, err = stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
+	require.NoError(t, err, "delegation should have been found")
 
 	// slash the validator
 	simulateSlashWithImprecision(t, *stakingKeeper, ctx, validatorAddress)
-	validator, found := stakingKeeper.GetValidator(ctx, validatorAddress)
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidator(ctx, validatorAddress)
+	require.NoError(t, err)
 
 	// Tokenize the new amount after the slash
-	delegationAmountAfterSlash := validator.TokensFromShares(sdk.NewDecFromInt(delegateAmount)).TruncateInt()
-	tokenizationCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegationAmountAfterSlash)
+	delegationAmountAfterSlash := validator.TokensFromShares(math.LegacyNewDecFromInt(delegateAmount)).TruncateInt()
+	tokenizationCoin := sdk.NewCoin(bondDenom, delegationAmountAfterSlash)
 
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    delegatorAddress.String(),
 		ValidatorAddress:    validatorAddress.String(),
 		Amount:              tokenizationCoin,
@@ -922,15 +945,15 @@ func TestTokenizeAndRedeemConversion_SlashBeforeTokenization(t *testing.T) {
 	require.Equal(t, expectedShareTokens.TruncateInt().Int64()-1, shareToken.Amount.Int64(), "share token amount")
 
 	// // Redeem the share tokens
-	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+	_, err = msgServer.RedeemTokensForShares(ctx, &types.MsgRedeemTokensForShares{
 		DelegatorAddress: delegatorAddress.String(),
 		Amount:           shareToken,
 	})
 	require.NoError(t, err, "no error expected when redeeming")
 
 	// Confirm the full tokenization amount was recovered - minus the 1 token from the precision error
-	newDelegation, found := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
-	require.True(t, found)
+	newDelegation, err := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
+	require.NoError(t, err)
 
 	endDelegationTokens := validator.TokensFromShares(newDelegation.Shares).TruncateInt().Int64()
 	expectedDelegationTokens := delegationAmountAfterSlash.Int64() - 1
@@ -942,29 +965,34 @@ func TestTokenizeAndRedeemConversion_SlashBeforeTokenization(t *testing.T) {
 // Note, in this example, there 1 token lost during the decimal to int conversion
 // during the unbonding step within redemption
 func TestTokenizeAndRedeemConversion_SlashBeforeRedemption(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
 	var (
-		stakingKeeper = app.StakingKeeper
-		bankKeeper    = app.BankKeeper
+		stakingKeeper = f.stakingKeeper
+		bankKeeper    = f.bankKeeper
 	)
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 	delegatorAddress, validatorAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
 
 	// Delegate and confirm the delegation record was created
-	delegateAmount := sdk.NewInt(1000)
-	delegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
-	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+	delegateAmount := math.NewInt(1000)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
+	delegateCoin := sdk.NewCoin(bondDenom, delegateAmount)
+	_, err = msgServer.Delegate(ctx, &types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAddress.String(),
 		Amount:           delegateCoin,
 	})
 	require.NoError(t, err, "no error expected when delegating")
 
-	_, found := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
-	require.True(t, found, "delegation should have been found")
+	_, err = stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
+	require.NoError(t, err, "delegation should have been found")
 
 	// Tokenize the full delegation amount
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    delegatorAddress.String(),
 		ValidatorAddress:    validatorAddress.String(),
 		Amount:              delegateCoin,
@@ -982,11 +1010,11 @@ func TestTokenizeAndRedeemConversion_SlashBeforeRedemption(t *testing.T) {
 
 	// slash the validator
 	simulateSlashWithImprecision(t, *stakingKeeper, ctx, validatorAddress)
-	validator, found := stakingKeeper.GetValidator(ctx, validatorAddress)
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidator(ctx, validatorAddress)
+	require.NoError(t, err)
 
 	// Redeem the share tokens
-	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+	_, err = msgServer.RedeemTokensForShares(ctx, &types.MsgRedeemTokensForShares{
 		DelegatorAddress: delegatorAddress.String(),
 		Amount:           shareToken,
 	})
@@ -994,9 +1022,9 @@ func TestTokenizeAndRedeemConversion_SlashBeforeRedemption(t *testing.T) {
 
 	// Confirm the original delegation, minus the slash, was recovered
 	// There's an additional 1 token lost from precision error during unbonding
-	delegationAmountAfterSlash := validator.TokensFromShares(sdk.NewDecFromInt(delegateAmount)).TruncateInt().Int64()
-	newDelegation, found := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
-	require.True(t, found)
+	delegationAmountAfterSlash := validator.TokensFromShares(math.LegacyNewDecFromInt(delegateAmount)).TruncateInt().Int64()
+	newDelegation, err := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
+	require.NoError(t, err)
 
 	endDelegationTokens := validator.TokensFromShares(newDelegation.Shares).TruncateInt().Int64()
 	require.Equal(t, delegationAmountAfterSlash-1, endDelegationTokens, "final delegation tokens")
@@ -1007,12 +1035,13 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 		bankKeeper    bankkeeper.Keeper
 		stakingKeeper *keeper.Keeper
 	)
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(
+		depinject.Configs(testutil.AppConfig, depinject.Supply(log.NewNopLogger())),
 		&bankKeeper,
 		&stakingKeeper,
 	)
 	require.NoError(t, err)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 3, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
@@ -1022,7 +1051,7 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 	pubKeys := simtestutil.CreateTestPubKeys(1)
 	pk := pubKeys[0]
 
-	val, err := stakingtypes.NewValidator(addrVal, pk, stakingtypes.Description{})
+	val, err := stakingtypes.NewValidator(addrVal.String(), pk, stakingtypes.Description{})
 	require.NoError(t, err)
 
 	stakingKeeper.SetValidator(ctx, val)
@@ -1039,7 +1068,7 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = msgServer.TransferTokenizeShareRecord(sdk.WrapSDKContext(ctx), &types.MsgTransferTokenizeShareRecord{
+	_, err = msgServer.TransferTokenizeShareRecord(ctx, &types.MsgTransferTokenizeShareRecord{
 		TokenizeShareRecordId: 1,
 		Sender:                addrAcc1.String(),
 		NewOwner:              addrAcc2.String(),
@@ -1107,11 +1136,14 @@ func TestValidatorBond(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, app, ctx := createTestInput(t)
+			t.Parallel()
+			f := initFixture(t)
+
+			ctx := f.sdkCtx
 			var (
-				accountKeeper = app.AccountKeeper
-				stakingKeeper = app.StakingKeeper
-				bankKeeper    = app.BankKeeper
+				accountKeeper = f.accountKeeper
+				stakingKeeper = f.stakingKeeper
+				bankKeeper    = f.bankKeeper
 			)
 			pubKeys := simtestutil.CreateTestPubKeys(2)
 
@@ -1129,9 +1161,11 @@ func TestValidatorBond(t *testing.T) {
 
 			// Fund the delegator
 			delegationAmount := stakingKeeper.TokensFromConsensusPower(ctx, 20)
-			coins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegationAmount))
+			bondDenom, err := stakingKeeper.BondDenom(ctx)
+			require.NoError(t, err)
+			coins := sdk.NewCoins(sdk.NewCoin(bondDenom, delegationAmount))
 
-			err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+			err = bankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 			require.NoError(t, err, "no error expected when minting")
 
 			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delegatorAddress, coins)
@@ -1139,7 +1173,7 @@ func TestValidatorBond(t *testing.T) {
 
 			// Create Validator and delegation
 			if tc.createValidator {
-				validator, err := stakingtypes.NewValidator(validatorAddress, validatorPubKey, stakingtypes.Description{})
+				validator, err := stakingtypes.NewValidator(validatorAddress.String(), validatorPubKey, stakingtypes.Description{})
 				require.NoError(t, err)
 				validator.Status = stakingtypes.Bonded
 				stakingKeeper.SetValidator(ctx, validator)
@@ -1154,8 +1188,8 @@ func TestValidatorBond(t *testing.T) {
 
 					// Optionally, convert the delegation into a validator bond
 					if tc.alreadyValidatorBond {
-						delegation, found := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
-						require.True(t, found, "delegation should have been found")
+						delegation, err := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
+						require.NoError(t, err, "delegation should have been found")
 
 						delegation.ValidatorBond = true
 						stakingKeeper.SetDelegation(ctx, delegation)
@@ -1165,7 +1199,7 @@ func TestValidatorBond(t *testing.T) {
 
 			// Call ValidatorBond
 			msgServer := keeper.NewMsgServerImpl(stakingKeeper)
-			_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+			_, err = msgServer.ValidatorBond(ctx, &types.MsgValidatorBond{
 				DelegatorAddress: delegatorAddress.String(),
 				ValidatorAddress: validatorAddress.String(),
 			})
@@ -1176,13 +1210,13 @@ func TestValidatorBond(t *testing.T) {
 				require.NoError(t, err, "no error expected from validator bond transaction")
 
 				// check validator bond true
-				delegation, found := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
-				require.True(t, found, "delegation should have been found after validator bond")
+				delegation, err := stakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
+				require.NoError(t, err, "delegation should have been found after validator bond")
 				require.True(t, delegation.ValidatorBond, "delegation should be marked as a validator bond")
 
 				// check validator bond shares
-				validator, found := stakingKeeper.GetValidator(ctx, validatorAddress)
-				require.True(t, found, "validator should have been found after validator bond")
+				validator, err := stakingKeeper.GetValidator(ctx, validatorAddress)
+				require.NoError(t, err, "validator should have been found after validator bond")
 
 				if tc.alreadyValidatorBond {
 					require.True(t, validator.ValidatorBondShares.IsZero(), "validator bond shares should still be zero")
@@ -1196,20 +1230,23 @@ func TestValidatorBond(t *testing.T) {
 }
 
 func TestChangeValidatorBond(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
 	var (
-		stakingKeeper = app.StakingKeeper
-		bankKeeper    = app.BankKeeper
+		stakingKeeper = f.stakingKeeper
+		bankKeeper    = f.bankKeeper
 	)
 
 	checkValidatorBondShares := func(validatorAddress sdk.ValAddress, expectedShares math.Int) {
-		validator, found := stakingKeeper.GetValidator(ctx, validatorAddress)
-		require.True(t, found, "validator should have been found")
+		validator, err := stakingKeeper.GetValidator(ctx, validatorAddress)
+		require.NoError(t, err, "validator should have been found")
 		require.Equal(t, expectedShares.Int64(), validator.ValidatorBondShares.TruncateInt64(), "validator bond shares")
 	}
 
 	// Create a delegator and 3 validators
-	addresses := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 4, sdk.NewInt(1_000_000))
+	addresses := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 4, math.NewInt(1_000_000))
 	pubKeys := simtestutil.CreateTestPubKeys(4)
 
 	validatorAPubKey := pubKeys[1]
@@ -1221,75 +1258,77 @@ func TestChangeValidatorBond(t *testing.T) {
 	validatorBAddress := sdk.ValAddress(validatorBPubKey.Address())
 	validatorCAddress := sdk.ValAddress(validatorCPubKey.Address())
 
-	validatorA, err := stakingtypes.NewValidator(validatorAAddress, validatorAPubKey, stakingtypes.Description{})
+	validatorA, err := stakingtypes.NewValidator(validatorAAddress.String(), validatorAPubKey, stakingtypes.Description{})
 	require.NoError(t, err)
-	validatorB, err := stakingtypes.NewValidator(validatorBAddress, validatorBPubKey, stakingtypes.Description{})
+	validatorB, err := stakingtypes.NewValidator(validatorBAddress.String(), validatorBPubKey, stakingtypes.Description{})
 	require.NoError(t, err)
-	validatorC, err := stakingtypes.NewValidator(validatorCAddress, validatorCPubKey, stakingtypes.Description{})
+	validatorC, err := stakingtypes.NewValidator(validatorCAddress.String(), validatorCPubKey, stakingtypes.Description{})
 	require.NoError(t, err)
 
-	validatorA.Tokens = sdk.NewInt(1_000_000)
-	validatorB.Tokens = sdk.NewInt(1_000_000)
-	validatorC.Tokens = sdk.NewInt(1_000_000)
-	validatorA.DelegatorShares = sdk.NewDec(1_000_000)
-	validatorB.DelegatorShares = sdk.NewDec(1_000_000)
-	validatorC.DelegatorShares = sdk.NewDec(1_000_000)
+	validatorA.Tokens = math.NewInt(1_000_000)
+	validatorB.Tokens = math.NewInt(1_000_000)
+	validatorC.Tokens = math.NewInt(1_000_000)
+	validatorA.DelegatorShares = math.LegacyNewDec(1_000_000)
+	validatorB.DelegatorShares = math.LegacyNewDec(1_000_000)
+	validatorC.DelegatorShares = math.LegacyNewDec(1_000_000)
 
 	stakingKeeper.SetValidator(ctx, validatorA)
 	stakingKeeper.SetValidator(ctx, validatorB)
 	stakingKeeper.SetValidator(ctx, validatorC)
 
 	// The test will go through Delegate/Redelegate/Undelegate messages with the following
-	delegation1Amount := sdk.NewInt(1000)
-	delegation2Amount := sdk.NewInt(1000)
-	redelegateAmount := sdk.NewInt(500)
-	undelegateAmount := sdk.NewInt(500)
+	delegation1Amount := math.NewInt(1000)
+	delegation2Amount := math.NewInt(1000)
+	redelegateAmount := math.NewInt(500)
+	undelegateAmount := math.NewInt(500)
 
-	delegate1Coin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegation1Amount)
-	delegate2Coin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegation2Amount)
-	redelegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), redelegateAmount)
-	undelegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), undelegateAmount)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
+	delegate1Coin := sdk.NewCoin(bondDenom, delegation1Amount)
+	delegate2Coin := sdk.NewCoin(bondDenom, delegation2Amount)
+	redelegateCoin := sdk.NewCoin(bondDenom, redelegateAmount)
+	undelegateCoin := sdk.NewCoin(bondDenom, undelegateAmount)
 
 	// Delegate to validator's A and C - validator bond shares should not change
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+	_, err = msgServer.Delegate(ctx, &types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAAddress.String(),
 		Amount:           delegate1Coin,
 	})
 	require.NoError(t, err, "no error expected during first delegation")
 
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+	_, err = msgServer.Delegate(ctx, &types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorCAddress.String(),
 		Amount:           delegate1Coin,
 	})
 	require.NoError(t, err, "no error expected during first delegation")
 
-	checkValidatorBondShares(validatorAAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorCAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorAAddress, math.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, math.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, math.ZeroInt())
 
 	// Flag the the delegations to validator A and C validator bond's
 	// Their bond shares should increase
-	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+	_, err = msgServer.ValidatorBond(ctx, &types.MsgValidatorBond{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAAddress.String(),
 	})
 	require.NoError(t, err, "no error expected during validator bond")
 
-	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+	_, err = msgServer.ValidatorBond(ctx, &types.MsgValidatorBond{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorCAddress.String(),
 	})
 	require.NoError(t, err, "no error expected during validator bond")
 
 	checkValidatorBondShares(validatorAAddress, delegation1Amount)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, math.ZeroInt())
 	checkValidatorBondShares(validatorCAddress, delegation1Amount)
 
 	// Delegate more to validator A - it should increase the validator bond shares
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+	_, err = msgServer.Delegate(ctx, &types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAAddress.String(),
 		Amount:           delegate2Coin,
@@ -1297,12 +1336,12 @@ func TestChangeValidatorBond(t *testing.T) {
 	require.NoError(t, err, "no error expected during second delegation")
 
 	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount))
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, math.ZeroInt())
 	checkValidatorBondShares(validatorCAddress, delegation1Amount)
 
 	// Redelegate partially from A to B (where A is a validator bond and B is not)
 	// It should remove the bond shares from A, and B's validator bond shares should not change
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
 		DelegatorAddress:    delegatorAddress.String(),
 		ValidatorSrcAddress: validatorAAddress.String(),
 		ValidatorDstAddress: validatorBAddress.String(),
@@ -1312,12 +1351,12 @@ func TestChangeValidatorBond(t *testing.T) {
 
 	expectedBondSharesA := delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount)
 	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, math.ZeroInt())
 	checkValidatorBondShares(validatorCAddress, delegation1Amount)
 
 	// Now redelegate from B to C (where B is not a validator bond, but C is)
 	// Validator B's bond shares should remain at zero, but C's bond shares should increase
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
 		DelegatorAddress:    delegatorAddress.String(),
 		ValidatorSrcAddress: validatorBAddress.String(),
 		ValidatorDstAddress: validatorCAddress.String(),
@@ -1326,12 +1365,12 @@ func TestChangeValidatorBond(t *testing.T) {
 	require.NoError(t, err, "no error expected during redelegation")
 
 	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, math.ZeroInt())
 	checkValidatorBondShares(validatorCAddress, delegation1Amount.Add(redelegateAmount))
 
 	// Redelegate partially from A to C (where C is a validator bond delegation)
 	// It should remove the bond shares from A, and increase the bond shares on validator C
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
 		DelegatorAddress:    delegatorAddress.String(),
 		ValidatorSrcAddress: validatorAAddress.String(),
 		ValidatorDstAddress: validatorCAddress.String(),
@@ -1342,11 +1381,11 @@ func TestChangeValidatorBond(t *testing.T) {
 	expectedBondSharesA = expectedBondSharesA.Sub(redelegateAmount)
 	expectedBondSharesC := delegation1Amount.Add(redelegateAmount).Add(redelegateAmount)
 	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, math.ZeroInt())
 	checkValidatorBondShares(validatorCAddress, expectedBondSharesC)
 
 	// Undelegate from validator A - it should remove shares
-	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &types.MsgUndelegate{
+	_, err = msgServer.Undelegate(ctx, &types.MsgUndelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAAddress.String(),
 		Amount:           undelegateCoin,
@@ -1355,30 +1394,35 @@ func TestChangeValidatorBond(t *testing.T) {
 
 	expectedBondSharesA = expectedBondSharesA.Sub(undelegateAmount)
 	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, math.ZeroInt())
 	checkValidatorBondShares(validatorCAddress, expectedBondSharesC)
 }
 
 func TestEnableDisableTokenizeShares(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
 	var (
-		stakingKeeper = app.StakingKeeper
-		bankKeeper    = app.BankKeeper
+		stakingKeeper = f.stakingKeeper
+		bankKeeper    = f.bankKeeper
 	)
 	// Create a delegator and validator
-	stakeAmount := sdk.NewInt(1000)
-	stakeToken := sdk.NewCoin(stakingKeeper.BondDenom(ctx), stakeAmount)
+	stakeAmount := math.NewInt(1000)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
+	stakeToken := sdk.NewCoin(bondDenom, stakeAmount)
 
 	addresses := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, stakeAmount)
 	delegatorAddress := addresses[0]
 
 	pubKeys := simtestutil.CreateTestPubKeys(1)
 	validatorAddress := sdk.ValAddress(addresses[1])
-	validator, err := stakingtypes.NewValidator(validatorAddress, pubKeys[0], stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(validatorAddress.String(), pubKeys[0], stakingtypes.Description{})
 	require.NoError(t, err)
 
-	validator.DelegatorShares = sdk.NewDec(1_000_000)
-	validator.Tokens = sdk.NewInt(1_000_000)
+	validator.DelegatorShares = math.LegacyNewDec(1_000_000)
+	validator.Tokens = math.NewInt(1_000_000)
 	validator.Status = types.Bonded
 	stakingKeeper.SetValidator(ctx, validator)
 
@@ -1387,7 +1431,8 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	ctx = ctx.WithBlockTime(blockTime)
 
 	unbondingPeriod := time.Hour * 24
-	params := stakingKeeper.GetParams(ctx)
+	params, err := stakingKeeper.GetParams(ctx)
+	require.NoError(t, err)
 	params.UnbondingTime = unbondingPeriod
 	stakingKeeper.SetParams(ctx, params)
 	unlockTime := blockTime.Add(unbondingPeriod)
@@ -1416,11 +1461,11 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 	// Delegate normally
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &delegateMsg)
+	_, err = msgServer.Delegate(ctx, &delegateMsg)
 	require.NoError(t, err, "no error expected when delegating")
 
 	// Tokenize shares - it should succeed
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
+	_, err = msgServer.TokenizeShares(ctx, &tokenizeMsg)
 	require.NoError(t, err, "no error expected when tokenizing shares for the first time")
 
 	liquidToken := bankKeeper.GetBalance(ctx, delegatorAddress, validatorAddress.String()+"/1")
@@ -1428,32 +1473,32 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 
 	// Redeem to remove all tokenized shares
 	redeemMsg.Amount = liquidToken
-	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &redeemMsg)
+	_, err = msgServer.RedeemTokensForShares(ctx, &redeemMsg)
 	require.NoError(t, err, "no error expected when redeeming")
 
 	// Attempt to enable tokenizing shares when there is no lock in place, it should error
-	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
+	_, err = msgServer.EnableTokenizeShares(ctx, &enableMsg)
 	require.ErrorIs(t, err, types.ErrTokenizeSharesAlreadyEnabledForAccount)
 
 	// Attempt to disable when no lock is in place, it should succeed
-	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
+	_, err = msgServer.DisableTokenizeShares(ctx, &disableMsg)
 	require.NoError(t, err, "no error expected when disabling tokenization")
 
 	// Disabling again while the lock is already in place, should error
-	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
+	_, err = msgServer.DisableTokenizeShares(ctx, &disableMsg)
 	require.ErrorIs(t, err, types.ErrTokenizeSharesAlreadyDisabledForAccount)
 
 	// Attempt to tokenize, it should fail since tokenization is disabled
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
+	_, err = msgServer.TokenizeShares(ctx, &tokenizeMsg)
 	require.ErrorIs(t, err, types.ErrTokenizeSharesDisabledForAccount)
 
 	// Now enable tokenization
-	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
+	_, err = msgServer.EnableTokenizeShares(ctx, &enableMsg)
 	require.NoError(t, err, "no error expected when enabling tokenization")
 
 	// Attempt to tokenize again, it should still fail since the unbonding period has
 	// not passed and the lock is still active
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
+	_, err = msgServer.TokenizeShares(ctx, &tokenizeMsg)
 	require.ErrorIs(t, err, types.ErrTokenizeSharesDisabledForAccount)
 	require.ErrorContains(t, err, fmt.Sprintf("tokenization will be allowed at %s",
 		blockTime.Add(unbondingPeriod)))
@@ -1464,14 +1509,14 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 		"pending tokenize share authorizations")
 
 	// Disable tokenization again - it should remove the pending record from the queue
-	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
+	_, err = msgServer.DisableTokenizeShares(ctx, &disableMsg)
 	require.NoError(t, err, "no error expected when re-enabling tokenization")
 
 	authorizations = stakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, unlockTime)
 	require.Empty(t, authorizations.Addresses, "there should be no pending authorizations in the queue")
 
 	// Enable one more time
-	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
+	_, err = msgServer.EnableTokenizeShares(ctx, &enableMsg)
 	require.NoError(t, err, "no error expected when enabling tokenization again")
 
 	// Increment the block time by the unbonding period and remove the expired locks
@@ -1479,7 +1524,7 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	stakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, ctx.BlockTime())
 
 	// Attempt to tokenize again, it should succeed this time since the lock has expired
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
+	_, err = msgServer.TokenizeShares(ctx, &tokenizeMsg)
 	require.NoError(t, err, "no error expected when tokenizing after lock has expired")
 }
 
@@ -1489,12 +1534,13 @@ func TestUnbondValidator(t *testing.T) {
 		stakingKeeper *keeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(
+		depinject.Configs(testutil.AppConfig, depinject.Supply(log.NewNopLogger())),
 		&bankKeeper,
 		&stakingKeeper,
 	)
 	require.NoError(t, err)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
@@ -1505,7 +1551,7 @@ func TestUnbondValidator(t *testing.T) {
 	pk1 := pubKeys[0]
 
 	// Create Validators and Delegation
-	val1, err := stakingtypes.NewValidator(addrVal1, pk1, stakingtypes.Description{})
+	val1, err := stakingtypes.NewValidator(addrVal1.String(), pk1, stakingtypes.Description{})
 	require.NoError(t, err)
 	val1.Status = stakingtypes.Bonded
 	stakingKeeper.SetValidator(ctx, val1)
@@ -1515,53 +1561,58 @@ func TestUnbondValidator(t *testing.T) {
 
 	// try unbonding not available validator
 	msgServer = keeper.NewMsgServerImpl(stakingKeeper)
-	_, err = msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), &types.MsgUnbondValidator{
+	_, err = msgServer.UnbondValidator(ctx, &types.MsgUnbondValidator{
 		ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
 	})
 	require.Error(t, err)
 
 	// unbond validator
-	_, err = msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), &types.MsgUnbondValidator{
+	_, err = msgServer.UnbondValidator(ctx, &types.MsgUnbondValidator{
 		ValidatorAddress: addrVal1.String(),
 	})
 	require.NoError(t, err)
 
 	// check if validator is jailed
-	validator, found := stakingKeeper.GetValidator(ctx, addrVal1)
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidator(ctx, addrVal1)
+	require.NoError(t, err)
 	require.True(t, validator.Jailed)
 }
 
 // TestICADelegateUndelegate tests that an ICA account can undelegate
 // sequentially right after delegating.
 func TestICADelegateUndelegate(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
 	var (
-		accountKeeper = app.AccountKeeper
-		stakingKeeper = app.StakingKeeper
-		bankKeeper    = app.BankKeeper
+		accountKeeper = f.accountKeeper
+		stakingKeeper = f.stakingKeeper
+		bankKeeper    = f.bankKeeper
 	)
 
 	// Create a delegator and validator (the delegator will be an ICA account)
-	delegateAmount := sdk.NewInt(1000)
-	delegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
+	delegateAmount := math.NewInt(1000)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
+	delegateCoin := sdk.NewCoin(bondDenom, delegateAmount)
 	icaAccountAddress := createICAAccount(ctx, accountKeeper)
 
 	// Fund ICA account
-	err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegateCoin))
+	err = bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegateCoin))
 	require.NoError(t, err)
 	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegateCoin))
 	require.NoError(t, err)
 
-	addresses := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(0))
+	addresses := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, math.NewInt(0))
 	pubKeys := simtestutil.CreateTestPubKeys(1)
 	validatorAddress := sdk.ValAddress(addresses[0])
-	validator, err := stakingtypes.NewValidator(validatorAddress, pubKeys[0], stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(validatorAddress.String(), pubKeys[0], stakingtypes.Description{})
 	require.NoError(t, err)
 
-	validator.DelegatorShares = sdk.NewDec(1_000_000)
-	validator.Tokens = sdk.NewInt(1_000_000)
-	validator.LiquidShares = sdk.NewDec(0)
+	validator.DelegatorShares = math.LegacyNewDec(1_000_000)
+	validator.Tokens = math.NewInt(1_000_000)
+	validator.LiquidShares = math.LegacyNewDec(0)
 	stakingKeeper.SetValidator(ctx, validator)
 
 	delegateMsg := types.MsgDelegate{
@@ -1579,37 +1630,37 @@ func TestICADelegateUndelegate(t *testing.T) {
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 
 	// Delegate normally
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &delegateMsg)
+	_, err = msgServer.Delegate(ctx, &delegateMsg)
 	require.NoError(t, err, "no error expected when delegating")
 
 	// Confirm delegation record
-	_, found := stakingKeeper.GetDelegation(ctx, icaAccountAddress, validatorAddress)
-	require.True(t, found, "delegation should have been found")
+	_, err = stakingKeeper.GetDelegation(ctx, icaAccountAddress, validatorAddress)
+	require.NoError(t, err, "delegation should have been found")
 
 	// Confirm liquid staking totals were incremented
 	expectedTotalLiquidStaked := delegateAmount.Int64()
 	actualTotalLiquidStaked := stakingKeeper.GetTotalLiquidStakedTokens(ctx).Int64()
 	require.Equal(t, expectedTotalLiquidStaked, actualTotalLiquidStaked, "total liquid staked tokens after delegation")
 
-	validator, found = stakingKeeper.GetValidator(ctx, validatorAddress)
-	require.True(t, found, "validator should have been found")
-	require.Equal(t, sdk.NewDecFromInt(delegateAmount), validator.LiquidShares, "validator liquid shares after delegation")
+	validator, err = stakingKeeper.GetValidator(ctx, validatorAddress)
+	require.NoError(t, err, "validator should have been found")
+	require.Equal(t, math.LegacyNewDecFromInt(delegateAmount), validator.LiquidShares, "validator liquid shares after delegation")
 
 	// Try to undelegate
-	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &undelegateMsg)
+	_, err = msgServer.Undelegate(ctx, &undelegateMsg)
 	require.NoError(t, err, "no error expected when sequentially undelegating")
 
 	// Confirm delegation record was removed
-	_, found = stakingKeeper.GetDelegation(ctx, icaAccountAddress, validatorAddress)
-	require.False(t, found, "delegation not have been found")
+	_, err = stakingKeeper.GetDelegation(ctx, icaAccountAddress, validatorAddress)
+	require.True(t, errors.Is(err, stakingtypes.ErrNoDelegation), "delegation have been found")
 
 	// Confirm liquid staking totals were decremented
 	actualTotalLiquidStaked = stakingKeeper.GetTotalLiquidStakedTokens(ctx).Int64()
 	require.Zero(t, actualTotalLiquidStaked, "total liquid staked tokens after undelegation")
 
-	validator, found = stakingKeeper.GetValidator(ctx, validatorAddress)
-	require.True(t, found, "validator should have been found")
-	require.Equal(t, sdk.ZeroDec(), validator.LiquidShares, "validator liquid shares after undelegation")
+	validator, err = stakingKeeper.GetValidator(ctx, validatorAddress)
+	require.NoError(t, err, "validator should have been found")
+	require.Equal(t, math.LegacyZeroDec(), validator.LiquidShares, "validator liquid shares after undelegation")
 }
 
 // Helper function to create 32-length account
@@ -1620,9 +1671,9 @@ func createICAAccount(ctx sdk.Context, ak accountkeeper.AccountKeeper) sdk.AccAd
 	portID := icahost
 
 	moduleAddress := authtypes.NewModuleAddress(icahost)
-	icaAddress := sdk.AccAddress(address.Derive(moduleAddress, []byte(connectionID+portID)))
+	icaAddress := sdk.AccAddress(sdkaddress.Derive(moduleAddress, []byte(connectionID+portID)))
 
-	account := authtypes.NewBaseAccountWithAddress(icaAddress)
+	account := ak.NewAccountWithAddress(ctx, icaAddress)
 	ak.SetAccount(ctx, account)
 
 	return icaAddress

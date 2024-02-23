@@ -18,6 +18,8 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
+	fundAccounts(t, f.sdkCtx, f.bankKeeper)
+
 	valAddr2 := sdk.ValAddress(sdk.AccAddress(PKS[1].Address()))
 
 	valAddrs := []sdk.ValAddress{f.valAddr, valAddr2}

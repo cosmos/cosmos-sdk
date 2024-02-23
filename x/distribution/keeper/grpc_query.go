@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	goerrors "errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -378,13 +379,13 @@ func (k Keeper) TokenizeShareRecordReward(c context.Context, req *types.QueryTok
 	totalRewards := sdk.DecCoins{}
 	rewards := []types.TokenizeShareRecordReward{}
 
-	ownerAddr, err := sdk.AccAddressFromBech32(req.OwnerAddress)
+	ownerAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.OwnerAddress)
 	if err != nil {
 		return nil, err
 	}
 	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
 	for _, record := range records {
-		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(record.Validator)
 		if err != nil {
 			return nil, err
 		}
@@ -393,17 +394,27 @@ func (k Keeper) TokenizeShareRecordReward(c context.Context, req *types.QueryTok
 		moduleBalance := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
 		moduleBalanceDecCoins := sdk.NewDecCoinsFromCoins(moduleBalance...)
 
+		validatorFound := true
 		val, err := k.stakingKeeper.Validator(ctx, valAddr)
 		if err != nil {
-			return nil, err
+			if !goerrors.Is(err, stakingtypes.ErrNoValidatorFound) {
+				return nil, err
+			}
+
+			validatorFound = false
 		}
 
+		delegationFound := true
 		del, err := k.stakingKeeper.Delegation(ctx, moduleAddr, valAddr)
 		if err != nil {
-			return nil, err
+			if !goerrors.Is(err, stakingtypes.ErrNoDelegation) {
+				return nil, err
+			}
+
+			delegationFound = false
 		}
 
-		if val != nil && del != nil {
+		if validatorFound && delegationFound {
 			// withdraw rewards
 			endingPeriod, err := k.IncrementValidatorPeriod(ctx, val)
 			if err != nil {

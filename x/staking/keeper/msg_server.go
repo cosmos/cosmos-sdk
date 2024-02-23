@@ -733,8 +733,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 // a validator from bonded to unbonding
 // This allows a validator to stop their services and jail themselves without
 // experiencing a slash
-func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (k msgServer) UnbondValidator(ctx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
 	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
@@ -767,6 +766,15 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
+	}
+
+	_, err = k.authKeeper.AddressCodec().StringToBytes(msg.TokenizedShareOwner)
+	if err != nil {
+		return nil, err
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid shares amount")
 	}
 
 	// Check if the delegator has disabled tokenization
@@ -928,6 +936,10 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 		return nil, err
 	}
 
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid shares amount")
+	}
+
 	shareToken := msg.Amount
 	balance := k.bankKeeper.GetBalance(ctx, delegatorAddress, shareToken.Denom)
 	if balance.Amount.LT(shareToken.Amount) {
@@ -987,7 +999,7 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 
 	// Note: since delegation object has been changed from unbond call, it gets latest delegation
 	_, err = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
-	if !errors.Is(err, types.ErrNoDelegation) {
+	if err != nil && !errors.Is(err, types.ErrNoDelegation) {
 		return nil, err
 	}
 
@@ -1095,9 +1107,7 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 }
 
 // DisableTokenizeShares prevents an address from tokenizing any of their delegations
-func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDisableTokenizeShares) (*types.MsgDisableTokenizeSharesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (k msgServer) DisableTokenizeShares(ctx context.Context, msg *types.MsgDisableTokenizeShares) (*types.MsgDisableTokenizeSharesResponse, error) {
 	delegator, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		panic(err)
@@ -1123,9 +1133,7 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 
 // EnableTokenizeShares begins the countdown after which tokenizing shares by the
 // sender address is re-allowed, which will complete after the unbonding period
-func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEnableTokenizeShares) (*types.MsgEnableTokenizeSharesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (k msgServer) EnableTokenizeShares(ctx context.Context, msg *types.MsgEnableTokenizeShares) (*types.MsgEnableTokenizeSharesResponse, error) {
 	delegator, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		panic(err)

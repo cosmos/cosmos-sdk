@@ -111,7 +111,7 @@ func (k Keeper) AddTokenizeShareRecord(ctx context.Context, tokenizeShareRecord 
 
 	k.setTokenizeShareRecord(ctx, tokenizeShareRecord)
 
-	owner, err := sdk.AccAddressFromBech32(tokenizeShareRecord.Owner)
+	owner, err := k.authKeeper.AddressCodec().StringToBytes(tokenizeShareRecord.Owner)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (k Keeper) DeleteTokenizeShareRecord(ctx context.Context, recordID uint64) 
 	if err != nil {
 		return err
 	}
-	owner, err := sdk.AccAddressFromBech32(record.Owner)
+	owner, err := k.authKeeper.AddressCodec().StringToBytes(record.Owner)
 	if err != nil {
 		return err
 	}

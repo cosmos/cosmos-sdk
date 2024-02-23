@@ -92,7 +92,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		s.Require().NoError(s.network.WaitForNextBlock())
 	}
 
-	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
+	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5))
 
 	// unbonding the amount
 	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)

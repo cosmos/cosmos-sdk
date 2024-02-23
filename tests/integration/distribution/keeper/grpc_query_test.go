@@ -602,6 +602,8 @@ func TestGRPCTokenizeShareRecordReward(t *testing.T) {
 	f := initFixture(t)
 	ctx := f.sdkCtx
 
+	fundAccounts(t, ctx, f.bankKeeper)
+
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 

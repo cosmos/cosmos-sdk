@@ -27,7 +27,6 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	poolKeeper    types.PoolKeeper
-	logger        log.Logger
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -76,7 +75,6 @@ func NewKeeper(
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		poolKeeper:       pk,
-		logger:           env.Logger,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),

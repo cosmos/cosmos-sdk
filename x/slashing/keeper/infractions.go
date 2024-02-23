@@ -11,6 +11,11 @@ import (
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
 func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Address, power int64, signed bool) {
+	params := k.GetParams(ctx)
+	k.HandleValidatorSignatureWithParams(ctx, params, addr, power, signed)
+}
+
+func (k Keeper) HandleValidatorSignatureWithParams(ctx sdk.Context, params types.Params, addr cryptotypes.Address, power int64, signed bool) {
 	logger := k.Logger(ctx)
 	height := ctx.BlockHeight()
 
@@ -28,9 +33,14 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
 
-	// this is a relative index, so it counts blocks the validator *should* have signed
-	// will use the 0-value default signing info if not present, except for start height
-	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
+	signedBlocksWindow := params.SignedBlocksWindow
+
+	// Compute the relative index, so we count the blocks the validator *should*
+	// have signed. We will use the 0-value default signing info if not present,
+	// except for start height. The index is in the range [0, SignedBlocksWindow)
+	// and is used to see if a validator signed a block at the given height, which
+	// is represented by a bit in the bitmap.
+	index := signInfo.IndexOffset % signedBlocksWindow
 	signInfo.IndexOffset++
 
 	// Update signed block bit array & counter
@@ -51,7 +61,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 		// Array value at this index has not changed, no need to update counter
 	}
 
-	minSignedPerWindow := k.MinSignedPerWindow(ctx)
+	minSignedPerWindow := params.MinSignedPerWindowInt()
 
 	if missed {
 		ctx.EventManager().EmitEvent(

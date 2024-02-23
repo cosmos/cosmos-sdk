@@ -178,15 +178,15 @@ func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, 
 
 	validatorUpdates := make([]appmodule.ValidatorUpdate, len(cometValidatorUpdates))
 	for i, v := range cometValidatorUpdates {
-		if len(v.PubKey.GetEd25519()) > 0 {
+		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
 			validatorUpdates[i] = appmodule.ValidatorUpdate{
-				PubKey:     v.PubKey.GetEd25519(),
+				PubKey:     ed25519,
 				PubKeyType: "ed25519",
 				Power:      v.Power,
 			}
-		} else if len(v.PubKey.GetSecp256K1()) > 0 {
+		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
 			validatorUpdates[i] = appmodule.ValidatorUpdate{
-				PubKey:     v.PubKey.GetSecp256K1(),
+				PubKey:     secp256k1,
 				PubKeyType: "secp256k1",
 				Power:      v.Power,
 			}

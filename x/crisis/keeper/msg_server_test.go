@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModule{})
 	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", sdk.AccAddress([]byte("addr1_______________")).String(), addresscodec.NewBech32Codec("cosmos"))
 
 	s.ctx = testCtx.Ctx
@@ -51,7 +51,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 	err := s.keeper.ConstantFee.Set(s.ctx, constantFee)
 	s.Require().NoError(err)
 
-	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModule{})
 	kr := keyring.NewInMemory(encCfg.Codec)
 	testutil.CreateKeyringAccounts(s.T(), kr, 1)
 

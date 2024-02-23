@@ -29,7 +29,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -132,7 +132,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -238,7 +238,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -365,7 +365,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -465,7 +465,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -543,7 +543,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -662,7 +662,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -802,7 +802,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -1004,7 +1004,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)

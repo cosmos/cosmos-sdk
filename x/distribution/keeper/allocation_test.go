@@ -31,7 +31,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -91,7 +91,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -223,7 +223,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)

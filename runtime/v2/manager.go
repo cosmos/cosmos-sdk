@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
@@ -151,7 +150,7 @@ func (m *MM) BeginBlock() func(ctx context.Context) error {
 
 // EndBlock runs the end-block logic of all modules and tx validator updates
 func (m *MM) EndBlock() (endblock func(ctx context.Context) error, valupdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)) {
-	validatorUpdates := []abci.ValidatorUpdate{}
+	validatorUpdates := []appmodule.ValidatorUpdate{}
 
 	endBlock := func(ctx context.Context) error {
 		for _, moduleName := range m.config.EndBlockers {
@@ -172,49 +171,35 @@ func (m *MM) EndBlock() (endblock func(ctx context.Context) error, valupdate fun
 						return errors.New("validator end block updates already set by a previous module")
 					}
 
-					for _, updates := range moduleValUpdates {
-						validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
-					}
+					validatorUpdates = append(validatorUpdates, moduleValUpdates...)
 				}
-			} else {
-				continue
 			}
 		}
 
 		return nil
 	}
 
-	valUpdate := func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
-		valUpdates := []appmodule.ValidatorUpdate{}
-
-		// get validator updates of legacy modules using HasABCIEndBlock
-		for i, v := range validatorUpdates {
-			valUpdates[i] = appmodule.ValidatorUpdate{
-				PubKey: v.PubKey.GetEd25519(),
-				Power:  v.Power,
-			}
-		}
-
+	valUpdateFunc := func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 		// get validator updates of modules implementing directly the new HasUpdateValidators interface
 		for _, v := range m.modules {
 			if module, ok := v.(appmodule.HasUpdateValidators); ok {
-				up, err := module.UpdateValidators(ctx)
+				validatorUpdate, err := module.UpdateValidators(ctx)
 				if err != nil {
 					return nil, err
 				}
 
-				if len(valUpdates) > 0 {
+				if len(validatorUpdates) > 0 && len(validatorUpdate) > 0 {
 					return nil, errors.New("validator end block updates already set by a previous module")
 				}
 
-				valUpdates = append(valUpdates, up...)
+				validatorUpdates = append(validatorUpdates, validatorUpdate...)
 			}
 		}
 
-		return valUpdates, nil
+		return validatorUpdates, nil
 	}
 
-	return endBlock, valUpdate
+	return endBlock, valUpdateFunc
 }
 
 // PreBlocker runs the pre-block logic of all modules

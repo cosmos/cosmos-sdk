@@ -27,6 +27,7 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -118,14 +119,10 @@ type HasServices interface {
 	RegisterServices(Configurator)
 }
 
-// HasABCIEndblock is a released typo of HasABCIEndBlock.
-// Deprecated: use HasABCIEndBlock instead.
-type HasABCIEndblock HasABCIEndBlock
-
 // HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
 type HasABCIEndBlock interface {
 	AppModule
-	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
+	EndBlock(context.Context) ([]appmodule.ValidatorUpdate, error)
 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
@@ -734,7 +731,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 // modules.
 func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
-	validatorUpdates := []abci.ValidatorUpdate{}
+	validatorUpdates := []appmodule.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
@@ -754,17 +751,37 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 					return sdk.EndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
 				}
 
-				for _, updates := range moduleValUpdates {
-					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
-				}
+				validatorUpdates = append(validatorUpdates, moduleValUpdates...)
 			}
-		} else {
-			continue
+		}
+	}
+
+	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
+	for i, v := range validatorUpdates {
+		var pubkey cmtcryptoproto.PublicKey
+		switch v.PubKeyType {
+		case "ed25519":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Ed25519{
+					Ed25519: v.PubKey,
+				},
+			}
+		case "secp256k1":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
+					Secp256K1: v.PubKey,
+				},
+			}
+		}
+
+		cometValidatorUpdates[i] = abci.ValidatorUpdate{
+			PubKey: pubkey,
+			Power:  v.Power,
 		}
 	}
 
 	return sdk.EndBlock{
-		ValidatorUpdates: validatorUpdates,
+		ValidatorUpdates: cometValidatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}, nil
 }

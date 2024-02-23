@@ -599,7 +599,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, err
 	}
 
-	// get previous params params
+	// get previous staking params
 	previousParams, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, err

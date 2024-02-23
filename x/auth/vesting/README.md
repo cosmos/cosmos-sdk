@@ -6,7 +6,8 @@ sidebar_position: 1
 
 :::warning
 This module is deprecated in favor of x/accounts.
-The creation of vesting account using x/auth/vesting, is not possible since v0.51
+The creation of vesting account, using x/auth/vesting, is not possible since v0.51.
+For existing chains, importing the x/auth/vesting module is still required for backward compatibility purposes.
 :::
 
 * [Intro and Requirements](#intro-and-requirements)

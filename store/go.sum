@@ -46,8 +46,8 @@ github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=
 github.com/cosmos/gogoproto v1.4.11 h1:LZcMHrx4FjUgrqQSWeaGC1v/TeuVFqSLa43CC6aWR2g=
 github.com/cosmos/gogoproto v1.4.11/go.mod h1:/g39Mh8m17X8Q/GDEs5zYTSNaNnInBSohtaxzQnYq1Y=
-github.com/cosmos/iavl v1.0.0-beta.1.0.20240125174944-11ba4961dae9 h1:guolkG50C5Pfk/+iHXbRg20DhkDkDMHmJVXtzS67FME=
-github.com/cosmos/iavl v1.0.0-beta.1.0.20240125174944-11ba4961dae9/go.mod h1:JDw0feJTylH9iDDzi8sWeJO0xrf3qajxebBMnWA6iz4=
+github.com/cosmos/iavl v1.0.1 h1:D+mYbcRO2wptYzOM1Hxl9cpmmHU1ZEt9T2Wv5nZTeUw=
+github.com/cosmos/iavl v1.0.1/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=
 github.com/cosmos/ics23/go v0.10.0/go.mod h1:ZfJSmng/TBNTBkFemHHHj5YY7VAU/MBU980F4VU1NG0=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=

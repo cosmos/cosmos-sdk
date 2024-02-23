@@ -182,16 +182,18 @@ func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdate
 		// get validator updates of modules implementing directly the new HasUpdateValidators interface
 		for _, v := range m.modules {
 			if module, ok := v.(appmodule.HasUpdateValidators); ok {
-				validatorUpdate, err := module.UpdateValidators(ctx)
+				moduleValUpdates, err := module.UpdateValidators(ctx)
 				if err != nil {
 					return nil, err
 				}
 
-				if len(validatorUpdates) > 0 {
-					return nil, errors.New("validator end block updates already set by a previous module")
-				}
+				if len(moduleValUpdates) > 0 {
+					if len(validatorUpdates) > 0 {
+						return nil, errors.New("validator end block updates already set by a previous module")
+					}
 
-				validatorUpdates = append(validatorUpdates, validatorUpdate...)
+					validatorUpdates = append(validatorUpdates, moduleValUpdates...)
+				}
 			}
 		}
 

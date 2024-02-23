@@ -1027,10 +1027,13 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
 	require := s.Require()
 
+	// create validators to test commission rate
+	// TODO
+
 	testCases := []struct {
 		name      string
 		input     *types.MsgUpdateParams
-		expErr    bool
+		postCheck func()
 		expErrMsg string
 	}{
 		{
@@ -1039,7 +1042,15 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Authority: keeper.GetAuthority(),
 				Params:    types.DefaultParams(),
 			},
-			expErr: false,
+			postCheck: func() {
+				vals, err := keeper.GetAllValidators(ctx)
+				require.NoError(err)
+				require.Len(vals, 6)
+				for _, val := range vals {
+					require.True(val.Commission.Rate.GTE(types.DefaultParams().MinCommissionRate))
+					require.True(val.Commission.MaxRate.GTE(types.DefaultParams().MinCommissionRate))
+				}
+			},
 		},
 		{
 			name: "invalid authority",
@@ -1047,7 +1058,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Authority: "invalid",
 				Params:    types.DefaultParams(),
 			},
-			expErr:    true,
 			expErrMsg: "invalid authority",
 		},
 		{
@@ -1063,7 +1073,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
-			expErr:    true,
 			expErrMsg: "minimum commission rate cannot be negative",
 		},
 		{
@@ -1079,7 +1088,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
-			expErr:    true,
 			expErrMsg: "minimum commission rate cannot be greater than 100%",
 		},
 		{
@@ -1095,7 +1103,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         "",
 				},
 			},
-			expErr:    true,
 			expErrMsg: "bond denom cannot be blank",
 		},
 		{
@@ -1111,7 +1118,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
-			expErr:    true,
 			expErrMsg: "max validators must be positive",
 		},
 		{
@@ -1127,7 +1133,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
-			expErr:    true,
 			expErrMsg: "max entries must be positive",
 		},
 		{
@@ -1143,7 +1148,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         "denom",
 				},
 			},
-			expErr:    true,
 			expErrMsg: "unbonding time must be positive",
 		},
 	}
@@ -1152,11 +1156,15 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.UpdateParams(ctx, tc.input)
-			if tc.expErr {
+			if tc.expErrMsg != "" {
 				require.Error(err)
 				require.Contains(err.Error(), tc.expErrMsg)
 			} else {
 				require.NoError(err)
+
+				if tc.postCheck != nil {
+					tc.postCheck()
+				}
 			}
 		})
 	}

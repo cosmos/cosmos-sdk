@@ -27,6 +27,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* []() Governance change of `MinCommissionRate` in `MsgUpdateParams`, now updates the minimum commission rate for all validators.
+
 ### Improvements
 
 * [#19277](https://github.com/cosmos/cosmos-sdk/pull/19277) Hooks calls on `SetUnbondingDelegationEntry`, `SetRedelegationEntry`, `Slash` and `RemoveValidator` returns errors instead of logging just like other hooks calls.

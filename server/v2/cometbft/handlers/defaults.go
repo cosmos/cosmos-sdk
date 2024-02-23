@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	abci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	"github.com/cosmos/gogoproto/proto" // TODO: use protov2
 
-	abci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/core/transaction"
-
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/core/appmanager"
 )

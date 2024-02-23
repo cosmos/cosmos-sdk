@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	sdkabci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -17,7 +18,6 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	sdkabci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"

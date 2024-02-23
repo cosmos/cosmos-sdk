@@ -191,7 +191,6 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 
 // InitChain implements types.Application.
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-
 	// TODO: won't work for now
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,

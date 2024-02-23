@@ -69,6 +69,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Block:     defaultConsensusParams.Block,
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
+					Abci:      defaultConsensusParams.Abci,
 				}
 				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
@@ -79,6 +80,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 					Version:   defaultConsensusParams.Version,
+					Abci:      defaultConsensusParams.Abci,
 				},
 			},
 			true,
@@ -150,6 +152,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    false,
 			expErrMsg: "",
@@ -161,6 +164,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "block.MaxBytes must be -1 or greater than 0. Got -10",
@@ -172,6 +176,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "invalid authority",
@@ -183,6 +188,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  nil,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "all parameters must be present",
@@ -194,6 +200,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     nil,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "all parameters must be present",
@@ -205,6 +212,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: nil,
 				Evidence:  defaultConsensusParams.Evidence,
+				Abci:      defaultConsensusParams.Abci,
 			},
 			expErr:    true,
 			expErrMsg: "all parameters must be present",
@@ -229,6 +237,112 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				s.Require().Equal(tc.input.Block, res.Params.Block)
 				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)
 				s.Require().Equal(tc.input.Validator, res.Params.Validator)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetParams() {
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
+	testCases := []struct {
+		name      string
+		input     *types.ConsensusMsgParams
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "valid params",
+			input: &types.ConsensusMsgParams{
+				Abci:      defaultConsensusParams.Abci,
+				Version:   &cmtproto.VersionParams{App: 1},
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
+		{
+			name: "invalid  params",
+			input: &types.ConsensusMsgParams{
+				Abci:      defaultConsensusParams.Abci,
+				Version:   &cmtproto.VersionParams{App: 1},
+				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+			},
+			expErr:    true,
+			expErrMsg: "block.MaxBytes must be -1 or greater than 0. Got -10",
+		},
+		{
+			name: "nil version params",
+			input: &types.ConsensusMsgParams{
+				Abci:      defaultConsensusParams.Abci,
+				Version:   nil,
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+			},
+			expErr:    true,
+			expErrMsg: "all parameters must be present",
+		},
+		{
+			name: "nil evidence params",
+			input: &types.ConsensusMsgParams{
+				Abci:      defaultConsensusParams.Abci,
+				Version:   &cmtproto.VersionParams{App: 1},
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  nil,
+			},
+			expErr:    true,
+			expErrMsg: "all parameters must be present",
+		},
+		{
+			name: "nil block params",
+			input: &types.ConsensusMsgParams{
+				Abci:      defaultConsensusParams.Abci,
+				Version:   &cmtproto.VersionParams{App: 1},
+				Block:     nil,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+			},
+			expErr:    true,
+			expErrMsg: "all parameters must be present",
+		},
+		{
+			name: "nil validator params",
+			input: &types.ConsensusMsgParams{
+				Abci:      defaultConsensusParams.Abci,
+				Version:   &cmtproto.VersionParams{App: 1},
+				Block:     defaultConsensusParams.Block,
+				Validator: nil,
+				Evidence:  defaultConsensusParams.Evidence,
+			},
+			expErr:    true,
+			expErrMsg: "all parameters must be present",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			_, err := s.consensusParamsKeeper.SetParams(s.ctx, tc.input)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+
+				res, err := s.consensusParamsKeeper.Params(s.ctx, &types.QueryParamsRequest{})
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.input.Abci, res.Params.Abci)
+				s.Require().Equal(tc.input.Block, res.Params.Block)
+				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)
+				s.Require().Equal(tc.input.Validator, res.Params.Validator)
+				s.Require().Equal(tc.input.Version, res.Params.Version)
 			}
 		})
 	}

@@ -610,7 +610,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, err
 	}
 
-	// when min comission rate is updated, we need to update the commission rate of all validators
+	// when min commission rate is updated, we need to update the commission rate of all validators
 	if !previousParams.MinCommissionRate.Equal(msg.Params.MinCommissionRate) {
 		minRate := msg.Params.MinCommissionRate
 

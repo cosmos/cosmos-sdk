@@ -1027,8 +1027,17 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
 	require := s.Require()
 
-	// create validators to test commission rate
-	// TODO
+	// create validator to test commission rate
+	pk := ed25519.GenPrivKey().PubKey()
+	require.NotNil(pk)
+	comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, types.NotBondedPoolName, gomock.Any()).AnyTimes()
+	msg, err := types.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	require.NoError(err)
+	_, err = msgServer.CreateValidator(ctx, msg)
+	require.NoError(err)
+	paramsWithUpdatedMinCommissionRate := types.DefaultParams()
+	paramsWithUpdatedMinCommissionRate.MinCommissionRate = math.LegacyNewDecWithPrec(5, 2)
 
 	testCases := []struct {
 		name      string
@@ -1043,13 +1052,26 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Params:    types.DefaultParams(),
 			},
 			postCheck: func() {
+				// verify that the commission isn't changed
 				vals, err := keeper.GetAllValidators(ctx)
 				require.NoError(err)
-				require.Len(vals, 6)
-				for _, val := range vals {
-					require.True(val.Commission.Rate.GTE(types.DefaultParams().MinCommissionRate))
-					require.True(val.Commission.MaxRate.GTE(types.DefaultParams().MinCommissionRate))
-				}
+				require.Len(vals, 1)
+				require.True(vals[0].Commission.Rate.Equal(comm.Rate))
+				require.True(vals[0].Commission.MaxRate.GTE(comm.MaxRate))
+			},
+		},
+		{
+			name: "valid params with updated min commission rate",
+			input: &types.MsgUpdateParams{
+				Authority: keeper.GetAuthority(),
+				Params:    paramsWithUpdatedMinCommissionRate,
+			},
+			postCheck: func() {
+				vals, err := keeper.GetAllValidators(ctx)
+				require.NoError(err)
+				require.Len(vals, 1)
+				require.True(vals[0].Commission.Rate.GTE(paramsWithUpdatedMinCommissionRate.MinCommissionRate))
+				require.True(vals[0].Commission.MaxRate.GTE(paramsWithUpdatedMinCommissionRate.MinCommissionRate))
 			},
 		},
 		{

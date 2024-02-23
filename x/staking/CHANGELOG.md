@@ -27,7 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* []() Governance change of `MinCommissionRate` in `MsgUpdateParams`, now updates the minimum commission rate for all validators.
+* [#19537](https://github.com/cosmos/cosmos-sdk/pull/19537) Changing `MinCommissionRate` in `MsgUpdateParams` now updates the minimum commission rate for all validators.
 
 ### Improvements
 

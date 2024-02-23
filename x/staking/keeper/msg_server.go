@@ -623,7 +623,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 			// set the commission rate to min rate
 			if val.Commission.CommissionRates.Rate.LT(minRate) {
 				val.Commission.CommissionRates.Rate = minRate
-				// set the max rate to minRate if it is less than minRate
+				// set the max rate to minRate if it is less than min rate
 				if val.Commission.CommissionRates.MaxRate.LT(minRate) {
 					val.Commission.CommissionRates.MaxRate = minRate
 				}

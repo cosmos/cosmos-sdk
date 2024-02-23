@@ -43,7 +43,7 @@ When creating a testnet the important part is migrate the validator set from man
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-	bech32Addr, err := bech32.ConvertAndEncode("merlinvaloper", bz)
+	bech32Addr, err := bech32.ConvertAndEncode("simvaloper", bz)
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
@@ -135,21 +135,21 @@ It is useful to create new accounts for your testing purposes. This avoids the n
   // BANK
 	//
 
-	defaultCoins := sdk.NewCoins(sdk.NewInt64Coin("umerlin", 1000000000000))
+	defaultCoins := sdk.NewCoins(sdk.NewInt64Coin("ustake", 1000000000000))
 
 	localMerlinAccounts := []sdk.AccAddress{
-		sdk.MustAccAddressFromBech32("merlin12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
-		sdk.MustAccAddressFromBech32("merlin1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"),
-		sdk.MustAccAddressFromBech32("merlin18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv"),
-		sdk.MustAccAddressFromBech32("merlin1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka"),
-		sdk.MustAccAddressFromBech32("merlin14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53"),
-		sdk.MustAccAddressFromBech32("merlin12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t"),
-		sdk.MustAccAddressFromBech32("merlin1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq"),
-		sdk.MustAccAddressFromBech32("merlin10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0"),
-		sdk.MustAccAddressFromBech32("merlin1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
-		sdk.MustAccAddressFromBech32("merlin1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
-		sdk.MustAccAddressFromBech32("merlin14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
-		sdk.MustAccAddressFromBech32("merlin1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
+		sdk.MustAccAddressFromBech32("cosmos12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+		sdk.MustAccAddressFromBech32("cosmos1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"),
+		sdk.MustAccAddressFromBech32("cosmos18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv"),
+		sdk.MustAccAddressFromBech32("cosmos1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka"),
+		sdk.MustAccAddressFromBech32("cosmos14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53"),
+		sdk.MustAccAddressFromBech32("cosmos12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t"),
+		sdk.MustAccAddressFromBech32("cosmos1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq"),
+		sdk.MustAccAddressFromBech32("cosmos10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0"),
+		sdk.MustAccAddressFromBech32("cosmos1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
+		sdk.MustAccAddressFromBech32("cosmos1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
+		sdk.MustAccAddressFromBech32("cosmos14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
+		sdk.MustAccAddressFromBech32("cosmos1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
 
   // Fund localMerlin accounts
 	for _, account := range localMerlinAccounts {
@@ -194,22 +194,22 @@ Before we can run the testnet we must plug everything together.
 
 in `root.go`, in the `initRootCmd` function we add:
 
-```go
-  server.AddCommands(rootCmd, merlin.DefaultNodeHome, newApp, createMerlinAppAndExport, addModuleInitFlags)
-	++ server.AddTestnetCreatorCommand(rootCmd, merlin.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
+```diff
+  server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createMerlinAppAndExport, addModuleInitFlags)
+	++ server.AddTestnetCreatorCommand(rootCmd, simapp.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
 ```
 
-Next we will add a newTestnetCommand helper function:
+Next we will add a newTestnetApp helper function:
 
-```go
+```diff
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
 // for a testnet to be created from the provided app.
 func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	// Create an app and type cast to an MerlinApp
 	app := newApp(logger, db, traceStore, appOpts)
-	merlinApp, ok := app.(*merlin.MerlinApp)
+	simApp, ok := app.(*simapp.SimApp)
 	if !ok {
-		panic("app created from newApp is not of type merlinApp")
+		panic("app created from newApp is not of type simApp")
 	}
 
 	newValAddr, ok := appOpts.Get(server.KeyNewValAddr).(bytes.HexBytes)
@@ -230,6 +230,6 @@ func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, ap
 	}
 
 	// Make modifications to the normal MerlinApp required to run the network locally
-	return meriln.InitMerlinAppForTestnet(merlinApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
+	return meriln.InitMerlinAppForTestnet(simApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
 }
 ```

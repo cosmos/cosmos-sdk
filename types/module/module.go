@@ -582,6 +582,9 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 // MigrationHandler is the migration function that each module registers.
 type MigrationHandler func(ctx sdk.Context) error
 
+// VersionMap is a map of moduleName -> version
+type VersionMap = appmodule.VersionMap
+
 // RunMigrations performs in-place store migrations for all modules. This
 // function MUST be called inside an x/upgrade UpgradeHandler.
 //

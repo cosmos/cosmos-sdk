@@ -246,13 +246,13 @@ func (s *KeeperTestSuite) TestSetParams() {
 	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
 	testCases := []struct {
 		name      string
-		input     *types.ConMsgParams
+		input     *types.ConsensusMsgParams
 		expErr    bool
 		expErrMsg string
 	}{
 		{
 			name: "valid params",
-			input: &types.ConMsgParams{
+			input: &types.ConsensusMsgParams{
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,
@@ -264,7 +264,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		},
 		{
 			name: "invalid  params",
-			input: &types.ConMsgParams{
+			input: &types.ConsensusMsgParams{
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
@@ -276,7 +276,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		},
 		{
 			name: "nil version params",
-			input: &types.ConMsgParams{
+			input: &types.ConsensusMsgParams{
 				Abci:      defaultConsensusParams.Abci,
 				Version:   nil,
 				Block:     defaultConsensusParams.Block,
@@ -288,7 +288,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		},
 		{
 			name: "nil evidence params",
-			input: &types.ConMsgParams{
+			input: &types.ConsensusMsgParams{
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,
@@ -300,7 +300,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		},
 		{
 			name: "nil block params",
-			input: &types.ConMsgParams{
+			input: &types.ConsensusMsgParams{
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     nil,
@@ -312,7 +312,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		},
 		{
 			name: "nil validator params",
-			input: &types.ConMsgParams{
+			input: &types.ConsensusMsgParams{
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,

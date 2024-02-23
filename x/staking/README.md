@@ -776,6 +776,7 @@ When this message is processed the following actions occur:
 
 The `MsgUpdateParams` update the staking module parameters.
 The params are updated through a governance proposal where the signer is the gov module account address.
+When the `MinCommissionRate` is updated, all validators with a lower (max) commission rate than `MinCommissionRate` will be updated to `MinCommissionRate`.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L182-L195
@@ -1036,6 +1037,10 @@ The staking module contains the following parameters:
 | MinCommissionRate      | string           | "0.000000000000000000" |
 | KeyRotationFee         | sdk.Coin         | "1000000stake"         |
 | MaxConsPubkeyRotations | int              | 1                      |
+
+:::warning
+Manually updating the `MinCommissionRate` parameter will not affect the commission rate of the existing validators. It will only affect the commission rate of the new validators. Update the parameter with `MsgUpdateParams` to affect the commission rate of the existing validators as well.
+:::
 
 ## Client
 

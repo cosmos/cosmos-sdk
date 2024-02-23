@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
@@ -37,10 +38,10 @@ var (
 	_ module.HasABCIGenesis        = AppModule{}
 	_ module.HasABCIEndBlock       = AppModule{}
 
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasMigrations   = AppModule{}
+	_ appmodulev2.AppModule       = AppModule{}
+	_ appmodulev2.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices       = AppModule{}
+	_ appmodulev2.HasMigrations   = AppModule{}
 
 	_ depinject.OnePerModuleType = AppModule{}
 )

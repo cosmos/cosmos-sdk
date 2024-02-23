@@ -6,7 +6,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,7 +25,7 @@ var (
 	_ module.HasGRPCGateway        = AppModule{}
 	_ module.HasRegisterInterfaces = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodulev2.AppModule = AppModule{}
 )
 
 // AppModule implements an application module

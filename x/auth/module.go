@@ -36,10 +36,10 @@ var (
 	_ module.HasName             = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 
-	_ appmodule.AppModule                         = AppModule{}
+	_ appmodulev2.AppModule                       = AppModule{}
 	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
 	_ appmodule.HasServices                       = AppModule{}
-	_ appmodule.HasMigrations                     = AppModule{}
+	_ appmodulev2.HasMigrations                   = AppModule{}
 )
 
 // AppModule implements an application module for the auth module.

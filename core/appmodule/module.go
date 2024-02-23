@@ -28,10 +28,6 @@ type HasBeginBlocker = appmodule.HasBeginBlocker
 // custom logic after transaction processing in a block.
 type HasEndBlocker = appmodule.HasEndBlocker
 
-// **********************************************
-// The following interfaces are baseapp specific and will be deprecated in the future.
-// **********************************************
-
 // HasPrepareCheckState is an extension interface that contains information about the AppModule
 // and PrepareCheckState.
 type HasPrepareCheckState interface {

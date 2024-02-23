@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/client/cli"
 	"cosmossdk.io/x/gov/keeper"
@@ -37,10 +38,10 @@ var (
 	_ module.HasGenesis            = AppModule{}
 	_ module.HasInvariants         = AppModule{}
 
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
+	_ appmodulev2.AppModule     = AppModule{}
+	_ appmodulev2.HasEndBlocker = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodulev2.HasMigrations = AppModule{}
 )
 
 // AppModule implements an application module for the gov module.

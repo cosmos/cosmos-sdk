@@ -104,8 +104,8 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 		return sdk.DecCoins{}, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if startingInfo.Height == uint64(sdkCtx.BlockHeight()) { // started this height, no rewards yet
+	headerinfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	if startingInfo.Height == uint64(headerinfo.Height) { // started this height, no rewards yet
 		return sdk.DecCoins{}, nil
 	}
 
@@ -122,7 +122,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 	startingHeight := startingInfo.Height
 	// Slashes this block happened after reward allocation, but we have to account
 	// for them for the stake sanity check below.
-	endingHeight := uint64(sdkCtx.BlockHeight())
+	endingHeight := uint64(headerinfo.Height)
 	var iterErr error
 	if endingHeight > startingHeight {
 		err = k.IterateValidatorSlashEventsBetween(ctx, valAddr, startingHeight, endingHeight,

@@ -460,14 +460,17 @@ This will aso affect a large number of unit tests that will need to be adapted/r
 
 #### State Machine
 
-The impact on the state machine code will be minimal, the only module affected (at the time of writing this ADR)
-is the `x/accounts` module, specifically the `Authenticate` function. This function will need to be adapted to use a `CryptoProvider` service to make use of the `Verifier` instance.
-As a result, the account abstraction feature will benefit from all the new features and security improvements mentioned in this ADR.
+The impact on the state machine code will be minimal, the modules affected (at the time of writing this ADR)
+are the `x/accounts` module, specifically the `Authenticate` function and the `x/auth/ante` module. These function will need to be adapted to use a `CryptoProvider` service to make use of the `Verifier` instance. As a result, the account abstraction feature will benefit from all the new features and security improvements mentioned in this ADR.
+
+Worth mentioning that there's also the alternative of using `Verifier` instances in a standalone fashion (see note below).
+
+The specific way to adapt these modules will be deeply analyzed and decided at implementation time of this ADR.
 
 
 _Note:_ All the cryptographic tools (hasher, verifier, signer, etc) will still be available as standalone packages that can be
 imported and utilized directly without the need for a `CryptoProvider` instance. But, the `CryptoProvider` will be the recommended way to use them
-since it provides a more secure way to handle sensitive dta, better modularity and the possibility to store configurations and metadata into the CryptoProvider
+since it provides a more secure way to handle sensitive data, better modularity and the possibility to store configurations and metadata into the CryptoProvider
 definition.
 
 

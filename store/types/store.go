@@ -191,6 +191,9 @@ type CommitMultiStore interface {
 	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 	SetIAVLDisableFastNode(disable bool)
 
+	// SetIAVLV2 enables/disables iavl v2.
+	SetIAVLV2(path string) error
+
 	// SetIAVLLazyLoading enable/disable lazy loading on iavl.
 	SetLazyLoading(lazyLoading bool)
 

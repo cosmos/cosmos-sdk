@@ -298,3 +298,8 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 
 	app.prepareProposal = handler
 }
+
+func SetIAVLV2(rootPath string) func(*BaseApp) {
+	fmt.Println("SetIAVLV2 rootPath:", rootPath)
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLV2(rootPath) }
+}

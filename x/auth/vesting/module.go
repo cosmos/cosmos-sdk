@@ -2,7 +2,6 @@ package vesting
 
 import (
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/auth/keeper"
@@ -56,12 +55,6 @@ func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 // GetTxCmd returns the root tx command for the vesting module.
 func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
-}
-
-// RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
-	return nil
 }
 
 // ConsensusVersion implements HasConsensusVersion.

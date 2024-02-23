@@ -6,8 +6,8 @@ import "tendermint/types/params.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 
-// ConMsgParams is the Msg/Params request type. This is a consensus message that is sent from cometbft.
-message ConMsgParams {
+// ConsensusMsgParams is the Msg/Params request type. This is a consensus message that is sent from cometbft.
+message ConsensusMsgParams {
   // params defines the x/consensus parameters to be passed from comet.
   //
   // NOTE: All parameters must be supplied.
@@ -18,6 +18,6 @@ message ConMsgParams {
   tendermint.types.ABCIParams      abci      = 5;
 }
 
-// ConMsgParamsResponse defines the response structure for executing a
-// ConMsgParams message.
-message ConMsgParamsResponse {}
+// ConsensusMsgParamsResponse defines the response structure for executing a
+// ConsensusMsgParams message.
+message ConsensusMsgParamsResponse {}

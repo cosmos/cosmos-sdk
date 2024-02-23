@@ -7,7 +7,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 )
 
-func (msg ConMsgParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, error) {
+func (msg ConsensusMsgParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, error) {
 	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil || msg.Version == nil {
 		return cmtproto.ConsensusParams{}, errors.New("all parameters must be present")
 	}

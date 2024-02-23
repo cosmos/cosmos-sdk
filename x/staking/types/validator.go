@@ -473,11 +473,6 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	return pk, nil
 }
 
-// Deprecated: use CmtConsPublicKey instead
-func (v Validator) TmConsPublicKey() (cmtprotocrypto.PublicKey, error) {
-	return v.CmtConsPublicKey()
-}
-
 // CmtConsPublicKey casts Validator.ConsensusPubkey to cmtprotocrypto.PubKey.
 func (v Validator) CmtConsPublicKey() (cmtprotocrypto.PublicKey, error) {
 	pk, err := v.ConsPubKey()

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"strconv"
 	"time"
@@ -598,9 +599,41 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, err
 	}
 
+	// get previous staking params
+	previousParams, err := k.Params.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// store params
 	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
+	}
+
+	// when min commission rate is updated, we need to update the commission rate of all validators
+	if !previousParams.MinCommissionRate.Equal(msg.Params.MinCommissionRate) {
+		minRate := msg.Params.MinCommissionRate
+
+		vals, err := k.GetAllValidators(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, val := range vals {
+			// set the commission rate to min rate
+			if val.Commission.CommissionRates.Rate.LT(minRate) {
+				val.Commission.CommissionRates.Rate = minRate
+				// set the max rate to minRate if it is less than min rate
+				if val.Commission.CommissionRates.MaxRate.LT(minRate) {
+					val.Commission.CommissionRates.MaxRate = minRate
+				}
+
+				val.Commission.UpdateTime = k.environment.HeaderService.GetHeaderInfo(ctx).Time
+				if err := k.SetValidator(ctx, val); err != nil {
+					return nil, fmt.Errorf("failed to set validator after MinCommissionRate param change: %w", err)
+				}
+			}
+		}
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil

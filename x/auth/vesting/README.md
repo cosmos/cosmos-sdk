@@ -4,6 +4,10 @@ sidebar_position: 1
 
 # `x/auth/vesting`
 
+:::warning
+This module is deprecated in favor of x/accounts.
+The creation of vesting account using x/auth/vesting, is not possible since v0.51
+:::
 
 * [Intro and Requirements](#intro-and-requirements)
 * [Note](#note)

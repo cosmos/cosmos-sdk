@@ -313,7 +313,7 @@ func (bva *BaseVesting) TrackUndelegation(ctx context.Context, amount sdk.Coins)
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
 			newDelFree := delFreeCoin.Sub(xCoin)
-			err = bva.DelegatedVesting.Set(ctx, newDelFree.Denom, newDelFree.Amount)
+			err = bva.DelegatedFree.Set(ctx, newDelFree.Denom, newDelFree.Amount)
 			if err != nil {
 				return err
 			}

@@ -550,7 +550,7 @@ var stringsBuilderPool = &sync.Pool{
 // (instead of manipulating the int or math.Int object).
 func FormatInt(v string) (string, error) {
 	if len(v) == 0 {
-		return "", fmt.Errorf("cannot format empty string")
+		return "", errors.New("cannot format empty string")
 	}
 
 	sign := ""

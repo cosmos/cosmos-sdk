@@ -72,4 +72,4 @@ The consensus module emits the following events:
 | Type   | Attribute Key | Attribute Value     |
 |--------|---------------|---------------------|
 | string | authority     | msg.Signer          |
-| string | parameters    | consensus Parmeters |
+| string | parameters    | consensus Parameters |

@@ -48,3 +48,19 @@ jobs:
           GIT_DIFF: ${{ env.GIT_DIFF }}
           LINT_DIFF: 1
           NIX: 1
+
+  gosec:
+    runs-on: ubuntu-latest
+    name: Check GO security
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: -exclude-generated ./...
+        env:
+          GOROOT: ""

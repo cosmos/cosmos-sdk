@@ -60,7 +60,6 @@ func (AppModule) GetTxCmd() *cobra.Command {
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
 	return nil
 }
 

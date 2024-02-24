@@ -344,19 +344,19 @@ func (bva BaseVesting) getBalance(ctx context.Context, sender, denom string) (*s
 }
 
 func (bva BaseVesting) checkTokensSendable(ctx context.Context, sender string, amount, vestingCoins sdk.Coins) error {
-	// Get locked token
-	lockedCoins, err := bva.LockedCoinsFromVesting(ctx, vestingCoins)
-	if err != nil {
-		return err
-	}
-
 	// Check if any sent tokens is exceeds vesting account balances
 	for _, coin := range amount {
 		balance, err := bva.getBalance(ctx, sender, coin.Denom)
 		if err != nil {
 			return err
 		}
-		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
+		vestingAmt := vestingCoins.AmountOf(coin.Denom)
+
+		// get lockedCoin for the sent denom
+		locked, err := bva.LockedCoinFromVesting(ctx, sdk.NewCoin(coin.Denom, vestingAmt), coin.Denom)
+		if err != nil {
+			return err
+		}
 
 		spendable, hasNeg := sdk.Coins{*balance}.SafeSub(locked)
 		if hasNeg {
@@ -391,26 +391,22 @@ func (bva BaseVesting) IterateCoinEntries(
 	return err
 }
 
-// LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)
-// for a vesting account given the current vesting coins. If no coins are locked,
-// an empty slice of Coins is returned.
-//
-// CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
-func (bva BaseVesting) LockedCoinsFromVesting(ctx context.Context, vestingCoins sdk.Coins) (sdk.Coins, error) {
-	delegatedVestingCoins := sdk.Coins{}
-	err := bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool, err error) {
-		delegatedVestingCoins = append(delegatedVestingCoins, sdk.NewCoin(key, value))
-		return false, nil
-	})
+// LockedCoinsFromVesting returns the coin that are not spendable by denom (i.e. locked)
+// for a vesting account given the current vesting coin. If the coin by the provided denom
+// are not locked, an coin with zero amount is returned.
+func (bva BaseVesting) LockedCoinFromVesting(ctx context.Context, vestingCoin sdk.Coin, denom string) (sdk.Coin, error) {
+	delegatedVestingAmt, err := bva.DelegatedVesting.Get(ctx, denom)
 	if err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coin{}, err
 	}
+	vestingAmt := vestingCoin.Amount
 
-	lockedCoins := vestingCoins.Sub(vestingCoins.Min(delegatedVestingCoins)...)
-	if lockedCoins == nil {
-		return sdk.Coins{}, nil
-	}
-	return lockedCoins, nil
+	x := math.MinInt(vestingAmt, delegatedVestingAmt)
+	lockedAmt := vestingAmt.Sub(x)
+
+	lockedCoin := sdk.NewCoin(denom, lockedAmt)
+
+	return lockedCoin, nil
 }
 
 // QueryVestingAccountInfo returns a vesting account's info

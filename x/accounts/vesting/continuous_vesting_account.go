@@ -128,9 +128,9 @@ func (cva ContinuousVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context
 
 	originalVesting := sdk.NewCoin(denom, originalVestingAmt)
 	if startTime.After(blockTime) {
-		return nil, &originalVesting, nil
+		return &sdk.Coin{}, &originalVesting, nil
 	} else if endTime.Before(blockTime) {
-		return &originalVesting, nil, nil
+		return &originalVesting, &sdk.Coin{}, nil
 	}
 
 	// calculate the vesting scalar

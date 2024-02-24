@@ -91,10 +91,10 @@ func (dva DelayedVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, b
 		return nil, nil, err
 	}
 	if blockTime.After(endTime) {
-		return &originalVesting, nil, nil
+		return &originalVesting, &sdk.Coin{}, nil
 	}
 
-	return nil, &originalVesting, nil
+	return &sdk.Coin{}, &originalVesting, nil
 }
 
 // GetVestingCoinsWithDenom returns the number of vesting coin for a specific denom. If no coins are

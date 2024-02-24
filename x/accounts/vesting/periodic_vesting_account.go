@@ -210,9 +210,9 @@ func (pva PeriodicVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, 
 		return nil, nil, err
 	}
 	if blockTime.Before(startTime) {
-		return vestedCoin, &originalVesting, nil
+		return &sdk.Coin{}, &originalVesting, nil
 	} else if blockTime.After(endTime) {
-		return &originalVesting, vestingCoin, nil
+		return &originalVesting, &sdk.Coin{}, nil
 	}
 
 	// track the start time of the next period

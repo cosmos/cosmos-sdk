@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var _ types.QueryServer = accountKeeper{}
+var _ types.QueryServer = AccountKeeper{}
 
 func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
 	if req == nil {
@@ -74,7 +74,7 @@ func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsReque
 }
 
 // Account returns account details based on address
-func (ak accountKeeper) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
+func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -106,7 +106,7 @@ func (ak accountKeeper) Account(c context.Context, req *types.QueryAccountReques
 }
 
 // Params returns parameters of auth module
-func (ak accountKeeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (ak AccountKeeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -193,8 +193,15 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 		return nil, status.Error(codes.InvalidArgument, "module name is empty")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	moduleName := req.Name
+	return &types.AddressBytesToStringResponse{AddressString: text}, nil
+}
+
+// AddressStringToBytes converts an address from string to bytes, using the
+// keeper's bech32 prefix.
+func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 
 	account := ak.GetModuleAccount(ctx, moduleName)
 	if account == nil {

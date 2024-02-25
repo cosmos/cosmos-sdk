@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cometbft/cometbft v0.38.5
-	github.com/cosmos/cosmos-db v1.0.0
+	github.com/cosmos/cosmos-db v1.0.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.11

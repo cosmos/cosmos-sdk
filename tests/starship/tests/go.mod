@@ -44,7 +44,7 @@ require (
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	github.com/cosmos/cosmos-db v1.0.0
+	github.com/cosmos/cosmos-db v1.0.1
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.62.0

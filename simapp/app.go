@@ -298,7 +298,6 @@ func NewSimApp(
 		// TESTING: do not add
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
-		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
 		// new vesting account
 		accountstd.AddAccount(vestingv1.CONTINUOUS_VESTING_ACCOUNT, vestingv1.NewContinuousVestingAccount),
 		accountstd.AddAccount(vestingv1.PERIODIC_VESTING_ACCOUNT, vestingv1.NewPeriodicVestingAccount),

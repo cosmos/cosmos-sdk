@@ -2,7 +2,7 @@ package store
 
 // Database provides access to the underlying database for CRUD operations of non-consensus data.
 type DatabaseService interface {
-	GetDataBase() NonConsensusStore
+	GetDatabase() NonConsensusStore
 }
 
 // NonConsensusStore is a simple key-value store that is used to store non-consensus data.

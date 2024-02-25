@@ -1,4 +1,5 @@
 go 1.21
+toolchain go1.22.0
 
 module github.com/cosmos/cosmos-sdk
 
@@ -20,7 +21,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cometbft/cometbft v0.38.5
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-db v1.0.0
+	github.com/cosmos/cosmos-db v1.0.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0

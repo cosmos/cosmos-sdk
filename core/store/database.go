@@ -1,6 +1,6 @@
 package store
 
-// Database provides access to the underlying data base for get set and delete operations of nonconsensus Data
+// Database provides access to the underlying database for CRUD operations of non-consensus data.
 type DatabaseService interface {
 	GetDataBase() NonConsensusStore
 }

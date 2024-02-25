@@ -45,7 +45,7 @@ Whilst ORM offers a lot of good functionality aimed at solving these specific pr
 
 ### CosmWasm Solution: cw-storage-plus
 
-The collections API takes inspiration from [cw-storage-plus](https://docs.cosmwasm.com/docs/1.0/smart-contracts/state/cw-plus/),
+The collections API takes inspiration from [cw-storage-plus](https://docs.cosmwasm.com/docs/smart-contracts/state/cw-plus),
 which has demonstrated to be a powerful tool for dealing with storage in CosmWasm contracts.
 It's simple, does not require extra tooling, it makes it easy to deal with complex storage structures (indexes, snapshot, etc).
 The API is straightforward and explicit.
@@ -78,7 +78,7 @@ These default implementations also offer safety around proper lexicographic orde
 
 Examples of the collections API can be found here:
 - introduction: https://github.com/NibiruChain/collections/tree/main/examples
-- usage in nibiru: [x/oracle](https://github.com/NibiruChain/nibiru/blob/master/x/oracle/keeper/keeper.go#L32), [x/perp](https://github.com/NibiruChain/nibiru/blob/master/x/perp/keeper/keeper.go#L31)
+- usage in nibiru: [x/oracle](https://github.com/NibiruChain/nibiru/blob/master/x/oracle/keeper/keeper.go#L32), [x/perp](https://github.com/NibiruChain/nibiru/blob/main/x/perp/v2/keeper/keeper.go)
 - cosmos-sdk's x/staking migrated: https://github.com/testinginprod/cosmos-sdk/pull/22
 
 

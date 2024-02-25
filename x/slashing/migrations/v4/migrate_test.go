@@ -20,7 +20,7 @@ import (
 var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 
 func TestMigrate(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(slashing.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(slashing.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(slashingtypes.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit"
@@ -39,11 +40,12 @@ type fixture struct {
 
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
-	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModule{})
 	ac := addresscodec.NewBech32Codec("cosmos")
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	storeService := runtime.NewKVStoreService(mockStoreKey)
-	k := keeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress("gov").String(), ac)
+
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(mockStoreKey), log.NewNopLogger())
+	k := keeper.NewKeeper(env, encCfg.Codec, authtypes.NewModuleAddress("gov").String(), ac)
 
 	bz, err := ac.StringToBytes(authtypes.NewModuleAddress("gov").String())
 	require.NoError(t, err)

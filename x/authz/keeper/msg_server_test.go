@@ -124,7 +124,6 @@ func (suite *TestSuite) TestGrant() {
 				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), newAcc).Return(nil).AnyTimes()
 				acc := authtypes.NewBaseAccountWithAddress(newAcc)
 				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), newAcc).Return(acc).AnyTimes()
-				suite.accountKeeper.EXPECT().SetAccount(gomock.Any(), acc).Return()
 
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
 				suite.Require().NoError(err)

@@ -47,6 +47,15 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	simulationExpectedCost := expectedGasCostByKeys(pkSet1[:multisigKey1.Threshold])
+	simulationMultiSignatureData := make([]signing.SignatureData, 0, multisigKey1.Threshold)
+	for i := uint32(0); i < multisigKey1.Threshold; i++ {
+		simulationMultiSignatureData = append(simulationMultiSignatureData, &signing.SingleSignatureData{})
+	}
+	multisigSimulationSignature := &signing.MultiSignatureData{
+		Signatures: simulationMultiSignatureData,
+	}
+
 	type args struct {
 		meter  storetypes.GasMeter
 		sig    signing.SignatureData
@@ -63,6 +72,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		{"PubKeySecp256k1", args{storetypes.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
 		{"PubKeySecp256r1", args{storetypes.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
 		{"Multisig", args{storetypes.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
+		{"Multisig simulation", args{storetypes.NewInfiniteGasMeter(), multisigSimulationSignature, multisigKey1, params}, simulationExpectedCost, false},
 		{"unknown key", args{storetypes.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
 	for _, tt := range tests {
@@ -135,7 +145,7 @@ func TestSigVerification(t *testing.T) {
 	)
 	require.NoError(t, err)
 	noOpGasConsume := func(_ storetypes.GasMeter, _ signing.SignatureV2, _ types.Params) error { return nil }
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume)
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume, nil)
 	antehandler := sdk.ChainAnteDecorators(svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
 	require.NoError(t, err)
@@ -269,7 +279,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer)
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer, nil)
 	antehandler := sdk.ChainAnteDecorators(svd)
 
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
@@ -325,7 +335,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 		accs[i] = acc
 	}
 
-	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer)
+	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer, nil)
 
 	anteHandler := sdk.ChainAnteDecorators(sigVerificationDecorator)
 

@@ -34,7 +34,7 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
-	err = suite.GovKeeper.SetProposal(ctx, proposal)
+	err = suite.GovKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	require.NoError(t, err)
 
 	// manually set proposal in inactive proposal queue
@@ -62,7 +62,7 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 	proposal.Status = v1.StatusVotingPeriod
 	proposal.VotingEndTime = &endTime
 
-	err = suite.GovKeeper.SetProposal(ctx, proposal)
+	err = suite.GovKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	require.NoError(t, err)
 
 	// manually set proposal in active proposal queue
@@ -360,6 +360,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
+			acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+			suite.AccountKeeper.SetAccount(ctx, acc)
 
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err := suite.StakingKeeper.EndBlocker(ctx)
@@ -420,6 +422,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 	toAddrStr, err := ac.BytesToString(addrs[0])
 	require.NoError(t, err)
+
+	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+	suite.AccountKeeper.SetAccount(ctx, acc)
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	_, err = suite.StakingKeeper.EndBlocker(ctx)
@@ -499,6 +504,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 
+			acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+			suite.AccountKeeper.SetAccount(ctx, acc)
 			// Create a validator so that able to vote on proposal.
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err = suite.StakingKeeper.EndBlocker(ctx)

@@ -68,7 +68,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, distribution.AppModule{}).Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -85,8 +85,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -98,15 +98,15 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
@@ -244,6 +244,9 @@ func setValidator(t *testing.T, f *deterministicFixture, validator stakingtypes.
 	delegatorAddress := sdk.AccAddress(valbz)
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
 	assert.NilError(t, banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins))
+
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddress)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 
 	_, err = f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
 	assert.NilError(t, err)
@@ -396,6 +399,8 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 
 		for i := 0; i < numDels; i++ {
 			delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+			acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+			f.accountKeeper.SetAccount(f.ctx, acc)
 			_, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 			assert.NilError(t, err)
 		}
@@ -412,9 +417,13 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 
 	validator := getStaticValidator(t, f)
 
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	_, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
+	acc = f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr2)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	_, err = fundAccountAndDelegate(t, f, delegatorAddr2, validator, f.amt2)
 	assert.NilError(t, err)
 
@@ -435,6 +444,8 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 
 		for i := 0; i < numDels; i++ {
 			delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+			acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+			f.accountKeeper.SetAccount(f.ctx, acc)
 			shares, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 			assert.NilError(t, err)
 			valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
@@ -454,12 +465,16 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 
 	validator := getStaticValidator(t, f)
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	shares1, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
 	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
 	assert.NilError(t, err)
 
+	acc = f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr2)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	shares2, err := fundAccountAndDelegate(t, f, delegatorAddr2, validator, f.amt2)
 	assert.NilError(t, err)
 
@@ -480,6 +495,8 @@ func TestGRPCDelegation(t *testing.T) {
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+		f.accountKeeper.SetAccount(f.ctx, acc)
 		_, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 		assert.NilError(t, err)
 
@@ -494,6 +511,8 @@ func TestGRPCDelegation(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 
 	validator := getStaticValidator(t, f)
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	_, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
@@ -512,6 +531,8 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+		f.accountKeeper.SetAccount(f.ctx, acc)
 		shares, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 		assert.NilError(t, err)
 
@@ -531,6 +552,8 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 	validator := getStaticValidator(t, f)
 
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	shares1, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
@@ -555,6 +578,8 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 
 		for i := 0; i < numVals; i++ {
 			validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
+			acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+			f.accountKeeper.SetAccount(f.ctx, acc)
 			_, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 			assert.NilError(t, err)
 		}
@@ -570,6 +595,8 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 
 	validator := getStaticValidator(t, f)
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	_, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
@@ -588,6 +615,8 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
 
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+		f.accountKeeper.SetAccount(f.ctx, acc)
 		_, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 		assert.NilError(t, err)
 
@@ -602,6 +631,8 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 
 	validator := getStaticValidator(t, f)
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	_, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 
 	assert.NilError(t, err)
@@ -624,6 +655,8 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 
 		for i := 0; i < numVals; i++ {
 			validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
+			acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+			f.accountKeeper.SetAccount(f.ctx, acc)
 			shares, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 			assert.NilError(t, err)
 			valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
@@ -643,6 +676,8 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 
 	validator := getStaticValidator(t, f)
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	shares1, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
@@ -707,6 +742,8 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 
 		for i := 0; i < numVals; i++ {
 			validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
+			acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+			f.accountKeeper.SetAccount(f.ctx, acc)
 			_, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 			assert.NilError(t, err)
 		}
@@ -722,7 +759,8 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 
 	validator := getStaticValidator(t, f)
-
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	_, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
@@ -761,6 +799,8 @@ func TestGRPCRedelegations(t *testing.T) {
 		numDels := rapid.IntRange(1, 5).Draw(rt, "num-dels")
 
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+		f.accountKeeper.SetAccount(f.ctx, acc)
 		shares, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 		assert.NilError(t, err)
 
@@ -795,6 +835,8 @@ func TestGRPCRedelegations(t *testing.T) {
 	validator := getStaticValidator(t, f)
 	_ = getStaticValidator2(t, f)
 
+	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
+	f.accountKeeper.SetAccount(f.ctx, acc)
 	shares, err := fundAccountAndDelegate(t, f, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 

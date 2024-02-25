@@ -67,7 +67,7 @@ func (suite *SimTestSuite) SetupTest() {
 	// create validator (non random as using a seed)
 	createValidator := func() (*cmttypes.ValidatorSet, error) {
 		account := accounts[0]
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.PubKey)
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.ConsKey.PubKey())
 		if err != nil {
 			return nil, fmt.Errorf("failed to create pubkey: %w", err)
 		}
@@ -167,7 +167,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 	val0ConsAddressStr, err := suite.stakingKeeper.ConsensusAddressCodec().BytesToString(val0ConsAddress)
 	suite.Require().NoError(err)
-	info := types.NewValidatorSigningInfo(val0ConsAddressStr, int64(4), int64(3),
+	info := types.NewValidatorSigningInfo(val0ConsAddressStr, int64(4),
 		time.Unix(2, 0), false, int64(10))
 	err = suite.slashingKeeper.ValidatorSigningInfo.Set(ctx, val0ConsAddress, info)
 	suite.Require().NoError(err)

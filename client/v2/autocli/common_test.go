@@ -51,7 +51,7 @@ func initFixture(t *testing.T) *fixture {
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(bank.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(bank.AppModule{})
 	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
 

@@ -1466,6 +1466,7 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 }
 
 func (s *E2ETestSuite) TestAuxSigner() {
+	s.T().Skip("re-enable this when we bring back sign mode aux client testing")
 	require := s.Require()
 	val := s.network.GetValidators()[0]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10))

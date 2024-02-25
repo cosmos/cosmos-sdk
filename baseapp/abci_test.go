@@ -930,19 +930,6 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 	}
-
-	// Transaction with an unregistered message
-	{
-		txBuilder := suite.txConfig.NewTxBuilder()
-		err = txBuilder.SetMsgs(&testdata.MsgCreateDog{})
-		require.NoError(t, err)
-		tx := txBuilder.GetTx()
-
-		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
-		space, code, _ := errorsmod.ABCIInfo(err, false)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)
-	}
 }
 
 func TestABCI_TxGasLimits(t *testing.T) {
@@ -2224,11 +2211,25 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	}
 	require.Equal(t, 10, successful)
 
+	extVotes := []abci.ExtendedVoteInfo{}
+	for _, val := range vals {
+		extVotes = append(extVotes, abci.ExtendedVoteInfo{
+			VoteExtension:      allVEs[0],
+			BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+			ExtensionSignature: []byte{},
+			Validator: abci.Validator{
+				Address: val.Bytes(),
+				Power:   666,
+			},
+		},
+		)
+	}
+
 	prepPropReq := &abci.RequestPrepareProposal{
 		Height: 1,
 		LocalLastCommit: abci.ExtendedCommitInfo{
 			Round: 0,
-			Votes: []abci.ExtendedVoteInfo{},
+			Votes: extVotes,
 		},
 	}
 
@@ -2287,6 +2288,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			ExtensionSignature: extSig,
 			Validator: abci.Validator{
 				Address: vals[i].Bytes(),
+				Power:   666,
 			},
 		})
 	}

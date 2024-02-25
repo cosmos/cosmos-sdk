@@ -62,9 +62,7 @@ func (k Keeper) Unjail(ctx context.Context, validatorAddr sdk.ValAddress) error 
 			return types.ErrValidatorJailed
 		}
 
-		// cannot be unjailed until out of jail
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		if sdkCtx.HeaderInfo().Time.Before(info.JailedUntil) {
+		if k.environment.HeaderService.GetHeaderInfo(ctx).Time.Before(info.JailedUntil) {
 			return types.ErrValidatorJailed
 		}
 	}

@@ -1027,10 +1027,22 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
 	require := s.Require()
 
+	// create validator to test commission rate
+	pk := ed25519.GenPrivKey().PubKey()
+	require.NotNil(pk)
+	comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, types.NotBondedPoolName, gomock.Any()).AnyTimes()
+	msg, err := types.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	require.NoError(err)
+	_, err = msgServer.CreateValidator(ctx, msg)
+	require.NoError(err)
+	paramsWithUpdatedMinCommissionRate := types.DefaultParams()
+	paramsWithUpdatedMinCommissionRate.MinCommissionRate = math.LegacyNewDecWithPrec(5, 2)
+
 	testCases := []struct {
 		name      string
 		input     *types.MsgUpdateParams
-		expErr    bool
+		postCheck func()
 		expErrMsg string
 	}{
 		{
@@ -1039,7 +1051,28 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Authority: keeper.GetAuthority(),
 				Params:    types.DefaultParams(),
 			},
-			expErr: false,
+			postCheck: func() {
+				// verify that the commission isn't changed
+				vals, err := keeper.GetAllValidators(ctx)
+				require.NoError(err)
+				require.Len(vals, 1)
+				require.True(vals[0].Commission.Rate.Equal(comm.Rate))
+				require.True(vals[0].Commission.MaxRate.GTE(comm.MaxRate))
+			},
+		},
+		{
+			name: "valid params with updated min commission rate",
+			input: &types.MsgUpdateParams{
+				Authority: keeper.GetAuthority(),
+				Params:    paramsWithUpdatedMinCommissionRate,
+			},
+			postCheck: func() {
+				vals, err := keeper.GetAllValidators(ctx)
+				require.NoError(err)
+				require.Len(vals, 1)
+				require.True(vals[0].Commission.Rate.GTE(paramsWithUpdatedMinCommissionRate.MinCommissionRate))
+				require.True(vals[0].Commission.MaxRate.GTE(paramsWithUpdatedMinCommissionRate.MinCommissionRate))
+			},
 		},
 		{
 			name: "invalid authority",
@@ -1047,7 +1080,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Authority: "invalid",
 				Params:    types.DefaultParams(),
 			},
-			expErr:    true,
 			expErrMsg: "invalid authority",
 		},
 		{
@@ -1063,7 +1095,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
-			expErr:    true,
 			expErrMsg: "minimum commission rate cannot be negative",
 		},
 		{
@@ -1079,7 +1110,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
-			expErr:    true,
 			expErrMsg: "minimum commission rate cannot be greater than 100%",
 		},
 		{
@@ -1095,7 +1125,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         "",
 				},
 			},
-			expErr:    true,
 			expErrMsg: "bond denom cannot be blank",
 		},
 		{
@@ -1111,7 +1140,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
-			expErr:    true,
 			expErrMsg: "max validators must be positive",
 		},
 		{
@@ -1127,7 +1155,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
-			expErr:    true,
 			expErrMsg: "max entries must be positive",
 		},
 		{
@@ -1143,7 +1170,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         "denom",
 				},
 			},
-			expErr:    true,
 			expErrMsg: "unbonding time must be positive",
 		},
 	}
@@ -1152,11 +1178,15 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.UpdateParams(ctx, tc.input)
-			if tc.expErr {
+			if tc.expErrMsg != "" {
 				require.Error(err)
 				require.Contains(err.Error(), tc.expErrMsg)
 			} else {
 				require.NoError(err)
+
+				if tc.postCheck != nil {
+					tc.postCheck()
+				}
 			}
 		})
 	}

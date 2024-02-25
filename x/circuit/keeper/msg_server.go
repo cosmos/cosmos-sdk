@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/circuit/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -63,15 +63,14 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			"authorize_circuit_breaker",
-			sdk.NewAttribute("granter", msg.Granter),
-			sdk.NewAttribute("grantee", msg.Grantee),
-			sdk.NewAttribute("permission", msg.Permissions.String()),
-		),
-	})
+	if err = srv.Keeper.env.EventService.EventManager(ctx).EmitKV(
+		"authorize_circuit_breaker",
+		event.NewAttribute("granter", msg.Granter),
+		event.NewAttribute("grantee", msg.Grantee),
+		event.NewAttribute("permission", msg.Permissions.String()),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgAuthorizeCircuitBreakerResponse{
 		Success: true,
@@ -121,14 +120,13 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 
 	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			"trip_circuit_breaker",
-			sdk.NewAttribute("authority", msg.Authority),
-			sdk.NewAttribute("msg_url", urls),
-		),
-	})
+	if err = srv.Keeper.env.EventService.EventManager(ctx).EmitKV(
+		"trip_circuit_breaker",
+		event.NewAttribute("authority", msg.Authority),
+		event.NewAttribute("msg_url", urls),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgTripCircuitBreakerResponse{
 		Success: true,
@@ -180,14 +178,13 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 
 	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			"reset_circuit_breaker",
-			sdk.NewAttribute("authority", msg.Authority),
-			sdk.NewAttribute("msg_url", urls),
-		),
-	})
+	if err = srv.Keeper.env.EventService.EventManager(ctx).EmitKV(
+		"reset_circuit_breaker",
+		event.NewAttribute("authority", msg.Authority),
+		event.NewAttribute("msg_url", urls),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgResetCircuitBreakerResponse{Success: true}, nil
 }

@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"sync"
 
-	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/errors"
@@ -26,7 +25,7 @@ const (
 
 // Store is a snapshot store, containing snapshot metadata and binary chunks.
 type Store struct {
-	db  db.DB
+	db  store.RawDB
 	dir string
 
 	mtx    sync.Mutex
@@ -34,7 +33,7 @@ type Store struct {
 }
 
 // NewStore creates a new snapshot store.
-func NewStore(db db.DB, dir string) (*Store, error) {
+func NewStore(db store.RawDB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, errors.Wrap(store.ErrLogic, "snapshot directory not given")
 	}
@@ -59,14 +58,20 @@ func (s *Store) Delete(height uint64, format uint32) error {
 		return errors.Wrapf(store.ErrConflict,
 			"snapshot for height %v format %v is currently being saved", height, format)
 	}
-	err := s.db.DeleteSync(encodeKey(height, format))
-	if err != nil {
+	b := s.db.NewBatch()
+	defer b.Close()
+	if err := b.Delete(encodeKey(height, format)); err != nil {
+		return errors.Wrapf(err, "failed to delete item in the batch")
+	}
+	if err := b.WriteSync(); err != nil {
 		return errors.Wrapf(err, "failed to delete snapshot for height %v format %v",
 			height, format)
 	}
-	err = os.RemoveAll(s.pathSnapshot(height, format))
-	return errors.Wrapf(err, "failed to delete snapshot chunks for height %v format %v",
-		height, format)
+	if err := os.RemoveAll(s.pathSnapshot(height, format)); err != nil {
+		return errors.Wrapf(err, "failed to delete snapshot chunks for height %v format %v",
+			height, format)
+	}
+	return nil
 }
 
 // Get fetches snapshot info from the database.
@@ -327,8 +332,15 @@ func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode snapshot metadata")
 	}
-	err = s.db.SetSync(encodeKey(snapshot.Height, snapshot.Format), value)
-	return errors.Wrap(err, "failed to store snapshot")
+	b := s.db.NewBatch()
+	defer b.Close()
+	if err := b.Set(encodeKey(snapshot.Height, snapshot.Format), value); err != nil {
+		return errors.Wrap(err, "failed to set snapshot in batch")
+	}
+	if err := b.WriteSync(); err != nil {
+		return errors.Wrap(err, "failed to store snapshot")
+	}
+	return nil
 }
 
 // pathHeight generates the path to a height, containing multiple snapshot formats.

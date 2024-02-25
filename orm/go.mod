@@ -1,20 +1,22 @@
 module cosmossdk.io/orm
 
-go 1.21
+go 1.22
+
+toolchain go1.22.0
 
 require (
 	cosmossdk.io/api v0.7.3
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.1
-	github.com/cosmos/cosmos-db v1.0.0
+	github.com/cosmos/cosmos-db v1.0.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/regen-network/gocuke v1.1.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	google.golang.org/grpc v1.62.0
 	google.golang.org/protobuf v1.32.0
 	gotest.tools/v3 v3.5.1
@@ -45,7 +47,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/klauspost/compress v1.17.6 // indirect
+	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/linxGnu/grocksdb v1.8.12 // indirect
@@ -53,11 +55,11 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.18.0 // indirect
-	github.com/prometheus/client_model v0.5.0 // indirect
-	github.com/prometheus/common v0.47.0 // indirect
+	github.com/prometheus/client_model v0.6.0 // indirect
+	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	github.com/spf13/cast v1.5.1 // indirect
+	github.com/spf13/cast v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect

@@ -8,6 +8,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/iavl/v2"
+	"github.com/dustin/go-humanize"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 var (
@@ -29,18 +31,39 @@ type Store struct {
 	iavl.Tree
 }
 
-func LoadStoreWithInitialVersion(v2RootPath string, key types.StoreKey, id types.CommitID, _ uint64) (types.CommitKVStore, error) {
+func LoadStoreWithInitialVersion(v2RootPath string, metadata *iavl.SqliteKVStore, key types.StoreKey, id types.CommitID, _ uint64) (types.CommitKVStore, error) {
 	// TODO
 	// handle initialVersion (last param). This parameter is non-zero when the storeKey is flagged as added in upgrades.
 	// i.e. not the happy path.
 	path := filepath.Join(v2RootPath, key.Name())
 	pool := iavl.NewNodePool()
 	sqlOpts := iavl.SqliteDbOptions{Path: path}
-	var err error
-	sqlOpts.MmapSize, err = sqlOpts.EstimateMmapSize()
+
+	mmapKey := []byte(fmt.Sprintf("mmap-%s", key.Name()))
+	mmapSize, err := metadata.Get(mmapKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to estimate mmap size for sqlite db path=%s: %w", path, err)
+		return nil, fmt.Errorf("failed to get mmap size for sqlite db path=%s: %w", path, err)
 	}
+	if mmapSize == nil {
+		sqlOpts.MmapSize, err = sqlOpts.EstimateMmapSize()
+		if err != nil {
+			return nil, fmt.Errorf("failed to estimate mmap size for sqlite db path=%s: %w", path, err)
+		}
+		bz, err := gogotypes.StdInt32Marshal(int32(sqlOpts.MmapSize))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mmap size for sqlite db path=%s: %w", path, err)
+		}
+		metadata.Set(mmapKey, bz)
+	} else {
+		var sz int32
+		err = gogotypes.StdInt32Unmarshal(&sz, mmapSize)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal mmap size for sqlite db path=%s: %w", path, err)
+		}
+		fmt.Printf("mmap size for sqlite path=%s: %s\n", path, humanize.IBytes(uint64(sz)))
+		sqlOpts.MmapSize = int(sz)
+	}
+
 	sql, err := iavl.NewSqliteDb(pool, sqlOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite db path=%s: %w", path, err)
@@ -52,11 +75,8 @@ func LoadStoreWithInitialVersion(v2RootPath string, key types.StoreKey, id types
 		MetricsProxy:       &telemetry.GlobalMetricProxy{},
 		HeightFilter:       1,
 	})
-	if key.Name() == "ibc" {
-		err = tree.LoadVersion(id.Version)
-	} else {
-		err = tree.LoadVersion(id.Version)
-	}
+
+	err = tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +112,6 @@ func (s *Store) Commit() types.CommitID {
 
 func (s *Store) LastCommitID() types.CommitID {
 	hash := s.Tree.Hash()
-	fmt.Printf("IAVLV2 Get LastCommitID: %x\n", hash)
 
 	return types.CommitID{
 		Version: s.Tree.Version(),

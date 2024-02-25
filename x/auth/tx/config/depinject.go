@@ -83,10 +83,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		CustomSignModes: customSignModeHandlers,
 	}
 
-	if in.CustomGetSigners != nil {
-		for _, mode := range in.CustomGetSigners {
-			txConfigOptions.SigningOptions.CustomGetSigners[mode.MsgType] = mode.Fn
-		}
+	for _, mode := range in.CustomGetSigners {
+		txConfigOptions.SigningOptions.CustomGetSigners[mode.MsgType] = mode.Fn
 	}
 
 	// enable SIGN_MODE_TEXTUAL only if bank keeper is available

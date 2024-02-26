@@ -40,10 +40,6 @@ func (s *VestingAccountTestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
 }
 
-func contextAt(t time.Time) sdk.Context {
-	return sdk.Context{}.WithBlockTime(t)
-}
-
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -97,15 +93,15 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 
 	// require that all original coins are locked at the end of the vesting
 	// schedule
-	lockedCoins := cva.LockedCoins(contextAt(now))
+	lockedCoins := cva.LockedCoins(now)
 	require.Equal(t, origCoins, lockedCoins)
 
 	// require that there exist no locked coins in the beginning of the
-	lockedCoins = cva.LockedCoins(contextAt(endTime))
+	lockedCoins = cva.LockedCoins(endTime)
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all vested coins (50%) are spendable
-	lockedCoins = cva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
+	lockedCoins = cva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
@@ -233,23 +229,23 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	// require that all coins are locked in the beginning of the vesting
 	// schedule
 	dva := types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
-	lockedCoins := dva.LockedCoins(contextAt(now))
+	lockedCoins := dva.LockedCoins(now)
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// require that all coins are spendable after the maturation of the vesting
 	// schedule
-	lockedCoins = dva.LockedCoins(contextAt(endTime))
+	lockedCoins = dva.LockedCoins(endTime)
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all coins are still vesting after some time
-	lockedCoins = dva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
+	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// delegate some locked coins
 	// require that locked is reduced
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
 	dva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
-	lockedCoins = dva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
+	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount...)))
 }
 
@@ -391,40 +387,40 @@ func TestAddGrantPeriodicVestingAcc(t *testing.T) {
 	// At now+150, 75stake unvested but only 15stake locked, due to slashing
 	ctx = ctx.WithBlockTime(now.Add(150 * time.Second))
 	require.Equal(t, int64(75), pva.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
-	require.Equal(t, int64(15), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(15), pva.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant while all slashing is covered by unvested tokens
 	pva.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
 
 	// After new grant, 115stake locked at now+150 due to slashing,
 	// delegation bookkeeping unchanged
-	require.Equal(t, int64(115), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(115), pva.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(60), pva.DelegatedVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), pva.DelegatedFree.AmountOf(stakeDenom).Int64())
 
 	// At now+425, 50stake unvested, nothing locked due to slashing
 	ctx = ctx.WithBlockTime(now.Add(425 * time.Second))
 	require.Equal(t, int64(50), pva.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
-	require.Equal(t, int64(0), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(0), pva.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant, while slashed amount is 50 unvested, 10 vested
 	pva.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
 
 	// After new grant, slashed amount reduced to 50 vested, locked is 100
-	require.Equal(t, int64(100), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(100), pva.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(50), pva.DelegatedVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), pva.DelegatedFree.AmountOf(stakeDenom).Int64())
 
 	// At now+1000, nothing unvested, nothing locked
 	ctx = ctx.WithBlockTime(now.Add(1000 * time.Second))
 	require.Equal(t, int64(0), pva.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
-	require.Equal(t, int64(0), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(0), pva.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant with residual slashed amount, but no unvested
 	pva.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
 
 	// After new grant, all 100 locked, no residual delegation bookkeeping
-	require.Equal(t, int64(100), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(100), pva.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), pva.DelegatedVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), pva.DelegatedFree.AmountOf(stakeDenom).Int64())
 
@@ -467,7 +463,7 @@ func TestAddGrantPeriodicVestingAcc_FullSlash(t *testing.T) {
 	pva.DelegatedVesting = c(stake(100))
 
 	// Nothing locked at now+150 since all unvested lost to slashing
-	require.Equal(t, int64(0), pva.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(0), pva.LockedCoins(now.Add(150*time.Second)).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
@@ -475,7 +471,7 @@ func TestAddGrantPeriodicVestingAcc_FullSlash(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, pva)
 
 	// Only 10 of the new grant locked, since 40 fell into the "hole" of slashed-vested
-	require.Equal(t, int64(10), pva.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(10), pva.LockedCoins(now.Add(150*time.Second)).AmountOf(stakeDenom).Int64())
 }
 
 func TestAddGrantPeriodicVestingAcc_negAmount(t *testing.T) {
@@ -616,16 +612,16 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 
 	// require that there exist no spendable coins at the beginning of the
 	// vesting schedule
-	lockedCoins := pva.LockedCoins(contextAt(now))
+	lockedCoins := pva.LockedCoins(now)
 	require.Equal(t, origCoins, lockedCoins)
 
 	// require that all original coins are spendable at the end of the vesting
 	// schedule
-	lockedCoins = pva.LockedCoins(contextAt(endTime))
+	lockedCoins = pva.LockedCoins(endTime)
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all still vesting coins (50%) are locked
-	lockedCoins = pva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
+	lockedCoins = pva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
@@ -784,18 +780,18 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 	// require that all coins are locked in the beginning of the vesting
 	// schedule
 	plva := types.NewPermanentLockedAccount(bacc, origCoins)
-	lockedCoins := plva.LockedCoins(contextAt(now))
+	lockedCoins := plva.LockedCoins(now)
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// require that all coins are still locked at end time
-	lockedCoins = plva.LockedCoins(contextAt(endTime))
+	lockedCoins = plva.LockedCoins(endTime)
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// delegate some locked coins
 	// require that locked is reduced
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
 	plva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
-	lockedCoins = plva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
+	lockedCoins = plva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount...)))
 }
 
@@ -988,16 +984,16 @@ func TestSpendableCoinsClawbackVestingAcc(t *testing.T) {
 
 	// require that there exist no spendable coins at the beginning of the
 	// vesting schedule
-	lockedCoins := va.LockedCoins(contextAt(now))
+	lockedCoins := va.LockedCoins(now)
 	require.Equal(t, origCoins, lockedCoins)
 
 	// require that all original coins are spendable at the end of the vesting
 	// schedule
-	lockedCoins = va.LockedCoins(contextAt(endTime))
+	lockedCoins = va.LockedCoins(endTime)
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all still vesting coins (50%) are locked
-	lockedCoins = va.LockedCoins(contextAt(now.Add(17 * time.Hour)))
+	lockedCoins = va.LockedCoins(now.Add(17 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
@@ -1461,7 +1457,7 @@ func TestAddGrantClawbackVestingAcc_fullSlash(t *testing.T) {
 	va.DelegatedVesting = c(stake(100))
 
 	// Nothing locked at now+150, due to slashing
-	require.Equal(t, int64(0), va.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(0), va.LockedCoins(now.Add(150*time.Second)).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
@@ -1472,7 +1468,7 @@ func TestAddGrantClawbackVestingAcc_fullSlash(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, va)
 
 	// Only 10 of the new grant locked, since 40 fell into the "hole" of slashed-vested.
-	require.Equal(t, int64(10), va.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(10), va.LockedCoins(now.Add(150*time.Second)).AmountOf(stakeDenom).Int64())
 }
 
 func TestAddGrantClawbackVestingAcc(t *testing.T) {
@@ -1505,7 +1501,7 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	// At now+150, 75stake unvested but only 15stake are locked, due to slashing
 	ctx = ctx.WithBlockTime(now.Add(150 * time.Second))
 	require.Equal(t, int64(75), va.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
-	require.Equal(t, int64(15), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(15), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant while all slashing is covered by unvested tokens
 	err := va.AddGrant(ctx, funder.String(), app.StakingKeeper, ctx.BlockTime().Unix(),
@@ -1514,35 +1510,35 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 
 	// After new grant, 115stake locked at now+150, due to slashing,
 	// delegation bookkeeping unchanged
-	require.Equal(t, int64(115), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(115), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(60), va.DelegatedVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), va.DelegatedFree.AmountOf(stakeDenom).Int64())
 
 	// At now+425, 50stake unvested, nothing locked due to slashing
 	ctx = ctx.WithBlockTime(now.Add(425 * time.Second))
 	require.Equal(t, int64(50), va.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
-	require.Equal(t, int64(0), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(0), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant, while slashed amount is 50 unvested, 10 vested
 	err = va.AddGrant(ctx, funder.String(), app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
 	require.NoError(t, err)
 
 	// After new grant, slashed amount reduced to 50 vested, locked is 100
-	require.Equal(t, int64(100), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(100), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(50), va.DelegatedVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), va.DelegatedFree.AmountOf(stakeDenom).Int64())
 
 	// At now+1000, nothing unvested, nothing locked
 	ctx = ctx.WithBlockTime(now.Add(1000 * time.Second))
 	require.Equal(t, int64(0), va.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
-	require.Equal(t, int64(0), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(0), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant with residual slashed amount, but no unvested
 	err = va.AddGrant(ctx, funder.String(), app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
 	require.NoError(t, err)
 
 	// After new grant, all 100 locked, no residual delegation bookkeeping
-	require.Equal(t, int64(100), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(100), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), va.DelegatedVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), va.DelegatedFree.AmountOf(stakeDenom).Int64())
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
@@ -18,7 +19,7 @@ import (
 
 // divide returns the division of total as evenly as possible.
 // Divisor must be 1 or greater and total must be nonnegative.
-func divide(total sdk.Int, divisor int) ([]sdk.Int, error) {
+func divide(total sdkmath.Int, divisor int) ([]sdkmath.Int, error) {
 	if divisor < 1 {
 		return nil, fmt.Errorf("divisions must be 1 or greater")
 	}
@@ -26,7 +27,7 @@ func divide(total sdk.Int, divisor int) ([]sdk.Int, error) {
 	if total.IsNegative() {
 		return nil, fmt.Errorf("total must be nonnegative")
 	}
-	divisions := make([]sdk.Int, divisor)
+	divisions := make([]sdkmath.Int, divisor)
 
 	// Ideally we could compute total of the first i divisions as
 	//     cumulative(i) = floor((total * i) / divisor)
@@ -68,7 +69,7 @@ func divideCoins(coins sdk.Coins, divisor int) ([]sdk.Coins, error) {
 		return nil, fmt.Errorf("divisor must be 1 or greater")
 	}
 	divisions := make([]sdk.Coins, divisor)
-	divisionsByDenom := make(map[string][]sdk.Int)
+	divisionsByDenom := make(map[string][]sdkmath.Int)
 	for _, coin := range coins {
 		dividedCoin, err := divide(coin.Amount, divisor)
 		if err != nil {

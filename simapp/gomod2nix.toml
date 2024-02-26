@@ -117,8 +117,8 @@ schema = 3
     version = "v1.0.5"
     hash = "sha256-t572Sr5iiHcuMKLMWa2i+LBAt192oa+G1oA371tG/eI="
   [mod."github.com/cosmos/cosmos-db"]
-    version = "v1.0.0"
-    hash = "sha256-3EL4xQsSpovTy/V3gwulybqSDHvuu7bPodBZib9JKAk="
+    version = "v1.0.2"
+    hash = "sha256-WjDoB2AGoIyEW30LlGcQX5JVACJbs0jWSY58IuJHz0M="
   [mod."github.com/cosmos/cosmos-proto"]
     version = "v1.0.0-beta.4"
     hash = "sha256-5Kn82nsZfiEtuwhhLZqmMxdAY1tX/Fi3HJ0/MEaRohw="
@@ -321,8 +321,8 @@ schema = 3
     version = "v1.0.0"
     hash = "sha256-xEd0mDBeq3eR/GYeXjoTVb2sPs8sTCosn5ayWkcgENI="
   [mod."github.com/klauspost/compress"]
-    version = "v1.17.6"
-    hash = "sha256-SU/joptkmHjvb/qUGyF2yy2uh/xZSJ2OQNeOlyrzxO0="
+    version = "v1.17.7"
+    hash = "sha256-UkW+tAFEZYj067z9gXDQjQx0dCF8noCn5OSw/APh4oo="
   [mod."github.com/kr/pretty"]
     version = "v0.3.1"
     hash = "sha256-DlER7XM+xiaLjvebcIPiB12oVNjyZHuJHoRGITzzpKU="

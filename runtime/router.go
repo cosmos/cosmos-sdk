@@ -3,12 +3,14 @@ package runtime
 import (
 	"context"
 
-	"cosmossdk.io/core/router"
-	"cosmossdk.io/core/store"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/store"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 func NewMsgRouterService(storeService store.KVStoreService, router *baseapp.MsgServiceRouter) router.Service {
@@ -24,7 +26,7 @@ type msgRouterService struct {
 }
 
 // InvokeTyped implements router.Service.
-func (m *msgRouterService) InvokeTyped(ctx context.Context, req protoiface.MessageV1, res protoiface.MessageV1) error {
+func (m *msgRouterService) InvokeTyped(ctx context.Context, req, res protoiface.MessageV1) error {
 	messageName := msgTypeURL(req)
 	return m.router.HybridHandlerByMsgName(messageName)(ctx, req, res)
 }

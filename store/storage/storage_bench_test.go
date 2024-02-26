@@ -32,6 +32,10 @@ var (
 		},
 		"pebbledb_default_opts": func(dataDir string) (store.VersionedDatabase, error) {
 			db, err := pebbledb.New(dataDir)
+			if err == nil && db != nil {
+				db.SetSync(false)
+			}
+
 			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 		"btree_sqlite": func(dataDir string) (store.VersionedDatabase, error) {

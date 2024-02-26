@@ -169,8 +169,31 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 	return am.keeper.BeginBlocker(ctx)
 }
 
-// EndBlock returns the end blocker for the staking module. It returns no validator
-// updates.
-func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	return am.keeper.EndBlocker(ctx)
+// EndBlock returns the end blocker for the staking module.
+func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
+	cometValidatorUpdates, err := am.keeper.EndBlocker(ctx) // TODO: refactor to return appmodule.ValidatorUpdate higher up the stack
+	if err != nil {
+		return nil, err
+	}
+
+	validatorUpdates := make([]appmodule.ValidatorUpdate, len(cometValidatorUpdates))
+	for i, v := range cometValidatorUpdates {
+		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
+			validatorUpdates[i] = appmodule.ValidatorUpdate{
+				PubKey:     ed25519,
+				PubKeyType: "ed25519",
+				Power:      v.Power,
+			}
+		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
+			validatorUpdates[i] = appmodule.ValidatorUpdate{
+				PubKey:     secp256k1,
+				PubKeyType: "secp256k1",
+				Power:      v.Power,
+			}
+		} else {
+			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
+		}
+	}
+
+	return validatorUpdates, nil
 }

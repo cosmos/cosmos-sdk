@@ -178,7 +178,7 @@ func TestRunMigrations(t *testing.T) {
 				for i := tc.fromVersion; i < tc.toVersion; i++ {
 					// Register migration for module from version `fromVersion` to `fromVersion+1`.
 					tt.Logf("Registering migration for %q v%d", tc.moduleName, i)
-					err = configurator.RegisterMigration(tc.moduleName, i, func(context.Context) error {
+					err = configurator.Register(tc.moduleName, i, func(context.Context) error {
 						called++
 
 						return nil
@@ -198,7 +198,7 @@ func TestRunMigrations(t *testing.T) {
 			// their latest ConsensusVersion.
 			_, err = app.ModuleManager.RunMigrations(
 				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
-				module.VersionMap{
+				appmodule.VersionMap{
 					"accounts":     accounts.AppModule{}.ConsensusVersion(),
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -241,7 +241,6 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
 	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1)
-	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule
 

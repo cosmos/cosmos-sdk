@@ -25,6 +25,7 @@ func (m msgServer) Register(ctx context.Context, msg *types.MsgRegister) (*types
 		return nil, err
 	}
 
+	// Addition authenticate
 	err = m.CheckCondition(ctx, types.Condition{
 		Owner:    msg.Owner,
 		Account:  msg.Account,
@@ -34,6 +35,7 @@ func (m msgServer) Register(ctx context.Context, msg *types.MsgRegister) (*types
 		return nil, err
 	}
 
+	// Check if owner is exist
 	if accExists := m.authKeeper.HasAccount(ctx, sdk.AccAddress(msg.Owner)); !accExists {
 		return nil, types.ErrNonExistOwner
 	}

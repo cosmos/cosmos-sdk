@@ -57,7 +57,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/crypto v0.16.0
-	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/sync v0.4.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
 	google.golang.org/grpc v1.60.1

@@ -102,6 +102,7 @@ func (c *Consensus[T]) handleQueryStore(path []string, st types.Store, req *abci
 		return nil, err
 	}
 
+	//TODO: fix to adhere to what store uses
 	res := &abci.ResponseQuery{
 		Codespace: cometerrors.RootCodespace,
 		Height:    int64(qRes.Version()),

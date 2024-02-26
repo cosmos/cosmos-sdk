@@ -53,7 +53,7 @@
             default = simd;
             simd = with pkgs; mkShell {
               buildInputs = [
-                go_1_21 # Use Go 1.21 version
+                go_1_22 # Use Go 1.22 version
                 rocksdb
               ];
             };

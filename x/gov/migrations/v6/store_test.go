@@ -19,7 +19,7 @@ import (
 )
 
 func TestMigrateStore(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(gov.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(gov.AppModule{}).Codec
 	govKey := storetypes.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, storetypes.NewTransientStoreKey("transient_test"))
 	storeService := runtime.NewKVStoreService(govKey)

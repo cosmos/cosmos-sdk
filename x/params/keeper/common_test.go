@@ -12,7 +12,7 @@ import (
 )
 
 func testComponents() (*codec.LegacyAmino, sdk.Context, storetypes.StoreKey, storetypes.StoreKey, paramskeeper.Keeper) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(params.AppModule{})
 	cdc := encodingConfig.Codec
 
 	legacyAmino := createTestCodec()

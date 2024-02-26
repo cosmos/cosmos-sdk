@@ -79,7 +79,7 @@ When creating a testnet the important part is migrate the validator set from man
 	// Remove all valdiators from last validators store
 	iterator = app.StakingKeeper.LastValidatorsIterator(ctx)
 	for ; iterator.Valid(); iterator.Next() {
-		stakingStore.Delete(iterator.Key())
+		app.StakingKeeper.LastValidatorPower.Delete(iterator.Key())
 	}
 	iterator.Close()
 
@@ -87,7 +87,7 @@ When creating a testnet the important part is migrate the validator set from man
 	app.StakingKeeper.SetValidator(ctx, newVal)
 	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
 	if err != nil {
-		tmos.Exit(err.Error())
+		panic(err)
 	}
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
 	app.StakingKeeper.SetLastValidatorPower(ctx, newVal.GetOperator(), 0)
@@ -103,10 +103,10 @@ Since the validator set has changed, we need to update the distribution records 
 
 ```go
 	// Initialize records for this validator across all distribution stores
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, newVal.GetOperator(), 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorCurrentRewards(ctx, newVal.GetOperator(), distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, newVal.GetOperator(), distrtypes.InitialValidatorAccumulatedCommission())
-	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, newVal.GetOperator(), distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	app.DistrKeeper.ValidatorHistoricalRewards.Set(ctx, newVal.GetOperator(), 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.ValidatorCurrentRewards.Set(ctx, newVal.GetOperator(), distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	app.DistrKeeper.ValidatorAccumulatedCommission.Set(ctx, newVal.GetOperator(), distrtypes.InitialValidatorAccumulatedCommission())
+	app.DistrKeeper.ValidatorOutstandingRewards.Set(ctx, newVal.GetOperator(), distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
 ```
 
 #### Slashing
@@ -124,7 +124,7 @@ We also need to set the validator signing info for the new validator.
 		StartHeight: app.LastBlockHeight() - 1,
 		Tombstoned:  false,
 	}
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
+	app.SlashingKeeper.ValidatorSigningInfo.Set(ctx, newConsAddr, newValidatorSigningInfo)
 ```
 
 #### Bank

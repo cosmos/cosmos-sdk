@@ -1102,7 +1102,7 @@ func (k Keeper) Undelegate(
 // TransferUnbonding changes the ownership of UnbondingDelegation entries
 // until the desired number of tokens have changed hands. Returns the actual
 // number of tokens transferred.
-func (k Keeper) TransferUnbonding(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantAmt sdk.Int) sdk.Int {
+func (k Keeper) TransferUnbonding(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantAmt math.Int) math.Int {
 	transferred := sdk.ZeroInt()
 	ubdFrom, found := k.GetUnbondingDelegation(ctx, fromAddr, valAddr)
 	if !found {

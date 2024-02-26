@@ -1019,6 +1019,9 @@ func (va *BaseVestingAccount) forceTransfer(ctx sdk.Context, amt sdk.Coins, dest
 	gotCoins = gotCoins.Sub(decrVesting)
 	ak.SetAccount(ctx, va)
 	// gotCoins should be zero at this point, unless DF+DV was not accurate
+	if !gotCoins.IsZero() {
+		ctx.Logger().Error("more staked than tracked in vesting delegation - %s undercounted by %s", va.Address, gotCoins)
+	}
 
 	// If we've transferred everything and still haven't transferred the desired clawback amount,
 	// then the account must have lost some unvested tokens from slashing.

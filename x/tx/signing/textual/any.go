@@ -2,6 +2,7 @@ package textual
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -74,7 +75,7 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 // Parse implements the ValueRenderer interface.
 func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) == 0 {
-		return nilValue, fmt.Errorf("expect at least one screen")
+		return nilValue, errors.New("expect at least one screen")
 	}
 	if screens[0].Indent != 0 {
 		return nilValue, fmt.Errorf("bad indentation: want 0, got %d", screens[0].Indent)

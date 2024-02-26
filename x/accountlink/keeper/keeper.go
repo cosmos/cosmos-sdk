@@ -3,9 +3,10 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"strings"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accountlink/interfaces"
 	"cosmossdk.io/x/accountlink/types"
@@ -23,54 +24,52 @@ type LegacyStateCodec interface {
 	Unmarshal([]byte, gogoproto.Message) error
 }
 
-type AccountsIndexes struct {
-	AccountType *indexes.ReversePair[sdk.AccAddress, string, types.AccountsMetadata]
-}
-
-func newAccountsIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
-	return AccountsIndexes{
-		AccountType: indexes.NewReversePair[types.AccountsMetadata](
-			sb, types.AccountTypeAddressPrefix, "addresses_by_account_type_index",
-			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			indexes.WithReversePairUncheckedValue(),
-		),
-	}
-}
-
-func (a AccountsIndexes) IndexesList() []collections.Index[collections.Pair[sdk.AccAddress, string], types.AccountsMetadata] {
-	return []collections.Index[collections.Pair[sdk.AccAddress, string], types.AccountsMetadata]{a.AccountType}
-}
-
 type Keeper struct {
 	authKeeper    types.AuthKeeper
 	accountKeeper types.AccountKeeper
 	// map all smart account addresses by key pair of owner address and account type
-	accounts collections.IndexedMap[collections.Pair[sdk.AccAddress, string], types.AccountsMetadata, AccountsIndexes]
+	accounts collections.Map[collections.Pair[sdk.AccAddress, string], types.AccountsMetadata]
 }
 
 func NewKeeper(authKeeper types.AuthKeeper, accountKeeper types.AccountKeeper, storeService store.KVStoreService, cdc LegacyStateCodec) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		authKeeper: authKeeper,
-		accounts:   *collections.NewIndexedMap(sb, types.AccountsPrefix, "accounts", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.AccountsMetadata](cdc), newAccountsIndexes(sb)),
+		accounts:   collections.NewMap(sb, types.AccountsPrefix, "accounts", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.AccountsMetadata](cdc)),
 	}
 }
 
-func (k Keeper) GetAccountsByOwner(ctx context.Context, owner sdk.AccAddress, accountType string) types.AccountsMetadata {
+func (k Keeper) GetAccountsByOwner(ctx context.Context, owner sdk.AccAddress, accountType string) (*types.AccountsMetadata, error) {
 	addresses, err := k.accounts.Get(ctx, collections.Join(owner, accountType))
+
 	if err != nil {
-		return types.AccountsMetadata{
-			Addresses: []string{},
+		// create new map when key not exist
+		if strings.Contains(err.Error(), collections.ErrNotFound.Error()) {
+			return &types.AccountsMetadata{
+				Addresses: map[string]bool{},
+			}, nil
 		}
+
+		return nil, err
 	}
-	return addresses
+
+	return &addresses, nil
 }
 
 func (k Keeper) SetAccountsByOwner(ctx context.Context, owner sdk.AccAddress, accountType, address string) error {
-	accounts := k.GetAccountsByOwner(ctx, owner, accountType)
-	accounts.Addresses = append(accounts.Addresses, address)
+	accounts, err := k.GetAccountsByOwner(ctx, owner, accountType)
+	if err != nil {
+		return err
+	}
 
-	err := k.accounts.Set(ctx, collections.Join(owner, accountType), accounts)
+	exist := accounts.Addresses[address]
+	if exist {
+		return fmt.Errorf("address %s already exist", address)
+	}
+
+	accounts.Addresses[address] = true
+
+	err = k.accounts.Set(ctx, collections.Join(owner, accountType), *accounts)
 	if err != nil {
 		return err
 	}

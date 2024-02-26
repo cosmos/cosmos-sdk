@@ -27,8 +27,16 @@ func (q queryServer) AccountsQuery(ctx context.Context, request *types.AccountsQ
 		return nil, types.ErrNonExistOwner
 	}
 
-	accData := q.GetAccountsByOwner(ctx, sdk.AccAddress(request.Owner), request.AccountType)
+	accData, err := q.GetAccountsByOwner(ctx, sdk.AccAddress(request.Owner), request.AccountType)
+	if err != nil {
+		return nil, err
+	}
+	addressesList := make([]string, len(accData.Addresses))
+	for addr := range accData.Addresses {
+		addressesList = append(addressesList, addr)
+	}
+
 	return &types.AccountsQueryResponse{
-		Addresses: accData.Addresses,
+		Addresses: addressesList,
 	}, nil
 }

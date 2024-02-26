@@ -1,12 +1,19 @@
 syntax = "proto3";
 package cosmos.accountlink.v1;
 
+import "google/api/annotations.proto";
+import "cosmos/query/v1/query.proto";
+
 option go_package = "cosmossdk.io/x/accountlink/types";
 
 // Query defines the Query service for the x/accountlink module.
 service Query {
   // AccountsQuery runs set accounts of an account type query belong to an owner.
-  rpc AccountsQuery(AccountsQueryRequest) returns (AccountsQueryResponse) {}
+  rpc AccountsQuery(AccountsQueryRequest) returns (AccountsQueryResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/account_link/v1beta1/owner/{owner}/account-type/"
+                                                 "{account_type}";
+  }
 }
 
 // AccountQueryRequest is the request type for the Query/AccountsQuery RPC

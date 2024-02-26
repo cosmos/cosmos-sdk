@@ -11,53 +11,90 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	io "io"
 	reflect "reflect"
+	sort "sort"
 	sync "sync"
 )
 
-var _ protoreflect.List = (*_AccountsMetadata_1_list)(nil)
+var _ protoreflect.Map = (*_AccountsMetadata_1_map)(nil)
 
-type _AccountsMetadata_1_list struct {
-	list *[]string
+type _AccountsMetadata_1_map struct {
+	m *map[string]bool
 }
 
-func (x *_AccountsMetadata_1_list) Len() int {
-	if x.list == nil {
+func (x *_AccountsMetadata_1_map) Len() int {
+	if x.m == nil {
 		return 0
 	}
-	return len(*x.list)
+	return len(*x.m)
 }
 
-func (x *_AccountsMetadata_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
+func (x *_AccountsMetadata_1_map) Range(f func(protoreflect.MapKey, protoreflect.Value) bool) {
+	if x.m == nil {
+		return
+	}
+	for k, v := range *x.m {
+		mapKey := (protoreflect.MapKey)(protoreflect.ValueOfString(k))
+		mapValue := protoreflect.ValueOfBool(v)
+		if !f(mapKey, mapValue) {
+			break
+		}
+	}
 }
 
-func (x *_AccountsMetadata_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
+func (x *_AccountsMetadata_1_map) Has(key protoreflect.MapKey) bool {
+	if x.m == nil {
+		return false
+	}
+	keyUnwrapped := key.String()
+	concreteValue := keyUnwrapped
+	_, ok := (*x.m)[concreteValue]
+	return ok
+}
+
+func (x *_AccountsMetadata_1_map) Clear(key protoreflect.MapKey) {
+	if x.m == nil {
+		return
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	delete(*x.m, concreteKey)
+}
+
+func (x *_AccountsMetadata_1_map) Get(key protoreflect.MapKey) protoreflect.Value {
+	if x.m == nil {
+		return protoreflect.Value{}
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	v, ok := (*x.m)[concreteKey]
+	if !ok {
+		return protoreflect.Value{}
+	}
+	return protoreflect.ValueOfBool(v)
+}
+
+func (x *_AccountsMetadata_1_map) Set(key protoreflect.MapKey, value protoreflect.Value) {
+	if !key.IsValid() || !value.IsValid() {
+		panic("invalid key or value provided")
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	valueUnwrapped := value.Bool()
 	concreteValue := valueUnwrapped
-	(*x.list)[i] = concreteValue
+	(*x.m)[concreteKey] = concreteValue
 }
 
-func (x *_AccountsMetadata_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	*x.list = append(*x.list, concreteValue)
+func (x *_AccountsMetadata_1_map) Mutable(key protoreflect.MapKey) protoreflect.Value {
+	panic("should not call Mutable on protoreflect.Map whose value is not of type protoreflect.Message")
 }
 
-func (x *_AccountsMetadata_1_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message AccountsMetadata at list field Addresses as it is not of Message kind"))
+func (x *_AccountsMetadata_1_map) NewValue() protoreflect.Value {
+	v := false
+	return protoreflect.ValueOfBool(v)
 }
 
-func (x *_AccountsMetadata_1_list) Truncate(n int) {
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_AccountsMetadata_1_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
-}
-
-func (x *_AccountsMetadata_1_list) IsValid() bool {
-	return x.list != nil
+func (x *_AccountsMetadata_1_map) IsValid() bool {
+	return x.m != nil
 }
 
 var (
@@ -137,7 +174,7 @@ func (x *fastReflection_AccountsMetadata) Interface() protoreflect.ProtoMessage 
 // on the current field descriptor.
 func (x *fastReflection_AccountsMetadata) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.Addresses) != 0 {
-		value := protoreflect.ValueOfList(&_AccountsMetadata_1_list{list: &x.Addresses})
+		value := protoreflect.ValueOfMap(&_AccountsMetadata_1_map{m: &x.Addresses})
 		if !f(fd_AccountsMetadata_addresses, value) {
 			return
 		}
@@ -195,10 +232,10 @@ func (x *fastReflection_AccountsMetadata) Get(descriptor protoreflect.FieldDescr
 	switch descriptor.FullName() {
 	case "cosmos.accountlink.v1.AccountsMetadata.addresses":
 		if len(x.Addresses) == 0 {
-			return protoreflect.ValueOfList(&_AccountsMetadata_1_list{})
+			return protoreflect.ValueOfMap(&_AccountsMetadata_1_map{})
 		}
-		listValue := &_AccountsMetadata_1_list{list: &x.Addresses}
-		return protoreflect.ValueOfList(listValue)
+		mapValue := &_AccountsMetadata_1_map{m: &x.Addresses}
+		return protoreflect.ValueOfMap(mapValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accountlink.v1.AccountsMetadata"))
@@ -220,9 +257,9 @@ func (x *fastReflection_AccountsMetadata) Get(descriptor protoreflect.FieldDescr
 func (x *fastReflection_AccountsMetadata) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.accountlink.v1.AccountsMetadata.addresses":
-		lv := value.List()
-		clv := lv.(*_AccountsMetadata_1_list)
-		x.Addresses = *clv.list
+		mv := value.Map()
+		cmv := mv.(*_AccountsMetadata_1_map)
+		x.Addresses = *cmv.m
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accountlink.v1.AccountsMetadata"))
@@ -245,10 +282,10 @@ func (x *fastReflection_AccountsMetadata) Mutable(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "cosmos.accountlink.v1.AccountsMetadata.addresses":
 		if x.Addresses == nil {
-			x.Addresses = []string{}
+			x.Addresses = make(map[string]bool)
 		}
-		value := &_AccountsMetadata_1_list{list: &x.Addresses}
-		return protoreflect.ValueOfList(value)
+		value := &_AccountsMetadata_1_map{m: &x.Addresses}
+		return protoreflect.ValueOfMap(value)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accountlink.v1.AccountsMetadata"))
@@ -263,8 +300,8 @@ func (x *fastReflection_AccountsMetadata) Mutable(fd protoreflect.FieldDescripto
 func (x *fastReflection_AccountsMetadata) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.accountlink.v1.AccountsMetadata.addresses":
-		list := []string{}
-		return protoreflect.ValueOfList(&_AccountsMetadata_1_list{list: &list})
+		m := make(map[string]bool)
+		return protoreflect.ValueOfMap(&_AccountsMetadata_1_map{m: &m})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accountlink.v1.AccountsMetadata"))
@@ -335,9 +372,24 @@ func (x *fastReflection_AccountsMetadata) ProtoMethods() *protoiface.Methods {
 		var l int
 		_ = l
 		if len(x.Addresses) > 0 {
-			for _, s := range x.Addresses {
-				l = len(s)
-				n += 1 + l + runtime.Sov(uint64(l))
+			SiZeMaP := func(k string, v bool) {
+				mapEntrySize := 1 + len(k) + runtime.Sov(uint64(len(k))) + 1 + 1
+				n += mapEntrySize + 1 + runtime.Sov(uint64(mapEntrySize))
+			}
+			if options.Deterministic {
+				sortme := make([]string, 0, len(x.Addresses))
+				for k := range x.Addresses {
+					sortme = append(sortme, k)
+				}
+				sort.Strings(sortme)
+				for _, k := range sortme {
+					v := x.Addresses[k]
+					SiZeMaP(k, v)
+				}
+			} else {
+				for k, v := range x.Addresses {
+					SiZeMaP(k, v)
+				}
 			}
 		}
 		if x.unknownFields != nil {
@@ -370,12 +422,49 @@ func (x *fastReflection_AccountsMetadata) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.unknownFields)
 		}
 		if len(x.Addresses) > 0 {
-			for iNdEx := len(x.Addresses) - 1; iNdEx >= 0; iNdEx-- {
-				i -= len(x.Addresses[iNdEx])
-				copy(dAtA[i:], x.Addresses[iNdEx])
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Addresses[iNdEx])))
+			MaRsHaLmAp := func(k string, v bool) (protoiface.MarshalOutput, error) {
+				baseI := i
+				i--
+				if v {
+					dAtA[i] = 1
+				} else {
+					dAtA[i] = 0
+				}
+				i--
+				dAtA[i] = 0x10
+				i -= len(k)
+				copy(dAtA[i:], k)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(k)))
 				i--
 				dAtA[i] = 0xa
+				i = runtime.EncodeVarint(dAtA, i, uint64(baseI-i))
+				i--
+				dAtA[i] = 0xa
+				return protoiface.MarshalOutput{}, nil
+			}
+			if options.Deterministic {
+				keysForAddresses := make([]string, 0, len(x.Addresses))
+				for k := range x.Addresses {
+					keysForAddresses = append(keysForAddresses, string(k))
+				}
+				sort.Slice(keysForAddresses, func(i, j int) bool {
+					return keysForAddresses[i] < keysForAddresses[j]
+				})
+				for iNdEx := len(keysForAddresses) - 1; iNdEx >= 0; iNdEx-- {
+					v := x.Addresses[string(keysForAddresses[iNdEx])]
+					out, err := MaRsHaLmAp(keysForAddresses[iNdEx], v)
+					if err != nil {
+						return out, err
+					}
+				}
+			} else {
+				for k := range x.Addresses {
+					v := x.Addresses[k]
+					out, err := MaRsHaLmAp(k, v)
+					if err != nil {
+						return out, err
+					}
+				}
 			}
 		}
 		if input.Buf != nil {
@@ -431,7 +520,7 @@ func (x *fastReflection_AccountsMetadata) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
 				}
-				var stringLen uint64
+				var msglen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -441,23 +530,106 @@ func (x *fastReflection_AccountsMetadata) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					msglen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if msglen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + msglen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Addresses = append(x.Addresses, string(dAtA[iNdEx:postIndex]))
+				if x.Addresses == nil {
+					x.Addresses = make(map[string]bool)
+				}
+				var mapkey string
+				var mapvalue bool
+				for iNdEx < postIndex {
+					entryPreIndex := iNdEx
+					var wire uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						wire |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					fieldNum := int32(wire >> 3)
+					if fieldNum == 1 {
+						var stringLenmapkey uint64
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							stringLenmapkey |= uint64(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						intStringLenmapkey := int(stringLenmapkey)
+						if intStringLenmapkey < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						postStringIndexmapkey := iNdEx + intStringLenmapkey
+						if postStringIndexmapkey < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						if postStringIndexmapkey > l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+						iNdEx = postStringIndexmapkey
+					} else if fieldNum == 2 {
+						var mapvaluetemp int
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							mapvaluetemp |= int(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						mapvalue = bool(mapvaluetemp != 0)
+					} else {
+						iNdEx = entryPreIndex
+						skippy, err := runtime.Skip(dAtA[iNdEx:])
+						if err != nil {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+						}
+						if (skippy < 0) || (iNdEx+skippy) < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						if (iNdEx + skippy) > postIndex {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						iNdEx += skippy
+					}
+				}
+				x.Addresses[mapkey] = mapvalue
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -1137,7 +1309,7 @@ type AccountsMetadata struct {
 	unknownFields protoimpl.UnknownFields
 
 	// addresses is a list of smart account addresses
-	Addresses []string `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty"`
+	Addresses map[string]bool `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 }
 
 func (x *AccountsMetadata) Reset() {
@@ -1160,7 +1332,7 @@ func (*AccountsMetadata) Descriptor() ([]byte, []int) {
 	return file_cosmos_accountlink_v1_account_link_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *AccountsMetadata) GetAddresses() []string {
+func (x *AccountsMetadata) GetAddresses() map[string]bool {
 	if x != nil {
 		return x.Addresses
 	}
@@ -1234,33 +1406,40 @@ var file_cosmos_accountlink_v1_account_link_proto_rawDesc = []byte{
 	0x31, 0x1a, 0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
 	0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x30, 0x0a, 0x10, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x1c, 0x0a, 0x09, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x22, 0x87, 0x01, 0x0a, 0x09, 0x43, 0x6f,
-	0x6e, 0x64, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x03, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61,
-	0x67, 0x65, 0x73, 0x42, 0xd9, 0x01, 0x0a, 0x19, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x2e, 0x76,
-	0x31, 0x42, 0x10, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4c, 0x69, 0x6e, 0x6b, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x34, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
-	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x3b, 0x61, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41,
-	0x58, 0xaa, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x5c, 0x56,
-	0x31, 0xe2, 0x02, 0x21, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x17, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
-	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x3a, 0x3a, 0x56, 0x31, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa6, 0x01, 0x0a, 0x10, 0x41, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x54, 0x0a, 0x09,
+	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x6c, 0x69, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x65, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x09, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x65, 0x73, 0x1a, 0x3c, 0x0a, 0x0e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x45,
+	0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01,
+	0x22, 0x87, 0x01, 0x0a, 0x09, 0x43, 0x6f, 0x6e, 0x64, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2e,
+	0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x18,
+	0x0a, 0x07, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79,
+	0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x42, 0xd9, 0x01, 0x0a, 0x19, 0x63,
+	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x42, 0x10, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x4c, 0x69, 0x6e, 0x6b, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x34, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e,
+	0x6b, 0x2f, 0x76, 0x31, 0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b,
+	0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x2e, 0x56, 0x31,
+	0xca, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x21, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69, 0x6e, 0x6b, 0x5c, 0x56, 0x31,
+	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x17, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x6c, 0x69,
+	0x6e, 0x6b, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1275,19 +1454,21 @@ func file_cosmos_accountlink_v1_account_link_proto_rawDescGZIP() []byte {
 	return file_cosmos_accountlink_v1_account_link_proto_rawDescData
 }
 
-var file_cosmos_accountlink_v1_account_link_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cosmos_accountlink_v1_account_link_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_cosmos_accountlink_v1_account_link_proto_goTypes = []interface{}{
 	(*AccountsMetadata)(nil), // 0: cosmos.accountlink.v1.AccountsMetadata
 	(*Condition)(nil),        // 1: cosmos.accountlink.v1.Condition
-	(*anypb.Any)(nil),        // 2: google.protobuf.Any
+	nil,                      // 2: cosmos.accountlink.v1.AccountsMetadata.AddressesEntry
+	(*anypb.Any)(nil),        // 3: google.protobuf.Any
 }
 var file_cosmos_accountlink_v1_account_link_proto_depIdxs = []int32{
-	2, // 0: cosmos.accountlink.v1.Condition.messages:type_name -> google.protobuf.Any
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 0: cosmos.accountlink.v1.AccountsMetadata.addresses:type_name -> cosmos.accountlink.v1.AccountsMetadata.AddressesEntry
+	3, // 1: cosmos.accountlink.v1.Condition.messages:type_name -> google.protobuf.Any
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_accountlink_v1_account_link_proto_init() }
@@ -1327,7 +1508,7 @@ func file_cosmos_accountlink_v1_account_link_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_accountlink_v1_account_link_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

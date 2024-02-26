@@ -10,7 +10,7 @@ option go_package = "cosmossdk.io/x/accountlink/types";
 // corresponding to a pair of owner address and account type
 message AccountsMetadata {
   // addresses is a list of smart account addresses
-  repeated string addresses = 1;
+  map<string, bool> addresses = 1;
 }
 
 // Condition or a set of rule that are check before any

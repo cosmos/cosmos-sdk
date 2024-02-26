@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
@@ -39,8 +40,8 @@ type (
 )
 
 type Consensus[T transaction.Tx] struct {
-	app             appmanager.AppManager[T]
-	cfg             Config
+	app             *appmanager.AppManager[T]
+	cfg             *cmtcfg.Config
 	store           types.Store
 	logger          log.Logger
 	txCodec         transaction.Codec[T]
@@ -61,10 +62,10 @@ type Consensus[T transaction.Tx] struct {
 }
 
 func NewConsensus[T transaction.Tx](
-	app appmanager.AppManager[T],
+	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	store types.Store,
-	cfg Config,
+	cfg *cmtcfg.Config,
 ) *Consensus[T] {
 	return &Consensus[T]{
 		mempool: mp,

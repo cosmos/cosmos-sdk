@@ -18,9 +18,9 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	sdkabci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
-	sdkabci "cosmossdk.io/api/tendermint/abci"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -196,7 +196,7 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 	abciEvents := make([]*sdkabci.Event, len(txRes.Events))
 	for i, e := range txRes.Events {
 		abciEvents[i] = &sdkabci.Event{
-			Type_:      e.Type,
+			Type:       e.Type,
 			Attributes: make([]*sdkabci.EventAttribute, len(e.Attributes)),
 		}
 

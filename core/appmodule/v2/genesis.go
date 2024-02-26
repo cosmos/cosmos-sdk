@@ -5,6 +5,7 @@ import (
 )
 
 // HasGenesis defines a custom genesis handling API implementation.
+// TODO: finalize this API
 type HasGenesis interface {
 	AppModule
 	DefaultGenesis() Message

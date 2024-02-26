@@ -278,6 +278,14 @@ type CacheKVStore interface {
 	Write()
 }
 
+// LockingStore allows for unlocking the associated lock keys that were acquired during
+// locking with CacheWrapWithLocks on a LockingCacheWrapper.
+type LockingStore interface {
+	Store
+
+	Unlock()
+}
+
 // CommitKVStore is an interface for MultiStore.
 type CommitKVStore interface {
 	Committer
@@ -308,6 +316,13 @@ type CacheWrapper interface {
 
 	// CacheWrapWithTrace branches a store with tracing enabled.
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
+}
+
+type LockingCacheWrapper interface {
+	CacheWrapper
+
+	// CacheWrapWithLocks branches a store with the specific lock keys being acquired.
+	CacheWrapWithLocks(lockKeys [][]byte) CacheWrap
 }
 
 func (cid CommitID) IsZero() bool {
@@ -377,7 +392,8 @@ type CapabilityKey StoreKey
 // KVStoreKey is used for accessing substores.
 // Only the pointer value should ever be used - it functions as a capabilities key.
 type KVStoreKey struct {
-	name string
+	name    string
+	locking bool
 }
 
 // NewKVStoreKey returns a new pointer to a KVStoreKey.
@@ -409,7 +425,19 @@ func (key *KVStoreKey) Name() string {
 }
 
 func (key *KVStoreKey) String() string {
-	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
+	return fmt.Sprintf("KVStoreKey{%p, %s, locking: %t}", key, key.name, key.locking)
+}
+
+func (key *KVStoreKey) IsLocking() bool {
+	return key.locking
+}
+
+// Enables locking for the store key.
+func (key *KVStoreKey) WithLocking() *KVStoreKey {
+	return &KVStoreKey{
+		name:    key.name,
+		locking: true,
+	}
 }
 
 // TransientStoreKey is used for indexing transient stores in a MultiStore

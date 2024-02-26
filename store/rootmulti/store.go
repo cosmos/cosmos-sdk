@@ -565,6 +565,22 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
 }
 
+// LockingCacheMultiStore creates ephemeral branch of the multi-store that supports locking and returns a
+// CacheMultiStore. It implements the MultiStore interface.
+func (rs *Store) LockingCacheMultiStore() types.CacheMultiStore {
+	stores := make(map[types.StoreKey]types.CacheWrapper)
+	for k, v := range rs.stores {
+		store := types.KVStore(v)
+		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+		// set same listeners on cache store will observe duplicated writes.
+		if rs.ListeningEnabled(k) {
+			store = listenkv.NewStore(store, k, rs.listeners[k])
+		}
+		stores[k] = store
+	}
+	return cachemulti.NewLockingStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
+}
+
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded. This should only be used for querying and

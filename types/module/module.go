@@ -119,6 +119,9 @@ type HasServices interface {
 	RegisterServices(Configurator)
 }
 
+// HasConsensusVersion is the interface for declaring a module consensus version.
+type HasConsensusVersion = appmodule.HasConsensusVersion
+
 // HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
 type HasABCIEndBlock interface {
 	AppModule

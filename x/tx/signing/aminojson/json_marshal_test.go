@@ -2,6 +2,7 @@ package aminojson_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -197,7 +198,7 @@ func TestMarshalDuration(t *testing.T) {
 		fields := msg.Descriptor().Fields()
 		secondsField := fields.ByName(secondsName)
 		if secondsField == nil {
-			return fmt.Errorf("expected seconds field")
+			return errors.New("expected seconds field")
 		}
 		seconds := msg.Get(secondsField).Int()
 

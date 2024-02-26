@@ -9,7 +9,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.1.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	gotest.tools/v3 v3.5.1
 )
 
@@ -20,7 +20,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
-	cosmossdk.io/math v1.2.0 // indirect
+	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/store v1.0.0 // indirect
 	cosmossdk.io/x/tx v0.13.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -149,9 +149,8 @@ require (
 	google.golang.org/grpc v1.60.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
 )

@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/math v1.2.0
+	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.0.2
 	cosmossdk.io/x/tx v0.13.0
 	github.com/99designs/keyring v1.2.1
@@ -54,14 +54,14 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.19.0
-	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/sync v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231120223509-83a465c0220f
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
@@ -157,7 +157,6 @@ require (
 	google.golang.org/genproto v0.0.0-20231211222908-989df2bf70f3 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )

@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
+## Unreleased
+
+### API Breaking Changes
+
+* (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support
+
 ## `v0.46.16-alpha.agoric.2` - 2024-02-08
 
 * Agoric/agoric-sdk#8871 Have `tx gov submit-proposal` accept either new or legacy syntax

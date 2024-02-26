@@ -43,7 +43,6 @@ func TestBankStateCompatibility(t *testing.T) {
 		authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
-		log.NewNopLogger(),
 	)
 
 	// test we can decode balances without problems

@@ -61,7 +61,6 @@ type BaseKeeper struct {
 	cdc                    codec.BinaryCodec
 	environment            appmodule.Environment
 	mintCoinsRestrictionFn types.MintingRestrictionFn
-	logger                 log.Logger
 }
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
@@ -88,22 +87,20 @@ func NewBaseKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
-	logger log.Logger,
 ) BaseKeeper {
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	// add the module name to the logger
-	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
+	env.Logger = env.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority, logger),
+		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority),
 		ak:                     ak,
 		cdc:                    cdc,
 		environment:            env,
 		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
-		logger:                 logger,
 	}
 }
 

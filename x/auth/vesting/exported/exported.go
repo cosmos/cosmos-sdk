@@ -16,7 +16,7 @@ type VestingAccount interface {
 	// To get spendable coins of a vesting account, first the total balance must
 	// be retrieved and the locked tokens can be subtracted from the total balance.
 	// Note, the spendable balance can be negative.
-	LockedCoins(ctx sdk.Context) sdk.Coins
+	LockedCoins(blockTime time.Time) sdk.Coins
 
 	// TrackDelegation performs internal vesting accounting necessary when
 	// delegating from a vesting account. It accepts the current block time, the

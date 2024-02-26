@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcfg "github.com/cometbft/cometbft/config"
 	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
@@ -41,7 +40,7 @@ type (
 
 type Consensus[T transaction.Tx] struct {
 	app             *appmanager.AppManager[T]
-	cfg             *cmtcfg.Config
+	cfg             Config
 	store           types.Store
 	logger          log.Logger
 	txCodec         transaction.Codec[T]
@@ -65,7 +64,7 @@ func NewConsensus[T transaction.Tx](
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	store types.Store,
-	cfg *cmtcfg.Config,
+	cfg Config,
 ) *Consensus[T] {
 	return &Consensus[T]{
 		mempool: mp,
@@ -73,6 +72,34 @@ func NewConsensus[T transaction.Tx](
 		app:     app,
 		cfg:     cfg,
 	}
+}
+
+func (c *Consensus[T]) SetMempool(mp mempool.Mempool[T]) {
+	c.mempool = mp
+}
+
+func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
+	c.streaming = sm
+}
+
+func (c *Consensus[T]) SetSnapshotManager(sm *snapshots.Manager) {
+	c.snapshotManager = sm
+}
+
+func (c *Consensus[T]) SetPrepareProposalHandler(handler handlers.PrepareHandler[T]) {
+	c.prepareProposalHandler = handler
+}
+
+func (c *Consensus[T]) SetProcessProposalHandler(handler handlers.ProcessHandler[T]) {
+	c.processProposalHandler = handler
+}
+
+func (c *Consensus[T]) SetExtendVoteExtension(handler ExtendVoteFunc) {
+	c.extendVote = handler
+}
+
+func (c *Consensus[T]) SetVerifyVoteExtension(handler VerifyVoteExtensionFunc) {
+	c.verifyVoteExt = handler
 }
 
 // BlockData is used to keep some data about the last committed block. Currently

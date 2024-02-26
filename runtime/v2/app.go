@@ -31,7 +31,7 @@ type App struct {
 	stf                *stf.STF[transaction.Tx]
 	msgRouterBuilder   *stf.MsgRouterBuilder
 	queryRouterBuilder *stf.MsgRouterBuilder
-	db                 Store
+	db                 Store // TODO: double check
 
 	// app configuration
 	logger    log.Logger
@@ -97,4 +97,12 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 	}
 
 	return a.storeKeys[i]
+}
+
+func (a *App) GetStore() Store {
+	return a.db
+}
+
+func (a *App) GetLogger() log.Logger {
+	return a.logger
 }

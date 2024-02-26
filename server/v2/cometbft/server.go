@@ -7,10 +7,11 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/types"
+	"cosmossdk.io/server/v2/mempool"
 	abciserver "github.com/cometbft/cometbft/abci/server"
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -18,36 +19,43 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	cmttypes "github.com/cometbft/cometbft/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-type CometBFTServer struct {
-	Node   *node.Node
-	app    abci.Application
-	logger log.Logger
+type CometBFTServer[T transaction.Tx] struct {
+	Node     *node.Node
+	CometBft *Consensus[T] // FACU, should we expose this or only expose the setters while keeping this private?
+	logger   log.Logger
 
-	config    *cmtcfg.Config
+	config    Config
 	cleanupFn func()
 }
 
-func NewCometBFTServer(
-	logger log.Logger,
+func NewCometBFTServer[T transaction.Tx](
 	app *runtime.App,
-	cfg *cmtcfg.Config,
+	cfg Config,
 	voteExtHandler types.VoteExtensionsHandler,
-) *CometBFTServer {
-	logger = logger.With("module", "cometbft-server")
-	return &CometBFTServer{
-		logger: logger,
-		app:    NewConsensus[transaction.Tx](app.AppManager, nil, nil, cfg),
-		config: cfg,
+) *CometBFTServer[T] {
+	logger := app.GetLogger().With("module", "cometbft-server")
+
+	// create noop mempool
+	mempool := mempool.NewNoopMempool[T]()
+
+	// TODO: set default handlers (prepare, process, extendvote, verify vote)
+	// TODO: set
+	return &CometBFTServer[T]{
+		logger:   logger,
+		CometBft: NewConsensus[T](app.AppManager[T], mempool, app.GetStore(), cfg),
+		config:   cfg,
 	}
 }
 
-func (s *CometBFTServer) Name() string {
+func (s *CometBFTServer[T]) Name() string {
 	return "cometbft"
 }
 
-func (s *CometBFTServer) Start(ctx context.Context) error {
+func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {
 		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.app)
@@ -60,20 +68,20 @@ func (s *CometBFTServer) Start(ctx context.Context) error {
 		return svr.Start()
 	}
 
-	nodeKey, err := p2p.LoadOrGenNodeKey(s.config.NodeKeyFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(s.config.CmtConfig.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
 	s.Node, err = node.NewNodeWithContext(
 		ctx,
-		s.config,
-		pvm.LoadOrGenFilePV(s.config.PrivValidatorKeyFile(), s.config.PrivValidatorStateFile()),
+		s.config.CmtConfig,
+		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(s.app),
-		getGenDocProvider(s.config),
+		proxy.NewLocalClientCreator(s.CometBft),
+		getGenDocProvider(s.config.CmtConfig),
 		cmtcfg.DefaultDBProvider,
-		node.DefaultMetricsProvider(s.config.Instrumentation),
+		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),
 		wrappedLogger,
 	)
 	if err != nil {
@@ -89,12 +97,21 @@ func (s *CometBFTServer) Start(ctx context.Context) error {
 	return s.Node.Start()
 }
 
-func (s *CometBFTServer) Stop(_ context.Context) error {
+func (s *CometBFTServer[T]) Stop(_ context.Context) error {
 	defer s.cleanupFn()
 	if s.Node != nil {
 		return s.Node.Stop()
 	}
 	return nil
+}
+
+func (s *CometBFTServer[T]) Config() (any, *viper.Viper) {
+	v := viper.New()
+	v.SetConfigFile("???") // TODO: where do we set this
+	v.SetConfigName("config")
+	v.SetConfigType("toml")
+	v.ReadInConfig()
+	return nil, nil
 }
 
 // returns a function which returns the genesis doc from the genesis file.
@@ -108,3 +125,38 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) 
 		return appGenesis.ToGenesisDoc()
 	}
 }
+
+func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
+	return serverv2.CLIConfig{
+		Command: []*cobra.Command{
+			s.QueryBlockCmd(),
+			s.QueryBlocksCmd(),
+			s.QueryBlockResultsCmd(),
+			s.
+		},
+	}
+}
+
+/*
+GetStore from app
+GetLogger from app
+
+// Set on abci.go
+func SetCodec? <- I think we can get this from app manager too. Is codec.Codec fine?
+
+func SetExtendVoteExtension
+func SetVerifyVoteExtension
+func SetPrepareProposalHandler
+func SetProcessProposalHandler
+func SetSnapshotManager (?)
+
+API routes
+SetServer grpc
+grpc gateway
+streaming
+telemetry
+cli commands
+
+
+
+*/

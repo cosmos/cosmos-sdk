@@ -4,6 +4,7 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	"cosmossdk.io/server/v2/core/store"
+	storev2 "cosmossdk.io/store/v2"
 )
 
 type Store interface {
@@ -19,7 +20,7 @@ type Store interface {
 	StateCommit(changes []store.StateChanges) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
-	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
+	Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
 }
 
 type QueryResult interface {

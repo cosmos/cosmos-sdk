@@ -1,13 +1,17 @@
 package runtime
 
 import (
+	"context"
+
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/store"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
-func NewMsgRouterService(storeService store.KVStoreService, router baseapp.MessageRouter) router.Service {
+func NewMsgRouterService(storeService store.KVStoreService, router *baseapp.MsgServiceRouter) router.Service {
 	return &msgRouterService{
 		storeService: storeService,
 		router:       router,
@@ -16,15 +20,20 @@ func NewMsgRouterService(storeService store.KVStoreService, router baseapp.Messa
 
 type msgRouterService struct {
 	storeService store.KVStoreService
-	router       baseapp.MessageRouter
+	router       *baseapp.MsgServiceRouter
 }
 
-// Handler implements router.Service.
-func (m *msgRouterService) Handler(msg proto.Message) router.Service {
-	return m.router.Handler(msg)
+// InvokeTyped implements router.Service.
+func (m *msgRouterService) InvokeTyped(ctx context.Context, req protoiface.MessageV1, res protoiface.MessageV1) error {
+	messageName := msgTypeURL(req)
+	return m.router.HybridHandlerByMsgName(messageName)(ctx, req, res)
 }
 
-// HandlerByTypeURL implements router.Service.
-func (*msgRouterService) HandlerByTypeURL(typeURL string) router.Service {
-	panic("unimplemented")
+// msgTypeURL returns the TypeURL of a `sdk.Msg`.
+func msgTypeURL(msg proto.Message) string {
+	if m, ok := msg.(protov2.Message); ok {
+		return "/" + string(m.ProtoReflect().Descriptor().FullName())
+	}
+
+	return "/" + proto.MessageName(msg)
 }

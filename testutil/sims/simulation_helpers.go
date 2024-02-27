@@ -55,7 +55,7 @@ func SimulationOperations(app runtime.AppSimI, cdc codec.Codec, config simtypes.
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
-		TxConfig:  authtx.NewTxConfig(cdc, authtx.DefaultSignModes), // TODO(tip): we should extract this from app
+		TxConfig:  authtx.NewTxConfig(cdc, authtx.DefaultSignModes, "cosmos", "cosmosvaloper"), // TODO(tip): we should extract this from app
 		BondDenom: sdk.DefaultBondDenom,
 	}
 

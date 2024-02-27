@@ -12,7 +12,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	coreheader "cosmossdk.io/core/header"
-
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 
@@ -124,7 +123,7 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 
 	header := ctx.BlockHeader()
 	header.Time = newBlockTime
-	header.Height = header.Height + 1
+	header.Height++
 
 	newCtx := app.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
 		Height: header.Height,

@@ -17,11 +17,13 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	coreheader "cosmossdk.io/core/header"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -105,6 +107,35 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 	cfg := DefaultStartUpConfig()
 	cfg.AtGenesis = true
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
+}
+
+// NextBlock starts a new block.
+func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.Context, error) {
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
+	if err != nil {
+		return sdk.Context{}, err
+	}
+	_, err = app.Commit()
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	newBlockTime := ctx.BlockTime().Add(jumpTime)
+
+	header := ctx.BlockHeader()
+	header.Time = newBlockTime
+	header.Height = header.Height + 1
+
+	newCtx := app.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
+
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	return newCtx, err
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.

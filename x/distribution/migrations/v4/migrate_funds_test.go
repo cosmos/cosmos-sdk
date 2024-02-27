@@ -62,7 +62,6 @@ func TestFundsMigration(t *testing.T) {
 		accountKeeper,
 		map[string]bool{},
 		authority.String(),
-		log.NewNopLogger(),
 	)
 
 	// gomock initializations

@@ -1,4 +1,4 @@
-package vesting
+package lockup
 
 import (
 	"bytes"

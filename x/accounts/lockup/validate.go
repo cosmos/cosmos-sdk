@@ -1,4 +1,4 @@
-package vesting
+package lockup
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -16,18 +16,6 @@ import (
 	"cosmossdk.io/server/v2/mempool"
 )
 
-type (
-	// PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations
-	// over the list of proposed transactions. It can return a modified list of txs to include in the proposal.
-	PrepareHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) ([]T, error)
-
-	// ProcessHandler is a function that takes a list of transactions and returns a boolean and an error.
-	// If the verification of a transaction fails, the boolean is false and the error is non-nil.
-	ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) error
-
-	VerifyVoteExtensionhandler func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
-	ExtendVoteHandler          func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
-)
 type AppManager[T transaction.Tx] interface {
 	ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error)
 	Query(ctx context.Context, version uint64, request appmanager.Type) (response appmanager.Type, err error)

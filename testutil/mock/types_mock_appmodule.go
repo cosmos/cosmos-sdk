@@ -60,7 +60,7 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) DefaultGenesis(arg0 interf
 func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]appmodule.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]appmodule.ValidatorUpdate)
+	ret0, _ := ret[0].([]appmodulev2.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

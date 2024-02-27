@@ -16,6 +16,7 @@ import (
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/protocompat"
@@ -178,6 +179,7 @@ func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdate
 		return nil
 	}
 
+
 	valUpdateFunc = func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 		// get validator updates of modules implementing directly the new HasUpdateValidators interface
 		for _, v := range m.modules {
@@ -222,7 +224,7 @@ func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error 
 func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
 	return func(ctx context.Context, tx transaction.Tx) error {
 		for _, moduleName := range m.config.TxValidation {
-			if module, ok := m.modules[moduleName].(appmodule.HasTxValidation[transaction.Tx]); ok {
+			if module, ok := m.modules[moduleName].(appmodulev2.HasTxValidation[transaction.Tx]); ok {
 				if err := module.TxValidator(ctx, tx); err != nil {
 					return fmt.Errorf("failed to run txvalidator for %s: %w", moduleName, err)
 				}

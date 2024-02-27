@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -34,10 +35,10 @@ var (
 	_ module.HasRegisterInterfaces = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasPreBlocker = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
+	_ appmodulev2.AppModule     = AppModule{}
+	_ appmodule.HasPreBlocker   = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodulev2.HasMigrations = AppModule{}
 )
 
 // AppModule implements the sdk.AppModule interface

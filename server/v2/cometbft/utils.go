@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	sdkabci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -20,8 +20,7 @@ import (
 
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
-	sdkabci "cosmossdk.io/api/tendermint/abci"
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
@@ -125,7 +124,7 @@ func finalizeBlockResponse(
 	return resp, nil
 }
 
-func intoABCIValidatorUpdates(updates []appmodule.ValidatorUpdate) []abci.ValidatorUpdate {
+func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.ValidatorUpdate {
 	valsetUpdates := make([]abci.ValidatorUpdate, len(updates))
 
 	for i := range updates {
@@ -196,7 +195,7 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 	abciEvents := make([]*sdkabci.Event, len(txRes.Events))
 	for i, e := range txRes.Events {
 		abciEvents[i] = &sdkabci.Event{
-			Type_:      e.Type,
+			Type:       e.Type,
 			Attributes: make([]*sdkabci.EventAttribute, len(e.Attributes)),
 		}
 
@@ -348,22 +347,22 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	} else {
 		// convert our params to cometbft params
 		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds)
-		cs = &types1.ConsensusParams{
-			Block: &types1.BlockParams{
+		cs = &cmtproto.ConsensusParams{
+			Block: &cmtproto.BlockParams{
 				MaxBytes: r.Params.Block.MaxBytes,
 				MaxGas:   r.Params.Block.MaxGas,
 			},
-			Evidence: &types1.EvidenceParams{
+			Evidence: &cmtproto.EvidenceParams{
 				MaxAgeNumBlocks: r.Params.Evidence.MaxAgeNumBlocks,
 				MaxAgeDuration:  evidenceMaxDuration,
 			},
-			Validator: &types1.ValidatorParams{
+			Validator: &cmtproto.ValidatorParams{
 				PubKeyTypes: r.Params.Validator.PubKeyTypes,
 			},
-			Version: &types1.VersionParams{
+			Version: &cmtproto.VersionParams{
 				App: r.Params.Version.App,
 			},
-			Abci: &types1.ABCIParams{
+			Abci: &cmtproto.ABCIParams{
 				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
 			},
 		}

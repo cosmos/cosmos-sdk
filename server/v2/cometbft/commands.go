@@ -207,7 +207,16 @@ for. Each module documents its respective events under 'xx_events.md'.
 				return err
 			}
 
-			return clientCtx.PrintProto(blocks)
+			// return clientCtx.PrintProto(blocks) // TODO: previously we had this, but I think it can be replaced with a simple json marshal.
+			// We are missing YAML output tho.
+
+			bz, err := json.Marshal(blocks)
+			if err != nil {
+				return err
+			}
+
+			_, err = cmd.OutOrStdout().Write(bz)
+			return err
 		},
 	}
 
@@ -266,7 +275,15 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with height %s", args[0])
 				}
 
-				return clientCtx.PrintProto(output)
+				// return clientCtx.PrintProto(output)
+
+				bz, err := json.Marshal(output)
+				if err != nil {
+					return err
+				}
+
+				_, err = cmd.OutOrStdout().Write(bz)
+				return err
 
 			case auth.TypeHash:
 
@@ -284,7 +301,14 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with hash %s", args[0])
 				}
 
-				return clientCtx.PrintProto(output)
+				// return clientCtx.PrintProto(output)
+				bz, err := json.Marshal(output)
+				if err != nil {
+					return err
+				}
+
+				_, err = cmd.OutOrStdout().Write(bz)
+				return err
 
 			default:
 				return fmt.Errorf("unknown --%s value %s", auth.FlagType, typ)
@@ -370,30 +394,18 @@ func (s *CometBFTServer[T]) BootstrapStateCmd(appCreator types.AppCreator) *cobr
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			panic("not implemented, need a full app in here? or just with a store we are fine?")
-			return nil
-			// serverCtx := GetServerContextFromCmd(cmd)
-			// logger := log.NewLogger(cmd.OutOrStdout())
-			cfg := s.config.CmtConfig
-
-			height, err := cmd.Flags().GetInt64("height")
+			height, err := cmd.Flags().GetUint64("height")
 			if err != nil {
 				return err
 			}
 			if height == 0 {
-				// s.app.GetStore()
-				// ss
-				// 	home := serverCtx.Viper.GetString(flags.FlagHome)
-				// 	db, err := OpenDB(home, GetAppDBBackend(serverCtx.Viper))
-				// 	if err != nil {
-				// 		return err
-				// 	}
-
-				// 	app := appCreator(logger, db, nil, serverCtx.Viper)
-				// 	height = app.CommitMultiStore().LastCommitID().Version
+				height, err = s.CometBFT.store.LatestVersion()
+				if err != nil {
+					return err
+				}
 			}
 
-			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, uint64(height), nil)
+			return node.BootstrapState(cmd.Context(), s.config.CmtConfig, cmtcfg.DefaultDBProvider, height, nil)
 		},
 	}
 

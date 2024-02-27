@@ -12,13 +12,13 @@ import (
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
-	"cosmossdk.io/x/slashing/testutil"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	distributionkeeper "cosmossdk.io/x/distribution/keeper"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/tests/integration/slashing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -34,7 +34,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 	app, err := simtestutil.Setup(depinject.Configs(
 		depinject.Supply(log.NewNopLogger()),
-		testutil.AppConfig,
+		slashing.AppConfig,
 	), &stakingKeeper, &bankKeeper, &slashKeeper, &distrKeeper)
 	require.NoError(t, err)
 

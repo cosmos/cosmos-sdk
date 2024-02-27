@@ -10,13 +10,14 @@ import (
 	"github.com/cosmos/iavl/v2"
 	"github.com/dustin/go-humanize"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 var (
@@ -49,19 +50,21 @@ func LoadStoreWithInitialVersion(v2RootPath string, metadata *iavl.SqliteKVStore
 		if err != nil {
 			return nil, fmt.Errorf("failed to estimate mmap size for sqlite db path=%s: %w", path, err)
 		}
-		bz, err := gogotypes.StdInt32Marshal(int32(sqlOpts.MmapSize))
+		bz, err := gogotypes.StdUInt64Marshal(sqlOpts.MmapSize)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal mmap size for sqlite db path=%s: %w", path, err)
 		}
-		metadata.Set(mmapKey, bz)
+		if err = metadata.Set(mmapKey, bz); err != nil {
+			return nil, err
+		}
 	} else {
-		var sz int32
-		err = gogotypes.StdInt32Unmarshal(&sz, mmapSize)
+		var sz uint64
+		err = gogotypes.StdUInt64Unmarshal(&sz, mmapSize)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal mmap size for sqlite db path=%s: %w", path, err)
 		}
 		fmt.Printf("mmap size for sqlite path=%s: %s\n", path, humanize.IBytes(uint64(sz)))
-		sqlOpts.MmapSize = int(sz)
+		sqlOpts.MmapSize = sz
 	}
 
 	sql, err := iavl.NewSqliteDb(pool, sqlOpts)
@@ -71,7 +74,8 @@ func LoadStoreWithInitialVersion(v2RootPath string, metadata *iavl.SqliteKVStore
 
 	tree := iavl.NewTree(sql, pool, iavl.TreeOptions{
 		StateStorage:       true,
-		CheckpointInterval: 1000,
+		CheckpointInterval: 10_000,
+		EvictionDepth:      16,
 		MetricsProxy:       &telemetry.GlobalMetricProxy{},
 		HeightFilter:       1,
 	})
@@ -193,11 +197,19 @@ func (s *Store) ReverseIterator(start, end []byte) types.Iterator {
 }
 
 func (s *Store) DeleteVersions(versions ...int64) error {
-	max := versions[0]
+	maxVersion := versions[0]
 	for _, v := range versions {
-		if v > max {
-			max = v
+		if v > maxVersion {
+			maxVersion = v
 		}
 	}
-	return s.Tree.DeleteVersionsTo(max)
+	return s.Tree.DeleteVersionsTo(maxVersion)
+}
+
+func (s *Store) WorkingBytes() uint64 {
+	return s.Tree.WorkingBytes()
+}
+
+func (s *Store) SetShouldCheckpoint() {
+	s.Tree.SetShouldCheckpoint()
 }

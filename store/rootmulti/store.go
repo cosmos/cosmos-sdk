@@ -89,6 +89,7 @@ type Store struct {
 	metadataKv         *iavlv2.SqliteKVStore
 	commitLock         chan struct{}
 	concurrentCommitCh chan *concurrentCommitResult
+	maxWorkingBytes    uint64
 }
 
 var (
@@ -689,7 +690,7 @@ func (rs *Store) PruneStores(clearPruningManager bool, pruningHeights []int64) (
 		return nil
 	}
 
-	rs.logger.Debug("pruning store", "heights", pruningHeights)
+	rs.logger.Info("pruning store", "heights", pruningHeights)
 
 	for key, store := range rs.stores {
 		rs.logger.Debug("pruning store", "key", key) // Also log store.name (a private variable)?
@@ -1231,6 +1232,7 @@ func (rs *Store) getLatestVersion() int64 {
 func (rs *Store) commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 	storeKeys := keysForStoreKeyMap(storeMap)
+	var workingBytes uint64
 
 	concurrentCommits := 0
 	for _, key := range storeKeys {
@@ -1249,6 +1251,13 @@ func (rs *Store) commitStores(version int64, storeMap map[types.StoreKey]types.C
 		} else {
 			if rs.concurrentIO > 0 && storeType == types.StoreTypeIAVL {
 				concurrentCommits++
+				iavlV2Store, ok := store.(*iavl_v2.Store)
+				if ok && rs.maxWorkingBytes > 0 {
+					workingBytes += iavlV2Store.WorkingBytes()
+					if workingBytes > rs.maxWorkingBytes {
+						iavlV2Store.SetShouldCheckpoint()
+					}
+				}
 				go func(k types.StoreKey, s types.CommitKVStore) {
 					<-rs.commitLock
 					commitID := store.Commit()
@@ -1330,6 +1339,7 @@ func (rs *Store) SetIAVLV2(path string) (err error) {
 	rs.concurrentIO = 8
 	rs.commitLock = make(chan struct{}, rs.concurrentIO)
 	rs.concurrentCommitCh = make(chan *concurrentCommitResult, rs.concurrentIO)
+	//rs.maxWorkingBytes = 5 * 1024 * 1024 * 1024
 
 	for i := 0; i < rs.concurrentIO; i++ {
 		rs.commitLock <- struct{}{}

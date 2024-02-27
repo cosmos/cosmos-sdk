@@ -1,4 +1,4 @@
-# x/accounts/vesting
+# x/accounts/lockup
 
 <!--- TODO: need to expand more on this --->
 

@@ -102,6 +102,8 @@ func TestSigVerification(t *testing.T) {
 	txConfigOpts := authtx.ConfigOptions{
 		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
 		EnabledSignModes:           enabledSignModes,
+		AddressPrefix:              "cosmos",
+		ValidatorPrefix:            "cosmosvaloper",
 	}
 	var err error
 	suite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(

@@ -33,6 +33,8 @@ type CometBFTServer[T transaction.Tx] struct {
 	cleanupFn func()
 }
 
+// App is an interface that represents an application in the CometBFT server.
+// It provides methods to access the app manager, logger, and store.
 type App[T transaction.Tx] interface {
 	GetApp() *appmanager.AppManager[T]
 	GetLogger() log.Logger
@@ -156,14 +158,9 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 }
 
 /*
-GetStore from app
-GetLogger from app
 
 // Set on abci.go
 func SetCodec? <- I think we can get this from app manager too. Is codec.Codec fine?
-
-func SetExtendVoteExtension
-func SetVerifyVoteExtension
 func SetSnapshotManager (?)
 
 API routes

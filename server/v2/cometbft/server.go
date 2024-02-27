@@ -25,7 +25,7 @@ import (
 
 type CometBFTServer[T transaction.Tx] struct {
 	Node     *node.Node
-	CometBft *Consensus[T] // FACU, should we expose this or only expose the setters while keeping this private?
+	CometBFT *Consensus[T]
 	logger   log.Logger
 
 	config    Config
@@ -46,9 +46,10 @@ func NewCometBFTServer[T transaction.Tx](
 	// TODO: set
 	return &CometBFTServer[T]{
 		logger:   logger,
-		CometBft: NewConsensus[T](app.AppManager[T], mempool, app.GetStore(), cfg),
+		CometBFT: NewConsensus[T](app.AppManager[T], mempool, app.GetStore(), cfg),
 		config:   cfg,
 	}
+
 }
 
 func (s *CometBFTServer[T]) Name() string {
@@ -58,7 +59,7 @@ func (s *CometBFTServer[T]) Name() string {
 func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {
-		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.app)
+		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.CometBFT)
 		if err != nil {
 			return fmt.Errorf("error creating listener: %w", err)
 		}
@@ -78,7 +79,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		s.config.CmtConfig,
 		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(s.CometBft),
+		proxy.NewLocalClientCreator(s.CometBFT),
 		getGenDocProvider(s.config.CmtConfig),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),
@@ -129,10 +130,14 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) 
 func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Command: []*cobra.Command{
+			s.StatusCommand(),
+			s.ShowNodeIDCmd(),
+			s.ShowValidatorCmd(),
+			s.ShowAddressCmd(),
+			s.VersionCmd(),
 			s.QueryBlockCmd(),
 			s.QueryBlocksCmd(),
 			s.QueryBlockResultsCmd(),
-			s.
 		},
 	}
 }

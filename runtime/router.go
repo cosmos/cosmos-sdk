@@ -67,7 +67,7 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	return msgResp, err
 }
 
-// msgTypeURL returns the TypeURL of a `sdk.Msg`.
+// msgTypeURL returns the TypeURL of a proto message.
 func msgTypeURL(msg proto.Message) string {
 	if m, ok := msg.(protov2.Message); ok {
 		return "/" + string(m.ProtoReflect().Descriptor().FullName())

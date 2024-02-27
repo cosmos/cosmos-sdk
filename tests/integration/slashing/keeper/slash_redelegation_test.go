@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -13,18 +15,15 @@ import (
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
+	distributionkeeper "cosmossdk.io/x/distribution/keeper"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	distributionkeeper "cosmossdk.io/x/distribution/keeper"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/slashing"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestSlashRedelegation(t *testing.T) {
@@ -111,7 +110,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block, commit height 2, move to height 3
-	// with the new delegations, evil val increases in voting power and commit byzantine behaviour at height 3 consensus
+	// with the new delegations, evil val increases in voting power and commit byzantine behavior at height 3 consensus
 	// at the same time, acc 1 and acc 2 withdraw delegation from evil val
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
 	require.NoError(t, err)
@@ -138,9 +137,9 @@ func TestSlashRedelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block, commit height 3, move to height 4
-	// Slash evil val for byzantine behaviour at height 3 consensus,
+	// Slash evil val for byzantine behavior at height 3 consensus,
 	// at which acc 1 and acc 2 still contributed to evil val voting power
-	// even tho they undelegate at block 3, the valset update is applied after commited block 3 when height 3 consensus already passes
+	// even tho they undelegate at block 3, the valset update is applied after committed block 3 when height 3 consensus already passes
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
 	require.NoError(t, err)
 

@@ -118,7 +118,6 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 			return delegation, nil
 		}, query.WithCollectionPaginationPairPrefix[sdk.ValAddress, sdk.AccAddress](valAddr),
 	)
-
 	if err != nil {
 		delegations, pageResponse, err := k.getValidatorDelegationsLegacy(ctx, req)
 		if err != nil {

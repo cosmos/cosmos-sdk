@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/server/v2/mempool"
@@ -32,8 +32,14 @@ type CometBFTServer[T transaction.Tx] struct {
 	cleanupFn func()
 }
 
+type App[T transaction.Tx] interface {
+	GetApp() *appmanager.AppManager[T]
+	GetLogger() log.Logger
+	GetStore() types.Store
+}
+
 func NewCometBFTServer[T transaction.Tx](
-	app *runtime.App,
+	app App[T],
 	cfg Config,
 	voteExtHandler types.VoteExtensionsHandler,
 ) *CometBFTServer[T] {
@@ -46,7 +52,7 @@ func NewCometBFTServer[T transaction.Tx](
 	// TODO: set
 	return &CometBFTServer[T]{
 		logger:   logger,
-		CometBFT: NewConsensus[T](app.AppManager, mempool, app.GetStore(), cfg),
+		CometBFT: NewConsensus[T](app.GetApp(), mempool, app.GetStore(), cfg),
 		config:   cfg,
 	}
 

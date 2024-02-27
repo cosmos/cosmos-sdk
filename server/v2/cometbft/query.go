@@ -102,28 +102,29 @@ func (c *Consensus[T]) handleQueryStore(path []string, st types.Store, req *abci
 		return nil, err
 	}
 
-	//TODO: fix to adhere to what store uses
 	res := &abci.ResponseQuery{
 		Codespace: cometerrors.RootCodespace,
-		Height:    int64(qRes.Version()),
-		Key:       qRes.Key(),
-		Value:     qRes.Value(),
+		Height:    int64(qRes.Version),
+		Key:       qRes.Key,
+		Value:     qRes.Value,
 	}
 
 	if req.Prove {
-		bz, err := qRes.Proof().Marshal()
-		if err != nil {
-			return nil, errorsmod.Wrap(err, "failed to marshal proof")
-		}
+		for _, proof := range qRes.ProofOps {
+			bz, err := proof.Proof.Marshal()
+			if err != nil {
+				return nil, errorsmod.Wrap(err, "failed to marshal proof")
+			}
 
-		res.ProofOps = &crypto.ProofOps{
-			Ops: []crypto.ProofOp{
-				{
-					Type: qRes.ProofType(),
-					Key:  qRes.Key(),
-					Data: bz,
+			res.ProofOps = &crypto.ProofOps{
+				Ops: []crypto.ProofOp{
+					{
+						Type: proof.Type,
+						Key:  proof.Key,
+						Data: bz,
+					},
 				},
-			},
+			}
 		}
 	}
 

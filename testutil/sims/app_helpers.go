@@ -170,7 +170,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
 		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-			Height:             app.LastBlockHeight() + 1,
+			Height:             app.LastBlockHeight()++,
 			NextValidatorsHash: valSet.Hash(),
 		})
 		if err != nil {

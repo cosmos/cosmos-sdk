@@ -56,7 +56,10 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	if typ == nil {
 		return nil, fmt.Errorf("no message type found for %s", respName)
 	}
-	msgResp := reflect.New(typ.Elem()).Interface().(protoiface.MessageV1)
+	msgResp, ok := reflect.New(typ.Elem()).Interface().(protoiface.MessageV1)
+	if !ok {
+		return nil, fmt.Errorf("could not create response message %s", respName)
+	}
 
 	handler := m.router.HybridHandlerByMsgName(messageName)
 	if handler == nil {

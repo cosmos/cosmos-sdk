@@ -25,7 +25,7 @@ type MessageRouter interface {
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 
-	ResponseNameByRequestName(msgName string) string
+	ResponseNameByRequestName(requestName string) string
 	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
 }
 
@@ -93,8 +93,8 @@ func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx con
 	return msr.hybridHandlers[msgName]
 }
 
-func (msr *MsgServiceRouter) ResponseNameByRequestName(msgName string) string {
-	return msr.responseByRequest[msgName]
+func (msr *MsgServiceRouter) ResponseNameByRequestName(requestName string) string {
+	return msr.responseByRequest[requestName]
 }
 
 func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {

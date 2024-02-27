@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
@@ -74,7 +73,6 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		environment:      env,
-		logger:           env.Logger,
 		addressCodec:     addressCodec,
 		msgRouter:        execRouter,
 		signerProvider:   signerProvider,
@@ -108,7 +106,6 @@ type Keeper struct {
 	signerProvider   SignerProvider
 	queryRouter      QueryRouter
 	makeSendCoinsMsg coinsTransferMsgFunc
-	logger           log.Logger
 
 	accounts map[string]implementation.Implementation
 

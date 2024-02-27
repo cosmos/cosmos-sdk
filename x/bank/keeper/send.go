@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
 
@@ -59,7 +58,6 @@ type BaseSendKeeper struct {
 	cdc         codec.BinaryCodec
 	ak          types.AccountKeeper
 	environment appmodule.Environment
-	logger      log.Logger
 
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
@@ -77,20 +75,18 @@ func NewBaseSendKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
-	logger log.Logger,
 ) BaseSendKeeper {
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseSendKeeper{
-		BaseViewKeeper:  NewBaseViewKeeper(env, cdc, ak, logger),
+		BaseViewKeeper:  NewBaseViewKeeper(env, cdc, ak),
 		cdc:             cdc,
 		ak:              ak,
 		environment:     env,
 		blockedAddrs:    blockedAddrs,
 		authority:       authority,
-		logger:          logger,
 		sendRestriction: newSendRestriction(),
 	}
 }

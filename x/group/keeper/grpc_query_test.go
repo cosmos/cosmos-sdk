@@ -45,7 +45,7 @@ func initKeeper(t *testing.T) *fixture {
 	key := storetypes.NewKVStoreKey(group.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 
 	ctx := testCtx.Ctx
 

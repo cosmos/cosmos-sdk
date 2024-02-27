@@ -103,7 +103,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
-		log.NewNopLogger(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))

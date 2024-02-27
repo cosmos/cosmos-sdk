@@ -47,6 +47,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19161](https://github.com/cosmos/cosmos-sdk/pull/19161) Remove `simulate` from `SetGasMeter`
 * [#19363](https://github.com/cosmos/cosmos-sdk/pull/19363) Remove `IterateAccounts` and `GetAllAccounts` methods from the AccountKeeper interface and Keeper.
 * [#19290](https://github.com/cosmos/cosmos-sdk/issues/19290) Pass `appmodule.Environment` to NewKeeper instead of passing individual services. 
+* [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating vesting accounts on a running chain. 
+<!-- TODO add a link to lockup accounts docs -->
 
 ### Consensus Breaking Changes
 

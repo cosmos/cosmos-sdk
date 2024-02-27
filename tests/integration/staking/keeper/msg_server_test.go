@@ -1583,6 +1583,66 @@ func TestICADelegateUndelegate(t *testing.T) {
 	require.Equal(t, sdk.ZeroDec(), validator.LiquidShares, "validator liquid shares after undelegation")
 }
 
+func TestTokenizeVestingDelegation(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+	var (
+		bankKeeper    = app.BankKeeper
+		accountKeeper = app.AccountKeeper
+		stakingKeeper = app.StakingKeeper
+	)
+
+	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	addrAcc1 := addrs[0]
+	addrVal1 := sdk.ValAddress(addrAcc1)
+
+	vestingAmount := math.NewInt(100_000)
+	originalVesting := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, vestingAmount))
+	startTime := ctx.BlockTime().Unix()
+	endTime := startTime + 86400
+
+	// create vesting account
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	baseAcc := authtypes.NewBaseAccount(addrAcc1, pubkey, 0, 0)
+	delayedVestingAccount := vestingtypes.NewContinuousVestingAccount(
+		baseAcc,
+		originalVesting,
+		startTime,
+		endTime,
+	)
+	accountKeeper.SetAccount(ctx, delayedVestingAccount)
+
+	pubKeys := simtestutil.CreateTestPubKeys(1)
+	pk1 := pubKeys[0]
+
+	// Create Validators and Delegation
+	val1 := testutil.NewValidator(t, addrVal1, pk1)
+	val1.Status = stakingtypes.Bonded
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	require.NoError(t, err)
+
+	delAmount := math.NewInt(100_0000)
+	// Delegate from both the main delegator as well as a random account so there is a
+	// non-zero delegation after redemption
+	err = delegateCoinsFromAccount(ctx, *stakingKeeper, addrAcc1, delAmount, val1)
+	require.NoError(t, err)
+
+	// apply TM updates
+	applyValidatorSetUpdates(t, ctx, stakingKeeper, -1)
+
+	// // Create ICA module account
+	// icaAccountAddress := createICAAccount(ctx, accountKeeper)
+
+	// // Fund module account
+	// delegationCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), tc.delegationAmount)
+	// err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
+	// require.NoError(t, err)
+	// err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegationCoin))
+	// require.NoError(t, err)
+
+}
+
 // Helper function to create 32-length account
 // Used to mock an liquid staking provider's ICA account
 func createICAAccount(ctx sdk.Context, ak accountkeeper.AccountKeeper) sdk.AccAddress {

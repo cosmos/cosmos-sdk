@@ -106,6 +106,21 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
 }
 
+// NextBlock starts a new block.
+func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) sdk.Context {
+	app.EndBlock(abci.RequestEndBlock{Height: ctx.BlockHeight()})
+
+	app.Commit()
+
+	newBlockTime := ctx.BlockTime().Add(jumpTime)
+	nextHeight := ctx.BlockHeight() + 1
+	newHeader := tmproto.Header{Height: nextHeight, Time: newBlockTime}
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
+
+	return app.NewUncachedContext(false, newHeader)
+}
+
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).

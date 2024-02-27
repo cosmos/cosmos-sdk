@@ -348,7 +348,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
-		k.logger.Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
+		k.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
 		return err
 	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
@@ -371,7 +371,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
+	k.Logger().Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
@@ -411,7 +411,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
+	k.Logger().Debug("burned tokens from account", "amount", amounts.String(), "from", address)
 
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {

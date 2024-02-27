@@ -46,7 +46,7 @@ func NewCometBFTServer[T transaction.Tx](
 	// TODO: set
 	return &CometBFTServer[T]{
 		logger:   logger,
-		CometBFT: NewConsensus[T](app.AppManager[T], mempool, app.GetStore(), cfg),
+		CometBFT: NewConsensus[T](app.AppManager, mempool, app.GetStore(), cfg),
 		config:   cfg,
 	}
 

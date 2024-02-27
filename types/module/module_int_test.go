@@ -6,8 +6,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/core/appmodule"
 )
 
 func TestModuleIntSuite(t *testing.T) {

@@ -150,8 +150,8 @@ func (m *MM) BeginBlock() func(ctx context.Context) error {
 }
 
 // EndBlock runs the end-block logic of all modules and tx validator updates
-func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdateFunc func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)) {
-	validatorUpdates := []appmodule.ValidatorUpdate{}
+func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdateFunc func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error)) {
+	validatorUpdates := []appmodulev2.ValidatorUpdate{}
 	endBlockFunc = func(ctx context.Context) error {
 		for _, moduleName := range m.config.EndBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasEndBlocker); ok {
@@ -179,11 +179,10 @@ func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdate
 		return nil
 	}
 
-
-	valUpdateFunc = func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
+	valUpdateFunc = func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) {
 		// get validator updates of modules implementing directly the new HasUpdateValidators interface
 		for _, v := range m.modules {
-			if module, ok := v.(appmodule.HasUpdateValidators); ok {
+			if module, ok := v.(appmodulev2.HasUpdateValidators); ok {
 				moduleValUpdates, err := module.UpdateValidators(ctx)
 				if err != nil {
 					return nil, err

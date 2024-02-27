@@ -1,6 +1,7 @@
 package store
 
 // Database provides access to the underlying database for CRUD operations of non-consensus data.
+// WARNING: using this api will make your module unprovable for fraud and validity proofs
 type DatabaseService interface {
 	GetDatabase() NonConsensusStore
 }

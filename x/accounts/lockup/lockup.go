@@ -32,10 +32,10 @@ var (
 )
 
 var (
-	CONTINUOUS_LOCKUP_ACCOUNT = "continuous-lockup-account"
-	DELAYED_LOCKUP_ACCOUNT    = "delayed-lockup-account"
-	PERIODIC_LOCKUP_ACCOUNT   = "periodic-lockup-account"
-	PERMANENT_LOCKUP_ACCOUNT  = "permanent-lockup-account"
+	CONTINUOUS_LOCKING_ACCOUNT = "continuous-locking-account"
+	DELAYED_LOCKING_ACCOUNT    = "delayed-locking-account"
+	PERIODIC_LOCKING_ACCOUNT   = "periodic-locking-account"
+	PERMANENT_LOCKING_ACCOUNT  = "permanent-locking-account"
 )
 
 var (

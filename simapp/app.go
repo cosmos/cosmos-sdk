@@ -23,9 +23,9 @@ import (
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
+	lockup "cosmossdk.io/x/accounts/lockup"
 	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
-	vestingv1 "cosmossdk.io/x/accounts/vesting"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
@@ -298,12 +298,11 @@ func NewSimApp(
 		// TESTING: do not add
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
-		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
-		// new vesting account
-		accountstd.AddAccount(vestingv1.CONTINUOUS_VESTING_ACCOUNT, vestingv1.NewContinuousVestingAccount),
-		accountstd.AddAccount(vestingv1.PERIODIC_VESTING_ACCOUNT, vestingv1.NewPeriodicVestingAccount),
-		accountstd.AddAccount(vestingv1.DELAYED_VESTING_ACCOUNT, vestingv1.NewDelayedVestingAccount),
-		accountstd.AddAccount(vestingv1.PERMANENT_VESTING_ACCOUNT, vestingv1.NewPermanentLockedAccount),
+		// Lockup account
+		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
+		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
+		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
+		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
 		// PRODUCTION: add
 		baseaccount.NewAccount("base", txConfig.SignModeHandler()),
 	)

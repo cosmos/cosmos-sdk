@@ -18,14 +18,14 @@ import (
 
 // Compile-time type assertions
 var (
-	_ accountstd.Interface = (*PeriodicVestingAccount)(nil)
+	_ accountstd.Interface = (*PeriodicLockingAccount)(nil)
 )
 
-// NewPeriodicVestingAccount creates a new PeriodicVestingAccount object.
-func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccount, error) {
+// NewPeriodicLockingAccount creates a new PeriodicLockingAccount object.
+func NewPeriodicLockingAccount(d accountstd.Dependencies) (*PeriodicLockingAccount, error) {
 	baseLockup := NewBaseLockup(d)
 
-	periodicsVestingAccount := PeriodicVestingAccount{
+	periodicsVestingAccount := PeriodicLockingAccount{
 		BaseLockup:     baseLockup,
 		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 		LockingPeriods: collections.NewVec(d.SchemaBuilder, LockingPeriodsPrefix, "locking_periods", codec.CollValue[lockuptypes.Period](d.LegacyStateCodec)),
@@ -34,13 +34,13 @@ func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccou
 	return &periodicsVestingAccount, nil
 }
 
-type PeriodicVestingAccount struct {
+type PeriodicLockingAccount struct {
 	*BaseLockup
 	StartTime      collections.Item[time.Time]
 	LockingPeriods collections.Vec[lockuptypes.Period]
 }
 
-func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitPeriodicLockingAccount) (*lockuptypes.MsgInitPeriodicLockingAccountResponse, error) {
+func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitPeriodicLockingAccount) (*lockuptypes.MsgInitPeriodicLockingAccountResponse, error) {
 	owner, err := pva.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
@@ -94,14 +94,14 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 	return &lockuptypes.MsgInitPeriodicLockingAccountResponse{}, nil
 }
 
-func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
+func (pva *PeriodicLockingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
 	return pva.BaseLockup.ExecuteMessages(ctx, msg, pva.GetLockedCoinWithDenoms)
 }
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
-func (pva PeriodicVestingAccount) IteratePeriods(
+func (pva PeriodicLockingAccount) IteratePeriods(
 	ctx context.Context,
 	cb func(value lockuptypes.Period) (bool, error),
 ) error {
@@ -116,7 +116,7 @@ func (pva PeriodicVestingAccount) IteratePeriods(
 }
 
 // GetLockCoinsInfo returns the total number of locked and unlocked coins.
-func (pva PeriodicVestingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (unlockedCoins, lockedCoins sdk.Coins, err error) {
+func (pva PeriodicLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (unlockedCoins, lockedCoins sdk.Coins, err error) {
 	unlockedCoins = sdk.Coins{}
 	lockedCoins = sdk.Coins{}
 
@@ -177,7 +177,7 @@ func (pva PeriodicVestingAccount) GetLockCoinsInfo(ctx context.Context, blockTim
 
 // GetLockedCoins returns the total number of locked coins. If no coins are
 // locked, nil is returned.
-func (pva PeriodicVestingAccount) GetLockedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
+func (pva PeriodicLockingAccount) GetLockedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
 	_, vestingCoins, err := pva.GetLockCoinsInfo(ctx, blockTime)
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (pva PeriodicVestingAccount) GetLockedCoins(ctx context.Context, blockTime 
 }
 
 // GetLockCoinInfoWithDenom returns the total number of locked and unlocked coin for a specific denom.
-func (pva PeriodicVestingAccount) GetLockCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (unlockedCoin, lockedCoin *sdk.Coin, err error) {
+func (pva PeriodicLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (unlockedCoin, lockedCoin *sdk.Coin, err error) {
 	// We must handle the case where the start time for a lockup account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
@@ -246,7 +246,7 @@ func (pva PeriodicVestingAccount) GetLockCoinInfoWithDenom(ctx context.Context, 
 
 // GetLockedCoinWithDenoms returns the total number of locked coins. If no coins are
 // locked, nil is returned.
-func (pva PeriodicVestingAccount) GetLockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+func (pva PeriodicLockingAccount) GetLockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	lockedCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		_, lockedCoin, err := pva.GetLockCoinInfoWithDenom(ctx, blockTime, denom)
@@ -258,7 +258,7 @@ func (pva PeriodicVestingAccount) GetLockedCoinWithDenoms(ctx context.Context, b
 	return lockedCoins, nil
 }
 
-func (pva PeriodicVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
+func (pva PeriodicLockingAccount) QueryVestingAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
 	*lockuptypes.QueryLockupAccountInfoResponse, error,
 ) {
 	resp, err := pva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
@@ -280,7 +280,7 @@ func (pva PeriodicVestingAccount) QueryVestingAccountInfo(ctx context.Context, r
 	return resp, nil
 }
 
-func (pva PeriodicVestingAccount) QueryVestingPeriods(ctx context.Context, msg *lockuptypes.QueryLockingPeriodsRequest) (
+func (pva PeriodicLockingAccount) QueryVestingPeriods(ctx context.Context, msg *lockuptypes.QueryLockingPeriodsRequest) (
 	*lockuptypes.QueryLockingPeriodsResponse, error,
 ) {
 	lockingPeriods := []*lockuptypes.Period{}
@@ -297,15 +297,15 @@ func (pva PeriodicVestingAccount) QueryVestingPeriods(ctx context.Context, msg *
 }
 
 // Implement smart account interface
-func (pva PeriodicVestingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
+func (pva PeriodicLockingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, pva.Init)
 }
 
-func (pva PeriodicVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.ExecuteMessages)
 }
 
-func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestingAccountInfo)
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestingPeriods)
 }

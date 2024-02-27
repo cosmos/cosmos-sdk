@@ -376,8 +376,8 @@ func TestGRPCValidators(t *testing.T) {
 	getStaticValidator(f, t)
 	getStaticValidator2(f, t)
 
-	// NOTE: gas consumption delta changed from 3525 to 3597
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 3597, false)
+	// NOTE: gas consumption delta changed from 3597 to 2916
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 2916, false)
 }
 
 func TestGRPCValidatorDelegations(t *testing.T) {
@@ -416,8 +416,8 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	// NOTE: gas consumption delta changed from 11985 to 12615
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 12615, false)
+	// NOTE: gas consumption delta changed from 12615 to 15105
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 15105, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -707,8 +707,8 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		Height: height,
 	}
 
-	// NOTE: gas consumption delta changed from 1930 to 1948
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1948, false)
+	// NOTE: gas consumption delta changed from 1948 to 1963
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1963, false)
 }
 
 func TestGRPCDelegatorValidators(t *testing.T) {
@@ -757,8 +757,8 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(f, t)
-	// NOTE: gas consumption delta changed from 6185 to 6377
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6377, false)
+	// NOTE: gas consumption delta changed from 6377 to 6434
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6434, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {

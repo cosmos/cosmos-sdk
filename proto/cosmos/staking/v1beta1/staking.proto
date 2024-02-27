@@ -340,21 +340,27 @@ message Params {
   string validator_bond_factor = 7 [
     (gogoproto.moretags)   = "yaml:\"validator_bond_factor\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
+    (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
   // global_liquid_staking_cap represents a cap on the portion of stake that
   // comes from liquid staking providers
   string global_liquid_staking_cap = 8 [
     (gogoproto.moretags)   = "yaml:\"global_liquid_staking_cap\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
+    (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
   // validator_liquid_staking_cap represents a cap on the portion of stake that
   // comes from liquid staking providers for a specific validator
   string validator_liquid_staking_cap = 9 [
     (gogoproto.moretags)   = "yaml:\"validator_liquid_staking_cap\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
+    (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
 }
 

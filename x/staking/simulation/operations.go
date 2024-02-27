@@ -1004,14 +1004,14 @@ func SimulateMsgTokenizeShares(txGen client.TxConfig, ak types.AccountKeeper, bk
 		if totalStaked.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot happened - no validators bonded if stake is 0.0"), nil, nil // skip
 		}
-		totalLiquidStaked := math.LegacyNewDecFromInt(k.GetTotalLiquidStakedTokens(ctx).Add(tokenizeShareAmt))
+		totalLiquidStaked := math.LegacyNewDecFromInt(k.GetTotalLiquidStakedTokens(ctx))
 		liquidStakedPercent := totalLiquidStaked.Quo(totalStaked)
 		if liquidStakedPercent.GT(params.GlobalLiquidStakingCap) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "global liquid staking cap exceeded"), nil, nil
 		}
 
 		// check that tokenization would not exceed validator liquid staking cap
-		validatorTotalShares := validator.DelegatorShares.Add(shares)
+		validatorTotalShares := validator.DelegatorShares
 		validatorLiquidShares := validator.LiquidShares.Add(shares)
 		validatorLiquidSharesPercent := validatorLiquidShares.Quo(validatorTotalShares)
 		if validatorLiquidSharesPercent.GT(params.ValidatorLiquidStakingCap) {
@@ -1117,8 +1117,10 @@ func SimulateMsgRedeemTokensforShares(txGen client.TxConfig, ak types.AccountKee
 		}
 
 		// prevent redemption that returns a 0 amount
-		shareDenomSupply := bk.GetSupply(ctx, tokenizeShareRecord.GetShareTokenDenom())
-		shares := delegation.Shares.Mul(math.LegacyNewDecFromInt(redeemCoin.Amount)).QuoInt(shareDenomSupply.Amount)
+		shares := math.LegacyNewDecFromInt(redeemCoin.Amount)
+		if redeemCoin.Amount.Equal(delegation.Shares.TruncateInt()) {
+			shares = delegation.Shares
+		}
 
 		if validator.TokensFromShares(shares).TruncateInt().IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "zero tokens returned"), nil, nil

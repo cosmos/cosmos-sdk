@@ -9,7 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	vestingtypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,24 +23,24 @@ var (
 
 // NewPeriodicVestingAccount creates a new PeriodicVestingAccount object.
 func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccount, error) {
-	baseVesting := NewBaseVesting(d)
+	baseLockup := NewBaseLockup(d)
 
 	periodicsVestingAccount := PeriodicVestingAccount{
-		BaseVesting:    baseVesting,
+		BaseLockup:     baseLockup,
 		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
-		VestingPeriods: collections.NewVec(d.SchemaBuilder, VestingPeriodsPrefix, "vesting_periods", codec.CollValue[vestingtypes.Period](d.LegacyStateCodec)),
+		LockingPeriods: collections.NewVec(d.SchemaBuilder, LockingPeriodsPrefix, "locking_periods", codec.CollValue[lockuptypes.Period](d.LegacyStateCodec)),
 	}
 
 	return &periodicsVestingAccount, nil
 }
 
 type PeriodicVestingAccount struct {
-	*BaseVesting
+	*BaseLockup
 	StartTime      collections.Item[time.Time]
-	VestingPeriods collections.Vec[vestingtypes.Period]
+	LockingPeriods collections.Vec[lockuptypes.Period]
 }
 
-func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitPeriodicVestingAccount) (*vestingtypes.MsgInitPeriodicVestingAccountResponse, error) {
+func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitPeriodicLockingAccount) (*lockuptypes.MsgInitPeriodicLockingAccountResponse, error) {
 	owner, err := pva.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
@@ -52,7 +52,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 
 	totalCoins := sdk.Coins{}
 	endTime := msg.StartTime
-	for _, period := range msg.VestingPeriods {
+	for _, period := range msg.LockingPeriods {
 		if period.Length.Seconds() <= 0 {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period duration length %d", period.Length)
 		}
@@ -64,7 +64,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		totalCoins = totalCoins.Add(period.Amount...)
 		// Calculate end time
 		endTime = endTime.Add(period.Length)
-		err = pva.VestingPeriods.Push(ctx, period)
+		err = pva.LockingPeriods.Push(ctx, period)
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +72,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 
 	sortedAmt := totalCoins.Sort()
 	for _, coin := range sortedAmt {
-		err := pva.OriginalVesting.Set(ctx, coin.Denom, coin.Amount)
+		err := pva.OriginalLocking.Set(ctx, coin.Denom, coin.Amount)
 		if err != nil {
 			return nil, err
 		}
@@ -91,21 +91,21 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		return nil, err
 	}
 
-	return &vestingtypes.MsgInitPeriodicVestingAccountResponse{}, nil
+	return &lockuptypes.MsgInitPeriodicLockingAccountResponse{}, nil
 }
 
-func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
-	*vestingtypes.MsgExecuteMessagesResponse, error,
+func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return pva.BaseVesting.ExecuteMessages(ctx, msg, pva.GetVestingCoinWithDenoms)
+	return pva.BaseLockup.ExecuteMessages(ctx, msg, pva.GetLockedCoinWithDenoms)
 }
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (pva PeriodicVestingAccount) IteratePeriods(
 	ctx context.Context,
-	cb func(value vestingtypes.Period) (bool, error),
+	cb func(value lockuptypes.Period) (bool, error),
 ) error {
-	err := pva.VestingPeriods.Walk(ctx, nil, func(_ uint64, value vestingtypes.Period) (stop bool, err error) {
+	err := pva.LockingPeriods.Walk(ctx, nil, func(_ uint64, value lockuptypes.Period) (stop bool, err error) {
 		return cb(value)
 	})
 	if err != nil {
@@ -115,13 +115,12 @@ func (pva PeriodicVestingAccount) IteratePeriods(
 	return nil
 }
 
-// GetVestedCoins returns the total number of vested coins. If no coins are vested,
-// nil is returned.
-func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTime time.Time) (vestedCoins, vestingCoins sdk.Coins, err error) {
-	vestedCoins = sdk.Coins{}
-	vestingCoins = sdk.Coins{}
+// GetLockCoinsInfo returns the total number of locked and unlocked coins.
+func (pva PeriodicVestingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (unlockedCoins, lockedCoins sdk.Coins, err error) {
+	unlockedCoins = sdk.Coins{}
+	lockedCoins = sdk.Coins{}
 
-	// We must handle the case where the start time for a vesting account has
+	// We must handle the case where the start time for a lockup account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
 	startTime, err := pva.StartTime.Get(ctx)
@@ -132,18 +131,18 @@ func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTim
 	if err != nil {
 		return nil, nil, err
 	}
-	originalVesting := sdk.Coins{}
-	err = pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+	originalLocking := sdk.Coins{}
+	err = pva.IterateCoinEntries(ctx, pva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
+		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
 		return false, nil
 	})
 	if err != nil {
 		return nil, nil, err
 	}
 	if blockTime.Before(startTime) {
-		return vestedCoins, originalVesting, nil
+		return unlockedCoins, originalLocking, nil
 	} else if blockTime.After(endTime) {
-		return originalVesting, vestingCoins, nil
+		return originalLocking, lockedCoins, nil
 	}
 
 	// track the start time of the next period
@@ -152,13 +151,13 @@ func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTim
 		return nil, nil, err
 	}
 
-	err = pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool, err error) {
+	err = pva.IteratePeriods(ctx, func(period lockuptypes.Period) (stop bool, err error) {
 		x := blockTime.Sub(currentPeriodStartTime)
 		if x.Seconds() < period.Length.Seconds() {
 			return true, nil
 		}
 
-		vestedCoins = vestedCoins.Add(period.Amount...)
+		unlockedCoins = unlockedCoins.Add(period.Amount...)
 
 		// update the start time of the next period
 		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
@@ -171,25 +170,24 @@ func (pva PeriodicVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTim
 		return nil, nil, err
 	}
 
-	vestingCoins = originalVesting.Sub(vestedCoins...)
+	lockedCoins = originalLocking.Sub(unlockedCoins...)
 
-	return vestedCoins, vestingCoins, err
+	return unlockedCoins, lockedCoins, err
 }
 
-// GetVestingCoins returns the total number of vesting coins. If no coins are
-// vesting, nil is returned.
-func (pva PeriodicVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	_, vestingCoins, err := pva.GetVestCoinsInfo(ctx, blockTime)
+// GetLockedCoins returns the total number of locked coins. If no coins are
+// locked, nil is returned.
+func (pva PeriodicVestingAccount) GetLockedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
+	_, vestingCoins, err := pva.GetLockCoinsInfo(ctx, blockTime)
 	if err != nil {
 		return nil, err
 	}
 	return vestingCoins, nil
 }
 
-// GetVestedCoins returns the total number of vested coins. If no coins are vested,
-// nil is returned.
-func (pva PeriodicVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (vestedCoin, vestingCoin *sdk.Coin, err error) {
-	// We must handle the case where the start time for a vesting account has
+// GetLockCoinInfoWithDenom returns the total number of locked and unlocked coin for a specific denom.
+func (pva PeriodicVestingAccount) GetLockCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (unlockedCoin, lockedCoin *sdk.Coin, err error) {
+	// We must handle the case where the start time for a lockup account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
 	startTime, err := pva.StartTime.Get(ctx)
@@ -200,19 +198,19 @@ func (pva PeriodicVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, 
 	if err != nil {
 		return nil, nil, err
 	}
-	originalVestingAmt, err := pva.OriginalVesting.Get(ctx, denom)
+	originalLockingAmt, err := pva.OriginalLocking.Get(ctx, denom)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	originalVesting := sdk.NewCoin(denom, originalVestingAmt)
+	originalLockingCoin := sdk.NewCoin(denom, originalLockingAmt)
 	if err != nil {
 		return nil, nil, err
 	}
 	if blockTime.Before(startTime) {
-		return &sdk.Coin{}, &originalVesting, nil
+		return &sdk.Coin{}, &originalLockingCoin, nil
 	} else if blockTime.After(endTime) {
-		return &originalVesting, &sdk.Coin{}, nil
+		return &originalLockingCoin, &sdk.Coin{}, nil
 	}
 
 	// track the start time of the next period
@@ -221,14 +219,14 @@ func (pva PeriodicVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, 
 		return nil, nil, err
 	}
 
-	vested := sdk.NewCoin(denom, math.ZeroInt())
-	err = pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool, err error) {
+	unlocked := sdk.NewCoin(denom, math.ZeroInt())
+	err = pva.IteratePeriods(ctx, func(period lockuptypes.Period) (stop bool, err error) {
 		x := blockTime.Sub(currentPeriodStartTime)
 		if x.Seconds() < period.Length.Seconds() {
 			return true, nil
 		}
 
-		vested = vested.Add(sdk.NewCoin(denom, period.Amount.AmountOf(denom)))
+		unlocked = unlocked.Add(sdk.NewCoin(denom, period.Amount.AmountOf(denom)))
 
 		// update the start time of the next period
 		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
@@ -241,29 +239,29 @@ func (pva PeriodicVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, 
 		return nil, nil, err
 	}
 
-	vesting := originalVesting.Sub(vested)
+	locked := originalLockingCoin.Sub(unlocked)
 
-	return &vested, &vesting, err
+	return &unlocked, &locked, err
 }
 
-// GetVestingCoins returns the total number of vesting coins. If no coins are
-// vesting, nil is returned.
-func (pva PeriodicVestingAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
-	vestingCoins := sdk.Coins{}
+// GetLockedCoinWithDenoms returns the total number of locked coins. If no coins are
+// locked, nil is returned.
+func (pva PeriodicVestingAccount) GetLockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+	lockedCoins := sdk.Coins{}
 	for _, denom := range denoms {
-		_, vestingCoin, err := pva.GetVestCoinInfoWithDenom(ctx, blockTime, denom)
+		_, lockedCoin, err := pva.GetLockCoinInfoWithDenom(ctx, blockTime, denom)
 		if err != nil {
 			return nil, err
 		}
-		vestingCoins = append(vestingCoins, *vestingCoin)
+		lockedCoins = append(lockedCoins, *lockedCoin)
 	}
-	return vestingCoins, nil
+	return lockedCoins, nil
 }
 
-func (pva PeriodicVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
-	*vestingtypes.QueryVestingAccountInfoResponse, error,
+func (pva PeriodicVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
+	*lockuptypes.QueryLockupAccountInfoResponse, error,
 ) {
-	resp, err := pva.BaseVesting.QueryVestingAccountBaseInfo(ctx, req)
+	resp, err := pva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -272,30 +270,29 @@ func (pva PeriodicVestingAccount) QueryVestingAccountInfo(ctx context.Context, r
 		return nil, err
 	}
 	hs := pva.headerService.GetHeaderInfo(ctx)
-	vestedCoins, vestingCoins, err := pva.GetVestCoinsInfo(ctx, hs.Time)
+	unlockedCoins, lockedCoins, err := pva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-	resp.VestedVesting = sdk.Coins{}
 	resp.StartTime = &startTime
-	resp.VestingCoins = vestingCoins
-	resp.VestedVesting = vestedCoins
+	resp.LockedCoins = lockedCoins
+	resp.UnlockedCoins = unlockedCoins
 	return resp, nil
 }
 
-func (pva PeriodicVestingAccount) QueryVestingPeriods(ctx context.Context, msg *vestingtypes.QueryVestingPeriodsRequest) (
-	*vestingtypes.QueryVestingPeriodsResponse, error,
+func (pva PeriodicVestingAccount) QueryVestingPeriods(ctx context.Context, msg *lockuptypes.QueryLockingPeriodsRequest) (
+	*lockuptypes.QueryLockingPeriodsResponse, error,
 ) {
-	vestingPeriods := []*vestingtypes.Period{}
-	err := pva.IteratePeriods(ctx, func(period vestingtypes.Period) (stop bool, err error) {
-		vestingPeriods = append(vestingPeriods, &period)
+	lockingPeriods := []*lockuptypes.Period{}
+	err := pva.IteratePeriods(ctx, func(period lockuptypes.Period) (stop bool, err error) {
+		lockingPeriods = append(lockingPeriods, &period)
 		return false, nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &vestingtypes.QueryVestingPeriodsResponse{
-		VestingPeriods: vestingPeriods,
+	return &lockuptypes.QueryLockingPeriodsResponse{
+		LockingPeriods: lockingPeriods,
 	}, nil
 }
 

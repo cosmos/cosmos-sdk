@@ -1,23 +1,23 @@
 syntax = "proto3";
-package cosmos.accounts.vesting;
+package cosmos.lockup;
 
 import "amino/amino.proto";
 import "google/protobuf/any.proto";
-import "cosmos/accounts/vesting/vesting.proto";
+import "cosmos/lockup/lockup.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/msg/v1/msg.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "cosmossdk.io/x/accounts/vesting/types";
+option go_package = "cosmossdk.io/x/accounts/lockup/types";
 
 //-------------------------------------- INIT --------------------------------------
 
-// MsgInitVestingAccount defines a message that enables creating a vesting
+// MsgInitLockupAccount defines a message that enables creating a lockup
 // account.
-message MsgInitVestingAccount {
-  option (amino.name) = "cosmos-sdk/MsgInitVestingAccount";
+message MsgInitLockupAccount {
+  option (amino.name) = "cosmos-sdk/MsgInitLockupAccount";
 
   option (gogoproto.equal) = true;
 
@@ -30,37 +30,37 @@ message MsgInitVestingAccount {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
-  // end of vesting
+  // end of lockup
   google.protobuf.Timestamp end_time = 3
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-  // start of vesting
+  // start of lockup
   google.protobuf.Timestamp start_time = 4
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 }
 
-// MsgInitVestingAccountResponse defines the Msg/InitVestingAccount response type.
-message MsgInitVestingAccountResponse {}
+// MsgInitLockupAccountResponse defines the Msg/InitLockupAccount response type.
+message MsgInitLockupAccountResponse {}
 
-// MsgInitVestingAccount defines a message that enables creating a vesting
+// MsgInitPeriodicLockingAccount defines a message that enables creating a periodic locking
 // account.
-message MsgInitPeriodicVestingAccount {
-  option (amino.name) = "cosmos-sdk/MsgInitPeriodVestAccount";
+message MsgInitPeriodicLockingAccount {
+  option (amino.name) = "cosmos-sdk/MsgInitPeriodLockupAccount";
 
   option (gogoproto.equal) = false;
 
-  // owner of the vesting account
+  // owner of the lockup account
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // start of vesting
+  // start of lockup
   google.protobuf.Timestamp start_time = 2
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-  repeated Period vesting_periods = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Period locking_periods = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// MsgInitVestingAccountResponse defines the Msg/InitPeriodicVestingAccount
+// MsgInitPeriodicLockingAccountResponse defines the Msg/InitPeriodicLockingAccount
 // response type.
-message MsgInitPeriodicVestingAccountResponse {}
+message MsgInitPeriodicLockingAccountResponse {}
 
-// MsgExecuteMessages defines a message that enable vesting account to execute module messages
+// MsgExecuteMessages defines a message that enable lockup account to execute module messages
 message MsgExecuteMessages {
   option (cosmos.msg.v1.signer) = "sender";
 

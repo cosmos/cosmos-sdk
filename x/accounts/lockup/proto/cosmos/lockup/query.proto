@@ -1,7 +1,7 @@
 syntax = "proto3";
-package cosmos.accounts.vesting;
+package cosmos.lockup;
 
-import "cosmos/accounts/vesting/vesting.proto";
+import "cosmos/lockup/lockup.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
@@ -13,8 +13,8 @@ message QueryLockupAccountInfoRequest {}
 
 // QueryLockupAccountInfoResponse return lockup account info
 message QueryLockupAccountInfoResponse {
-  // original_lockup defines the value of the account original lockup coins.
-  repeated cosmos.base.v1beta1.Coin original_lockup = 1
+  // original_locking defines the value of the account original locking coins.
+  repeated cosmos.base.v1beta1.Coin original_locking = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // delegated_free defines the value of the account free delegated amount.
@@ -31,23 +31,23 @@ message QueryLockupAccountInfoResponse {
   // end_time defines the value of the account lockup end time.
   google.protobuf.Timestamp end_time = 5 [(gogoproto.stdtime) = true];
 
-  // vesting_coins defines the value of the account vesting coins.
-  repeated cosmos.base.v1beta1.Coin locking_coins = 6
+  // locked_coins defines the value of the account locking coins.
+  repeated cosmos.base.v1beta1.Coin locked_coins = 6
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
-  // released_coins defines the value of the account released coins from lockup.
-  repeated cosmos.base.v1beta1.Coin released_coins = 7
+  // unlocked_coins defines the value of the account released coins from lockup.
+  repeated cosmos.base.v1beta1.Coin unlocked_coins = 7
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // owner defines the value of the owner of the lockup account.
   string owner = 8;
 }
 
-// QueryLockupPeriodsRequest is used to query the periodic lockup account lockup periods.
-message QueryLockupPeriodsRequest {}
+// QueryLockingPeriodsRequest is used to query the periodic lockup account locking periods.
+message QueryLockingPeriodsRequest {}
 
-// QueryLockupPeriodsResponse returns the periodic lockup account lockup periods.
-message QueryLockupPeriodsResponse {
-  // lockup_periods defines the value of the periodic lockup account lockup periods.
-  repeated Period lockup_periods = 1;
+// QueryLockingPeriodsResponse returns the periodic lockup account locking periods.
+message QueryLockingPeriodsResponse {
+  // lockup_periods defines the value of the periodic lockup account locking periods.
+  repeated Period locking_periods = 1;
 }

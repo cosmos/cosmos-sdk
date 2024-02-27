@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	vestingtypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,95 +14,92 @@ import (
 
 // Compile-time type assertions
 var (
-	_ accountstd.Interface = (*DelayedVestingAccount)(nil)
+	_ accountstd.Interface = (*DelayedLockingAccount)(nil)
 )
 
-// NewDelayedVestingAccount creates a new DelayedVestingAccount object.
-func NewDelayedVestingAccount(d accountstd.Dependencies) (*DelayedVestingAccount, error) {
-	baseVesting := NewBaseVesting(d)
-	return &DelayedVestingAccount{
-		baseVesting,
+// NewDelayedLockingAccount creates a new DelayedLockingAccount object.
+func NewDelayedLockingAccount(d accountstd.Dependencies) (*DelayedLockingAccount, error) {
+	baseLockup := NewBaseLockup(d)
+	return &DelayedLockingAccount{
+		baseLockup,
 	}, nil
 }
 
-type DelayedVestingAccount struct {
-	*BaseVesting
+type DelayedLockingAccount struct {
+	*BaseLockup
 }
 
-func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
+func (dva DelayedLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupAccount) (*lockuptypes.MsgInitLockupAccountResponse, error) {
 	if msg.EndTime.IsZero() {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
 
-	return dva.BaseVesting.Init(ctx, msg)
+	return dva.BaseLockup.Init(ctx, msg)
 }
 
-func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
-	*vestingtypes.MsgExecuteMessagesResponse, error,
+func (dva *DelayedLockingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return dva.BaseVesting.ExecuteMessages(ctx, msg, dva.GetVestingCoinWithDenoms)
+	return dva.BaseLockup.ExecuteMessages(ctx, msg, dva.GetLockedCoinWithDenoms)
 }
 
-// GetVestedCoins returns the total number of vested coins. If no coins are vested,
-// nil is returned.
-func (dva DelayedVestingAccount) GetVestCoinsInfo(ctx context.Context, blockTime time.Time) (sdk.Coins, sdk.Coins, error) {
+// GetLockCoinsInfo returns the total number of unlocked and locked coins.
+func (dva DelayedLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (sdk.Coins, sdk.Coins, error) {
 	endTime, err := dva.EndTime.Get(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	originalVesting := sdk.Coins{}
-	err = dva.IterateCoinEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+	originalLocking := sdk.Coins{}
+	err = dva.IterateCoinEntries(ctx, dva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
+		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
 		return false, nil
 	})
 	if err != nil {
 		return nil, nil, err
 	}
 	if blockTime.After(endTime) {
-		return originalVesting, sdk.Coins{}, nil
+		return originalLocking, sdk.Coins{}, nil
 	}
 
-	return sdk.Coins{}, originalVesting, nil
+	return sdk.Coins{}, originalLocking, nil
 }
 
-// GetVestingCoins returns the total number of vesting coins. If no coins are
-// vesting, nil is returned.
-func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
-	_, vestingCoins, err := dva.GetVestCoinsInfo(ctx, blockTime)
+// GetLockedCoins returns the total number of locked coins. If no coins are
+// locked, nil is returned.
+func (dva DelayedLockingAccount) GetLockedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
+	_, lockedCoins, err := dva.GetLockCoinsInfo(ctx, blockTime)
 	if err != nil {
 		return nil, err
 	}
-	return vestingCoins, nil
+	return lockedCoins, nil
 }
 
-// GetVestCoinsInfoWithDenom returns the number of vested coin for a specific denom. If no coins are vested,
-// nil is returned.
-func (dva DelayedVestingAccount) GetVestCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (*sdk.Coin, *sdk.Coin, error) {
+// GetLockCoinInfoWithDenom returns the number of unlocked and locked coin for a specific denom.
+func (dva DelayedLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (*sdk.Coin, *sdk.Coin, error) {
 	endTime, err := dva.EndTime.Get(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	originalVestingAmt, err := dva.OriginalVesting.Get(ctx, denom)
+	originalLockingAmt, err := dva.OriginalLocking.Get(ctx, denom)
 	if err != nil {
 		return nil, nil, err
 	}
-	originalVesting := sdk.NewCoin(denom, originalVestingAmt)
+	originalLockingCoin := sdk.NewCoin(denom, originalLockingAmt)
 	if err != nil {
 		return nil, nil, err
 	}
 	if blockTime.After(endTime) {
-		return &originalVesting, &sdk.Coin{}, nil
+		return &originalLockingCoin, &sdk.Coin{}, nil
 	}
 
-	return &sdk.Coin{}, &originalVesting, nil
+	return &sdk.Coin{}, &originalLockingCoin, nil
 }
 
-// GetVestingCoinsWithDenom returns the number of vesting coin for a specific denom. If no coins are
-// vesting, nil is returned.
-func (dva DelayedVestingAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+// GetLockedCoinWithDenoms returns the number of locked coin for a specific denom.
+func (dva DelayedLockingAccount) GetLockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	vestingCoins := sdk.Coins{}
 	for _, denom := range denoms {
-		_, vestingCoin, err := dva.GetVestCoinInfoWithDenom(ctx, blockTime, denom)
+		_, vestingCoin, err := dva.GetLockCoinInfoWithDenom(ctx, blockTime, denom)
 		if err != nil {
 			return nil, err
 		}
@@ -111,33 +108,32 @@ func (dva DelayedVestingAccount) GetVestingCoinWithDenoms(ctx context.Context, b
 	return vestingCoins, nil
 }
 
-func (dva DelayedVestingAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
-	*vestingtypes.QueryVestingAccountInfoResponse, error,
+func (dva DelayedLockingAccount) QueryVestingAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
+	*lockuptypes.QueryLockupAccountInfoResponse, error,
 ) {
-	resp, err := dva.BaseVesting.QueryVestingAccountBaseInfo(ctx, req)
+	resp, err := dva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	hs := dva.headerService.GetHeaderInfo(ctx)
-	vestedCoins, vestingCoins, err := dva.GetVestCoinsInfo(ctx, hs.Time)
+	unlockedCoins, lockedCoins, err := dva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
-	resp.VestedVesting = sdk.Coins{}
-	resp.VestingCoins = vestingCoins
-	resp.VestedVesting = vestedCoins
+	resp.LockedCoins = lockedCoins
+	resp.UnlockedCoins = unlockedCoins
 	return resp, nil
 }
 
 // Implement smart account interface
-func (dva DelayedVestingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
+func (dva DelayedLockingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, dva.Init)
 }
 
-func (dva DelayedVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+func (dva DelayedLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, dva.ExecuteMessages)
 }
 
-func (dva DelayedVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+func (dva DelayedLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, dva.QueryVestingAccountInfo)
 }

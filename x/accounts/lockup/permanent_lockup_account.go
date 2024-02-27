@@ -6,29 +6,29 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	vestingtypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Compile-time type assertions
 var (
-	_ accountstd.Interface = (*PermanentLockedAccount)(nil)
+	_ accountstd.Interface = (*PermanentLockingAccount)(nil)
 )
 
-// NewPermanentLockedAccount creates a new PermanentLockedAccount object.
-func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccount, error) {
-	baseVesting := NewBaseVesting(d)
+// NewPermanentLockingAccount creates a new PermanentLockingAccount object.
+func NewPermanentLockingAccount(d accountstd.Dependencies) (*PermanentLockingAccount, error) {
+	baseLockup := NewBaseLockup(d)
 
-	return &PermanentLockedAccount{baseVesting}, nil
+	return &PermanentLockingAccount{baseLockup}, nil
 }
 
-type PermanentLockedAccount struct {
-	*BaseVesting
+type PermanentLockingAccount struct {
+	*BaseLockup
 }
 
-func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
-	resp, err := plva.BaseVesting.Init(ctx, msg)
+func (plva PermanentLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupAccount) (*lockuptypes.MsgInitLockupAccountResponse, error) {
+	resp, err := plva.BaseLockup.Init(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -42,10 +42,10 @@ func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.M
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
-func (plva PermanentLockedAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+func (plva PermanentLockingAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	vestingCoins := sdk.Coins{}
 	for _, denom := range denoms {
-		originalVestingAmt, err := plva.OriginalVesting.Get(ctx, denom)
+		originalVestingAmt, err := plva.OriginalLocking.Get(ctx, denom)
 		if err != nil {
 			return nil, err
 		}
@@ -54,42 +54,42 @@ func (plva PermanentLockedAccount) GetVestingCoinWithDenoms(ctx context.Context,
 	return vestingCoins, nil
 }
 
-func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
-	*vestingtypes.MsgExecuteMessagesResponse, error,
+func (plva *PermanentLockingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseVesting.ExecuteMessages(ctx, msg, plva.GetVestingCoinWithDenoms)
+	return plva.BaseLockup.ExecuteMessages(ctx, msg, plva.GetVestingCoinWithDenoms)
 }
 
-func (plva PermanentLockedAccount) QueryVestingAccountInfo(ctx context.Context, req *vestingtypes.QueryVestingAccountInfoRequest) (
-	*vestingtypes.QueryVestingAccountInfoResponse, error,
+func (plva PermanentLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
+	*lockuptypes.QueryLockupAccountInfoResponse, error,
 ) {
-	resp, err := plva.BaseVesting.QueryVestingAccountBaseInfo(ctx, req)
+	resp, err := plva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	originalVesting := sdk.Coins{}
-	err = plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool, err error) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+	originalLocking := sdk.Coins{}
+	err = plva.IterateCoinEntries(ctx, plva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
+		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
 		return false, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	resp.VestingCoins = originalVesting
-	resp.VestedVesting = sdk.Coins{}
+	resp.LockedCoins = originalLocking
+	resp.UnlockedCoins = sdk.Coins{}
 	return resp, nil
 }
 
 // Implement smart account interface
-func (plva PermanentLockedAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
+func (plva PermanentLockingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, plva.Init)
 }
 
-func (plva PermanentLockedAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+func (plva PermanentLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, plva.ExecuteMessages)
 }
 
-func (plva PermanentLockedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, plva.QueryVestingAccountInfo)
+func (plva PermanentLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+	accountstd.RegisterQueryHandler(builder, plva.QueryLockupAccountInfo)
 }

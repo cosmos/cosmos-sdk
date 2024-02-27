@@ -22,13 +22,13 @@ import (
 )
 
 var (
-	OriginalLockupPrefix  = collections.NewPrefix(0)
-	DelegatedFreePrefix   = collections.NewPrefix(1)
-	DelegatedLockupPrefix = collections.NewPrefix(2)
-	EndTimePrefix         = collections.NewPrefix(3)
-	StartTimePrefix       = collections.NewPrefix(4)
-	LockupPeriodsPrefix   = collections.NewPrefix(5)
-	OwnerPrefix           = collections.NewPrefix(6)
+	OriginalLockingPrefix  = collections.NewPrefix(0)
+	DelegatedFreePrefix    = collections.NewPrefix(1)
+	DelegatedLockingPrefix = collections.NewPrefix(2)
+	EndTimePrefix          = collections.NewPrefix(3)
+	StartTimePrefix        = collections.NewPrefix(4)
+	LockingPeriodsPrefix   = collections.NewPrefix(5)
+	OwnerPrefix            = collections.NewPrefix(6)
 )
 
 var (
@@ -45,18 +45,18 @@ var (
 	MSG_MULTI_SEND = "/cosmos.bank.v1beta1.MsgMultiSend"
 )
 
-type getLockCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
+type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
 
 // NewBaseLockup creates a new BaseLockup object.
 func NewBaseLockup(d accountstd.Dependencies) *BaseLockup {
 	BaseLockup := &BaseLockup{
-		Owner:           collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
-		OriginalLockup:  collections.NewMap(d.SchemaBuilder, OriginalLockupPrefix, "original_lockup", collections.StringKey, sdk.IntValue),
-		DelegatedFree:   collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
-		DelegatedLockup: collections.NewMap(d.SchemaBuilder, DelegatedLockupPrefix, "delegated_lockup", collections.StringKey, sdk.IntValue),
-		addressCodec:    d.AddressCodec,
-		headerService:   d.HeaderService,
-		EndTime:         collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
+		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
+		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
+		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
+		addressCodec:     d.AddressCodec,
+		headerService:    d.HeaderService,
+		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 	}
 
 	return BaseLockup
@@ -64,18 +64,18 @@ func NewBaseLockup(d accountstd.Dependencies) *BaseLockup {
 
 type BaseLockup struct {
 	// Owner is the address of the account owner.
-	Owner           collections.Item[[]byte]
-	OriginalLockup  collections.Map[string, math.Int]
-	DelegatedFree   collections.Map[string, math.Int]
-	DelegatedLockup collections.Map[string, math.Int]
-	addressCodec    address.Codec
-	headerService   header.Service
+	Owner            collections.Item[[]byte]
+	OriginalLocking  collections.Map[string, math.Int]
+	DelegatedFree    collections.Map[string, math.Int]
+	DelegatedLocking collections.Map[string, math.Int]
+	addressCodec     address.Codec
+	headerService    header.Service
 	// lockup end time.
 	EndTime collections.Item[time.Time]
 }
 
-func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitVestingAccount) (
-	*lockuptypes.MsgInitVestingAccountResponse, error,
+func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupAccount) (
+	*lockuptypes.MsgInitLockupAccountResponse, error,
 ) {
 	owner, err := bva.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
@@ -97,7 +97,7 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitVesting
 
 	sortedAmt := msg.Amount.Sort()
 	for _, coin := range sortedAmt {
-		err = bva.OriginalLockup.Set(ctx, coin.Denom, coin.Amount)
+		err = bva.OriginalLocking.Set(ctx, coin.Denom, coin.Amount)
 		if err != nil {
 			return nil, err
 		}
@@ -108,15 +108,15 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitVesting
 		return nil, err
 	}
 
-	return &lockuptypes.MsgInitVestingAccountResponse{}, nil
+	return &lockuptypes.MsgInitLockupAccountResponse{}, nil
 }
 
 // ExecuteMessages handle the execution of codectypes Any messages
-// and update the vesting account DelegatedFree and DelegatedVesting
+// and update the lockup account DelegatedFree and DelegatedLocking
 // when delegate or undelegate is trigger. And check for locked coins
 // when performing a send message.
 func (bva *BaseLockup) ExecuteMessages(
-	ctx context.Context, msg *lockuptypes.MsgExecuteMessages, getLockCoinsFunc getLockCoinsFunc,
+	ctx context.Context, msg *lockuptypes.MsgExecuteMessages, getLockedCoinsFunc getLockedCoinsFunc,
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -150,7 +150,7 @@ func (bva *BaseLockup) ExecuteMessages(
 			if err != nil {
 				return nil, err
 			}
-			vestingCoins, err := getLockCoinsFunc(ctx, hs.Time, msgDelegate.Amount.Denom)
+			lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msgDelegate.Amount.Denom)
 			if err != nil {
 				return nil, err
 			}
@@ -158,7 +158,7 @@ func (bva *BaseLockup) ExecuteMessages(
 			err = bva.TrackDelegation(
 				ctx,
 				sdk.Coins{*balance},
-				vestingCoins,
+				lockedCoins,
 				sdk.Coins{msgDelegate.Amount},
 			)
 			if err != nil {
@@ -182,12 +182,12 @@ func (bva *BaseLockup) ExecuteMessages(
 			sender := msgSend.FromAddress
 			amount := msgSend.Amount
 
-			vestingCoins, err := getLockCoinsFunc(ctx, hs.Time, amount.Denoms()...)
+			lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, amount.Denoms()...)
 			if err != nil {
 				return nil, err
 			}
 
-			err = bva.checkTokensSendable(ctx, sender, amount, vestingCoins)
+			err = bva.checkTokensSendable(ctx, sender, amount, lockedCoins)
 			if err != nil {
 				return nil, err
 			}
@@ -199,12 +199,12 @@ func (bva *BaseLockup) ExecuteMessages(
 			sender := msgMultiSend.Inputs[0].Address
 			amount := msgMultiSend.Inputs[0].Coins
 
-			vestingCoins, err := getLockCoinsFunc(ctx, hs.Time, amount.Denoms()...)
+			lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, amount.Denoms()...)
 			if err != nil {
 				return nil, err
 			}
 
-			err = bva.checkTokensSendable(ctx, sender, amount, vestingCoins)
+			err = bva.checkTokensSendable(ctx, sender, amount, lockedCoins)
 			if err != nil {
 				return nil, err
 			}
@@ -225,14 +225,14 @@ func (bva *BaseLockup) ExecuteMessages(
 // of the delegation denominations.
 //
 // CONTRACT: The account's coins, delegation coins, locked coins, and delegated
-// lockup coins must be sorted.
+// locking coins must be sorted.
 func (bva *BaseLockup) TrackDelegation(
-	ctx context.Context, balance, vestingCoins, amount sdk.Coins,
+	ctx context.Context, balance, lockedCoins, amount sdk.Coins,
 ) error {
 	for _, coin := range amount {
 		baseAmt := balance.AmountOf(coin.Denom)
-		vestingAmt := vestingCoins.AmountOf(coin.Denom)
-		delVestingAmt, err := bva.DelegatedLockup.Get(ctx, coin.Denom)
+		lockedAmt := lockedCoins.AmountOf(coin.Denom)
+		delLockingAmt, err := bva.DelegatedLocking.Get(ctx, coin.Denom)
 		if err != nil {
 			return err
 		}
@@ -250,15 +250,15 @@ func (bva *BaseLockup) TrackDelegation(
 		// compute x and y per the specification, where:
 		// X := min(max(V - DV, 0), D)
 		// Y := D - X
-		x := math.MinInt(math.MaxInt(vestingAmt.Sub(delVestingAmt), math.ZeroInt()), coin.Amount)
+		x := math.MinInt(math.MaxInt(lockedAmt.Sub(delLockingAmt), math.ZeroInt()), coin.Amount)
 		y := coin.Amount.Sub(x)
 
-		delVestingCoin := sdk.NewCoin(coin.Denom, delVestingAmt)
+		delLockingCoin := sdk.NewCoin(coin.Denom, delLockingAmt)
 		delFreeCoin := sdk.NewCoin(coin.Denom, delFreeAmt)
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			newDelVesting := delVestingCoin.Add(xCoin)
-			err = bva.DelegatedLockup.Set(ctx, newDelVesting.Denom, newDelVesting.Amount)
+			newDelLocking := delLockingCoin.Add(xCoin)
+			err = bva.DelegatedLocking.Set(ctx, newDelLocking.Denom, newDelLocking.Amount)
 			if err != nil {
 				return err
 			}
@@ -278,11 +278,11 @@ func (bva *BaseLockup) TrackDelegation(
 }
 
 // TrackUndelegation tracks an undelegation amount by setting the necessary
-// values by which delegated vesting and delegated vesting need to decrease and
+// values by which delegated locking and delegated free need to decrease and
 // by which amount the base coins need to increase.
 //
 // NOTE: The undelegation (bond refund) amount may exceed the delegated
-// vesting (bond) amount due to the way undelegation truncates the bond refund,
+// locking (bond) amount due to the way undelegation truncates the bond refund,
 // which can increase the validator's exchange rate (tokens/shares) slightly if
 // the undelegated tokens are non-integral.
 //
@@ -297,7 +297,7 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 		if err != nil {
 			return err
 		}
-		delVestingAmt, err := bva.DelegatedLockup.Get(ctx, coin.Denom)
+		delLockingAmt, err := bva.DelegatedLocking.Get(ctx, coin.Denom)
 		if err != nil {
 			return err
 		}
@@ -306,9 +306,9 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 		// X := min(DF, D)
 		// Y := min(DV, D - X)
 		x := math.MinInt(delFreeAmt, coin.Amount)
-		y := math.MinInt(delVestingAmt, coin.Amount.Sub(x))
+		y := math.MinInt(delLockingAmt, coin.Amount.Sub(x))
 
-		delVestingCoin := sdk.NewCoin(coin.Denom, delVestingAmt)
+		delLockingCoin := sdk.NewCoin(coin.Denom, delLockingAmt)
 		delFreeCoin := sdk.NewCoin(coin.Denom, delFreeAmt)
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
@@ -321,8 +321,8 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			newDelVesting := delVestingCoin.Sub(yCoin)
-			err = bva.DelegatedLockup.Set(ctx, newDelVesting.Denom, newDelVesting.Amount)
+			newDelLocking := delLockingCoin.Sub(yCoin)
+			err = bva.DelegatedLocking.Set(ctx, newDelLocking.Denom, newDelLocking.Amount)
 			if err != nil {
 				return err
 			}
@@ -343,17 +343,17 @@ func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sd
 	return resp.Balance, nil
 }
 
-func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, amount, vestingCoins sdk.Coins) error {
-	// Check if any sent tokens is exceeds vesting account balances
+func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, amount, lockedCoins sdk.Coins) error {
+	// Check if any sent tokens is exceeds lockup account balances
 	for _, coin := range amount {
 		balance, err := bva.getBalance(ctx, sender, coin.Denom)
 		if err != nil {
 			return err
 		}
-		vestingAmt := vestingCoins.AmountOf(coin.Denom)
+		lockedAmt := lockedCoins.AmountOf(coin.Denom)
 
-		// get lockedCoin for the sent denom
-		locked, err := bva.LockedCoinFromVesting(ctx, sdk.NewCoin(coin.Denom, vestingAmt), coin.Denom)
+		// get lockedCoin from delegated locking for the sent denom
+		locked, err := bva.LockedCoinFromDelegatedLocking(ctx, sdk.NewCoin(coin.Denom, lockedAmt), coin.Denom)
 		if err != nil {
 			return err
 		}
@@ -391,27 +391,24 @@ func (bva BaseLockup) IterateCoinEntries(
 	return err
 }
 
-// LockedCoinsFromVesting returns the coin that are not spendable by denom (i.e. locked)
-// for a vesting account given the current vesting coin. If the coin by the provided denom
+// LockedCoinFromDelegatedLocking returns the coin that are not spendable by denom (i.e. locked)
+// for a lockup account given the current locked coin. If the coin by the provided denom
 // are not locked, an coin with zero amount is returned.
-func (bva BaseLockup) LockedCoinFromVesting(ctx context.Context, vestingCoin sdk.Coin, denom string) (sdk.Coin, error) {
-	delegatedVestingAmt, err := bva.DelegatedLockup.Get(ctx, denom)
+func (bva BaseLockup) LockedCoinFromDelegatedLocking(ctx context.Context, lockedCoin sdk.Coin, denom string) (sdk.Coin, error) {
+	delegatedLockingAmt, err := bva.DelegatedLocking.Get(ctx, denom)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	vestingAmt := vestingCoin.Amount
 
-	x := math.MinInt(vestingAmt, delegatedVestingAmt)
-	lockedAmt := vestingAmt.Sub(x)
+	x := math.MinInt(lockedCoin.Amount, delegatedLockingAmt)
+	lockedAmt := lockedCoin.Amount.Sub(x)
 
-	lockedCoin := sdk.NewCoin(denom, lockedAmt)
-
-	return lockedCoin, nil
+	return sdk.NewCoin(denom, lockedAmt), nil
 }
 
-// QueryVestingAccountInfo returns a vesting account's info
-func (bva BaseLockup) QueryVestingAccountBaseInfo(ctx context.Context, _ *lockuptypes.QueryVestingAccountInfoRequest) (
-	*lockuptypes.QueryVestingAccountInfoResponse, error,
+// QueryLockupAccountBaseInfo returns a lockup account's info
+func (bva BaseLockup) QueryLockupAccountBaseInfo(ctx context.Context, _ *lockuptypes.QueryLockupAccountInfoRequest) (
+	*lockuptypes.QueryLockupAccountInfoResponse, error,
 ) {
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
@@ -428,18 +425,18 @@ func (bva BaseLockup) QueryVestingAccountBaseInfo(ctx context.Context, _ *lockup
 		return nil, err
 	}
 
-	originalVesting := sdk.Coins{}
-	err = bva.IterateCoinEntries(ctx, bva.OriginalLockup, func(key string, value math.Int) (stop bool, err error) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+	originalLocking := sdk.Coins{}
+	err = bva.IterateCoinEntries(ctx, bva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
+		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
 		return false, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	delegatedVesting := sdk.Coins{}
-	err = bva.IterateCoinEntries(ctx, bva.DelegatedLockup, func(key string, value math.Int) (stop bool, err error) {
-		delegatedVesting = append(delegatedVesting, sdk.NewCoin(key, value))
+	delegatedLocking := sdk.Coins{}
+	err = bva.IterateCoinEntries(ctx, bva.DelegatedLocking, func(key string, value math.Int) (stop bool, err error) {
+		delegatedLocking = append(delegatedLocking, sdk.NewCoin(key, value))
 		return false, nil
 	})
 	if err != nil {
@@ -455,10 +452,10 @@ func (bva BaseLockup) QueryVestingAccountBaseInfo(ctx context.Context, _ *lockup
 		return nil, err
 	}
 
-	return &lockuptypes.QueryVestingAccountInfoResponse{
+	return &lockuptypes.QueryLockupAccountInfoResponse{
 		Owner:            ownerAddress,
-		OriginalVesting:  originalVesting,
-		DelegatedVesting: delegatedVesting,
+		OriginalLocking:  originalLocking,
+		DelegatedLocking: delegatedLocking,
 		DelegatedFree:    delegatedFree,
 		EndTime:          &endTime,
 	}, nil

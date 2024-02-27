@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/handlers"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/server/v2/mempool"
@@ -46,13 +47,20 @@ func NewCometBFTServer[T transaction.Tx](
 	logger := app.GetLogger().With("module", "cometbft-server")
 
 	// create noop mempool
-	mempool := mempool.NewNoopMempool[T]()
+	mempool := mempool.NoOpMempool[T]{}
+
+	// create consensus
+	consensus := NewConsensus[T](app.GetApp(), mempool, app.GetStore(), cfg)
+
+	handler := handlers.NewDefaultProposalHandler[T](mempool)
+	consensus.SetPrepareProposalHandler(handler.PrepareHandler())
+	consensus.SetProcessProposalHandler(handler.ProcessHandler())
 
 	// TODO: set default handlers (prepare, process, extendvote, verify vote)
 	// TODO: set
 	return &CometBFTServer[T]{
 		logger:   logger,
-		CometBFT: NewConsensus[T](app.GetApp(), mempool, app.GetStore(), cfg),
+		CometBFT: consensus,
 		config:   cfg,
 	}
 

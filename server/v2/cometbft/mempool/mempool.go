@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/core/mempool"
 )
 
 // Mempool defines the required methods of an application's mempool.
@@ -16,23 +17,11 @@ type Mempool[T transaction.Tx] interface {
 	// Select returns an Iterator over the app-side mempool. If txs are specified,
 	// then they shall be incorporated into the Iterator. The Iterator must be
 	// closed by the caller.
-	Select(context.Context, []T) Iterator[T]
+	Select(context.Context, []T) mempool.Iterator[T]
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
 	Remove([]T) error
-}
-
-// Iterator defines an app-side mempool iterator interface that is as minimal as
-// possible. The order of iteration is determined by the app-side mempool
-// implementation.
-type Iterator[T transaction.Tx] interface {
-	// Next returns the next transaction from the mempool. If there are no more
-	// transactions, it returns nil.
-	Next() Iterator[T]
-
-	// Tx returns the transaction at the current position of the iterator.
-	Tx() T
 }
 
 var (
@@ -55,6 +44,6 @@ func (NoOpMempool[T]) Remove([]T) error {
 }
 
 // Select implements Mempool.
-func (NoOpMempool[T]) Select(context.Context, []T) Iterator[T] {
+func (NoOpMempool[T]) Select(context.Context, []T) mempool.Iterator[T] {
 	panic("unimplemented")
 }

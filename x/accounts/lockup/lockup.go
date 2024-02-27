@@ -352,16 +352,16 @@ func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, am
 		}
 		lockedAmt := lockedCoins.AmountOf(coin.Denom)
 
-		// get lockedCoin from delegated locking for the sent denom
-		locked, err := bva.LockedCoinFromDelegatedLocking(ctx, sdk.NewCoin(coin.Denom, lockedAmt), coin.Denom)
+		// get lockedCoin from that are not bonded for the sent denom
+		notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, sdk.NewCoin(coin.Denom, lockedAmt), coin.Denom)
 		if err != nil {
 			return err
 		}
 
-		spendable, hasNeg := sdk.Coins{*balance}.SafeSub(locked)
+		spendable, hasNeg := sdk.Coins{*balance}.SafeSub(notBondedLockedCoin)
 		if hasNeg {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
-				"locked amount exceeds account balance funds: %s > %s", locked, balance)
+				"locked amount exceeds account balance funds: %s > %s", notBondedLockedCoin, balance)
 		}
 
 		if _, hasNeg := spendable.SafeSub(coin); hasNeg {
@@ -391,10 +391,9 @@ func (bva BaseLockup) IterateCoinEntries(
 	return err
 }
 
-// LockedCoinFromDelegatedLocking returns the coin that are not spendable by denom (i.e. locked)
-// for a lockup account given the current locked coin. If the coin by the provided denom
-// are not locked, an coin with zero amount is returned.
-func (bva BaseLockup) LockedCoinFromDelegatedLocking(ctx context.Context, lockedCoin sdk.Coin, denom string) (sdk.Coin, error) {
+// GetNotBondedLockedCoin returns the coin that are not spendable that are not bonded by denom
+// for a lockup account. If the coin by the provided denom are not locked, an coin with zero amount is returned.
+func (bva BaseLockup) GetNotBondedLockedCoin(ctx context.Context, lockedCoin sdk.Coin, denom string) (sdk.Coin, error) {
 	delegatedLockingAmt, err := bva.DelegatedLocking.Get(ctx, denom)
 	if err != nil {
 		return sdk.Coin{}, err

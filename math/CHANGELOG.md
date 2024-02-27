@@ -36,11 +36,12 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+## [math/v1.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.3.0) - 2024-02-22
+
 ### Features
+
 * [#18552](https://github.com/cosmos/cosmos-sdk/pull/18552) Add safe arithmetic operations for `math.Int` that return an error in case of an overflow or any mishap.
-
 * [#18421](https://github.com/cosmos/cosmos-sdk/pull/18421) Add mutative api for `LegacyDec.BigInt()`.
-
 * [#18874](https://github.com/cosmos/cosmos-sdk/pull/18874) Speedup `math.Int.Mul` by removing a duplicate overflow check
 * [#19386](https://github.com/cosmos/cosmos-sdk/pull/19386) Speedup `math.Int` overflow checks
 * [#19466](https://github.com/cosmos/cosmos-sdk/pull/19466) Speedup `math.NewLegacyDec` by one heap allocation

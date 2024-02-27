@@ -108,26 +108,28 @@ const (
 )
 
 // StartCmdOptions defines options that can be customized in `StartCmdWithOptions`,
-type StartCmdOptions struct {
+type StartCmdOptions[T types.Application] struct {
 	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
 	// default to the builtin db opener.
 	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
 	// PostSetup can be used to setup extra services under the same cancellable context,
 	// it's not called in stand-alone mode, only for in-process mode.
-	PostSetup func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
+	PostSetup func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
+	// PostSetupStandalone can be used to setup extra services under the same cancellable context,
+	PostSetupStandalone func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
 }
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // CometBFT.
-func StartCmd(appCreator types.AppCreator) *cobra.Command {
-	return StartCmdWithOptions(appCreator, StartCmdOptions{})
+func StartCmd[T types.Application](appCreator types.AppCreator[T]) *cobra.Command {
+	return StartCmdWithOptions(appCreator, StartCmdOptions[T]{})
 }
 
 // StartCmdWithOptions runs the service passed in, either stand-alone or in-process with
 // CometBFT.
-func StartCmdWithOptions(appCreator types.AppCreator, opts StartCmdOptions) *cobra.Command {
+func StartCmdWithOptions[T types.Application](appCreator types.AppCreator[T], opts StartCmdOptions[T]) *cobra.Command {
 	if opts.DBOpener == nil {
 		opts.DBOpener = OpenDB
 	}
@@ -199,13 +201,13 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	return cmd
 }
 
-func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, withCmt bool, opts StartCmdOptions) error {
+func start[T types.Application](svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], withCmt bool, opts StartCmdOptions[T]) error {
 	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
 		return err
 	}
 
-	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
+	app, appCleanupFn, err := startApp[T](svrCtx, appCreator, opts)
 	if err != nil {
 		return err
 	}
@@ -219,12 +221,12 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	emitServerInfoMetrics()
 
 	if !withCmt {
-		return startStandAlone(svrCtx, svrCfg, clientCtx, app, metrics, opts)
+		return startStandAlone[T](svrCtx, svrCfg, clientCtx, app, metrics, opts)
 	}
-	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
+	return startInProcess[T](svrCtx, svrCfg, clientCtx, app, metrics, opts)
 }
 
-func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, metrics *telemetry.Metrics, opts StartCmdOptions) error {
+func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app T, metrics *telemetry.Metrics, opts StartCmdOptions[T]) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
@@ -271,6 +273,12 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		return err
 	}
 
+	if opts.PostSetupStandalone != nil {
+		if err := opts.PostSetupStandalone(app, svrCtx, clientCtx, ctx, g); err != nil {
+			return err
+		}
+	}
+
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
 			svrCtx.Logger.Error("failed to start out-of-process ABCI server", "err", err)
@@ -287,8 +295,8 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	return g.Wait()
 }
 
-func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application,
-	metrics *telemetry.Metrics, opts StartCmdOptions,
+func startInProcess[T types.Application](svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app T,
+	metrics *telemetry.Metrics, opts StartCmdOptions[T],
 ) error {
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
@@ -334,7 +342,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	}
 
 	if opts.PostSetup != nil {
-		if err := opts.PostSetup(svrCtx, clientCtx, ctx, g); err != nil {
+		if err := opts.PostSetup(app, svrCtx, clientCtx, ctx, g); err != nil {
 			return err
 		}
 	}
@@ -585,7 +593,7 @@ func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
 	return g, ctx
 }
 
-func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
+func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[T], opts StartCmdOptions[T]) (app T, cleanupFn func(), err error) {
 	traceWriter, traceCleanupFn, err := SetupTraceWriter(svrCtx.Logger, svrCtx.Viper.GetString(flagTraceStore))
 	if err != nil {
 		return app, traceCleanupFn, err
@@ -598,10 +606,12 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	}
 
 	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
-		app, err = testnetify(svrCtx, home, appCreator, db, traceWriter)
+		var appPtr *T
+		appPtr, err = testnetify[T](svrCtx, home, appCreator, db, traceWriter)
 		if err != nil {
 			return app, traceCleanupFn, err
 		}
+		app = *appPtr
 	} else {
 		app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 	}
@@ -618,8 +628,8 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 // InPlaceTestnetCreator utilizes the provided chainID and operatorAddress as well as the local private validator key to
 // control the network represented in the data folder. This is useful to create testnets nearly identical to your
 // mainnet environment.
-func InPlaceTestnetCreator(testnetAppCreator types.AppCreator) *cobra.Command {
-	opts := StartCmdOptions{}
+func InPlaceTestnetCreator[T types.Application](testnetAppCreator types.AppCreator[T]) *cobra.Command {
+	opts := StartCmdOptions[T]{}
 	if opts.DBOpener == nil {
 		opts.DBOpener = OpenDB
 	}
@@ -711,7 +721,7 @@ you want to test the upgrade handler itself.
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
+func testnetify[T types.Application](ctx *Context, home string, testnetAppCreator types.AppCreator[T], db dbm.DB, traceWriter io.WriteCloser) (*T, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
@@ -780,7 +790,7 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	cmtApp := NewCometABCIWrapper(testnetApp)
 	_, context := getCtx(ctx, true)
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
-	metrics := node.DefaultMetricsProvider(config.Instrumentation)
+	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
 	_, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID)
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
@@ -800,13 +810,21 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	var block *cmttypes.Block
 	switch {
 	case appHeight == blockStore.Height():
-		// This state occurs when we stop the node with the halt height flag, and need to handle differently
-		state.LastBlockHeight++
 		block = blockStore.LoadBlock(blockStore.Height())
-		block.AppHash = appHash
-		state.AppHash = appHash
+		// If the state's last blockstore height does not match the app and blockstore height, we likely stopped with the halt height flag.
+		if state.LastBlockHeight != appHeight {
+			state.LastBlockHeight = appHeight
+			block.AppHash = appHash
+			state.AppHash = appHash
+		} else {
+			// Node was likely stopped via SIGTERM, delete the next block's seen commit
+			err := blockStoreDB.Delete([]byte(fmt.Sprintf("SC:%v", blockStore.Height()+1)))
+			if err != nil {
+				return nil, err
+			}
+		}
 	case blockStore.Height() > state.LastBlockHeight:
-		// This state occurs when we kill the node
+		// This state usually occurs when we gracefully stop the node.
 		err = blockStore.DeleteLatestBlock()
 		if err != nil {
 			return nil, err
@@ -925,11 +943,11 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 		return nil, err
 	}
 
-	return testnetApp, err
+	return &testnetApp, err
 }
 
 // addStartNodeFlags should be added to any CLI commands that start the network.
-func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {
+func addStartNodeFlags[T types.Application](cmd *cobra.Command, opts StartCmdOptions[T]) {
 	cmd.Flags().Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
 	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")

@@ -52,7 +52,7 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	// suite setup
 	s.addrs = simtestutil.CreateIncrementalAccounts(3)
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))

@@ -6,93 +6,72 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 var (
-	_ module.AppModuleBasic = AppModule{}
+	_ module.HasName        = AppModule{}
 	_ module.HasABCIGenesis = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the genutil module.
-type AppModuleBasic struct {
-	GenTxValidator types.MessageValidator
+// AppModule implements an application module for the genutil module.
+type AppModule struct {
+	accountKeeper    types.AccountKeeper
+	stakingKeeper    types.StakingKeeper
+	deliverTx        genesis.TxHandler
+	txEncodingConfig client.TxEncodingConfig
+	genTxValidator   types.MessageValidator
 }
 
-// NewAppModuleBasic creates AppModuleBasic, validator is a function used to validate genesis
-// transactions.
-func NewAppModuleBasic(validator types.MessageValidator) AppModuleBasic {
-	return AppModuleBasic{validator}
+// NewAppModule creates a new AppModule object
+func NewAppModule(
+	accountKeeper types.AccountKeeper,
+	stakingKeeper types.StakingKeeper,
+	deliverTx genesis.TxHandler,
+	txEncodingConfig client.TxEncodingConfig,
+	genTxValidator types.MessageValidator,
+) module.AppModule {
+	return AppModule{
+		accountKeeper:    accountKeeper,
+		stakingKeeper:    stakingKeeper,
+		deliverTx:        deliverTx,
+		txEncodingConfig: txEncodingConfig,
+		genTxValidator:   genTxValidator,
+	}
 }
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModule) IsAppModule() {}
 
 // Name returns the genutil module's name.
-func (AppModuleBasic) Name() string {
+func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers the genutil module's types on the given LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
-
-// RegisterInterfaces registers the module's interface types
-func (b AppModuleBasic) RegisterInterfaces(cdctypes.InterfaceRegistry) {}
-
-// DefaultGenesis returns default genesis state as raw bytes for the genutil
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+// DefaultGenesis returns default genesis state as raw bytes for the genutil module.
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the genutil module.
-func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig, bz json.RawMessage) error {
+func (b AppModule) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder(), b.GenTxValidator)
+	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder(), b.genTxValidator)
 }
-
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the genutil module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {
-}
-
-// AppModule implements an application module for the genutil module.
-type AppModule struct {
-	AppModuleBasic
-
-	accountKeeper    types.AccountKeeper
-	stakingKeeper    types.StakingKeeper
-	deliverTx        genesis.TxHandler
-	txEncodingConfig client.TxEncodingConfig
-}
-
-// NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper types.AccountKeeper,
-	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
-	txEncodingConfig client.TxEncodingConfig,
-) module.GenesisOnlyAppModule {
-	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic:   AppModuleBasic{},
-		accountKeeper:    accountKeeper,
-		stakingKeeper:    stakingKeeper,
-		deliverTx:        deliverTx,
-		txEncodingConfig: txEncodingConfig,
-	})
-}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (AppModule) IsAppModule() {}
 
 // InitGenesis performs genesis initialization for the genutil module.
 func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
@@ -105,11 +84,18 @@ func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data j
 	return validators
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the genutil
-// module.
+// ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
 func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.RawMessage {
 	return am.DefaultGenesis(cdc)
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// GenTxValidator returns the genutil module's genesis transaction validator.
+func (am AppModule) GenTxValidator() types.MessageValidator {
+	return am.genTxValidator
+}
+
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// RegisterInterfaces implements module.AppModule.
+func (AppModule) RegisterInterfaces(codectypes.InterfaceRegistry) {}

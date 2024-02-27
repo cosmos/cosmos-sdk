@@ -68,7 +68,7 @@ func displayInfo(info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(mbm module.BasicManager) *cobra.Command {
+func InitCmd(mm *module.Manager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
@@ -133,7 +133,7 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 			if defaultDenom != "" {
 				sdk.DefaultBondDenom = defaultDenom
 			}
-			appGenState := mbm.DefaultGenesis(cdc)
+			appGenState := mm.DefaultGenesis(cdc)
 
 			appState, err := json.MarshalIndent(appGenState, "", " ")
 			if err != nil {

@@ -61,7 +61,6 @@ type BaseKeeper struct {
 	cdc                    codec.BinaryCodec
 	environment            appmodule.Environment
 	mintCoinsRestrictionFn types.MintingRestrictionFn
-	logger                 log.Logger
 }
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
@@ -88,22 +87,20 @@ func NewBaseKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
-	logger log.Logger,
 ) BaseKeeper {
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	// add the module name to the logger
-	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
+	env.Logger = env.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority, logger),
+		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority),
 		ak:                     ak,
 		cdc:                    cdc,
 		environment:            env,
 		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
-		logger:                 logger,
 	}
 }
 
@@ -351,7 +348,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
-		k.logger.Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
+		k.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
 		return err
 	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
@@ -374,7 +371,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
+	k.Logger().Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
@@ -414,7 +411,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
+	k.Logger().Debug("burned tokens from account", "amount", amounts.String(), "from", address)
 
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {

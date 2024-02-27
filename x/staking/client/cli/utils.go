@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	errorsmod "cosmossdk.io/errors"
@@ -56,7 +55,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 	}
 
 	if v.Amount == "" {
-		return validator{}, fmt.Errorf("must specify amount of coins to bond")
+		return validator{}, errors.New("must specify amount of coins to bond")
 	}
 	amount, err := sdk.ParseCoinNormalized(v.Amount)
 	if err != nil {
@@ -64,7 +63,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 	}
 
 	if v.PubKey == nil {
-		return validator{}, fmt.Errorf("must specify the JSON encoded pubkey")
+		return validator{}, errors.New("must specify the JSON encoded pubkey")
 	}
 	var pk cryptotypes.PubKey
 	if err := cdc.UnmarshalInterfaceJSON(v.PubKey, &pk); err != nil {
@@ -72,7 +71,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 	}
 
 	if v.Moniker == "" {
-		return validator{}, fmt.Errorf("must specify the moniker name")
+		return validator{}, errors.New("must specify the moniker name")
 	}
 
 	commissionRates, err := buildCommissionRates(v.CommissionRate, v.CommissionMaxRate, v.CommissionMaxChange)
@@ -81,7 +80,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 	}
 
 	if v.MinSelfDelegation == "" {
-		return validator{}, fmt.Errorf("must specify minimum self delegation")
+		return validator{}, errors.New("must specify minimum self delegation")
 	}
 	minSelfDelegation, ok := math.NewIntFromString(v.MinSelfDelegation)
 	if !ok {

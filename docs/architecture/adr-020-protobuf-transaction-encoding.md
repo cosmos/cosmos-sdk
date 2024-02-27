@@ -349,7 +349,7 @@ type TxBuilder interface {
 ```
 
 We then update `Context` to have new fields: `Codec`, `TxGenerator`,
-and `AccountRetriever`, and we update `AppModuleBasic.GetTxCmd` to take
+and `AccountRetriever`, and we update `AppModule.GetTxCmd` to take
 a `Context` which should have all of these fields pre-populated.
 
 Each client method should then use one of the `Init` methods to re-initialize

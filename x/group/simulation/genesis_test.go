@@ -19,7 +19,7 @@ import (
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(groupmodule.AppModuleBasic{}, bank.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(groupmodule.AppModule{}, bank.AppModule{})
 	cdc := encodingConfig.Codec
 
 	s := rand.NewSource(1)

@@ -251,6 +251,10 @@ func (k BaseViewKeeper) getDenomAddressPrefixStore(ctx sdk.Context, denom string
 }
 
 // UnmarshalBalanceCompat unmarshal balance amount from storage, it's backward-compatible with the legacy format.
+// This function is edited from the original function in x/bank/keeper/view.go, to remove one ValidateDenom call.
+// It removes the NewCoin call, and constructs the object directly. It replicates the exact edge case behavior
+// of upstream SDK v0.47.x. This is done to maintain compatibility with upstream.
+// Should be removed when the next version of the SDK is released.
 func UnmarshalBalanceCompat(cdc codec.BinaryCodec, bz []byte, denom string) (sdk.Coin, error) {
 	if err := sdk.ValidateDenom(denom); err != nil {
 		return sdk.Coin{}, err
@@ -258,7 +262,7 @@ func UnmarshalBalanceCompat(cdc codec.BinaryCodec, bz []byte, denom string) (sdk
 
 	amount := math.ZeroInt()
 	if bz == nil {
-		return sdk.NewCoin(denom, amount), nil
+		return sdk.Coin{Denom: denom, Amount: amount}, nil
 	}
 
 	if err := amount.Unmarshal(bz); err != nil {
@@ -271,5 +275,10 @@ func UnmarshalBalanceCompat(cdc codec.BinaryCodec, bz []byte, denom string) (sdk
 		return balance, nil
 	}
 
-	return sdk.NewCoin(denom, amount), nil
+	// replicate old behavior
+	if amount.IsNegative() {
+		panic(fmt.Errorf("negative coin amount: %v", amount))
+	}
+
+	return sdk.Coin{Denom: denom, Amount: amount}, nil
 }

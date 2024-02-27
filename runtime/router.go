@@ -3,10 +3,10 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
 
@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-func NewMsgRouterService(storeService store.KVStoreService, router *baseapp.MsgServiceRouter) router.Service {
+func NewMsgRouterService(storeService store.KVStoreService, router baseapp.MessageRouter) router.Service {
 	return &msgRouterService{
 		storeService: storeService,
 		router:       router,
@@ -26,22 +26,24 @@ func NewMsgRouterService(storeService store.KVStoreService, router *baseapp.MsgS
 
 type msgRouterService struct {
 	storeService store.KVStoreService
-	router       *baseapp.MsgServiceRouter
+	router       baseapp.MessageRouter
 	resolver     protoregistry.MessageTypeResolver
 }
 
-// InvokeTyped implements router.Service.
-func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
+// InvokeTyped execute a message and fill-in a response.
+// The response must be known and passed as a parameter.
+// Use InvokeUntyped if the response type is not known.
+func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
 	messageName := msgTypeURL(msg)
 	handler := m.router.HybridHandlerByMsgName(messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
 	}
 
-	return handler(ctx, msg, msgResp)
+	return handler(ctx, msg, resp)
 }
 
-// InvokeUntyped implements router.Service.
+// InvokeUntyped execute a message and returns a response.
 func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
 	messageName := msgTypeURL(msg)
 	respName := m.router.ResponseNameByRequestName(messageName)
@@ -50,18 +52,18 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	}
 
 	// get response type
-	resp, err := m.resolver.FindMessageByName(protoreflect.FullName(respName))
-	if err != nil {
-		return nil, err
+	typ := proto.MessageType(respName)
+	if typ == nil {
+		return nil, fmt.Errorf("no message type found for %s", respName)
 	}
+	msgResp := reflect.New(typ.Elem()).Interface().(protoiface.MessageV1)
 
 	handler := m.router.HybridHandlerByMsgName(messageName)
 	if handler == nil {
 		return nil, fmt.Errorf("unknown message: %s", messageName)
 	}
 
-	msgResp := resp.New().Interface().(protoiface.MessageV1)
-	err = handler(ctx, msg, msgResp)
+	err := handler(ctx, msg, msgResp)
 	return msgResp, err
 }
 

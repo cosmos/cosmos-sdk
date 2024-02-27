@@ -42,7 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18457](https://github.com/cosmos/cosmos-sdk/pull/18457) Add branch.ExecuteWithGasLimit.
 * [#19041](https://github.com/cosmos/cosmos-sdk/pull/19041) Add `appmodule.Environment` interface to fetch different services
 * [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Add `appmodule.Migrations` interface to handle migrations
-
+* [#19571](https://github.com/cosmos/cosmos-sdk/pull/19571) Add `router.Service` and add it in `appmodule.Environment`
+ 
 ### API Breaking Changes
 
 * [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` to `x/tx`.

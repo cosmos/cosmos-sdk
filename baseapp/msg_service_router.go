@@ -24,6 +24,9 @@ import (
 type MessageRouter interface {
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
+
+	ResponseNameByRequestName(msgName string) string
+	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
 }
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.

@@ -177,6 +177,8 @@ func TestSlashRedelegation(t *testing.T) {
 }
 
 func fundAccount(t *testing.T, ctx context.Context, bankKeeper bankkeeper.Keeper, authKeeper authkeeper.AccountKeeper, addr sdk.AccAddress, amount sdk.Coins) {
+	t.Helper()
+
 	if authKeeper.GetAccount(ctx, addr) == nil {
 		addrAcc := authKeeper.NewAccountWithAddress(ctx, addr)
 		authKeeper.SetAccount(ctx, addrAcc)

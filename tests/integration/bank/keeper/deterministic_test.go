@@ -96,7 +96,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
-		log.NewNopLogger(),
 	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)

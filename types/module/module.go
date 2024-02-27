@@ -33,6 +33,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -125,7 +126,7 @@ type HasConsensusVersion = appmodule.HasConsensusVersion
 // HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
 type HasABCIEndBlock interface {
 	AppModule
-	EndBlock(context.Context) ([]appmodule.ValidatorUpdate, error)
+	EndBlock(context.Context) ([]appmodulev2.ValidatorUpdate, error)
 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
@@ -737,7 +738,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 // modules.
 func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
-	validatorUpdates := []appmodule.ValidatorUpdate{}
+	validatorUpdates := []appmodulev2.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {

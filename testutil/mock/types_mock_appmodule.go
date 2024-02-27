@@ -10,6 +10,7 @@ import (
 	reflect "reflect"
 
 	appmodule "cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	types "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -57,10 +58,10 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) DefaultGenesis(arg0 interf
 }
 
 // EndBlock mocks base method.
-func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]appmodule.ValidatorUpdate, error) {
+func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]appmodulev2.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]appmodule.ValidatorUpdate)
+	ret0, _ := ret[0].([]appmodulev2.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -223,10 +224,10 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) DefaultGenesis(arg0 in
 }
 
 // EndBlock mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) EndBlock(arg0 context.Context) ([]appmodule.ValidatorUpdate, error) {
+func (m *MockAppModuleWithAllExtensionsABCI) EndBlock(arg0 context.Context) ([]appmodulev2.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]appmodule.ValidatorUpdate)
+	ret0, _ := ret[0].([]appmodulev2.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

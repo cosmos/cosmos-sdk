@@ -2,7 +2,6 @@ package mempool
 
 import (
 	"context"
-	"errors"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/mempool"
@@ -22,28 +21,4 @@ type Mempool[T transaction.Tx] interface {
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
 	Remove([]T) error
-}
-
-var (
-	ErrTxNotFound           = errors.New("tx not found in mempool")
-	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
-)
-
-var _ Mempool[transaction.Tx] = NoOpMempool[transaction.Tx]{}
-
-type NoOpMempool[T transaction.Tx] struct{}
-
-// Insert implements Mempool.
-func (NoOpMempool[T]) Insert(context.Context, T) error {
-	panic("unimplemented")
-}
-
-// Remove implements Mempool.
-func (NoOpMempool[T]) Remove([]T) error {
-	panic("unimplemented")
-}
-
-// Select implements Mempool.
-func (NoOpMempool[T]) Select(context.Context, []T) mempool.Iterator[T] {
-	panic("unimplemented")
 }

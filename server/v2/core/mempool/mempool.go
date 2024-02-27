@@ -2,8 +2,14 @@ package mempool
 
 import (
 	"context"
+	"errors"
 
 	"cosmossdk.io/core/transaction"
+)
+
+var (
+	ErrTxNotFound           = errors.New("tx not found in mempool")
+	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
 )
 
 // Mempool defines the required methods of an application's mempool.

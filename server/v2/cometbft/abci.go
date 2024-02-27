@@ -33,11 +33,6 @@ const (
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
-type (
-	VerifyVoteExtensionFunc func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
-	ExtendVoteFunc          func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
-)
-
 type Consensus[T transaction.Tx] struct {
 	app             *appmanager.AppManager[T]
 	cfg             Config
@@ -48,9 +43,6 @@ type Consensus[T transaction.Tx] struct {
 	snapshotManager *snapshots.Manager
 	mempool         mempool.Mempool[T]
 
-	verifyVoteExt VerifyVoteExtensionFunc
-	extendVote    ExtendVoteFunc
-
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
 	// committed block. TODO(tip): check if concurrency is really needed
@@ -58,6 +50,8 @@ type Consensus[T transaction.Tx] struct {
 
 	prepareProposalHandler handlers.PrepareHandler[T]
 	processProposalHandler handlers.ProcessHandler[T]
+	verifyVoteExt          handlers.VerifyVoteExtensionhandler
+	extendVote             handlers.ExtendVoteHandler
 }
 
 func NewConsensus[T transaction.Tx](
@@ -94,11 +88,11 @@ func (c *Consensus[T]) SetProcessProposalHandler(handler handlers.ProcessHandler
 	c.processProposalHandler = handler
 }
 
-func (c *Consensus[T]) SetExtendVoteExtension(handler ExtendVoteFunc) {
+func (c *Consensus[T]) SetExtendVoteExtension(handler ExtendVoteHandler) {
 	c.extendVote = handler
 }
 
-func (c *Consensus[T]) SetVerifyVoteExtension(handler VerifyVoteExtensionFunc) {
+func (c *Consensus[T]) SetVerifyVoteExtension(handler VerifyVoteExtensionhandler) {
 	c.verifyVoteExt = handler
 }
 

@@ -52,12 +52,11 @@ func NewCometBFTServer[T transaction.Tx](
 	// create consensus
 	consensus := NewConsensus[T](app.GetApp(), mempool, app.GetStore(), cfg)
 
-	handler := handlers.NewDefaultProposalHandler[T](mempool)
-	consensus.SetPrepareProposalHandler(handler.PrepareHandler())
-	consensus.SetProcessProposalHandler(handler.ProcessHandler())
+	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
+	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
+	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
+	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
 
-	// TODO: set default handlers (prepare, process, extendvote, verify vote)
-	// TODO: set
 	return &CometBFTServer[T]{
 		logger:   logger,
 		CometBFT: consensus,
@@ -165,8 +164,6 @@ func SetCodec? <- I think we can get this from app manager too. Is codec.Codec f
 
 func SetExtendVoteExtension
 func SetVerifyVoteExtension
-func SetPrepareProposalHandler
-func SetProcessProposalHandler
 func SetSnapshotManager (?)
 
 API routes

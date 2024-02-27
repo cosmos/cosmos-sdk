@@ -10,29 +10,35 @@ import (
 	"buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/core/appmanager"
+	coremempool "cosmossdk.io/server/v2/core/mempool"
+	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/server/v2/mempool"
 )
 
-// PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations
-// over the list of proposed transactions. It can return a modified list of txs to include in the proposal.
-type PrepareHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) ([]T, error)
+type (
+	// PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations
+	// over the list of proposed transactions. It can return a modified list of txs to include in the proposal.
+	PrepareHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) ([]T, error)
 
-// ProcessHandler is a function that takes a list of transactions and returns a boolean and an error.
-// If the verification of a transaction fails, the boolean is false and the error is non-nil.
-type ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) error
+	// ProcessHandler is a function that takes a list of transactions and returns a boolean and an error.
+	// If the verification of a transaction fails, the boolean is false and the error is non-nil.
+	ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) error
 
+	VerifyVoteExtensionhandler func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+	ExtendVoteHandler          func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
+)
 type AppManager[T transaction.Tx] interface {
 	ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error)
 	Query(ctx context.Context, version uint64, request appmanager.Type) (response appmanager.Type, err error)
 }
 
 type DefaultProposalHandler[T transaction.Tx] struct {
-	mempool    mempool.Mempool[T]
+	mempool    coremempool.Mempool[T]
 	txSelector TxSelector[T]
 }
 
-func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *DefaultProposalHandler[T] {
+func NewDefaultProposalHandler[T transaction.Tx](mp coremempool.Mempool[T]) *DefaultProposalHandler[T] {
 	return &DefaultProposalHandler[T]{
 		mempool:    mp,
 		txSelector: NewDefaultTxSelector[T](),
@@ -92,7 +98,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 			_, err := app.ValidateTx(ctx, memTx)
 			if err != nil {
 				err := h.mempool.Remove([]T{memTx})
-				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				if err != nil && !errors.Is(err, coremempool.ErrTxNotFound) {
 					return nil, err
 				}
 			} else {
@@ -155,5 +161,37 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 		}
 
 		return nil
+	}
+}
+
+// NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
+// return the transactions sent by the client's request.
+func NoOpPrepareProposal[T transaction.Tx]() PrepareHandler[T] {
+	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
+		return txs, nil
+	}
+}
+
+// NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
+// return ACCEPT.
+func NoOpProcessProposal[T transaction.Tx]() ProcessHandler[T] {
+	return func(context.Context, AppManager[T], []T, proto.Message) error {
+		return nil
+	}
+}
+
+// NoOpExtendVote defines a no-op ExtendVote handler. It will always return an
+// empty byte slice as the vote extension.
+func NoOpExtendVote() ExtendVoteHandler {
+	return func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
+	}
+}
+
+// NoOpVerifyVoteExtensionHandler defines a no-op VerifyVoteExtension handler. It
+// will always return an ACCEPT status with no error.
+func NoOpVerifyVoteExtensionHandler() VerifyVoteExtensionhandler {
+	return func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	}
 }

@@ -145,7 +145,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
-		log.NewNopLogger(),
 	)
 
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -308,7 +307,6 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 			suite.authKeeper,
 			nil,
 			authority,
-			log.NewNopLogger(),
 		)
 	}
 

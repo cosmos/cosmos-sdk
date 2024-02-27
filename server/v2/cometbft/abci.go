@@ -88,11 +88,11 @@ func (c *Consensus[T]) SetProcessProposalHandler(handler handlers.ProcessHandler
 	c.processProposalHandler = handler
 }
 
-func (c *Consensus[T]) SetExtendVoteExtension(handler ExtendVoteHandler) {
+func (c *Consensus[T]) SetExtendVoteExtension(handler handlers.ExtendVoteHandler) {
 	c.extendVote = handler
 }
 
-func (c *Consensus[T]) SetVerifyVoteExtension(handler VerifyVoteExtensionhandler) {
+func (c *Consensus[T]) SetVerifyVoteExtension(handler handlers.VerifyVoteExtensionhandler) {
 	c.verifyVoteExt = handler
 }
 

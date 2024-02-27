@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/accounts/cli"
@@ -32,10 +32,11 @@ const (
 )
 
 var (
-	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
+
 	_ module.HasName             = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	_ module.HasServices         = AppModule{}
 	_ module.HasConsensusVersion = AppModule{}
 )
 
@@ -49,19 +50,19 @@ type AppModule struct {
 
 func (m AppModule) IsAppModule() {}
 
-func (m AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+func (AppModule) Name() string { return ModuleName }
 
 func (m AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, v1.MsgServiceDesc())
 }
 
-func (m AppModule) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
-
 // App module services
 
-func (m AppModule) RegisterServices(configurator module.Configurator) {
-	v1.RegisterQueryServer(configurator.QueryServer(), NewQueryServer(m.k))
-	v1.RegisterMsgServer(configurator.MsgServer(), NewMsgServer(m.k))
+func (m AppModule) RegisterServices(registar grpc.ServiceRegistrar) error {
+	v1.RegisterQueryServer(registar, NewQueryServer(m.k))
+	v1.RegisterMsgServer(registar, NewMsgServer(m.k))
+
+	return nil
 }
 
 // App module genesis
@@ -95,8 +96,6 @@ func (m AppModule) ExportGenesis(ctx context.Context, jsonCodec codec.JSONCodec)
 	}
 	return jsonCodec.MustMarshalJSON(gs)
 }
-
-func (AppModule) Name() string { return ModuleName }
 
 func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.TxCmd(ModuleName)

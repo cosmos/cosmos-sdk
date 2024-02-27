@@ -20,45 +20,50 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.AppModuleBasic = AppModule{}
+	_ module.HasName               = AppModule{}
+	_ module.HasAminoCodec         = AppModule{}
+	_ module.HasGRPCGateway        = AppModule{}
+	_ module.HasRegisterInterfaces = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the consensus module.
-type AppModuleBasic struct {
-	cdc codec.Codec
+// AppModule implements an application module
+type AppModule struct {
+	cdc    codec.Codec
+	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+	return AppModule{
+		cdc:    cdc,
+		keeper: keeper,
+	}
+}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // Name returns the consensus module's name.
-func (AppModuleBasic) Name() string { return types.ModuleName }
+func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
-
-// AppModule implements an application module
-type AppModule struct {
-	AppModuleBasic
-
-	keeper keeper.Keeper
-}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
@@ -67,13 +72,10 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         keeper,
-	}
-}
-
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+// RegisterConsensusMessages registers the consensus module's messages.
+func (am AppModule) RegisterConsensusMessages(builder any) {
+	// std.RegisterConsensusHandler(builder ,am.keeper.SetParams) // TODO uncomment when api is available
+}

@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
@@ -27,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/registry"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -54,6 +55,7 @@ type ModuleInputs struct {
 	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
 	FeeGrantKeeper         ante.FeegrantKeeper                `optional:"true"`
 	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
+	CustomGetSigners       []txsigning.CustomGetSigner        `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -65,7 +67,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
-	return registry.MergedProtoRegistry()
+	return gogoproto.HybridResolver
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -80,10 +82,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			FileResolver:          in.ProtoFileResolver,
 			AddressCodec:          in.AddressCodec,
 			ValidatorAddressCodec: in.ValidatorAddressCodec,
+			CustomGetSigners:      make(map[protoreflect.FullName]txsigning.GetSignersFunc),
 		},
 		CustomSignModes: customSignModeHandlers,
 		AddressPrefix:   in.AuthConfig.Bech32Prefix,
 		ValidatorPrefix: in.StakingConfig.Bech32PrefixValidator,
+	}
+
+	for _, mode := range in.CustomGetSigners {
+		txConfigOptions.SigningOptions.CustomGetSigners[mode.MsgType] = mode.Fn
 	}
 
 	// enable SIGN_MODE_TEXTUAL only if bank keeper is available

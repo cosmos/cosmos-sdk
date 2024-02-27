@@ -7,7 +7,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
@@ -22,21 +21,43 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic      = AppModule{}
-	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasGenesis          = AppModule{}
+	_ module.HasName               = AppModule{}
+	_ module.HasGRPCGateway        = AppModule{}
+	_ module.HasRegisterInterfaces = AppModule{}
+	_ module.AppModuleSimulation   = AppModule{}
+	_ module.HasGenesis            = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the nft module.
-type AppModuleBasic struct {
-	cdc codec.Codec
-	ac  address.Codec
+const ConsensusVersion = 1
+
+// AppModule implements the sdk.AppModule interface
+type AppModule struct {
+	cdc      codec.Codec
+	registry cdctypes.InterfaceRegistry
+
+	keeper        keeper.Keeper
+	accountKeeper nft.AccountKeeper
+	bankKeeper    nft.BankKeeper
 }
 
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak nft.AccountKeeper, bk nft.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+	return AppModule{
+		cdc:           cdc,
+		keeper:        keeper,
+		accountKeeper: ak,
+		bankKeeper:    bk,
+		registry:      registry,
+	}
+}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // Name returns the nft module's name.
-func (AppModuleBasic) Name() string {
+func (AppModule) Name() string {
 	return nft.ModuleName
 }
 
@@ -48,80 +69,48 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// RegisterLegacyAminoCodec registers the nft module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
-
 // RegisterInterfaces registers the nft module's interface types
-func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	nft.RegisterInterfaces(registry)
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the nft
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(nft.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the nft module.
-func (ab AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data nft.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return errors.Wrapf(err, "failed to unmarshal %s genesis state", nft.ModuleName)
-	}
-
-	return nft.ValidateGenesis(data, ab.ac)
-}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the nft module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
+func (AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := nft.RegisterQueryHandlerClient(context.Background(), mux, nft.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// AppModule implements the sdk.AppModule interface
-type AppModule struct {
-	AppModuleBasic
-	keeper keeper.Keeper
-	// TODO accountKeeper,bankKeeper will be replaced by query service
-	accountKeeper nft.AccountKeeper
-	bankKeeper    nft.BankKeeper
-	registry      cdctypes.InterfaceRegistry
+// DefaultGenesis returns default genesis state as raw bytes for the nft module.
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(nft.DefaultGenesisState())
 }
 
-// NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak nft.AccountKeeper, bk nft.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
-		keeper:         keeper,
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		registry:       registry,
+// ValidateGenesis performs genesis state validation for the nft module.
+func (am AppModule) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+	var data nft.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", nft.ModuleName)
 	}
+
+	return nft.ValidateGenesis(data, am.accountKeeper.AddressCodec())
 }
 
-// IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
-
-// InitGenesis performs genesis initialization for the nft module. It returns
-// no validator updates.
+// InitGenesis performs genesis initialization for the nft module.
 func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState nft.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	am.keeper.InitGenesis(ctx, &genesisState)
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the nft
-// module.
+// ExportGenesis returns the exported genesis state as raw bytes for the nft module.
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// ____________________________________________________________________________
+// ConsensusVersion implements HasConsensusVersion
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // AppModuleSimulation functions
 

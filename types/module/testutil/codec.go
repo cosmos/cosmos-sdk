@@ -12,7 +12,7 @@ import (
 )
 
 // TestEncodingConfig defines an encoding configuration that is used for testing
-// purposes. Note, MakeTestEncodingConfig takes a series of AppModuleBasic types
+// purposes. Note, MakeTestEncodingConfig takes a series of AppModule types
 // which should only contain the relevant module being tested and any potential
 // dependencies.
 type TestEncodingConfig struct {
@@ -22,7 +22,7 @@ type TestEncodingConfig struct {
 	Amino             *codec.LegacyAmino
 }
 
-func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig {
+func MakeTestEncodingConfig(modules ...module.AppModule) TestEncodingConfig {
 	aminoCodec := codec.NewLegacyAmino()
 	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
@@ -34,8 +34,7 @@ func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig
 		Amino:             aminoCodec,
 	}
 
-	mb := module.NewBasicManager(modules...)
-
+	mb := module.NewManager(modules...)
 	std.RegisterLegacyAminoCodec(encCfg.Amino)
 	std.RegisterInterfaces(encCfg.InterfaceRegistry)
 	mb.RegisterLegacyAminoCodec(encCfg.Amino)

@@ -18,7 +18,7 @@ import (
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 	s := rand.NewSource(1)
 	r := rand.New(s)
 

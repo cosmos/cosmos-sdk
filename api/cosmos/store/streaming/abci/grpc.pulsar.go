@@ -2,8 +2,8 @@
 package abci
 
 import (
+	abci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	v1beta1 "cosmossdk.io/api/cosmos/store/v1beta1"
-	abci "cosmossdk.io/api/tendermint/abci"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

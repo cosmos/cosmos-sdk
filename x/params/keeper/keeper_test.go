@@ -30,7 +30,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(params.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	tkey := storetypes.NewTransientStoreKey("params_transient_test")
 

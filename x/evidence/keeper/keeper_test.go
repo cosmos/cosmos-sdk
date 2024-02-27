@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
@@ -83,9 +84,9 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
 	suite.ctx = testCtx.Ctx
@@ -99,7 +100,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	evidenceKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		stakingKeeper,
 		slashingKeeper,
 		address.NewBech32Codec("cosmos"),
@@ -114,7 +115,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	evidenceKeeper.SetRouter(router)
 
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModule{})
 
 	suite.accountKeeper = accountKeeper
 
@@ -124,7 +125,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.evidenceKeeper = *evidenceKeeper
 
 	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
-		suite.evidenceKeeper.Logger(testCtx.Ctx))
+		suite.evidenceKeeper.Logger())
 
 	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }

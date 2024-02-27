@@ -6,7 +6,8 @@ import (
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/slashing/types"
@@ -18,10 +19,10 @@ import (
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeService storetypes.KVStoreService
-	cdc          codec.BinaryCodec
-	legacyAmino  *codec.LegacyAmino
-	sk           types.StakingKeeper
+	environment appmodule.Environment
+	cdc         codec.BinaryCodec
+	legacyAmino *codec.LegacyAmino
+	sk          types.StakingKeeper
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -37,15 +38,15 @@ type Keeper struct {
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeService storetypes.KVStoreService, sk types.StakingKeeper, authority string) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(environment appmodule.Environment, cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, sk types.StakingKeeper, authority string) Keeper {
+	sb := collections.NewSchemaBuilder(environment.KVStoreService)
 	k := Keeper{
-		storeService: storeService,
-		cdc:          cdc,
-		legacyAmino:  legacyAmino,
-		sk:           sk,
-		authority:    authority,
-		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		environment: environment,
+		cdc:         cdc,
+		legacyAmino: legacyAmino,
+		sk:          sk,
+		authority:   authority,
+		Params:      collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		ValidatorSigningInfo: collections.NewMap(
 			sb,
 			types.ValidatorSigningInfoKeyPrefix,
@@ -84,8 +85,7 @@ func (k Keeper) GetAuthority() string {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx context.Context) log.Logger {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
+	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
@@ -107,12 +107,12 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 		return err
 	}
 
-	reasonAttr := sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueUnspecified)
+	reasonAttr := event.NewAttribute(types.AttributeKeyReason, types.AttributeValueUnspecified)
 	switch infraction {
 	case st.Infraction_INFRACTION_DOUBLE_SIGN:
-		reasonAttr = sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign)
+		reasonAttr = event.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign)
 	case st.Infraction_INFRACTION_DOWNTIME:
-		reasonAttr = sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature)
+		reasonAttr = event.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature)
 	}
 
 	consStr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
@@ -120,24 +120,19 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 		return err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyAddress, consStr),
-			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-			reasonAttr,
-			sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
-		),
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeSlash,
+		event.NewAttribute(types.AttributeKeyAddress, consStr),
+		event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
+		reasonAttr,
+		event.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 	)
-	return nil
 }
 
 // Jail attempts to jail a validator. The slash is delegated to the staking module
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	err := k.sk.Jail(sdkCtx, consAddr)
+	err := k.sk.Jail(ctx, consAddr)
 	if err != nil {
 		return err
 	}
@@ -146,11 +141,11 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		return err
 	}
 
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyJailed, consStr),
-		),
-	)
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeSlash,
+		event.NewAttribute(types.AttributeKeyJailed, consStr),
+	); err != nil {
+		return err
+	}
 	return nil
 }

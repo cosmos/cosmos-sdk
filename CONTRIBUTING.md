@@ -62,14 +62,14 @@ The Cosmos SDK has many stakeholders contributing and shaping the project. The C
 
 The developers work in sprints, which are available in a [GitHub Project](https://github.com/orgs/cosmos/projects/26/views/22). The current EPICs are pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues).
 
-The important development announcements are shared on [Discord](https://discord.com/invite/cosmosnetwork) in the `#dev-announcements` channel.
+The important development announcements are shared on [Discord](https://discord.gg/interchain) in the `#dev-announcements` channel.
 
 To synchronize we have few major meetings:
 
 * Cosmos SDK Sprint Review on Monday and Thursday at 14:00 UTC (limited participation to core devs).
 * Cosmos SDK Community Call on Thursday at 16:00 UTC.
 
-If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@tac0turtle).
+If you would like to join one of the community call, then please contact us on [Discord](https://discord.gg/interchain) or reach out directly to Marko (@tac0turtle).
 
 ## Architecture Decision Records (ADR)
 

@@ -1,7 +1,6 @@
 /*
 Package module contains application module patterns and associated "manager" functionality.
 The module pattern has been broken down by:
-  - independent module functionality (AppModuleBasic)
   - inter-dependent module simulation functionality (AppModuleSimulation)
   - inter-dependent module full functionality (AppModule)
 
@@ -11,14 +10,7 @@ module keepers are dependent on each other, thus in order to access the full
 set of module functionality we need to define all the keepers/params-store/keys
 etc. This full set of advanced functionality is defined by the AppModule interface.
 
-Independent module functions are separated to allow for the construction of the
-basic application structures required early on in the application definition
-and used to enable the definition of full module functionality later in the
-process. This separation is necessary, however we still want to allow for a
-high level pattern for modules to follow - for instance, such that we don't
-have to manually register all of the codecs for all the modules. This basic
-procedure as well as other basic patterns are handled through the use of
-BasicManager.
+Independent module functions of modules can be accessed through a non instantiated AppModule.
 
 Lastly the interface for genesis functionality (HasGenesis & HasABCIGenesis) has been
 separated out from full module functionality (AppModule) so that modules which
@@ -51,12 +43,22 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// AppModuleBasic is the standard form for basic non-dependant elements of an application module.
+// Deprecated: use the embed extension interfaces instead, when needed.
 type AppModuleBasic interface {
 	HasName
-	RegisterLegacyAminoCodec(*codec.LegacyAmino)
-	RegisterInterfaces(types.InterfaceRegistry)
-	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
+	HasRegisterInterfaces
+	HasGRPCGateway
+	HasAminoCodec
+}
+
+// AppModule is the form for an application module. Most of
+// its functionality has been moved to extension interfaces.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaces interfaces instead.
+type AppModule interface {
+	appmodule.AppModule
+
+	HasName
+	HasRegisterInterfaces
 }
 
 // HasName allows the module to provide its own name for legacy purposes.
@@ -68,117 +70,26 @@ type HasName interface {
 
 // HasGenesisBasics is the legacy interface for stateless genesis methods.
 type HasGenesisBasics interface {
+	HasName
+
 	DefaultGenesis(codec.JSONCodec) json.RawMessage
 	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
 }
 
-// BasicManager is a collection of AppModuleBasic
-type BasicManager map[string]AppModuleBasic
-
-// NewBasicManager creates a new BasicManager object
-func NewBasicManager(modules ...AppModuleBasic) BasicManager {
-	moduleMap := make(map[string]AppModuleBasic)
-	for _, module := range modules {
-		moduleMap[module.Name()] = module
-	}
-	return moduleMap
+// HasAminoCodec is the interface for modules that have amino codec registration.
+// Deprecated: modules should not need to register their own amino codecs.
+type HasAminoCodec interface {
+	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 }
 
-// NewBasicManagerFromManager creates a new BasicManager from a Manager
-// The BasicManager will contain all AppModuleBasic from the AppModule Manager
-// Module's AppModuleBasic can be overridden by passing a custom AppModuleBasic map
-func NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic) BasicManager {
-	moduleMap := make(map[string]AppModuleBasic)
-	for name, module := range manager.Modules {
-		if customBasicMod, ok := customModuleBasics[name]; ok {
-			moduleMap[name] = customBasicMod
-			continue
-		}
-
-		if appModule, ok := module.(appmodule.AppModule); ok {
-			moduleMap[name] = CoreAppModuleBasicAdaptor(name, appModule)
-			continue
-		}
-
-		if basicMod, ok := module.(AppModuleBasic); ok {
-			moduleMap[name] = basicMod
-		}
-	}
-
-	return moduleMap
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces interface {
+	RegisterInterfaces(types.InterfaceRegistry)
 }
 
-// RegisterLegacyAminoCodec registers all module codecs
-func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	for _, b := range bm {
-		b.RegisterLegacyAminoCodec(cdc)
-	}
-}
-
-// RegisterInterfaces registers all module interface types
-func (bm BasicManager) RegisterInterfaces(registry types.InterfaceRegistry) {
-	for _, m := range bm {
-		m.RegisterInterfaces(registry)
-	}
-}
-
-// DefaultGenesis provides default genesis information for all modules
-func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
-	genesisData := make(map[string]json.RawMessage)
-	for _, b := range bm {
-		if mod, ok := b.(HasGenesisBasics); ok {
-			genesisData[b.Name()] = mod.DefaultGenesis(cdc)
-		}
-	}
-
-	return genesisData
-}
-
-// ValidateGenesis performs genesis state validation for all modules
-func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
-	for _, b := range bm {
-		// first check if the module is an adapted Core API Module
-		if mod, ok := b.(HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[b.Name()]); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// RegisterGRPCGatewayRoutes registers all module rest routes
-func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
-	for _, b := range bm {
-		b.RegisterGRPCGatewayRoutes(clientCtx, rtr)
-	}
-}
-
-// AddTxCommands adds all tx commands to the rootTxCmd.
-func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
-	for _, b := range bm {
-		if mod, ok := b.(interface {
-			GetTxCmd() *cobra.Command
-		}); ok {
-			if cmd := mod.GetTxCmd(); cmd != nil {
-				rootTxCmd.AddCommand(cmd)
-			}
-		}
-	}
-}
-
-// AddQueryCommands adds all query commands to the rootQueryCmd.
-func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
-	for _, b := range bm {
-		if mod, ok := b.(interface {
-			GetQueryCmd() *cobra.Command
-		}); ok {
-			if cmd := mod.GetQueryCmd(); cmd != nil {
-				rootQueryCmd.AddCommand(cmd)
-			}
-		}
-	}
+// HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
+type HasGRPCGateway interface {
+	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
 
 // HasGenesis is the extension interface for stateful genesis methods.
@@ -193,15 +104,6 @@ type HasABCIGenesis interface {
 	HasGenesisBasics
 	InitGenesis(context.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(context.Context, codec.JSONCodec) json.RawMessage
-}
-
-// AppModule is the form for an application module. Most of
-// its functionality has been moved to extension interfaces.
-// Deprecated: use appmodule.AppModule with a combination of extension interfaes interfaces instead.
-type AppModule interface {
-	appmodule.AppModule
-
-	AppModuleBasic
 }
 
 // HasInvariants is the interface for registering invariants.
@@ -225,55 +127,16 @@ type HasConsensusVersion interface {
 	ConsensusVersion() uint64
 }
 
-// HasABCIEndblock is a released typo of HasABCIEndBlock.
-// Deprecated: use HasABCIEndBlock instead.
-type HasABCIEndblock HasABCIEndBlock
-
 // HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
 type HasABCIEndBlock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
 
-var (
-	_ appmodule.AppModule = (*GenesisOnlyAppModule)(nil)
-	_ AppModuleBasic      = (*GenesisOnlyAppModule)(nil)
-)
-
-// genesisOnlyModule is an interface need to return GenesisOnlyAppModule struct in order to wrap two interfaces
-type genesisOnlyModule interface {
-	AppModuleBasic
-	HasABCIGenesis
-}
-
-// GenesisOnlyAppModule is an AppModule that only has import/export functionality
-type GenesisOnlyAppModule struct {
-	genesisOnlyModule
-}
-
-// NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg genesisOnlyModule) GenesisOnlyAppModule {
-	return GenesisOnlyAppModule{
-		genesisOnlyModule: amg,
-	}
-}
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (GenesisOnlyAppModule) IsOnePerModuleType() {}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (GenesisOnlyAppModule) IsAppModule() {}
-
-// RegisterInvariants is a placeholder function register no invariants
-func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// ConsensusVersion implements AppModule/ConsensusVersion.
-func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
-
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules                  map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
+	Modules                  map[string]appmodule.AppModule
 	OrderInitGenesis         []string
 	OrderExportGenesis       []string
 	OrderPreBlockers         []string
@@ -286,7 +149,7 @@ type Manager struct {
 
 // NewManager creates a new Manager object.
 func NewManager(modules ...AppModule) *Manager {
-	moduleMap := make(map[string]interface{})
+	moduleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(modules))
 	preBlockModulesStr := make([]string, 0)
 	for _, module := range modules {
@@ -316,7 +179,7 @@ func NewManager(modules ...AppModule) *Manager {
 // NewManagerFromMap creates a new Manager object from a map of module names to module implementations.
 // This method should be used for apps and modules which have migrated to the cosmossdk.io/core.appmodule.AppModule API.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
-	simpleModuleMap := make(map[string]interface{})
+	simpleModuleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(simpleModuleMap))
 	preBlockModulesStr := make([]string, 0)
 	for name, module := range moduleMap {
@@ -442,6 +305,87 @@ func (m *Manager) SetOrderPrecommiters(moduleNames ...string) {
 func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderMigrations", moduleNames, nil)
 	m.OrderMigrations = moduleNames
+}
+
+// RegisterLegacyAminoCodec registers all module codecs
+func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	for _, b := range m.Modules {
+		if mod, ok := b.(HasAminoCodec); ok {
+			mod.RegisterLegacyAminoCodec(cdc)
+		}
+	}
+}
+
+// RegisterInterfaces registers all module interface types
+func (m *Manager) RegisterInterfaces(registry types.InterfaceRegistry) {
+	for _, b := range m.Modules {
+		if mod, ok := b.(HasRegisterInterfaces); ok {
+			mod.RegisterInterfaces(registry)
+		}
+	}
+}
+
+// DefaultGenesis provides default genesis information for all modules
+func (m *Manager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
+	genesisData := make(map[string]json.RawMessage)
+	for _, b := range m.Modules {
+		if mod, ok := b.(HasGenesisBasics); ok {
+			genesisData[mod.Name()] = mod.DefaultGenesis(cdc)
+		} else if mod, ok := b.(HasName); ok {
+			genesisData[mod.Name()] = []byte("{}")
+		}
+	}
+
+	return genesisData
+}
+
+// ValidateGenesis performs genesis state validation for all modules
+func (m *Manager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
+	for _, b := range m.Modules {
+		// first check if the module is an adapted Core API Module
+		if mod, ok := b.(HasGenesisBasics); ok {
+			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[mod.Name()]); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// RegisterGRPCGatewayRoutes registers all module rest routes
+func (m *Manager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
+	for _, b := range m.Modules {
+		if mod, ok := b.(HasGRPCGateway); ok {
+			mod.RegisterGRPCGatewayRoutes(clientCtx, rtr)
+		}
+	}
+}
+
+// AddTxCommands adds all tx commands to the rootTxCmd.
+func (m *Manager) AddTxCommands(rootTxCmd *cobra.Command) {
+	for _, b := range m.Modules {
+		if mod, ok := b.(interface {
+			GetTxCmd() *cobra.Command
+		}); ok {
+			if cmd := mod.GetTxCmd(); cmd != nil {
+				rootTxCmd.AddCommand(cmd)
+			}
+		}
+	}
+}
+
+// AddQueryCommands adds all query commands to the rootQueryCmd.
+func (m *Manager) AddQueryCommands(rootQueryCmd *cobra.Command) {
+	for _, b := range m.Modules {
+		if mod, ok := b.(interface {
+			GetQueryCmd() *cobra.Command
+		}); ok {
+			if cmd := mod.GetQueryCmd(); cmd != nil {
+				rootQueryCmd.AddCommand(cmd)
+			}
+		}
+	}
 }
 
 // RegisterInvariants registers all module invariants
@@ -819,12 +763,8 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 					return sdk.EndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
 				}
 
-				for _, updates := range moduleValUpdates {
-					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
-				}
+				validatorUpdates = append(validatorUpdates, moduleValUpdates...)
 			}
-		} else {
-			continue
 		}
 	}
 

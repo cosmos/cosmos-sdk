@@ -417,14 +417,16 @@ func TestPreprocessHook(t *testing.T) {
 	err = txfDirect.PreprocessTx(from, txb)
 	requireT.NoError(err)
 
-	hasExtOptsTx, ok := txb.(ante.HasExtensionOptionsTx)
+	tx := txb.GetTx()
+	hasExtOptsTx, ok := tx.(ante.HasExtensionOptionsTx)
 	requireT.True(ok)
 
 	hasOneExt := len(hasExtOptsTx.GetExtensionOptions()) == 1
 	requireT.True(hasOneExt)
 
 	opt := hasExtOptsTx.GetExtensionOptions()[0]
-	requireT.Equal(opt, extAny)
+	requireT.Equal(opt.TypeUrl, extAny.TypeUrl)
+	requireT.Equal(opt.Value, extAny.Value)
 }
 
 func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.PubKey) []signingtypes.SignatureV2 {

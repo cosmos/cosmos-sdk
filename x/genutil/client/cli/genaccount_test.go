@@ -69,7 +69,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
-			appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
+			appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}).Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 

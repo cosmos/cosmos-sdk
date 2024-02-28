@@ -52,8 +52,9 @@ func MsgUnbondExec(clientCtx client.Context, from, valAddress,
 }
 
 // MsgTokenizeSharesExec creates a delegation message.
-func MsgTokenizeSharesExec(clientCtx client.Context, from fmt.Stringer, valAddress,
-	rewardOwner, amount fmt.Stringer, extraArgs ...string,
+func MsgTokenizeSharesExec(clientCtx client.Context, from, valAddress,
+	rewardOwner, amount fmt.Stringer,
+	extraArgs ...string,
 ) (testutil.BufferWriter, error) {
 	args := []string{
 		valAddress.String(),

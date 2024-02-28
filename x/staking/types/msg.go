@@ -138,8 +138,6 @@ func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int
 }
 
 // NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
-//
-//nolint:interfacer
 func NewMsgUnbondValidator(valAddr string) *MsgUnbondValidator {
 	return &MsgUnbondValidator{
 		ValidatorAddress: valAddr,
@@ -147,8 +145,6 @@ func NewMsgUnbondValidator(valAddr string) *MsgUnbondValidator {
 }
 
 // NewMsgTokenizeShares creates a new MsgTokenizeShares instance.
-//
-//nolint:interfacer
 func NewMsgTokenizeShares(delAddr, valAddr string, amount sdk.Coin, owner string) *MsgTokenizeShares {
 	return &MsgTokenizeShares{
 		DelegatorAddress:    delAddr,
@@ -159,8 +155,6 @@ func NewMsgTokenizeShares(delAddr, valAddr string, amount sdk.Coin, owner string
 }
 
 // NewMsgRedeemTokensForShares creates a new MsgRedeemTokensForShares instance.
-//
-//nolint:interfacer
 func NewMsgRedeemTokensForShares(delAddr string, amount sdk.Coin) *MsgRedeemTokensForShares {
 	return &MsgRedeemTokensForShares{
 		DelegatorAddress: delAddr,
@@ -169,19 +163,15 @@ func NewMsgRedeemTokensForShares(delAddr string, amount sdk.Coin) *MsgRedeemToke
 }
 
 // NewMsgTransferTokenizeShareRecord creates a new MsgTransferTokenizeShareRecord instance.
-//
-//nolint:interfacer
-func NewMsgTransferTokenizeShareRecord(recordId uint64, sender, newOwner string) *MsgTransferTokenizeShareRecord {
+func NewMsgTransferTokenizeShareRecord(recordID uint64, sender, newOwner string) *MsgTransferTokenizeShareRecord {
 	return &MsgTransferTokenizeShareRecord{
-		TokenizeShareRecordId: recordId,
+		TokenizeShareRecordId: recordID,
 		Sender:                sender,
 		NewOwner:              newOwner,
 	}
 }
 
 // NewMsgDisableTokenizeShares creates a new MsgDisableTokenizeShares instance.
-//
-//nolint:interfacer
 func NewMsgDisableTokenizeShares(delAddr string) *MsgDisableTokenizeShares {
 	return &MsgDisableTokenizeShares{
 		DelegatorAddress: delAddr,
@@ -189,8 +179,6 @@ func NewMsgDisableTokenizeShares(delAddr string) *MsgDisableTokenizeShares {
 }
 
 // NewMsgEnableTokenizeShares creates a new MsgEnableTokenizeShares instance.
-//
-//nolint:interfacer
 func NewMsgEnableTokenizeShares(delAddr string) *MsgEnableTokenizeShares {
 	return &MsgEnableTokenizeShares{
 		DelegatorAddress: delAddr,
@@ -198,8 +186,6 @@ func NewMsgEnableTokenizeShares(delAddr string) *MsgEnableTokenizeShares {
 }
 
 // NewMsgValidatorBond creates a new MsgValidatorBond instance.
-//
-//nolint:interfacer
 func NewMsgValidatorBond(delAddr, valAddr string) *MsgValidatorBond {
 	return &MsgValidatorBond{
 		DelegatorAddress: delAddr,

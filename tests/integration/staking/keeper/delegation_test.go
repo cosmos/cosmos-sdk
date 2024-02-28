@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
@@ -14,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
@@ -150,7 +150,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	validator, _ = f.stakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, *f.stakingKeeper, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+	_, err = msgServer.ValidatorBond(ctx, &types.MsgValidatorBond{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 	})
@@ -160,7 +160,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	validator, _ = f.stakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, *f.stakingKeeper, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
-	tokenizeShareResp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	tokenizeShareResp, err := msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    addrDels[1].String(),
 		ValidatorAddress:    addrVals[0].String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
@@ -169,7 +169,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	// try undelegating
-	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &types.MsgUndelegate{
+	_, err = msgServer.Undelegate(ctx, &types.MsgUndelegate{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
@@ -180,14 +180,14 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	validator, _ = f.stakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, *f.stakingKeeper, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+	_, err = msgServer.RedeemTokensForShares(ctx, &types.MsgRedeemTokensForShares{
 		DelegatorAddress: addrDels[1].String(),
 		Amount:           tokenizeShareResp.Amount,
 	})
 	require.NoError(t, err)
 
 	// try undelegating
-	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &types.MsgUndelegate{
+	_, err = msgServer.Undelegate(ctx, &types.MsgUndelegate{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
@@ -244,7 +244,7 @@ func TestValidatorBondRedelegate(t *testing.T) {
 
 	// convert to validator self-bond
 	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
-	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+	_, err = msgServer.ValidatorBond(ctx, &types.MsgValidatorBond{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 	})
@@ -254,7 +254,7 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	validator, _ = f.stakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, *f.stakingKeeper, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
-	tokenizeShareResp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	tokenizeShareResp, err := msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    addrDels[1].String(),
 		ValidatorAddress:    addrVals[0].String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
@@ -263,7 +263,7 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	// try undelegating
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
 		DelegatorAddress:    addrDels[0].String(),
 		ValidatorSrcAddress: addrVals[0].String(),
 		ValidatorDstAddress: addrVals[1].String(),
@@ -275,14 +275,14 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	validator, _ = f.stakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, *f.stakingKeeper, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+	_, err = msgServer.RedeemTokensForShares(ctx, &types.MsgRedeemTokensForShares{
 		DelegatorAddress: addrDels[1].String(),
 		Amount:           tokenizeShareResp.Amount,
 	})
 	require.NoError(t, err)
 
 	// try undelegating
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
 		DelegatorAddress:    addrDels[0].String(),
 		ValidatorSrcAddress: addrVals[0].String(),
 		ValidatorDstAddress: addrVals[1].String(),

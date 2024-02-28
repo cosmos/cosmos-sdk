@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	gocontext "context"
-
 	"fmt"
 	"testing"
 
@@ -657,7 +656,7 @@ func TestGRPCTokenizeShareRecordReward(t *testing.T) {
 	// tokenize share amount
 	delTokens := math.NewInt(1000000)
 	msgServer := stakingkeeper.NewMsgServerImpl(f.stakingKeeper)
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(ctx, &stakingtypes.MsgTokenizeShares{
 		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
 		ValidatorAddress:    valAddrs[0].String(),
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[0]).String(),

@@ -724,7 +724,7 @@ func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllT
 
 	store := k.storeService.OpenKVStore(ctx)
 	valStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.TokenizeShareRecordPrefix)
-	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		var tokenizeShareRecord types.TokenizeShareRecord
 		if err := k.cdc.Unmarshal(value, &tokenizeShareRecord); err != nil {
 			return false, err

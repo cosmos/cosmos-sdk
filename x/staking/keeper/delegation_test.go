@@ -889,6 +889,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	require.Equal(valTokens, issuedShares.RoundInt())
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validator2 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
+	require.Equal(stakingtypes.Bonded, validator2.Status)
 
 	header := ctx.BlockHeader()
 	blockHeight := int64(10)

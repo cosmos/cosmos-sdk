@@ -209,16 +209,16 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	k.SetTotalLiquidStakedTokens(ctx, data.TotalLiquidStakedTokens)
 
 	// Set each tokenize share record, as well as the last tokenize share record ID
-	latestId := uint64(0)
+	latestID := uint64(0)
 	for _, tokenizeShareRecord := range data.TokenizeShareRecords {
 		if err := k.AddTokenizeShareRecord(ctx, tokenizeShareRecord); err != nil {
 			panic(err)
 		}
-		if tokenizeShareRecord.Id > latestId {
-			latestId = tokenizeShareRecord.Id
+		if tokenizeShareRecord.Id > latestID {
+			latestID = tokenizeShareRecord.Id
 		}
 	}
-	if data.LastTokenizeShareRecordId < latestId {
+	if data.LastTokenizeShareRecordId < latestID {
 		panic("Tokenize share record specified with ID greater than the latest ID")
 	}
 	k.SetLastTokenizeShareRecordID(ctx, data.LastTokenizeShareRecordId)

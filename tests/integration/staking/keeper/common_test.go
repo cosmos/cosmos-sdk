@@ -28,7 +28,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -168,7 +167,7 @@ func initFixture(t testing.TB) *fixture {
 	return &f
 }
 
-func delegateCoinsFromAccount(ctx sdk.Context, sk keeper.Keeper, addr sdk.AccAddress, amount math.Int, val types.ValidatorI) error {
+func delegateCoinsFromAccount(ctx sdk.Context, sk stakingkeeper.Keeper, addr sdk.AccAddress, amount math.Int, val types.ValidatorI) error {
 	_, err := sk.Delegate(ctx, addr, amount, types.Unbonded, val.(types.Validator), true)
 
 	return err

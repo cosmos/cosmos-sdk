@@ -40,13 +40,12 @@ const (
 	OpWeightMsgUndelegate                  = "op_weight_msg_undelegate"
 	OpWeightMsgBeginRedelegate             = "op_weight_msg_begin_redelegate"
 	OpWeightMsgCancelUnbondingDelegation   = "op_weight_msg_cancel_unbonding_delegation"
-	OpWeightMsgValidatorBond               = "op_weight_msg_validator_bond"                 //nolint:gosec
-	OpWeightMsgTokenizeShares              = "op_weight_msg_tokenize_shares"                //nolint:gosec
-	OpWeightMsgRedeemTokensforShares       = "op_weight_msg_redeem_tokens_for_shares"       //nolint:gosec
-	OpWeightMsgTransferTokenizeShareRecord = "op_weight_msg_transfer_tokenize_share_record" //nolint:gosec
-	OpWeightMsgDisableTokenizeShares       = "op_weight_msg_disable_tokenize_shares"        //nolint:gosec
-	OpWeightMsgEnableTokenizeShares        = "op_weight_msg_enable_tokenize_shares"         //nolint:gosec
-
+	OpWeightMsgValidatorBond               = "op_weight_msg_validator_bond"
+	OpWeightMsgTokenizeShares              = "op_weight_msg_tokenize_shares"
+	OpWeightMsgRedeemTokensforShares       = "op_weight_msg_redeem_tokens_for_shares"
+	OpWeightMsgTransferTokenizeShareRecord = "op_weight_msg_transfer_tokenize_share_record"
+	OpWeightMsgDisableTokenizeShares       = "op_weight_msg_disable_tokenize_shares"
+	OpWeightMsgEnableTokenizeShares        = "op_weight_msg_enable_tokenize_shares"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

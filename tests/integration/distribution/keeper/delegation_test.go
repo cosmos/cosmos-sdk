@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +13,6 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
@@ -80,7 +81,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	// tokenize share amount
 	delTokens := math.NewInt(1000000)
 	msgServer := stakingkeeper.NewMsgServerImpl(f.stakingKeeper)
-	resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
+	resp, err := msgServer.TokenizeShares(ctx, &stakingtypes.MsgTokenizeShares{
 		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
 		ValidatorAddress:    valAddrs[0].String(),
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[1]).String(),

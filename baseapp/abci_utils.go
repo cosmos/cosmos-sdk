@@ -13,16 +13,9 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
-
-// VoteExtensionThreshold defines the total voting power % that must be
-// submitted in order for all vote extensions to be considered valid for a
-// given height.
-var VoteExtensionThreshold = math.LegacyNewDecWithPrec(667, 3)
 
 type (
 	// ValidatorStore defines the interface contract require for verifying vote
@@ -132,13 +125,18 @@ func ValidateVoteExtensions(
 		sumVP += vote.Validator.Power
 	}
 
-	if totalVP > 0 {
-		percentSubmitted := math.LegacyNewDecFromInt(math.NewInt(sumVP)).Quo(math.LegacyNewDecFromInt(math.NewInt(totalVP)))
-		if percentSubmitted.LT(VoteExtensionThreshold) {
-			return fmt.Errorf("insufficient cumulative voting power received to verify vote extensions; got: %s, expected: >=%s", percentSubmitted, VoteExtensionThreshold)
-		}
+	// This check is probably unnecessary, but better safe than sorry.
+	if totalVP <= 0 {
+		return fmt.Errorf("total voting power must be positive, got: %d", totalVP)
 	}
 
+	// If the sum of the voting power has not reached (2/3 + 1) we need to error.
+	if requiredVP := ((totalVP * 2) / 3) + 1; sumVP < requiredVP {
+		return fmt.Errorf(
+			"insufficient cumulative voting power received to verify vote extensions; got: %d, expected: >=%d",
+			sumVP, requiredVP,
+		)
+	}
 	return nil
 }
 
@@ -156,17 +154,19 @@ type (
 	// DefaultProposalHandler defines the default ABCI PrepareProposal and
 	// ProcessProposal handlers.
 	DefaultProposalHandler struct {
-		mempool    mempool.Mempool
-		txVerifier ProposalTxVerifier
-		txSelector TxSelector
+		mempool          mempool.Mempool
+		txVerifier       ProposalTxVerifier
+		txSelector       TxSelector
+		signerExtAdapter mempool.SignerExtractionAdapter
 	}
 )
 
 func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
 	return &DefaultProposalHandler{
-		mempool:    mp,
-		txVerifier: txVerifier,
-		txSelector: NewDefaultTxSelector(),
+		mempool:          mp,
+		txVerifier:       txVerifier,
+		txSelector:       NewDefaultTxSelector(),
+		signerExtAdapter: mempool.NewDefaultSignerExtractionAdapter(),
 	}
 }
 
@@ -226,8 +226,39 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		}
 
 		iterator := h.mempool.Select(ctx, req.Txs)
+		selectedTxsSignersSeqs := make(map[string]uint64)
+		var selectedTxsNums int
 		for iterator != nil {
 			memTx := iterator.Tx()
+			signerData, err := h.signerExtAdapter.GetSigners(memTx)
+			if err != nil {
+				return nil, err
+			}
+
+			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
+			// so we add them and continue given that we don't need to check the sequence.
+			shouldAdd := true
+			txSignersSeqs := make(map[string]uint64)
+			for _, signer := range signerData {
+				seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
+				if !ok {
+					txSignersSeqs[signer.Signer.String()] = signer.Sequence
+					continue
+				}
+
+				// If we have seen this signer before in this block, we must make
+				// sure that the current sequence is seq+1; otherwise is invalid
+				// and we skip it.
+				if seq+1 != signer.Sequence {
+					shouldAdd = false
+					break
+				}
+				txSignersSeqs[signer.Signer.String()] = signer.Sequence
+			}
+			if !shouldAdd {
+				iterator = iterator.Next()
+				continue
+			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
 			// which calls mempool.Insert, in theory everything in the pool should be
@@ -244,6 +275,23 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				if stop {
 					break
 				}
+
+				txsLen := len(h.txSelector.SelectedTxs(ctx))
+				for sender, seq := range txSignersSeqs {
+					// If txsLen != selectedTxsNums is true, it means that we've
+					// added a new tx to the selected txs, so we need to update
+					// the sequence of the sender.
+					if txsLen != selectedTxsNums {
+						selectedTxsSignersSeqs[sender] = seq
+					} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
+						// The transaction hasn't been added but it passed the
+						// verification, so we know that the sequence is correct.
+						// So we set this sender's sequence to seq-1, in order
+						// to avoid unnecessary calls to PrepareProposalVerifyTx.
+						selectedTxsSignersSeqs[sender] = seq - 1
+					}
+				}
+				selectedTxsNums = txsLen
 			}
 
 			iterator = iterator.Next()

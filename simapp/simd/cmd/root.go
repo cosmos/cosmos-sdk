@@ -18,7 +18,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -72,7 +72,7 @@ func NewRootCmd() *cobra.Command {
 				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 				txConfigOpts := tx.ConfigOptions{
 					EnabledSignModes:           enabledSignModes,
-					TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
+					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
 				}
 				txConfig, err := tx.NewTxConfigWithOptions(
 					initClientCtx.Codec,
@@ -100,7 +100,7 @@ func NewRootCmd() *cobra.Command {
 
 	// add keyring to autocli opts
 	autoCliOpts := tempApp.AutoCliOpts()
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	initClientCtx, _ = config.ReadDefaultValuesFromDefaultClientConfig(initClientCtx)
 	autoCliOpts.Keyring, _ = keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
 	autoCliOpts.ClientCtx = initClientCtx
 

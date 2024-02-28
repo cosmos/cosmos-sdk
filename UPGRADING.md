@@ -64,7 +64,7 @@ is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
 ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
 methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
 allows an application to define handlers for these methods via `ExtendVoteHandler`
-and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/building-apps/vote-extensions)
 for more info.
 
 #### Set PreBlocker

@@ -38,6 +38,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.50.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.4) - 2023-02-19
+
+### Features
+
+* (server) [#19280](https://github.com/cosmos/cosmos-sdk/pull/19280) Adds in-place testnet CLI command.
+
+### Improvements
+
+* (client) [#19393](https://github.com/cosmos/cosmos-sdk/pull/19393/) Add `ReadDefaultValuesFromDefaultClientConfig` to populate the default values from the default client config in client.Context without creating a app folder.
+
+### Bug Fixes
+
+* (x/auth/vesting) [GHSA-4j93-fm92-rp4m](#bug-fixes) Add `BlockedAddr` check in `CreatePeriodicVestingAccount`.
+* (baseapp) [#19338](https://github.com/cosmos/cosmos-sdk/pull/19338) Set HeaderInfo in context when calling `setState`.
+* (baseapp): [#19200](https://github.com/cosmos/cosmos-sdk/pull/19200) Ensure that sdk side ve math matches cometbft.
+* [#19106](https://github.com/cosmos/cosmos-sdk/pull/19106) Allow empty public keys when setting signatures. Public keys aren't needed for every transaction.
+* (baseapp) [#19198](https://github.com/cosmos/cosmos-sdk/pull/19198) Remove usage of pointers in logs in all optimistic execution goroutines.
+* (baseapp) [#19177](https://github.com/cosmos/cosmos-sdk/pull/19177) Fix baseapp `DefaultProposalHandler` same-sender non-sequential sequence.
+* (crypto) [#19371](https://github.com/cosmos/cosmos-sdk/pull/19371) Avoid CLI redundant log in stdout, log to stderr instead.
+
 ## [v0.50.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.3) - 2023-01-15
 
 ### Features

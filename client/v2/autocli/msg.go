@@ -16,17 +16,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
-func (b *Builder) BuildMsgCommand(appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
-	msgCmd := topLevelCmd("tx", "Transaction subcommands")
+func (b *Builder) BuildMsgCommand(ctx context.Context, appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
+	msgCmd := topLevelCmd(ctx, "tx", "Transaction subcommands")
+
 	if err := b.enhanceCommandCommon(msgCmd, msgCmdType, appOptions, customCmds); err != nil {
 		return nil, err
 	}
@@ -41,7 +38,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	for cmdName, subCmdDescriptor := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			subCmd = topLevelCmd(cmdName, fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service))
+			subCmd = topLevelCmd(cmd.Context(), cmdName, fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service))
 		}
 
 		// Add recursive sub-commands if there are any. This is used for nested services.
@@ -112,8 +109,6 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 // BuildMsgMethodCommand returns a command that outputs the JSON representation of the message.
 func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &b.ClientCtx))
-
 		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
@@ -121,24 +116,6 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 		clientCtx = clientCtx.WithCmdContext(cmd.Context())
 		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
-
-		// enable sign mode textual
-		// the config is always overwritten as we need to have set the flags to the client context
-		// this ensures that the context has the correct client.
-		if !clientCtx.Offline {
-			b.TxConfigOpts.EnabledSignModes = append(b.TxConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-			b.TxConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
-
-			txConfig, err := authtx.NewTxConfigWithOptions(
-				codec.NewProtoCodec(clientCtx.InterfaceRegistry),
-				b.TxConfigOpts,
-			)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithTxConfig(txConfig)
-		}
 
 		// set signer to signer field if empty
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))

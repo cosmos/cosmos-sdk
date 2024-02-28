@@ -6,9 +6,9 @@ package types
 // is required for the remainder of the AnteHandler execution, a new Context should
 // be created off of the provided Context and returned as <newCtx>.
 //
-// When exec module is simulate (or simulate argument is true) itindicates if the AnteHandler is
-// being executed  in simulation mode, which attempts to estimate a gas cost for the tx.
-// Any state modifications made will be discarded if simulate is true.
+// When exec module is in simulation mode (ctx.ExecMode() == ExecModeSimulate), it indicates if the AnteHandler is
+// being executed in simulation mode, which attempts to estimate a gas cost for the tx.
+// Any state modifications made will be discarded in simulation mode.
 type AnteHandler func(ctx Context, tx Tx, _ bool) (newCtx Context, err error)
 
 // PostHandler like AnteHandler but it executes after RunMsgs. Runs on success

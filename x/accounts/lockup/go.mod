@@ -165,11 +165,6 @@ require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20240130113600-88ef6483f90f.1 // indirect
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/golang/mock v1.6.0 // indirect
-	github.com/google/orderedcode v0.0.1 // indirect
-	github.com/lib/pq v1.10.7 // indirect
-	github.com/minio/highwayhash v1.0.2 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../../.

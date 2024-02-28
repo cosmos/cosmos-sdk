@@ -10,7 +10,7 @@ import (
 )
 
 // NewRollbackCmd creates a command to rollback CometBFT and multistore state by one height.
-func NewRollbackCmd(appCreator types.AppCreator) *cobra.Command {
+func NewRollbackCmd[T types.Application](appCreator types.AppCreator[T]) *cobra.Command {
 	var removeBlock bool
 
 	cmd := &cobra.Command{

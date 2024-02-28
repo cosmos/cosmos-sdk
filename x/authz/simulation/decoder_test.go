@@ -19,7 +19,7 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	dec := simulation.NewDecodeStore(encCfg.Codec)

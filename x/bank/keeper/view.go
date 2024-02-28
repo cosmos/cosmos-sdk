@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -56,10 +56,9 @@ func (b BalancesIndexes) IndexesList() []collections.Index[collections.Pair[sdk.
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	cdc          codec.BinaryCodec
-	storeService store.KVStoreService
-	ak           types.AccountKeeper
-	logger       log.Logger
+	cdc         codec.BinaryCodec
+	environment appmodule.Environment
+	ak          types.AccountKeeper
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -70,13 +69,12 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, logger log.Logger) BaseViewKeeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper) BaseViewKeeper {
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := BaseViewKeeper{
 		cdc:           cdc,
-		storeService:  storeService,
+		environment:   env,
 		ak:            ak,
-		logger:        logger,
 		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
 		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
 		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
@@ -99,7 +97,7 @@ func (k BaseViewKeeper) HasBalance(ctx context.Context, addr sdk.AccAddress, amt
 
 // Logger returns a module-specific logger.
 func (k BaseViewKeeper) Logger() log.Logger {
-	return k.logger
+	return k.environment.Logger
 }
 
 // GetAllBalances returns all the account balances for the given account address.
@@ -186,8 +184,7 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 	if acc != nil {
 		vacc, ok := acc.(types.VestingAccount)
 		if ok {
-			sdkCtx := sdk.UnwrapSDKContext(ctx)
-			return vacc.LockedCoins(sdkCtx.HeaderInfo().Time)
+			return vacc.LockedCoins(k.environment.HeaderService.GetHeaderInfo(ctx).Time)
 		}
 	}
 

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -138,7 +139,7 @@ type InterfaceRegistryOptions struct {
 // NewInterfaceRegistryWithOptions returns a new InterfaceRegistry with the given options.
 func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (InterfaceRegistry, error) {
 	if options.ProtoFiles == nil {
-		return nil, fmt.Errorf("proto files must be provided")
+		return nil, errors.New("proto files must be provided")
 	}
 
 	options.SigningOptions.FileResolver = options.ProtoFiles
@@ -284,7 +285,7 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 
 	rv := reflect.ValueOf(iface)
 	if rv.Kind() != reflect.Ptr {
-		return fmt.Errorf("UnpackAny expects a pointer")
+		return errors.New("UnpackAny expects a pointer")
 	}
 
 	rt := rv.Elem().Type()
@@ -366,9 +367,9 @@ func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
 type failingAddressCodec struct{}
 
 func (f failingAddressCodec) StringToBytes(string) ([]byte, error) {
-	return nil, fmt.Errorf("InterfaceRegistry requires a proper address codec implementation to do address conversion")
+	return nil, errors.New("InterfaceRegistry requires a proper address codec implementation to do address conversion")
 }
 
 func (f failingAddressCodec) BytesToString([]byte) (string, error) {
-	return "", fmt.Errorf("InterfaceRegistry requires a proper address codec implementation to do address conversion")
+	return "", errors.New("InterfaceRegistry requires a proper address codec implementation to do address conversion")
 }

@@ -138,7 +138,7 @@ func TestReadTxsFromFile(t *testing.T) {
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
 	txConfig := encodingConfig.TxConfig
 
 	clientCtx := client.Context{}

@@ -71,14 +71,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	auth, err := in.AddressCodec.BytesToString(authority)
+	authorityStr, err := in.AddressCodec.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, auth)
-	m := NewAppModule(k, in.AddressCodec)
+	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, authorityStr)
+	m := NewAppModule(k)
 
 	return ModuleOutputs{UpgradeKeeper: k, Module: m}
 }

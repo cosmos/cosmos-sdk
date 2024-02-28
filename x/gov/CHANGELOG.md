@@ -60,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* []() `types.Config` and `types.DefaultConfig` have been moved to the keeper package in order to support the custom tallying function.
 * [#19349](https://github.com/cosmos/cosmos-sdk/pull/19349) Simplify state management in `x/gov`. Note `k.VotingPeriodProposals` and `k.SetProposal` are no longer needed and have been removed.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a `ProposalType` parameter instead.
 * [#17496](https://github.com/cosmos/cosmos-sdk/pull/17496) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type.

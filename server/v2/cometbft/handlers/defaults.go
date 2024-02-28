@@ -11,9 +11,9 @@ import (
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
-	coremempool "cosmossdk.io/server/v2/core/mempool"
+
+	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/server/v2/mempool"
 )
 
 type AppManager[T transaction.Tx] interface {
@@ -22,11 +22,11 @@ type AppManager[T transaction.Tx] interface {
 }
 
 type DefaultProposalHandler[T transaction.Tx] struct {
-	mempool    coremempool.Mempool[T]
+	mempool    mempool.Mempool[T]
 	txSelector TxSelector[T]
 }
 
-func NewDefaultProposalHandler[T transaction.Tx](mp coremempool.Mempool[T]) *DefaultProposalHandler[T] {
+func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *DefaultProposalHandler[T] {
 	return &DefaultProposalHandler[T]{
 		mempool:    mp,
 		txSelector: NewDefaultTxSelector[T](),
@@ -86,7 +86,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 			_, err := app.ValidateTx(ctx, memTx)
 			if err != nil {
 				err := h.mempool.Remove([]T{memTx})
-				if err != nil && !errors.Is(err, coremempool.ErrTxNotFound) {
+				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					return nil, err
 				}
 			} else {

@@ -70,7 +70,7 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".simappv2")
 }
 
 // AppConfig returns the default app config.

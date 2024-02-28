@@ -4,9 +4,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"cosmossdk.io/core/appmodule"
+	"github.com/stretchr/testify/suite"
 )
 
 func TestModuleIntSuite(t *testing.T) {

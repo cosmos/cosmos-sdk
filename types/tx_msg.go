@@ -5,9 +5,10 @@ import (
 	fmt "fmt"
 	strings "strings"
 
-	"cosmossdk.io/core/transaction"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
+
+	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

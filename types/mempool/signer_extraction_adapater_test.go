@@ -24,6 +24,26 @@ func (n nonVerifiableTx) GetMsgsV2() ([]proto.Message, error) {
 	panic("not implemented")
 }
 
+func (n nonVerifiableTx) Bytes() []byte {
+	return []byte{}
+}
+
+func (n nonVerifiableTx) Hash() [32]byte {
+	return [32]byte{}
+}
+
+func (n nonVerifiableTx) GetGasLimit() uint64 {
+	return 0
+}
+
+func (n nonVerifiableTx) GetMessages() []Type {
+	return nil
+}
+
+func (n nonVerifiableTx) GetSenders() []Identity {
+	return nil
+}
+
 func TestDefaultSignerExtractor(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	sa := accounts[0].Address

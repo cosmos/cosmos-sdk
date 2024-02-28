@@ -14,6 +14,7 @@ replace (
 )
 
 require (
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1
 	cosmossdk.io/api v0.7.2
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
@@ -29,6 +30,7 @@ require (
 )
 
 require (
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect

@@ -78,8 +78,8 @@ schema = 3
     version = "v2.3.2"
     hash = "sha256-natWs+yIAuD1UI07iZtjPilroQLfXizFn3lNOiOT83U="
   [mod."github.com/cenkalti/backoff/v4"]
-    version = "v4.1.3"
-    hash = "sha256-u6MEDopHoTWAZoVvvXOKnAg++xre53YgQx0gmf6t2KU="
+    version = "v4.2.1"
+    hash = "sha256-CKogmPe0pCcAdpztzPwr24rLTJZfq8QVZ9AUduwAcoA="
   [mod."github.com/cespare/xxhash"]
     version = "v1.1.0"
     hash = "sha256-nVDTtXH9PC3yJ0THaQZEN243UP9xgLi/clt5xRqj3+M="
@@ -273,8 +273,8 @@ schema = 3
     version = "v1.7.3"
     hash = "sha256-z3zrjcOsgJrZkGLwaKVauq/MFAPtulXatV/RrkKNJv4="
   [mod."github.com/hashicorp/go-hclog"]
-    version = "v1.5.0"
-    hash = "sha256-u3Jqg7Qex11IZ7vbk4hRGgLy6e0cF70CCx7ERF0GUHo="
+    version = "v1.6.2"
+    hash = "sha256-cGlKyuctpU6Jd+L1ybCoJrBwnBlHXks4CQYkTQMCxDU="
   [mod."github.com/hashicorp/go-immutable-radix"]
     version = "v1.3.1"
     hash = "sha256-65+A2HiVfS/GV9G+6/TkXXjzXhI/V98e6RlJWjxy+mg="
@@ -282,8 +282,8 @@ schema = 3
     version = "v0.5.3"
     hash = "sha256-5jQftEvEhL88yWeVnu+IZKzV5p9osZcgFmwP1zlrjzY="
   [mod."github.com/hashicorp/go-plugin"]
-    version = "v1.5.2"
-    hash = "sha256-bdBT9TyHUJkUogQZWj0waniVv/Qauy/iKEbegyK2HZA="
+    version = "v1.6.0"
+    hash = "sha256-NeY86Z+qJwt0NPV4cNmWDiTryDPSiyKMkS1ivRX9ThE="
   [mod."github.com/hashicorp/go-safetemp"]
     version = "v1.0.0"
     hash = "sha256-g5i9m7FSRInQzZ4iRpIsoUu685AY7fppUwjhuZCezT8="
@@ -417,8 +417,8 @@ schema = 3
     version = "v1.12.0"
     hash = "sha256-qvDNCe3l84/LgrA8X4O15e1FeDcazyX91m9LmXGXX6M="
   [mod."github.com/rs/cors"]
-    version = "v1.8.3"
-    hash = "sha256-VgVB4HKAhPSjNg96mIEUN1bt5ZQng8Fi3ZABy3CDWQE="
+    version = "v1.10.0"
+    hash = "sha256-jniwkO6hvL9f6ziNfy5GsMtNBdqKG7mSKtqq7qcH6lU="
   [mod."github.com/rs/zerolog"]
     version = "v1.32.0"
     hash = "sha256-9dZjtsES+wLp1cFiSVMuEUbdeXVFcgT0dgg5ACZkILk="
@@ -568,8 +568,8 @@ schema = 3
     version = "v3.5.1"
     hash = "sha256-ps2GEc3P2xvlrU4TCtXz+nLTxyP0RrF7SScz5jUqE5E="
   [mod."nhooyr.io/websocket"]
-    version = "v1.8.6"
-    hash = "sha256-DyaiCc/1iELrl6JSpz6WYMtFwUiSCOSoNF8IhSyP1ag="
+    version = "v1.8.7"
+    hash = "sha256-6pQ35gFvbyMhNo0gv4bPxYDUrwDF/ok1GMA+BHfsRRM="
   [mod."pgregory.net/rapid"]
     version = "v1.1.0"
     hash = "sha256-sVQY9EQ9Y5blYyVYfaOa+y12e+399OqdHiEY3BaDnqo="

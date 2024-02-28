@@ -23,4 +23,11 @@ type Store interface {
 	// StateAt returns a readonly view over the provided
 	// state. Must error when the version does not exist.
 	StateAt(version uint64) (corestore.ReaderMap, error)
+
+	// LoadVersion loads the RootStore to the given version.
+	LoadVersion(version uint64) error
+
+	// LoadLatestVersion behaves identically to LoadVersion except it loads the
+	// latest version implicitly.
+	LoadLatestVersion() error
 }

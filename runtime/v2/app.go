@@ -81,18 +81,18 @@ func (a *App) DefaultGenesis() map[string]json.RawMessage {
 	return a.moduleManager.DefaultGenesis(a.cdc)
 }
 
-// Load finishes all initialization operations and loads the app.
-func (a *App) Load() error {
-	return nil
+// LoadLatest loads the latest version.
+func (a *App) LoadLatest() error {
+	return a.db.LoadLatestVersion()
+}
+
+// LoadHeight loads a particular height
+func (a *App) LoadHeight(height uint64) error {
+	return a.db.LoadVersion(height)
 }
 
 // Close is called in start cmd to gracefully cleanup resources.
 func (a *App) Close() error {
-	return nil
-}
-
-// LoadHeight loads a particular height
-func (a *App) LoadHeight(height int64) error {
 	return nil
 }
 

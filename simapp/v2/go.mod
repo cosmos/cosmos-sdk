@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/store v1.0.2
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
@@ -20,14 +20,14 @@ require (
 	cosmossdk.io/x/tx v0.13.0 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v0.38.5
-	github.com/cosmos/cosmos-db v1.0.2
+	github.com/cosmos/cosmos-db v1.0.2 // indirect
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.51.0
-	github.com/cosmos/gogoproto v1.4.11
-	github.com/golang/mock v1.6.0
-	github.com/spf13/cast v1.6.0
+	github.com/cosmos/gogoproto v1.4.11 // indirect
+	github.com/golang/mock v1.6.0 // indirect
+	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/protobuf v1.32.0

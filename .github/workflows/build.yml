@@ -30,9 +30,9 @@ jobs:
         ###################
         #### Build App ####
         ###################
-      - name: Build
+      - name: Build v1
         run: GOARCH=${{ matrix.go-arch }} make build
-      - name: Build Legacy
+      - name: Build v1 legacy
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
       - name: Build with rocksdb backend
         if: |

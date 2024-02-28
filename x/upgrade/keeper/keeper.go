@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
@@ -85,7 +86,7 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 }
 
 // SetModuleVersionMap saves a given version map to state
-func (k Keeper) SetModuleVersionMap(ctx context.Context, vm appmodule.VersionMap) error {
+func (k Keeper) SetModuleVersionMap(ctx context.Context, vm appmodulev2.VersionMap) error {
 	if len(vm) > 0 {
 		store := runtime.KVStoreAdapter(k.environment.KVStoreService.OpenKVStore(ctx))
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})

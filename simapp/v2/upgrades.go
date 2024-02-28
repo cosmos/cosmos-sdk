@@ -9,6 +9,7 @@ import (
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
+	"github.com/cosmos/cosmos-sdk/types/module"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
@@ -23,8 +24,8 @@ const UpgradeName = "v050-to-v051"
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
-		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodulev2.VersionMap) (appmodulev2.VersionMap, error) {
-			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (appmodulev2.VersionMap, error) {
+			return app.ModuleManager().RunMigrations(ctx, fromVM)
 		},
 	)
 
@@ -45,6 +46,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+		_ = storeUpgrades
+		// app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }

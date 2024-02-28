@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
@@ -32,7 +33,7 @@ type MM struct {
 	logger             log.Logger
 	cdc                codec.Codec
 	config             *runtimev2.Module
-	modules            map[string]appmodule.AppModule
+	modules            map[string]appmodulev2.AppModule
 	migrationRegistrar *migrationRegistrar
 }
 
@@ -42,11 +43,10 @@ func NewModuleManager(
 	logger log.Logger,
 	cdc codec.Codec,
 	config *runtimev2.Module,
-	modules map[string]appmodule.AppModule,
+	modules map[string]appmodulev2.AppModule,
 ) *MM {
+	// good defaults for the module manager order
 	modulesName := maps.Keys(modules)
-
-	// TODO: check for missing modules
 	if len(config.PreBlockers) == 0 {
 		config.PreBlockers = modulesName
 	}
@@ -69,13 +69,25 @@ func NewModuleManager(
 		config.OrderMigrations = sdkmodule.DefaultMigrationsOrder(modulesName)
 	}
 
-	return &MM{
+	mm := &MM{
 		logger:             logger,
 		cdc:                cdc,
 		config:             config,
 		modules:            modules,
 		migrationRegistrar: newMigrationRegistrar(),
 	}
+
+	if err := mm.validateConfig(); err != nil {
+		panic(err)
+
+	}
+
+	return mm
+}
+
+// Modules returns the modules registered in the module manager
+func (m *MM) Modules() map[string]appmodulev2.AppModule {
+	return m.modules
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
@@ -100,7 +112,9 @@ func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 func (m *MM) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, b := range m.modules {
-		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+		if mod, ok := b.(appmodulev2.HasGenesis); ok {
+			_ = mod // TODO, support appmodulev2 genesis
+		} else if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
 			genesisData[mod.Name()] = mod.DefaultGenesis(cdc)
 		} else if mod, ok := b.(sdkmodule.HasName); ok {
 			genesisData[mod.Name()] = []byte("{}")
@@ -114,7 +128,9 @@ func (m *MM) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
 func (m *MM) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
 	for _, b := range m.modules {
 		// first check if the module is an adapted Core API Module
-		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+		if mod, ok := b.(appmodulev2.HasGenesis); ok {
+			_ = mod // TODO, support appmodulev2 genesis
+		} else if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[mod.Name()]); err != nil {
 				return err
 			}
@@ -138,7 +154,7 @@ func (m *MM) ExportGenesis() {
 func (m *MM) BeginBlock() func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		for _, moduleName := range m.config.BeginBlockers {
-			if module, ok := m.modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			if module, ok := m.modules[moduleName].(appmodulev2.HasBeginBlocker); ok {
 				if err := module.BeginBlock(ctx); err != nil {
 					return fmt.Errorf("failed to run beginblocker for %s: %w", moduleName, err)
 				}
@@ -154,7 +170,7 @@ func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdate
 	validatorUpdates := []appmodulev2.ValidatorUpdate{}
 	endBlockFunc = func(ctx context.Context) error {
 		for _, moduleName := range m.config.EndBlockers {
-			if module, ok := m.modules[moduleName].(appmodule.HasEndBlocker); ok {
+			if module, ok := m.modules[moduleName].(appmodulev2.HasEndBlocker); ok {
 				err := module.EndBlock(ctx)
 				if err != nil {
 					return fmt.Errorf("failed to run endblock for %s: %w", moduleName, err)
@@ -235,13 +251,13 @@ func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
 }
 
 // TODO write as descriptive godoc as module manager v1.
-func (m *MM) RunMigrations(ctx context.Context, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
-	updatedVM := appmodule.VersionMap{}
+func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (appmodulev2.VersionMap, error) {
+	updatedVM := appmodulev2.VersionMap{}
 	for _, moduleName := range m.config.OrderMigrations {
 		module := m.modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := uint64(0)
-		if module, ok := module.(appmodule.HasConsensusVersion); ok {
+		if module, ok := module.(appmodulev2.HasConsensusVersion); ok {
 			toVersion = module.ConsensusVersion()
 		}
 
@@ -260,6 +276,9 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodule.VersionMap) (ap
 			}
 		} else {
 			m.logger.Info(fmt.Sprintf("adding a new module: %s", moduleName))
+			if mod, ok := m.modules[moduleName].(appmodulev2.HasGenesis); ok {
+				mod.InitGenesis(ctx, mod.DefaultGenesis())
+			}
 			if mod, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
 				mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
 			}
@@ -289,13 +308,121 @@ func (m *MM) RegisterServices(app *App) error {
 		}
 
 		// register migrations
-		if module, ok := module.(appmodule.HasMigrations); ok {
+		if module, ok := module.(appmodulev2.HasMigrations); ok {
 			if err := module.RegisterMigrations(m.migrationRegistrar); err != nil {
 				return err
 			}
 		}
 
 		// TODO: register pre and post msg
+	}
+
+	return nil
+}
+
+// validateConfig validates the module manager configuration
+// it asserts that all modules are defined in the configuration and that no modules are forgotten
+func (m *MM) validateConfig() error {
+	if err := m.assertNoForgottenModules("PreBlockers", m.config.PreBlockers, func(moduleName string) bool {
+		module := m.modules[moduleName]
+		_, hasBlock := module.(appmodule.HasPreBlocker)
+		return !hasBlock
+	}); err != nil {
+		return err
+	}
+
+	if err := m.assertNoForgottenModules("BeginBlockers", m.config.BeginBlockers, func(moduleName string) bool {
+		module := m.modules[moduleName]
+		_, hasBeginBlock := module.(appmodulev2.HasBeginBlocker)
+		return !hasBeginBlock
+	}); err != nil {
+		return err
+	}
+
+	if err := m.assertNoForgottenModules("EndBlockers", m.config.EndBlockers, func(moduleName string) bool {
+		module := m.modules[moduleName]
+		if _, hasEndBlock := module.(appmodulev2.HasEndBlocker); hasEndBlock {
+			return !hasEndBlock
+		}
+
+		_, hasABCIEndBlock := module.(sdkmodule.HasABCIEndBlock)
+		return !hasABCIEndBlock
+	}); err != nil {
+		return err
+	}
+
+	if err := m.assertNoForgottenModules("TxValidation", m.config.TxValidation, func(moduleName string) bool {
+		module := m.modules[moduleName]
+		_, hasTxValidation := module.(appmodulev2.HasTxValidation[transaction.Tx])
+		return !hasTxValidation
+	}); err != nil {
+		return err
+	}
+
+	if err := m.assertNoForgottenModules("InitGenesis", m.config.InitGenesis, func(moduleName string) bool {
+		module := m.modules[moduleName]
+		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
+			return !hasGenesis
+		}
+
+		// TODO, if we actually don't support old genesis, let's panic here saying this module isn't server/v2 compatible
+		if _, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis); hasABCIGenesis {
+			return !hasABCIGenesis
+		}
+
+		_, hasGenesis := module.(sdkmodule.HasGenesis)
+		return !hasGenesis
+	}); err != nil {
+		return err
+	}
+
+	if err := m.assertNoForgottenModules("ExportGenesis", m.config.ExportGenesis, func(moduleName string) bool {
+		module := m.modules[moduleName]
+		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
+			return !hasGenesis
+		}
+
+		// TODO, if we actually don't support old genesis, let's panic here saying this module isn't server/v2 compatible
+		if _, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis); hasABCIGenesis {
+			return !hasABCIGenesis
+		}
+
+		_, hasGenesis := module.(sdkmodule.HasGenesis)
+		return !hasGenesis
+	}); err != nil {
+		return err
+	}
+
+	if err := m.assertNoForgottenModules("OrderMigrations", m.config.OrderMigrations, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// assertNoForgottenModules checks that we didn't forget any modules in the *runtimev2.Module config.
+// `pass` is a closure which allows one to omit modules from `moduleNames`.
+// If you provide non-nil `pass` and it returns true, the module would not be subject of the assertion.
+func (m *MM) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(moduleName string) bool) error {
+	ms := make(map[string]bool)
+	for _, m := range moduleNames {
+		ms[m] = true
+	}
+	var missing []string
+	for m := range m.modules {
+		m := m
+		if pass != nil && pass(m) {
+			continue
+		}
+
+		if !ms[m] {
+			missing = append(missing, m)
+		}
+	}
+
+	if len(missing) != 0 {
+		sort.Strings(missing)
+		return fmt.Errorf("all modules must be defined when setting %s, missing: %v", setOrderFnName, missing)
 	}
 
 	return nil

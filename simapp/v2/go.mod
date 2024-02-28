@@ -1,4 +1,4 @@
-module cosmossdk.io/simapp
+module cosmossdk.io/simapp/v2
 
 go 1.22
 
@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/tx v0.13.0
+	cosmossdk.io/x/tx v0.13.0 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v0.38.5
 	github.com/cosmos/cosmos-db v1.0.2
@@ -36,6 +36,8 @@ require (
 require cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130
 
 require (
+	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/simapp v0.0.0-20240228100938-e4d97090d806
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
@@ -56,7 +58,6 @@ require (
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/storage v1.36.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
@@ -240,28 +241,28 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/core => ../core
-	cosmossdk.io/depinject => ../depinject
-	cosmossdk.io/tools/confix => ../tools/confix
-	cosmossdk.io/x/accounts => ../x/accounts
-	cosmossdk.io/x/auth => ../x/auth
-	cosmossdk.io/x/authz => ../x/authz
-	cosmossdk.io/x/bank => ../x/bank
-	cosmossdk.io/x/circuit => ../x/circuit
-	cosmossdk.io/x/distribution => ../x/distribution
-	cosmossdk.io/x/evidence => ../x/evidence
-	cosmossdk.io/x/feegrant => ../x/feegrant
-	cosmossdk.io/x/gov => ../x/gov
-	cosmossdk.io/x/group => ../x/group
-	cosmossdk.io/x/mint => ../x/mint
-	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/params => ../x/params
-	cosmossdk.io/x/protocolpool => ../x/protocolpool
-	cosmossdk.io/x/slashing => ../x/slashing
-	cosmossdk.io/x/staking => ../x/staking
-	cosmossdk.io/x/tx => ../x/tx
-	cosmossdk.io/x/upgrade => ../x/upgrade
+	cosmossdk.io/client/v2 => ../../client/v2
+	cosmossdk.io/core => ../../core
+	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/tools/confix => ../../tools/confix
+	cosmossdk.io/x/accounts => ../../x/accounts
+	cosmossdk.io/x/auth => ../../x/auth
+	cosmossdk.io/x/authz => ../../x/authz
+	cosmossdk.io/x/bank => ../../x/bank
+	cosmossdk.io/x/circuit => ../../x/circuit
+	cosmossdk.io/x/distribution => ../../x/distribution
+	cosmossdk.io/x/evidence => ../../x/evidence
+	cosmossdk.io/x/feegrant => ../../x/feegrant
+	cosmossdk.io/x/gov => ../../x/gov
+	cosmossdk.io/x/group => ../../x/group
+	cosmossdk.io/x/mint => ../../x/mint
+	cosmossdk.io/x/nft => ../../x/nft
+	cosmossdk.io/x/params => ../../x/params
+	cosmossdk.io/x/protocolpool => ../../x/protocolpool
+	cosmossdk.io/x/slashing => ../../x/slashing
+	cosmossdk.io/x/staking => ../../x/staking
+	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/x/upgrade => ../../x/upgrade
 )
 
 // Below are the long-lived replace of the SimApp
@@ -269,7 +270,7 @@ replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
-	github.com/cosmos/cosmos-sdk => ../.
+	github.com/cosmos/cosmos-sdk => ../../.
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
@@ -279,10 +280,10 @@ replace (
 
 // server v2 integration
 replace (
-	cosmossdk.io/api => ../api
-	cosmossdk.io/runtime/v2 => ../runtime/v2
-	cosmossdk.io/server/v2 => ../server/v2
-	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
-	cosmossdk.io/server/v2/core => ../server/v2/core
-	cosmossdk.io/server/v2/stf => ../server/v2/stf
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/runtime/v2 => ../../runtime/v2
+	cosmossdk.io/server/v2 => ../../server/v2
+	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
+	cosmossdk.io/server/v2/core => ../../server/v2/core
+	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 )

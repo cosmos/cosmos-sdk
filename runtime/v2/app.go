@@ -1,6 +1,9 @@
 package runtime
 
 import (
+	"context"
+	"encoding/json"
+
 	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
@@ -8,12 +11,29 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
+	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
+	corestore "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
+
+var _ AppI[transaction.Tx] = (*App)(nil)
+
+// AppI is an interface that defines the methods required by the App.
+type AppI[T transaction.Tx] interface {
+	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, corestore.WriterMap, error)
+	ValidateTx(ctx context.Context, tx T) (coreappmanager.TxResult, error)
+	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, corestore.WriterMap, error)
+	Query(ctx context.Context, version uint64, request coreappmanager.Type) (coreappmanager.Type, error)
+	QueryWithState(ctx context.Context, state corestore.ReaderMap, request coreappmanager.Type) (coreappmanager.Type, error)
+
+	Logger() log.Logger
+	ModuleManager() *MM
+	Close() error
+}
 
 // App is a wrapper around AppManager and ModuleManager that can be used in hybrid
 // app.go/app config scenarios or directly as a servertypes.Application instance.
@@ -46,6 +66,36 @@ type App struct {
 	moduleManager     *MM
 }
 
+// Logger returns the app logger.
+func (a *App) Logger() log.Logger {
+	return a.logger
+}
+
+// ModuleManager returns the module manager.
+func (a *App) ModuleManager() *MM {
+	return a.moduleManager
+}
+
+// DefaultGenesis returns a default genesis from the registered modules.
+func (a *App) DefaultGenesis() map[string]json.RawMessage {
+	return a.moduleManager.DefaultGenesis(a.cdc)
+}
+
+// Load finishes all initialization operations and loads the app.
+func (a *App) Load() error {
+	return nil
+}
+
+// Close is called in start cmd to gracefully cleanup resources.
+func (a *App) Close() error {
+	return nil
+}
+
+// LoadHeight loads a particular height
+func (a *App) LoadHeight(height int64) error {
+	return nil
+}
+
 // RegisterStores registers the provided store keys.
 // This method should only be used for registering extra stores
 // wiich is necessary for modules that not registered using the app config.
@@ -57,38 +107,12 @@ func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 	return nil
 }
 
-// Load finishes all initialization operations and loads the app.
-func (a *App) Load() error {
-
-	appManagerBuilder := appmanager.Builder[transaction.Tx]{
-		STF:                a.stf,
-		DB:                 a.db,
-		ValidateTxGasLimit: a.config.GasConfig.ValidateTxGasLimit,
-		QueryGasLimit:      a.config.GasConfig.QueryGasLimit,
-		SimulationGasLimit: a.config.GasConfig.SimulationGasLimit,
-	}
-
-	appManager, err := appManagerBuilder.Build()
-	if err != nil {
-		return err
-	}
-	a.AppManager = appManager
-
-	return nil
-}
-
-// LoadHeight loads a particular height
-func (a *App) LoadHeight(height int64) error {
-	return nil // TODO
-}
-
 // GetStoreKeys returns all the stored store keys.
 func (a *App) GetStoreKeys() []storetypes.StoreKey {
 	return a.storeKeys
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
-//
 // NOTE: This should only be used in testing.
 func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 	i := slices.IndexFunc(a.storeKeys, func(s storetypes.StoreKey) bool { return s.Name() == storeKey })

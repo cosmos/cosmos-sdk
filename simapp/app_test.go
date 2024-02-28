@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -15,7 +14,6 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
@@ -178,7 +176,7 @@ func TestRunMigrations(t *testing.T) {
 				for i := tc.fromVersion; i < tc.toVersion; i++ {
 					// Register migration for module from version `fromVersion` to `fromVersion+1`.
 					tt.Logf("Registering migration for %q v%d", tc.moduleName, i)
-					err = configurator.Register(tc.moduleName, i, func(context.Context) error {
+					err = configurator.RegisterMigration(tc.moduleName, i, func(sdk.Context) error {
 						called++
 
 						return nil
@@ -198,7 +196,7 @@ func TestRunMigrations(t *testing.T) {
 			// their latest ConsensusVersion.
 			_, err = app.ModuleManager.RunMigrations(
 				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
-				appmodule.VersionMap{
+				module.VersionMap{
 					"accounts":     accounts.AppModule{}.ConsensusVersion(),
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -241,13 +239,14 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
 	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1)
+	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule
 
 	// Run migrations only for "mock" module. We exclude it from
 	// the VersionMap to simulate upgrading with a new module.
 	_, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(),
-		appmodulev2.VersionMap{
+		module.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
 			"authz":        authzmodule.AppModule{}.ConsensusVersion(),
@@ -279,7 +278,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	vm, err := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	require.NoError(t, err)
 	for v, i := range app.ModuleManager.Modules {
-		if i, ok := i.(appmodulev2.HasConsensusVersion); ok {
+		if i, ok := i.(module.HasConsensusVersion); ok {
 			require.Equal(t, vm[v], i.ConsensusVersion())
 		}
 	}

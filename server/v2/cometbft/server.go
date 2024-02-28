@@ -12,6 +12,7 @@ import (
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
+	"cosmossdk.io/store/v2/snapshots"
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
@@ -25,9 +26,9 @@ import (
 )
 
 type CometBFTServer[T transaction.Tx] struct {
-	Node     *node.Node
-	CometBFT *Consensus[T]
-	logger   log.Logger
+	Node   *node.Node
+	App    *Consensus[T]
+	logger log.Logger
 
 	config    Config
 	cleanupFn func()
@@ -58,10 +59,27 @@ func NewCometBFTServer[T transaction.Tx](
 	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
 	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
 
+	ss, ok := app.GetStore().GetStateStorage().(snapshots.StorageSnapshotter)
+	if !ok {
+		panic("snapshots are not supported for this store")
+	}
+	sc, ok := app.GetStore().GetStateCommitment().(snapshots.CommitSnapshotter)
+	if !ok {
+		panic("snapshots are not supported for this store")
+	}
+
+	store, err := GetSnapshotStore(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	sm := snapshots.NewManager(store, nil, sc, ss, nil, logger)
+	consensus.SetSnapshotManager(sm)
+
 	return &CometBFTServer[T]{
-		logger:   logger,
-		CometBFT: consensus,
-		config:   cfg,
+		logger: logger,
+		App:    consensus,
+		config: cfg,
 	}
 
 }
@@ -73,7 +91,7 @@ func (s *CometBFTServer[T]) Name() string {
 func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {
-		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.CometBFT)
+		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.App)
 		if err != nil {
 			return fmt.Errorf("error creating listener: %w", err)
 		}
@@ -93,7 +111,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		s.config.CmtConfig,
 		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(s.CometBFT),
+		proxy.NewLocalClientCreator(s.App),
 		getGenDocProvider(s.config.CmtConfig),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),

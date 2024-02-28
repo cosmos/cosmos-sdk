@@ -3,11 +3,38 @@ package cometbft
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/spf13/cast"
 
+	"cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/snapshots"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
+
+func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
+	if err := os.MkdirAll(snapshotDir, 0o744); err != nil {
+		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
+	}
+
+	snapshotDB, err := db.NewGoLevelDB("metadata", snapshotDir, nil) // TODO: goleveldb?
+	if err != nil {
+		return nil, err
+	}
+	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return snapshotStore, nil
+}
 
 // ApplySnapshotChunk implements types.Application.
 func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) {

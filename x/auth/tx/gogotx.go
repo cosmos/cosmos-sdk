@@ -27,6 +27,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+type (
+	Type     = protov2.Message
+	Identity = []byte
+)
+
 func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (w *gogoTxWrapper, err error) {
 	// set msgsv1
 	msgv1, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
@@ -94,6 +99,26 @@ type gogoTxWrapper struct {
 }
 
 func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
+
+func (w *gogoTxWrapper) Bytes() []byte {
+	return []byte{}
+}
+
+func (w *gogoTxWrapper) Hash() [32]byte {
+	return [32]byte{}
+}
+
+func (w *gogoTxWrapper) GetGasLimit() uint64 {
+	return 0
+}
+
+func (w *gogoTxWrapper) GetMessages() []Type {
+	return nil
+}
+
+func (w *gogoTxWrapper) GetSenders() []Identity {
+	return nil
+}
 
 var (
 	_ authsigning.Tx             = &gogoTxWrapper{}

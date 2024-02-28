@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
 	protov2 "google.golang.org/protobuf/proto"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
@@ -14,6 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+)
+
+type (
+	Type     = proto.Message
+	Identity = []byte
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -92,6 +98,22 @@ func NewTx(key, value string, accAddress sdk.AccAddress) *KVStoreTx {
 		bytes:   []byte(bytes),
 		address: accAddress,
 	}
+}
+
+func (msg *KVStoreTx) Hash() [32]byte {
+	return [32]byte{}
+}
+
+func (msg *KVStoreTx) GetGasLimit() uint64 {
+	return 0
+}
+
+func (msg *KVStoreTx) GetMessages() []Type {
+	return nil
+}
+
+func (msg *KVStoreTx) GetSenders() []Identity {
+	return nil
 }
 
 func (msg *KVStoreTx) Type() string {

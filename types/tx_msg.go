@@ -5,6 +5,7 @@ import (
 	fmt "fmt"
 	strings "strings"
 
+	"cosmossdk.io/core/transaction"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 
@@ -51,6 +52,7 @@ type (
 	// Tx defines an interface a transaction must fulfill.
 	Tx interface {
 		HasMsgs
+		transaction.Tx
 
 		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
 		GetMsgsV2() ([]protov2.Message, error)

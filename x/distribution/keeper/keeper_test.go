@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -36,7 +37,6 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
@@ -56,9 +56,11 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	bankKeeper.EXPECT().BlockedAddr(withdrawAddr).Return(false).AnyTimes()
 	bankKeeper.EXPECT().BlockedAddr(distrAcc.GetAddress()).Return(true).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,

@@ -3,7 +3,6 @@ package distribution
 import (
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -28,9 +27,9 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
+	Config      *modulev1.Module
+	Environment appmodule.Environment
+	Cdc         codec.Codec
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -60,7 +59,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.StoreService,
+		in.Environment,
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,

@@ -162,7 +162,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the distribution module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
+	c := sdk.UnwrapSDKContext(ctx) // TODO: remove and use context.Context after including the comet service
 	return am.keeper.BeginBlocker(c)
 }
 

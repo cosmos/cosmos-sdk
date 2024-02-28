@@ -19,7 +19,7 @@ var (
 
 // NewDelayedLockingAccount creates a new DelayedLockingAccount object.
 func NewDelayedLockingAccount(d accountstd.Dependencies) (*DelayedLockingAccount, error) {
-	baseLockup := NewBaseLockup(d)
+	baseLockup := newBaseLockup(d)
 	return &DelayedLockingAccount{
 		baseLockup,
 	}, nil

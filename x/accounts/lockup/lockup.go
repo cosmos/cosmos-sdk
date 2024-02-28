@@ -47,8 +47,8 @@ var (
 
 type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
 
-// NewBaseLockup creates a new BaseLockup object.
-func NewBaseLockup(d accountstd.Dependencies) *BaseLockup {
+// newBaseLockup creates a new BaseLockup object.
+func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 	BaseLockup := &BaseLockup{
 		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),

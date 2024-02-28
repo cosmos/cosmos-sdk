@@ -18,7 +18,7 @@ var (
 
 // NewPermanentLockingAccount creates a new PermanentLockingAccount object.
 func NewPermanentLockingAccount(d accountstd.Dependencies) (*PermanentLockingAccount, error) {
-	baseLockup := NewBaseLockup(d)
+	baseLockup := newBaseLockup(d)
 
 	return &PermanentLockingAccount{baseLockup}, nil
 }

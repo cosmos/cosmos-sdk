@@ -23,7 +23,7 @@ var (
 
 // NewPeriodicLockingAccount creates a new PeriodicLockingAccount object.
 func NewPeriodicLockingAccount(d accountstd.Dependencies) (*PeriodicLockingAccount, error) {
-	baseLockup := NewBaseLockup(d)
+	baseLockup := newBaseLockup(d)
 
 	periodicsVestingAccount := PeriodicLockingAccount{
 		BaseLockup:     baseLockup,

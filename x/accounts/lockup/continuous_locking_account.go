@@ -21,7 +21,7 @@ var (
 
 // NewContinuousLockingAccount creates a new ContinuousLockingAccount object.
 func NewContinuousLockingAccount(d accountstd.Dependencies) (*ContinuousLockingAccount, error) {
-	baseLockup := NewBaseLockup(d)
+	baseLockup := newBaseLockup(d)
 
 	ContinuousLockingAccount := ContinuousLockingAccount{
 		BaseLockup: baseLockup,

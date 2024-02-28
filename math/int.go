@@ -102,7 +102,7 @@ func (i Int) BigInt() *big.Int {
 	return new(big.Int).Set(i.i)
 }
 
-// BigInt converts Int to big.Int, mutative the input
+// BigIntMut converts Int to big.Int, mutative the input
 func (i Int) BigIntMut() *big.Int {
 	if i.IsNil() {
 		return nil
@@ -404,7 +404,7 @@ func (i Int) Abs() Int {
 	return Int{abs(i.i)}
 }
 
-// return the minimum of the ints
+// MinInt return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
 }
@@ -517,7 +517,7 @@ func (i *Int) Size() int {
 	return len(bz)
 }
 
-// Override Amino binary serialization by proxying to protobuf.
+// MarshalAmino Override Amino binary serialization by proxying to protobuf.
 func (i Int) MarshalAmino() ([]byte, error)   { return i.Marshal() }
 func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 

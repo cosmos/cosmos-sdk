@@ -854,9 +854,10 @@ func TestGRPCRedelegations(t *testing.T) {
 func TestGRPCParams(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	coinDenomRegex := `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
 
 	rapid.Check(t, func(rt *rapid.T) {
-		bondDenom := rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(rt, "bond-denom")
+		bondDenom := rapid.StringMatching(coinDenomRegex).Draw(rt, "bond-denom")
 		params := stakingtypes.Params{
 			BondDenom:         bondDenom,
 			UnbondingTime:     durationGenerator().Draw(rt, "duration"),

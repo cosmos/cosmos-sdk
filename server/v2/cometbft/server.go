@@ -44,7 +44,6 @@ type App[T transaction.Tx] interface {
 func NewCometBFTServer[T transaction.Tx](
 	app App[T],
 	cfg Config,
-	voteExtHandler types.VoteExtensionsHandler,
 ) *CometBFTServer[T] {
 	logger := app.GetLogger().With("module", "cometbft-server")
 

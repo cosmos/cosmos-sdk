@@ -35,6 +35,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.47.10-ics-lsm
+
+This is a special cosmos-sdk release with support for both ICS and LSM.
+All the changes to the special release are state machine breaking - this release should 
+be used only to upgrade from [v0.45.16-ics-lsm](https://github.com/cosmos/cosmos-sdk/tree/v0.45.16-ics-lsm).
+
+It applies fixes from [v0.47.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.10).
+
+## [v0.47.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.10) - 2024-02-27
+
+### Bug Fixes
+
+* (x/staking) Fix a possible bypass of delagator slashing: [GHSA-86h5-xcpx-cfqc](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-86h5-xcpx-cfqc)
+* (server) [#19573](https://github.com/cosmos/cosmos-sdk/pull/19573) Use proper `db_backend` type when reading chain-id
+
 ## v0.47.9-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.

@@ -29,7 +29,7 @@ func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}
 
-	snapshotDB, err := db.NewGoLevelDB("metadata", snapshotDir, nil) // TODO: goleveldb?
+	snapshotDB, err := db.NewGoLevelDB("metadata", snapshotDir, nil) // TODO: goleveldb? talk with storage team on if this will change
 	if err != nil {
 		return nil, err
 	}

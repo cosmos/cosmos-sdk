@@ -73,7 +73,7 @@ func NewCometBFTServer[T transaction.Tx](
 		panic(err)
 	}
 
-	sm := snapshots.NewManager(store, nil, sc, ss, nil, logger)
+	sm := snapshots.NewManager(store, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
 	consensus.SetSnapshotManager(sm)
 
 	return &CometBFTServer[T]{

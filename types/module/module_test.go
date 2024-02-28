@@ -270,15 +270,15 @@ func TestManager_EndBlock(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
-	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
+	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]appmodule.ValidatorUpdate{{}}, nil)
 	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1)
 	ret, err := mm.EndBlock(sdk.Context{})
 	require.NoError(t, err)
 	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
-	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
-	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
+	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]appmodule.ValidatorUpdate{{}}, nil)
+	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]appmodule.ValidatorUpdate{{}}, nil)
 	_, err = mm.EndBlock(sdk.Context{})
 	require.Error(t, err)
 }

@@ -4,6 +4,11 @@ go 1.21
 
 replace (
 	cosmossdk.io/core => ../../../core
+	github.com/cosmos/cosmos-sdk => ../../../
+	cosmossdk.io/x/accounts => ../../../x/accounts
+	cosmossdk.io/x/bank => ../../../x/bank
+	cosmossdk.io/x/staking => ../../../x/staking
+	cosmossdk.io/x/auth => ../../../x/auth
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
 	cosmossdk.io/server/v2/core => ../core

@@ -6,11 +6,12 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/handlers"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
-	"cosmossdk.io/server/v2/mempool"
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
@@ -32,21 +33,35 @@ type CometBFTServer[T transaction.Tx] struct {
 	cleanupFn func()
 }
 
+// App is an interface that represents an application in the CometBFT server.
+// It provides methods to access the app manager, logger, and store.
+type App[T transaction.Tx] interface {
+	GetApp() *appmanager.AppManager[T]
+	GetLogger() log.Logger
+	GetStore() types.Store
+}
+
 func NewCometBFTServer[T transaction.Tx](
-	app *runtime.App,
+	app App[T],
 	cfg Config,
 	voteExtHandler types.VoteExtensionsHandler,
 ) *CometBFTServer[T] {
 	logger := app.GetLogger().With("module", "cometbft-server")
 
 	// create noop mempool
-	mempool := mempool.NewNoopMempool[T]()
+	mempool := mempool.NoOpMempool[T]{}
 
-	// TODO: set default handlers (prepare, process, extendvote, verify vote)
-	// TODO: set
+	// create consensus
+	consensus := NewConsensus[T](app.GetApp(), mempool, app.GetStore(), cfg)
+
+	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
+	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
+	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
+	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
+
 	return &CometBFTServer[T]{
 		logger:   logger,
-		CometBFT: NewConsensus[T](app.AppManager, mempool, app.GetStore(), cfg),
+		CometBFT: consensus,
 		config:   cfg,
 	}
 
@@ -143,16 +158,9 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 }
 
 /*
-GetStore from app
-GetLogger from app
 
 // Set on abci.go
 func SetCodec? <- I think we can get this from app manager too. Is codec.Codec fine?
-
-func SetExtendVoteExtension
-func SetVerifyVoteExtension
-func SetPrepareProposalHandler
-func SetProcessProposalHandler
 func SetSnapshotManager (?)
 
 API routes

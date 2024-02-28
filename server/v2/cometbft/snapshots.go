@@ -17,6 +17,11 @@ import (
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
+// GetSnapshotStore returns a snapshot store for the given application options.
+// It creates a directory for storing snapshots if it doesn't exist.
+// It initializes a GoLevelDB database for storing metadata of the snapshots.
+// The snapshot store is then created using the initialized database and directory.
+// If any error occurs during the process, it is returned along with a nil snapshot store.
 func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
 	snapshotDir := filepath.Join(homeDir, "data", "snapshots")

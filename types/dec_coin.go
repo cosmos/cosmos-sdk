@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"unicode"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -630,16 +631,10 @@ func (coins DecCoins) Sort() DecCoins {
 // ParseDecCoin parses a decimal coin from a string, returning an error if
 // invalid. An empty string is considered invalid.
 func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
-	coinStr = strings.TrimSpace(coinStr)
-	amountStart, amountEnd, denomStart, denomEnd, isValid := MatchDecCoin([]byte(coinStr))
-
-	if !isValid {
-		return DecCoin{}, fmt.Errorf("invalid decimal coin expression: %s", coinStr)
+	amountStr, denomStr, err := ParseDecAmount(coinStr)
+	if err != nil {
+		return DecCoin{}, err
 	}
-
-	// Extract amount and denomination using the positions returned by MatchDecCoin
-	amountStr := coinStr[amountStart:amountEnd] // Adjusted to include amountEnd
-	denomStr := coinStr[denomStart : denomEnd+1]
 
 	amount, err := math.LegacyNewDecFromStr(amountStr)
 	if err != nil {
@@ -651,6 +646,27 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	}
 
 	return NewDecCoinFromDec(denomStr, amount), nil
+}
+
+func ParseDecAmount(coinStr string) (string, string, error) {
+	var amountString, denomString strings.Builder
+
+	for _, r := range coinStr {
+		// digit or "." that can come from decimals
+		if unicode.IsDigit(r) || r == '.' {
+			amountString.WriteRune(r)
+		} else if unicode.IsLetter(r) || r == '/' || r == ':' || r == '_' || r == '-' {
+			if amountString.Len() == 0 {
+				// Found a non-digit character before any digit; not a valid format
+				return "", "", fmt.Errorf("invalid format: %s", coinStr)
+			}
+			denomString.WriteRune(r)
+		} else {
+			return "", "", fmt.Errorf("invalid character in coin string: %s", coinStr)
+		}
+	}
+
+	return amountString.String(), denomString.String(), nil
 }
 
 // ParseDecCoins will parse out a list of decimal coins separated by commas. If the parsing is successuful,

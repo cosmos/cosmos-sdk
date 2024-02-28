@@ -844,10 +844,10 @@ func (coins Coins) Sort() Coins {
 // ValidateDenom is the default validation function for Coin.Denom.
 func ValidateDenom(denom string) error {
 	// Convert the string to a byte slice as required by the Ragel-generated function.
-	data := []byte(denom)
+	denomBytes := []byte(denom)
 
 	// Call the Ragel-generated function.
-	if !MatchDenom(data) {
+	if !MatchDenom(denomBytes) {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
 

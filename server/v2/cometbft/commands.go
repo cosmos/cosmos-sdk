@@ -29,6 +29,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func (s *CometBFTServer[T]) rpcClient() (rpc.CometRPC, error) {
@@ -209,8 +210,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 
 			// return clientCtx.PrintProto(blocks) // TODO: previously we had this, but I think it can be replaced with a simple json marshal.
 			// We are missing YAML output tho.
-
-			bz, err := json.Marshal(blocks)
+			bz, err := protojson.Marshal(blocks)
 			if err != nil {
 				return err
 			}

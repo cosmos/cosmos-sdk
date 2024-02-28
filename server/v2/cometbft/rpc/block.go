@@ -4,12 +4,9 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"time"
 
-	cmt "github.com/cometbft/cometbft/proto/tendermint/types"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmtypes "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
+	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 )
 
 // GetChainHeight returns the current blockchain height.
@@ -41,7 +38,7 @@ func GetChainHeight(ctx context.Context, rpcClient CometRPC) (int64, error) {
 //		  tx.height = 5                       # all txs of the fifth block
 //
 // For more information, see the /subscribe CometBFT RPC endpoint documentation
-func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query, orderBy string) (*sdk.SearchBlocksResult, error) {
+func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query, orderBy string) (*abciv1beta1.SearchBlocksResult, error) {
 	resBlocks, err := rpcClient.BlockSearch(ctx, query, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
@@ -52,13 +49,13 @@ func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query
 		return nil, err
 	}
 
-	result := sdk.NewSearchBlocksResult(int64(resBlocks.TotalCount), int64(len(blocks)), int64(page), int64(limit), blocks)
+	result := NewSearchBlocksResult(int64(resBlocks.TotalCount), int64(len(blocks)), int64(page), int64(limit), blocks)
 
 	return result, nil
 }
 
 // get block by height
-func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*cmt.Block, error) {
+func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*tmtypes.Block, error) {
 	// header -> BlockchainInfo
 	// header, tx -> Block
 	// results -> BlockResults
@@ -67,7 +64,7 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 		return nil, err
 	}
 
-	out := sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339))
+	out := NewResponseResultBlock(resBlock)
 	if out == nil {
 		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
 	}
@@ -75,7 +72,7 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 	return out, nil
 }
 
-func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString string) (*cmt.Block, error) {
+func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString string) (*tmtypes.Block, error) {
 	hash, err := hex.DecodeString(hashHexString)
 	if err != nil {
 		return nil, err
@@ -90,22 +87,9 @@ func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString strin
 	}
 
 	// TODO: Also move NewResponseResultBlock somewhere around this package
-	out := sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339))
+	out := NewResponseResultBlock(resBlock)
 	if out == nil {
 		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
-	}
-
-	return out, nil
-}
-
-// formatBlockResults parses the indexed blocks into a slice of BlockResponse objects.
-func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*cmt.Block, error) {
-	out := make([]*cmt.Block, len(resBlocks))
-	for i := range resBlocks {
-		out[i] = sdk.NewResponseResultBlock(resBlocks[i], resBlocks[i].Block.Time.Format(time.RFC3339))
-		if out[i] == nil {
-			return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlocks[i])
-		}
 	}
 
 	return out, nil

@@ -22,10 +22,10 @@ func (p Params) ValidateBasic() error {
 	if err := validateCommunityTax(p.CommunityTax); err != nil {
 		return err
 	}
-	if err := validateLiquidityProviderReward(p.CommunityTax); err != nil {
+	if err := validateLiquidityProviderReward(p.LiquidityProviderReward); err != nil {
 		return err
 	}
-	if err := validateWithdrawAddrEnabled(p.CommunityTax); err != nil {
+	if err := validateWithdrawAddrEnabled(p.WithdrawAddrEnabled); err != nil {
 		return err
 	}
 	return nil

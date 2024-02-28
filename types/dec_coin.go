@@ -648,25 +648,48 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	return NewDecCoinFromDec(denomStr, amount), nil
 }
 
+// ParseDecAmount parses the given string into amount, denomination.
 func ParseDecAmount(coinStr string) (string, string, error) {
-	var amountString, denomString strings.Builder
+	var amountRune, denomRune []rune
 
-	for _, r := range coinStr {
-		// digit or "." that can come from decimals
-		if unicode.IsDigit(r) || r == '.' {
-			amountString.WriteRune(r)
-		} else if unicode.IsLetter(r) || r == '/' || r == ':' || r == '_' || r == '-' {
-			if amountString.Len() == 0 {
-				// Found a non-digit character before any digit; not a valid format
-				return "", "", fmt.Errorf("invalid format: %s", coinStr)
+	// Indicates the start of denom parsing
+	seenLetter := false
+	// Indicates we're currently parsing the amount
+	parsingAmount := true
+
+	for _, r := range strings.TrimSpace(coinStr) {
+		if parsingAmount {
+			if unicode.IsDigit(r) || r == '.' {
+				amountRune = append(amountRune, r)
+			} else if unicode.IsSpace(r) { // if space is seen, indicates that we have finished parsing amount
+				parsingAmount = false
+			} else if unicode.IsLetter(r) { // if letter is seen, indicates that it is the start of denom
+				parsingAmount = false
+				seenLetter = true
+				denomRune = append(denomRune, r)
+			} else { // Invalid character encountered in amount part
+				return "", "", fmt.Errorf("invalid character in coin string: %s", string(r))
 			}
-			denomString.WriteRune(r)
+		} else if !seenLetter { // This logic flow is for skipping spaces between amount and denomination
+			if unicode.IsLetter(r) {
+				seenLetter = true
+				denomRune = append(denomRune, r)
+			} else if !unicode.IsSpace(r) {
+				// Invalid character before denomination starts
+				return "", "", fmt.Errorf("invalid start of denomination: %s", string(r))
+			}
 		} else {
-			return "", "", fmt.Errorf("invalid character in coin string: %s", coinStr)
+			// Parsing the denomination
+			if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '/' || r == ':' || r == '.' || r == '_' || r == '-' {
+				denomRune = append(denomRune, r)
+			} else {
+				// Invalid character encountered in denomination part
+				return "", "", fmt.Errorf("invalid character in denomination: %s", string(r))
+			}
 		}
 	}
 
-	return amountString.String(), denomString.String(), nil
+	return string(amountRune), string(denomRune), nil
 }
 
 // ParseDecCoins will parse out a list of decimal coins separated by commas. If the parsing is successuful,

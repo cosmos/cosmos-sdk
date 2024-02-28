@@ -100,7 +100,7 @@ var (
 			{
 				Name: runtime.ModuleName,
 				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
-					AppName: "SimApp",
+					AppName: "SimAppV2",
 					// NOTE: upgrade module is required to be prioritized
 					PreBlockers: []string{
 						upgradetypes.ModuleName,

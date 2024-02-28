@@ -277,7 +277,9 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 		} else {
 			m.logger.Info(fmt.Sprintf("adding a new module: %s", moduleName))
 			if mod, ok := m.modules[moduleName].(appmodulev2.HasGenesis); ok {
-				mod.InitGenesis(ctx, mod.DefaultGenesis())
+				if err := mod.InitGenesis(ctx, mod.DefaultGenesis()); err != nil {
+					return nil, fmt.Errorf("failed to run InitGenesis for %s: %w", moduleName, err)
+				}
 			}
 			if mod, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
 				mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))

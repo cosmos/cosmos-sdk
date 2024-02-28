@@ -155,7 +155,7 @@ func appExport(
 	if height != -1 {
 		simApp = simapp.NewSimApp(logger, db, false, appOpts)
 
-		if err := simApp.LoadHeight(height); err != nil {
+		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {

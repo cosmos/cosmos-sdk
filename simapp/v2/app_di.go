@@ -185,7 +185,7 @@ func NewSimApp(
 	// wire snapshot manager
 	// wire unordered tx manager
 
-	if err := app.Load(); err != nil {
+	if err := app.LoadLatest(); err != nil {
 		panic(err)
 	}
 

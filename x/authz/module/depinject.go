@@ -3,7 +3,6 @@ package module
 import (
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/authz"
@@ -34,7 +33,7 @@ type ModuleInputs struct {
 	BankKeeper       authz.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
 	MsgServiceRouter baseapp.MessageRouter
-	StoreService     store.KVStoreService
+	Environment      appmodule.Environment
 }
 
 type ModuleOutputs struct {
@@ -45,7 +44,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
+	k := keeper.NewKeeper(in.Environment, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return ModuleOutputs{AuthzKeeper: k, Module: m}
 }

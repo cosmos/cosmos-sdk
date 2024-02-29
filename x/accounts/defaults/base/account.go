@@ -2,6 +2,7 @@ package base
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
@@ -59,7 +60,7 @@ func (a Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitResponse
 
 func (a Account) SwapPubKey(ctx context.Context, msg *v1.MsgSwapPubKey) (*v1.MsgSwapPubKeyResponse, error) {
 	if !accountstd.SenderIsSelf(ctx) {
-		return nil, fmt.Errorf("unauthorized")
+		return nil, errors.New("unauthorized")
 	}
 
 	return &v1.MsgSwapPubKeyResponse{}, a.verifyAndSetPubKey(ctx, msg.NewPubKey)
@@ -76,7 +77,7 @@ func (a Account) verifyAndSetPubKey(ctx context.Context, key []byte) error {
 // Authenticate implements the authentication flow of an abstracted base account.
 func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthenticate) (*aa_interface_v1.MsgAuthenticateResponse, error) {
 	if !accountstd.SenderIsAccountsModule(ctx) {
-		return nil, fmt.Errorf("unauthorized: only accounts module is allowed to call this")
+		return nil, errors.New("unauthorized: only accounts module is allowed to call this")
 	}
 
 	pubKey, signerData, err := a.computeSignerData(ctx)
@@ -107,7 +108,7 @@ func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthe
 	}
 
 	if !pubKey.VerifySignature(signBytes, signature) {
-		return nil, fmt.Errorf("signature verification failed")
+		return nil, errors.New("signature verification failed")
 	}
 
 	return &aa_interface_v1.MsgAuthenticateResponse{}, nil

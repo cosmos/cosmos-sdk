@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
@@ -35,10 +36,10 @@ var (
 	_ module.HasGenesis            = AppModule{}
 	_ module.HasInvariants         = AppModule{}
 
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasMigrations   = AppModule{}
+	_ appmodulev2.AppModule       = AppModule{}
+	_ appmodulev2.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices       = AppModule{}
+	_ appmodulev2.HasMigrations   = AppModule{}
 )
 
 // AppModule implements an application module for the distribution module.
@@ -161,7 +162,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the distribution module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
+	c := sdk.UnwrapSDKContext(ctx) // TODO: remove and use context.Context after including the comet service
 	return am.keeper.BeginBlocker(c)
 }
 

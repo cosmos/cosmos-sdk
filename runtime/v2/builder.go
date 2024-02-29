@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -22,7 +23,7 @@ type branchFunc func(state store.ReaderMap) store.WriterMap
 type AppBuilder struct {
 	app *App
 
-	// options for building the app
+	// the following fields are used to overwrite the default
 	branch      branchFunc
 	txValidator func(ctx context.Context, tx transaction.Tx) error
 }
@@ -72,6 +73,8 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 		a.txValidator = a.app.moduleManager.TxValidation()
 	}
 
+	a.app.db = db
+
 	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
 		return nil, err
 	}
@@ -93,7 +96,19 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 		valUpdate,
 		a.branch,
 	)
-	a.app.db = db
+	appManagerBuilder := appmanager.Builder[transaction.Tx]{
+		STF:                a.app.stf,
+		DB:                 a.app.db,
+		ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
+		QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
+		SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
+	}
+
+	appManager, err := appManagerBuilder.Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build app manager: %w", err)
+	}
+	a.app.AppManager = appManager
 
 	return a.app, nil
 }
@@ -102,6 +117,7 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 // customize the resulting app.
 type AppBuilderOption func(*AppBuilder)
 
+// AppBuilderWithBranch sets a custom branch implementation for the app.
 func AppBuilderWithBranch(branch branchFunc) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.branch = branch
@@ -109,7 +125,7 @@ func AppBuilderWithBranch(branch branchFunc) AppBuilderOption {
 }
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
-// It overrides the default tx validator from all modules.
+// It overrides all default tx validators defined by modules.
 func AppBuilderWithTxValidator(validator func(ctx context.Context, tx transaction.Tx) error) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.txValidator = validator

@@ -9,6 +9,7 @@ import (
 	json "encoding/json"
 	reflect "reflect"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	types "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -18,6 +19,79 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
+
+// MockAppModuleBasic is a mock of AppModuleBasic interface.
+type MockAppModuleBasic struct {
+	ctrl     *gomock.Controller
+	recorder *MockAppModuleBasicMockRecorder
+}
+
+// MockAppModuleBasicMockRecorder is the mock recorder for MockAppModuleBasic.
+type MockAppModuleBasicMockRecorder struct {
+	mock *MockAppModuleBasic
+}
+
+// NewMockAppModuleBasic creates a new mock instance.
+func NewMockAppModuleBasic(ctrl *gomock.Controller) *MockAppModuleBasic {
+	mock := &MockAppModuleBasic{ctrl: ctrl}
+	mock.recorder = &MockAppModuleBasicMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAppModuleBasic) EXPECT() *MockAppModuleBasicMockRecorder {
+	return m.recorder
+}
+
+// Name mocks base method.
+func (m *MockAppModuleBasic) Name() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Name")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Name indicates an expected call of Name.
+func (mr *MockAppModuleBasicMockRecorder) Name() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleBasic)(nil).Name))
+}
+
+// RegisterGRPCGatewayRoutes mocks base method.
+func (m *MockAppModuleBasic) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
+}
+
+// RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
+func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
+}
+
+// RegisterInterfaces mocks base method.
+func (m *MockAppModuleBasic) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterInterfaces", arg0)
+}
+
+// RegisterInterfaces indicates an expected call of RegisterInterfaces.
+func (mr *MockAppModuleBasicMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterInterfaces), arg0)
+}
+
+// RegisterLegacyAminoCodec mocks base method.
+func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
+}
+
+// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
+func (mr *MockAppModuleBasicMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterLegacyAminoCodec), arg0)
+}
 
 // MockAppModule is a mock of AppModule interface.
 type MockAppModule struct {
@@ -577,10 +651,10 @@ func (m *MockHasABCIEndBlock) EXPECT() *MockHasABCIEndBlockMockRecorder {
 }
 
 // EndBlock mocks base method.
-func (m *MockHasABCIEndBlock) EndBlock(arg0 context.Context) ([]types.ValidatorUpdate, error) {
+func (m *MockHasABCIEndBlock) EndBlock(arg0 context.Context) ([]appmodulev2.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
+	ret0, _ := ret[0].([]appmodulev2.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

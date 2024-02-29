@@ -18,9 +18,8 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	events []event.Event,
 	stateChanges []store.StateChanges,
 ) error {
-
 	// convert txresults to streaming txresults
-	var streamingTxResults = make([]*streaming.ExecTxResult, len(txResults))
+	streamingTxResults := make([]*streaming.ExecTxResult, len(txResults))
 	for i, txResult := range txResults {
 		// TODO populate this info
 		streamingTxResults[i] = &streaming.ExecTxResult{

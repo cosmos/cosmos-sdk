@@ -6,7 +6,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,7 +25,7 @@ var (
 	_ module.HasGRPCGateway        = AppModule{}
 	_ module.HasRegisterInterfaces = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodulev2.AppModule = AppModule{}
 )
 
 // AppModule implements an application module
@@ -74,3 +74,8 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // ConsensusVersion implements HasConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+// RegisterConsensusMessages registers the consensus module's messages.
+func (am AppModule) RegisterConsensusMessages(builder any) {
+	// std.RegisterConsensusHandler(builder ,am.keeper.SetParams) // TODO uncomment when api is available
+}

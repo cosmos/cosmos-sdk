@@ -38,4 +38,11 @@ type Store interface {
 
 	// GetStateCommitment returns the SC backend.
 	GetStateCommitment() storev2.Committer
+
+	// LoadVersion loads the RootStore to the given version.
+	LoadVersion(version uint64) error
+
+	// LoadLatestVersion behaves identically to LoadVersion except it loads the
+	// latest version implicitly.
+	LoadLatestVersion() error
 }

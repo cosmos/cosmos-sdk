@@ -2,13 +2,13 @@ package decode
 
 import (
 	"crypto/sha256"
-	"fmt"
+	"errors"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
 
@@ -34,7 +34,7 @@ type Options struct {
 // NewDecoder creates a new Decoder for decoding transactions.
 func NewDecoder(options Options) (*Decoder, error) {
 	if options.SigningContext == nil {
-		return nil, fmt.Errorf("signing context is required")
+		return nil, errors.New("signing context is required")
 	}
 
 	return &Decoder{
@@ -47,7 +47,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	// Make sure txBytes follow ADR-027.
 	err := rejectNonADR027TxRaw(txBytes)
 	if err != nil {
-		return nil, errors.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
 	var raw v1beta1.TxRaw
@@ -56,7 +56,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	fileResolver := d.signingCtx.FileResolver()
 	err = RejectUnknownFieldsStrict(txBytes, raw.ProtoReflect().Descriptor(), fileResolver)
 	if err != nil {
-		return nil, errors.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
 	err = proto.Unmarshal(txBytes, &raw)
@@ -69,12 +69,12 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	// allow non-critical unknown fields in TxBody
 	txBodyHasUnknownNonCriticals, err := RejectUnknownFields(raw.BodyBytes, body.ProtoReflect().Descriptor(), true, fileResolver)
 	if err != nil {
-		return nil, errors.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
 	err = proto.Unmarshal(raw.BodyBytes, &body)
 	if err != nil {
-		return nil, errors.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
 	var authInfo v1beta1.AuthInfo
@@ -82,12 +82,12 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	// reject all unknown proto fields in AuthInfo
 	err = RejectUnknownFieldsStrict(raw.AuthInfoBytes, authInfo.ProtoReflect().Descriptor(), fileResolver)
 	if err != nil {
-		return nil, errors.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
 	err = proto.Unmarshal(raw.AuthInfoBytes, &authInfo)
 	if err != nil {
-		return nil, errors.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
 	theTx := &v1beta1.Tx{
@@ -102,12 +102,12 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	for _, anyMsg := range body.Messages {
 		msg, signerErr := anyutil.Unpack(anyMsg, fileResolver, d.signingCtx.TypeResolver())
 		if signerErr != nil {
-			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
+			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error())
 		}
 		msgs = append(msgs, msg)
 		ss, signerErr := d.signingCtx.GetSigners(msg)
 		if signerErr != nil {
-			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
+			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error())
 		}
 		for _, s := range ss {
 			_, seen := seenSigners[string(s)]

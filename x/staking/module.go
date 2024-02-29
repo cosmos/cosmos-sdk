@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
@@ -37,10 +38,10 @@ var (
 	_ module.HasABCIGenesis        = AppModule{}
 	_ module.HasABCIEndBlock       = AppModule{}
 
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasMigrations   = AppModule{}
+	_ appmodulev2.AppModule       = AppModule{}
+	_ appmodulev2.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices       = AppModule{}
+	_ appmodulev2.HasMigrations   = AppModule{}
 
 	_ depinject.OnePerModuleType = AppModule{}
 )
@@ -168,8 +169,31 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 	return am.keeper.BeginBlocker(ctx)
 }
 
-// EndBlock returns the end blocker for the staking module. It returns no validator
-// updates.
-func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	return am.keeper.EndBlocker(ctx)
+// EndBlock returns the end blocker for the staking module.
+func (am AppModule) EndBlock(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) {
+	cometValidatorUpdates, err := am.keeper.EndBlocker(ctx) // TODO: refactor to return appmodule.ValidatorUpdate higher up the stack
+	if err != nil {
+		return nil, err
+	}
+
+	validatorUpdates := make([]appmodulev2.ValidatorUpdate, len(cometValidatorUpdates))
+	for i, v := range cometValidatorUpdates {
+		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
+			validatorUpdates[i] = appmodulev2.ValidatorUpdate{
+				PubKey:     ed25519,
+				PubKeyType: "ed25519",
+				Power:      v.Power,
+			}
+		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
+			validatorUpdates[i] = appmodulev2.ValidatorUpdate{
+				PubKey:     secp256k1,
+				PubKeyType: "secp256k1",
+				Power:      v.Power,
+			}
+		} else {
+			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
+		}
+	}
+
+	return validatorUpdates, nil
 }

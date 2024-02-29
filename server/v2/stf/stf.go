@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
@@ -24,7 +24,7 @@ type STF[T transaction.Tx] struct {
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
 	doEndBlock        func(ctx context.Context) error
-	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error)
+	doValidatorUpdate func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error)
 
 	doTxValidation func(ctx context.Context, tx T) error
 	postTxExec     func(ctx context.Context, tx T, success bool) error
@@ -42,7 +42,7 @@ func NewSTF[T transaction.Tx](
 	doBeginBlock func(ctx context.Context) error,
 	doEndBlock func(ctx context.Context) error,
 	doTxValidation func(ctx context.Context, tx T) error,
-	doValidatorUpdate func(ctx context.Context) ([]appmodule.ValidatorUpdate, error),
+	doValidatorUpdate func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error),
 	branch func(store store.ReaderMap) store.WriterMap,
 ) *STF[T] {
 	return &STF[T]{
@@ -257,7 +257,7 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlo
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodule.ValidatorUpdate, error) {
+func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
@@ -282,7 +282,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Ev
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodule.ValidatorUpdate, error) {
+func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {

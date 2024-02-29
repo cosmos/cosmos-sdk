@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
@@ -559,10 +558,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			if !tc.vestingAmount.IsZero() {
 				// create vesting account
-				pubkey := secp256k1.GenPrivKey().PubKey()
-				baseAcc := authtypes.NewBaseAccount(addrAcc2, pubkey, 0, 0)
+				acc2 := accountKeeper.GetAccount(ctx, addrAcc2).(*authtypes.BaseAccount)
 				initialVesting := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tc.vestingAmount))
-				baseVestingWithCoins, err := vestingtypes.NewBaseVestingAccount(baseAcc, initialVesting, ctx.BlockTime().Unix()+86400*365)
+				baseVestingWithCoins, err := vestingtypes.NewBaseVestingAccount(acc2, initialVesting, time.Now().Unix()+86400*365)
 				require.NoError(t, err)
 				delayedVestingAccount := vestingtypes.NewDelayedVestingAccountRaw(baseVestingWithCoins)
 				accountKeeper.SetAccount(ctx, delayedVestingAccount)
@@ -651,10 +649,10 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			if tc.prevAccountDelegationExists {
 				_, err = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
-				require.NoError(t, err, "delegation found after partial tokenize share")
+				require.NoError(t, err, "delegation not found after partial tokenize share")
 			} else {
 				_, err = stakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
-				require.NoError(t, err, "delegation found after full tokenize share")
+				require.ErrorIs(t, err, types.ErrNoDelegation, "delegation found after full tokenize share")
 			}
 
 			shareToken := bankKeeper.GetBalance(ctx, delegatorAccount, resp.Amount.Denom)

@@ -108,7 +108,7 @@ func NewSigningOptions(addressPrefix, validatorPrefix string) (*txsigning.Option
 func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
 	var err error
 	if configOpts.SigningOptions == nil {
-		return nil, errors.New("not signing options not provided")
+		return nil, errors.New("signing options not provided")
 	}
 	if configOpts.SigningContext == nil {
 		configOpts.SigningContext, err = txsigning.NewContext(*configOpts.SigningOptions)

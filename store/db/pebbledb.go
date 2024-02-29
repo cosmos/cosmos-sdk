@@ -91,8 +91,11 @@ func (db *PebbleDB) NewBatch() store.RawBatch {
 	}
 }
 
-func (db *PebbleDB) NewBatchWithSize(int) store.RawBatch {
-	panic("not implemented!")
+func (db *PebbleDB) NewBatchWithSize(size int) store.RawBatch {
+	return &pebbleDBBatch{
+		db:    db,
+		batch: db.storage.NewBatchWithSize(size),
+	}
 }
 
 var _ store.RawBatch = (*pebbleDBBatch)(nil)

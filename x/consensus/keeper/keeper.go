@@ -25,6 +25,8 @@ type Keeper struct {
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
+
+	cometInfoCache *types.CometInfo
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
@@ -103,4 +105,14 @@ func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*
 	}
 
 	return &types.ConsensusMsgParamsResponse{}, nil
+}
+
+func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
+	return &types.MsgCometInfoResponse{CometInfo: k.cometInfoCache}, nil
+}
+
+func (k *Keeper) SetCometInfo(ctx context.Context, req *types.ConsensusMsgCometInfoRequest) (*types.ConsensusMsgCometInfoResponse, error) {
+	k.cometInfoCache = req.CometInfo
+
+	return &types.ConsensusMsgCometInfoResponse{}, nil
 }

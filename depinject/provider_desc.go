@@ -2,11 +2,11 @@ package depinject
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 	"unicode"
 
 	"github.com/cockroachdb/errors"
-	"golang.org/x/exp/slices"
 )
 
 // providerDescriptor defines a special provider type that is defined by

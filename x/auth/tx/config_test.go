@@ -1,6 +1,7 @@
 package tx_test
 
 import (
+	"cosmossdk.io/x/tx/signing"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -30,7 +31,10 @@ func TestGenerator(t *testing.T) {
 func TestConfigOptions(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	protoCodec := codec.NewProtoCodec(interfaceRegistry)
-	configOptions := tx.ConfigOptions{}
+	configOptions := tx.ConfigOptions{SigningOptions: &signing.Options{
+		AddressCodec:          protoCodec.InterfaceRegistry().SigningContext().AddressCodec(),
+		ValidatorAddressCodec: protoCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
+	}}
 	txConfig, err := tx.NewTxConfigWithOptions(protoCodec, configOptions)
 	require.NoError(t, err)
 	require.NotNil(t, txConfig)

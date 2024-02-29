@@ -9,6 +9,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -102,6 +103,9 @@ func (s *Store) GetLatest() (*types.Snapshot, error) {
 	if len(metadata) == 0 {
 		return nil, nil
 	}
+	// file system may not guarantee the order of the files, so we sort them lexically
+	sort.Slice(metadata, func(i, j int) bool { return metadata[i].Name() > metadata[j].Name() })
+
 	path := filepath.Join(s.pathMetadataDir(), metadata[len(metadata)-1].Name())
 	if err := s.validateMetadataPath(path); err != nil {
 		return nil, err
@@ -125,6 +129,9 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list snapshot metadata")
 	}
+	// file system may not guarantee the order of the files, so we sort them lexically
+	sort.Slice(metadata, func(i, j int) bool { return metadata[i].Name() > metadata[j].Name() })
+
 	snapshots := make([]*types.Snapshot, len(metadata))
 	for i, entry := range metadata {
 		path := filepath.Join(s.pathMetadataDir(), entry.Name())

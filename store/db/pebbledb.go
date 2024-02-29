@@ -16,20 +16,9 @@ var _ store.RawDB = (*PebbleDB)(nil)
 // the IAVL v0/v1 backend.
 type PebbleDB struct {
 	storage *pebble.DB
-
-	// Sync is whether to sync writes through the OS buffer cache and down onto
-	// the actual disk, if applicable. Setting Sync is required for durability of
-	// individual write operations but can result in slower writes.
-	//
-	// If false, and the process or machine crashes, then a recent write may be
-	// lost. This is due to the recently written data being buffered inside the
-	// process running Pebble. This differs from the semantics of a write system
-	// call in which the data is buffered in the OS buffer cache and would thus
-	// survive a process crash.
-	sync bool
 }
 
-func NewPebbleDB(dataDir string, sync bool) (*PebbleDB, error) {
+func NewPebbleDB(dataDir string) (*PebbleDB, error) {
 	opts := &pebble.Options{}
 	opts = opts.EnsureDefaults()
 
@@ -38,7 +27,7 @@ func NewPebbleDB(dataDir string, sync bool) (*PebbleDB, error) {
 		return nil, fmt.Errorf("failed to open PebbleDB: %w", err)
 	}
 
-	return &PebbleDB{storage: db, sync: sync}, nil
+	return &PebbleDB{storage: db}, nil
 }
 
 func NewPebbleDBWithOpts(dataDir string, sync bool, opts *pebble.Options) (*PebbleDB, error) {
@@ -47,7 +36,7 @@ func NewPebbleDBWithOpts(dataDir string, sync bool, opts *pebble.Options) (*Pebb
 		return nil, fmt.Errorf("failed to open PebbleDB: %w", err)
 	}
 
-	return &PebbleDB{storage: db, sync: sync}, nil
+	return &PebbleDB{storage: db}, nil
 }
 
 func (db *PebbleDB) Close() error {
@@ -96,9 +85,70 @@ func (db *PebbleDB) ReverseIterator(start, end []byte) (corestore.Iterator, erro
 }
 
 func (db *PebbleDB) NewBatch() store.RawBatch {
-	panic("not implemented!")
+	return &pebbleDBBatch{
+		db:    db,
+		batch: db.storage.NewBatch(),
+	}
 }
 
 func (db *PebbleDB) NewBatchWithSize(int) store.RawBatch {
 	panic("not implemented!")
+}
+
+var _ store.RawBatch = (*pebbleDBBatch)(nil)
+
+type pebbleDBBatch struct {
+	db    *PebbleDB
+	batch *pebble.Batch
+}
+
+func (b *pebbleDBBatch) Set(key, value []byte) error {
+	if len(key) == 0 {
+		return store.ErrKeyEmpty
+	}
+	if value == nil {
+		return store.ErrValueNil
+	}
+	if b.batch == nil {
+		return store.ErrBatchClosed
+	}
+
+	return b.batch.Set(key, value, nil)
+}
+
+func (b *pebbleDBBatch) Delete(key []byte) error {
+	if len(key) == 0 {
+		return store.ErrKeyEmpty
+	}
+	if b.batch == nil {
+		return store.ErrBatchClosed
+	}
+
+	return b.batch.Delete(key, nil)
+}
+
+func (b *pebbleDBBatch) Write() error {
+	err := b.batch.Commit(&pebble.WriteOptions{Sync: false})
+	if err != nil {
+		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	}
+
+	return nil
+}
+
+func (b *pebbleDBBatch) WriteSync() error {
+	err := b.batch.Commit(&pebble.WriteOptions{Sync: true})
+	if err != nil {
+		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	}
+
+	return nil
+}
+
+func (b *pebbleDBBatch) Close() error {
+	return b.batch.Close()
+}
+
+func (b *pebbleDBBatch) GetByteSize() (int, error) {
+	return b.batch.Len(), nil
 }

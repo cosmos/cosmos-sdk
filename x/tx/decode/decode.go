@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
@@ -20,6 +21,8 @@ type DecodedTx struct {
 	Signers                      [][]byte
 	TxBodyHasUnknownNonCriticals bool
 }
+
+var _ transaction.Tx = &DecodedTx{}
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {
@@ -148,4 +151,8 @@ func (dtx *DecodedTx) GetMessages() []proto.Message {
 
 func (dtx *DecodedTx) GetSenders() [][]byte {
 	return dtx.Signers
+}
+
+func (dtx *DecodedTx) Bytes() []byte {
+	return dtx.TxRaw.BodyBytes
 }

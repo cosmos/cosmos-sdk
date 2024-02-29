@@ -46,7 +46,7 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	messageName := msgTypeURL(msg)
 	respName := m.router.ResponseNameByRequestName(messageName)
 	if respName == "" {
-		return nil, fmt.Errorf("could not find response type for message %T", msg)
+		return nil, fmt.Errorf("could not find response type for message %s (%T)", messageName, msg)
 	}
 
 	// get response type

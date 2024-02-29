@@ -23,7 +23,7 @@ func TestMsgRouterService(t *testing.T) {
 	counterKeeper := counterkeeper.NewKeeper(runtime.NewEnvironment(storeService, log.NewNopLogger()))
 	countertypes.RegisterInterfaces(interfaceRegistry)
 	countertypes.RegisterMsgServer(router, counterKeeper)
-	countertypes.RegisterQueryServer(router, counterKeeper)
+	// countertypes.RegisterQueryServer(router, counterKeeper)
 
 	routerService := runtime.NewMsgRouterService(storeService, router)
 

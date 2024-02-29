@@ -16,6 +16,8 @@ import (
 	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -38,12 +40,12 @@ var (
 	PERMANENT_LOCKING_ACCOUNT  = "permanent-locking-account"
 )
 
-var (
-	MSG_DELEGATE   = "/cosmos.staking.v1beta1.MsgDelegate"
-	MSG_UNDELEGATE = "/cosmos.staking.v1beta1.MsgUndelegate"
-	MSG_SEND       = "/cosmos.bank.v1beta1.MsgSend"
-	MSG_MULTI_SEND = "/cosmos.bank.v1beta1.MsgMultiSend"
-)
+var notAllowedList = map[string]struct{}{
+	"/cosmos.staking.v1beta1.MsgDelegate":   {},
+	"/cosmos.staking.v1beta1.MsgUndelegate": {},
+	"/cosmos.bank.v1beta1.MsgSend":          {},
+	"/cosmos.bank.v1beta1.MsgMultiSend":     {},
+}
 
 type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
 
@@ -111,113 +113,144 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupA
 	return &lockuptypes.MsgInitLockupAccountResponse{}, nil
 }
 
-// ExecuteMessages handle the execution of codectypes Any messages
-// and update the lockup account DelegatedFree and DelegatedLocking
-// when delegate or undelegate is trigger. And check for locked coins
-// when performing a send message.
-func (bva *BaseLockup) ExecuteMessages(
-	ctx context.Context, msg *lockuptypes.MsgExecuteMessages, getLockedCoinsFunc getLockedCoinsFunc,
+func (bva *BaseLockup) Delegate(
+	ctx context.Context, msg *lockuptypes.MsgDelegate, getLockedCoinsFunc getLockedCoinsFunc,
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	owner, err := bva.Owner.Get(ctx)
+	err := bva.checkSender(ctx, msg.Sender)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())
+		return nil, err
 	}
-	sender, err := bva.addressCodec.StringToBytes(msg.Sender)
+	whoami := accountstd.Whoami(ctx)
+	delegatorAddress, err := bva.addressCodec.BytesToString(whoami)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err.Error())
+		return nil, err
 	}
-	if !bytes.Equal(owner, sender) {
-		return nil, fmt.Errorf("sender is not the owner of this vesting account")
-	}
+
 	hs := bva.headerService.GetHeaderInfo(ctx)
 
-	for _, m := range msg.Messages {
-		concreteMsg, err := lockuptypes.UnpackAnyRaw(m)
-		if err != nil {
-			return nil, err
-		}
-
-		typeUrl := sdk.MsgTypeURL(concreteMsg)
-		switch typeUrl {
-		case MSG_DELEGATE:
-			msgDelegate, ok := concreteMsg.(*stakingtypes.MsgDelegate)
-			if !ok {
-				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-			}
-			balance, err := bva.getBalance(ctx, msgDelegate.DelegatorAddress, msgDelegate.Amount.Denom)
-			if err != nil {
-				return nil, err
-			}
-			lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msgDelegate.Amount.Denom)
-			if err != nil {
-				return nil, err
-			}
-
-			err = bva.TrackDelegation(
-				ctx,
-				sdk.Coins{*balance},
-				lockedCoins,
-				sdk.Coins{msgDelegate.Amount},
-			)
-			if err != nil {
-				return nil, err
-			}
-		case MSG_UNDELEGATE:
-			msgUndelegate, ok := concreteMsg.(*stakingtypes.MsgUndelegate)
-			if !ok {
-				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-			}
-
-			err = bva.TrackUndelegation(ctx, sdk.Coins{msgUndelegate.Amount})
-			if err != nil {
-				return nil, err
-			}
-		case MSG_SEND:
-			msgSend, ok := concreteMsg.(*banktypes.MsgSend)
-			if !ok {
-				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-			}
-			sender := msgSend.FromAddress
-			amount := msgSend.Amount
-
-			lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, amount.Denoms()...)
-			if err != nil {
-				return nil, err
-			}
-
-			err = bva.checkTokensSendable(ctx, sender, amount, lockedCoins)
-			if err != nil {
-				return nil, err
-			}
-		case MSG_MULTI_SEND:
-			msgMultiSend, ok := concreteMsg.(*banktypes.MsgMultiSend)
-			if !ok {
-				return nil, fmt.Errorf("invalid proto msg for type: %s", typeUrl)
-			}
-			sender := msgMultiSend.Inputs[0].Address
-			amount := msgMultiSend.Inputs[0].Coins
-
-			lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, amount.Denoms()...)
-			if err != nil {
-				return nil, err
-			}
-
-			err = bva.checkTokensSendable(ctx, sender, amount, lockedCoins)
-			if err != nil {
-				return nil, err
-			}
-		}
+	balance, err := bva.getBalance(ctx, delegatorAddress, msg.Amount.Denom)
+	if err != nil {
+		return nil, err
+	}
+	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Amount.Denom)
+	if err != nil {
+		return nil, err
 	}
 
-	// execute messages
-	responses, err := accountstd.ExecModuleAnys(ctx, msg.Messages)
+	err = bva.TrackDelegation(
+		ctx,
+		sdk.Coins{*balance},
+		lockedCoins,
+		sdk.Coins{msg.Amount},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	msgDelegate := stakingtypes.NewMsgDelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
+	responses, err := sendAnyMessage(ctx, msgDelegate)
 	if err != nil {
 		return nil, err
 	}
 
 	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+}
+
+func (bva *BaseLockup) Undelegate(
+	ctx context.Context, msg *lockuptypes.MsgUndelegate,
+) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	err := bva.checkSender(ctx, msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	whoami := accountstd.Whoami(ctx)
+	delegatorAddress, err := bva.addressCodec.BytesToString(whoami)
+	if err != nil {
+		return nil, err
+	}
+
+	err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	msgUndelegate := stakingtypes.NewMsgUndelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
+	responses, err := sendAnyMessage(ctx, msgUndelegate)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+}
+
+func (bva *BaseLockup) SendCoins(
+	ctx context.Context, msg *lockuptypes.MsgSend, getLockedCoinsFunc getLockedCoinsFunc,
+) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	err := bva.checkSender(ctx, msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	whoami := accountstd.Whoami(ctx)
+	fromAddress, err := bva.addressCodec.BytesToString(whoami)
+	if err != nil {
+		return nil, err
+	}
+
+	hs := bva.headerService.GetHeaderInfo(ctx)
+
+	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Amount.Denoms()...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = bva.checkTokensSendable(ctx, fromAddress, msg.Amount, lockedCoins)
+	if err != nil {
+		return nil, err
+	}
+
+	msgSend := banktypes.NewMsgSend(fromAddress, msg.ToAddress, msg.Amount)
+	responses, err := sendAnyMessage(ctx, msgSend)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+}
+
+func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
+	owner, err := bva.Owner.Get(ctx)
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())
+	}
+	senderBytes, err := bva.addressCodec.StringToBytes(sender)
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err.Error())
+	}
+	if !bytes.Equal(owner, senderBytes) {
+		return fmt.Errorf("sender is not the owner of this vesting account")
+	}
+
+	return nil
+}
+
+func sendAnyMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, error) {
+	msgAny, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	responses, err := accountstd.ExecModuleAnys(ctx, []*codectypes.Any{msgAny})
+	if err != nil {
+		return nil, err
+	}
+
+	return responses, nil
 }
 
 // TrackDelegation tracks a delegation amount for any given lockup account type

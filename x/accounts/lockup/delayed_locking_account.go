@@ -37,10 +37,22 @@ func (dva DelayedLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgI
 	return dva.BaseLockup.Init(ctx, msg)
 }
 
-func (dva *DelayedLockingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
+func (dva *DelayedLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return dva.BaseLockup.ExecuteMessages(ctx, msg, dva.GetLockedCoinWithDenoms)
+	return dva.BaseLockup.Delegate(ctx, msg, dva.GetLockedCoinWithDenoms)
+}
+
+func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return dva.BaseLockup.Undelegate(ctx, msg)
+}
+
+func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return dva.BaseLockup.SendCoins(ctx, msg, dva.GetLockedCoinWithDenoms)
 }
 
 // GetLockCoinsInfo returns the total number of unlocked and locked coins.
@@ -131,7 +143,9 @@ func (dva DelayedLockingAccount) RegisterInitHandler(builder *accountstd.InitBui
 }
 
 func (dva DelayedLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-	accountstd.RegisterExecuteHandler(builder, dva.ExecuteMessages)
+	accountstd.RegisterExecuteHandler(builder, dva.Delegate)
+	accountstd.RegisterExecuteHandler(builder, dva.Undelegate)
+	accountstd.RegisterExecuteHandler(builder, dva.SendCoins)
 }
 
 func (dva DelayedLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

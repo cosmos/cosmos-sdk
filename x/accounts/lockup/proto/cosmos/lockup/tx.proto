@@ -68,7 +68,64 @@ message MsgExecuteMessages {
   repeated google.protobuf.Any messages = 2;
 }
 
-// MsgExecuteMessagesResponse defines the response for MsgExecuteMessages
+// MsgExecuteMessagesResponse defines the response for lockup execute operations
 message MsgExecuteMessagesResponse {
   repeated google.protobuf.Any responses = 1;
 }
+
+// MsgDelegate defines a message that enable lockup account to execute delegate message
+message MsgDelegate {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // sender is the owner of the lockup account
+  string                   sender            = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgUndelegate defines a message that enable lockup account to execute undelegate message
+message MsgUndelegate {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string                   sender            = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgSend defines a message that enable lockup account to execute send message
+message MsgSend {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string   sender                          = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   to_address                      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgWithdraw defines a message that the owner of the lockup can perform to withdraw unlocked token to an account of
+// choice
+message MsgWithdraw {
+  option (cosmos.msg.v1.signer) = "withdrawer";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string withdrawer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string to_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawResponse defines the response for MsgWithdraw
+message MsgWithdrawResponse {}

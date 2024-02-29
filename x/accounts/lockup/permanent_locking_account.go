@@ -40,9 +40,9 @@ func (plva PermanentLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 	return resp, err
 }
 
-// GetVestingCoins returns the total number of vesting coins. If no coins are
-// vesting, nil is returned.
-func (plva PermanentLockingAccount) GetVestingCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+// GetlockedCoinWithDenoms returns the total number of locked coins. If no coins are
+// locked, nil is returned.
+func (plva PermanentLockingAccount) GetlockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	vestingCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		originalVestingAmt, err := plva.OriginalLocking.Get(ctx, denom)
@@ -54,10 +54,22 @@ func (plva PermanentLockingAccount) GetVestingCoinWithDenoms(ctx context.Context
 	return vestingCoins, nil
 }
 
-func (plva *PermanentLockingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
+func (plva *PermanentLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseLockup.ExecuteMessages(ctx, msg, plva.GetVestingCoinWithDenoms)
+	return plva.BaseLockup.Delegate(ctx, msg, plva.GetlockedCoinWithDenoms)
+}
+
+func (plva *PermanentLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return plva.BaseLockup.Undelegate(ctx, msg)
+}
+
+func (plva *PermanentLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return plva.BaseLockup.SendCoins(ctx, msg, plva.GetlockedCoinWithDenoms)
 }
 
 func (plva PermanentLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
@@ -87,7 +99,9 @@ func (plva PermanentLockingAccount) RegisterInitHandler(builder *accountstd.Init
 }
 
 func (plva PermanentLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-	accountstd.RegisterExecuteHandler(builder, plva.ExecuteMessages)
+	accountstd.RegisterExecuteHandler(builder, plva.Delegate)
+	accountstd.RegisterExecuteHandler(builder, plva.Undelegate)
+	accountstd.RegisterExecuteHandler(builder, plva.SendCoins)
 }
 
 func (plva PermanentLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

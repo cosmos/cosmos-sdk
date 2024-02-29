@@ -60,10 +60,22 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 	return cva.BaseLockup.Init(ctx, msg)
 }
 
-func (cva *ContinuousLockingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
+func (cva *ContinuousLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return cva.BaseLockup.ExecuteMessages(ctx, msg, cva.GetLockedCoinWithDenoms)
+	return cva.BaseLockup.Delegate(ctx, msg, cva.GetLockedCoinWithDenoms)
+}
+
+func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return cva.BaseLockup.Undelegate(ctx, msg)
+}
+
+func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return cva.BaseLockup.SendCoins(ctx, msg, cva.GetLockedCoinWithDenoms)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -199,7 +211,9 @@ func (cva ContinuousLockingAccount) RegisterInitHandler(builder *accountstd.Init
 }
 
 func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-	accountstd.RegisterExecuteHandler(builder, cva.ExecuteMessages)
+	accountstd.RegisterExecuteHandler(builder, cva.Delegate)
+	accountstd.RegisterExecuteHandler(builder, cva.Undelegate)
+	accountstd.RegisterExecuteHandler(builder, cva.SendCoins)
 }
 
 func (cva ContinuousLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

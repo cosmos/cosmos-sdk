@@ -94,10 +94,22 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 	return &lockuptypes.MsgInitPeriodicLockingAccountResponse{}, nil
 }
 
-func (pva *PeriodicLockingAccount) ExecuteMessages(ctx context.Context, msg *lockuptypes.MsgExecuteMessages) (
+func (pva *PeriodicLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return pva.BaseLockup.ExecuteMessages(ctx, msg, pva.GetLockedCoinWithDenoms)
+	return pva.BaseLockup.Delegate(ctx, msg, pva.GetLockedCoinWithDenoms)
+}
+
+func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return pva.BaseLockup.Undelegate(ctx, msg)
+}
+
+func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return pva.BaseLockup.SendCoins(ctx, msg, pva.GetLockedCoinWithDenoms)
 }
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
@@ -302,7 +314,9 @@ func (pva PeriodicLockingAccount) RegisterInitHandler(builder *accountstd.InitBu
 }
 
 func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-	accountstd.RegisterExecuteHandler(builder, pva.ExecuteMessages)
+	accountstd.RegisterExecuteHandler(builder, pva.Delegate)
+	accountstd.RegisterExecuteHandler(builder, pva.Undelegate)
+	accountstd.RegisterExecuteHandler(builder, pva.SendCoins)
 }
 
 func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

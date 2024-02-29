@@ -35,7 +35,7 @@ func (db *PebbleDB) Close() error {
 	panic("not implemented!")
 }
 
-func (db *PebbleDB) NewBatch() RawBatch {
+func (db *PebbleDB) NewBatch() store.RawBatch {
 	panic("not implemented!")
 }
 

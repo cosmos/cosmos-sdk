@@ -15,10 +15,6 @@ import (
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
 func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	// clear the evidence cache at the end of this function
-	defer func() {
-		k.evidenceCache = nil
-	}()
 
 	// If the user is using the legacy CometBFT consensus, we need to convert the
 	// evidence to the new types.Misbehavior type and store it in the cache.

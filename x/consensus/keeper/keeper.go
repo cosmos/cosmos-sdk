@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -14,6 +15,7 @@ import (
 	"cosmossdk.io/core/event"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -25,8 +27,8 @@ type Keeper struct {
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
-
-	cometInfoCache *types.CometInfo
+	// storage of the last comet info
+	cometInfo collections.Item[types.CometInfo]
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
@@ -108,11 +110,24 @@ func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*
 }
 
 func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
-	return &types.MsgCometInfoResponse{CometInfo: k.cometInfoCache}, nil
+	ci, err := k.cometInfo.Get(ctx)
+	if errors.Is(err, collections.ErrNotFound) {
+		ci := sdk.UnwrapSDKContext(ctx).CometInfo()
+		res := &types.MsgCometInfoResponse{CometInfo: &types.CometInfo{
+			ValidatorsHash:  ci.ValidatorsHash,
+			ProposerAddress: ci.ProposerAddress,
+			LastCommit:      ci.LastCommit, // TODO
+			Evidence:        ci.Evidence,   // TODO
+		}}
+
+		return res, err
+	}
+
+	return &types.MsgCometInfoResponse{CometInfo: &ci}, err
 }
 
 func (k *Keeper) SetCometInfo(ctx context.Context, req *types.ConsensusMsgCometInfoRequest) (*types.ConsensusMsgCometInfoResponse, error) {
-	k.cometInfoCache = req.CometInfo
+	err := k.cometInfo.Set(ctx, *req.CometInfo)
 
-	return &types.ConsensusMsgCometInfoResponse{}, nil
+	return &types.ConsensusMsgCometInfoResponse{}, err
 }

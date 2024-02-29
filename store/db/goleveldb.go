@@ -17,18 +17,20 @@ import (
 	"cosmossdk.io/store/v2"
 )
 
+var _ store.RawDB = (*GoLevelDB)(nil)
+
 // GoLevelDB implements RawDB using github.com/syndtr/goleveldb/leveldb.
-// It is used for only store v2 migration, since some clients use goleveldb as the iavl v0/v1 backend.
+// It is used for only store v2 migration, since some clients use goleveldb as
+// the IAVL v0/v1 backend.
 type GoLevelDB struct {
 	db *leveldb.DB
 }
-
-var _ store.RawDB = (*GoLevelDB)(nil)
 
 func NewGoLevelDB(name, dir string, opts store.DBOptions) (*GoLevelDB, error) {
 	defaultOpts := &opt.Options{
 		Filter: filter.NewBloomFilter(10), // by default, goleveldb doesn't use a bloom filter.
 	}
+
 	if opts != nil {
 		files := cast.ToInt(opts.Get("maxopenfiles"))
 		if files > 0 {

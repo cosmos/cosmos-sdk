@@ -103,6 +103,9 @@ func (s *Store) GetLatest() (*types.Snapshot, error) {
 		return nil, nil
 	}
 	path := filepath.Join(s.pathMetadataDir(), metadata[len(metadata)-1].Name())
+	if err := s.validateMetadataPath(path); err != nil {
+		return nil, err
+	}
 	bz, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read latest snapshot metadata %s", path)
@@ -111,7 +114,7 @@ func (s *Store) GetLatest() (*types.Snapshot, error) {
 	snapshot := &types.Snapshot{}
 	err = proto.Unmarshal(bz, snapshot)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to decode latest snapshot %s", path)
+		return nil, errors.Wrapf(err, "failed to decode latest snapshot metadata %s", path)
 	}
 	return snapshot, nil
 }
@@ -124,7 +127,11 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 	}
 	snapshots := make([]*types.Snapshot, len(metadata))
 	for i, entry := range metadata {
-		bz, err := os.ReadFile(filepath.Join(s.pathMetadataDir(), entry.Name()))
+		path := filepath.Join(s.pathMetadataDir(), entry.Name())
+		if err := s.validateMetadataPath(path); err != nil {
+			return nil, err
+		}
+		bz, err := os.ReadFile(path)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to read snapshot metadata %s", entry.Name())
 		}
@@ -199,23 +206,11 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 	prunedHeights := make(map[uint64]bool)
 	skip := make(map[uint64]bool)
 	for i := len(metadata) - 1; i >= 0; i-- {
-		var height, format uint64
-		parts := strings.Split(metadata[i].Name(), "-")
-		if len(parts) != 2 {
-			return pruned, fmt.Errorf("invalid snapshot metadata file %s", metadata[i].Name())
-		}
-		height, err = strconv.ParseUint(parts[0], 10, 64)
+		height, format, err := s.parseMetadataFilename(metadata[i].Name())
 		if err != nil {
-			return pruned, errors.Wrapf(err, "invalid snapshot metadata file %s", metadata[i].Name())
-		}
-		format, err = strconv.ParseUint(parts[1], 10, 32)
-		if err != nil {
-			return pruned, errors.Wrapf(err, "invalid snapshot metadata file %s", metadata[i].Name())
+			return 0, err
 		}
 
-		if err != nil {
-			return 0, errors.Wrap(err, "failed to prune snapshots")
-		}
 		if skip[height] || uint32(len(skip)) < retain {
 			skip[height] = true
 			continue
@@ -367,9 +362,39 @@ func (s *Store) pathMetadataDir() string {
 	return filepath.Join(s.dir, "metadata")
 }
 
+func (s *Store) parseMetadataFilename(filename string) (height uint64, format uint32, err error) {
+	parts := strings.Split(filename, "-")
+	if len(parts) != 2 {
+		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot metadata filename %s", filename)
+	}
+	height, err = strconv.ParseUint(parts[0], 10, 64)
+	if err != nil {
+		return 0, 0, errors.Wrapf(err, "invalid snapshot metadata filename %s", filename)
+	}
+	var f uint64
+	f, err = strconv.ParseUint(parts[1], 10, 32)
+	if err != nil {
+		return 0, 0, errors.Wrapf(err, "invalid snapshot metadata filename %s", filename)
+	}
+	format = uint32(f)
+	if filename != s.pathMetadata(height, uint32(format)) {
+		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot metadata filename %s", filename)
+	}
+	return height, format, nil
+}
+
+func (s *Store) validateMetadataPath(path string) error {
+	dir, f := filepath.Split(path)
+	if dir != s.pathMetadataDir() {
+		return errors.Wrapf(store.ErrLogic, "invalid snapshot metadata path %s", path)
+	}
+	_, _, err := s.parseMetadataFilename(f)
+	return err
+}
+
 // pathMetadata generates a snapshot metadata path.
 func (s *Store) pathMetadata(height uint64, format uint32) string {
-	return filepath.Join(s.pathMetadataDir(), fmt.Sprintf("%06d-%06d", height, format))
+	return filepath.Join(s.pathMetadataDir(), fmt.Sprintf("%020d-%08d", height, format))
 }
 
 // PathChunk generates a snapshot chunk path.

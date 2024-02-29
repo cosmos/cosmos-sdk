@@ -76,8 +76,18 @@ func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
 }
 
+// SetSnapshotManager sets the snapshot manager for the Consensus.
+// The snapshot manager is responsible for managing snapshots of the Consensus state.
+// It allows for creating, storing, and restoring snapshots of the Consensus state.
+// The provided snapshot manager will be used by the Consensus to handle snapshots.
 func (c *Consensus[T]) SetSnapshotManager(sm *snapshots.Manager) {
 	c.snapshotManager = sm
+}
+
+// RegisterExtensions registers the given extensions with the consensus module's snapshot manager.
+// It allows additional snapshotter implementations to be used for creating and restoring snapshots.
+func (c *Consensus[T]) RegisterExtensions(extensions ...snapshots.ExtensionSnapshotter) {
+	c.snapshotManager.RegisterExtensions(extensions...)
 }
 
 func (c *Consensus[T]) SetPrepareProposalHandler(handler handlers.PrepareHandler[T]) {

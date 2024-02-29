@@ -399,7 +399,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd(appCreator types.AppCreator) *cobr
 				return err
 			}
 			if height == 0 {
-				height, err = s.CometBFT.store.LatestVersion()
+				height, err = s.App.store.LatestVersion()
 				if err != nil {
 					return err
 				}

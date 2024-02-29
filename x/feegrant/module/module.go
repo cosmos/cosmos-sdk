@@ -13,6 +13,8 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
@@ -20,6 +22,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -31,10 +34,11 @@ var (
 	_ module.AppModuleSimulation   = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodulev2.AppModule     = AppModule{}
-	_ appmodulev2.HasEndBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodulev2.HasMigrations = AppModule{}
+	_ appmodulev2.AppModule                       = AppModule{}
+	_ appmodulev2.HasEndBlocker                   = AppModule{}
+	_ appmodule.HasServices                       = AppModule{}
+	_ appmodulev2.HasMigrations                   = AppModule{}
+	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
 )
 
 // AppModule implements an application module for the feegrant module.
@@ -97,7 +101,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // RegisterMigrations registers module migrations.
-func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
+func (am AppModule) RegisterMigrations(mr appmodulev2.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 
 	if err := mr.Register(feegrant.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -154,6 +158,22 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 // TxValidator implements appmodule.HasTxValidation.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	// TODO in follow-up
-	return nil
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// supports legacy ante handler
+	// eventually do the reverse, write ante handler as TxValidator
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewSetUpContextDecorator(),
+		ante.NewValidateBasicDecorator(),
+		ante.NewTxTimeoutHeightDecorator(),
+		ante.NewValidateMemoDecorator(am.accountKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
+		ante.NewValidateSigCountDecorator(am.accountKeeper),
+		ante.NewDeductFeeDecorator(am.accountKeeper, am.bankKeeper, &am.keeper, nil),
+	}
+
+	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
+	_, err := anteHandler(sdkCtx, runtime.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate)
+
+	return err
 }

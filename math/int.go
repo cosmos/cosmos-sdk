@@ -9,7 +9,6 @@ import (
 	"math/bits"
 	"strings"
 	"sync"
-	"testing"
 )
 
 // MaxBitLen defines the maximum bit length supported bit Int and Uint types.
@@ -520,12 +519,6 @@ func (i *Int) Size() int {
 // MarshalAmino Override Amino binary serialization by proxying to protobuf.
 func (i Int) MarshalAmino() ([]byte, error)   { return i.Marshal() }
 func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
-
-// intended to be used with require/assert:  require.True(IntEq(...))
-func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
-	t.Helper()
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
 
 func hasOnlyDigits(s string) bool {
 	if s == "" {

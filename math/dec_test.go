@@ -24,27 +24,39 @@ func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
 }
 
+// LegacyDecEq intended to be used with require/assert:  require.True(DecEq(...))
+func legacyDecEq(t *testing.T, exp, got math.LegacyDec) (*testing.T, bool, string, string, string) {
+	t.Helper()
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func legacyDecApproxEq(t *testing.T, d1, d2, tol math.LegacyDec) (*testing.T, bool, string, string, string) {
+	t.Helper()
+	diff := d1.Sub(d2).Abs()
+	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
+}
+
 func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := math.LegacyNewDecWithPrec(55, 2)
 	d2 := math.LegacyNewDecWithPrec(6, 1)
 	tol := math.LegacyNewDecWithPrec(1, 1)
 
-	require.True(math.LegacyDecApproxEq(t, d1, d2, tol))
+	require.True(legacyDecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.55, d2 = 0.6, tol = 1E-5
 	d1 = math.LegacyNewDecWithPrec(55, 2)
 	d2 = math.LegacyNewDecWithPrec(6, 1)
 	tol = math.LegacyNewDecWithPrec(1, 5)
 
-	require.False(math.LegacyDecApproxEq(t, d1, d2, tol))
+	require.False(legacyDecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.6, d2 = 0.61, tol = 0.01
 	d1 = math.LegacyNewDecWithPrec(6, 1)
 	d2 = math.LegacyNewDecWithPrec(61, 2)
 	tol = math.LegacyNewDecWithPrec(1, 2)
 
-	require.True(math.LegacyDecApproxEq(t, d1, d2, tol))
+	require.True(legacyDecApproxEq(t, d1, d2, tol))
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")

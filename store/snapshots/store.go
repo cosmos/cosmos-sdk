@@ -258,37 +258,24 @@ func (s *Store) Save(
 		s.mtx.Unlock()
 	}()
 
-	exists := true
-	if _, err := os.Stat(s.pathMetadata(height, format)); os.IsNotExist(err) {
-		exists = false
-	}
-	if exists {
-		return nil, errors.Wrapf(store.ErrConflict,
-			"snapshot already exists for height %v format %v", height, format)
-	}
-
 	snapshot := &types.Snapshot{
 		Height: height,
 		Format: format,
 	}
 
-	dirCreated := false
+	// create height directory or do nothing
+	if err := os.MkdirAll(s.pathHeight(height), 0o750); err != nil {
+		return nil, errors.Wrapf(err, "failed to create snapshot directory for height %v", height)
+	}
+	// create format directory or fail (if for example the format directory already exists)
+	if err := os.Mkdir(s.pathSnapshot(height, format), 0o750); err != nil {
+		return nil, errors.Wrapf(err, "failed to create snapshot directory for height %v format %v", height, format)
+	}
+
 	index := uint32(0)
 	snapshotHasher := sha256.New()
 	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
-		// Only create the snapshot directory on encountering the first chunk.
-		// If the directory disappears during chunk saving,
-		// the whole operation will fail anyway.
-		if !dirCreated {
-			dir := s.pathSnapshot(height, format)
-			if err := os.MkdirAll(dir, 0o755); err != nil {
-				return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
-			}
-
-			dirCreated = true
-		}
-
 		if err := s.saveChunk(chunkBody, index, snapshot, chunkHasher, snapshotHasher); err != nil {
 			return nil, err
 		}
@@ -362,10 +349,20 @@ func (s *Store) pathMetadataDir() string {
 	return filepath.Join(s.dir, "metadata")
 }
 
+// pathMetadata generates a snapshot metadata path.
+func (s *Store) pathMetadata(height uint64, format uint32) string {
+	return filepath.Join(s.pathMetadataDir(), fmt.Sprintf("%020d-%08d", height, format))
+}
+
+// PathChunk generates a snapshot chunk path.
+func (s *Store) PathChunk(height uint64, format, chunk uint32) string {
+	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
+}
+
 func (s *Store) parseMetadataFilename(filename string) (height uint64, format uint32, err error) {
 	parts := strings.Split(filename, "-")
 	if len(parts) != 2 {
-		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot metadata filename %s", filename)
+		return 0, 0, fmt.Errorf("invalid snapshot metadata filename %s", filename)
 	}
 	height, err = strconv.ParseUint(parts[0], 10, 64)
 	if err != nil {
@@ -377,29 +374,19 @@ func (s *Store) parseMetadataFilename(filename string) (height uint64, format ui
 		return 0, 0, errors.Wrapf(err, "invalid snapshot metadata filename %s", filename)
 	}
 	format = uint32(f)
-	if filename != s.pathMetadata(height, uint32(format)) {
-		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot metadata filename %s", filename)
+	if filename != filepath.Base(s.pathMetadata(height, uint32(format))) {
+		return 0, 0, fmt.Errorf("invalid snapshot metadata filename %s", filename)
 	}
 	return height, format, nil
 }
 
 func (s *Store) validateMetadataPath(path string) error {
 	dir, f := filepath.Split(path)
-	if dir != s.pathMetadataDir() {
-		return errors.Wrapf(store.ErrLogic, "invalid snapshot metadata path %s", path)
+	if dir != fmt.Sprintf("%s/", s.pathMetadataDir()) {
+		return fmt.Errorf("invalid snapshot metadata path %s", path)
 	}
 	_, _, err := s.parseMetadataFilename(f)
 	return err
-}
-
-// pathMetadata generates a snapshot metadata path.
-func (s *Store) pathMetadata(height uint64, format uint32) string {
-	return filepath.Join(s.pathMetadataDir(), fmt.Sprintf("%020d-%08d", height, format))
-}
-
-// PathChunk generates a snapshot chunk path.
-func (s *Store) PathChunk(height uint64, format, chunk uint32) string {
-	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
 }
 
 // legacyV1DecodeKey decodes a legacy snapshot key used in a raw kv store.

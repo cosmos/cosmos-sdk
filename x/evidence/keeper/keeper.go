@@ -32,6 +32,8 @@ type Keeper struct {
 	Schema collections.Schema
 	// Evidences key: evidence hash bytes | value: Evidence
 	Evidences collections.Map[[]byte, exported.Evidence]
+
+	evidenceCache []*types.Misbehavior
 }
 
 // NewKeeper creates a new Keeper object.
@@ -114,4 +116,12 @@ func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) 
 	}
 
 	return k.Evidences.Set(ctx, evidence.Hash(), evidence)
+}
+
+func (k Keeper) SetEvidence(ctx context.Context, req *types.ConsensusEvidenceMsg) error {
+	if len(req.Misbehaviors) == 0 || req.Misbehaviors == nil {
+		return errors.Wrap(types.ErrInvalidEvidence, "empty evidence")
+	}
+	k.evidenceCache = req.Misbehaviors
+	return nil
 }

@@ -1,0 +1,38 @@
+syntax = "proto3";
+package cosmos.evidence.v1beta1;
+
+option go_package            = "cosmossdk.io/x/evidence/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+// The type of misbehavior committed by a validator.
+enum MisbehaviorType {
+  // Unknown
+  MISBEHAVIOR_TYPE_UNSPECIFIED = 0;
+  // Duplicate vote
+  MISBEHAVIOR_TYPE_DUPLICATE_VOTE = 1;
+  // Light client attack
+  MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK = 2;
+}
+
+// Misbehavior is a type of misbehavior committed by a validator.
+message Misbehavior {
+  MisbehaviorType type = 1;
+  // The offending validator
+  bytes consensus_address = 2;
+  // The height when the offense occurred
+  int64 height = 3;
+  // The corresponding time where the offense occurred
+  google.protobuf.Timestamp time = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  // Total voting power of the validator set in case the ABCI application does
+  // not store historical validators.
+  // https://github.com/tendermint/tendermint/issues/4581
+  int64 total_voting_power = 5;
+}
+
+// ConsensusEvidence is a type of evidence that is committed by a validator
+message ConsensusEvidenceMsg {
+  repeated Misbehavior misbehaviors = 1;
+}

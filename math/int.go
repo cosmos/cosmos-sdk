@@ -332,7 +332,7 @@ func (i Int) Mul(i2 Int) (res Int) {
 	return x
 }
 
-// MulRaw multipies Int and int64
+// MulRaw multiples Int and int64
 func (i Int) MulRaw(i2 int64) Int {
 	return i.Mul(NewInt(i2))
 }
@@ -413,7 +413,7 @@ func MaxInt(i, i2 Int) Int {
 	return Int{max(i.BigInt(), i2.BigInt())}
 }
 
-// Human readable string
+// String Human readable string
 func (i Int) String() string {
 	return i.i.String()
 }

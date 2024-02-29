@@ -1,7 +1,6 @@
 package tx_test
 
 import (
-	"cosmossdk.io/x/tx/signing"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,6 +9,7 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/x/auth/tx"
 	txtestutil "cosmossdk.io/x/auth/tx/testutil"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"

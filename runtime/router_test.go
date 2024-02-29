@@ -24,13 +24,14 @@ func TestMsgRouterService(t *testing.T) {
 	router.SetInterfaceRegistry(interfaceRegistry)
 	key := storetypes.NewKVStoreKey(countertypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	queryRouter := baseapp.NewQueryServerTestHelper(testCtx.Ctx, interfaceRegistry)
 	counterKeeper := counterkeeper.NewKeeper(runtime.NewEnvironment(storeService, log.NewNopLogger()))
 	countertypes.RegisterInterfaces(interfaceRegistry)
 	countertypes.RegisterMsgServer(router, counterKeeper)
-	countertypes.RegisterQueryServer(router, counterKeeper)
+	countertypes.RegisterQueryServer(queryRouter, counterKeeper)
 
 	routerService := runtime.NewMsgRouterService(storeService, router)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
 	t.Run("invalid msg", func(t *testing.T) {
 		_, err := routerService.InvokeUntyped(testCtx.Ctx, &bankv1beta1.MsgSend{})

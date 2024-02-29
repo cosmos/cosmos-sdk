@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/router"
@@ -16,18 +15,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
+// NewMsgRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
 func NewMsgRouterService(storeService store.KVStoreService, router baseapp.MessageRouter) router.Service {
 	return &msgRouterService{
 		storeService: storeService,
 		router:       router,
-		resolver:     protoregistry.GlobalTypes,
 	}
 }
 
 type msgRouterService struct {
 	storeService store.KVStoreService
 	router       baseapp.MessageRouter
-	resolver     protoregistry.MessageTypeResolver
 }
 
 // InvokeTyped execute a message and fill-in a response.

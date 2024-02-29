@@ -2,13 +2,13 @@ package snapshots
 
 import (
 	"crypto/sha256"
-	"encoding/binary"
+	"fmt"
 	"hash"
 	"io"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -25,7 +25,6 @@ const (
 
 // Store is a snapshot store, containing snapshot metadata and binary chunks.
 type Store struct {
-	db  store.RawDB
 	dir string
 
 	mtx    sync.Mutex
@@ -33,7 +32,7 @@ type Store struct {
 }
 
 // NewStore creates a new snapshot store.
-func NewStore(db store.RawDB, dir string) (*Store, error) {
+func NewStore(dir string) (*Store, error) {
 	if dir == "" {
 		return nil, errors.Wrap(store.ErrLogic, "snapshot directory not given")
 	}
@@ -41,9 +40,12 @@ func NewStore(db store.RawDB, dir string) (*Store, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
+	err = os.MkdirAll(filepath.Join(dir, "metadata"), 0o755)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create snapshot metadata directory %q", dir)
+	}
 
 	return &Store{
-		db:     db,
 		dir:    dir,
 		saving: make(map[uint64]bool),
 	}, nil
@@ -58,31 +60,24 @@ func (s *Store) Delete(height uint64, format uint32) error {
 		return errors.Wrapf(store.ErrConflict,
 			"snapshot for height %v format %v is currently being saved", height, format)
 	}
-	b := s.db.NewBatch()
-	defer b.Close()
-	if err := b.Delete(encodeKey(height, format)); err != nil {
-		return errors.Wrapf(err, "failed to delete item in the batch")
-	}
-	if err := b.WriteSync(); err != nil {
-		return errors.Wrapf(err, "failed to delete snapshot for height %v format %v",
-			height, format)
-	}
 	if err := os.RemoveAll(s.pathSnapshot(height, format)); err != nil {
-		return errors.Wrapf(err, "failed to delete snapshot chunks for height %v format %v",
-			height, format)
+		return errors.Wrapf(err, "failed to delete snapshot chunks for height %v format %v", height, format)
+	}
+	if err := os.Remove(s.pathMetadata(height, format)); err != nil {
+		return errors.Wrapf(err, "failed to delete snapshot metadata for height %v format %v", height, format)
 	}
 	return nil
 }
 
 // Get fetches snapshot info from the database.
 func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
-	bytes, err := s.db.Get(encodeKey(height, format))
+	if _, err := os.Stat(s.pathMetadata(height, format)); os.IsNotExist(err) {
+		return nil, nil
+	}
+	bytes, err := os.ReadFile(s.pathMetadata(height, format))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to fetch snapshot metadata for height %v format %v",
 			height, format)
-	}
-	if bytes == nil {
-		return nil, nil
 	}
 	snapshot := &types.Snapshot{}
 	err = proto.Unmarshal(bytes, snapshot)
@@ -96,44 +91,50 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	return snapshot, nil
 }
 
-// Get fetches the latest snapshot from the database, if any.
+// GetLatest fetches the latest snapshot from the database, if any.
 func (s *Store) GetLatest() (*types.Snapshot, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
+	metadata, err := os.ReadDir(s.pathMetadataDir())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to find latest snapshot")
+		return nil, errors.Wrap(err, "failed to list snapshot metadata")
 	}
-	defer iter.Close()
+	if len(metadata) == 0 {
+		return nil, nil
+	}
+	path := filepath.Join(s.pathMetadataDir(), metadata[len(metadata)-1].Name())
+	bz, err := os.ReadFile(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read latest snapshot metadata %s", path)
+	}
 
-	var snapshot *types.Snapshot
-	if iter.Valid() {
-		snapshot = &types.Snapshot{}
-		err := proto.Unmarshal(iter.Value(), snapshot)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to decode latest snapshot")
-		}
+	snapshot := &types.Snapshot{}
+	err = proto.Unmarshal(bz, snapshot)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to decode latest snapshot %s", path)
 	}
-	err = iter.Error()
-	return snapshot, errors.Wrap(err, "failed to find latest snapshot")
+	return snapshot, nil
 }
 
 // List lists snapshots, in reverse order (newest first).
 func (s *Store) List() ([]*types.Snapshot, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
+	metadata, err := os.ReadDir(s.pathMetadataDir())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list snapshots")
+		return nil, errors.Wrap(err, "failed to list snapshot metadata")
 	}
-	defer iter.Close()
-
-	snapshots := make([]*types.Snapshot, 0)
-	for ; iter.Valid(); iter.Next() {
-		snapshot := &types.Snapshot{}
-		err := proto.Unmarshal(iter.Value(), snapshot)
+	snapshots := make([]*types.Snapshot, len(metadata))
+	for i := len(metadata) - 1; i >= 0; i-- {
+		entry := metadata[i]
+		bz, err := os.ReadFile(filepath.Join(s.pathMetadataDir(), entry.Name()))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to decode snapshot info")
+			return nil, errors.Wrapf(err, "failed to read snapshot metadata %s", entry.Name())
 		}
-		snapshots = append(snapshots, snapshot)
+		snapshot := &types.Snapshot{}
+		err = proto.Unmarshal(bz, snapshot)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to decode snapshot metadata %s", entry.Name())
+		}
+		snapshots[i] = snapshot
 	}
-	return snapshots, iter.Error()
+	return snapshots, nil
 }
 
 // Load loads a snapshot (both metadata and binary chunks). The chunks must be consumed and closed.
@@ -188,17 +189,29 @@ func (s *Store) loadChunkFile(height uint64, format, chunk uint32) (io.ReadClose
 
 // Prune removes old snapshots. The given number of most recent heights (regardless of format) are retained.
 func (s *Store) Prune(retain uint32) (uint64, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
+	metadata, err := os.ReadDir(s.pathMetadataDir())
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to prune snapshots")
+		return 0, errors.Wrap(err, "failed to list snapshot metadata")
 	}
-	defer iter.Close()
 
 	pruned := uint64(0)
 	prunedHeights := make(map[uint64]bool)
 	skip := make(map[uint64]bool)
-	for ; iter.Valid(); iter.Next() {
-		height, format, err := decodeKey(iter.Key())
+	for i := len(metadata) - 1; i >= 0; i-- {
+		var height, format uint64
+		parts := strings.Split(metadata[i].Name(), "-")
+		if len(parts) != 2 {
+			return pruned, fmt.Errorf("invalid snapshot metadata file %s", metadata[i].Name())
+		}
+		height, err = strconv.ParseUint(parts[0], 10, 64)
+		if err != nil {
+			return pruned, errors.Wrapf(err, "invalid snapshot metadata file %s", metadata[i].Name())
+		}
+		format, err = strconv.ParseUint(parts[1], 10, 32)
+		if err != nil {
+			return pruned, errors.Wrapf(err, "invalid snapshot metadata file %s", metadata[i].Name())
+		}
+
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to prune snapshots")
 		}
@@ -206,7 +219,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 			skip[height] = true
 			continue
 		}
-		err = s.Delete(height, format)
+		err = s.Delete(height, uint32(format))
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to prune snapshots")
 		}
@@ -223,7 +236,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 			}
 		}
 	}
-	return pruned, iter.Error()
+	return pruned, nil
 }
 
 // Save saves a snapshot to disk, returning it.
@@ -249,9 +262,9 @@ func (s *Store) Save(
 		s.mtx.Unlock()
 	}()
 
-	exists, err := s.db.Has(encodeKey(height, format))
-	if err != nil {
-		return nil, err
+	exists := true
+	if _, err := os.Stat(s.pathMetadata(height, format)); os.IsNotExist(err) {
+		exists = false
 	}
 	if exists {
 		return nil, errors.Wrapf(store.ErrConflict,
@@ -332,13 +345,9 @@ func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode snapshot metadata")
 	}
-	b := s.db.NewBatch()
-	defer b.Close()
-	if err := b.Set(encodeKey(snapshot.Height, snapshot.Format), value); err != nil {
-		return errors.Wrap(err, "failed to set snapshot in batch")
-	}
-	if err := b.WriteSync(); err != nil {
-		return errors.Wrap(err, "failed to store snapshot")
+	err = os.WriteFile(s.pathMetadata(snapshot.Height, snapshot.Format), value, 0o664)
+	if err != nil {
+		return errors.Wrap(err, "failed to write snapshot metadata")
 	}
 	return nil
 }
@@ -353,30 +362,20 @@ func (s *Store) pathSnapshot(height uint64, format uint32) string {
 	return filepath.Join(s.pathHeight(height), strconv.FormatUint(uint64(format), 10))
 }
 
+func (s *Store) pathMetadataDir() string {
+	return filepath.Join(s.dir, "metadata")
+}
+
+// pathMetadata generates a snapshot metadata path.
+func (s *Store) pathMetadata(height uint64, format uint32) string {
+	return filepath.Join(s.pathMetadataDir(), fmt.Sprintf("%06d-%06d", height, format))
+}
+
 // PathChunk generates a snapshot chunk path.
 func (s *Store) PathChunk(height uint64, format, chunk uint32) string {
 	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
 }
 
-// decodeKey decodes a snapshot key.
-func decodeKey(k []byte) (uint64, uint32, error) {
-	if len(k) != 13 {
-		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key with length %v", len(k))
-	}
-	if k[0] != keyPrefixSnapshot {
-		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key prefix %x", k[0])
-	}
-
-	height := binary.BigEndian.Uint64(k[1:9])
-	format := binary.BigEndian.Uint32(k[9:13])
-	return height, format, nil
-}
-
-// encodeKey encodes a snapshot key.
-func encodeKey(height uint64, format uint32) []byte {
-	k := make([]byte, 13)
-	k[0] = keyPrefixSnapshot
-	binary.BigEndian.PutUint64(k[1:], height)
-	binary.BigEndian.PutUint32(k[9:], format)
-	return k
+func (s *Store) MigrateFromV1(db store.RawDB) error {
+	panic("implement me")
 }

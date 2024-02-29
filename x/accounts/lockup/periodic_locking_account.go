@@ -46,8 +46,10 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
 	}
 
-	if msg.StartTime.IsZero() {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %s", msg.StartTime.String())
+	hs := pva.headerService.GetHeaderInfo(ctx)
+
+	if msg.StartTime.Before(hs.Time) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("start time %s should be after block time")
 	}
 
 	totalCoins := sdk.Coins{}

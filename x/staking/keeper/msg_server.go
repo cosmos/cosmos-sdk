@@ -716,3 +716,37 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 
 	return res, nil
 }
+
+// RotateOperatorPubKey rotates the operator public key of a validator.
+// It takes a RotateOperatorPubKey message as input and updates the operator address of the corresponding validator.
+// If the provided public key is not of type cryptotypes.PubKey, it returns an error.
+// It returns the RotateOperatorPubKeyResponse message and any error encountered during the process.
+func (k msgServer) RotateOperatorPubKey(ctx context.Context, msg *types.MsgRotateOperatorPubKey) (res *types.MsgRotateOperatorPubKeyResponse, err error) {
+	cv := msg.NewPubkey.GetCachedValue()
+	pk, ok := cv.(cryptotypes.PubKey)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
+	}
+
+	addr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	validator, err := k.GetValidator(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	operAddr, err := k.authKeeper.AddressCodec().BytesToString(pk.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	validator.OperatorAddress = operAddr
+
+	if err := k.SetValidator(ctx, validator); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}

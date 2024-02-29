@@ -50,6 +50,11 @@ service Msg {
   // of a validator.
   // Since: cosmos-sdk 0.51
   rpc RotateConsPubKey(MsgRotateConsPubKey) returns (MsgRotateConsPubKeyResponse);
+
+  // RotateOperatorPubKey defines an operation for rotating the operator keys
+  // of a validator.
+  // Since: cosmos-sdk 0.51
+  rpc RotateOperatorPubKey(MsgRotateOperatorPubKey) returns (MsgRotateOperatorPubKeyResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -230,3 +235,22 @@ message MsgRotateConsPubKey {
 //
 // Since: cosmos-sdk 0.51
 message MsgRotateConsPubKeyResponse {}
+
+// MsgRotateOperatorPubKey
+message MsgRotateOperatorPubKey {
+  option (cosmos.msg.v1.signer) = "validator_address";
+  option (amino.name)           = "cosmos-sdk/MsgRotateOperatorPubKey";
+
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
+
+  string              validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  google.protobuf.Any new_pubkey        = 2
+      [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey", (cosmos_proto.scalar) = "cosmos.PubKey"];
+}
+
+// MsgRotateOperatorPubKeyResponse defines the response structure for executing a
+// MsgRotateOperatorPubKey message.
+//
+// Since: cosmos-sdk 0.51
+message MsgRotateOperatorPubKeyResponse {}

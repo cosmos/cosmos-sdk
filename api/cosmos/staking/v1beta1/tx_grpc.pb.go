@@ -27,6 +27,7 @@ const (
 	Msg_CancelUnbondingDelegation_FullMethodName = "/cosmos.staking.v1beta1.Msg/CancelUnbondingDelegation"
 	Msg_UpdateParams_FullMethodName              = "/cosmos.staking.v1beta1.Msg/UpdateParams"
 	Msg_RotateConsPubKey_FullMethodName          = "/cosmos.staking.v1beta1.Msg/RotateConsPubKey"
+	Msg_RotateOperatorPubKey_FullMethodName      = "/cosmos.staking.v1beta1.Msg/RotateOperatorPubKey"
 )
 
 // MsgClient is the client API for Msg service.
@@ -59,6 +60,10 @@ type MsgClient interface {
 	// of a validator.
 	// Since: cosmos-sdk 0.51
 	RotateConsPubKey(ctx context.Context, in *MsgRotateConsPubKey, opts ...grpc.CallOption) (*MsgRotateConsPubKeyResponse, error)
+	// RotateOperatorPubKey defines an operation for rotating the operator keys
+	// of a validator.
+	// Since: cosmos-sdk 0.51
+	RotateOperatorPubKey(ctx context.Context, in *MsgRotateOperatorPubKey, opts ...grpc.CallOption) (*MsgRotateOperatorPubKeyResponse, error)
 }
 
 type msgClient struct {
@@ -141,6 +146,15 @@ func (c *msgClient) RotateConsPubKey(ctx context.Context, in *MsgRotateConsPubKe
 	return out, nil
 }
 
+func (c *msgClient) RotateOperatorPubKey(ctx context.Context, in *MsgRotateOperatorPubKey, opts ...grpc.CallOption) (*MsgRotateOperatorPubKeyResponse, error) {
+	out := new(MsgRotateOperatorPubKeyResponse)
+	err := c.cc.Invoke(ctx, Msg_RotateOperatorPubKey_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -171,6 +185,10 @@ type MsgServer interface {
 	// of a validator.
 	// Since: cosmos-sdk 0.51
 	RotateConsPubKey(context.Context, *MsgRotateConsPubKey) (*MsgRotateConsPubKeyResponse, error)
+	// RotateOperatorPubKey defines an operation for rotating the operator keys
+	// of a validator.
+	// Since: cosmos-sdk 0.51
+	RotateOperatorPubKey(context.Context, *MsgRotateOperatorPubKey) (*MsgRotateOperatorPubKeyResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -201,6 +219,9 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 }
 func (UnimplementedMsgServer) RotateConsPubKey(context.Context, *MsgRotateConsPubKey) (*MsgRotateConsPubKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RotateConsPubKey not implemented")
+}
+func (UnimplementedMsgServer) RotateOperatorPubKey(context.Context, *MsgRotateOperatorPubKey) (*MsgRotateOperatorPubKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RotateOperatorPubKey not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -359,6 +380,24 @@ func _Msg_RotateConsPubKey_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RotateOperatorPubKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRotateOperatorPubKey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RotateOperatorPubKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RotateOperatorPubKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RotateOperatorPubKey(ctx, req.(*MsgRotateOperatorPubKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -397,6 +436,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RotateConsPubKey",
 			Handler:    _Msg_RotateConsPubKey_Handler,
+		},
+		{
+			MethodName: "RotateOperatorPubKey",
+			Handler:    _Msg_RotateOperatorPubKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

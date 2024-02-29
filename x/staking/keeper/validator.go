@@ -440,7 +440,7 @@ func (k Keeper) InsertUnbondingValidatorQueue(ctx context.Context, val types.Val
 	if err != nil {
 		return err
 	}
-	addrs = append(addrs, val.OperatorAddress)
+	addrs = append(addrs, val.OperatorAddress) // TODO: why use operator instead of consensus as the idenfier?
 	return k.SetUnbondingValidatorsQueue(ctx, val.UnbondingTime, val.UnbondingHeight, addrs)
 }
 

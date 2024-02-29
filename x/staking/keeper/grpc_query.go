@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -414,14 +413,13 @@ func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegation
 	var pageRes *query.PageResponse
 	var err error
 
-	store := runtime.KVStoreAdapter(k.environment.KVStoreService.OpenKVStore(ctx))
 	switch {
 	case req.DelegatorAddr != "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr != "":
 		redels, err = queryRedelegation(ctx, k, req)
 	case req.DelegatorAddr == "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr == "":
-		redels, pageRes, err = queryRedelegationsFromSrcValidator(ctx, store, k, req)
+		redels, pageRes, err = queryRedelegationsFromSrcValidator(ctx, k, req)
 	default:
-		redels, pageRes, err = queryAllRedelegations(ctx, store, k, req)
+		redels, pageRes, err = queryAllRedelegations(ctx, k, req)
 	}
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -526,7 +524,7 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 	return redels, nil
 }
 
-func queryRedelegationsFromSrcValidator(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (types.Redelegations, *query.PageResponse, error) {
+func queryRedelegationsFromSrcValidator(ctx context.Context, k Querier, req *types.QueryRedelegationsRequest) (types.Redelegations, *query.PageResponse, error) {
 	valAddr, err := k.validatorAddressCodec.StringToBytes(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, nil, err
@@ -542,7 +540,7 @@ func queryRedelegationsFromSrcValidator(ctx context.Context, store storetypes.KV
 	}, query.WithCollectionPaginationTriplePrefix[[]byte, []byte, []byte](valAddr))
 }
 
-func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryAllRedelegations(ctx context.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, nil, err

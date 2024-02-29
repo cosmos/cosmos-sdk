@@ -42,7 +42,7 @@ func NewStore(dir string) (*Store, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
-	err = os.MkdirAll(filepath.Join(dir, "metadata"), 0o755)
+	err = os.MkdirAll(filepath.Join(dir, "metadata"), 0o750)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create snapshot metadata directory %q", dir)
 	}
@@ -346,7 +346,7 @@ func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode snapshot metadata")
 	}
-	err = os.WriteFile(s.pathMetadata(snapshot.Height, snapshot.Format), value, 0o664)
+	err = os.WriteFile(s.pathMetadata(snapshot.Height, snapshot.Format), value, 0o600)
 	if err != nil {
 		return errors.Wrap(err, "failed to write snapshot metadata")
 	}
@@ -411,7 +411,7 @@ func (s *Store) MigrateFromV1(db store.RawDB) error {
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(s.pathMetadata(height, format), itr.Value(), 0o664); err != nil {
+		if err := os.WriteFile(s.pathMetadata(height, format), itr.Value(), 0o600); err != nil {
 			return errors.Wrapf(err, "failed to write snapshot metadata %q", s.pathMetadata(height, format))
 		}
 	}

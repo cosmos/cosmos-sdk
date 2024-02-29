@@ -80,7 +80,7 @@ type Context struct {
 	ValidatorAddressCodec address.Codec
 	ConsensusAddressCodec address.Codec
 
-	// Bech32 address prefixes
+	// Bech32 address prefixes.
 	AddressPrefix   string
 	ValidatorPrefix string
 }

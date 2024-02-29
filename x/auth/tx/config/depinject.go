@@ -10,9 +10,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
@@ -47,8 +45,6 @@ type ModuleInputs struct {
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
 	Codec                 codec.Codec
 	ProtoFileResolver     txsigning.ProtoFileResolver
-	AuthConfig            *authv1.Module
-	StakingConfig         *stakingv1.Module
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
 	MetadataBankKeeper     BankKeeper                         `optional:"true"`
@@ -85,8 +81,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			CustomGetSigners:      make(map[protoreflect.FullName]txsigning.GetSignersFunc),
 		},
 		CustomSignModes: customSignModeHandlers,
-		AddressPrefix:   in.AuthConfig.Bech32Prefix,
-		ValidatorPrefix: in.StakingConfig.Bech32PrefixValidator,
 	}
 
 	for _, mode := range in.CustomGetSigners {

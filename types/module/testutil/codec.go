@@ -25,12 +25,13 @@ type TestEncodingConfig struct {
 func MakeTestEncodingConfig(modules ...module.AppModule) TestEncodingConfig {
 	aminoCodec := codec.NewLegacyAmino()
 	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
-	codec := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	signingCtx := interfaceRegistry.SigningContext()
 
 	encCfg := TestEncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
-		Codec:             codec,
-		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes, "cosmos", "cosmosvaloper"),
+		Codec:             cdc,
+		TxConfig:          tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes),
 		Amino:             aminoCodec,
 	}
 
@@ -46,7 +47,8 @@ func MakeTestEncodingConfig(modules ...module.AppModule) TestEncodingConfig {
 func MakeTestTxConfig() client.TxConfig {
 	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	return tx.NewTxConfig(cdc, tx.DefaultSignModes, "cosmos", "cosmosvaloper")
+	signingCtx := interfaceRegistry.SigningContext()
+	return tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
 }
 
 type TestBuilderTxConfig struct {

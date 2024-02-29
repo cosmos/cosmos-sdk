@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -82,8 +83,10 @@ func NewRootCmd() *cobra.Command {
 				txConfigOpts := tx.ConfigOptions{
 					EnabledSignModes:           enabledSignModes,
 					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
-					AddressPrefix:              sdk.GetConfig().GetBech32AccountAddrPrefix(),
-					ValidatorPrefix:            sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+					SigningOptions: &txsigning.Options{
+						AddressCodec:          initClientCtx.InterfaceRegistry.SigningContext().AddressCodec(),
+						ValidatorAddressCodec: initClientCtx.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+					},
 				}
 				txConfig, err := tx.NewTxConfigWithOptions(
 					initClientCtx.Codec,

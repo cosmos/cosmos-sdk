@@ -97,9 +97,7 @@ func (dva DelayedLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, b
 		return nil, nil, err
 	}
 	originalLockingCoin := sdk.NewCoin(denom, originalLockingAmt)
-	if err != nil {
-		return nil, nil, err
-	}
+
 	if blockTime.After(endTime) {
 		return &originalLockingCoin, &sdk.Coin{}, nil
 	}

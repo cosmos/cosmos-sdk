@@ -40,12 +40,12 @@ var (
 	PERMANENT_LOCKING_ACCOUNT  = "permanent-locking-account"
 )
 
-var notAllowedList = map[string]struct{}{
-	"/cosmos.staking.v1beta1.MsgDelegate":   {},
-	"/cosmos.staking.v1beta1.MsgUndelegate": {},
-	"/cosmos.bank.v1beta1.MsgSend":          {},
-	"/cosmos.bank.v1beta1.MsgMultiSend":     {},
-}
+// var notAllowedList = map[string]struct{}{
+// 	"/cosmos.staking.v1beta1.MsgDelegate":   {},
+// 	"/cosmos.staking.v1beta1.MsgUndelegate": {},
+// 	"/cosmos.bank.v1beta1.MsgSend":          {},
+// 	"/cosmos.bank.v1beta1.MsgMultiSend":     {},
+// }
 
 type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
 

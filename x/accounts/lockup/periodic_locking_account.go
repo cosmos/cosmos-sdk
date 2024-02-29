@@ -49,7 +49,7 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 	hs := pva.headerService.GetHeaderInfo(ctx)
 
 	if msg.StartTime.Before(hs.Time) {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("start time %s should be after block time")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("start time %s should be after block time")
 	}
 
 	totalCoins := sdk.Coins{}
@@ -218,9 +218,7 @@ func (pva PeriodicLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, 
 	}
 
 	originalLockingCoin := sdk.NewCoin(denom, originalLockingAmt)
-	if err != nil {
-		return nil, nil, err
-	}
+
 	if blockTime.Before(startTime) {
 		return &sdk.Coin{}, &originalLockingCoin, nil
 	} else if blockTime.After(endTime) {

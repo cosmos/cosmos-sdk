@@ -3,17 +3,19 @@ package runtime_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	counterkeeper "github.com/cosmos/cosmos-sdk/x/counter/keeper"
 	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMsgRouterService(t *testing.T) {

@@ -53,9 +53,8 @@ func NewIntegrationApp(
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
 	moduleManager.RegisterInterfaces(interfaceRegistry)
-	signingCtx := interfaceRegistry.SigningContext()
 
-	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 

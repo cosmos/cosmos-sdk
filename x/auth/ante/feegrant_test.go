@@ -146,8 +146,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			suite := SetupTestSuite(t, false)
 			cdc := codec.NewProtoCodec(suite.encCfg.InterfaceRegistry)
-			signingCtx := cdc.InterfaceRegistry().SigningContext()
-			protoTxCfg := tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
+			protoTxCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 			// this just tests our handler
 			dfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, suite.feeGrantKeeper, nil)
 			feeAnteHandler := sdk.ChainAnteDecorators(dfd)

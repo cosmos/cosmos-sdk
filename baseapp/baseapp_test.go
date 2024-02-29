@@ -64,9 +64,8 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	t.Helper()
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
 	logBuffer := new(bytes.Buffer)
 	logger := log.NewLogger(logBuffer, log.ColorOption(false))
@@ -501,10 +500,9 @@ func TestBaseAppOptionSeal(t *testing.T) {
 func TestTxDecoder(t *testing.T) {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
 	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 
 	tx := newTxCounter(t, txConfig, 1, 0)
 	txBytes, err := txConfig.TxEncoder()(tx)

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	abciserver "github.com/cometbft/cometbft/abci/server"
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -21,7 +22,21 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+)
+
+const (
+	flagWithComet     = "with-comet"
+	flagAddress       = "address"
+	flagTransport     = "transport"
+	flagTraceStore    = "trace-store"
+	flagCPUProfile    = "cpu-profile"
+	FlagMinGasPrices  = "minimum-gas-prices"
+	FlagQueryGasLimit = "query-gas-limit"
+	FlagHaltHeight    = "halt-height"
+	FlagHaltTime      = "halt-time"
+	FlagTrace         = "trace"
 )
 
 type CometBFTServer[T transaction.Tx] struct {
@@ -142,6 +157,21 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) 
 	}
 }
 
+func (s *CometBFTServer[T]) StartCmdFlags() pflag.FlagSet {
+	flags := *pflag.NewFlagSet("cometbft", pflag.ExitOnError)
+	flags.Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
+	flags.String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
+	flags.String(flagTransport, "socket", "Transport protocol: socket, grpc")
+	flags.String(flagTraceStore, "", "Enable KVStore tracing to an output file")
+	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	flags.Uint64(FlagQueryGasLimit, 0, "Maximum gas a Rest/Grpc query can consume. Blank and 0 imply unbounded.")
+	flags.Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
+	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
+	flags.String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
+	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
+	return flags
+}
+
 func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Command: []*cobra.Command{
@@ -153,6 +183,8 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 			s.QueryBlockCmd(),
 			s.QueryBlocksCmd(),
 			s.QueryBlockResultsCmd(),
+			cmtcmd.ResetAllCmd,
+			cmtcmd.ResetStateCmd,
 		},
 	}
 }

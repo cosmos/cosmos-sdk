@@ -1,10 +1,9 @@
 package util
 
 import (
-	"slices"
-
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 // IterateMapOrdered iterates over the map with keys sorted in ascending order

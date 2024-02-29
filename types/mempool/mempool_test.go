@@ -23,11 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/counter"
 )
 
-type (
-	Type     = protov2.Message
-	Identity = []byte
-)
-
 // testPubKey is a dummy implementation of PubKey used for testing.
 type testPubKey struct {
 	address sdk.AccAddress
@@ -91,11 +86,11 @@ func (tx testTx) GetGasLimit() uint64 {
 	return 0
 }
 
-func (tx testTx) GetMessages() []Type {
+func (tx testTx) GetMessages() []protov2.Message {
 	return nil
 }
 
-func (tx testTx) GetSenders() []Identity {
+func (tx testTx) GetSenders() [][]byte {
 	return nil
 }
 
@@ -125,11 +120,11 @@ func (sigErrTx) GetGasLimit() uint64 {
 	return 0
 }
 
-func (sigErrTx) GetMessages() []Type {
+func (sigErrTx) GetMessages() []protov2.Message {
 	return nil
 }
 
-func (sigErrTx) GetSenders() []Identity {
+func (sigErrTx) GetSenders() [][]byte {
 	return nil
 }
 

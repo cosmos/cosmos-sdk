@@ -36,11 +36,11 @@ func (n nonVerifiableTx) GetGasLimit() uint64 {
 	return 0
 }
 
-func (n nonVerifiableTx) GetMessages() []Type {
+func (n nonVerifiableTx) GetMessages() []proto.Message {
 	return nil
 }
 
-func (n nonVerifiableTx) GetSenders() []Identity {
+func (n nonVerifiableTx) GetSenders() [][]byte {
 	return nil
 }
 

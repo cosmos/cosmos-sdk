@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"reflect"
 	"strings"
@@ -25,11 +26,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-)
-
-type (
-	Type     = protov2.Message
-	Identity = []byte
 )
 
 func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (w *gogoTxWrapper, err error) {
@@ -101,23 +97,28 @@ type gogoTxWrapper struct {
 func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
 
 func (w *gogoTxWrapper) Bytes() []byte {
-	return []byte{}
+	return w.decodedTx.TxRaw.BodyBytes
 }
 
 func (w *gogoTxWrapper) Hash() [32]byte {
-	return [32]byte{}
+	bz, err := proto.Marshal(w.decodedTx.TxRaw)
+	if err != nil {
+		panic(err)
+	}
+
+	return sha256.Sum256(bz)
 }
 
 func (w *gogoTxWrapper) GetGasLimit() uint64 {
-	return 0
+	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit
 }
 
-func (w *gogoTxWrapper) GetMessages() []Type {
-	return nil
+func (w *gogoTxWrapper) GetMessages() []protov2.Message {
+	return w.decodedTx.Messages
 }
 
-func (w *gogoTxWrapper) GetSenders() []Identity {
-	return nil
+func (w *gogoTxWrapper) GetSenders() [][]byte {
+	return w.decodedTx.Signers
 }
 
 var (

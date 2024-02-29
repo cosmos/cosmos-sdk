@@ -16,11 +16,6 @@ import (
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-type (
-	Type     = proto.Message
-	Identity = []byte
-)
-
 // An sdk.Tx which is its own sdk.Msg.
 type KVStoreTx struct {
 	key     []byte
@@ -107,11 +102,11 @@ func (msg *KVStoreTx) GetGasLimit() uint64 {
 	return 0
 }
 
-func (msg *KVStoreTx) GetMessages() []Type {
+func (msg *KVStoreTx) GetMessages() []proto.Message {
 	return nil
 }
 
-func (msg *KVStoreTx) GetSenders() []Identity {
+func (msg *KVStoreTx) GetSenders() [][]byte {
 	return nil
 }
 

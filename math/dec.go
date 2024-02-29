@@ -7,7 +7,6 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"testing"
 )
 
 // LegacyDec NOTE: never use new(Dec) or else we will panic unmarshalling into the
@@ -922,18 +921,6 @@ func LegacyMaxDec(d1, d2 LegacyDec) LegacyDec {
 		return d2
 	}
 	return d1
-}
-
-// LegacyDecEq intended to be used with require/assert:  require.True(DecEq(...))
-func LegacyDecEq(t *testing.T, exp, got LegacyDec) (*testing.T, bool, string, string, string) {
-	t.Helper()
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
-
-func LegacyDecApproxEq(t *testing.T, d1, d2, tol LegacyDec) (*testing.T, bool, string, string, string) {
-	t.Helper()
-	diff := d1.Sub(d2).Abs()
-	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
 }
 
 // FormatDec formats a decimal (as encoded in protobuf) into a value-rendered

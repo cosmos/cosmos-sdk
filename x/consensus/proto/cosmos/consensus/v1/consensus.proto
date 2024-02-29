@@ -45,10 +45,10 @@ message MsgCometInfoResponse {
 // ConsensusMsgCometInfoResponse represents the consensus message containing information about the validators, proposer,
 // and last commit.
 message CometInfo {
-  bytes      validators_hash  = 1; // Hash of the validators
-  bytes      proposer_address = 2; // Address of the proposer
-  CommitInfo last_commit      = 3; // Information about the last commit
-  Evidence   evidence         = 4; // Evidence of the last commit
+  bytes             validators_hash  = 1; // Hash of the validators
+  bytes             proposer_address = 2; // Address of the proposer
+  CommitInfo        last_commit      = 3; // Information about the last commit
+  repeated Evidence evidence         = 4; // Evidence of the last commit
 }
 
 // CommitInfo represents information about a commit.

@@ -2704,6 +2704,57 @@ func (x *fastReflection_MsgCometInfoResponse) ProtoMethods() *protoiface.Methods
 	}
 }
 
+var _ protoreflect.List = (*_CometInfo_4_list)(nil)
+
+type _CometInfo_4_list struct {
+	list *[]*Evidence
+}
+
+func (x *_CometInfo_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_CometInfo_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_CometInfo_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Evidence)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_CometInfo_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Evidence)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_CometInfo_4_list) AppendMutable() protoreflect.Value {
+	v := new(Evidence)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_CometInfo_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_CometInfo_4_list) NewElement() protoreflect.Value {
+	v := new(Evidence)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_CometInfo_4_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_CometInfo                  protoreflect.MessageDescriptor
 	fd_CometInfo_validators_hash  protoreflect.FieldDescriptor
@@ -2804,8 +2855,8 @@ func (x *fastReflection_CometInfo) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if x.Evidence != nil {
-		value := protoreflect.ValueOfMessage(x.Evidence.ProtoReflect())
+	if len(x.Evidence) != 0 {
+		value := protoreflect.ValueOfList(&_CometInfo_4_list{list: &x.Evidence})
 		if !f(fd_CometInfo_evidence, value) {
 			return
 		}
@@ -2832,7 +2883,7 @@ func (x *fastReflection_CometInfo) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.consensus.v1.CometInfo.last_commit":
 		return x.LastCommit != nil
 	case "cosmos.consensus.v1.CometInfo.evidence":
-		return x.Evidence != nil
+		return len(x.Evidence) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
@@ -2883,8 +2934,11 @@ func (x *fastReflection_CometInfo) Get(descriptor protoreflect.FieldDescriptor) 
 		value := x.LastCommit
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.consensus.v1.CometInfo.evidence":
-		value := x.Evidence
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+		if len(x.Evidence) == 0 {
+			return protoreflect.ValueOfList(&_CometInfo_4_list{})
+		}
+		listValue := &_CometInfo_4_list{list: &x.Evidence}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
@@ -2912,7 +2966,9 @@ func (x *fastReflection_CometInfo) Set(fd protoreflect.FieldDescriptor, value pr
 	case "cosmos.consensus.v1.CometInfo.last_commit":
 		x.LastCommit = value.Message().Interface().(*CommitInfo)
 	case "cosmos.consensus.v1.CometInfo.evidence":
-		x.Evidence = value.Message().Interface().(*Evidence)
+		lv := value.List()
+		clv := lv.(*_CometInfo_4_list)
+		x.Evidence = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
@@ -2940,9 +2996,10 @@ func (x *fastReflection_CometInfo) Mutable(fd protoreflect.FieldDescriptor) prot
 		return protoreflect.ValueOfMessage(x.LastCommit.ProtoReflect())
 	case "cosmos.consensus.v1.CometInfo.evidence":
 		if x.Evidence == nil {
-			x.Evidence = new(Evidence)
+			x.Evidence = []*Evidence{}
 		}
-		return protoreflect.ValueOfMessage(x.Evidence.ProtoReflect())
+		value := &_CometInfo_4_list{list: &x.Evidence}
+		return protoreflect.ValueOfList(value)
 	case "cosmos.consensus.v1.CometInfo.validators_hash":
 		panic(fmt.Errorf("field validators_hash of message cosmos.consensus.v1.CometInfo is not mutable"))
 	case "cosmos.consensus.v1.CometInfo.proposer_address":
@@ -2968,8 +3025,8 @@ func (x *fastReflection_CometInfo) NewField(fd protoreflect.FieldDescriptor) pro
 		m := new(CommitInfo)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.consensus.v1.CometInfo.evidence":
-		m := new(Evidence)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+		list := []*Evidence{}
+		return protoreflect.ValueOfList(&_CometInfo_4_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
@@ -3051,9 +3108,11 @@ func (x *fastReflection_CometInfo) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.LastCommit)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Evidence != nil {
-			l = options.Size(x.Evidence)
-			n += 1 + l + runtime.Sov(uint64(l))
+		if len(x.Evidence) > 0 {
+			for _, e := range x.Evidence {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -3084,19 +3143,21 @@ func (x *fastReflection_CometInfo) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Evidence != nil {
-			encoded, err := options.Marshal(x.Evidence)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
+		if len(x.Evidence) > 0 {
+			for iNdEx := len(x.Evidence) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Evidence[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
 			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x22
 		}
 		if x.LastCommit != nil {
 			encoded, err := options.Marshal(x.LastCommit)
@@ -3308,10 +3369,8 @@ func (x *fastReflection_CometInfo) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Evidence == nil {
-					x.Evidence = &Evidence{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Evidence); err != nil {
+				x.Evidence = append(x.Evidence, &Evidence{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Evidence[len(x.Evidence)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -5865,7 +5924,7 @@ type CometInfo struct {
 	ValidatorsHash  []byte      `protobuf:"bytes,1,opt,name=validators_hash,json=validatorsHash,proto3" json:"validators_hash,omitempty"`    // Hash of the validators
 	ProposerAddress []byte      `protobuf:"bytes,2,opt,name=proposer_address,json=proposerAddress,proto3" json:"proposer_address,omitempty"` // Address of the proposer
 	LastCommit      *CommitInfo `protobuf:"bytes,3,opt,name=last_commit,json=lastCommit,proto3" json:"last_commit,omitempty"`                // Information about the last commit
-	Evidence        *Evidence   `protobuf:"bytes,4,opt,name=evidence,proto3" json:"evidence,omitempty"`                                      // Evidence of the last commit
+	Evidence        []*Evidence `protobuf:"bytes,4,rep,name=evidence,proto3" json:"evidence,omitempty"`                                      // Evidence of the last commit
 }
 
 func (x *CometInfo) Reset() {
@@ -5909,7 +5968,7 @@ func (x *CometInfo) GetLastCommit() *CommitInfo {
 	return nil
 }
 
-func (x *CometInfo) GetEvidence() *Evidence {
+func (x *CometInfo) GetEvidence() []*Evidence {
 	if x != nil {
 		return x.Evidence
 	}
@@ -6175,7 +6234,7 @@ var file_cosmos_consensus_v1_consensus_proto_rawDesc = []byte{
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76,
 	0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0a, 0x6c, 0x61,
 	0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x12, 0x39, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64,
-	0x65, 0x6e, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73,
+	0x65, 0x6e, 0x63, 0x65, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31,
 	0x2e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65,
 	0x6e, 0x63, 0x65, 0x22, 0x57, 0x0a, 0x0a, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x49, 0x6e, 0x66,

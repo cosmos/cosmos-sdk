@@ -111,14 +111,37 @@ func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*
 
 func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
 	ci, err := k.cometInfo.Get(ctx)
+	// if the value is not found we may be using baseapp and not have consensus messages
 	if errors.Is(err, collections.ErrNotFound) {
 		ci := sdk.UnwrapSDKContext(ctx).CometInfo()
 		res := &types.MsgCometInfoResponse{CometInfo: &types.CometInfo{
 			ValidatorsHash:  ci.ValidatorsHash,
 			ProposerAddress: ci.ProposerAddress,
-			LastCommit:      ci.LastCommit, // TODO
-			Evidence:        ci.Evidence,   // TODO
 		}}
+
+		for _, vote := range ci.LastCommit.Votes {
+			res.CometInfo.LastCommit.Votes = append(res.CometInfo.LastCommit.Votes, &types.VoteInfo{
+				Validator: &types.Validator{
+					Address: vote.Validator.Address,
+					Power:   vote.Validator.Power,
+				},
+				BlockIdFlag: types.BlockIDFlag(vote.BlockIDFlag),
+			})
+		}
+		res.CometInfo.LastCommit.Round = ci.LastCommit.Round
+
+		for _, evi := range ci.Evidence {
+			res.CometInfo.Evidence = append(res.CometInfo.Evidence, &types.Evidence{
+				Type: types.MisbehaviorType(evi.Type),
+				Validator: &types.Validator{
+					Address: evi.Validator.Address,
+					Power:   evi.Validator.Power,
+				},
+				Height:           evi.Height,
+				Time:             &evi.Time,
+				TotalVotingPower: evi.TotalVotingPower,
+			})
+		}
 
 		return res, err
 	}

@@ -3,9 +3,9 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"

@@ -2,9 +2,11 @@ package snapshots
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
 	"hash"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -63,7 +65,7 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	if err := os.RemoveAll(s.pathSnapshot(height, format)); err != nil {
 		return errors.Wrapf(err, "failed to delete snapshot chunks for height %v format %v", height, format)
 	}
-	if err := os.Remove(s.pathMetadata(height, format)); err != nil {
+	if err := os.RemoveAll(s.pathMetadata(height, format)); err != nil {
 		return errors.Wrapf(err, "failed to delete snapshot metadata for height %v format %v", height, format)
 	}
 	return nil
@@ -121,8 +123,7 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 		return nil, errors.Wrap(err, "failed to list snapshot metadata")
 	}
 	snapshots := make([]*types.Snapshot, len(metadata))
-	for i := len(metadata) - 1; i >= 0; i-- {
-		entry := metadata[i]
+	for i, entry := range metadata {
 		bz, err := os.ReadFile(filepath.Join(s.pathMetadataDir(), entry.Name()))
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to read snapshot metadata %s", entry.Name())
@@ -132,7 +133,7 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to decode snapshot metadata %s", entry.Name())
 		}
-		snapshots[i] = snapshot
+		snapshots[len(metadata)-1-i] = snapshot
 	}
 	return snapshots, nil
 }
@@ -376,6 +377,43 @@ func (s *Store) PathChunk(height uint64, format, chunk uint32) string {
 	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
 }
 
+// legacyV1DecodeKey decodes a legacy snapshot key used in a raw kv store.
+func legacyV1DecodeKey(k []byte) (uint64, uint32, error) {
+	if len(k) != 13 {
+		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key with length %v", len(k))
+	}
+	if k[0] != keyPrefixSnapshot {
+		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key prefix %x", k[0])
+	}
+
+	height := binary.BigEndian.Uint64(k[1:9])
+	format := binary.BigEndian.Uint32(k[9:13])
+	return height, format, nil
+}
+
+// legacyV1EncodeKey encodes a snapshot key for use in a raw kv store.
+func legacyV1EncodeKey(height uint64, format uint32) []byte {
+	k := make([]byte, 13)
+	k[0] = keyPrefixSnapshot
+	binary.BigEndian.PutUint64(k[1:], height)
+	binary.BigEndian.PutUint32(k[9:], format)
+	return k
+}
+
 func (s *Store) MigrateFromV1(db store.RawDB) error {
-	panic("implement me")
+	itr, err := db.Iterator(legacyV1EncodeKey(0, 0), legacyV1EncodeKey(math.MaxUint64, math.MaxUint32))
+	if err != nil {
+		return err
+	}
+	defer itr.Close()
+	for ; itr.Valid(); itr.Next() {
+		height, format, err := legacyV1DecodeKey(itr.Key())
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(s.pathMetadata(height, format), itr.Value(), 0o664); err != nil {
+			return errors.Wrapf(err, "failed to write snapshot metadata %q", s.pathMetadata(height, format))
+		}
+	}
+	return nil
 }

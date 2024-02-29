@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/x/evidence/types"
 
@@ -73,17 +74,19 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// Reject evidence if the double-sign is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	cp := sdkCtx.ConsensusParams() // TODO: remove in favor of querying consensus module
-	if cp.Evidence != nil {
-		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
+	var res consensusv1.QueryParamsResponse
+	if err := k.environment.MessageRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+		return fmt.Errorf("failed to query consensus params: %w", err)
+	}
+	if res.Params.Evidence != nil {
+		if ageDuration > res.Params.Evidence.MaxAgeDuration.AsDuration() && ageBlocks > res.Params.Evidence.MaxAgeNumBlocks {
 			logger.Info(
 				"ignored equivocation; evidence too old",
 				"validator", consAddr,
 				"infraction_height", infractionHeight,
-				"max_age_num_blocks", cp.Evidence.MaxAgeNumBlocks,
+				"max_age_num_blocks", res.Params.Evidence.MaxAgeNumBlocks,
 				"infraction_time", infractionTime,
-				"max_age_duration", cp.Evidence.MaxAgeDuration,
+				"max_age_duration", res.Params.Evidence.MaxAgeDuration,
 			)
 			return nil
 		}

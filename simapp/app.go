@@ -140,6 +140,7 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*baseapp.BaseApp
+	logger            log.Logger
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
@@ -267,6 +268,7 @@ func NewSimApp(
 
 	app := &SimApp{
 		BaseApp:           bApp,
+		logger:            logger,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
 		txConfig:          txConfig,
@@ -576,6 +578,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
+				Environment:              runtime.NewEnvironment(nil, app.logger), // nil is set as the kvstoreservice to avoid module access
 				AccountAbstractionKeeper: app.AccountsKeeper,
 				AccountKeeper:            app.AuthKeeper,
 				BankKeeper:               app.BankKeeper,

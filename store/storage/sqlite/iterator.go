@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 
 	corestore "cosmossdk.io/core/store"
 )

@@ -75,7 +75,7 @@ func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) er
 			_, err := io.WriteString(w, "[]")
 			return err
 		}
-		return enc.marshalList(list, nil /* TODO */, w)
+		return enc.marshalList(list, nil /* no field descriptor available here */, w)
 	default:
 		return fmt.Errorf("unsupported type %T", list)
 	}

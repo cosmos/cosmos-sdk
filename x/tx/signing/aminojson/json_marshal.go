@@ -193,7 +193,7 @@ func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAn
 		}
 	}
 
-	err := enc.marshal(protoreflect.ValueOfMessage(msg), nil /* todo */, writer)
+	err := enc.marshal(protoreflect.ValueOfMessage(msg), nil /* no field descriptor needed here */, writer)
 	if err != nil {
 		return err
 	}

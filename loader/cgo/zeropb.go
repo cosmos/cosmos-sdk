@@ -14,13 +14,14 @@ const BUFFER_SIZE = 65536
 const MAX_EXTENT = BUFFER_SIZE - 2
 
 func ZeroPBMarshal(message proto.Message) ([]byte, error) {
-	zd, err := globalRegistry.messageDescriptor(message.ProtoReflect().Descriptor())
+	ref := message.ProtoReflect()
+	zd, err := globalRegistry.messageDescriptor(ref.Descriptor())
 	if err != nil {
 		return nil, err
 	}
 
 	out := newBufferContext()
-	if err := zd.marshal(message.ProtoReflect(), out); err != nil {
+	if err := zd.marshal(ref, out); err != nil {
 		return nil, err
 	}
 
@@ -150,7 +151,7 @@ func nextAlignedOffset(offset, align int) int {
 
 func (z *zeropbMessageDescriptor) marshal(msg protoreflect.Message, out bufferContext) error {
 	var err error
-	out, err = out.alloc(z.size, z.align)
+	out, _, err = out.alloc(z.size, z.align)
 	if err != nil {
 		return err
 	}
@@ -163,7 +164,7 @@ func (z *zeropbMessageDescriptor) marshal(msg protoreflect.Message, out bufferCo
 			continue
 		}
 
-		if err := z.marshalField(field, msg.Get(field), out.seek(z.offsets[field.Number()])); err != nil {
+		if err := z.marshalField(field, msg.Get(field), out.seekRelative(z.offsets[field.Number()])); err != nil {
 			return err
 		}
 	}
@@ -187,6 +188,8 @@ func (z *zeropbMessageDescriptor) marshalList(field protoreflect.FieldDescriptor
 		return err
 	}
 
+	elMd := field.Message()
+
 	n := list.Len()
 	if n == 0 {
 		return nil
@@ -196,35 +199,55 @@ func (z *zeropbMessageDescriptor) marshalList(field protoreflect.FieldDescriptor
 		return fmt.Errorf("list too large, must be less than %d elements, have %d", MAX_EXTENT, n)
 	}
 
-	for left := n; left > 0; {
+	for i := 0; i < n; {
 		segmentCount := 256
+		left := n - i
 		if left > segmentCount {
 			segmentCount = left
 		}
 
-		segmentSize := elSize * segmentCount
-		segmentOut, err := out.alloc(segmentSize, elAlign)
+		segmentOut, relPtr, err := out.alloc(4, 2) // alloc and align segment header
 		if err != nil {
 			return err
 		}
 
-		// write first segment pointer
 		if left == n {
-			binary.LittleEndian.PutUint16(out.bytes(), uint16(segmentOut.offset))
+			// write first segment pointer
+			binary.LittleEndian.PutUint16(out.bytes(), uint16(relPtr))
 			binary.LittleEndian.PutUint16(out.bytes()[2:], uint16(n))
+		} else {
+			// write next segment pointer
+			binary.LittleEndian.PutUint16(out.bytes()[2:], uint16(segmentOut.offset))
 		}
+		// update out so that we can point to the next segment header
+		out = segmentOut
 
-		err = z.marshalListSegment(field, list, segmentOut, left, left+segmentCount)
-		if err != nil {
-			return err
+		// write segment header
+		bz := segmentOut.bytes()
+		bz[0] = byte(segmentCount) // used
+		bz[1] = byte(segmentCount) // capacity
+
+		// seek and align segment out
+		segmentOut = segmentOut.seekRelative(4) // skip segment header
+		segmentOut = segmentOut.align(elAlign)  // align to element
+
+		// write elements
+		for ; i < segmentCount; i++ {
+			value := list.Get(i)
+			if elMd != nil {
+				if err := z.marshalMessage(value.Message(), segmentOut); err != nil {
+					return err
+				}
+			} else {
+				if err := z.marshalScalar(field, value, segmentOut); err != nil {
+					return err
+				}
+			}
+
+			segmentOut = segmentOut.seekRelative(elSize)
 		}
-		left -= segmentCount
 	}
 	return nil
-}
-
-func (z *zeropbMessageDescriptor) marshalListSegment(field protoreflect.FieldDescriptor, list protoreflect.List, out bufferContext, start, end int) error {
-	panic("TODO")
 }
 
 func (z *zeropbMessageDescriptor) marshalMessage(message protoreflect.Message, out bufferContext) error {
@@ -267,13 +290,13 @@ func (z *zeropbMessageDescriptor) marshalScalar(field protoreflect.FieldDescript
 
 func (z *zeropbMessageDescriptor) marshalBytes(bz []byte, out bufferContext) error {
 	n := len(bz)
-	newOut, err := out.alloc(n, 1)
+	newOut, relPtr, err := out.alloc(n, 1)
 	if err != nil {
 		return err
 	}
 
 	copy(newOut.bytes(), bz)
-	binary.LittleEndian.PutUint16(out.bytes(), uint16(newOut.offset))
+	binary.LittleEndian.PutUint16(out.bytes(), uint16(relPtr))
 	binary.LittleEndian.PutUint16(out.bytes()[2:], uint16(n))
 	return nil
 }
@@ -288,39 +311,68 @@ func (z *zeropbMessageDescriptor) unmarshal(in bufferContext, msg protoreflect.M
 	numFields := fds.Len()
 	for i := 0; i < numFields; i++ {
 		field := fds.Get(i)
-		if !msg.Has(field) {
-			continue
-		}
-
-		if err := z.unmarshalField(msg, field, in.seek(z.offsets[field.Number()]), msg.Mutable(field)); err != nil {
-			return err
+		switch {
+		case field.IsList():
+			err := z.unmarshalList(field, in, msg.Mutable(field))
+			if err != nil {
+				return err
+			}
+		case field.Kind() == protoreflect.MessageKind:
+			err := z.unmarshalMessage(field.Message(), in, msg.Mutable(field))
+			if err != nil {
+				return err
+			}
+		default:
+			val, err := z.unmarshalScalar(field, in)
+			if err != nil {
+				return err
+			}
+			msg.Set(field, val)
 		}
 	}
 	return nil
 }
 
-func (z *zeropbMessageDescriptor) unmarshalField(msg protoreflect.Message, field protoreflect.FieldDescriptor, in bufferContext, mutable protoreflect.Value) error {
-	switch {
-	case field.IsList():
-		return z.unmarshalList(field, in, mutable)
-	case field.Kind() == protoreflect.MessageKind:
-		return z.unmarshalMessage(field, in, mutable)
-	default:
-		val, err := z.unmarshalScalar(field, in)
-		if err != nil {
-			return err
-		}
-		msg.Set(field, val)
-		return nil
+func (z *zeropbMessageDescriptor) unmarshalList(field protoreflect.FieldDescriptor, in bufferContext, mutable protoreflect.Value) error {
+	list := mutable.List()
+	elSize, elAlign, err := z.registry.fieldSizeAlign(field)
+	if err != nil {
+		return err
 	}
+
+	elMd := field.Message()
+	segOffset := int(binary.LittleEndian.Uint16(in.bytes()))
+
+	for segOffset != 0 {
+		segIn := in.seekAbsolute(segOffset)
+		segUsed := int(segIn.bytes()[0])
+		segOffset = int(binary.LittleEndian.Uint16(segIn.bytes()[2:]))
+
+		segIn = segIn.seekRelative(4) // skip segment header
+		segIn = segIn.align(elAlign)  // align to element
+
+		for j := 0; j < segUsed; j++ {
+			if elMd != nil {
+				newVal := list.AppendMutable()
+				if err := z.unmarshalMessage(elMd, segIn, newVal); err != nil {
+					return err
+				}
+			} else {
+				val, err := z.unmarshalScalar(field, segIn)
+				if err != nil {
+					return err
+				}
+				list.Append(val)
+			}
+
+			segIn = segIn.seekRelative(elSize)
+		}
+	}
+	return nil
 }
 
-func (z *zeropbMessageDescriptor) unmarshalList(field protoreflect.FieldDescriptor, bytes bufferContext, mutable protoreflect.Value) error {
-	panic("TODO")
-}
-
-func (z *zeropbMessageDescriptor) unmarshalMessage(field protoreflect.FieldDescriptor, bytes bufferContext, mutable protoreflect.Value) error {
-	zd, err := z.registry.messageDescriptor(field.Message())
+func (z *zeropbMessageDescriptor) unmarshalMessage(md protoreflect.MessageDescriptor, bytes bufferContext, mutable protoreflect.Value) error {
+	zd, err := z.registry.messageDescriptor(md)
 	if err != nil {
 		return err
 	}
@@ -366,7 +418,8 @@ func (z *zeropbMessageDescriptor) unmarshalScalar(field protoreflect.FieldDescri
 func (z *zeropbMessageDescriptor) umarshalBytes(in bufferContext) ([]byte, error) {
 	offset := int(binary.LittleEndian.Uint16(in.bytes()))
 	n := int(binary.LittleEndian.Uint16(in.bytes()[2:]))
-	return in.root[offset : offset+n], nil
+	in = in.seekAbsolute(offset)
+	return in.bytes()[:n], nil
 }
 
 type bufferContext struct {
@@ -386,17 +439,23 @@ func (c bufferContext) setExtent(extent int) {
 	binary.LittleEndian.PutUint16(c.root[MAX_EXTENT:], uint16(extent))
 }
 
-func (c bufferContext) alloc(size, align int) (bufferContext, error) {
+func (c bufferContext) alloc(size, align int) (res bufferContext, relPtr int, err error) {
 	offset := nextAlignedOffset(c.offset, align)
-	if offset+size > c.extent() {
-		return bufferContext{}, fmt.Errorf("out of buffer space")
+	relPtr = offset - c.offset
+	if offset+size > MAX_EXTENT {
+		return bufferContext{}, 0, fmt.Errorf("out of buffer space")
 	}
 	c.setExtent(offset + size)
-	return bufferContext{root: c.root, offset: offset}, nil
+	return bufferContext{root: c.root, offset: offset}, relPtr, nil
 }
 
-func (c bufferContext) seek(offset int) bufferContext {
+func (c bufferContext) seekRelative(offset int) bufferContext {
 	c.offset += offset
+	return c
+}
+
+func (c bufferContext) seekAbsolute(offset int) bufferContext {
+	c.offset = offset
 	return c
 }
 

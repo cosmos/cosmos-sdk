@@ -2,6 +2,7 @@ use core::{borrow::Borrow, marker::PhantomData, ptr, slice::from_raw_parts};
 
 use crate::error::Error;
 use crate::rel_ptr::{alloc_rel_ptr, resolve_rel_ptr, resolve_start_extent, MAX_EXTENT};
+use crate::result::{err_code_raw, RawResult};
 use crate::zerocopy::ZeroCopy;
 
 #[repr(C)]
@@ -26,13 +27,13 @@ impl Bytes {
         }
     }
 
-    pub fn new_writer(&mut self) -> Result<BytesWriter, Error> {
+    pub fn new_writer(&mut self) -> RawResult<BytesWriter> {
         unsafe {
             let base = (self as *const Self).cast::<u8>();
             let (start, extent_ptr) = resolve_start_extent(base);
             let last_extent = *extent_ptr;
             if last_extent as usize == MAX_EXTENT {
-                return Err(Error::OutOfMemory);
+                return err_code_raw(crate::Code::ResourceExhausted)
             }
 
             let write_head = (start + last_extent as usize) as *mut u8;
@@ -67,18 +68,18 @@ pub struct BytesWriter<'a> {
 }
 
 impl<'a> BytesWriter<'a> {
-    pub fn write(&mut self, content: &[u8]) -> Result<(), Error> {
+    pub fn write(&mut self, content: &[u8]) -> RawResult<()> {
         unsafe {
             let extent = *self.extent_ptr;
             if extent != self.last_extent {
-                return Err(Error::InvalidState);
+                return err_code_raw(crate::Code::Internal);
             }
 
             let len = content.len();
             self.bz.length += len as u16;
             let next_extent = extent as usize + len;
-            if next_extent > crate::rel_ptr::MAX_EXTENT {
-                return Err(Error::OutOfMemory);
+            if next_extent > MAX_EXTENT {
+                return err_code_raw(crate::Code::ResourceExhausted);
             }
 
             ptr::copy_nonoverlapping(content.as_ptr(), self.write_head, len);

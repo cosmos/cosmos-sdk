@@ -9,7 +9,7 @@ pub(crate) fn gen_service(
     ctx: &mut Context,
 ) -> anyhow::Result<()> {
     gen_service_server(service, ctx)?;
-    // gen_service_client(service, ctx)?;
+    gen_service_client(service, ctx)?;
     Ok(())
 }
 
@@ -36,65 +36,65 @@ pub(crate) fn gen_server_method(
     let method_name = method.name.clone().unwrap().to_snake_case();
     let input_type = method.input_type.clone().unwrap();
     let output_type = method.output_type.clone().unwrap();
-    write!(ctx, "    fn {}(&self, ctx: &Ctx, req: &", method_name)?;
+    write!(ctx, "    fn {}(&self, ctx: &mut zeropb::Context, req: &", method_name)?;
     gen_message_name(&input_type, ctx)?;
-    write!(ctx, ") -> Result<");
+    write!(ctx, ") -> zeropb::Result<");
     gen_message_name(&output_type, ctx)?;
-    write!(ctx, ", zeropb::Status>;\n")?;
+    write!(ctx, ">;\n")?;
     Ok(())
 }
 
 fn gen_service_client(service: &ServiceDescriptorProto, ctx: &mut Context) -> anyhow::Result<()> {
     write!(
         ctx,
-        "struct {}Client<'a, Client> {{\n",
+        "struct {}Client {{\n",
         service.name.clone().unwrap()
     )?;
-    write!(ctx, "   client_conn: Client,\n")?;
-    for method in service.method.iter() {
-        let method_name = method.name.clone().unwrap().to_snake_case();
-        write!(ctx, "   {}: zeropb::Handler<'a, i32, i32>,\n", method_name)?;
-    }
+    write!(ctx, "   connection: zeropb::Connection,\n")?;
+    write!(ctx, "   service_id: u64,\n")?;
     write!(ctx, "}}\n\n")?;
     write!(
         ctx,
-        "impl <'a, Client: ClientConn> {}Client<'a, Client> {{\n",
+        "impl {}Client {{\n",
         service.name.clone().unwrap()
     )?;
-    write!(ctx, "    pub fn new(client_conn: Client) -> Self {{")?;
-    write!(ctx, "        Self {{")?;
-    write!(ctx, "            client_conn,\n")?;
+    // write!(ctx, "    pub fn new(client_conn: Client) -> Self {{")?;
+    // write!(ctx, "        Self {{")?;
+    // write!(ctx, "            client_conn,\n")?;
+    // for method in service.method.iter() {
+    //     let method_name = method.name.clone().unwrap();
+    //     let method_name_snake = method_name.to_snake_case();
+    //     write!(
+    //         ctx,
+    //         "            {}: client_conn.resolve_unary(\"{}\"),\n",
+    //         method_name_snake, method_name
+    //     )?;
+    // }
+    // write!(ctx, "        }}\n")?;
+    // write!(ctx, "    }}\n\n")?;
+    let mut i = 1;
     for method in service.method.iter() {
-        let method_name = method.name.clone().unwrap();
-        let method_name_snake = method_name.to_snake_case();
-        write!(
-            ctx,
-            "            {}: client_conn.resolve_unary(\"{}\"),\n",
-            method_name_snake, method_name
-        )?;
-    }
-    write!(ctx, "        }}\n")?;
-    write!(ctx, "    }}\n\n")?;
-    for method in service.method.iter() {
-        gen_client_method(method, ctx)?;
+        gen_client_method(i, method, ctx)?;
+        i += 1;
     }
     write!(ctx, "}}\n\n")?;
     Ok(())
 }
 
 pub(crate) fn gen_client_method(
+    i: u64,
     method: &MethodDescriptorProto,
     ctx: &mut Context,
 ) -> anyhow::Result<()> {
     let method_name = method.name.clone().unwrap().to_snake_case();
     let input_type = method.input_type.clone().unwrap();
     let output_type = method.output_type.clone().unwrap();
-    write!(ctx, "    fn {}(&self, req: &", method_name)?;
+    write!(ctx, "    fn {}(&self, ctx: &mut zeropb::Context, req: zeropb::Root<", method_name)?;
     gen_message_name(&input_type, ctx)?;
-    write!(ctx, ") -> Result<")?;
+    write!(ctx, ">) -> zeropb::Result<")?;
     gen_message_name(&output_type, ctx)?;
-    write!(ctx, ", zeropb::Status> {{\n")?;
-    write!(ctx, "        unimplemented!()\n")?;
+    write!(ctx, "> {{\n")?;
+    write!(ctx, "       zeropb::connection_invoke(self.connection, {}, &ctx, req)\n", i)?;
     write!(ctx, "    }}\n")?;
     Ok(())
 }

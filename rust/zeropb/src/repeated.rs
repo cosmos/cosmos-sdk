@@ -5,6 +5,8 @@ use core::iter::Iterator;
 use core::marker::PhantomData;
 use core::mem::{align_of, size_of};
 use core::ptr::{NonNull, null};
+use crate::Code::ResourceExhausted;
+use crate::result::{err_code_raw, RawResult};
 
 use crate::zerocopy::ZeroCopy;
 
@@ -25,13 +27,13 @@ struct RepeatedSegmentHeader {
 }
 
 impl<'a, T> Repeated<T> {
-    pub fn start_write(&'a mut self) -> Result<RepeatedWriter<'a, T>, Error> {
+    pub fn start_write(&'a mut self) -> RawResult<RepeatedWriter<'a, T>> {
         unsafe {
             let base = (self as *const Self).cast::<u8>();
             let (buf_start, extent_ptr) = resolve_start_extent(base);
             let cur_extent = *extent_ptr;
             if cur_extent as usize == MAX_EXTENT {
-                return Err(Error::OutOfMemory);
+                return err_code_raw(ResourceExhausted)
             }
 
             let mut writer = RepeatedWriter {
@@ -89,7 +91,7 @@ const REPEATED_SEGMENT_HEADER_SIZE: usize = size_of::<RepeatedSegmentHeader>();
 const REPEATED_SEGMENT_HEADER_ALIGN: usize = align_of::<RepeatedSegmentHeader>();
 
 impl<'a, T> RepeatedWriter<'a, T> {
-    fn new_segment(&mut self, base: *const u8) -> Result<(), Error> {
+    fn new_segment(&mut self, base: *const u8) -> RawResult<()> {
         unsafe {
             let cur_extent = *self.extent_ptr;
             let write_head = self.buf_start + cur_extent as usize;
@@ -119,7 +121,7 @@ impl<'a, T> RepeatedWriter<'a, T> {
             let write_limit = write_head + capacity as usize * size_t;
             let next_extent = write_limit - self.buf_start;
             if next_extent > MAX_EXTENT {
-                return Err(Error::OutOfMemory);
+                return err_code_raw(ResourceExhausted)
             }
             *self.extent_ptr = next_extent as u16;
 

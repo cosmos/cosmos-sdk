@@ -3,7 +3,7 @@ use core::{borrow::Borrow, fmt::Write, str::from_utf8_unchecked};
 use core::fmt::Display;
 
 use crate::bytes::{Bytes, BytesWriter};
-use crate::error::Error;
+use crate::result::RawResult;
 use crate::zerocopy::ZeroCopy;
 
 #[repr(C)]
@@ -15,11 +15,11 @@ pub struct Str {
 unsafe impl ZeroCopy for Str {}
 
 impl Str {
-    pub fn set(&mut self, content: &str) -> Result<(), Error> {
+    pub fn set(&mut self, content: &str) -> RawResult<()> {
         self.ptr.set(content.as_bytes())
     }
 
-    pub fn new_writer(&mut self) -> Result<StrWriter, Error> {
+    pub fn new_writer(&mut self) -> RawResult<StrWriter> {
         self.ptr.new_writer().map(|bz| StrWriter { bz })
     }
 }

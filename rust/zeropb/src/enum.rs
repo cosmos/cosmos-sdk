@@ -1,5 +1,7 @@
 use crate::zerocopy::ZeroCopy;
 use core::marker::PhantomData;
+use crate::Code::InvalidArgument;
+use crate::result::{err_code_raw, RawResult};
 
 #[repr(C)]
 pub struct Enum<T> {
@@ -14,10 +16,10 @@ pub unsafe trait ZeroCopyEnum: Copy + Into<u8> + TryFrom<u8> {
 }
 
 impl<T: ZeroCopyEnum> Enum<T> {
-    fn get(&self) -> Result<T, u8> {
+    fn get(&self) -> RawResult<T> {
         let value: u8 = self.value.into();
         if (value) > T::MAX_VALUE {
-            Err(value)
+            err_code_raw(InvalidArgument)
         } else {
             Ok(self.value)
         }
@@ -34,6 +36,8 @@ mod tests {
     use core::marker::PhantomData;
     use core::mem::transmute;
     use num_enum::{IntoPrimitive, TryFromPrimitive};
+    use crate::Code::InvalidArgument;
+    use crate::result::err_code_raw;
 
     #[repr(u8)]
     #[derive(Clone, Copy, IntoPrimitive, TryFromPrimitive, Eq, PartialEq, Debug)]
@@ -62,7 +66,7 @@ mod tests {
     fn test_bad() {
         let x: u8 = 3;
         let mut e: Enum<ABC> = unsafe { transmute(x) };
-        assert_eq!(e.get(), Err(3));
+        assert_eq!(e.get(), err_code_raw(InvalidArgument));
         e.set(ABC::C);
         assert_eq!(e.get(), Ok(ABC::C));
     }

@@ -3,12 +3,10 @@ mod wasm;
 
 mod r#extern;
 
-mod store;
-pub use store::{KVStore, KVStoreService};
 mod context;
 
 use zeropb;
-use zeropb::{ClientConn, ZeroCopy};
+use zeropb::{ZeroCopy};
 
 #[cfg(feature = "tonic")]
 pub mod tonic;

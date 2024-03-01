@@ -26,6 +26,8 @@ pub struct Root<T: ZeroCopy> {
     _phantom: PhantomData<T>,
 }
 
+type Request<T> = Root<T>;
+
 impl<T: ZeroCopy> Root<T> {
     pub fn new() -> Self {
         unsafe {
@@ -43,6 +45,15 @@ impl<T: ZeroCopy> Root<T> {
         }
     }
 
+    pub fn empty() -> Self {
+        unsafe {
+            Self {
+                buf: null_mut(),
+                _phantom: PhantomData,
+            }
+        }
+    }
+
     pub unsafe fn unsafe_wrap(ptr: *mut u8) -> Self {
         assert!(ptr.is_null() || (ptr as usize) & 0xFFFF == 0);
 
@@ -54,6 +65,13 @@ impl<T: ZeroCopy> Root<T> {
 
     pub unsafe fn unsafe_unwrap(&self) -> *mut u8 {
         self.buf
+    }
+
+    pub unsafe fn raw(self) -> RawRoot {
+        RawRoot {
+            buf: self.buf,
+            _phantom: PhantomPinned,
+        }
     }
 
     pub fn as_slice(&self) -> &[u8] {

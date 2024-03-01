@@ -1,4 +1,4 @@
 #[repr(transparent)]
 pub struct Context {
-    id: usize
+    pub(crate) id: u64,
 }

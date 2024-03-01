@@ -33,14 +33,17 @@ mod repeated;
 
 pub use repeated::{Repeated, ScalarRepeated, RepeatedWriter, RepeatedIter, ScalarRepeatedWriter};
 
-mod server;
-mod status;
 mod context;
+mod result;
+mod code;
+
 pub use context::{Context};
 
-pub use status::{Status, Code};
+pub use code::{Code};
 
-pub use client::{ClientConn, Handler};
+pub use client::{Connection, connection_invoke};
+
+pub use result::{Result, ok, err_code, err_msg};
 
 #[cfg(test)]
 mod tests {

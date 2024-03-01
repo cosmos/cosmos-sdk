@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::result::{err_code_raw, RawResult};
 
 pub(crate) const MAX_EXTENT: usize = 0x10000 - 2;
 
@@ -23,7 +23,7 @@ pub(crate) unsafe fn alloc_rel_ptr(
     base_ptr: *const u8,
     len: usize,
     align: usize,
-) -> Result<(i16, *mut ()), Error> {
+) -> RawResult<(i16, *mut ())> {
     let (start, extent_ptr) = resolve_start_extent(base_ptr);
     let alloc_start = (*extent_ptr) as usize;
     // align alloc_start to align
@@ -32,12 +32,12 @@ pub(crate) unsafe fn alloc_rel_ptr(
     let base = base_ptr as usize;
     let offset = target - base;
     if offset > i16::MAX as usize {
-        return Err(Error::OutOfBounds);
+        return err_code_raw(crate::Code::OutOfRange);
     }
 
     let next_extent = alloc_start + len;
     if next_extent > MAX_EXTENT {
-        return Err(Error::OutOfMemory);
+        return err_code_raw(crate::Code::ResourceExhausted);
     }
 
     *extent_ptr = next_extent as u16;

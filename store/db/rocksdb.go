@@ -6,6 +6,7 @@ package db
 import (
 	"bytes"
 	"fmt"
+	"slices"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -147,31 +148,85 @@ func newRocksDBIterator(src *grocksdb.Iterator, start, end []byte, reverse bool)
 }
 
 func (itr *rocksDBIterator) Domain() (start, end []byte) {
-	panic("not implemented!")
+	return itr.start, itr.end
 }
 
 func (itr *rocksDBIterator) Valid() bool {
-	panic("not implemented!")
-}
+	// once invalid, forever invalid
+	if !itr.valid {
+		return false
+	}
 
-func (itr *rocksDBIterator) Next() {
-	panic("not implemented!")
+	// if source has error, consider it invalid
+	if err := itr.source.Err(); err != nil {
+		itr.valid = false
+		return false
+	}
+
+	// if source is invalid, consider it invalid
+	if !itr.source.Valid() {
+		itr.valid = false
+		return false
+	}
+
+	// if key is at the end or past it, consider it invalid
+	start := itr.start
+	end := itr.end
+	key := readOnlySlice(itr.source.Key())
+
+	if itr.reverse {
+		if start != nil && bytes.Compare(key, start) < 0 {
+			itr.valid = false
+			return false
+		}
+	} else {
+		if end != nil && bytes.Compare(end, key) <= 0 {
+			itr.valid = false
+			return false
+		}
+	}
+
+	return true
 }
 
 func (itr *rocksDBIterator) Key() []byte {
-	panic("not implemented!")
+	itr.assertIsValid()
+	return copyAndFreeSlice(itr.source.Key())
 }
 
 func (itr *rocksDBIterator) Value() []byte {
-	panic("not implemented!")
+	itr.assertIsValid()
+	return copyAndFreeSlice(itr.source.Value())
+}
+
+func (itr *rocksDBIterator) Next() {
+	if !itr.valid {
+		return
+	}
+
+	if itr.reverse {
+		itr.source.Prev()
+	} else {
+		itr.source.Next()
+	}
 }
 
 func (itr *rocksDBIterator) Error() error {
-	panic("not implemented!")
+	return itr.source.Err()
 }
 
 func (itr *rocksDBIterator) Close() error {
-	panic("not implemented!")
+	itr.source.Close()
+	itr.source = nil
+	itr.valid = false
+
+	return nil
+}
+
+func (itr *rocksDBIterator) assertIsValid() {
+	if !itr.valid {
+		panic("rocksDB iterator is invalid")
+	}
 }
 
 var _ store.RawBatch = (*rocksDBBatch)(nil)
@@ -245,4 +300,16 @@ func readOnlySlice(s *grocksdb.Slice) []byte {
 	}
 
 	return s.Data()
+}
+
+// copyAndFreeSlice will copy a given RocksDB slice and free it. If the slice
+// does not exist, <nil> will be returned.
+func copyAndFreeSlice(s *grocksdb.Slice) []byte {
+	defer s.Free()
+
+	if !s.Exists() {
+		return nil
+	}
+
+	return slices.Clone(s.Data())
 }

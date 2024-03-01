@@ -26,6 +26,7 @@ type RocksDB struct {
 
 func NewRocksDB(dataDir string) (*RocksDB, error) {
 	opts := grocksdb.NewDefaultOptions()
+	opts.SetCreateIfMissing(true)
 
 	storage, err := grocksdb.OpenDb(opts, dataDir)
 	if err != nil {

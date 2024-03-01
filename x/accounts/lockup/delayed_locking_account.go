@@ -40,7 +40,7 @@ func (dva DelayedLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgI
 func (dva *DelayedLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return dva.BaseLockup.Delegate(ctx, msg, dva.GetLockedCoinWithDenoms)
+	return dva.BaseLockup.Delegate(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
 func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
@@ -52,7 +52,7 @@ func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *lockuptyp
 func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return dva.BaseLockup.SendCoins(ctx, msg, dva.GetLockedCoinWithDenoms)
+	return dva.BaseLockup.SendCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
 // GetLockCoinsInfo returns the total number of unlocked and locked coins.
@@ -105,8 +105,8 @@ func (dva DelayedLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, b
 	return &sdk.Coin{}, &originalLockingCoin, nil
 }
 
-// GetLockedCoinWithDenoms returns the number of locked coin for a specific denom.
-func (dva DelayedLockingAccount) GetLockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+// GetLockedCoinsWithDenoms returns the number of locked coin for a specific denom.
+func (dva DelayedLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	vestingCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		_, vestingCoin, err := dva.GetLockCoinInfoWithDenom(ctx, blockTime, denom)

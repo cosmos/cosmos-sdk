@@ -63,7 +63,7 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 func (cva *ContinuousLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return cva.BaseLockup.Delegate(ctx, msg, cva.GetLockedCoinWithDenoms)
+	return cva.BaseLockup.Delegate(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
 func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
@@ -75,16 +75,15 @@ func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *lockup
 func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return cva.BaseLockup.SendCoins(ctx, msg, cva.GetLockedCoinWithDenoms)
+	return cva.BaseLockup.SendCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
-// GetVestedCoins returns the total number of vested coins. If no coins are vested,
-// nil is returned.
-func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (vestedCoins, vestingCoins sdk.Coins, err error) {
-	vestedCoins = sdk.Coins{}
-	vestingCoins = sdk.Coins{}
+// GetLockCoinsInfo returns the total number of unlocked and locked coins.
+func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (unlockedCoins, lockedCoins sdk.Coins, err error) {
+	unlockedCoins = sdk.Coins{}
+	lockedCoins = sdk.Coins{}
 
-	// We must handle the case where the start time for a vesting account has
+	// We must handle the case where the start time for a lockup account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
 	startTime, err := cva.StartTime.Get(ctx)
@@ -102,26 +101,26 @@ func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockT
 		if err != nil {
 			return true, err
 		}
-		vestedCoins = append(vestedCoins, *vestedCoin)
-		vestingCoins = append(vestingCoins, *vestingCoin)
+		unlockedCoins = append(unlockedCoins, *vestedCoin)
+		lockedCoins = append(lockedCoins, *vestingCoin)
 		return false, nil
 	})
 	if err != nil {
 		return nil, nil, err
 	}
 	if startTime.After(blockTime) {
-		return vestedCoins, originalVesting, nil
+		return unlockedCoins, originalVesting, nil
 	} else if endTime.Before(blockTime) {
-		return originalVesting, vestingCoins, nil
+		return originalVesting, lockedCoins, nil
 	}
 
-	return vestedCoins, vestingCoins, nil
+	return unlockedCoins, lockedCoins, nil
 }
 
-// GetVestCoinsInfoWithDenom returns the number of vested coin for a specific denom. If no coins are vested,
+// GetLockCoinInfoWithDenom returns the number of locked coin for a specific denom. If no coins are locked,
 // nil is returned.
-func (cva ContinuousLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (vestedCoin, vestingCoin *sdk.Coin, err error) {
-	// We must handle the case where the start time for a vesting account has
+func (cva ContinuousLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (unlockedCoin, lockedCoin *sdk.Coin, err error) {
+	// We must handle the case where the start time for a lockup account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
 	startTime, err := cva.StartTime.Get(ctx)
@@ -150,16 +149,15 @@ func (cva ContinuousLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context
 	y := endTime.Unix() - startTime.Unix()
 	s := math.LegacyNewDec(x).Quo(math.LegacyNewDec(y))
 
-	vestedAmt := math.LegacyNewDecFromInt(originalLocking.Amount).Mul(s).RoundInt()
-	vested := sdk.NewCoin(originalLocking.Denom, vestedAmt)
+	unlockedAmt := math.LegacyNewDecFromInt(originalLocking.Amount).Mul(s).RoundInt()
+	unlocked := sdk.NewCoin(originalLocking.Denom, unlockedAmt)
 
-	vesting := originalLocking.Sub(vested)
+	locked := originalLocking.Sub(unlocked)
 
-	return &vested, &vesting, nil
+	return &unlocked, &locked, nil
 }
 
-// GetVestingCoins returns the total number of vesting coins. If no coins are
-// vesting, nil is returned.
+// GetLockedCoins returns the total number of locked coins.
 func (cva ContinuousLockingAccount) GetLockedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
 	_, lockedCoins, err := cva.GetLockCoinsInfo(ctx, blockTime)
 	if err != nil {
@@ -168,9 +166,8 @@ func (cva ContinuousLockingAccount) GetLockedCoins(ctx context.Context, blockTim
 	return lockedCoins, nil
 }
 
-// GetVestingCoinsWithDenom returns the number of vesting coin for a specific denom. If no coins are
-// vesting, nil is returned.
-func (cva ContinuousLockingAccount) GetLockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+// GetLockedCoinsWithDenoms returns the number of locked coin for a specific denom.
+func (cva ContinuousLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	lockedCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		_, lockedCoin, err := cva.GetLockCoinInfoWithDenom(ctx, blockTime, denom)

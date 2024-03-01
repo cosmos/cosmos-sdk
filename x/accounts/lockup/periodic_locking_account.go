@@ -99,7 +99,7 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 func (pva *PeriodicLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return pva.BaseLockup.Delegate(ctx, msg, pva.GetLockedCoinWithDenoms)
+	return pva.BaseLockup.Delegate(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
 func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
@@ -111,7 +111,7 @@ func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *lockupty
 func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return pva.BaseLockup.SendCoins(ctx, msg, pva.GetLockedCoinWithDenoms)
+	return pva.BaseLockup.SendCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
@@ -256,9 +256,9 @@ func (pva PeriodicLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, 
 	return &unlocked, &locked, err
 }
 
-// GetLockedCoinWithDenoms returns the total number of locked coins. If no coins are
+// GetLockedCoinsWithDenoms returns the total number of locked coins. If no coins are
 // locked, nil is returned.
-func (pva PeriodicLockingAccount) GetLockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+func (pva PeriodicLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	lockedCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		_, lockedCoin, err := pva.GetLockCoinInfoWithDenom(ctx, blockTime, denom)
@@ -270,7 +270,7 @@ func (pva PeriodicLockingAccount) GetLockedCoinWithDenoms(ctx context.Context, b
 	return lockedCoins, nil
 }
 
-func (pva PeriodicLockingAccount) QueryVestingAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
+func (pva PeriodicLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
 	*lockuptypes.QueryLockupAccountInfoResponse, error,
 ) {
 	resp, err := pva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
@@ -292,7 +292,7 @@ func (pva PeriodicLockingAccount) QueryVestingAccountInfo(ctx context.Context, r
 	return resp, nil
 }
 
-func (pva PeriodicLockingAccount) QueryVestingPeriods(ctx context.Context, msg *lockuptypes.QueryLockingPeriodsRequest) (
+func (pva PeriodicLockingAccount) QueryLockingPeriods(ctx context.Context, msg *lockuptypes.QueryLockingPeriodsRequest) (
 	*lockuptypes.QueryLockingPeriodsResponse, error,
 ) {
 	lockingPeriods := []*lockuptypes.Period{}
@@ -320,6 +320,6 @@ func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 }
 
 func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, pva.QueryVestingAccountInfo)
-	accountstd.RegisterQueryHandler(builder, pva.QueryVestingPeriods)
+	accountstd.RegisterQueryHandler(builder, pva.QueryLockupAccountInfo)
+	accountstd.RegisterQueryHandler(builder, pva.QueryLockingPeriods)
 }

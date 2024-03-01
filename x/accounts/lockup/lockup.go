@@ -31,6 +31,7 @@ var (
 	StartTimePrefix        = collections.NewPrefix(4)
 	LockingPeriodsPrefix   = collections.NewPrefix(5)
 	OwnerPrefix            = collections.NewPrefix(6)
+	WithdrawedCoinsPrefix  = collections.NewPrefix(7)
 )
 
 var (
@@ -40,14 +41,8 @@ var (
 	PERMANENT_LOCKING_ACCOUNT  = "permanent-locking-account"
 )
 
-// var notAllowedList = map[string]struct{}{
-// 	"/cosmos.staking.v1beta1.MsgDelegate":   {},
-// 	"/cosmos.staking.v1beta1.MsgUndelegate": {},
-// 	"/cosmos.bank.v1beta1.MsgSend":          {},
-// 	"/cosmos.bank.v1beta1.MsgMultiSend":     {},
-// }
-
-type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
+type getLockedCoinsWithDenomsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
+type getLockedCoinsFunc = func(ctx context.Context, time time.Time) (sdk.Coins, error)
 
 // newBaseLockup creates a new BaseLockup object.
 func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
@@ -56,6 +51,7 @@ func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
 		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
+		WithdrawedCoins:  collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
 		addressCodec:     d.AddressCodec,
 		headerService:    d.HeaderService,
 		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
@@ -70,6 +66,7 @@ type BaseLockup struct {
 	OriginalLocking  collections.Map[string, math.Int]
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedLocking collections.Map[string, math.Int]
+	WithdrawedCoins  collections.Map[string, math.Int]
 	addressCodec     address.Codec
 	headerService    header.Service
 	// lockup end time.
@@ -103,6 +100,24 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupA
 		if err != nil {
 			return nil, err
 		}
+
+		// Set initial value for all locked token
+		err = bva.WithdrawedCoins.Set(ctx, coin.Denom, math.ZeroInt())
+		if err != nil {
+			return nil, err
+		}
+
+		// Set initial value for all locked token
+		err = bva.DelegatedFree.Set(ctx, coin.Denom, math.ZeroInt())
+		if err != nil {
+			return nil, err
+		}
+
+		// Set initial value for all locked token
+		err = bva.DelegatedLocking.Set(ctx, coin.Denom, math.ZeroInt())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = bva.EndTime.Set(ctx, msg.EndTime)
@@ -114,7 +129,7 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupA
 }
 
 func (bva *BaseLockup) Delegate(
-	ctx context.Context, msg *lockuptypes.MsgDelegate, getLockedCoinsFunc getLockedCoinsFunc,
+	ctx context.Context, msg *lockuptypes.MsgDelegate, getLockedCoinsFunc getLockedCoinsWithDenomsFunc,
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -188,7 +203,7 @@ func (bva *BaseLockup) Undelegate(
 }
 
 func (bva *BaseLockup) SendCoins(
-	ctx context.Context, msg *lockuptypes.MsgSend, getLockedCoinsFunc getLockedCoinsFunc,
+	ctx context.Context, msg *lockuptypes.MsgSend, getLockedCoinsFunc getLockedCoinsWithDenomsFunc,
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -221,6 +236,37 @@ func (bva *BaseLockup) SendCoins(
 	}
 
 	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+}
+
+func (bva *BaseLockup) WithdrawUnlockedCoins(
+	ctx context.Context, msg *lockuptypes.MsgWithdraw, getLockedCoinsFunc getLockedCoinsFunc,
+) (
+	*lockuptypes.MsgWithdrawResponse, error,
+) {
+	err := bva.checkSender(ctx, msg.Withdrawer)
+	if err != nil {
+		return nil, err
+	}
+	whoami := accountstd.Whoami(ctx)
+	fromAddress, err := bva.addressCodec.BytesToString(whoami)
+	if err != nil {
+		return nil, err
+	}
+
+	hs := bva.headerService.GetHeaderInfo(ctx)
+	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time)
+	if err != nil {
+		return nil, err
+	}
+	amount := sdk.Coins{}
+
+	msgSend := banktypes.NewMsgSend(fromAddress, msg.ToAddress, amount)
+	_, err = sendAnyMessage(ctx, msgSend)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.MsgWithdrawResponse{}, nil
 }
 
 func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {

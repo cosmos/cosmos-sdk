@@ -40,9 +40,9 @@ func (plva PermanentLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 	return resp, err
 }
 
-// GetlockedCoinWithDenoms returns the total number of locked coins. If no coins are
+// GetlockedCoinsWithDenoms returns the total number of locked coins. If no coins are
 // locked, nil is returned.
-func (plva PermanentLockingAccount) GetlockedCoinWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+func (plva PermanentLockingAccount) GetlockedCoinsWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	vestingCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		originalVestingAmt, err := plva.OriginalLocking.Get(ctx, denom)
@@ -57,7 +57,7 @@ func (plva PermanentLockingAccount) GetlockedCoinWithDenoms(ctx context.Context,
 func (plva *PermanentLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseLockup.Delegate(ctx, msg, plva.GetlockedCoinWithDenoms)
+	return plva.BaseLockup.Delegate(ctx, msg, plva.GetlockedCoinsWithDenoms)
 }
 
 func (plva *PermanentLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
@@ -69,7 +69,7 @@ func (plva *PermanentLockingAccount) Undelegate(ctx context.Context, msg *lockup
 func (plva *PermanentLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseLockup.SendCoins(ctx, msg, plva.GetlockedCoinWithDenoms)
+	return plva.BaseLockup.SendCoins(ctx, msg, plva.GetlockedCoinsWithDenoms)
 }
 
 func (plva PermanentLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (

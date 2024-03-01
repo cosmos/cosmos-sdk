@@ -21,7 +21,7 @@ func (u Uint) BigInt() *big.Int {
 	return new(big.Int).Set(u.i)
 }
 
-// BigInt converts Uint to big.Int, mutative the input
+// BigIntMut converts Uint to big.Int, mutative the input
 func (u Uint) BigIntMut() *big.Int {
 	if u.IsNil() {
 		return nil
@@ -99,7 +99,7 @@ func (u Uint) LTE(u2 Uint) bool { return !u.GT(u2) }
 // Add adds Uint from another
 func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i, u2.i)) }
 
-// Add convert uint64 and add it to Uint
+// AddUint64 convert uint64 and add it to Uint
 func (u Uint) AddUint64(u2 uint64) Uint { return u.Add(NewUint(u2)) }
 
 // Sub adds Uint from another
@@ -113,7 +113,7 @@ func (u Uint) Mul(u2 Uint) (res Uint) {
 	return NewUintFromBigInt(new(big.Int).Mul(u.i, u2.i))
 }
 
-// Mul multiplies two Uints
+// MulUint64 multiplies two Uints
 func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 
 // Quo divides Uint with Uint
@@ -139,16 +139,16 @@ func (u Uint) Decr() Uint {
 	return u.Sub(OneUint())
 }
 
-// Quo divides Uint with uint64
+// QuoUint64 divides Uint with uint64
 func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 
-// Return the minimum of the Uints
+// MinUint returns the minimum of the Uints
 func MinUint(u1, u2 Uint) Uint { return NewUintFromBigInt(min(u1.i, u2.i)) }
 
-// Return the maximum of the Uints
+// MaxUint returns the maximum of the Uints
 func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(max(u1.i, u2.i)) }
 
-// Human readable string
+// String returns human-readable string
 func (u Uint) String() string { return u.i.String() }
 
 // MarshalJSON defines custom encoding scheme
@@ -219,7 +219,7 @@ func (u *Uint) Size() int {
 	return len(bz)
 }
 
-// Override Amino binary serialization by proxying to protobuf.
+// MarshalAmino override Amino binary serialization by proxying to protobuf.
 func (u Uint) MarshalAmino() ([]byte, error)   { return u.Marshal() }
 func (u *Uint) UnmarshalAmino(bz []byte) error { return u.Unmarshal(bz) }
 

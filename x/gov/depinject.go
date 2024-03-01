@@ -60,7 +60,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	defaultConfig := govtypes.DefaultConfig()
+	defaultConfig := keeper.DefaultConfig()
 	if in.Config.MaxTitleLen != 0 {
 		defaultConfig.MaxTitleLen = in.Config.MaxTitleLen
 	}

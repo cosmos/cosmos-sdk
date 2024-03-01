@@ -48,6 +48,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Introduce `HasUpdateValidators` interface and `ValidatorUpdate` struct for validator updates 
     * Introduce `HasTxValidation` interface for modules to register tx validation handlers
     * `HasGenesis` interface for modules to register import, export, validation and default genesis handlers. The new api works with `proto.Message`
+    * Add `PreMsghandler`and `PostMsgHandler` for pre and post message hooks
+    * Add `MsgHandler` as an alternative to grpc handlers
+    * Provide separate `MigrationRegistrar` instead of grouping with `RegisterServices`
 
 ### Improvements
 

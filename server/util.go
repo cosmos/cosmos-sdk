@@ -462,7 +462,8 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// read the chainID from home directory (either from comet or genesis).
-		chainId, err := readChainIdFromHome(homeDir)
+		dbBackend := cast.ToString(appOpts.Get("db_backend"))
+		chainId, err := readChainIdFromHome(homeDir, dbBackend)
 		if err != nil {
 			panic(err)
 		}
@@ -503,9 +504,10 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 }
 
 // readChainIdFromHome reads chain id from home directory.
-func readChainIdFromHome(homeDir string) (string, error) {
+func readChainIdFromHome(homeDir string, dbBackend string) (string, error) {
 	cfg := tmcfg.DefaultConfig()
 	cfg.SetRoot(homeDir)
+	cfg.BaseConfig.DBBackend = dbBackend
 
 	// if the node's current height is not zero then try to read the chainID from comet db.
 	db, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})

@@ -76,11 +76,11 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	if msg.Expedited { // checking for backward compatibility
 		msg.ProposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 	}
-	if err := k.validateInitialDeposit(ctx, params, msg.GetInitialDeposit(), msg.ProposalType); err != nil {
+	if err := k.validateInitialDeposit(params, msg.GetInitialDeposit(), msg.ProposalType); err != nil {
 		return nil, err
 	}
 
-	if err := k.validateDepositDenom(ctx, params, msg.GetInitialDeposit()); err != nil {
+	if err := k.validateDepositDenom(params, msg.GetInitialDeposit()); err != nil {
 		return nil, err
 	}
 

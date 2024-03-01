@@ -35,15 +35,12 @@ func (k Keeper) GetDelegatorValidators(
 		validators[i] = validator
 		i++
 
-<<<<<<< HEAD
 		return false, nil
 	})
 	if err != nil {
 		return types.Validators{}, err
 	}
 
-=======
->>>>>>> b118a0ada (fix(staking): fix impossible conditions (#19621))
 	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
 }
 

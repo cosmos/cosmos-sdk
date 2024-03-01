@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/address"
-	authcodec "cosmossdk.io/x/auth/codec"
 	txdecode "cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -77,14 +76,14 @@ var DefaultSignModes = []signingtypes.SignMode{
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
-func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMode, customSignModes ...txsigning.SignModeHandler,
+func NewTxConfig(protoCodec codec.Codec, addressCodec, validatorAddressCodec address.Codec, enabledSignModes []signingtypes.SignMode, customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
 		EnabledSignModes: enabledSignModes,
 		CustomSignModes:  customSignModes,
 		SigningOptions: &txsigning.Options{
-			AddressCodec:          protoCodec.InterfaceRegistry().SigningContext().AddressCodec(),
-			ValidatorAddressCodec: protoCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
+			AddressCodec:          addressCodec,
+			ValidatorAddressCodec: validatorAddressCodec,
 		},
 	})
 	if err != nil {
@@ -95,10 +94,10 @@ func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMod
 
 // NewSigningOptions returns signing options used by x/tx. This includes account and
 // validator address prefix enabled codecs.
-func NewSigningOptions(addressPrefix, validatorPrefix string) (*txsigning.Options, error) {
+func NewSigningOptions(addressCodec, validatorAddressCodec address.Codec) (*txsigning.Options, error) {
 	return &txsigning.Options{
-		AddressCodec:          authcodec.NewBech32Codec(addressPrefix),
-		ValidatorAddressCodec: authcodec.NewBech32Codec(validatorPrefix),
+		AddressCodec:          addressCodec,
+		ValidatorAddressCodec: validatorAddressCodec,
 	}, nil
 }
 

@@ -30,7 +30,8 @@ import (
 func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	cdc := codec.NewProtoCodec(encodingConfig.InterfaceRegistry)
-	return authtx.NewTxConfig(cdc, authtx.DefaultSignModes), encodingConfig.Codec
+	signingCtx := encodingConfig.InterfaceRegistry.SigningContext()
+	return authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), encodingConfig.Codec
 }
 
 // mockContext is a mock client.Context to return arbitrary simulation response, used to

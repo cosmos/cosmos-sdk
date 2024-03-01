@@ -447,8 +447,8 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 // holds a vested delegation for an equal or greater amount of the specified coin
 // at the given block time.
 //
-// Note that this function enables a specific use-case in the LSM module for tokenizing vested delegations.
-// See https://github.com/cosmos/gaia/issues/2877 for more details.
+// Note that this function facilitates a specific use-case in the LSM module for tokenizing vested delegations.
+// For more details, see https://github.com/cosmos/gaia/issues/2877.
 func CheckVestedDelegationInVestingAccount(
 	account vesting.VestingAccount,
 	blockTime time.Time,
@@ -462,12 +462,14 @@ func CheckVestedDelegationInVestingAccount(
 	delVestingAmount := account.GetDelegatedVesting().AmountOf(coin.Denom)
 	delVested := account.GetDelegatedFree()
 
-	// x represents the new vested delegated coins
+	// Calculate the new vested delegated coins
 	x := sdk.MinInt(vestingAmount.Sub(delVestingAmount), math.ZeroInt())
 
+	// Add the newly vested delegated coins to the existing delegated vested amount
 	if !x.IsZero() {
 		delVested = delVested.Add(sdk.Coin{Denom: coin.Denom, Amount: x.Abs()})
 	}
 
+	// Check if the total delegated vested amount is greater than or equal to the specified coin amount
 	return delVested.AmountOf(coin.Denom).GTE(coin.Amount)
 }

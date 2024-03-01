@@ -824,64 +824,63 @@ func TestCheckVestedDelegationInVestingAccount(t *testing.T) {
 	)
 
 	testCases := []struct {
-		name       string
-		setupAcct  func()
-		blockTime  time.Time
-		delegation sdk.Coin
-		expRes     bool
+		name         string
+		setupAcct    func()
+		blockTime    time.Time
+		coinRequired sdk.Coin
+		expRes       bool
 	}{
 		{
-			name:       "vesting account has zero delegations",
-			setupAcct:  func() {},
-			blockTime:  endTime,
-			delegation: sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
-			expRes:     false,
+			name:         "vesting account has zero delegations",
+			setupAcct:    func() {},
+			blockTime:    endTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+			expRes:       false,
 		},
 		{
 			name: "vested delegations exist but for a different coin",
 			setupAcct: func() {
 				vestingAcct.DelegatedFree = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(100_000)))
 			},
-			blockTime:  endTime,
-			delegation: sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
-			expRes:     false,
+			blockTime:    endTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+			expRes:       false,
 		},
 		{
 			name: "all delegations are vesting",
 			setupAcct: func() {
 				vestingAcct.DelegatedVesting = vestingAcct.OriginalVesting
 			},
-			blockTime:  startTime,
-			delegation: sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
-			expRes:     false,
+			blockTime:    startTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+			expRes:       false,
 		},
 		{
-			name: "not enough vested coins",
+			name: "not enough vested coin",
 			setupAcct: func() {
 				vestingAcct.DelegatedFree = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(80_000)))
 			},
-			blockTime:  endTime,
-			delegation: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)),
-			expRes:     false,
+			blockTime:    endTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)),
+			expRes:       false,
 		},
 		{
 			name: "account is vested and have vested delegations",
 			setupAcct: func() {
 				vestingAcct.DelegatedFree = vestingAcct.OriginalVesting
 			},
-			blockTime:  endTime,
-			delegation: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)),
-			expRes:     true,
+			blockTime:    endTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)),
+			expRes:       true,
 		},
 		{
 			name: "vesting account partially vested and have vesting and vested delegations",
 			setupAcct: func() {
-				// In this use-case 25k in "DelegatedVesting" are vested
 				vestingAcct.DelegatedFree = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(50_000)))
 				vestingAcct.DelegatedVesting = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(50_000)))
 			},
-			blockTime:  startTime.Add(18 * time.Hour), // vest 3/4 vesting period
-			delegation: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(75_000)),
+			blockTime:    startTime.Add(18 * time.Hour), // vest 3/4 vesting period
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(75_000)),
 
 			expRes: true,
 		},
@@ -904,7 +903,7 @@ func TestCheckVestedDelegationInVestingAccount(t *testing.T) {
 				tc.expRes, keeper.CheckVestedDelegationInVestingAccount(
 					vestingAcct,
 					tc.blockTime,
-					tc.delegation,
+					tc.coinRequired,
 				),
 			)
 		})

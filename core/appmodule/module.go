@@ -3,9 +3,10 @@ package appmodule
 import (
 	"context"
 
-	appmodule "cosmossdk.io/core/appmodule/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	appmodule "cosmossdk.io/core/appmodule/v2"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -15,7 +16,12 @@ import (
 type AppModule = appmodule.AppModule
 
 // HasMigrations is the extension interface that modules should implement to register migrations.
-type HasMigrations = appmodule.HasMigrations
+type HasMigrations interface {
+	AppModule
+
+	// RegisterMigrations registers the module's migrations with the app's migrator.
+	RegisterMigrations(MigrationRegistrar) error
+}
 
 // HasConsensusVersion is the interface for declaring a module consensus version.
 type HasConsensusVersion = appmodule.HasConsensusVersion

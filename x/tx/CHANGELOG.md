@@ -31,9 +31,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.14.0
+
 ### Features
 
-* * [#](https://github.com/cosmos/cosmos-sdk/pull/) Add enum as string option to encoder.
+* [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Add enum as string option to encoder.
 
 ### Improvements
 

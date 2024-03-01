@@ -26,7 +26,6 @@ type RocksDB struct {
 
 func NewRocksDB(dataDir string) (*RocksDB, error) {
 	opts := grocksdb.NewDefaultOptions()
-	opts.SetCreateIfMissing(true)
 
 	storage, err := grocksdb.OpenDb(opts, dataDir)
 	if err != nil {
@@ -85,6 +84,71 @@ func (db *RocksDB) NewBatch() store.RawBatch {
 	panic("not implemented!")
 }
 
-func (db *RocksDB) NewBatchWithSize(int) store.RawBatch {
+func (db *RocksDB) NewBatchWithSize(size int) store.RawBatch {
 	panic("not implemented!")
+}
+
+var _ store.RawBatch = (*rocksDBBatch)(nil)
+
+type rocksDBBatch struct {
+	db    *RocksDB
+	batch *grocksdb.WriteBatch
+}
+
+func (b *rocksDBBatch) Set(key, value []byte) error {
+	if len(key) == 0 {
+		return store.ErrKeyEmpty
+	}
+	if value == nil {
+		return store.ErrValueNil
+	}
+	if b.batch == nil {
+		return store.ErrBatchClosed
+	}
+
+	b.batch.Put(key, value)
+	return nil
+}
+
+func (b *rocksDBBatch) Delete(key []byte) error {
+	if len(key) == 0 {
+		return store.ErrKeyEmpty
+	}
+	if b.batch == nil {
+		return store.ErrBatchClosed
+	}
+
+	b.batch.Delete(key)
+	return nil
+}
+
+func (b *rocksDBBatch) Write() error {
+	writeOpts := grocksdb.NewDefaultWriteOptions()
+	writeOpts.SetSync(false)
+
+	if err := b.db.storage.Write(writeOpts, b.batch); err != nil {
+		return fmt.Errorf("failed to write RocksDB batch: %w", err)
+	}
+
+	return nil
+}
+
+func (b *rocksDBBatch) WriteSync() error {
+	writeOpts := grocksdb.NewDefaultWriteOptions()
+	writeOpts.SetSync(true)
+
+	if err := b.db.storage.Write(writeOpts, b.batch); err != nil {
+		return fmt.Errorf("failed to write RocksDB batch: %w", err)
+	}
+
+	return nil
+}
+
+func (b *rocksDBBatch) Close() error {
+	b.batch.Destroy()
+	return nil
+}
+
+func (b *rocksDBBatch) GetByteSize() (int, error) {
+	return len(b.batch.Data()), nil
 }

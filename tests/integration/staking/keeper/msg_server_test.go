@@ -1583,7 +1583,7 @@ func TestICADelegateUndelegate(t *testing.T) {
 	require.Equal(t, sdk.ZeroDec(), validator.LiquidShares, "validator liquid shares after undelegation")
 }
 
-func TestTokenizeVestedDelegation(t *testing.T) {
+func TestTokenizeAndRedeemVestedDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 	var (
 		bankKeeper    = app.BankKeeper
@@ -1595,11 +1595,12 @@ func TestTokenizeVestedDelegation(t *testing.T) {
 	addrAcc1 := addrs[0]
 	addrVal1 := sdk.ValAddress(addrAcc1)
 
+	// Original vesting mount (OV)
 	originalVesting := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)))
 	startTime := time.Now().Unix()
 	endTime := time.Now().Add(24 * time.Hour).Unix()
 
-	// create vesting account
+	// Create vesting account
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	baseAcc := authtypes.NewBaseAccount(addrAcc1, pubkey, 0, 0)
 	continuousVestingAccount := vestingtypes.NewContinuousVestingAccount(
@@ -1626,13 +1627,14 @@ func TestTokenizeVestedDelegation(t *testing.T) {
 	err = delegateCoinsFromAccount(ctx, *stakingKeeper, addrAcc1, originalVestingAmount, val1)
 	require.NoError(t, err)
 
-	// apply TM updates
+	// Apply TM updates
 	applyValidatorSetUpdates(t, ctx, stakingKeeper, -1)
 
 	_, found := stakingKeeper.GetDelegation(ctx, addrAcc1, addrVal1)
 	require.True(t, found)
 
-	// check vesting account data
+	// Check vesting account data
+	// V=100, V'=0, DV=100, DF=0
 	acc := accountKeeper.GetAccount(ctx, addrAcc1).(*vestingtypes.ContinuousVestingAccount)
 	require.Equal(t, originalVesting, acc.GetVestingCoins(ctx.BlockTime()))
 	require.Empty(t, acc.GetVestedCoins(ctx.BlockTime()))
@@ -1641,27 +1643,28 @@ func TestTokenizeVestedDelegation(t *testing.T) {
 
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 
-	// vest tokens during half the vesting period
+	// Vest coins during a half of the vesting period
 	ctx = ctx.WithBlockTime(time.Now().Add(12 * time.Hour))
 
-	// check vesting account data
+	// Check vesting account data
+	// V=50, V'=50, DV=100, DF=0
 	acc = accountKeeper.GetAccount(ctx, addrAcc1).(*vestingtypes.ContinuousVestingAccount)
 	require.Equal(t, originalVesting.QuoInt(math.NewInt(2)), acc.GetVestingCoins(ctx.BlockTime()))
 	require.Equal(t, originalVesting.QuoInt(math.NewInt(2)), acc.GetVestedCoins(ctx.BlockTime()))
 	require.Equal(t, originalVesting, acc.GetDelegatedVesting())
 	require.Empty(t, acc.GetDelegatedFree())
 
-	// expect to fail when tokenizing the original vesting amount
+	// Expect to fail when tokenizing the all the delegated coins
+	// since only a half is vested
 	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
 		DelegatorAddress:    addrAcc1.String(),
 		ValidatorAddress:    addrVal1.String(),
 		Amount:              originalVesting[0],
 		TokenizedShareOwner: addrAcc1.String(),
 	})
-
 	require.Error(t, err)
 
-	// tokenize the vested coins should succeed
+	// Tokenize the delegated vested coins
 	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
 		DelegatorAddress:    addrAcc1.String(),
 		ValidatorAddress:    addrVal1.String(),
@@ -1672,7 +1675,7 @@ func TestTokenizeVestedDelegation(t *testing.T) {
 
 	shareDenom := addrVal1.String() + "/1"
 
-	// redeem the tokens
+	// Redeem the tokens
 	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx),
 		&types.MsgRedeemTokensForShares{
 			DelegatorAddress: addrAcc1.String(),
@@ -1681,7 +1684,8 @@ func TestTokenizeVestedDelegation(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// check that vesting account delegations correspond to the vesting and vested amount
+	// After the redeeming the tokens the vesting delegations should be balanced
+	// V=50, V'=50, DV=100, DF=50
 	acc = accountKeeper.GetAccount(ctx, addrAcc1).(*vestingtypes.ContinuousVestingAccount)
 	require.Equal(t, originalVesting.QuoInt(math.NewInt(2)), acc.GetVestingCoins(ctx.BlockTime()))
 	require.Equal(t, originalVesting.QuoInt(math.NewInt(2)), acc.GetVestedCoins(ctx.BlockTime()))

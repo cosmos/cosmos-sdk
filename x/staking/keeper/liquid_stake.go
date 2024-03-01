@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -440,4 +441,33 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 	k.SetTotalLiquidStakedTokens(ctx, totalLiquidStakedTokens)
 
 	return nil
+}
+
+// CheckVestedDelegationInVestingAccount verifies whether the provided vesting account
+// holds a vested delegation for an equal or greater amount of the specified coin
+// at the given block time.
+//
+// Note that this function enables a specific use-case in the LSM module for tokenizing vested delegations.
+// See https://github.com/cosmos/gaia/issues/2877 for more details.
+func CheckVestedDelegationInVestingAccount(
+	account vesting.VestingAccount,
+	blockTime time.Time,
+	coin sdk.Coin,
+) bool {
+	// Get the vesting coins at the current block time
+	vestingAmount := account.GetVestingCoins(blockTime).AmountOf(coin.Denom)
+
+	// Note that the "DelegatedVesting" and "DelegatedFree" values
+	// were computed during the last delegation or undelegation operation
+	delVestingAmount := account.GetDelegatedVesting().AmountOf(coin.Denom)
+	delVested := account.GetDelegatedFree()
+
+	// x represents the new vested delegated coins
+	x := sdk.MinInt(vestingAmount.Sub(delVestingAmount), math.ZeroInt())
+
+	if !x.IsZero() {
+		delVested = delVested.Add(sdk.Coin{Denom: coin.Denom, Amount: x.Abs()})
+	}
+
+	return delVested.AmountOf(coin.Denom).GTE(coin.Amount)
 }

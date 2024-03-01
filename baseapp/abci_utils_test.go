@@ -17,10 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	authtx "cosmossdk.io/x/auth/tx"
 
-	"cosmossdk.io/core/comet"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
@@ -61,13 +61,6 @@ func newTestValidator() testValidator {
 
 func (t testValidator) toValidator(power int64) abci.Validator {
 	return abci.Validator{
-		Address: t.consAddr.Bytes(),
-		Power:   power,
-	}
-}
-
-func (t testValidator) toSDKValidator(power int64) comet.Validator {
-	return comet.Validator{
 		Address: t.consAddr.Bytes(),
 		Power:   power,
 	}
@@ -776,23 +769,6 @@ func extendedCommitToLastCommit(ec abci.ExtendedCommitInfo) (abci.ExtendedCommit
 	return ec, comet.Info{
 		LastCommit: lastCommit,
 	}
-}
-
-type voteInfos []comet.VoteInfo
-
-func (v voteInfos) Len() int {
-	return len(v)
-}
-
-func (v voteInfos) Less(i, j int) bool {
-	if v[i].Validator.Power == v[j].Validator.Power {
-		return bytes.Compare(v[i].Validator.Address, v[j].Validator.Address) == -1
-	}
-	return v[i].Validator.Power > v[j].Validator.Power
-}
-
-func (v voteInfos) Swap(i, j int) {
-	v[i], v[j] = v[j], v[i]
 }
 
 type extendedVoteInfos []abci.ExtendedVoteInfo

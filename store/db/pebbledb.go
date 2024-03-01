@@ -1,8 +1,10 @@
 package db
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"slices"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -77,11 +79,29 @@ func (db *PebbleDB) Has(key []byte) (bool, error) {
 }
 
 func (db *PebbleDB) Iterator(start, end []byte) (corestore.Iterator, error) {
-	panic("not implemented!")
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
+	}
+
+	return newPebbleDBIterator(itr, start, end, false), nil
 }
 
 func (db *PebbleDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
-	panic("not implemented!")
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
+	}
+
+	return newPebbleDBIterator(itr, start, end, true), nil
 }
 
 func (db *PebbleDB) NewBatch() store.RawBatch {
@@ -95,6 +115,104 @@ func (db *PebbleDB) NewBatchWithSize(size int) store.RawBatch {
 	return &pebbleDBBatch{
 		db:    db,
 		batch: db.storage.NewBatchWithSize(size),
+	}
+}
+
+var _ corestore.Iterator = (*pebbleDBIterator)(nil)
+
+type pebbleDBIterator struct {
+	source  *pebble.Iterator
+	start   []byte
+	end     []byte
+	valid   bool
+	reverse bool
+}
+
+func newPebbleDBIterator(src *pebble.Iterator, start, end []byte, reverse bool) *pebbleDBIterator {
+	// move the underlying PebbleDB cursor to the first key
+	var valid bool
+	if reverse {
+		if end == nil {
+			valid = src.Last()
+		} else {
+			valid = src.SeekLT(end)
+		}
+	} else {
+		valid = src.First()
+	}
+
+	return &pebbleDBIterator{
+		source:  src,
+		start:   start,
+		end:     end,
+		valid:   valid,
+		reverse: reverse,
+	}
+}
+
+func (itr *pebbleDBIterator) Domain() (start, end []byte) {
+	return itr.start, itr.end
+}
+
+func (itr *pebbleDBIterator) Valid() bool {
+	// once invalid, forever invalid
+	if !itr.valid || !itr.source.Valid() {
+		itr.valid = false
+		return itr.valid
+	}
+
+	// if source has error, consider it invalid
+	if err := itr.source.Error(); err != nil {
+		itr.valid = false
+		return itr.valid
+	}
+
+	// if key is at the end or past it, consider it invalid
+	if end := itr.end; end != nil {
+		if bytes.Compare(end, itr.Key()) <= 0 {
+			itr.valid = false
+			return itr.valid
+		}
+	}
+
+	return true
+}
+
+func (itr *pebbleDBIterator) Key() []byte {
+	itr.assertIsValid()
+	return slices.Clone(itr.source.Key())
+}
+
+func (itr *pebbleDBIterator) Value() []byte {
+	itr.assertIsValid()
+	return slices.Clone(itr.source.Value())
+}
+
+func (itr *pebbleDBIterator) Next() {
+	itr.assertIsValid()
+
+	if itr.reverse {
+		itr.valid = itr.source.Prev()
+	} else {
+		itr.valid = itr.source.Next()
+	}
+}
+
+func (itr *pebbleDBIterator) Error() error {
+	return itr.source.Error()
+}
+
+func (itr *pebbleDBIterator) Close() error {
+	err := itr.source.Close()
+	itr.source = nil
+	itr.valid = false
+
+	return err
+}
+
+func (itr *pebbleDBIterator) assertIsValid() {
+	if !itr.valid {
+		panic("pebbleDB iterator is invalid")
 	}
 }
 

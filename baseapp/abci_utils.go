@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"slices"
 
+	"cosmossdk.io/core/comet"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
@@ -39,11 +41,17 @@ type (
 func ValidateVoteExtensions(
 	ctx sdk.Context,
 	valStore ValidatorStore,
-	currentHeight int64,
-	chainID string,
 	extCommit abci.ExtendedCommitInfo,
 ) error {
 	cp := ctx.ConsensusParams()
+	currentHeight := ctx.BlockHeight()
+	chainID := ctx.BlockHeader().ChainID
+	commitInfo := ctx.CometInfo().GetLastCommit()
+
+	// Check that both extCommit + commit are ordered in accordance with vp/address.
+	if err := validateExtendedCommitAgainstLastCommit(extCommit, commitInfo); err != nil {
+		return err
+	}
 	// Start checking vote extensions only **after** the vote extensions enable
 	// height, because when `currentHeight == VoteExtensionsEnableHeight`
 	// PrepareProposal doesn't get any vote extensions in its request.
@@ -64,7 +72,6 @@ func ValidateVoteExtensions(
 		sumVP int64
 	)
 
-	cache := make(map[string]struct{})
 	for _, vote := range extCommit.Votes {
 		totalVP += vote.Validator.Power
 
@@ -91,10 +98,6 @@ func ValidateVoteExtensions(
 
 		// Ensure that the validator has not already submitted a vote extension.
 		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
-		if _, ok := cache[valConsAddr.String()]; ok {
-			return fmt.Errorf("duplicate validator; validator %s has already submitted a vote extension", valConsAddr.String())
-		}
-		cache[valConsAddr.String()] = struct{}{}
 
 		pubKeyProto, err := valStore.GetPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
@@ -137,6 +140,51 @@ func ValidateVoteExtensions(
 			sumVP, requiredVP,
 		)
 	}
+	return nil
+}
+
+// validateExtendedCommitAgainstLastCommit validates an ExtendedCommitInfo against a LastCommit. Specifically,
+// it checks that the ExtendedCommit + LastCommit (for the same height), are consistent with each other + that
+// they are ordered correctly (by voting power) in accordance with
+// [comet](https://github.com/cometbft/cometbft/blob/4ce0277b35f31985bbf2c25d3806a184a4510010/types/validator_set.go#L784).
+func validateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc comet.CommitInfo) error {
+	// check that the rounds are the same
+	if ec.Round != lc.Round() {
+		return fmt.Errorf("extended commit round %d does not match last commit round %d", ec.Round, lc.Round)
+	}
+
+	// check that the # of votes are the same
+	if len(ec.Votes) != lc.Votes().Len() {
+		return fmt.Errorf("extended commit votes length %d does not match last commit votes length %d", len(ec.Votes), lc.Votes().Len())
+	}
+
+	// check sort order of extended commit votes
+	if !slices.IsSortedFunc(ec.Votes, func(vote1, vote2 abci.ExtendedVoteInfo) int {
+		if vote1.Validator.Power == vote2.Validator.Power {
+			return bytes.Compare(vote1.Validator.Address, vote2.Validator.Address) // addresses sorted in ascending order (used to break vp conflicts)
+		}
+		return -int(vote1.Validator.Power - vote2.Validator.Power) // vp sorted in descending order
+	}) {
+		return fmt.Errorf("extended commit votes are not sorted by voting power")
+	}
+
+	addressCache := make(map[string]struct{}, len(ec.Votes))
+	// check consistency between LastCommit and ExtendedCommit
+	for i, vote := range ec.Votes {
+		// cache addresses to check for duplicates
+		if _, ok := addressCache[string(vote.Validator.Address)]; ok {
+			return fmt.Errorf("extended commit vote address %X is duplicated", vote.Validator.Address)
+		}
+		addressCache[string(vote.Validator.Address)] = struct{}{}
+
+		if !bytes.Equal(vote.Validator.Address, lc.Votes().Get(i).Validator().Address()) {
+			return fmt.Errorf("extended commit vote address %X does not match last commit vote address %X", vote.Validator.Address, lc.Votes().Get(i).Validator().Address())
+		}
+		if vote.Validator.Power != lc.Votes().Get(i).Validator().Power() {
+			return fmt.Errorf("extended commit vote power %d does not match last commit vote power %d", vote.Validator.Power, lc.Votes().Get(i).Validator().Power())
+		}
+	}
+
 	return nil
 }
 

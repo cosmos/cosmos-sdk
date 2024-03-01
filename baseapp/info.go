@@ -8,30 +8,30 @@ import (
 	"cosmossdk.io/core/comet"
 )
 
-var _ comet.BlockInfo = (*cometInfo)(nil)
+var _ comet.BlockInfo = (*CometInfo)(nil)
 
 // CometInfo defines the properties provided by comet to the application
-type cometInfo struct {
+type CometInfo struct {
 	Misbehavior     []abci.Misbehavior
 	ValidatorsHash  []byte
 	ProposerAddress []byte
 	LastCommit      abci.CommitInfo
 }
 
-func (r cometInfo) GetEvidence() comet.EvidenceList {
+func (r CometInfo) GetEvidence() comet.EvidenceList {
 	return evidenceWrapper{evidence: r.Misbehavior}
 }
 
-func (r cometInfo) GetValidatorsHash() []byte {
+func (r CometInfo) GetValidatorsHash() []byte {
 	return r.ValidatorsHash
 }
 
-func (r cometInfo) GetProposerAddress() []byte {
+func (r CometInfo) GetProposerAddress() []byte {
 	return r.ProposerAddress
 }
 
-func (r cometInfo) GetLastCommit() comet.CommitInfo {
-	return commitInfoWrapper{r.LastCommit}
+func (r CometInfo) GetLastCommit() comet.CommitInfo {
+	return CommitInfoWrapper{r.LastCommit}
 }
 
 type evidenceWrapper struct {
@@ -46,18 +46,18 @@ func (e evidenceWrapper) Get(i int) comet.Evidence {
 	return misbehaviorWrapper{e.evidence[i]}
 }
 
-// commitInfoWrapper is a wrapper around abci.CommitInfo that implements CommitInfo interface
-type commitInfoWrapper struct {
+// CommitInfoWrapper is a wrapper around abci.CommitInfo that implements CommitInfo interface
+type CommitInfoWrapper struct {
 	abci.CommitInfo
 }
 
-var _ comet.CommitInfo = (*commitInfoWrapper)(nil)
+var _ comet.CommitInfo = (*CommitInfoWrapper)(nil)
 
-func (c commitInfoWrapper) Round() int32 {
+func (c CommitInfoWrapper) Round() int32 {
 	return c.CommitInfo.Round
 }
 
-func (c commitInfoWrapper) Votes() comet.VoteInfos {
+func (c CommitInfoWrapper) Votes() comet.VoteInfos {
 	return abciVoteInfoWrapper{c.CommitInfo.Votes}
 }
 
@@ -149,22 +149,22 @@ func (r prepareProposalInfo) GetProposerAddress() []byte {
 }
 
 func (r prepareProposalInfo) GetLastCommit() comet.CommitInfo {
-	return extendedCommitInfoWrapper{r.RequestPrepareProposal.LocalLastCommit}
+	return ExtendedCommitInfoWrapper{r.RequestPrepareProposal.LocalLastCommit}
 }
 
 var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
 
-type extendedCommitInfoWrapper struct {
+type ExtendedCommitInfoWrapper struct {
 	abci.ExtendedCommitInfo
 }
 
-var _ comet.CommitInfo = (*extendedCommitInfoWrapper)(nil)
+var _ comet.CommitInfo = (*ExtendedCommitInfoWrapper)(nil)
 
-func (e extendedCommitInfoWrapper) Round() int32 {
+func (e ExtendedCommitInfoWrapper) Round() int32 {
 	return e.ExtendedCommitInfo.Round
 }
 
-func (e extendedCommitInfoWrapper) Votes() comet.VoteInfos {
+func (e ExtendedCommitInfoWrapper) Votes() comet.VoteInfos {
 	return extendedVoteInfoWrapperList{e.ExtendedCommitInfo.Votes}
 }
 

@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"bytes"
+	"sort"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -16,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -98,7 +100,9 @@ func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
 		Abci: &cmtproto.ABCIParams{
 			VoteExtensionsEnableHeight: 2,
 		},
-	})
+	}).WithBlockHeader(cmtproto.Header{
+		ChainID: chainID,
+	}).WithLogger(log.NewTestLogger(t))
 	return s
 }
 
@@ -128,6 +132,8 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsHappyPath() {
 	extSig2, err := s.vals[2].privKey.Sign(bz)
 	s.Require().NoError(err)
 
+	s.ctx = s.ctx.WithBlockHeight(3) // enable vote-extensions
+
 	llc := abci.ExtendedCommitInfo{
 		Round: 0,
 		Votes: []abci.ExtendedVoteInfo{
@@ -151,8 +157,12 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsHappyPath() {
 			},
 		},
 	}
+
+	// order + convert to last commit
+	llc, info := extendedCommitToLastCommit(llc)
+	s.ctx = s.ctx.WithCometInfo(info)
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
 }
 
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Absent
@@ -197,7 +207,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteAbsent() {
 		},
 	}
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
 }
 
 // check ValidateVoteExtensions works with duplicate votes
@@ -231,7 +241,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsDuplicateVotes() {
 		},
 	}
 	// expect fail (duplicate votes)
-	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
 }
 
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Nil
@@ -276,7 +286,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteNil() {
 		},
 	}
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
 }
 
 // check ValidateVoteExtensions works when two nodes have submitted a BlockID_Nil / BlockID_Absent
@@ -317,8 +327,114 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 		},
 	}
 
+	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+
+	// create last commit
+	llc, info := extendedCommitToLastCommit(llc)
+	s.ctx = s.ctx.WithCometInfo(info)
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+}
+
+func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectVotingPower() {
+	ext := []byte("vote-extension")
+	cve := cmtproto.CanonicalVoteExtension{
+		Extension: ext,
+		Height:    2,
+		Round:     int64(0),
+		ChainId:   chainID,
+	}
+
+	bz, err := marshalDelimitedFn(&cve)
+	s.Require().NoError(err)
+
+	extSig0, err := s.vals[0].privKey.Sign(bz)
+	s.Require().NoError(err)
+
+	llc := abci.ExtendedCommitInfo{
+		Round: 0,
+		Votes: []abci.ExtendedVoteInfo{
+			// validator of power >2/3 is missing, so commit-info should not be valid
+			{
+				Validator:          s.vals[0].toValidator(333),
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+				VoteExtension:      ext,
+				ExtensionSignature: extSig0,
+			},
+			{
+				Validator:   s.vals[1].toValidator(333),
+				BlockIdFlag: cmtproto.BlockIDFlagNil,
+			},
+			{
+				Validator:     s.vals[2].toValidator(334),
+				VoteExtension: ext,
+				BlockIdFlag:   cmtproto.BlockIDFlagAbsent,
+			},
+		},
+	}
+
+	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+
+	// create last commit
+	llc, info := extendedCommitToLastCommit(llc)
+	s.ctx = s.ctx.WithCometInfo(info)
+
+	// modify voting powers to differ from the last-commit
+	llc.Votes[0].Validator.Power = 335
+	llc.Votes[2].Validator.Power = 332
+
+	// expect-pass (votes of height 2 are included in next block)
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+}
+
+func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrecOrder() {
+	ext := []byte("vote-extension")
+	cve := cmtproto.CanonicalVoteExtension{
+		Extension: ext,
+		Height:    2,
+		Round:     int64(0),
+		ChainId:   chainID,
+	}
+
+	bz, err := marshalDelimitedFn(&cve)
+	s.Require().NoError(err)
+
+	extSig0, err := s.vals[0].privKey.Sign(bz)
+	s.Require().NoError(err)
+
+	llc := abci.ExtendedCommitInfo{
+		Round: 0,
+		Votes: []abci.ExtendedVoteInfo{
+			// validator of power >2/3 is missing, so commit-info should not be valid
+			{
+				Validator:          s.vals[0].toValidator(333),
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+				VoteExtension:      ext,
+				ExtensionSignature: extSig0,
+			},
+			{
+				Validator:   s.vals[1].toValidator(333),
+				BlockIdFlag: cmtproto.BlockIDFlagNil,
+			},
+			{
+				Validator:     s.vals[2].toValidator(334),
+				VoteExtension: ext,
+				BlockIdFlag:   cmtproto.BlockIDFlagAbsent,
+			},
+		},
+	}
+
+	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+
+	// create last commit
+	llc, info := extendedCommitToLastCommit(llc)
+	s.ctx = s.ctx.WithCometInfo(info)
+
+	// modify voting powers to differ from the last-commit
+	llc.Votes[0], llc.Votes[2] = llc.Votes[2], llc.Votes[0]
+
+	// expect-pass (votes of height 2 are included in next block)
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
 }
 
 func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection() {
@@ -585,4 +701,62 @@ func setTxSignatureWithSecret(t *testing.T, builder client.TxBuilder, signatures
 		signatures...,
 	)
 	require.NoError(t, err)
+}
+
+func extendedCommitToLastCommit(ec abci.ExtendedCommitInfo) (abci.ExtendedCommitInfo, baseapp.CometInfo) {
+	// sort the extended commit info
+	sort.Sort(extendedVoteInfos(ec.Votes))
+
+	// convert the extended commit info to last commit info
+	lastCommit := abci.CommitInfo{
+		Round: ec.Round,
+		Votes: make([]abci.VoteInfo, len(ec.Votes)),
+	}
+
+	for i, vote := range ec.Votes {
+		lastCommit.Votes[i] = abci.VoteInfo{
+			Validator: abci.Validator{
+				Address: vote.Validator.Address,
+				Power:   vote.Validator.Power,
+			},
+		}
+	}
+
+	return ec, baseapp.CometInfo{
+		LastCommit: lastCommit,
+	}
+}
+
+type voteInfos []comet.VoteInfo
+
+func (v voteInfos) Len() int {
+	return len(v)
+}
+
+func (v voteInfos) Less(i, j int) bool {
+	if v[i].Validator().Power() == v[j].Validator().Power() {
+		return bytes.Compare(v[i].Validator().Address(), v[j].Validator().Address()) == -1
+	}
+	return v[i].Validator().Power() > v[j].Validator().Power()
+}
+
+func (v voteInfos) Swap(i, j int) {
+	v[i], v[j] = v[j], v[i]
+}
+
+type extendedVoteInfos []abci.ExtendedVoteInfo
+
+func (v extendedVoteInfos) Len() int {
+	return len(v)
+}
+
+func (v extendedVoteInfos) Less(i, j int) bool {
+	if v[i].Validator.Power == v[j].Validator.Power {
+		return bytes.Compare(v[i].Validator.Address, v[j].Validator.Address) == -1
+	}
+	return v[i].Validator.Power > v[j].Validator.Power
+}
+
+func (v extendedVoteInfos) Swap(i, j int) {
+	v[i], v[j] = v[j], v[i]
 }

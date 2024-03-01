@@ -4,6 +4,7 @@
 package db
 
 import (
+	"bytes"
 	"fmt"
 
 	corestore "cosmossdk.io/core/store"
@@ -74,11 +75,21 @@ func (db *RocksDB) Has(key []byte) (bool, error) {
 }
 
 func (db *RocksDB) Iterator(start, end []byte) (corestore.Iterator, error) {
-	panic("not implemented!")
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	itr := db.storage.NewIterator(defaultReadOpts)
+	return newRocksDBIterator(itr, start, end, false), nil
 }
 
 func (db *RocksDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
-	panic("not implemented!")
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	itr := db.storage.NewIterator(defaultReadOpts)
+	return newRocksDBIterator(itr, start, end, true), nil
 }
 
 func (db *RocksDB) NewBatch() store.RawBatch {
@@ -90,6 +101,77 @@ func (db *RocksDB) NewBatch() store.RawBatch {
 
 func (db *RocksDB) NewBatchWithSize(_ int) store.RawBatch {
 	return db.NewBatch()
+}
+
+var _ corestore.Iterator = (*rocksDBIterator)(nil)
+
+type rocksDBIterator struct {
+	source  *grocksdb.Iterator
+	start   []byte
+	end     []byte
+	valid   bool
+	reverse bool
+}
+
+func newRocksDBIterator(src *grocksdb.Iterator, start, end []byte, reverse bool) *rocksDBIterator {
+	if reverse {
+		if end == nil {
+			src.SeekToLast()
+		} else {
+			src.Seek(end)
+
+			if src.Valid() {
+				eoaKey := readOnlySlice(src.Key()) // end or after key
+				if bytes.Compare(end, eoaKey) <= 0 {
+					src.Prev()
+				}
+			} else {
+				src.SeekToLast()
+			}
+		}
+	} else {
+		if start == nil {
+			src.SeekToFirst()
+		} else {
+			src.Seek(start)
+		}
+	}
+
+	return &rocksDBIterator{
+		source:  src,
+		start:   start,
+		end:     end,
+		reverse: reverse,
+		valid:   src.Valid(),
+	}
+}
+
+func (itr *rocksDBIterator) Domain() (start, end []byte) {
+	panic("not implemented!")
+}
+
+func (itr *rocksDBIterator) Valid() bool {
+	panic("not implemented!")
+}
+
+func (itr *rocksDBIterator) Next() {
+	panic("not implemented!")
+}
+
+func (itr *rocksDBIterator) Key() []byte {
+	panic("not implemented!")
+}
+
+func (itr *rocksDBIterator) Value() []byte {
+	panic("not implemented!")
+}
+
+func (itr *rocksDBIterator) Error() error {
+	panic("not implemented!")
+}
+
+func (itr *rocksDBIterator) Close() error {
+	panic("not implemented!")
 }
 
 var _ store.RawBatch = (*rocksDBBatch)(nil)
@@ -155,4 +237,12 @@ func (b *rocksDBBatch) Close() error {
 
 func (b *rocksDBBatch) GetByteSize() (int, error) {
 	return len(b.batch.Data()), nil
+}
+
+func readOnlySlice(s *grocksdb.Slice) []byte {
+	if !s.Exists() {
+		return nil
+	}
+
+	return s.Data()
 }

@@ -1,7 +1,6 @@
 package cometbft
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -20,12 +19,10 @@ import (
 
 	auth "cosmossdk.io/x/auth/client/cli"
 
-	"cosmossdk.io/server/v2/cometbft/rpc"
+	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -55,7 +52,12 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 				return err
 			}
 
-			status, err := cmtservice.GetNodeStatus(context.Background(), clientCtx)
+			rpcclient, err := s.rpcClient()
+			if err != nil {
+				return err
+			}
+
+			status, err := rpcclient.Status(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -388,7 +390,7 @@ func parseOptionalHeight(heightStr string) (*int64, error) {
 	return &tmp, nil
 }
 
-func (s *CometBFTServer[T]) BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
+func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bootstrap-state",
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",

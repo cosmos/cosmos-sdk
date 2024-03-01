@@ -31,13 +31,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Bug Fixes
+### Features
 
-* [#19265](https://github.com/cosmos/cosmos-sdk/pull/19265) Reject denoms that contain a comma.
+* * [#](https://github.com/cosmos/cosmos-sdk/pull/) Add enum as string option to encoder.
 
 ### Improvements
 
 * [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` from `core/coins` to this package under `signing/textual`.
+
+### Bug Fixes
+
+* [#19265](https://github.com/cosmos/cosmos-sdk/pull/19265) Reject denoms that contain a comma.
 
 ## v0.13.0
 

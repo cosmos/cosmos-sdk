@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	eviclient "cosmossdk.io/x/evidence/client"
 	"cosmossdk.io/x/evidence/client/cli"
 	"cosmossdk.io/x/evidence/keeper"
@@ -31,8 +31,8 @@ var (
 	_ module.AppModuleSimulation   = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
+	_ appmodulev2.AppModule       = AppModule{}
+	_ appmodulev2.HasBeginBlocker = AppModule{}
 )
 
 const ConsensusVersion = 1

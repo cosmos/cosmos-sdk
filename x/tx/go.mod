@@ -3,10 +3,10 @@ module cosmossdk.io/x/tx
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.2
+	cosmossdk.io/api v0.7.3
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/math v1.2.0
+	cosmossdk.io/math v1.3.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/google/go-cmp v0.6.0
@@ -26,7 +26,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

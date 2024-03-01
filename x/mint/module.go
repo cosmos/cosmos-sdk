@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/simulation"
 	"cosmossdk.io/x/mint/types"
@@ -31,10 +32,10 @@ var (
 	_ module.AppModuleSimulation   = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasMigrations   = AppModule{}
+	_ appmodulev2.AppModule       = AppModule{}
+	_ appmodulev2.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices       = AppModule{}
+	_ appmodulev2.HasMigrations   = AppModule{}
 )
 
 // AppModule implements an application module for the mint module.

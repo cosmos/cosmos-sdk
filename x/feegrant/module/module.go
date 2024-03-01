@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
@@ -30,10 +31,10 @@ var (
 	_ module.AppModuleSimulation   = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
+	_ appmodulev2.AppModule     = AppModule{}
+	_ appmodulev2.HasEndBlocker = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodulev2.HasMigrations = AppModule{}
 )
 
 // AppModule implements an application module for the feegrant module.

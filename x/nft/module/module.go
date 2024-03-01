@@ -7,7 +7,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
@@ -27,7 +27,7 @@ var (
 	_ module.AppModuleSimulation   = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodulev2.AppModule = AppModule{}
 )
 
 const ConsensusVersion = 1

@@ -19,4 +19,10 @@ type Store interface {
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
 	Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
+
+	// GetStateStorage returns the SS backend.
+	GetStateStorage() storev2.VersionedDatabase
+
+	// GetStateCommitment returns the SC backend.
+	GetStateCommitment() storev2.Committer
 }

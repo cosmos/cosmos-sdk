@@ -401,7 +401,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 				return err
 			}
 			if height == 0 {
-				height, err = s.CometBFT.store.LatestVersion()
+				height, err = s.App.store.LatestVersion()
 				if err != nil {
 					return err
 				}

@@ -22,10 +22,27 @@ type Store interface {
 	// associated with it.
 	StateLatest() (uint64, corestore.ReaderMap, error)
 
+	// StateAt returns a readonly view over the provided
+	// state. Must error when the version does not exist.
+	StateAt(version uint64) (corestore.ReaderMap, error)
+
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
 	StateCommit(changes []corestore.StateChanges) (corestore.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
 	Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
+
+	// GetStateStorage returns the SS backend.
+	GetStateStorage() storev2.VersionedDatabase
+
+	// GetStateCommitment returns the SC backend.
+	GetStateCommitment() storev2.Committer
+
+	// LoadVersion loads the RootStore to the given version.
+	LoadVersion(version uint64) error
+
+	// LoadLatestVersion behaves identically to LoadVersion except it loads the
+	// latest version implicitly.
+	LoadLatestVersion() error
 }

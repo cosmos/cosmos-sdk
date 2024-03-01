@@ -8,10 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	coregas "cosmossdk.io/core/gas"
 	"cosmossdk.io/core/transaction"
-
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -42,7 +41,7 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "end-block")
 			return nil
 		},
-		doValidatorUpdate: func(ctx context.Context) ([]appmodule.ValidatorUpdate, error) { return nil, nil },
+		doValidatorUpdate: func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) { return nil, nil },
 		doTxValidation: func(ctx context.Context, tx mock.Tx) error {
 			kvSet(t, ctx, "validate")
 			return nil

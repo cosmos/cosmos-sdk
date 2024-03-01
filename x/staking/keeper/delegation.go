@@ -431,7 +431,6 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 		i++
 		return false, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}

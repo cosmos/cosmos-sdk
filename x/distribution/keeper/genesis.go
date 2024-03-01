@@ -121,7 +121,6 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 			),
 			evt.ValidatorSlashEvent,
 		)
-
 		if err != nil {
 			panic(err)
 		}
@@ -256,7 +255,6 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 			return false, nil
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}

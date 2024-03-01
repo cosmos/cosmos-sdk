@@ -150,7 +150,7 @@ func ValidateVoteExtensions(
 func validateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc comet.CommitInfo) error {
 	// check that the rounds are the same
 	if ec.Round != lc.Round() {
-		return fmt.Errorf("extended commit round %d does not match last commit round %d", ec.Round, lc.Round)
+		return fmt.Errorf("extended commit round %d does not match last commit round %d", ec.Round, lc.Round())
 	}
 
 	// check that the # of votes are the same

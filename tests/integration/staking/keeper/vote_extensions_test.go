@@ -84,7 +84,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 		votes = append(votes, ve)
 	}
 
-	err := baseapp.ValidateVoteExtensions(f.sdkCtx, f.stakingKeeper, f.sdkCtx.BlockHeight(), "chain-id-123", abci.ExtendedCommitInfo{Round: 0, Votes: votes})
+	err := baseapp.ValidateVoteExtensions(f.sdkCtx, f.stakingKeeper, abci.ExtendedCommitInfo{Round: 0, Votes: votes})
 	assert.NilError(t, err)
 }
 

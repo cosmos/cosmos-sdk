@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"cosmossdk.io/core/address"
 	"fmt"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
@@ -46,6 +47,8 @@ func NewIntegrationApp(
 	logger log.Logger,
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
+	addressCodec address.Codec,
+	validatorCodec address.Codec,
 	modules map[string]appmodule.AppModule,
 ) *App {
 	db := dbm.NewMemDB()
@@ -53,9 +56,8 @@ func NewIntegrationApp(
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
 	moduleManager.RegisterInterfaces(interfaceRegistry)
-	signingCtx := interfaceRegistry.SigningContext()
 
-	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), addressCodec, validatorCodec, authtx.DefaultSignModes)
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 

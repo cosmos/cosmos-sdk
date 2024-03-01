@@ -63,7 +63,8 @@ type deterministicFixture struct {
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	t.Helper()
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{}).Codec
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{})
+	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -101,10 +102,13 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
-		authtypes.ModuleName: authModule,
-		banktypes.ModuleName: bankModule,
-	})
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName: authModule,
+			banktypes.ModuleName: bankModule,
+		})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

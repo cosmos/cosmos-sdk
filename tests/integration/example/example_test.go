@@ -30,6 +30,8 @@ func Example() {
 	// in this example we are testing the integration of the following modules:
 	// - mint, which directly depends on auth, bank and staking
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, mint.AppModule{})
+	signingCtx := encodingCfg.InterfaceRegistry.SigningContext()
+
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
@@ -63,6 +65,8 @@ func Example() {
 		logger,
 		keys,
 		encodingCfg.Codec,
+		signingCtx.AddressCodec(),
+		signingCtx.ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
 			authtypes.ModuleName: authModule,
 			minttypes.ModuleName: mintModule,
@@ -147,6 +151,8 @@ func Example_oneModule() {
 		logger,
 		keys,
 		encodingCfg.Codec,
+		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
 			authtypes.ModuleName: authModule,
 		},

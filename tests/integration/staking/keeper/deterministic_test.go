@@ -68,7 +68,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, distribution.AppModule{}).Codec
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, distribution.AppModule{})
+	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -111,11 +112,14 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
-		authtypes.ModuleName:    authModule,
-		banktypes.ModuleName:    bankModule,
-		stakingtypes.ModuleName: stakingModule,
-	})
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName:    authModule,
+			banktypes.ModuleName:    bankModule,
+			stakingtypes.ModuleName: stakingModule,
+		})
 
 	ctx := integrationApp.Context()
 

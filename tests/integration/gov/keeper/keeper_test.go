@@ -52,7 +52,8 @@ func initFixture(tb testing.TB) *fixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, pooltypes.StoreKey, types.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{}, gov.AppModule{}).Codec
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{}, gov.AppModule{})
+	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -127,12 +128,15 @@ func initFixture(tb testing.TB) *fixture {
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
 	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, poolKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
-		authtypes.ModuleName:    authModule,
-		banktypes.ModuleName:    bankModule,
-		stakingtypes.ModuleName: stakingModule,
-		types.ModuleName:        govModule,
-	})
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName:    authModule,
+			banktypes.ModuleName:    bankModule,
+			stakingtypes.ModuleName: stakingModule,
+			types.ModuleName:        govModule,
+		})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

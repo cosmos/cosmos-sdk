@@ -81,6 +81,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	*codec.LegacyAmino,
 	*AppBuilder,
 	*baseapp.MsgServiceRouter,
+	*baseapp.GRPCQueryRouter,
 	appmodule.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
@@ -103,16 +104,18 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
+	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
 	app := &App{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
 		msgServiceRouter:  msgServiceRouter,
+		grpcQueryRouter:   grpcQueryRouter,
 	}
 	appBuilder := &AppBuilder{app}
 
-	return cdc, amino, appBuilder, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {
@@ -211,7 +214,14 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideEnvironment(logger log.Logger, config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder, msgServiceRouter *baseapp.MsgServiceRouter) (store.KVStoreService, store.MemoryStoreService, appmodule.Environment) {
+func ProvideEnvironment(
+	logger log.Logger,
+	config *runtimev1alpha1.Module,
+	key depinject.ModuleKey,
+	app *AppBuilder,
+	msgServiceRouter *baseapp.MsgServiceRouter,
+	queryServiceRouter *baseapp.GRPCQueryRouter,
+) (store.KVStoreService, store.MemoryStoreService, appmodule.Environment) {
 	storeKey := ProvideKVStoreKey(config, key, app)
 	kvService := kvStoreService{key: storeKey}
 
@@ -221,7 +231,7 @@ func ProvideEnvironment(logger log.Logger, config *runtimev1alpha1.Module, key d
 	return kvService, memStoreService, NewEnvironment(
 		kvService,
 		logger,
-		EnvWithMessageRouterService(msgServiceRouter),
+		EnvWithRouterService(queryServiceRouter, msgServiceRouter),
 		EnvWithMemStoreService(memStoreService),
 	)
 }

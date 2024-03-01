@@ -34,9 +34,9 @@ func NewEnvironment(
 
 type EnvOption func(*appmodule.Environment)
 
-func EnvWithMessageRouterService(msgServiceRouter *baseapp.MsgServiceRouter) EnvOption {
+func EnvWithRouterService(queryServiceRouter *baseapp.GRPCQueryRouter, msgServiceRouter *baseapp.MsgServiceRouter) EnvOption {
 	return func(env *appmodule.Environment) {
-		env.MessageRouterService = NewMsgRouterService(env.KVStoreService, msgServiceRouter)
+		env.RouterService = NewRouterService(env.KVStoreService, queryServiceRouter, msgServiceRouter)
 	}
 }
 

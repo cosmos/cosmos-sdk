@@ -14,11 +14,11 @@ import (
 type Environment struct {
 	Logger log.Logger
 
-	BranchService        branch.Service
-	EventService         event.Service
-	GasService           gas.Service
-	HeaderService        header.Service
-	MessageRouterService router.Service
+	BranchService branch.Service
+	EventService  event.Service
+	GasService    gas.Service
+	HeaderService header.Service
+	RouterService router.Router
 
 	KVStoreService  store.KVStoreService
 	MemStoreService store.MemoryStoreService

@@ -104,9 +104,9 @@ type Keeper struct {
 	// deps coming from the runtime
 	environment      appmodule.Environment
 	addressCodec     address.Codec
-	msgRouter        MsgRouter
+	msgRouter        MsgRouter // todo use env
 	signerProvider   SignerProvider
-	queryRouter      QueryRouter
+	queryRouter      QueryRouter // todo use env
 	makeSendCoinsMsg coinsTransferMsgFunc
 	logger           log.Logger
 

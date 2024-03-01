@@ -82,11 +82,14 @@ func (db *RocksDB) ReverseIterator(start, end []byte) (corestore.Iterator, error
 }
 
 func (db *RocksDB) NewBatch() store.RawBatch {
-	panic("not implemented!")
+	return &rocksDBBatch{
+		db:    db,
+		batch: grocksdb.NewWriteBatch(),
+	}
 }
 
-func (db *RocksDB) NewBatchWithSize(size int) store.RawBatch {
-	panic("not implemented!")
+func (db *RocksDB) NewBatchWithSize(_ int) store.RawBatch {
+	return db.NewBatch()
 }
 
 var _ store.RawBatch = (*rocksDBBatch)(nil)

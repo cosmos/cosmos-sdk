@@ -17,5 +17,6 @@ type Environment struct {
 	HeaderService   header.Service
 	KVStoreService  store.KVStoreService
 	MemStoreService store.MemoryStoreService
+	DataBaseService store.DatabaseService
 	Logger          log.Logger
 }

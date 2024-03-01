@@ -5,14 +5,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestServiceServer_Config(t *testing.T) {
 	defaultCfg := config.DefaultConfig()
-	svr := NewQueryServer(client.Context{}, *defaultCfg)
+	svr := NewQueryServer(*defaultCfg)
 	ctx := sdk.Context{}.WithMinGasPrices(sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 15)))
 
 	resp, err := svr.Config(ctx, &ConfigRequest{})

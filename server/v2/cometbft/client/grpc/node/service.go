@@ -6,14 +6,13 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterNodeService registers the node gRPC service on the provided gRPC router.
-func RegisterNodeService(clientCtx client.Context, server gogogrpc.Server, cfg config.Config) {
-	RegisterServiceServer(server, NewQueryServer(clientCtx, cfg))
+func RegisterNodeService(server gogogrpc.Server, cfg config.Config) {
+	RegisterServiceServer(server, NewQueryServer(cfg))
 }
 
 // RegisterGRPCGatewayRoutes mounts the node gRPC service's GRPC-gateway routes
@@ -25,13 +24,12 @@ func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.Serv
 var _ ServiceServer = queryServer{}
 
 type queryServer struct {
-	clientCtx client.Context
-	cfg       config.Config
+	cfg config.Config
 }
 
-func NewQueryServer(clientCtx client.Context, cfg config.Config) ServiceServer {
+func NewQueryServer(cfg config.Config) ServiceServer {
 	return queryServer{
-		clientCtx: clientCtx,
+		cfg: cfg,
 	}
 }
 

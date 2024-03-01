@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package cosmos.app.v1alpha2;
+
+message BundleDescriptor {
+  bytes file_descriptor_set = 1;
+  repeated ModuleDescriptor modules = 2;
+}
+
+message ModuleDescriptor {
+  string module_name = 1;
+  repeated Input inputs = 2;
+  repeated Output outputs = 3;
+}
+
+message Input {
+  ServiceDescriptor service = 1;
+  bool optional = 2;
+}
+
+message Output {
+  ServiceDescriptor service = 1;
+}
+
+message ServiceDescriptor {
+  oneof service_type {
+    ProtoServiceDescriptor proto = 1;
+  }
+}
+
+message ProtoServiceDescriptor {
+  string service_name = 1;
+  Encoding encoding = 2;
+  repeated string methods = 3;
+}
+
+enum Encoding {
+  ENCODING_PROTO_BINARY_UNSPECIFIED = 0;
+  ENCODING_ZEROPB = 1;
+}

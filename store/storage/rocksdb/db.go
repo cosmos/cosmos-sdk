@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/linxGnu/grocksdb"
-	"golang.org/x/exp/slices"
+	"slices"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"

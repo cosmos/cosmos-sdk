@@ -20,11 +20,10 @@ import (
 	auth "cosmossdk.io/x/auth/client/cli"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/v2/cometbft/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -47,11 +46,6 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 		Use:   "status",
 		Short: "Query remote node for status",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
 			rpcclient, err := s.rpcClient()
 			if err != nil {
 				return err
@@ -67,13 +61,10 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 				return err
 			}
 
-			// In order to maintain backwards compatibility, the default json format output
-			outputFormat, _ := cmd.Flags().GetString(flags.FlagOutput)
-			if outputFormat == flags.OutputFormatJSON {
-				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
-			}
+			cmd.Println(string(output))
 
-			return clientCtx.PrintRaw(output)
+			// TODO: figure out yaml and json output
+			return nil
 		},
 	}
 
@@ -118,13 +109,15 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
-			if err != nil {
-				return err
-			}
+			cmd.Println(sdkPK) // TODO: figure out if we need the codec here or not, see below
 
-			cmd.Println(string(bz))
+			// clientCtx := client.GetClientContextFromCmd(cmd)
+			// bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
+			// if err != nil {
+			// 	return err
+			// }
+
+			// cmd.Println(string(bz))
 			return nil
 		},
 	}
@@ -332,14 +325,14 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 		Long:  "Query for a specific committed block's results using the CometBFT RPC `block_results` method",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
+			// clientCtx, err := client.GetClientQueryContext(cmd)
+			// if err != nil {
+			// 	return err
+			// }
 
 			// TODO: we should be able to do this without using client context
 
-			node, err := clientCtx.GetNode()
+			node, err := s.rpcClient()
 			if err != nil {
 				return err
 			}
@@ -366,7 +359,10 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintRaw(blockResStr)
+			cmd.Println(string(blockResStr))
+
+			// TODO: figure out yaml and json output
+			return nil
 		},
 	}
 

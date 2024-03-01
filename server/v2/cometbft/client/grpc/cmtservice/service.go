@@ -29,22 +29,19 @@ type (
 	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
 
 	queryServer struct {
-		client            rpc.CometRPC
-		interfaceRegistry codectypes.InterfaceRegistry
-		queryFn           abciQueryFn
+		client  rpc.CometRPC
+		queryFn abciQueryFn
 	}
 )
 
 // NewQueryServer creates a new CometBFT query server.
 func NewQueryServer(
-	interfaceRegistry codectypes.InterfaceRegistry,
 	client rpc.CometRPC,
 	queryFn abciQueryFn,
 ) ServiceServer {
 	return queryServer{
-		interfaceRegistry: interfaceRegistry,
-		queryFn:           queryFn,
-		client:            client,
+		queryFn: queryFn,
+		client:  client,
 	}
 }
 
@@ -252,7 +249,7 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 
 	if path := baseapp.SplitABCIQueryPath(req.Path); len(path) > 0 {
 		switch path[0] {
-		case baseapp.QueryPathApp, baseapp.QueryPathStore, baseapp.QueryPathP2P, baseapp.QueryPathCustom:
+		case "app", "store", "p2p", "custom": // TODO: check if we can use the ones from abci.go without having circular deps.
 			// valid path
 
 		default:
@@ -273,10 +270,9 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 func RegisterTendermintService(
 	client rpc.CometRPC,
 	server gogogrpc.Server,
-	iRegistry codectypes.InterfaceRegistry,
 	queryFn abciQueryFn,
 ) {
-	RegisterServiceServer(server, NewQueryServer(iRegistry, client, queryFn))
+	RegisterServiceServer(server, NewQueryServer(client, queryFn))
 }
 
 // RegisterGRPCGatewayRoutes mounts the CometBFT service's GRPC-gateway routes on the

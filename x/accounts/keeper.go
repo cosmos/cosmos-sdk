@@ -46,7 +46,7 @@ type QueryRouter interface {
 // MsgRouter represents a router which can be used to route messages to the correct module.
 type MsgRouter interface {
 	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
-	ResponseNameByRequestName(name string) string
+	ResponseNameByMsgName(name string) string
 }
 
 // SignerProvider defines an interface used to get the expected sender from a message.
@@ -344,7 +344,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// we need to fetch the response type from the request message type.
 	// this is because the response type is not known.
-	respName := k.msgRouter.ResponseNameByRequestName(implementation.MessageName(msg))
+	respName := k.msgRouter.ResponseNameByMsgName(implementation.MessageName(msg))
 	if respName == "" {
 		return nil, fmt.Errorf("could not find response type for message %T", msg)
 	}

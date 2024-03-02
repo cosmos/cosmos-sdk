@@ -273,7 +273,7 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 		return err
 	}
 
-	if opts.PostSetup != nil {
+	if opts.PostSetupStandalone != nil {
 		if err := opts.PostSetupStandalone(app, svrCtx, clientCtx, ctx, g); err != nil {
 			return err
 		}

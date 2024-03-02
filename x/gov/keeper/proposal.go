@@ -264,7 +264,7 @@ func (k Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Proposal) 
 			customMessageParams, err := k.MessageBasedParams.Get(ctx, sdk.MsgTypeURL(proposal.Messages[0]))
 			if err == nil {
 				votingPeriod = customMessageParams.VotingPeriod
-			} else if err != nil && !errors.Is(err, collections.ErrNotFound) {
+			} else if !errors.Is(err, collections.ErrNotFound) {
 				return err
 			}
 		}

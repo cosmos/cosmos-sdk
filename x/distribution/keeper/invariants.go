@@ -153,7 +153,6 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 				return false, nil
 			},
 		)
-
 		if err != nil {
 			panic(err)
 		}
@@ -168,7 +167,6 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 				return false, nil
 			},
 		)
-
 		if err != nil {
 			panic(err)
 		}

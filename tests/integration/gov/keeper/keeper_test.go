@@ -89,7 +89,6 @@ func initFixture(tb testing.TB) *fixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
-		log.NewNopLogger(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
@@ -113,7 +112,7 @@ func initFixture(tb testing.TB) *fixture {
 		stakingKeeper,
 		poolKeeper,
 		router,
-		types.DefaultConfig(),
+		keeper.DefaultConfig(),
 		authority.String(),
 	)
 	assert.NilError(tb, govKeeper.ProposalID.Set(newCtx, 1))

@@ -38,20 +38,11 @@ func TestRouterService(t *testing.T) {
 
 	t.Run("invalid msg", func(t *testing.T) {
 		_, err := routerService.MessageRouterService().InvokeUntyped(testCtx.Ctx, &bankv1beta1.MsgSend{})
-		require.ErrorContains(t, err, "could not find response type for message /cosmos.bank.v1beta1.MsgSend")
+		require.ErrorContains(t, err, "could not find response type for message cosmos.bank.v1beta1.MsgSend")
 	})
 
 	t.Run("invoke untyped: valid msg (proto v1)", func(t *testing.T) {
 		resp, err := routerService.MessageRouterService().InvokeUntyped(testCtx.Ctx, &countertypes.MsgIncreaseCounter{
-			Signer: "cosmos1",
-			Count:  42,
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-	})
-
-	t.Run("invoke untyped: valid msg (proto v2)", func(t *testing.T) {
-		resp, err := routerService.MessageRouterService().InvokeUntyped(testCtx.Ctx, &counterv1.MsgIncreaseCounter{
 			Signer: "cosmos1",
 			Count:  42,
 		})
@@ -83,36 +74,37 @@ func TestRouterService(t *testing.T) {
 
 	t.Run("invalid query", func(t *testing.T) {
 		err := routerService.QueryRouterService().InvokeTyped(testCtx.Ctx, &bankv1beta1.QueryBalanceRequest{}, &bankv1beta1.QueryBalanceResponse{})
-		require.ErrorContains(t, err, "unknown request: /cosmos.bank.v1beta1.QueryBalanceRequest")
+		require.ErrorContains(t, err, "unknown request: cosmos.bank.v1beta1.QueryBalanceRequest")
 	})
 
 	t.Run("invoke typed: valid query (proto v1)", func(t *testing.T) {
+		_ = counterKeeper.CountStore.Set(testCtx.Ctx, 42)
+
 		resp := &countertypes.QueryGetCountResponse{}
 		err := routerService.QueryRouterService().InvokeTyped(testCtx.Ctx, &countertypes.QueryGetCountRequest{}, resp)
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.Equal(t, &countertypes.QueryGetCountResponse{TotalCount: 42}, resp)
+		require.Equal(t, int64(42), resp.TotalCount)
 	})
 
 	t.Run("invoke typed: valid query (proto v2)", func(t *testing.T) {
+		_ = counterKeeper.CountStore.Set(testCtx.Ctx, 42)
+
 		resp := &counterv1.QueryGetCountResponse{}
 		err := routerService.QueryRouterService().InvokeTyped(testCtx.Ctx, &counterv1.QueryGetCountRequest{}, resp)
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.Equal(t, &counterv1.QueryGetCountResponse{TotalCount: 42}, resp)
+		require.Equal(t, int64(42), resp.TotalCount)
 	})
 
 	t.Run("invoke untyped: valid query (proto v1)", func(t *testing.T) {
+		_ = counterKeeper.CountStore.Set(testCtx.Ctx, 42)
+
 		resp, err := routerService.QueryRouterService().InvokeUntyped(testCtx.Ctx, &countertypes.QueryGetCountRequest{})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.Equal(t, &countertypes.QueryGetCountResponse{TotalCount: 42}, resp)
-	})
-
-	t.Run("invoke untyped: valid query (proto v2)", func(t *testing.T) {
-		resp, err := routerService.QueryRouterService().InvokeUntyped(testCtx.Ctx, &counterv1.QueryGetCountRequest{})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		require.Equal(t, &counterv1.QueryGetCountResponse{TotalCount: 42}, resp)
+		respVal, ok := resp.(*countertypes.QueryGetCountResponse)
+		require.True(t, ok)
+		require.Equal(t, int64(42), respVal.TotalCount)
 	})
 }

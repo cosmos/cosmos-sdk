@@ -132,8 +132,8 @@ func (m *queryRouterService) InvokeUntyped(ctx context.Context, req protoiface.M
 // msgTypeURL returns the TypeURL of a proto message.
 func msgTypeURL(msg proto.Message) string {
 	if m, ok := msg.(protov2.Message); ok {
-		return "/" + string(m.ProtoReflect().Descriptor().FullName())
+		return string(m.ProtoReflect().Descriptor().FullName())
 	}
 
-	return "/" + proto.MessageName(msg)
+	return proto.MessageName(msg)
 }

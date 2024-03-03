@@ -26,7 +26,7 @@ Current design is kept and epoch logic is housed within specific modules instead
 
 A new epoch module is created that will allow for modules to register their logic to be executed at different intervals. Modules can register specific calls to be called at specified intervals. The epoch module will be responsible for executing the logic at the specified intervals.
 
-This changes the current design in which each module that executes logic in begin and/or end block to the epoch module having a map of calls to make each interval. The epoch module will be responsible for calling the logic and/or passing messages to the respective modules. 
+This changes the current design in which each module that executes logic in begin and/or end block to the epoch module having a map of calls to make each interval. The epoch module will be responsible for calling the logic and/or passing messages to the respective modules. This does not replace the concept of beginblock and endblock but rather allows for modules to register their logic to be executed at different intervals.
 
 This simplifies the need for their to be ordering in begin/endblock because the new design is around a caller to represent ordering. For example in the current design mint must come before distribution in begin block. With the proposed design mint and distribution would not have anything to register in beginblock and instead mint will only register a call to be made at a specific interval. Mint will then call distribution. 
 
@@ -103,26 +103,15 @@ A module will write a functions that returns an error to execute the specific lo
 
 ### Negative
 
-* Module requirements are increased. If a user wants to execute something every block and avoid the epoch module they will need to still use the epoch module. 
+* Modules that require that use the epoch module will need to be modified to avoid using the epoch module, if an application developers does not want to use it. 
 
 ### Neutral
 
-> {neutral consequences}
-
 ## Further Discussions
-
-> While an ADR is in the DRAFT or PROPOSED stage, this section should contain a
-> summary of issues to be solved in future iterations (usually referencing comments
-> from a pull-request discussion).
-> 
-> Later, this section can optionally list ideas or improvements the author or
-> reviewers found during the analysis of this ADR.
 
 ## Test Cases [optional]
 
-Test cases for an implementation are mandatory for ADRs that are affecting consensus
-changes. Other ADRs can choose to include links to test cases if applicable.
 
 ## References
 
-* {reference link}
+* [Osmosis Epoch](https://docs.osmosis.zone/osmosis-core/modules/epochs/)

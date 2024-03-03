@@ -55,6 +55,12 @@ func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *lockuptype
 	return dva.BaseLockup.SendCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
+func (dva *DelayedLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
+	*lockuptypes.MsgWithdrawResponse, error,
+) {
+	return dva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
+}
+
 // GetLockCoinsInfo returns the total number of unlocked and locked coins.
 func (dva DelayedLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (sdk.Coins, sdk.Coins, error) {
 	endTime, err := dva.EndTime.Get(ctx)
@@ -144,6 +150,7 @@ func (dva DelayedLockingAccount) RegisterExecuteHandlers(builder *accountstd.Exe
 	accountstd.RegisterExecuteHandler(builder, dva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, dva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, dva.SendCoins)
+	accountstd.RegisterExecuteHandler(builder, dva.WithdrawUnlockedCoins)
 }
 
 func (dva DelayedLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

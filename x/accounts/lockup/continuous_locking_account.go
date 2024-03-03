@@ -78,6 +78,12 @@ func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *lockupt
 	return cva.BaseLockup.SendCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
+func (cva *ContinuousLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
+	*lockuptypes.MsgWithdrawResponse, error,
+) {
+	return cva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
+}
+
 // GetLockCoinsInfo returns the total number of unlocked and locked coins.
 func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (unlockedCoins, lockedCoins sdk.Coins, err error) {
 	unlockedCoins = sdk.Coins{}
@@ -211,6 +217,7 @@ func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 	accountstd.RegisterExecuteHandler(builder, cva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, cva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, cva.SendCoins)
+	accountstd.RegisterExecuteHandler(builder, cva.WithdrawUnlockedCoins)
 }
 
 func (cva ContinuousLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

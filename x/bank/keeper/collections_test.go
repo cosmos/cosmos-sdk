@@ -30,7 +30,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
-	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
@@ -38,12 +38,11 @@ func TestBankStateCompatibility(t *testing.T) {
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	k := keeper.NewBaseKeeper(
+		env,
 		encCfg.Codec,
-		storeService,
 		authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
-		log.NewNopLogger(),
 	)
 
 	// test we can decode balances without problems
@@ -56,7 +55,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	)
 	require.NoError(t, err)
 	// we set the index key to the old value.
-	require.NoError(t, storeService.OpenKVStore(ctx).Set(rawKey, bankDenomAddressLegacyIndexValue))
+	require.NoError(t, env.KVStoreService.OpenKVStore(ctx).Set(rawKey, bankDenomAddressLegacyIndexValue))
 
 	// test walking is ok
 	err = k.Balances.Indexes.Denom.Walk(ctx, nil, func(indexingKey string, indexedKey sdk.AccAddress) (stop bool, err error) {
@@ -79,7 +78,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	err = k.Balances.Indexes.Denom.Reference(ctx, collections.Join(sdk.AccAddress("test"), "atom"), math.ZeroInt(), nil)
 	require.NoError(t, err)
 
-	newRawValue, err := storeService.OpenKVStore(ctx).Get(rawKey)
+	newRawValue, err := env.KVStoreService.OpenKVStore(ctx).Get(rawKey)
 	require.NoError(t, err)
 	require.Equal(t, []byte{}, newRawValue)
 }

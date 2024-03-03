@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	corestoretypes "cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/group"
@@ -46,9 +47,8 @@ const (
 )
 
 type Keeper struct {
-	storeService corestoretypes.KVStoreService
-
-	accKeeper group.AccountKeeper
+	environment appmodule.Environment
+	accKeeper   group.AccountKeeper
 
 	// Group Table
 	groupTable        orm.AutoUInt64Table
@@ -83,12 +83,12 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(env appmodule.Environment, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
-		storeService: storeService,
-		router:       router,
-		accKeeper:    accKeeper,
-		cdc:          cdc,
+		environment: env,
+		router:      router,
+		accKeeper:   accKeeper,
+		cdc:         cdc,
 	}
 
 	/*
@@ -236,24 +236,24 @@ func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, rout
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
+func (k Keeper) Logger() log.Logger {
+	return k.environment.Logger.With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
 
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
-	return k.groupTable.Sequence().CurVal(k.storeService.OpenKVStore(ctx))
+	return k.groupTable.Sequence().CurVal(k.environment.KVStoreService.OpenKVStore(ctx))
 }
 
 // GetGroupPolicySeq returns the current value of the group policy table sequence
 func (k Keeper) GetGroupPolicySeq(ctx sdk.Context) uint64 {
-	return k.groupPolicySeq.CurVal(k.storeService.OpenKVStore(ctx))
+	return k.groupPolicySeq.CurVal(k.environment.KVStoreService.OpenKVStore(ctx))
 }
 
 // proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.
-func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals []group.Proposal, err error) {
+func (k Keeper) proposalsByVPEnd(ctx context.Context, endTime time.Time) (proposals []group.Proposal, err error) {
 	timeBytes := sdk.FormatTimeBytes(endTime)
-	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(k.storeService.OpenKVStore(ctx), nil, timeBytes)
+	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(k.environment.KVStoreService.OpenKVStore(ctx), nil, timeBytes)
 	if err != nil {
 		return proposals, err
 	}
@@ -284,19 +284,19 @@ func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals 
 }
 
 // pruneProposal deletes a proposal from state.
-func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
-	err := k.proposalTable.Delete(k.storeService.OpenKVStore(ctx), proposalID)
+func (k Keeper) pruneProposal(ctx context.Context, proposalID uint64) error {
+	err := k.proposalTable.Delete(k.environment.KVStoreService.OpenKVStore(ctx), proposalID)
 	if err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
+	k.Logger().Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
 	return nil
 }
 
 // abortProposals iterates through all proposals by group policy index
 // and marks submitted proposals as aborted.
-func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
+func (k Keeper) abortProposals(ctx context.Context, groupPolicyAddr sdk.AccAddress) error {
 	proposals, err := k.proposalsByGroupPolicy(ctx, groupPolicyAddr)
 	if err != nil {
 		return err
@@ -308,7 +308,7 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
 
-			if err := k.proposalTable.Update(k.storeService.OpenKVStore(ctx), proposalInfo.Id, &proposalInfo); err != nil {
+			if err := k.proposalTable.Update(k.environment.KVStoreService.OpenKVStore(ctx), proposalInfo.Id, &proposalInfo); err != nil {
 				return err
 			}
 		}
@@ -317,8 +317,8 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 }
 
 // proposalsByGroupPolicy returns all proposals for a given group policy.
-func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
-	proposalIt, err := k.proposalByGroupPolicyIndex.Get(k.storeService.OpenKVStore(ctx), groupPolicyAddr.Bytes())
+func (k Keeper) proposalsByGroupPolicy(ctx context.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(k.environment.KVStoreService.OpenKVStore(ctx), groupPolicyAddr.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +341,7 @@ func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccA
 }
 
 // pruneVotes prunes all votes for a proposal from state.
-func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
+func (k Keeper) pruneVotes(ctx context.Context, proposalID uint64) error {
 	votes, err := k.votesByProposal(ctx, proposalID)
 	if err != nil {
 		return err
@@ -349,7 +349,7 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 
 	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &v)"
 	for _, v := range votes {
-		err = k.voteTable.Delete(k.storeService.OpenKVStore(ctx), &v)
+		err = k.voteTable.Delete(k.environment.KVStoreService.OpenKVStore(ctx), &v)
 		if err != nil {
 			return err
 		}
@@ -359,8 +359,8 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 }
 
 // votesByProposal returns all votes for a given proposal.
-func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vote, error) {
-	it, err := k.voteByProposalIndex.Get(k.storeService.OpenKVStore(ctx), proposalID)
+func (k Keeper) votesByProposal(ctx context.Context, proposalID uint64) ([]group.Vote, error) {
+	it, err := k.voteByProposalIndex.Get(k.environment.KVStoreService.OpenKVStore(ctx), proposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -384,8 +384,9 @@ func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vot
 // PruneProposals prunes all proposals that are expired, i.e. whose
 // `voting_period + max_execution_period` is greater than the current block
 // time.
-func (k Keeper) PruneProposals(ctx sdk.Context) error {
-	proposals, err := k.proposalsByVPEnd(ctx, ctx.HeaderInfo().Time.Add(-k.config.MaxExecutionPeriod))
+func (k Keeper) PruneProposals(ctx context.Context, env appmodule.Environment) error {
+	endTime := env.HeaderService.GetHeaderInfo(ctx).Time.Add(-k.config.MaxExecutionPeriod)
+	proposals, err := k.proposalsByVPEnd(ctx, endTime)
 	if err != nil {
 		return nil
 	}
@@ -397,12 +398,13 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 			return err
 		}
 		// Emit event for proposal finalized with its result
-		if err := ctx.EventManager().EmitTypedEvent(
+		if err := k.environment.EventService.EventManager(ctx).Emit(
 			&group.EventProposalPruned{
 				ProposalId:  proposal.Id,
 				Status:      proposal.Status,
 				TallyResult: &proposal.FinalTallyResult,
-			}); err != nil {
+			},
+		); err != nil {
 			return err
 		}
 	}
@@ -413,8 +415,8 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 // TallyProposalsAtVPEnd iterates over all proposals whose voting period
 // has ended, tallies their votes, prunes them, and updates the proposal's
 // `FinalTallyResult` field.
-func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
-	proposals, err := k.proposalsByVPEnd(ctx, ctx.HeaderInfo().Time)
+func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context, env appmodule.Environment) error {
+	proposals, err := k.proposalsByVPEnd(ctx, env.HeaderService.GetHeaderInfo(ctx).Time)
 	if err != nil {
 		return nil
 	}
@@ -439,11 +441,12 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return err
 			}
 			// Emit event for proposal finalized with its result
-			if err := ctx.EventManager().EmitTypedEvent(
+			if err := k.environment.EventService.EventManager(ctx).Emit(
 				&group.EventProposalPruned{
 					ProposalId: proposal.Id,
 					Status:     proposal.Status,
-				}); err != nil {
+				},
+			); err != nil {
 				return err
 			}
 		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
@@ -451,7 +454,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return errorsmod.Wrap(err, "doTallyAndUpdate")
 			}
 
-			if err := k.proposalTable.Update(k.storeService.OpenKVStore(ctx), proposal.Id, &proposal); err != nil {
+			if err := k.proposalTable.Update(k.environment.KVStoreService.OpenKVStore(ctx), proposal.Id, &proposal); err != nil {
 				return errorsmod.Wrap(err, "proposal update")
 			}
 		}

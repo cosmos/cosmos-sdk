@@ -27,15 +27,13 @@ For legacy reason modules can still implement interfaces from the SDK `module` p
 There are 2 main application module interfaces:
 
 * [`appmodule.AppModule` / `module.AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
-* (legacy) [`module.AppModuleBasic`](#appmodulebasic) for independent module functionalities. New modules can use `module.CoreAppModuleBasicAdaptor` instead.
 
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
 * (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
 * (legacy) [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
-* [`module.HasGenesis`](#modulehasgenesis) for inter-dependent genesis-related module functionalities.
-* [`module.HasABCIGenesis`](#modulehasabcigenesis) for inter-dependent genesis-related module functionalities.
-* [`appmodule.HasGenesis` / `module.HasGenesis`](#appmodulehasgenesis): The extension interface for stateful genesis methods.
+* (legacy) [`module.HasGenesis`](#modulehasgenesis) for inter-dependent genesis-related module functionalities.
+* (legacy) [`module.HasABCIGenesis`](#modulehasabcigenesis) for inter-dependent genesis-related module functionalities.
 * [`appmodule.HasPreBlocker`](#haspreblocker): The extension interface that contains information about the `AppModule` and `PreBlock`.
 * [`appmodule.HasBeginBlocker`](#hasbeginblocker): The extension interface that contains information about the `AppModule` and `BeginBlock`.
 * [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
@@ -46,31 +44,34 @@ The above interfaces are mostly embedding smaller interfaces (extension interfac
 * (legacy) [`module.HasInvariants`](#hasinvariants): The extension interface for registering invariants.
 * (legacy) [`module.HasConsensusVersion`](#hasconsensusversion): The extension interface for declaring a module consensus version.
 
-The `AppModuleBasic` interface exists to define independent methods of the module, i.e. those that do not depend on other modules in the application. This allows for the construction of the basic application structure early in the application definition, generally in the `init()` function of the [main application file](https://docs.cosmos.network/main/learn/beginner/app-anatomy).
-
 The `AppModule` interface exists to define inter-dependent module methods. Many modules need to interact with other modules, typically through [`keeper`s](./06-keeper.md), which means there is a need for an interface where modules list their `keeper`s and other methods that require a reference to another module's object. `AppModule` interface extension, such as `HasBeginBlocker` and `HasEndBlocker`, also enables the module manager to set the order of execution between module's methods like `BeginBlock` and `EndBlock`, which is important in cases where the order of execution between modules matters in the context of the application.
 
 The usage of extension interfaces allows modules to define only the functionalities they need. For example, a module that does not need an `EndBlock` does not need to define the `HasEndBlocker` interface and thus the `EndBlock` method. `AppModule` and `AppModuleGenesis` are voluntarily small interfaces, that can take advantage of the `Module` patterns without having to define many placeholder functions.
 
-### `AppModuleBasic`
-
-:::note
-Use `module.CoreAppModuleBasicAdaptor` instead for creating an `AppModuleBasic` from an `appmodule.AppModule`.
-:::
-
-The `AppModuleBasic` interface defines the independent methods modules need to implement.
+### `HasAminoCodec`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L56-L66
+// TODO
 ```
 
-Let us go through the methods:
-
 * `RegisterLegacyAminoCodec(*codec.LegacyAmino)`: Registers the `amino` codec for the module, which is used to marshal and unmarshal structs to/from `[]byte` in order to persist them in the module's `KVStore`.
+
+### `HasRegisterInterfaces`
+
+```go reference
+// TODO
+```
+
 * `RegisterInterfaces(codectypes.InterfaceRegistry)`: Registers a module's interface types and their concrete implementations as `proto.Message`.
+
+### `HasGRPCGateway`
+
+```go reference
+// TODO
+```
+
 * `RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)`: Registers gRPC routes for the module.
 
-All the `AppModuleBasic` of an application are managed by the [`BasicManager`](#basicmanager).
 
 ### `HasName`
 
@@ -83,7 +84,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 ### Genesis
 
 :::tip
-For easily creating an `AppModule` that only has genesis functionalities, use `module.GenesisOnlyAppModule`.
+For easily creating an `AppModule` that only has genesis functionalities, implement `module.HasGenesis/HasABCIGenesis` and `module.HasName`.
 :::
 
 #### `module.HasGenesisBasics`
@@ -111,16 +112,6 @@ https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L184-L1
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L191-L196
-```
-
-#### `appmodule.HasGenesis`
-
-:::warning
-`appmodule.HasGenesis` is experimental and should be considered unstable, it is recommended to not use this interface at this time.
-:::
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/6ce2505/core/appmodule/genesis.go#L8-L25
 ```
 
 ### `AppModule`
@@ -238,49 +229,24 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.
 
 ### Implementing the Application Module Interfaces
 
+// TODO reword!
+
 Typically, the various application module interfaces are implemented in a file called `module.go`, located in the module's folder (e.g. `./x/module/module.go`).
 
-Almost every module needs to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()` function often calls a `NewMsgServerImpl(k keeper)` function defined in `keeper/msg_server.go` and therefore needs to pass the module's [`keeper`](./06-keeper.md) as a parameter.
+Almost every module needs to implement the `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()` function often calls a `NewMsgServerImpl(k keeper)` function defined in `keeper/msg_server.go` and therefore needs to pass the module's [`keeper`](./06-keeper.md) as a parameter.
 
 ```go
 // example
 type AppModule struct {
-	AppModuleBasic
 	keeper       Keeper
 }
 ```
 
 In the example above, you can see that the `AppModule` concrete type references an `AppModuleBasic`, and not an `AppModuleGenesis`. That is because `AppModuleGenesis` only needs to be implemented in modules that focus on genesis-related functionalities. In most modules, the concrete `AppModule` type will have a reference to an `AppModuleBasic` and implement the two added methods of `AppModuleGenesis` directly in the `AppModule` type.
 
-If no parameter is required (which is often the case for `AppModuleBasic`), just declare an empty concrete type like so:
+## Module Manager
 
-```go
-type AppModuleBasic struct{}
-```
-
-## Module Managers
-
-Module managers are used to manage collections of `AppModuleBasic` and `AppModule`.
-
-### `BasicManager`
-
-The `BasicManager` is a structure that lists all the `AppModuleBasic` of an application:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L82
-```
-
-It implements the following methods:
-
-* `NewBasicManager(modules ...AppModuleBasic)`: Constructor function. It takes a list of the application's `AppModuleBasic` and builds a new `BasicManager`. This function is generally called in the `init()` function of [`app.go`](../../learn/beginner/00-app-anatomy.md#core-application-file) to quickly initialize the independent elements of the application's modules (click [here](https://github.com/cosmos/gaia/blob/main/app/app.go#L59-L74) to see an example).
-* `NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic)`: Constructor function. It creates a new `BasicManager` from a `Manager`. The `BasicManager` will contain all `AppModuleBasic` from the `AppModule` manager using `CoreAppModuleBasicAdaptor` whenever possible. Module's `AppModuleBasic` can be overridden by passing a custom AppModuleBasic map
-* `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`: Registers the [`codec.LegacyAmino`s](../../learn/advanced/05-encoding.md#amino) of each of the application's `AppModuleBasic`. This function is usually called early on in the [application's construction](../../learn/beginner/00-app-anatomy.md#constructor).
-* `RegisterInterfaces(registry codectypes.InterfaceRegistry)`: Registers interface types and implementations of each of the application's `AppModuleBasic`.
-* `DefaultGenesis(cdc codec.JSONCodec)`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis(cdc codec.JSONCodec)`](./08-genesis.md#defaultgenesis) function of each module. It only calls the modules that implements the `HasGenesisBasics` interfaces.
-* `ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage)`: Validates the genesis information modules by calling the [`ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`](./08-genesis.md#validategenesis) function of modules implementing the `HasGenesisBasics` interface.
-* `RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux)`: Registers gRPC routes for modules.
-* `AddTxCommands(rootTxCmd *cobra.Command)`: Adds modules' transaction commands (defined as `GetTxCmd() *cobra.Command`) to the application's [`rootTxCommand`](../../learn/advanced/07-cli.md#transaction-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../../learn/advanced/07-cli.md).
-* `AddQueryCommands(rootQueryCmd *cobra.Command)`: Adds modules' query commands (defined as `GetQueryCmd() *cobra.Command`) to the application's [`rootQueryCommand`](../../learn/advanced/07-cli.md#query-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../../learn/advanced/07-cli.md).
+The module manager is used to manage collections of `appmodule.AppModule` and `AppModule` and all the extensions interfaces.
 
 ### `Manager`
 
@@ -312,6 +278,11 @@ The module manager is used throughout the application whenever an action on a co
 * `EndBlock(context.Context) ([]abci.ValidatorUpdate, error)`: At the end of each block, this function is called from [`BaseApp`](../../learn/advanced/00-baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./06-beginblock-endblock.md) function of each modules implementing the `module.HasABCIEndBlock` interface, in the order defined in `OrderEndBlockers`. It creates a child [context](../../learn/advanced/02-context.md) with an event manager to aggregate [events](../../learn/advanced/08-events.md) emitted from all modules. The function returns an `abci` which contains the aforementioned events, as well as validator set updates (if any).
 * `Precommit(ctx context.Context)`: During [`Commit`](../../learn/advanced/00-baseapp.md#commit), this function is called from `BaseApp` immediately before the [`deliverState`](../../learn/advanced/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../../learn/advanced/04-store.md#commitmultistore) and, in turn calls the `Precommit` function of each modules implementing the `HasPrecommit` interface, in the order defined in `OrderPrecommiters`. It creates a child [context](../../learn/advanced/02-context.md) where the underlying `CacheMultiStore` is that of the newly committed block's [`finalizeblockstate`](../../learn/advanced/00-baseapp.md#state-updates).
 * `PrepareCheckState(ctx context.Context)`: During [`Commit`](../../learn/advanced/00-baseapp.md#commit), this function is called from `BaseApp` immediately after the [`deliverState`](../../learn/advanced/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../../learn/advanced/04-store.md#commitmultistore) and, in turn calls the `PrepareCheckState` function of each module implementing the `HasPrepareCheckState` interface, in the order defined in `OrderPrepareCheckStaters`. It creates a child [context](../../learn/advanced/02-context.md) where the underlying `CacheMultiStore` is that of the next block's [`checkState`](../../learn/advanced/00-baseapp.md#state-updates). Writes to this state will be present in the [`checkState`](../../learn/advanced/00-baseapp.md#state-updates) of the next block, and therefore this method can be used to prepare the `checkState` for the next block.
+* (Optional) `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`: Registers the [`codec.LegacyAmino`s](../../learn/advanced/05-encoding.md#amino) of each of the application module. This function is usually called early on in the [application's construction](../../learn/beginner/00-app-anatomy.md#constructor).
+* `RegisterInterfaces(registry codectypes.InterfaceRegistry)`: Registers interface types and implementations of each of the application's `AppModule`.
+* (Optional) `RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux)`: Registers gRPC routes for modules.
+* `DefaultGenesis(cdc codec.JSONCodec)`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis(cdc codec.JSONCodec)`](./08-genesis.md#defaultgenesis) function of each module. It only calls the modules that implements the `HasGenesisBasics` interfaces.
+* `ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage)`: Validates the genesis information modules by calling the [`ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`](./08-genesis.md#validategenesis) function of modules implementing the `HasGenesisBasics` interface.
 
 Here's an example of a concrete integration within an `simapp`:
 

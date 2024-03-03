@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -58,9 +59,8 @@ type BaseKeeper struct {
 
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
-	storeService           store.KVStoreService
+	environment            appmodule.Environment
 	mintCoinsRestrictionFn types.MintingRestrictionFn
-	logger                 log.Logger
 }
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
@@ -82,27 +82,25 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *que
 // to receive funds through direct and explicit actions, for example, by using a MsgSend or
 // by using a SendCoinsFromModuleToAccount execution.
 func NewBaseKeeper(
+	env appmodule.Environment,
 	cdc codec.BinaryCodec,
-	storeService store.KVStoreService,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
-	logger log.Logger,
 ) BaseKeeper {
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	// add the module name to the logger
-	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
+	env.Logger = env.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeService, ak, blockedAddrs, authority, logger),
+		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority),
 		ak:                     ak,
 		cdc:                    cdc,
-		storeService:           storeService,
+		environment:            env,
 		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
-		logger:                 logger,
 	}
 }
 
@@ -156,10 +154,13 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	if err != nil {
 		return err
 	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinSpentEvent(delAddrStr, amt),
-	)
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinSpent,
+		event.NewAttribute(types.AttributeKeySpender, delAddrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	); err != nil {
+		return err
+	}
 
 	err = k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
@@ -345,11 +346,9 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
-		k.logger.Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
+		k.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
 		return err
 	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
@@ -372,18 +371,19 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
+	k.Logger().Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
-	// emit mint event
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinMintEvent(addrStr, amounts),
-	)
 
-	return nil
+	// emit mint event
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinMint,
+		event.NewAttribute(types.AttributeKeyMinter, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
+	)
 }
 
 // BurnCoins burns coins deletes coins from the balance of an account.
@@ -411,19 +411,18 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
+	k.Logger().Debug("burned tokens from account", "amount", amounts.String(), "from", address)
 
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
 	// emit burn event
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinBurnEvent(addrStr, amounts),
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinBurn,
+		event.NewAttribute(types.AttributeKeyBurner, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
 	)
-
-	return nil
 }
 
 // setSupply sets the supply for the given coin
@@ -446,8 +445,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		vacc.TrackDelegation(sdkCtx.HeaderInfo().Time, balance, amt)
+		vacc.TrackDelegation(k.environment.HeaderService.GetHeaderInfo(ctx).Time, balance, amt)
 		k.ak.SetAccount(ctx, acc)
 	}
 

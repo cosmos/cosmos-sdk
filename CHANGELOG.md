@@ -52,10 +52,15 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#18499](https://github.com/cosmos/cosmos-sdk/pull/18499) Add `MsgRouter` response type from message name function.
 * (types) [#18768](https://github.com/cosmos/cosmos-sdk/pull/18768) Add MustValAddressFromBech32 function.
 * (gRPC) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) Add debug log prints for each gRPC request.
-* (server) [#19280](https://github.com/cosmos/cosmos-sdk/pull/19280) Adds in-place testnet CLI command.
+* (x/consensus) [#19483](https://github.com/cosmos/cosmos-sdk/pull/19483) Add consensus messages registration to consensus module.
 
 ### Improvements
 
+* (server) [#19455](https://github.com/cosmos/cosmos-sdk/pull/19455) Allow calling back into the application struct in PostSetup.
+* (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) The notion of basic manager does not exist anymore.
+    * The module manager now can do everything that the basic manager was doing.
+    * `AppModuleBasic` has been deprecated for extension interfaces. Modules can now implement `HasRegisterInterfaces`, `HasGRPCGateway` and `HasAminoCodec` when relevant.
+    * SDK modules now directly implement those extension interfaces on `AppModule` instead of `AppModuleBasic`.
 * (client/keys) [#18950](https://github.com/cosmos/cosmos-sdk/pull/18950) Improve `<appd> keys add`, `<appd> keys import` and `<appd> keys rename` by checking name validation.
 * (client/keys) [#18745](https://github.com/cosmos/cosmos-sdk/pull/18745) Improve `<appd> keys export` and `<appd> keys mnemonic` by adding --yes option to skip interactive confirmation.
 * (client/keys) [#18743](https://github.com/cosmos/cosmos-sdk/pull/18743) Improve `<appd> keys add -i` by hiding inputting of bip39 passphrase.
@@ -77,10 +82,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
-* (baseapp) [#19338](https://github.com/cosmos/cosmos-sdk/pull/19338) Set HeaderInfo in context when calling `setState`.
-* (x/staking) [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
-* (baseapp) [#19198](https://github.com/cosmos/cosmos-sdk/pull/19198) Remove usage of pointers in logs in all OE goroutines.
-* (baseapp) [#19177](https://github.com/cosmos/cosmos-sdk/pull/19177) Fix baseapp DefaultProposalHandler same-sender non-sequential sequence
 * (baseapp) [#18727](https://github.com/cosmos/cosmos-sdk/pull/18727) Ensure that `BaseApp.Init` firstly returns any errors from a nil commit multistore instead of panicking on nil dereferencing and before sealing the app.
 * (client) [#18622](https://github.com/cosmos/cosmos-sdk/pull/18622) Fixed a potential under/overflow from `uint64->int64` when computing gas fees as a LegacyDec.
 * (client/keys) [#18562](https://github.com/cosmos/cosmos-sdk/pull/18562) `keys delete` won't terminate when a key is not found.
@@ -89,13 +90,15 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
-* (abci): [#19200](https://github.com/cosmos/cosmos-sdk/pull/19200) Ensure that sdk side ve math matches cometbft
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
-* (crypto) [#19371](https://github.com/cosmos/cosmos-sdk/pull/19371) Avoid cli redundant log in stdout, log to stderr instead.
-* (client) [#19393](https://github.com/cosmos/cosmos-sdk/pull/19393/) Add `ReadDefaultValuesFromDefaultClientConfig` to populate the default values from the default client config in client.Context without creating a app folder.
 
 ### API Breaking Changes
 
+* (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) Remove basic manager and all related functions (`module.BasicManager`, `module.NewBasicManager`, `module.NewBasicManagerFromManager`, `NewGenesisOnlyAppModule`).
+    * The module manager now can do everything that the basic manager was doing.
+    * When using runtime, just inject the module manager when needed using your app config.
+    * All `AppModuleBasic` structs have been removed.
+* (x/consensus) [#19488](https://github.com/cosmos/cosmos-sdk/pull/19488) Consensus module creation takes `appmodule.Environment` instead of individual services.
 * (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `x/genutil` now handles the application export. `server.AddCommands` does not take an `AppExporter` but instead `genutilcli.Commands` does.
 * (x/gov/testutil) [#17986](https://github.com/cosmos/cosmos-sdk/pull/18036) `MsgDeposit` has been removed because of AutoCLI migration.
 * (x/staking/testutil) [#17986](https://github.com/cosmos/cosmos-sdk/pull/17986) `MsgRedelegateExec`, `MsgUnbondExec` has been removed because of AutoCLI migration.
@@ -133,6 +136,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#18695](https://github.com/cosmos/cosmos-sdk/pull/18695) Removed global configuration for txEncoder.
 * (types) [#18607](https://github.com/cosmos/cosmos-sdk/pull/18607) Removed address verifier from global config, moved verifier function to bech32 codec.
 * (server) [#18909](https://github.com/cosmos/cosmos-sdk/pull/18909) Remove configuration endpoint on grpc reflection endpoint in favour of auth module bech32prefix endpoint already exposed.
+* (crypto) [#19541](https://github.com/cosmos/cosmos-sdk/pull/19541) The deprecated `FromTmProtoPublicKey`, `ToTmProtoPublicKey`, `FromTmPubKeyInterface` and `ToTmPubKeyInterface` functions have been removed. Use their replacements (`Cmt` instead of `Tm`) instead.
 
 ### Client Breaking Changes
 
@@ -145,7 +149,27 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Deprecated
 
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
-* (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServicecs` instead from Core API.
+* (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
+
+## [v0.50.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.4) - 2023-02-19
+
+### Features
+
+* (server) [#19280](https://github.com/cosmos/cosmos-sdk/pull/19280) Adds in-place testnet CLI command.
+
+### Improvements
+
+* (client) [#19393](https://github.com/cosmos/cosmos-sdk/pull/19393/) Add `ReadDefaultValuesFromDefaultClientConfig` to populate the default values from the default client config in client.Context without creating a app folder.
+
+### Bug Fixes
+
+* (x/auth/vesting) [GHSA-4j93-fm92-rp4m](#bug-fixes) Add `BlockedAddr` check in `CreatePeriodicVestingAccount`.
+* (baseapp) [#19338](https://github.com/cosmos/cosmos-sdk/pull/19338) Set HeaderInfo in context when calling `setState`.
+* (baseapp): [#19200](https://github.com/cosmos/cosmos-sdk/pull/19200) Ensure that sdk side ve math matches cometbft.
+* [#19106](https://github.com/cosmos/cosmos-sdk/pull/19106) Allow empty public keys when setting signatures. Public keys aren't needed for every transaction.
+* (baseapp) [#19198](https://github.com/cosmos/cosmos-sdk/pull/19198) Remove usage of pointers in logs in all optimistic execution goroutines.
+* (baseapp) [#19177](https://github.com/cosmos/cosmos-sdk/pull/19177) Fix baseapp `DefaultProposalHandler` same-sender non-sequential sequence.
+* (crypto) [#19371](https://github.com/cosmos/cosmos-sdk/pull/19371) Avoid CLI redundant log in stdout, log to stderr instead.
 
 ## [v0.50.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.3) - 2023-01-15
 
@@ -543,6 +567,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#16980](https://github.com/cosmos/cosmos-sdk/pull/16980) Deprecate `IntProto` and `DecProto`. Instead, `math.Int` and `math.LegacyDec` should be used respectively. Both types support `Marshal` and `Unmarshal` for binary serialization.
 * (x/staking) [#14567](https://github.com/cosmos/cosmos-sdk/pull/14567) The `delegator_address` field of `MsgCreateValidator` has been deprecated.
    The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
+
+## [v0.47.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.9) - 2024-02-19
+
+### Bug Fixes
+
+* (x/auth/vesting) [GHSA-4j93-fm92-rp4m](#bug-fixes) Add `BlockedAddr` check in `CreatePeriodicVestingAccount`.
+* (baseapp) [#19177](https://github.com/cosmos/cosmos-sdk/pull/19177) Fix baseapp `DefaultProposalHandler` same-sender non-sequential sequence.
 
 ## [v0.47.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.8) - 2024-01-22
 
@@ -1233,7 +1264,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 * (x/group) [#13214](https://github.com/cosmos/cosmos-sdk/pull/13214) Add `withdraw-proposal` command to group module's CLI transaction commands.
 * (x/auth) [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the simulation decoder.
 * (simapp) [#13107](https://github.com/cosmos/cosmos-sdk/pull/13107) Call `SetIAVLCacheSize` with the configured value in simapp.
-* [#13301](https://github.com/cosmos/cosmos-sdk/pull/13301) Keep the balance query endpoint compatible with legacy blocks
+* [#13301](https://github.com/cosmos/cosmos-sdk/pull/13301) Keep the balance query endpoint compatible with legacy blocks
 * [#13321](https://github.com/cosmos/cosmos-sdk/pull/13321) Add flag to disable fast node migration and usage.
 
 ### Bug Fixes

@@ -80,7 +80,7 @@ func createHistoricalInfo(height int64, chainID string) *stakingtypes.Historical
 }
 
 func TestDelegationsByValidatorMigrations(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(staking.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(v5.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)

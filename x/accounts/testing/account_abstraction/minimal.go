@@ -2,7 +2,7 @@ package account_abstraction
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
@@ -39,7 +39,7 @@ func (a MinimalAbstractedAccount) Init(ctx context.Context, msg *rotationv1.MsgI
 }
 
 func (a MinimalAbstractedAccount) RotatePubKey(ctx context.Context, msg *rotationv1.MsgRotatePubKey) (*rotationv1.MsgRotatePubKeyResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 // Authenticate authenticates the account, auth always passess.
@@ -50,7 +50,7 @@ func (a MinimalAbstractedAccount) Authenticate(ctx context.Context, msg *account
 
 // QueryAuthenticateMethods queries the authentication methods of the account.
 func (a MinimalAbstractedAccount) QueryAuthenticateMethods(ctx context.Context, req *account_abstractionv1.QueryAuthenticationMethods) (*account_abstractionv1.QueryAuthenticationMethodsResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 func (a MinimalAbstractedAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {

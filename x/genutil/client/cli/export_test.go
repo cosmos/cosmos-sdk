@@ -59,7 +59,7 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 	sys := cmdtest.NewSystem()
 	sys.AddCommands(
 		cli.ExportCmd(exporter),
-		cli.InitCmd(module.NewBasicManager()),
+		cli.InitCmd(module.NewManager()),
 	)
 
 	tw := zerolog.NewTestWriter(t)

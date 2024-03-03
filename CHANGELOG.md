@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/auth) [#19549](https://github.com/cosmos/cosmos-sdk/pull/19549) Accept custom get signers when injecting `x/auth/tx`.
 
+### Features
+
+* (baseapp) [#19626](https://github.com/cosmos/cosmos-sdk/pull/19626) Adds `DisableBlockGasMeter` option to `BaseApp`, which removes the block gas meter during transaction execution.
+
 ## [v0.50.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.4) - 2023-02-19
 
 ### Features

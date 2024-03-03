@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"sort"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -21,6 +23,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TestValidateVoteExtensions is a unit test function that tests the validation of vote extensions.
+// It sets up the necessary fixtures and validators, generates vote extensions for each validator,
+// and validates the vote extensions using the baseapp.ValidateVoteExtensions function.
 func TestValidateVoteExtensions(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
@@ -86,7 +91,17 @@ func TestValidateVoteExtensions(t *testing.T) {
 		votes = append(votes, ve)
 	}
 
-	err := baseapp.ValidateVoteExtensions(f.sdkCtx, f.stakingKeeper, abci.ExtendedCommitInfo{Round: 0, Votes: votes})
+	eci := abci.ExtendedCommitInfo{Round: 0, Votes: votes}
+	commit := sdk.ToSDKExtendedCommitInfo(eci)
+	sorted := voteInfos(eci.Votes)
+	sort.Sort(sorted)
+	eci.Votes = sorted
+
+	f.sdkCtx = f.sdkCtx.WithCometInfo(comet.Info{
+		LastCommit: commit,
+	})
+
+	err := baseapp.ValidateVoteExtensions(f.sdkCtx, f.stakingKeeper, eci)
 	assert.NilError(t, err)
 }
 
@@ -97,4 +112,21 @@ func mashalVoteExt(msg proto.Message) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+type voteInfos []abci.ExtendedVoteInfo
+
+func (v voteInfos) Len() int {
+	return len(v)
+}
+
+func (v voteInfos) Less(i, j int) bool {
+	if v[i].Validator.Power == v[j].Validator.Power {
+		return bytes.Compare(v[i].Validator.Address, v[j].Validator.Address) == -1
+	}
+	return v[i].Validator.Power > v[j].Validator.Power
+}
+
+func (v voteInfos) Swap(i, j int) {
+	v[i], v[j] = v[j], v[i]
 }

@@ -91,15 +91,8 @@ func TestValidateVoteExtensions(t *testing.T) {
 		votes = append(votes, ve)
 	}
 
-	eci := abci.ExtendedCommitInfo{Round: 0, Votes: votes}
-	commit := sdk.ToSDKExtendedCommitInfo(eci)
-	sorted := voteInfos(eci.Votes)
-	sort.Sort(sorted)
-	eci.Votes = sorted
-
-	f.sdkCtx = f.sdkCtx.WithCometInfo(comet.Info{
-		LastCommit: commit,
-	})
+	eci, ci := extendedCommitToLastCommit(abci.ExtendedCommitInfo{Round: 0, Votes: votes})
+	f.sdkCtx = f.sdkCtx.WithCometInfo(ci)
 
 	err := baseapp.ValidateVoteExtensions(f.sdkCtx, f.stakingKeeper, eci)
 	assert.NilError(t, err)
@@ -114,19 +107,43 @@ func mashalVoteExt(msg proto.Message) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-type voteInfos []abci.ExtendedVoteInfo
+func extendedCommitToLastCommit(ec abci.ExtendedCommitInfo) (abci.ExtendedCommitInfo, comet.Info) {
+	// sort the extended commit info
+	sort.Sort(extendedVoteInfos(ec.Votes))
 
-func (v voteInfos) Len() int {
+	// convert the extended commit info to last commit info
+	lastCommit := comet.CommitInfo{
+		Round: ec.Round,
+		Votes: make([]comet.VoteInfo, len(ec.Votes)),
+	}
+
+	for i, vote := range ec.Votes {
+		lastCommit.Votes[i] = comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: vote.Validator.Address,
+				Power:   vote.Validator.Power,
+			},
+		}
+	}
+
+	return ec, comet.Info{
+		LastCommit: lastCommit,
+	}
+}
+
+type extendedVoteInfos []abci.ExtendedVoteInfo
+
+func (v extendedVoteInfos) Len() int {
 	return len(v)
 }
 
-func (v voteInfos) Less(i, j int) bool {
+func (v extendedVoteInfos) Less(i, j int) bool {
 	if v[i].Validator.Power == v[j].Validator.Power {
 		return bytes.Compare(v[i].Validator.Address, v[j].Validator.Address) == -1
 	}
 	return v[i].Validator.Power > v[j].Validator.Power
 }
 
-func (v voteInfos) Swap(i, j int) {
+func (v extendedVoteInfos) Swap(i, j int) {
 	v[i], v[j] = v[j], v[i]
 }

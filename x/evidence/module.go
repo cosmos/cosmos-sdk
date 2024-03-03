@@ -46,7 +46,7 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(keeper keeper.Keeper, cdc codec.Codec, evidenceHandlers ...eviclient.EvidenceHandler) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, evidenceHandlers ...eviclient.EvidenceHandler) AppModule {
 	return AppModule{
 		keeper:           keeper,
 		evidenceHandlers: evidenceHandlers,

@@ -2,12 +2,12 @@ syntax = "proto3";
 package cosmos.lockup;
 
 import "amino/amino.proto";
-import "google/protobuf/any.proto";
-import "cosmos/lockup/lockup.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/lockup/lockup.proto";
+import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "cosmos/msg/v1/msg.proto";
+import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "cosmossdk.io/x/accounts/lockup/types";
@@ -123,8 +123,9 @@ message MsgWithdraw {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string withdrawer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string to_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string          withdrawer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string          to_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated string denoms     = 3;
 }
 
 // MsgWithdrawResponse defines the response for MsgWithdraw

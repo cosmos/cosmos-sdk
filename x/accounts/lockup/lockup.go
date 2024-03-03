@@ -296,7 +296,10 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		}
 
 		withdrawAmt := math.MinInt(withdrawableAmt, spendable.Amount)
-
+		// if zero amount go to the next iteration
+		if withdrawAmt.IsZero() {
+			continue
+		}
 		amount = append(amount, sdk.NewCoin(denom, withdrawAmt))
 
 		// update the withdrawed amount

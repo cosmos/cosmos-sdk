@@ -787,20 +787,3 @@ func (v extendedVoteInfos) Less(i, j int) bool {
 func (v extendedVoteInfos) Swap(i, j int) {
 	v[i], v[j] = v[j], v[i]
 }
-
-type voteInfos []comet.VoteInfo
-
-func (v voteInfos) Len() int {
-	return len(v)
-}
-
-func (v voteInfos) Less(i, j int) bool {
-	if v[i].Validator.Power == v[j].Validator.Power {
-		return bytes.Compare(v[i].Validator.Address, v[j].Validator.Address) == -1
-	}
-	return v[i].Validator.Power > v[j].Validator.Power
-}
-
-func (v voteInfos) Swap(i, j int) {
-	v[i], v[j] = v[j], v[i]
-}

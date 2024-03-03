@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -32,7 +33,7 @@ var (
 	_ module.HasAminoCodec         = AppModule{}
 	_ module.HasGRPCGateway        = AppModule{}
 	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.HasGenesis            = AppModule{}
+	_ appmodulev2.HasGenesis       = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasPreBlocker = AppModule{}
@@ -42,6 +43,7 @@ var (
 
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
+	cdc    codec.Codec
 	keeper *keeper.Keeper
 }
 
@@ -105,24 +107,24 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 }
 
 // DefaultGenesis is an empty object
-func (AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
+func (AppModule) DefaultGenesis() json.RawMessage {
 	return []byte("{}")
 }
 
 // ValidateGenesis is always successful, as we ignore the value
-func (AppModule) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, _ json.RawMessage) error {
+func (AppModule) ValidateGenesis(_ json.RawMessage) error {
 	return nil
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(ctx context.Context, _ codec.JSONCodec, _ json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, _ json.RawMessage) error {
 	// set version map automatically if available
 	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
 		// chains can still use a custom init chainer for setting the version map
 		// this means that we need to combine the manually wired modules version map with app wiring enabled modules version map
 		moduleVM, err := am.keeper.GetModuleVersionMap(ctx)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		for name, version := range moduleVM {
@@ -133,14 +135,15 @@ func (am AppModule) InitGenesis(ctx context.Context, _ codec.JSONCodec, _ json.R
 
 		err = am.keeper.SetModuleVersionMap(ctx, versionMap)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
+	return nil
 }
 
 // ExportGenesis is always empty, as InitGenesis does nothing either
-func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.RawMessage {
-	return am.DefaultGenesis(cdc)
+func (am AppModule) ExportGenesis(_ context.Context) (json.RawMessage, error) {
+	return am.DefaultGenesis(), nil
 }
 
 // ConsensusVersion implements HasConsensusVersion

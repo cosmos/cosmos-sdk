@@ -76,7 +76,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	s.keeper.InitGenesis(s.ctx, genesisState)
 
-	exported := s.keeper.ExportGenesis(s.ctx)
+	exported, err := s.keeper.ExportGenesis(s.ctx)
+	s.Require().NoError(err)
 	bz, err := s.cdc.MarshalJSON(exported)
 	s.Require().NoError(err)
 

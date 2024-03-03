@@ -32,6 +32,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -215,6 +216,10 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 
 		if _, hasABCIGenesis := module.(HasABCIGenesis); hasABCIGenesis {
 			return !hasABCIGenesis
+		}
+
+		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
+			return !hasGenesis
 		}
 
 		_, hasGenesis := module.(HasGenesis)

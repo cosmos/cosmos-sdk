@@ -9,7 +9,7 @@ import (
 )
 
 // InitGenesis initializes new authz genesis
-func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) {
+func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) error {
 	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	for _, entry := range data.Authorization {
 		// ignore expired authorizations
@@ -19,11 +19,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) {
 
 		grantee, err := k.authKeeper.AddressCodec().StringToBytes(entry.Grantee)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		granter, err := k.authKeeper.AddressCodec().StringToBytes(entry.Granter)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
@@ -33,9 +33,10 @@ func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) {
 
 		err = k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
+	return nil
 }
 
 // ExportGenesis returns a GenesisState for a given context.

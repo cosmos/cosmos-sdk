@@ -86,6 +86,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	s.Require().Equal(genesisState.Params, params)
 	s.Require().NoError(err)
 
-	genesisState2 := s.keeper.ExportGenesis(s.sdkCtx)
+	genesisState2, err := s.keeper.ExportGenesis(s.sdkCtx)
+	s.Require().NoError(err)
 	s.Require().Equal(genesisState, genesisState2)
 }

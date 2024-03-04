@@ -25,7 +25,7 @@ type MessageRouter interface {
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 
-	ResponseNameByRequestName(requestName string) string
+	ResponseNameByMsgName(msgName string) string
 	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
 }
 
@@ -34,7 +34,7 @@ type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
-	responseByRequest map[string]string
+	responseByMsgName map[string]string
 	circuitBreaker    CircuitBreaker
 }
 
@@ -45,7 +45,7 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes:            map[string]MsgServiceHandler{},
 		hybridHandlers:    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
-		responseByRequest: map[string]string{},
+		responseByMsgName: map[string]string{},
 		circuitBreaker:    nil,
 	}
 }
@@ -93,8 +93,8 @@ func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx con
 	return msr.hybridHandlers[msgName]
 }
 
-func (msr *MsgServiceRouter) ResponseNameByRequestName(requestName string) string {
-	return msr.responseByRequest[requestName]
+func (msr *MsgServiceRouter) ResponseNameByMsgName(msgName string) string {
+	return msr.responseByMsgName[msgName]
 }
 
 func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
@@ -112,7 +112,7 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 		return err
 	}
 	// map input name to output name
-	msr.responseByRequest[string(inputName)] = string(outputName)
+	msr.responseByMsgName[string(inputName)] = string(outputName)
 	// if circuit breaker is not nil, then we decorate the hybrid handler with the circuit breaker
 	if msr.circuitBreaker == nil {
 		msr.hybridHandlers[string(inputName)] = hybridHandler

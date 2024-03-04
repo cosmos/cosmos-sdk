@@ -10,23 +10,23 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/registry"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
 	_ appmodule.AppModule = coreAppModuleAdaptor{}
 
-	_ HasName               = coreAppModuleAdaptor{}
-	_ HasAminoCodec         = coreAppModuleAdaptor{}
-	_ HasGRPCGateway        = coreAppModuleAdaptor{}
-	_ HasRegisterInterfaces = coreAppModuleAdaptor{}
-	_ HasABCIGenesis        = coreAppModuleAdaptor{}
-	_ HasServices           = coreAppModuleAdaptor{}
+	_ HasName                         = coreAppModuleAdaptor{}
+	_ HasAminoCodec                   = coreAppModuleAdaptor{}
+	_ HasGRPCGateway                  = coreAppModuleAdaptor{}
+	_ appmodule.HasRegisterInterfaces = coreAppModuleAdaptor{}
+	_ HasABCIGenesis                  = coreAppModuleAdaptor{}
+	_ HasServices                     = coreAppModuleAdaptor{}
 )
 
 // CoreAppModuleAdaptor wraps the core API module as an AppModule that this version of the SDK can use.
@@ -171,11 +171,11 @@ func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux 
 }
 
 // RegisterInterfaces implements HasRegisterInterfaces
-func (c coreAppModuleAdaptor) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.LegacyRegistry) {
 	if mod, ok := c.module.(interface {
-		RegisterInterfaces(registry codectypes.InterfaceRegistry)
+		RegisterInterfaces(registry.LegacyRegistry)
 	}); ok {
-		mod.RegisterInterfaces(registry)
+		mod.RegisterInterfaces(reg)
 	}
 }
 

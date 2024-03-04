@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"cosmossdk.io/core/registry"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -13,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -52,7 +52,7 @@ func (m AppModule) IsAppModule() {}
 
 func (AppModule) Name() string { return ModuleName }
 
-func (m AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
+func (m AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, v1.MsgServiceDesc())
 }
 

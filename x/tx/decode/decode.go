@@ -154,5 +154,9 @@ func (dtx *DecodedTx) GetSenders() [][]byte {
 }
 
 func (dtx *DecodedTx) Bytes() []byte {
-	return dtx.TxRaw.BodyBytes
+	bz, err := proto.Marshal(dtx.TxRaw)
+	if err != nil {
+		panic(err)
+	}
+	return bz
 }

@@ -307,8 +307,11 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 			return nil, err
 		}
 	}
+	if len(amount) == 0 {
+		return nil, fmt.Errorf("no tokens available for withdrawing")
+	}
 
-	msgSend := banktypes.NewMsgSend(fromAddress, msg.ToAddress, amount)
+	msgSend := makeMsgSend(fromAddress, msg.ToAddress, amount)
 	_, err = sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err

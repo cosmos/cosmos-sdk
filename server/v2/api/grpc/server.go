@@ -13,8 +13,8 @@ import (
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 	"cosmossdk.io/log"
+	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/grpc/gogoreflection"
 )
 
 type ClientContext interface {

@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -172,11 +171,11 @@ func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux 
 }
 
 // RegisterInterfaces implements HasRegisterInterfaces
-func (c coreAppModuleAdaptor) RegisterInterfaces(registry registry.LegacyRegistry) {
+func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.LegacyRegistry) {
 	if mod, ok := c.module.(interface {
-		RegisterInterfaces(registry codectypes.InterfaceRegistry)
+		RegisterInterfaces(registry.LegacyRegistry)
 	}); ok {
-		mod.RegisterInterfaces(registry)
+		mod.RegisterInterfaces(reg)
 	}
 }
 

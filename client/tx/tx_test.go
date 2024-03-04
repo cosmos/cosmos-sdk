@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -28,7 +29,7 @@ import (
 )
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{})
 	cdc := codec.NewProtoCodec(encodingConfig.InterfaceRegistry)
 	signingCtx := encodingConfig.InterfaceRegistry.SigningContext()
 	return authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), encodingConfig.Codec
@@ -155,7 +156,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 }
 
 func TestBuildUnsignedTxWithWithExtensionOptions(t *testing.T) {
-	txCfg := moduletestutil.MakeBuilderTestTxConfig()
+	txCfg := moduletestutil.MakeBuilderTestTxConfig(testutil.CodecOptions{})
 	extOpts := []*codectypes.Any{
 		{
 			TypeUrl: "/test",

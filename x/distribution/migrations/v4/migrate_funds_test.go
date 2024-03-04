@@ -22,6 +22,7 @@ import (
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +35,7 @@ func TestFundsMigration(t *testing.T) {
 	)
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
-	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, bank.AppModule{}, distribution.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{}, distribution.AppModule{})
 	ctx := sdk.NewContext(cms, true, logger)
 
 	maccPerms := map[string][]string{

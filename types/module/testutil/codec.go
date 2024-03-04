@@ -22,9 +22,9 @@ type TestEncodingConfig struct {
 	Amino             *codec.LegacyAmino
 }
 
-func MakeTestEncodingConfig(modules ...module.AppModule) TestEncodingConfig {
+func MakeTestEncodingConfig(codecOpt testutil.CodecOptions, modules ...module.AppModule) TestEncodingConfig {
 	aminoCodec := codec.NewLegacyAmino()
-	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
+	interfaceRegistry := codecOpt.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
@@ -44,8 +44,8 @@ func MakeTestEncodingConfig(modules ...module.AppModule) TestEncodingConfig {
 	return encCfg
 }
 
-func MakeTestTxConfig() client.TxConfig {
-	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
+func MakeTestTxConfig(codecOpt testutil.CodecOptions) client.TxConfig {
+	interfaceRegistry := codecOpt.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	signingCtx := interfaceRegistry.SigningContext()
 	return tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
@@ -56,9 +56,9 @@ type TestBuilderTxConfig struct {
 	TxBuilder *TestTxBuilder
 }
 
-func MakeBuilderTestTxConfig() TestBuilderTxConfig {
+func MakeBuilderTestTxConfig(codecOpt testutil.CodecOptions) TestBuilderTxConfig {
 	return TestBuilderTxConfig{
-		TxConfig: MakeTestTxConfig(),
+		TxConfig: MakeTestTxConfig(codecOpt),
 	}
 }
 

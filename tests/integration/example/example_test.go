@@ -18,6 +18,7 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +30,7 @@ import (
 func Example() {
 	// in this example we are testing the integration of the following modules:
 	// - mint, which directly depends on auth, bank and staking
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, mint.AppModule{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, mint.AppModule{})
 	signingCtx := encodingCfg.InterfaceRegistry.SigningContext()
 
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
@@ -122,7 +123,7 @@ func Example() {
 // That module has no dependency on other modules.
 func Example_oneModule() {
 	// in this example we are testing the integration of the auth module:
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 

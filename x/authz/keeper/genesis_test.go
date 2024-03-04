@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -49,7 +50,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())

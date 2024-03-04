@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/signing"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -236,7 +237,7 @@ func (s *MempoolTestSuite) TestSampleTxs() {
 }
 
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
-	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModule{})
+	cfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, counter.AppModule{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
 }
 

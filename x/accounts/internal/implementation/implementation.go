@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 
@@ -111,11 +112,11 @@ func newImplementation(schemaBuilder *collections.SchemaBuilder, account Account
 // and non-generic implementation usable by the x/accounts module.
 type Implementation struct {
 	// Init defines the initialisation handler for the smart account.
-	Init func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
+	Init func(ctx context.Context, env appmodule.Environment, msg ProtoMsg) (resp ProtoMsg, err error)
 	// Execute defines the execution handler for the smart account.
-	Execute func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
+	Execute func(ctx context.Context, env appmodule.Environment, msg ProtoMsg) (resp ProtoMsg, err error)
 	// Query defines the query handler for the smart account.
-	Query func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
+	Query func(ctx context.Context, env appmodule.Environment, msg ProtoMsg) (resp ProtoMsg, err error)
 	// CollectionsSchema represents the state schema.
 	CollectionsSchema collections.Schema
 	// InitHandlerSchema represents the init handler schema.

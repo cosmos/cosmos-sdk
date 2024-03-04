@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/core/appmodule"
 )
 
 func TestMakeAccountContext(t *testing.T) {
@@ -31,7 +32,8 @@ func TestMakeAccountContext(t *testing.T) {
 	impl, err := newImplementation(sb, ta)
 	require.NoError(t, err)
 
-	_, err = impl.Execute(accountCtx, &types.UInt64Value{Value: 1000})
+	env := appmodule.Environment{}
+	_, err = impl.Execute(accountCtx, env, &types.UInt64Value{Value: 1000})
 	require.NoError(t, err)
 
 	// we want to ensure that the account wrote in the correct prefix.

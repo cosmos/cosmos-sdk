@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/accounts/accountstd"
@@ -51,7 +52,7 @@ type Account struct {
 	gs           gas.Service
 }
 
-func (a Account) Init(ctx context.Context, msg *counterv1.MsgInit) (*counterv1.MsgInitResponse, error) {
+func (a Account) Init(ctx context.Context, env appmodule.Environment, msg *counterv1.MsgInit) (*counterv1.MsgInitResponse, error) {
 	err := a.Owner.Set(ctx, accountstd.Sender(ctx))
 	if err != nil {
 		return nil, err
@@ -64,7 +65,7 @@ func (a Account) Init(ctx context.Context, msg *counterv1.MsgInit) (*counterv1.M
 	return &counterv1.MsgInitResponse{}, nil
 }
 
-func (a Account) IncreaseCounter(ctx context.Context, msg *counterv1.MsgIncreaseCounter) (*counterv1.MsgIncreaseCounterResponse, error) {
+func (a Account) IncreaseCounter(ctx context.Context, env appmodule.Environment, msg *counterv1.MsgIncreaseCounter) (*counterv1.MsgIncreaseCounterResponse, error) {
 	sender := accountstd.Sender(ctx)
 	owner, err := a.Owner.Get(ctx)
 	if err != nil {
@@ -87,7 +88,7 @@ func (a Account) IncreaseCounter(ctx context.Context, msg *counterv1.MsgIncrease
 	}, nil
 }
 
-func (a Account) QueryCounter(ctx context.Context, _ *counterv1.QueryCounterRequest) (*counterv1.QueryCounterResponse, error) {
+func (a Account) QueryCounter(ctx context.Context, env appmodule.Environment, _ *counterv1.QueryCounterRequest) (*counterv1.QueryCounterResponse, error) {
 	counter, err := a.Counter.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -97,7 +98,7 @@ func (a Account) QueryCounter(ctx context.Context, _ *counterv1.QueryCounterRequ
 	}, nil
 }
 
-func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDependencies) (*counterv1.MsgTestDependenciesResponse, error) {
+func (a Account) TestDependencies(ctx context.Context, env appmodule.Environment, _ *counterv1.MsgTestDependencies) (*counterv1.MsgTestDependenciesResponse, error) {
 	// test binary codec
 	err := a.TestStateCodec.Set(ctx, counterv1.MsgTestDependencies{})
 	if err != nil {

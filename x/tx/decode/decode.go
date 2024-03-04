@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
@@ -20,6 +21,8 @@ type DecodedTx struct {
 	Signers                      [][]byte
 	TxBodyHasUnknownNonCriticals bool
 }
+
+var _ transaction.Tx = &DecodedTx{}
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {
@@ -129,7 +132,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 }
 
 // Hash implements the interface for the Tx interface.
-func (dtx *DecodedTx) Hash() [32]byte {
+func (dtx DecodedTx) Hash() [32]byte {
 	bz, err := proto.Marshal(dtx.TxRaw)
 	if err != nil {
 		panic(err)
@@ -138,14 +141,18 @@ func (dtx *DecodedTx) Hash() [32]byte {
 	return sha256.Sum256(bz)
 }
 
-func (dtx *DecodedTx) GetGasLimit() uint64 {
+func (dtx DecodedTx) GetGasLimit() uint64 {
 	return dtx.Tx.AuthInfo.Fee.GasLimit
 }
 
-func (dtx *DecodedTx) GetMessages() []proto.Message {
+func (dtx DecodedTx) GetMessages() []proto.Message {
 	return dtx.Messages
 }
 
-func (dtx *DecodedTx) GetSenders() [][]byte {
+func (dtx DecodedTx) GetSenders() [][]byte {
 	return dtx.Signers
+}
+
+func (dtx DecodedTx) Bytes() []byte {
+	return dtx.TxRaw.BodyBytes
 }

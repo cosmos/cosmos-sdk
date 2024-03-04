@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/tx/decode"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -157,7 +158,7 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 
 // TxValidator implements appmodule.HasTxValidation.
 // It replaces auth ante handlers for server/v2
-func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+func (am AppModule) TxValidator(ctx context.Context, tx decode.DecodedTx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// supports legacy ante handler

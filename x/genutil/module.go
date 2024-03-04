@@ -26,6 +26,7 @@ var (
 
 // AppModule implements an application module for the genutil module.
 type AppModule struct {
+	cdc              codec.Codec
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
 	deliverTx        genesis.TxHandler
@@ -74,9 +75,9 @@ func (b AppModule) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig client.
 }
 
 // InitGenesis performs genesis initialization for the genutil module.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
+	am.cdc.MustUnmarshalJSON(data, &genesisState)
 	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
 	if err != nil {
 		panic(err)
@@ -85,8 +86,8 @@ func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data j
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
-func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.RawMessage {
-	return am.DefaultGenesis(cdc)
+func (am AppModule) ExportGenesis(_ context.Context) json.RawMessage {
+	return am.DefaultGenesis(am.cdc)
 }
 
 // GenTxValidator returns the genutil module's genesis transaction validator.

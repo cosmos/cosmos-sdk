@@ -43,8 +43,8 @@ type AppModule struct {
 	// NOTE: We store a reference to the keeper here so that after a module
 	// manager is created, the invariants can be properly registered and
 	// executed.
-	keeper *keeper.Keeper
-
+	keeper                *keeper.Keeper
+	cdc                   codec.Codec
 	skipGenesisInvariants bool
 }
 
@@ -52,10 +52,11 @@ type AppModule struct {
 // we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
 // - which doesn't impact the chain security unless 66+% of validators have a wrongly
 // modified genesis file.
-func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
+func NewAppModule(keeper *keeper.Keeper, cdc codec.Codec, skipGenesisInvariants bool) AppModule {
 	return AppModule{
 		keeper:                keeper,
 		skipGenesisInvariants: skipGenesisInvariants,
+		cdc:                   cdc,
 	}
 }
 
@@ -117,10 +118,10 @@ func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingCo
 }
 
 // InitGenesis performs genesis initialization for the crisis module.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) {
 	start := time.Now()
 	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
+	am.cdc.MustUnmarshalJSON(data, &genesisState)
 	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, &genesisState)
@@ -130,9 +131,9 @@ func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data j
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the crisis  module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
-	return cdc.MustMarshalJSON(gs)
+	return am.cdc.MustMarshalJSON(gs)
 }
 
 // ConsensusVersion implements HasConsensusVersion

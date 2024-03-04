@@ -87,7 +87,7 @@ func (c coreAppModuleAdaptor) ValidateGenesis(cdc codec.JSONCodec, txConfig clie
 }
 
 // ExportGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) json.RawMessage {
 	if module, ok := c.module.(appmodule.HasGenesis); ok {
 		ctx := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 		target := genesis.RawJSONTarget{}
@@ -105,14 +105,14 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context, cdc codec.JSONC
 	}
 
 	if mod, ok := c.module.(HasGenesis); ok {
-		return mod.ExportGenesis(ctx, cdc)
+		return mod.ExportGenesis(ctx)
 	}
 
 	return nil
 }
 
 // InitGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessage) []abci.ValidatorUpdate {
 	if module, ok := c.module.(appmodule.HasGenesis); ok {
 		// core API genesis
 		source, err := genesis.SourceFromRawJSON(bz)
@@ -127,11 +127,11 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, cdc codec.JSONCod
 	}
 
 	if mod, ok := c.module.(HasGenesis); ok {
-		mod.InitGenesis(ctx, cdc, bz)
+		mod.InitGenesis(ctx, bz)
 		return nil
 	}
 	if mod, ok := c.module.(HasABCIGenesis); ok {
-		return mod.InitGenesis(ctx, cdc, bz)
+		return mod.InitGenesis(ctx, bz)
 	}
 	return nil
 }

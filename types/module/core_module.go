@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"cosmossdk.io/core/registry"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -171,7 +172,7 @@ func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux 
 }
 
 // RegisterInterfaces implements HasRegisterInterfaces
-func (c coreAppModuleAdaptor) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (c coreAppModuleAdaptor) RegisterInterfaces(registry registry.LegacyRegistry) {
 	if mod, ok := c.module.(interface {
 		RegisterInterfaces(registry codectypes.InterfaceRegistry)
 	}); ok {

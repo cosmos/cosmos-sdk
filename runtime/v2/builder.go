@@ -46,10 +46,7 @@ func (a *AppBuilder) RegisterModules(modules ...appmodule.AppModule) error {
 
 			if mod, ok := appModule.(sdkmodule.HasRegisterInterfaces); ok {
 				mod.RegisterInterfaces(a.app.interfaceRegistry)
-			} else if mod, ok := appModule.(sdkmodule.HasRegisterInterfacesV2); ok {
-				mod.RegisterInterfaces(a.app.interfaceRegistry)
 			}
-
 			if mod, ok := appModule.(sdkmodule.HasAminoCodec); ok {
 				mod.RegisterLegacyAminoCodec(a.app.amino)
 			}

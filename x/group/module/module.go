@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/registry"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -82,7 +83,7 @@ func (am AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *
 }
 
 // RegisterInterfaces registers the group module's interface types
-func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	group.RegisterInterfaces(registry)
 }
 

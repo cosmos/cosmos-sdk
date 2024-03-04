@@ -10,10 +10,10 @@ import (
 	reflect "reflect"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	types "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
-	types0 "github.com/cosmos/cosmos-sdk/codec/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
@@ -70,7 +70,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 i
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleBasic) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+func (m *MockAppModuleBasic) RegisterInterfaces(arg0 registry.LegacyRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -155,7 +155,7 @@ func (mr *MockAppModuleMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+func (m *MockAppModule) RegisterInterfaces(arg0 registry.LegacyRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -327,7 +327,7 @@ func (m *MockHasRegisterInterfaces) EXPECT() *MockHasRegisterInterfacesMockRecor
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockHasRegisterInterfaces) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+func (m *MockHasRegisterInterfaces) RegisterInterfaces(arg0 registry.LegacyRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -704,7 +704,7 @@ func (mr *MockHasABCIEndBlockMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockHasABCIEndBlock) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+func (m *MockHasABCIEndBlock) RegisterInterfaces(arg0 registry.LegacyRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 
+	"cosmossdk.io/core/registry"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
@@ -25,7 +26,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -100,11 +100,9 @@ func (m *MM) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (m *MM) RegisterInterfaces(registry registry.LegacyRegistry) {
 	for _, b := range m.modules {
 		if mod, ok := b.(sdkmodule.HasRegisterInterfaces); ok {
-			mod.RegisterInterfaces(registry)
-		} else if mod, ok := b.(sdkmodule.HasRegisterInterfacesV2); ok {
 			mod.RegisterInterfaces(registry)
 		}
 	}

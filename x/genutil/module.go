@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/registry"
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/core/appmodule"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -98,4 +98,4 @@ func (am AppModule) GenTxValidator() types.MessageValidator {
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // RegisterInterfaces implements module.AppModule.
-func (AppModule) RegisterInterfaces(codectypes.InterfaceRegistry) {}
+func (AppModule) RegisterInterfaces(registry.LegacyRegistry) {}

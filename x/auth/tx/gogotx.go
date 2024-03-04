@@ -92,21 +92,38 @@ type gogoTxWrapper struct {
 	fees       sdk.Coins
 	feePayer   []byte
 	feeGranter []byte
+
+	// Cache for hash and full bytes
+	cachedHash   [32]byte
+	cachedBytes  []byte
+	cachedHashed bool
 }
 
 func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
 
 func (w *gogoTxWrapper) Bytes() []byte {
-	return w.decodedTx.TxRaw.BodyBytes
+	if !w.cachedHashed {
+		w.computeHashAndBytes()
+	}
+	return w.cachedBytes
 }
 
 func (w *gogoTxWrapper) Hash() [32]byte {
+	if !w.cachedHashed {
+		w.computeHashAndBytes()
+	}
+	return w.cachedHash
+}
+
+func (w *gogoTxWrapper) computeHashAndBytes() {
 	bz, err := proto.Marshal(w.decodedTx.TxRaw)
 	if err != nil {
 		panic(err)
 	}
 
-	return sha256.Sum256(bz)
+	w.cachedBytes = bz
+	w.cachedHash = sha256.Sum256(bz)
+	w.cachedHashed = true
 }
 
 func (w *gogoTxWrapper) GetGasLimit() uint64 {

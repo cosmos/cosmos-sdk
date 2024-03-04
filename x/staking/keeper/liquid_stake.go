@@ -449,11 +449,7 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 //
 // Note that this function facilitates a specific use-case in the LSM module for tokenizing vested delegations.
 // For more details, see https://github.com/cosmos/gaia/issues/2877.
-func CheckVestedDelegationInVestingAccount(
-	account vesting.VestingAccount,
-	blockTime time.Time,
-	coin sdk.Coin,
-) bool {
+func CheckVestedDelegationInVestingAccount(account vesting.VestingAccount, blockTime time.Time, coin sdk.Coin) bool {
 	// Get the vesting coins at the current block time
 	vestingAmount := account.GetVestingCoins(blockTime).AmountOf(coin.Denom)
 

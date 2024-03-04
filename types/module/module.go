@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"sort"
 
+	"cosmossdk.io/core/registry"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -87,6 +88,10 @@ type HasAminoCodec interface {
 // HasRegisterInterfaces is the interface for modules to register their msg types.
 type HasRegisterInterfaces interface {
 	RegisterInterfaces(types.InterfaceRegistry)
+}
+
+type HasRegisterInterfacesV2 interface {
+	RegisterInterfaces(registry registry.LegacyRegistry)
 }
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
@@ -316,6 +321,8 @@ func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func (m *Manager) RegisterInterfaces(registry types.InterfaceRegistry) {
 	for _, b := range m.Modules {
 		if mod, ok := b.(HasRegisterInterfaces); ok {
+			mod.RegisterInterfaces(registry)
+		} else if mod, ok := b.(HasRegisterInterfacesV2); ok {
 			mod.RegisterInterfaces(registry)
 		}
 	}

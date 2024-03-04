@@ -104,6 +104,8 @@ func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	for _, b := range m.modules {
 		if mod, ok := b.(sdkmodule.HasRegisterInterfaces); ok {
 			mod.RegisterInterfaces(registry)
+		} else if mod, ok := b.(sdkmodule.HasRegisterInterfacesV2); ok {
+			mod.RegisterInterfaces(registry)
 		}
 	}
 }

@@ -41,7 +41,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -87,11 +86,7 @@ type HasAminoCodec interface {
 
 // HasRegisterInterfaces is the interface for modules to register their msg types.
 type HasRegisterInterfaces interface {
-	RegisterInterfaces(types.InterfaceRegistry)
-}
-
-type HasRegisterInterfacesV2 interface {
-	RegisterInterfaces(registry registry.LegacyRegistry)
+	RegisterInterfaces(registry.LegacyRegistry)
 }
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.

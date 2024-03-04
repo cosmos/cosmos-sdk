@@ -90,7 +90,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env.HeaderService, env.GasService, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}

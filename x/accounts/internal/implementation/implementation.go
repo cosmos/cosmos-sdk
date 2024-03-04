@@ -9,8 +9,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/gas"
-	"cosmossdk.io/core/header"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -19,8 +17,6 @@ import (
 type Dependencies struct {
 	SchemaBuilder    *collections.SchemaBuilder
 	AddressCodec     address.Codec
-	HeaderService    header.Service
-	GasService       gas.Service
 	LegacyStateCodec interface {
 		Marshal(gogoproto.Message) ([]byte, error)
 		Unmarshal([]byte, gogoproto.Message) error
@@ -35,8 +31,6 @@ type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 func MakeAccountsMap(
 	cdc codec.BinaryCodec,
 	addressCodec address.Codec,
-	hs header.Service,
-	gs gas.Service,
 	accounts []AccountCreatorFunc,
 ) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
@@ -45,8 +39,6 @@ func MakeAccountsMap(
 		deps := Dependencies{
 			SchemaBuilder:    stateSchemaBuilder,
 			AddressCodec:     addressCodec,
-			HeaderService:    headerService{hs},
-			GasService:       gasService{gs},
 			LegacyStateCodec: cdc,
 		}
 		name, accountInterface, err := makeAccount(deps)

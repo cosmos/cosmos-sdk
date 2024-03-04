@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +34,7 @@ type Dependencies = implementation.Dependencies
 
 func RegisterExecuteHandler[
 	Req any, ProtoReq implementation.ProtoMsgG[Req], Resp any, ProtoResp implementation.ProtoMsgG[Resp],
-](router *ExecuteBuilder, handler func(ctx context.Context, env appmodule.Environment, req ProtoReq) (ProtoResp, error),
+](router *ExecuteBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	implementation.RegisterExecuteHandler(router, handler)
 }
@@ -43,7 +42,7 @@ func RegisterExecuteHandler[
 // RegisterQueryHandler registers a query handler for a smart account that uses protobuf.
 func RegisterQueryHandler[
 	Req any, ProtoReq implementation.ProtoMsgG[Req], Resp any, ProtoResp implementation.ProtoMsgG[Resp],
-](router *QueryBuilder, handler func(ctx context.Context, env appmodule.Environment, req ProtoReq) (ProtoResp, error),
+](router *QueryBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	implementation.RegisterQueryHandler(router, handler)
 }
@@ -51,7 +50,7 @@ func RegisterQueryHandler[
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.
 func RegisterInitHandler[
 	Req any, ProtoReq implementation.ProtoMsgG[Req], Resp any, ProtoResp implementation.ProtoMsgG[Resp],
-](router *InitBuilder, handler func(ctx context.Context, env appmodule.Environment, req ProtoReq) (ProtoResp, error),
+](router *InitBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	implementation.RegisterInitHandler(router, handler)
 }

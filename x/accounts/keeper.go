@@ -173,7 +173,7 @@ func (k Keeper) init(
 	}
 	// make the context and init the account
 	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, creator, funds, false)
-	resp, err := impl.Init(ctx, k.environment, initRequest)
+	resp, err := impl.Init(ctx, initRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +234,7 @@ func (k Keeper) Execute(
 
 	// make the context and execute the account state transition.
 	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, sender, funds, false)
-	return impl.Execute(ctx, k.environment, execRequest)
+	return impl.Execute(ctx, execRequest)
 }
 
 // Query queries the given account.
@@ -259,7 +259,7 @@ func (k Keeper) Query(
 
 	// make the context and execute the account query
 	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, nil, nil, true)
-	return impl.Query(ctx, k.environment, queryRequest)
+	return impl.Query(ctx, queryRequest)
 }
 
 func (k Keeper) getImplementation(ctx context.Context, addr []byte) (implementation.Implementation, error) {

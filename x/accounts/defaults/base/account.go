@@ -13,7 +13,6 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/base/v1"
@@ -54,11 +53,11 @@ type Account struct {
 	signingHandlers *signing.HandlerMap
 }
 
-func (a Account) Init(ctx context.Context, _ appmodule.Environment, msg *v1.MsgInit) (*v1.MsgInitResponse, error) {
+func (a Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitResponse, error) {
 	return &v1.MsgInitResponse{}, a.verifyAndSetPubKey(ctx, msg.PubKey)
 }
 
-func (a Account) SwapPubKey(ctx context.Context, _ appmodule.Environment, msg *v1.MsgSwapPubKey) (*v1.MsgSwapPubKeyResponse, error) {
+func (a Account) SwapPubKey(ctx context.Context, msg *v1.MsgSwapPubKey) (*v1.MsgSwapPubKeyResponse, error) {
 	if !accountstd.SenderIsSelf(ctx) {
 		return nil, errors.New("unauthorized")
 	}
@@ -75,7 +74,7 @@ func (a Account) verifyAndSetPubKey(ctx context.Context, key []byte) error {
 }
 
 // Authenticate implements the authentication flow of an abstracted base account.
-func (a Account) Authenticate(ctx context.Context, _ appmodule.Environment, msg *aa_interface_v1.MsgAuthenticate) (*aa_interface_v1.MsgAuthenticateResponse, error) {
+func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthenticate) (*aa_interface_v1.MsgAuthenticateResponse, error) {
 	if !accountstd.SenderIsAccountsModule(ctx) {
 		return nil, errors.New("unauthorized: only accounts module is allowed to call this")
 	}
@@ -195,7 +194,7 @@ func (a Account) getTxData(msg *aa_interface_v1.MsgAuthenticate) (signing.TxData
 	}, nil
 }
 
-func (a Account) QuerySequence(ctx context.Context, _ appmodule.Environment, _ *v1.QuerySequence) (*v1.QuerySequenceResponse, error) {
+func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.QuerySequenceResponse, error) {
 	seq, err := a.Sequence.Peek(ctx)
 	if err != nil {
 		return nil, err

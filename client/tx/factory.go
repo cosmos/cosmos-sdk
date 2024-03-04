@@ -61,7 +61,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 	}
 
 	// Mapping of each SignMode
-	var signModeMap = map[string]signing.SignMode{
+	signModeMap := map[string]signing.SignMode{
 		flags.SignModeDirect:          signing.SignMode_SIGN_MODE_DIRECT,
 		flags.SignModeLegacyAminoJSON: signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		flags.SignModeDirectAux:       signing.SignMode_SIGN_MODE_DIRECT_AUX,

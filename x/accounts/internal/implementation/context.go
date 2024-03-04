@@ -135,5 +135,3 @@ func Whoami(ctx context.Context) []byte {
 
 // Funds returns the funds associated with the execution context.
 func Funds(ctx context.Context) sdk.Coins { return getCtx(ctx).funds }
-
-func getParentContext(ctx context.Context) context.Context { return getCtx(ctx).parentContext }

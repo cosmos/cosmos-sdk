@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -163,8 +162,8 @@ func (bva *BaseLockup) Delegate(
 		return nil, err
 	}
 
-	msgDelegate := stakingtypes.NewMsgDelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
-	responses, err := sendAnyMessage(ctx, msgDelegate)
+	msgDelegate := makeMsgDelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
+	responses, err := sendMessage(ctx, msgDelegate)
 	if err != nil {
 		return nil, err
 	}
@@ -192,8 +191,8 @@ func (bva *BaseLockup) Undelegate(
 		return nil, err
 	}
 
-	msgUndelegate := stakingtypes.NewMsgUndelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
-	responses, err := sendAnyMessage(ctx, msgUndelegate)
+	msgUndelegate := makeMsgUndelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
+	responses, err := sendMessage(ctx, msgUndelegate)
 	if err != nil {
 		return nil, err
 	}
@@ -228,8 +227,8 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	msgSend := banktypes.NewMsgSend(fromAddress, msg.ToAddress, msg.Amount)
-	responses, err := sendAnyMessage(ctx, msgSend)
+	msgSend := makeMsgSend(fromAddress, msg.ToAddress, msg.Amount)
+	responses, err := sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +309,7 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 	}
 
 	msgSend := banktypes.NewMsgSend(fromAddress, msg.ToAddress, amount)
-	_, err = sendAnyMessage(ctx, msgSend)
+	_, err = sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
 	}
@@ -334,18 +333,18 @@ func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
 	return nil
 }
 
-func sendAnyMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, error) {
-	msgAny, err := codectypes.NewAnyWithValue(msg)
+func sendMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, error) {
+	response, err := accountstd.ExecModuleUntyped(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
 
-	responses, err := accountstd.ExecModuleAnys(ctx, []*codectypes.Any{msgAny})
+	respAny, err := accountstd.PackAny(response)
 	if err != nil {
 		return nil, err
 	}
 
-	return responses, nil
+	return []*codectypes.Any{respAny}, nil
 }
 
 // TrackDelegation tracks a delegation amount for any given lockup account type

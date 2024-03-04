@@ -2,6 +2,7 @@ package appmodule
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -14,6 +15,9 @@ type (
 	// then the execution is reverted.
 	PostMsgHandler = func(ctx context.Context, msg, msgResp Message) error
 )
+
+// ErrNoHandler must be returned when there's no handler for the provided message.
+var ErrNoHandler = errors.New("no handler for the provided message")
 
 // RegisterHandler is a helper function that modules can use to not lose type safety when registering handlers to the
 // QueryRouter or MsgRouter. Example usage:
@@ -128,7 +132,7 @@ type PostMsgRouter interface {
 	// the provided name.
 	Register(msgName string, handler PostMsgHandler)
 	// RegisterGlobal will register a global message handler hooking after the execution of any message.
-	RegisterGlobal(handler PreMsgHandler)
+	RegisterGlobal(handler PostMsgHandler)
 }
 
 // query handler

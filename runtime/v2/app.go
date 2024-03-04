@@ -48,10 +48,12 @@ type App struct {
 	*appmanager.AppManager[transaction.Tx]
 
 	// app manager dependencies
-	stf                *stf.STF[transaction.Tx]
-	msgRouterBuilder   *stf.MsgRouterBuilder
-	queryRouterBuilder *stf.MsgRouterBuilder
-	db                 Store
+	stf                  *stf.STF[transaction.Tx]
+	msgRouterBuilder     *handlerRouter
+	preMsgRouterBuilder  *preHandlerRouter
+	postMsgRouterBuilder *postHandlerRouter
+	queryRouterBuilder   *handlerRouter
+	db                   Store
 
 	// app configuration
 	logger    log.Logger

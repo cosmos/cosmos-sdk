@@ -16,7 +16,9 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
+	appmodulev1 "cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/appmodule/v2"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -34,8 +36,8 @@ import (
 )
 
 var (
-	_ appmodule.AppModule   = appModule{}
-	_ appmodule.HasServices = appModule{}
+	_ appmodule.AppModule     = appModule{}
+	_ appmodulev1.HasServices = appModule{}
 )
 
 type appModule struct {
@@ -82,7 +84,10 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
-	*stf.MsgRouterBuilder,
+	appmodule.MsgRouter,
+	appmodule.PostMsgRouter,
+	appmodule.PreMsgRouter,
+	appmodule.QueryRouter,
 	appmodule.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
@@ -104,17 +109,20 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	std.RegisterLegacyAminoCodec(amino)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	msgRouterBuilder := stf.NewMsgRouterBuilder()
+	handlerRouter, preRouter, postRouter, queryRouter := newRouters()
 	app := &App{
-		storeKeys:         nil,
-		interfaceRegistry: interfaceRegistry,
-		cdc:               cdc,
-		amino:             amino,
-		msgRouterBuilder:  msgRouterBuilder,
+		storeKeys:            nil,
+		interfaceRegistry:    interfaceRegistry,
+		cdc:                  cdc,
+		amino:                amino,
+		msgRouterBuilder:     handlerRouter,
+		preMsgRouterBuilder:  preRouter,
+		postMsgRouterBuilder: postRouter,
+		queryRouterBuilder:   queryRouter,
 	}
 	appBuilder := &AppBuilder{app: app}
 
-	return cdc, amino, appBuilder, msgRouterBuilder, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, app.msgRouterBuilder, app.postMsgRouterBuilder, app.preMsgRouterBuilder, app.queryRouterBuilder, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {

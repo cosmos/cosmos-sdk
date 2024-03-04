@@ -21,8 +21,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/protocompat"
-	"cosmossdk.io/server/v2/stf"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -303,10 +301,19 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 func (m *MM) RegisterServices(app *App) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if services, ok := module.(appmodule.HasServices); ok {
+		services, hasServices := module.(appmodule.HasServices)
+		if hasServices {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
 				return err
 			}
+		}
+
+		// register msg handler
+		if h, ok := module.(appmodulev2.HasMsgHandlers); ok {
+			if hasServices {
+				return fmt.Errorf("a module cannot have both handlers and services")
+			}
+
 		}
 
 		// register migrations
@@ -316,7 +323,6 @@ func (m *MM) RegisterServices(app *App) error {
 			}
 		}
 
-		// TODO: register pre and post msg
 	}
 
 	return nil
@@ -445,8 +451,8 @@ var _ grpc.ServiceRegistrar = (*configurator)(nil)
 
 type configurator struct {
 	cdc            codec.BinaryCodec
-	stfQueryRouter *stf.MsgRouterBuilder
-	stfMsgRouter   *stf.MsgRouterBuilder
+	stfQueryRouter *handlerRouter
+	stfMsgRouter   *handlerRouter
 	registry       *protoregistry.Files
 	err            error
 }
@@ -493,7 +499,7 @@ func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{})
 	return nil
 }
 
-func registerMethod(cdc codec.BinaryCodec, stfRouter *stf.MsgRouterBuilder, sd *grpc.ServiceDesc, md grpc.MethodDesc, ss interface{}) error {
+func registerMethod(cdc codec.BinaryCodec, stfRouter *handlerRouter, sd *grpc.ServiceDesc, md grpc.MethodDesc, ss interface{}) error {
 	requestName, err := protocompat.RequestFullNameFromMethodDesc(sd, md)
 	if err != nil {
 		return err
@@ -515,7 +521,9 @@ func registerMethod(cdc codec.BinaryCodec, stfRouter *stf.MsgRouterBuilder, sd *
 		return err
 	}
 
-	return stfRouter.RegisterHandler(string(requestName), func(ctx context.Context, msg transaction.Type) (resp transaction.Type, err error) {
+	md.Handler
+
+	return stfRouter.Register(string(requestName), func(ctx context.Context, msg transaction.Type) (resp transaction.Type, err error) {
 		resp = responseV2Type.New().Interface()
 		return resp, hybridHandler(ctx, msg.(protoiface.MessageV1), resp.(protoiface.MessageV1))
 	})

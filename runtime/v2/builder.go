@@ -79,16 +79,21 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 		return nil, err
 	}
 
-	stfMsgHandler, err := a.app.msgRouterBuilder.Build()
+	stfMsgHandler, err := a.app.msgRouterBuilder.build(a.app.preMsgRouterBuilder, a.app.postMsgRouterBuilder)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build STF message handler: %w", err)
+	}
+
+	stfQueryMsgHandler, err := a.app.queryRouterBuilder.build(nil, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build STF message query handler: %w", err)
 	}
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
 	a.app.stf = stf.NewSTF[transaction.Tx](
 		stfMsgHandler,
-		stfMsgHandler,
+		stfQueryMsgHandler,
 		a.app.moduleManager.PreBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,

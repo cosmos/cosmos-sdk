@@ -463,7 +463,7 @@ func CheckVestedDelegationInVestingAccount(account vesting.VestingAccount, block
 
 	// Add the newly vested delegated coins to the existing delegated vested amount
 	if !x.IsZero() {
-		delVested = delVested.Add(sdk.Coin{Denom: coin.Denom, Amount: x.Abs()})
+		delVested = delVested.Add(sdk.NewCoin(coin.Denom, x.Abs()))
 	}
 
 	// Check if the total delegated vested amount is greater than or equal to the specified coin amount

@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
@@ -47,7 +46,7 @@ type QueryRouter interface {
 // MsgRouter represents a router which can be used to route messages to the correct module.
 type MsgRouter interface {
 	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
-	ResponseNameByRequestName(name string) string
+	ResponseNameByMsgName(name string) string
 }
 
 // SignerProvider defines an interface used to get the expected sender from a message.
@@ -74,7 +73,6 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		environment:      env,
-		logger:           env.Logger,
 		addressCodec:     addressCodec,
 		msgRouter:        execRouter,
 		signerProvider:   signerProvider,
@@ -104,11 +102,10 @@ type Keeper struct {
 	// deps coming from the runtime
 	environment      appmodule.Environment
 	addressCodec     address.Codec
-	msgRouter        MsgRouter
+	msgRouter        MsgRouter // todo use env
 	signerProvider   SignerProvider
-	queryRouter      QueryRouter
+	queryRouter      QueryRouter // todo use env
 	makeSendCoinsMsg coinsTransferMsgFunc
-	logger           log.Logger
 
 	accounts map[string]implementation.Implementation
 
@@ -347,7 +344,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// we need to fetch the response type from the request message type.
 	// this is because the response type is not known.
-	respName := k.msgRouter.ResponseNameByRequestName(implementation.MessageName(msg))
+	respName := k.msgRouter.ResponseNameByMsgName(implementation.MessageName(msg))
 	if respName == "" {
 		return nil, fmt.Errorf("could not find response type for message %T", msg)
 	}

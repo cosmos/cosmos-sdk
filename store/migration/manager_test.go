@@ -31,7 +31,7 @@ func setupMigrationManager(t *testing.T) (*Manager, *commitment.CommitStore) {
 	commitStore, err := commitment.NewCommitStore(multiTrees, db, nil, log.NewNopLogger())
 	require.NoError(t, err)
 
-	snapshotsStore, err := snapshots.NewStore(db, t.TempDir())
+	snapshotsStore, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 
 	snapshotsManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), commitStore, nil, nil, log.NewNopLogger())

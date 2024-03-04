@@ -5,7 +5,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/log"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
@@ -30,7 +29,6 @@ type ModuleInputs struct {
 	Config      *modulev1.Module
 	Cdc         codec.Codec
 	Environment appmodule.Environment
-	Logger      log.Logger
 
 	AccountKeeper types.AccountKeeper
 }
@@ -83,7 +81,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		blockedAddresses,
 		authStr,
-		in.Logger,
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 

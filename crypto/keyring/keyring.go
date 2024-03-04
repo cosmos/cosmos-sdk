@@ -56,12 +56,12 @@ var (
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
 type Keyring interface {
-	// Get the backend type used in the keyring config: "file", "os", "kwallet", "pass", "test", "memory".
+	// Backend get the backend type used in the keyring config: "file", "os", "kwallet", "pass", "test", "memory".
 	Backend() string
 	// List all keys.
 	List() ([]*Record, error)
 
-	// Supported signing algorithms for Keyring and Ledger respectively.
+	// SupportedAlgorithms supported signing algorithms for Keyring and Ledger respectively.
 	SupportedAlgorithms() (SigningAlgoList, SigningAlgoList)
 
 	// Key and KeyByAddress return keys by uid and address respectively.
@@ -130,7 +130,7 @@ type Migrator interface {
 
 // Exporter is implemented by key stores that support export of public and private keys.
 type Exporter interface {
-	// Export public key
+	// ExportPubKeyArmor export public key
 	ExportPubKeyArmor(uid string) (string, error)
 	ExportPubKeyArmorByAddress(address []byte) (string, error)
 

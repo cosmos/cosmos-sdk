@@ -30,9 +30,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18448](https://github.com/cosmos/cosmos-sdk/pull/18448) Extend group config
 * [18286](https://github.com/cosmos/cosmos-sdk/pull/18286) Move prefix store creation down after error checks.
 
-### Features
-
 ### API Breaking Changes
 
+* [#19638](https://github.com/cosmos/cosmos-sdk/pull/19638) Migrate module to use `appmodule.Environment` router service so no `baseapp.MessageRouter` is required is `NewKeeper` anymore.
 * [#19489](https://github.com/cosmos/cosmos-sdk/pull/19489) `appmodule.Environment` is received on the Keeper to get access to different application services.
 * [#19410](https://github.com/cosmos/cosmos-sdk/pull/19410) Migrate to Store Service.

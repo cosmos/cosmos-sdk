@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -75,18 +74,15 @@ type Keeper struct {
 	voteByProposalIndex orm.Index
 	voteByVoterIndex    orm.Index
 
-	router baseapp.MessageRouter
-
 	config group.Config
 
 	cdc codec.Codec
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(env appmodule.Environment, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		environment: env,
-		router:      router,
 		accKeeper:   accKeeper,
 		cdc:         cdc,
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -237,7 +236,7 @@ func TestManager_Restore(t *testing.T) {
 
 func TestManager_TakeError(t *testing.T) {
 	snapshotter := &mockErrorCommitSnapshotter{}
-	store, err := snapshots.NewStore(dbm.NewMemDB(), GetTempDir(t))
+	store, err := snapshots.NewStore(GetTempDir(t))
 	require.NoError(t, err)
 	manager := snapshots.NewManager(store, opts, snapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
 

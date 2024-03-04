@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/x/counter/types"
 )
@@ -18,15 +18,15 @@ import (
 var StoreKey = "Counter"
 
 type Keeper struct {
-	event event.Service
+	env appmodule.Environment
 
 	CountStore collections.Item[int64]
 }
 
-func NewKeeper(storeService storetypes.KVStoreService, em event.Service) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(env appmodule.Environment) Keeper {
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
-		event:      em,
+		env:        env,
 		CountStore: collections.NewItem(sb, collections.NewPrefix(0), "count", collections.Int64Value),
 	}
 }
@@ -67,7 +67,7 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter
 		return nil, err
 	}
 
-	if err := k.event.EventManager(ctx).EmitKV(
+	if err := k.env.EventService.EventManager(ctx).EmitKV(
 		"increase_counter",
 		event.NewAttribute("signer", msg.Signer),
 		event.NewAttribute("new count", fmt.Sprint(num+msg.Count))); err != nil {

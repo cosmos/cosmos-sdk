@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.7.3
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
 	google.golang.org/protobuf v1.32.0
 	gotest.tools/v3 v3.5.1

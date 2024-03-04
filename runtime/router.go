@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -59,6 +60,8 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 		return fmt.Errorf("missing type url")
 	}
 
+	typeURL = strings.TrimPrefix(typeURL, "/")
+
 	handler := m.router.HybridHandlerByMsgName(typeURL)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", typeURL)
@@ -113,6 +116,8 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 	if typeURL == "" {
 		return fmt.Errorf("missing type url")
 	}
+
+	typeURL = strings.TrimPrefix(typeURL, "/")
 
 	handlers := m.router.HybridHandlerByRequestName(typeURL)
 	if len(handlers) == 0 {

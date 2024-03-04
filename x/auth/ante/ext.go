@@ -43,13 +43,13 @@ func NewExtensionOptionsDecorator(checker ExtensionOptionChecker) sdk.AnteDecora
 var _ sdk.AnteDecorator = RejectExtensionOptionsDecorator{}
 
 // AnteHandle implements the AnteDecorator.AnteHandle method
-func (r RejectExtensionOptionsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (r RejectExtensionOptionsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	err = checkExtOpts(tx, r.checker)
 	if err != nil {
 		return ctx, err
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
 }
 
 func checkExtOpts(tx sdk.Tx, checker ExtensionOptionChecker) error {

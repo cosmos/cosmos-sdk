@@ -2,11 +2,11 @@ package gov
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -60,7 +60,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	defaultConfig := govtypes.DefaultConfig()
+	defaultConfig := keeper.DefaultConfig()
 	if in.Config.MaxTitleLen != 0 {
 		defaultConfig.MaxTitleLen = in.Config.MaxTitleLen
 	}

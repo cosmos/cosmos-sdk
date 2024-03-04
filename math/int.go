@@ -102,7 +102,7 @@ func (i Int) BigInt() *big.Int {
 	return new(big.Int).Set(i.i)
 }
 
-// BigInt converts Int to big.Int, mutative the input
+// BigIntMut converts Int to big.Int, mutative the input
 func (i Int) BigIntMut() *big.Int {
 	if i.IsNil() {
 		return nil
@@ -333,7 +333,7 @@ func (i Int) Mul(i2 Int) (res Int) {
 	return x
 }
 
-// MulRaw multipies Int and int64
+// MulRaw multiplies Int and int64
 func (i Int) MulRaw(i2 int64) Int {
 	return i.Mul(NewInt(i2))
 }
@@ -404,7 +404,7 @@ func (i Int) Abs() Int {
 	return Int{abs(i.i)}
 }
 
-// return the minimum of the ints
+// MinInt return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
 }
@@ -414,7 +414,7 @@ func MaxInt(i, i2 Int) Int {
 	return Int{max(i.BigInt(), i2.BigInt())}
 }
 
-// Human readable string
+// String returns human-readable string
 func (i Int) String() string {
 	return i.i.String()
 }
@@ -517,7 +517,7 @@ func (i *Int) Size() int {
 	return len(bz)
 }
 
-// Override Amino binary serialization by proxying to protobuf.
+// MarshalAmino Override Amino binary serialization by proxying to protobuf.
 func (i Int) MarshalAmino() ([]byte, error)   { return i.Marshal() }
 func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 

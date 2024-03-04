@@ -3,9 +3,9 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -49,6 +49,7 @@ type App struct {
 	amino             *codec.LegacyAmino
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
+	grpcQueryRouter   *baseapp.GRPCQueryRouter
 	appConfig         *appv1alpha1.Config
 	logger            log.Logger
 	// initChainer is the init chainer function defined by the app config.
@@ -87,7 +88,7 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // RegisterStores registers the provided store keys.
 // This method should only be used for registering extra stores
-// wiich is necessary for modules that not registered using the app config.
+// which is necessary for modules that not registered using the app config.
 // To be used in combination of RegisterModules.
 func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 	a.storeKeys = append(a.storeKeys, keys...)

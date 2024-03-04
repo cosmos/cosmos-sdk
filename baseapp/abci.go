@@ -1251,14 +1251,19 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	ctx := sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.Context().BlockHeader())
+		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  height,
+		}).
+		WithBlockHeader(app.checkState.Context().BlockHeader())
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)
 		if ok {
 			cInfo, err := rms.GetCommitInfo(height)
 			if cInfo != nil && err == nil {
-				ctx = ctx.WithHeaderInfo(coreheader.Info{Time: cInfo.Timestamp})
+				ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height, Time: cInfo.Timestamp})
 			}
 		}
 	}

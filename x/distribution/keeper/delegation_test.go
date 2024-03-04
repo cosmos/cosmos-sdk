@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -28,7 +29,6 @@ import (
 func TestCalculateRewardsBasic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -42,9 +42,11 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -73,7 +75,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	err = distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// historical count should be 2 (once for validator init, once for delegation init)
 	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
@@ -130,7 +132,6 @@ func getValHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
 func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -144,9 +145,11 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -179,7 +182,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -192,7 +195,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.True(t, rewards.IsZero())
 
 	// start out block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
 	slashedTokens := distrtestutil.SlashValidator(
@@ -208,7 +211,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
 	// increase block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some rewards
 	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
@@ -235,7 +238,6 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -249,9 +251,11 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -283,7 +287,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -296,7 +300,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	require.True(t, rewards.IsZero())
 
 	// start out block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
 	slashedTokens := distrtestutil.SlashValidator(
@@ -315,7 +319,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(1)
 
 	// increase block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some rewards
 	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
@@ -336,7 +340,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
 	// increase block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -361,7 +365,6 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -375,9 +378,11 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -409,7 +414,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := int64(20)
@@ -429,7 +434,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -460,7 +465,6 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -474,9 +478,11 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -507,7 +513,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
@@ -537,7 +543,6 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -551,9 +556,11 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -584,7 +591,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -597,7 +604,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	require.True(t, rewards.IsZero())
 
 	// start out block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some rewards
 	initial := math.LegacyNewDecFromInt(sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction))
@@ -631,7 +638,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	)
 
 	// increase block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -655,7 +662,6 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -669,9 +675,11 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -704,7 +712,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(2)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := math.LegacyNewDecFromInt(sdk.TokensFromConsensusPower(30, sdk.DefaultPowerReduction))
@@ -712,7 +720,8 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// slash the validator
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
+
 	distrtestutil.SlashValidator(
 		ctx,
 		valConsAddr0,
@@ -723,7 +732,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		&distrKeeper,
 		stakingKeeper,
 	)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// update validator mock
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(1)
@@ -749,13 +758,14 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// slash the validator again
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
+
 	distrtestutil.SlashValidator(
 		ctx,
 		valConsAddr0,
@@ -766,7 +776,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		&distrKeeper,
 		stakingKeeper,
 	)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -794,7 +804,6 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -808,9 +817,11 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -841,7 +852,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(2)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := int64(20)
@@ -875,7 +886,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, 3, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -924,7 +935,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.True(t, valCommission.Commission.IsZero())
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -958,7 +969,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, valCommission.Commission)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -995,7 +1006,6 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 func Test100PercentCommissionReward(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
@@ -1010,9 +1020,11 @@ func Test100PercentCommissionReward(t *testing.T) {
 	stakingKeeper.EXPECT().BondDenom(gomock.Any()).Return("stake", nil).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -1043,7 +1055,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(2)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := int64(20)
@@ -1051,19 +1063,19 @@ func Test100PercentCommissionReward(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))

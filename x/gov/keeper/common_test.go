@@ -131,7 +131,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 
 	// Gov keeper initializations
 
-	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.poolKeeper, baseApp.MsgServiceRouter(), types.DefaultConfig(), govAcct.String())
+	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.poolKeeper, baseApp.MsgServiceRouter(), keeper.DefaultConfig(), govAcct.String())
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)

@@ -13,17 +13,17 @@ import (
 
 // Deprecated: LegacyInfo is the publicly exposed information about a keypair
 type LegacyInfo interface {
-	// Human-readable type for key listing
+	// GetType human-readable type for key listing
 	GetType() KeyType
-	// Name of the key
+	// GetName name of the key
 	GetName() string
-	// Public key
+	// GetPubKey public key
 	GetPubKey() cryptotypes.PubKey
-	// Address
+	// GetAddress address
 	GetAddress() sdk.AccAddress
-	// Bip44 Path
+	// GetPath bip44 path
 	GetPath() (*hd.BIP44Params, error)
-	// Algo
+	// GetAlgo signing algorithm for the key
 	GetAlgo() hd.PubKeyType
 }
 
@@ -45,37 +45,37 @@ type legacyLocalInfo struct {
 
 func infoKey(name string) string { return fmt.Sprintf("%s.%s", name, infoSuffix) }
 
-// GetType implements Info interface
+// GetType returns human-readable type for key listing
 func (i legacyLocalInfo) GetType() KeyType {
 	return TypeLocal
 }
 
-// GetType implements Info interface
+// GetName returns name of the key
 func (i legacyLocalInfo) GetName() string {
 	return i.Name
 }
 
-// GetType implements Info interface
+// GetPubKey returns public key
 func (i legacyLocalInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
-// GetType implements Info interface
+// GetAddress returns address
 func (i legacyLocalInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
-// GetPrivKeyArmor
+// GetPrivKeyArmor returns privkey armor
 func (i legacyLocalInfo) GetPrivKeyArmor() string {
 	return i.PrivKeyArmor
 }
 
-// GetType implements Info interface
+// GetAlgo returns the signing algorithm for the key
 func (i legacyLocalInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
-// GetType implements Info interface
+// GetPath returns bip44 path, but not available for this type
 func (i legacyLocalInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -89,32 +89,32 @@ type legacyLedgerInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-// GetType implements Info interface
+// GetType returns human-readable type for key listing
 func (i legacyLedgerInfo) GetType() KeyType {
 	return TypeLedger
 }
 
-// GetName implements Info interface
+// GetName returns name of the key
 func (i legacyLedgerInfo) GetName() string {
 	return i.Name
 }
 
-// GetPubKey implements Info interface
+// GetPubKey returns public key
 func (i legacyLedgerInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
-// GetAddress implements Info interface
+// GetAddress returns address
 func (i legacyLedgerInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
-// GetPath implements Info interface
+// GetAlgo returns the signing algorithm for the key
 func (i legacyLedgerInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
-// GetPath implements Info interface
+// GetPath returns bip44 path
 func (i legacyLedgerInfo) GetPath() (*hd.BIP44Params, error) {
 	tmp := i.Path
 	return &tmp, nil
@@ -128,17 +128,17 @@ type legacyOfflineInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-// GetType implements Info interface
+// GetType returns human-readable type for key listing
 func (i legacyOfflineInfo) GetType() KeyType {
 	return TypeOffline
 }
 
-// GetName implements Info interface
+// GetName returns name of the key
 func (i legacyOfflineInfo) GetName() string {
 	return i.Name
 }
 
-// GetPubKey implements Info interface
+// GetPubKey returns public key
 func (i legacyOfflineInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
@@ -148,12 +148,12 @@ func (i legacyOfflineInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
-// GetAddress implements Info interface
+// GetAddress returns address
 func (i legacyOfflineInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
-// GetPath implements Info interface
+// GetPath returns bip44 path, but not available for this type
 func (i legacyOfflineInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -167,7 +167,7 @@ type multisigPubKeyInfo struct {
 	Weight uint               `json:"weight"`
 }
 
-// multiInfo is the public information about a multisig key
+// LegacyMultiInfo multiInfo is the public information about a multisig key
 type LegacyMultiInfo struct {
 	Name      string               `json:"name"`
 	PubKey    cryptotypes.PubKey   `json:"pubkey"`
@@ -186,32 +186,32 @@ func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error)
 	}, nil
 }
 
-// GetType implements Info interface
+// GetType returns human-readable type for key listing
 func (i LegacyMultiInfo) GetType() KeyType {
 	return TypeMulti
 }
 
-// GetName implements Info interface
+// GetName returns name of the key
 func (i LegacyMultiInfo) GetName() string {
 	return i.Name
 }
 
-// GetPubKey implements Info interface
+// GetPubKey returns public key
 func (i LegacyMultiInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
-// GetAddress implements Info interface
+// GetAddress returns address
 func (i LegacyMultiInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
-// GetPath implements Info interface
+// GetAlgo returns the signing algorithm for the key
 func (i LegacyMultiInfo) GetAlgo() hd.PubKeyType {
 	return hd.MultiType
 }
 
-// GetPath implements Info interface
+// GetPath returns bip44 path, but not available for this type
 func (i LegacyMultiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -223,7 +223,7 @@ func (i LegacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 	return codectypes.UnpackInterfaces(multiPK, unpacker)
 }
 
-// encoding info
+// MarshalInfo encoding info
 func MarshalInfo(i LegacyInfo) []byte {
 	return legacy.Cdc.MustMarshalLengthPrefixed(i)
 }

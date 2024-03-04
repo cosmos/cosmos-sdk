@@ -63,8 +63,8 @@ func initFixture(t *testing.T) *fixture {
 	banktypes.RegisterInterfaces(interfaceRegistry)
 
 	clientCtx := client.Context{}.
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithAddressCodec(interfaceRegistry.SigningContext().AddressCodec()).
+		WithValidatorAddressCodec(interfaceRegistry.SigningContext().ValidatorAddressCodec()).
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
 		WithKeyring(kr).
 		WithKeyringDir(home).

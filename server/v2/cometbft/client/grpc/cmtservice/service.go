@@ -2,6 +2,7 @@ package cmtservice
 
 import (
 	"context"
+	"strings"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -11,7 +12,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -247,7 +247,7 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 		return nil, status.Error(codes.InvalidArgument, "empty query path")
 	}
 
-	if path := baseapp.SplitABCIQueryPath(req.Path); len(path) > 0 {
+	if path := SplitABCIQueryPath(req.Path); len(path) > 0 {
 		switch path[0] {
 		case "app", "store", "p2p", "custom": // TODO: check if we can use the ones from abci.go without having circular deps.
 			// valid path
@@ -279,4 +279,18 @@ func RegisterTendermintService(
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
 	_ = RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))
+}
+
+// SplitABCIQueryPath splits a string path using the delimiter '/'.
+//
+// e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
+func SplitABCIQueryPath(requestPath string) (path []string) {
+	path = strings.Split(requestPath, "/")
+
+	// first element is empty string
+	if len(path) > 0 && path[0] == "" {
+		path = path[1:]
+	}
+
+	return path
 }

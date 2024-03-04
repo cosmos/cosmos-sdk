@@ -16,7 +16,7 @@ import (
 )
 
 // NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-func NewRouterService(storeService store.KVStoreService, queryRouter *baseapp.GRPCQueryRouter, msgRouter baseapp.MessageRouter) router.Router {
+func NewRouterService(storeService store.KVStoreService, queryRouter *baseapp.GRPCQueryRouter, msgRouter baseapp.MessageRouter) router.Service {
 	return &routerService{
 		queryRouterService: &queryRouterService{
 			storeService: storeService, // TODO: this will be used later on as authenticating modules before routing
@@ -29,28 +29,39 @@ func NewRouterService(storeService store.KVStoreService, queryRouter *baseapp.GR
 	}
 }
 
-var _ router.Router = (*routerService)(nil)
+var _ router.Service = (*routerService)(nil)
 
 type routerService struct {
-	queryRouterService router.Service
-	msgRouterService   router.Service
+	queryRouterService router.Router
+	msgRouterService   router.Router
 }
 
-// MessageRouterService implements router.Router.
-func (r *routerService) MessageRouterService() router.Service {
+// MessageRouterService implements router.Service.
+func (r *routerService) MessageRouterService() router.Router {
 	return r.msgRouterService
 }
 
-// QueryRouterService implements router.Router.
-func (r *routerService) QueryRouterService() router.Service {
+// QueryRouterService implements router.Service.
+func (r *routerService) QueryRouterService() router.Router {
 	return r.queryRouterService
 }
 
-var _ router.Service = (*msgRouterService)(nil)
+var _ router.Router = (*msgRouterService)(nil)
 
 type msgRouterService struct {
 	storeService store.KVStoreService
 	router       baseapp.MessageRouter
+}
+
+// CanInvoke returns an error if the given message cannot be invoked.
+func (m *msgRouterService) CanInvoke(ctx context.Context, msg protoiface.MessageV1) error {
+	messageName := msgTypeURL(msg)
+	handler := m.router.HybridHandlerByMsgName(messageName)
+	if handler == nil {
+		return fmt.Errorf("unknown message: %s", messageName)
+	}
+
+	return nil
 }
 
 // InvokeTyped execute a message and fill-in a response.
@@ -58,7 +69,6 @@ type msgRouterService struct {
 // Use InvokeUntyped if the response type is not known.
 func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
 	messageName := msgTypeURL(msg)
-
 	handler := m.router.HybridHandlerByMsgName(messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
@@ -88,21 +98,36 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	return msgResp, m.InvokeTyped(ctx, msg, msgResp)
 }
 
-var _ router.Service = (*queryRouterService)(nil)
+var _ router.Router = (*queryRouterService)(nil)
 
 type queryRouterService struct {
 	storeService store.KVStoreService
 	router       *baseapp.GRPCQueryRouter
 }
 
+// CanInvoke returns an error if the given request cannot be invoked.
+func (m *queryRouterService) CanInvoke(ctx context.Context, req protoiface.MessageV1) error {
+	reqName := msgTypeURL(req)
+	handlers := m.router.HybridHandlerByRequestName(reqName)
+	if len(handlers) == 0 {
+		return fmt.Errorf("unknown request: %s", reqName)
+	} else if len(handlers) > 1 {
+		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", reqName)
+	}
+
+	return nil
+}
+
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
 func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1) error {
-	messageName := msgTypeURL(req)
-	handlers := m.router.HybridHandlerByRequestName(messageName)
+	reqName := msgTypeURL(req)
+	handlers := m.router.HybridHandlerByRequestName(reqName)
 	if len(handlers) == 0 {
-		return fmt.Errorf("unknown request: %s", messageName)
+		return fmt.Errorf("unknown request: %s", reqName)
+	} else if len(handlers) > 1 {
+		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", reqName)
 	}
 
 	return handlers[0](ctx, req, resp)
@@ -110,10 +135,10 @@ func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoifa
 
 // InvokeUntyped execute a message and returns a response.
 func (m *queryRouterService) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (protoiface.MessageV1, error) {
-	messageName := msgTypeURL(req)
-	respName := m.router.ResponseNameByRequestName(messageName)
+	reqName := msgTypeURL(req)
+	respName := m.router.ResponseNameByRequestName(reqName)
 	if respName == "" {
-		return nil, fmt.Errorf("could not find response type for request %s (%T)", messageName, req)
+		return nil, fmt.Errorf("could not find response type for request %s (%T)", reqName, req)
 	}
 
 	// get response type

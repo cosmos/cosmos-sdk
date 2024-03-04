@@ -32,6 +32,7 @@ type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 func MakeAccountsMap(
 	cdc codec.BinaryCodec,
 	addressCodec address.Codec,
+	env appmodule.Environment,
 	accounts []AccountCreatorFunc,
 ) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
@@ -40,6 +41,7 @@ func MakeAccountsMap(
 		deps := Dependencies{
 			SchemaBuilder:    stateSchemaBuilder,
 			AddressCodec:     addressCodec,
+			Environment:      env,
 			LegacyStateCodec: cdc,
 		}
 		name, accountInterface, err := makeAccount(deps)

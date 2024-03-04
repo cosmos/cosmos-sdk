@@ -960,9 +960,16 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	}
 
 	if err == nil {
+
+		var feeEvents sdk.Events
 		if mode == execModeFinalize {
 			// When block gas exceeds, it'll panic and won't commit the cached store.
 			consumeBlockGas()
+
+			feeEvents, err = FeeInvoke(mode, app, runMsgCtx)
+			if err != nil {
+				return gInfo, nil, nil, err
+			}
 
 			msCache.Write()
 		}
@@ -971,6 +978,18 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
 		}
+
+		// additional fee events
+		if len(feeEvents) > 0 {
+			// append the fee events at the end of the other events, since they get charged at the end of the Tx
+			result.Events = append(result.Events, feeEvents.ToABCIEvents()...)
+		}
+
+		// if result != nil { // tx was successful run aggregator for ante and result events
+		// 	anteEvents, result.Events = AggregateEvents(app, anteEvents, result.Events)
+		// } else { // tx failed run aggregator for ante events only since result object is nil
+		// 	anteEvents, _ = AggregateEvents(app, anteEvents, nil)
+		// }
 	}
 
 	return gInfo, result, anteEvents, err

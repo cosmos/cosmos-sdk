@@ -106,6 +106,31 @@ func (s *coinTestSuite) TestCoinIsValid() {
 	}
 }
 
+func (s *coinTestSuite) TestCustomValidation() {
+	newDnmRegex := `[\x{1F600}-\x{1F6FF}]`
+	reDnmString := `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+
+	sdk.SetCoinDenomRegex(func() string {
+		return newDnmRegex
+	})
+
+	cases := []struct {
+		coin       sdk.Coin
+		expectPass bool
+	}{
+		{sdk.Coin{"🙂", math.NewInt(1)}, true},
+		{sdk.Coin{"🙁", math.NewInt(1)}, true},
+		{sdk.Coin{"🌶", math.NewInt(1)}, false}, // outside the unicode range listed above
+		{sdk.Coin{"asdf", math.NewInt(1)}, false},
+		{sdk.Coin{"", math.NewInt(1)}, false},
+	}
+
+	for i, tc := range cases {
+		s.Require().Equal(tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
+	}
+	sdk.SetCoinDenomRegex(func() string { return reDnmString })
+}
+
 func (s *coinTestSuite) TestCoinsDenoms() {
 	cases := []struct {
 		coins      sdk.Coins

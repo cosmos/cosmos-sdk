@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -841,14 +842,40 @@ func (coins Coins) Sort() Coins {
 	return coins
 }
 
+var (
+	reDecAmt = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
+	reSpc    = `[[:space:]]*`
+
+	coinDenomRegex func() string
+
+	reDnm     *regexp.Regexp
+	reDecCoin *regexp.Regexp
+)
+
+// SetCoinDenomRegex allows for coin's custom validation by overriding the regular
+// expression string used for denom validation.
+func SetCoinDenomRegex(reFn func() string) {
+	coinDenomRegex = reFn
+
+	reDnm = regexp.MustCompile(fmt.Sprintf(`^%s$`, coinDenomRegex()))
+	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, coinDenomRegex()))
+}
+
 // ValidateDenom is the default validation function for Coin.Denom.
 func ValidateDenom(denom string) error {
-	// Convert the string to a byte slice as required by the Ragel-generated function.
-	denomBytes := []byte(denom)
+	if reDnm == nil || reDecCoin == nil {
+		// Convert the string to a byte slice as required by the Ragel-generated function.
+		denomBytes := []byte(denom)
 
-	// Call the Ragel-generated function.
-	if !MatchDenom(denomBytes) {
-		return fmt.Errorf("invalid denom: %s", denom)
+		// Call the Ragel-generated function.
+		if !MatchDenom(denomBytes) {
+			return fmt.Errorf("invalid denom: %s", denom)
+		}
+	} else {
+		// If reDnm has been initialized, use it for matching.
+		if !reDnm.MatchString(denom) {
+			return fmt.Errorf("invalid denom: %s", denom)
+		}
 	}
 
 	return nil

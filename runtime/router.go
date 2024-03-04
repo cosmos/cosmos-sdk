@@ -54,11 +54,14 @@ type msgRouterService struct {
 }
 
 // CanInvoke returns an error if the given message cannot be invoked.
-func (m *msgRouterService) CanInvoke(ctx context.Context, msg protoiface.MessageV1) error {
-	messageName := msgTypeURL(msg)
-	handler := m.router.HybridHandlerByMsgName(messageName)
+func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
+	if typeURL == "" {
+		return fmt.Errorf("missing type url")
+	}
+
+	handler := m.router.HybridHandlerByMsgName(typeURL)
 	if handler == nil {
-		return fmt.Errorf("unknown message: %s", messageName)
+		return fmt.Errorf("unknown message: %s", typeURL)
 	}
 
 	return nil
@@ -106,13 +109,16 @@ type queryRouterService struct {
 }
 
 // CanInvoke returns an error if the given request cannot be invoked.
-func (m *queryRouterService) CanInvoke(ctx context.Context, req protoiface.MessageV1) error {
-	reqName := msgTypeURL(req)
-	handlers := m.router.HybridHandlerByRequestName(reqName)
+func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
+	if typeURL == "" {
+		return fmt.Errorf("missing type url")
+	}
+
+	handlers := m.router.HybridHandlerByRequestName(typeURL)
 	if len(handlers) == 0 {
-		return fmt.Errorf("unknown request: %s", reqName)
+		return fmt.Errorf("unknown request: %s", typeURL)
 	} else if len(handlers) > 1 {
-		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", reqName)
+		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", typeURL)
 	}
 
 	return nil

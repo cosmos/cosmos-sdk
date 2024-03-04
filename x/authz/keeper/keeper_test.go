@@ -53,7 +53,6 @@ func (s *TestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 
 	s.baseApp = baseapp.NewBaseApp(
 		"authz",
@@ -76,7 +75,8 @@ func (s *TestSuite) SetupTest() {
 	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
 
-	s.authzKeeper = authzkeeper.NewKeeper(env, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(s.baseApp.GRPCQueryRouter(), s.baseApp.MsgServiceRouter()))
+	s.authzKeeper = authzkeeper.NewKeeper(env, s.encCfg.Codec, s.accountKeeper)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)
 	authz.RegisterQueryServer(queryHelper, s.authzKeeper)

@@ -40,8 +40,8 @@ func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrant
 	}
 
 	t := authorization.MsgTypeURL()
-	if k.router.HandlerByTypeURL(t) == nil {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist.", t)
+	if k.environment.RouterService.MessageRouterService().CanInvoke(ctx, t) == nil {
+		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist", t)
 	}
 
 	err = k.SaveGrant(ctx, grantee, granter, authorization, msg.Grant.Expiration)

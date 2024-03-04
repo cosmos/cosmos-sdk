@@ -20,7 +20,7 @@ type gogoProtoPlusV2 interface {
 // this is exceptionally allowed to enable accounts to be decoupled from
 // the SDK, since x/accounts can support only protov1 in its APIs.
 // But in order to keep it decoupled from the SDK we need to use the API module.
-// This is a hack that are being used here:
+// This is a temporary solution that is being used here:
 // https://github.com/cosmos/cosmos-sdk/blob/main/x/accounts/coin_transfer.go
 type protoV2GogoWrapper struct {
 	gogoProtoPlusV2

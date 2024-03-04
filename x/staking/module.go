@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/registry"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -13,6 +12,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
@@ -29,14 +29,14 @@ const (
 )
 
 var (
-	_ module.AppModuleSimulation   = AppModule{}
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.HasInvariants         = AppModule{}
-	_ module.HasABCIGenesis        = AppModule{}
-	_ module.HasABCIEndBlock       = AppModule{}
+	_ module.AppModuleSimulation      = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ module.HasAminoCodec            = AppModule{}
+	_ module.HasGRPCGateway           = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.HasInvariants            = AppModule{}
+	_ module.HasABCIGenesis           = AppModule{}
+	_ module.HasABCIEndBlock          = AppModule{}
 
 	_ appmodulev2.AppModule       = AppModule{}
 	_ appmodulev2.HasBeginBlocker = AppModule{}

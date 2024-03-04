@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 
-	"cosmossdk.io/core/registry"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/registry"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,12 +21,12 @@ import (
 var (
 	_ appmodule.AppModule = coreAppModuleAdaptor{}
 
-	_ HasName               = coreAppModuleAdaptor{}
-	_ HasAminoCodec         = coreAppModuleAdaptor{}
-	_ HasGRPCGateway        = coreAppModuleAdaptor{}
-	_ HasRegisterInterfaces = coreAppModuleAdaptor{}
-	_ HasABCIGenesis        = coreAppModuleAdaptor{}
-	_ HasServices           = coreAppModuleAdaptor{}
+	_ HasName                         = coreAppModuleAdaptor{}
+	_ HasAminoCodec                   = coreAppModuleAdaptor{}
+	_ HasGRPCGateway                  = coreAppModuleAdaptor{}
+	_ appmodule.HasRegisterInterfaces = coreAppModuleAdaptor{}
+	_ HasABCIGenesis                  = coreAppModuleAdaptor{}
+	_ HasServices                     = coreAppModuleAdaptor{}
 )
 
 // CoreAppModuleAdaptor wraps the core API module as an AppModule that this version of the SDK can use.

@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"sort"
 
-	"cosmossdk.io/core/registry"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -36,6 +35,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
@@ -48,7 +48,7 @@ import (
 // Deprecated: use the embed extension interfaces instead, when needed.
 type AppModuleBasic interface {
 	HasName
-	HasRegisterInterfaces
+	appmodule.HasRegisterInterfaces
 	HasGRPCGateway
 	HasAminoCodec
 }
@@ -60,7 +60,7 @@ type AppModule interface {
 	appmodule.AppModule
 
 	HasName
-	HasRegisterInterfaces
+	appmodule.HasRegisterInterfaces
 }
 
 // HasName allows the module to provide its own name for legacy purposes.
@@ -82,11 +82,6 @@ type HasGenesisBasics interface {
 // Deprecated: modules should not need to register their own amino codecs.
 type HasAminoCodec interface {
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
-}
-
-// HasRegisterInterfaces is the interface for modules to register their msg types.
-type HasRegisterInterfaces interface {
-	RegisterInterfaces(registry.LegacyRegistry)
 }
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
@@ -315,7 +310,7 @@ func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // RegisterInterfaces registers all module interface types
 func (m *Manager) RegisterInterfaces(registry registry.LegacyRegistry) {
 	for _, b := range m.Modules {
-		if mod, ok := b.(HasRegisterInterfaces); ok {
+		if mod, ok := b.(appmodule.HasRegisterInterfaces); ok {
 			mod.RegisterInterfaces(registry)
 		}
 	}

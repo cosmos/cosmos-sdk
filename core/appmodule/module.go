@@ -28,6 +28,9 @@ type HasBeginBlocker = appmodule.HasBeginBlocker
 // custom logic after transaction processing in a block.
 type HasEndBlocker = appmodule.HasEndBlocker
 
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces = appmodule.HasRegisterInterfaces
+
 // HasPrepareCheckState is an extension interface that contains information about the AppModule
 // and PrepareCheckState.
 type HasPrepareCheckState interface {

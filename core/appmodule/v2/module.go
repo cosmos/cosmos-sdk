@@ -3,6 +3,7 @@ package appmodule
 import (
 	"context"
 
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 )
 
@@ -89,4 +90,9 @@ type ValidatorUpdate struct {
 	PubKey     []byte
 	PubKeyType string
 	Power      int64 // updated power of the validtor
+}
+
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces interface {
+	RegisterInterfaces(registry.LegacyRegistry)
 }

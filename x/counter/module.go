@@ -1,10 +1,10 @@
 package counter
 
 import (
-	"cosmossdk.io/core/registry"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/counter/keeper"
@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )

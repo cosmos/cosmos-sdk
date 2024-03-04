@@ -127,7 +127,6 @@ func ValidateVoteExtensions(
 		if !cmtPubKey.VerifySignature(extSignBytes, vote.ExtensionSignature) {
 			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
 		}
-		fmt.Println(vote.Validator.Address)
 
 		sumVP += vote.Validator.Power
 	}

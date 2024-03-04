@@ -20,10 +20,10 @@ import (
 	auth "cosmossdk.io/x/auth/client/cli"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
+	"cosmossdk.io/server/v2/cometbft/flags"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/v2/cometbft/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"google.golang.org/protobuf/encoding/protojson"
 )

@@ -60,18 +60,22 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
 	}
 
-	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
-	switch clientCtx.SignModeStr {
-	case flags.SignModeDirect:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT
-	case flags.SignModeLegacyAminoJSON:
-		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	case flags.SignModeDirectAux:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
-	case flags.SignModeTextual:
-		signMode = signing.SignMode_SIGN_MODE_TEXTUAL
-	case flags.SignModeEIP191:
-		signMode = signing.SignMode_SIGN_MODE_EIP_191
+	// Mapping of each SignMode
+	var signModeMap = map[string]signing.SignMode{
+		flags.SignModeDirect:          signing.SignMode_SIGN_MODE_DIRECT,
+		flags.SignModeLegacyAminoJSON: signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		flags.SignModeDirectAux:       signing.SignMode_SIGN_MODE_DIRECT_AUX,
+		flags.SignModeTextual:         signing.SignMode_SIGN_MODE_TEXTUAL,
+		flags.SignModeEIP191:          signing.SignMode_SIGN_MODE_EIP_191,
+	}
+
+	// Default value for SignMode
+	defaultSignMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+
+	// Get the mapped SignMode based on clientCtx.SignModeStr
+	signMode, ok := signModeMap[clientCtx.SignModeStr]
+	if !ok {
+		signMode = defaultSignMode // Use default value if not mapped
 	}
 
 	var accNum, accSeq uint64

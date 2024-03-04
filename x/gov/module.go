@@ -194,8 +194,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the gov module.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return EndBlocker(c, am.keeper)
+	return am.keeper.EndBlocker(ctx)
 }
 
 // AppModuleSimulation functions

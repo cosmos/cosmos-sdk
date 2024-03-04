@@ -1,6 +1,6 @@
 package v1beta1
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import context "context"
 
 // Content defines an interface that a proposal must implement. It contains
 // information such as the title and description along with the type and routing
@@ -17,7 +17,7 @@ type Content interface {
 
 // Handler defines a function that handles a proposal after it has passed the
 // governance process.
-type Handler func(ctx sdk.Context, content Content) error
+type Handler func(ctx context.Context, content Content) error
 
 type HandlerRoute struct {
 	Handler  Handler

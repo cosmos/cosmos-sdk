@@ -30,6 +30,10 @@ func (g GasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) cont
 	return sdk.UnwrapSDKContext(ctx).WithGasMeter(SDKGasMeter{gm: meter})
 }
 
+func (g GasService) GetGasConfig(ctx context.Context) gas.GasConfig {
+	return gas.GasConfig(sdk.UnwrapSDKContext(ctx).KVGasConfig())
+}
+
 // ______________________________________________________________________________________________
 // Gas Meter Wrappers
 // ______________________________________________________________________________________________
@@ -97,4 +101,36 @@ func (cgm CoreGasmeter) Remaining() gas.Gas {
 
 func (cgm CoreGasmeter) Limit() gas.Gas {
 	return cgm.gm.Limit()
+}
+
+type GasConfig struct {
+	gc gas.GasConfig
+}
+
+func (gc GasConfig) HasCost() gas.Gas {
+	return gc.gc.HasCost
+}
+
+func (gc GasConfig) DeleteCost() gas.Gas {
+	return gc.gc.DeleteCost
+}
+
+func (gc GasConfig) ReadCostFlat() gas.Gas {
+	return gc.gc.ReadCostFlat
+}
+
+func (gc GasConfig) ReadCostPerByte() gas.Gas {
+	return gc.gc.ReadCostPerByte
+}
+
+func (gc GasConfig) WriteCostFlat() gas.Gas {
+	return gc.gc.WriteCostFlat
+}
+
+func (gc GasConfig) WriteCostPerByte() gas.Gas {
+	return gc.gc.WriteCostPerByte
+}
+
+func (gc GasConfig) IterNextCostFlat() gas.Gas {
+	return gc.gc.IterNextCostFlat
 }

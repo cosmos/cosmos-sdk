@@ -173,6 +173,8 @@ type BaseApp struct {
 
 	feeHandler sdk.FeeHandler
 
+	aggregateEventsFunc func(anteEvents []abci.Event, resultEvents []abci.Event) ([]abci.Event, []abci.Event)
+
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
@@ -985,14 +987,22 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			result.Events = append(result.Events, feeEvents.ToABCIEvents()...)
 		}
 
-		// if result != nil { // tx was successful run aggregator for ante and result events
-		// 	anteEvents, result.Events = AggregateEvents(app, anteEvents, result.Events)
-		// } else { // tx failed run aggregator for ante events only since result object is nil
-		// 	anteEvents, _ = AggregateEvents(app, anteEvents, nil)
-		// }
+		if result != nil { // tx was successful run aggregator for ante and result events
+			anteEvents, result.Events = AggregateEvents(app, anteEvents, result.Events)
+		} else { // tx failed run aggregator for ante events only since result object is nil
+			anteEvents, _ = AggregateEvents(app, anteEvents, nil)
+		}
 	}
 
 	return gInfo, result, anteEvents, err
+}
+
+// AggregateEvents aggregation logic of result events (ante and postHander events) with feeEvents
+func AggregateEvents(app *BaseApp, anteEvents []abci.Event, resultEvents []abci.Event) ([]abci.Event, []abci.Event) {
+	if app.aggregateEventsFunc != nil {
+		return app.aggregateEventsFunc(anteEvents, resultEvents)
+	}
+	return anteEvents, resultEvents
 }
 
 // FeeInvoke apply fee logic and append events

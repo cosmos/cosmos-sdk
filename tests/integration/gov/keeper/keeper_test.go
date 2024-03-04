@@ -112,7 +112,7 @@ func initFixture(tb testing.TB) *fixture {
 		stakingKeeper,
 		poolKeeper,
 		router,
-		types.DefaultConfig(),
+		keeper.DefaultConfig(),
 		authority.String(),
 	)
 	assert.NilError(tb, govKeeper.ProposalID.Set(newCtx, 1))

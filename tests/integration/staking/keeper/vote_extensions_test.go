@@ -12,6 +12,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -23,6 +24,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const chainID = "chain-id-123"
+
 // TestValidateVoteExtensions is a unit test function that tests the validation of vote extensions.
 // It sets up the necessary fixtures and validators, generates vote extensions for each validator,
 // and validates the vote extensions using the baseapp.ValidateVoteExtensions function.
@@ -33,10 +36,10 @@ func TestValidateVoteExtensions(t *testing.T) {
 	// enable vote extensions
 	cp := simtestutil.DefaultConsensusParams
 	cp.Abci = &cmtproto.ABCIParams{VoteExtensionsEnableHeight: 1}
-	f.sdkCtx = f.sdkCtx.WithConsensusParams(*cp).WithBlockHeight(2)
+	f.sdkCtx = f.sdkCtx.WithConsensusParams(*cp).WithHeaderInfo(header.Info{Height: 2, ChainID: chainID})
 
 	// setup the validators
-	numVals := 3
+	numVals := 1
 	privKeys := []cryptotypes.PrivKey{}
 	for i := 0; i < numVals; i++ {
 		privKeys = append(privKeys, ed25519.GenPrivKey())
@@ -66,9 +69,9 @@ func TestValidateVoteExtensions(t *testing.T) {
 		voteExt := []byte("something" + v.OperatorAddress)
 		cve := cmtproto.CanonicalVoteExtension{
 			Extension: voteExt,
-			Height:    f.sdkCtx.BlockHeight() - 1, // the vote extension was signed in the previous height
+			Height:    f.sdkCtx.HeaderInfo().Height - 1, // the vote extension was signed in the previous height
 			Round:     0,
-			ChainId:   "chain-id-123",
+			ChainId:   chainID,
 		}
 
 		extSignBytes, err := mashalVoteExt(&cve)

@@ -47,8 +47,8 @@ func ValidateVoteExtensions(
 ) error {
 	// Get values from context
 	cp := ctx.ConsensusParams()
-	currentHeight := ctx.BlockHeight()
-	chainID := ctx.BlockHeader().ChainID
+	currentHeight := ctx.HeaderInfo().Height
+	chainID := ctx.HeaderInfo().ChainID
 	commitInfo := ctx.CometInfo().LastCommit
 
 	// Check that both extCommit + commit are ordered in accordance with vp/address.
@@ -127,6 +127,7 @@ func ValidateVoteExtensions(
 		if !cmtPubKey.VerifySignature(extSignBytes, vote.ExtensionSignature) {
 			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
 		}
+		fmt.Println(vote.Validator.Address)
 
 		sumVP += vote.Validator.Power
 	}

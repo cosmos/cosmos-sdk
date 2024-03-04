@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	authtx "cosmossdk.io/x/auth/tx"
 
@@ -132,7 +133,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsHappyPath() {
 	extSig2, err := s.vals[2].privKey.Sign(bz)
 	s.Require().NoError(err)
 
-	s.ctx = s.ctx.WithBlockHeight(3) // enable vote-extensions
+	s.ctx = s.ctx.WithBlockHeight(3).WithHeaderInfo(header.Info{Height: 3, ChainID: chainID}) // enable vote-extensions
 
 	llc := abci.ExtendedCommitInfo{
 		Round: 0,

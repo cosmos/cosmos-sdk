@@ -1644,7 +1644,8 @@ func TestTokenizeAndRedeemVestedDelegation(t *testing.T) {
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 
 	// Vest half the original vesting coins
-	ctx = ctx.WithBlockTime(startTime.Add(time.Duration(endTime.Sub(startTime).Hours() / float64(2))))
+	vestHalfTime := startTime.Add(time.Duration(float64(endTime.Sub(startTime).Nanoseconds()) / float64(2)))
+	ctx = ctx.WithBlockTime(vestHalfTime)
 
 	// expect that half of the orignal vesting coins are vested
 	expVestedCoins := originalVesting.QuoInt(math.NewInt(2))

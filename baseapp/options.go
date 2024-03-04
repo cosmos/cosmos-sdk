@@ -308,6 +308,15 @@ func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {
 	app.qms = ms
 }
 
+// SetFeeHandler sets the FeeHandler which if set will change the behavior of fee handling
+func (app *BaseApp) SetFeeHandler(feeHandler sdk.FeeHandler) {
+	if app.sealed {
+		panic("SetFeeHandler() on sealed BaseApp")
+	}
+
+	app.feeHandler = feeHandler
+}
+
 // SetMempool sets the mempool for the BaseApp and is required for the app to start up.
 func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 	if app.sealed {

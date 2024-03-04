@@ -171,6 +171,8 @@ type BaseApp struct {
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
 
+	feeHandler sdk.FeeHandler
+
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
@@ -972,6 +974,19 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	}
 
 	return gInfo, result, anteEvents, err
+}
+
+// FeeInvoke apply fee logic and append events
+func FeeInvoke(mode execMode, app *BaseApp, runMsgCtx sdk.Context) (sdk.Events, error) {
+	if app.feeHandler != nil {
+		// call the msgFee
+		_, eventsFromFeeHandler, err := app.feeHandler(runMsgCtx, mode == execModeSimulate)
+		if err != nil {
+			return nil, err
+		}
+		return eventsFromFeeHandler, nil
+	}
+	return nil, nil
 }
 
 // runMsgs iterates through a list of messages and executes them with the provided

@@ -7,24 +7,21 @@ import (
 	"fmt"
 	"sort"
 
-	"golang.org/x/exp/maps"
-	"google.golang.org/grpc"
-	protobuf "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/runtime/protoiface"
-
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/runtime/v2/protocompat"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
+	"golang.org/x/exp/maps"
+	"google.golang.org/grpc"
+	protobuf "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 type MM struct {
@@ -308,12 +305,24 @@ func (m *MM) RegisterServices(app *App) error {
 			}
 		}
 
-		// register msg handler
+		// register msg handlers
 		if h, ok := module.(appmodulev2.HasMsgHandlers); ok {
 			if hasServices {
 				return fmt.Errorf("a module cannot have both handlers and services")
 			}
+			h.RegisterMsgHandlers(app.msgRouterBuilder)
+		}
 
+		if h, ok := module.(appmodulev2.HasPreMsgHandlers); ok {
+			h.RegisterPreMsgHandlers(app.preMsgRouterBuilder)
+		}
+
+		if h, ok := module.(appmodulev2.HasPostMsgHandlers); ok {
+			h.RegisterPostMsgHandlers(app.postMsgRouterBuilder)
+		}
+
+		if h, ok := module.(appmodulev2.HasQueryHandlers); ok {
+			h.RegisterQueryHandlers(app.queryRouterBuilder)
 		}
 
 		// register migrations
@@ -322,7 +331,6 @@ func (m *MM) RegisterServices(app *App) error {
 				return err
 			}
 		}
-
 	}
 
 	return nil
@@ -481,7 +489,7 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
 		// TODO(tip): what if a query is not deterministic?
-		err := registerMethod(c.cdc, c.stfQueryRouter, sd, md, ss)
+		err := c.stfQueryRouter.registerLegacyGRPC(c.cdc, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
 		}
@@ -491,40 +499,10 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 
 func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
-		err := registerMethod(c.cdc, c.stfMsgRouter, sd, md, ss)
+		err := c.stfMsgRouter.registerLegacyGRPC(c.cdc, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
 		}
 	}
 	return nil
-}
-
-func registerMethod(cdc codec.BinaryCodec, stfRouter *handlerRouter, sd *grpc.ServiceDesc, md grpc.MethodDesc, ss interface{}) error {
-	requestName, err := protocompat.RequestFullNameFromMethodDesc(sd, md)
-	if err != nil {
-		return err
-	}
-
-	responseName, err := protocompat.ResponseFullNameFromMethodDesc(sd, md)
-	if err != nil {
-		return err
-	}
-
-	// now we create the hybrid handler
-	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, md, ss)
-	if err != nil {
-		return err
-	}
-
-	responseV2Type, err := protoregistry.GlobalTypes.FindMessageByName(responseName)
-	if err != nil {
-		return err
-	}
-
-	md.Handler
-
-	return stfRouter.Register(string(requestName), func(ctx context.Context, msg transaction.Type) (resp transaction.Type, err error) {
-		resp = responseV2Type.New().Interface()
-		return resp, hybridHandler(ctx, msg.(protoiface.MessageV1), resp.(protoiface.MessageV1))
-	})
 }

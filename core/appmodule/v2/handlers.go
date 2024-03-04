@@ -127,6 +127,10 @@ type HasMsgHandlers interface {
 	RegisterMsgHandlers(router MsgRouter)
 }
 
+type HasPostMsgHandlers interface {
+	RegisterPostMsgHandlers(router PostMsgRouter)
+}
+
 type PostMsgRouter interface {
 	// Register will register a specific message handler hooking after the execution of message with
 	// the provided name.

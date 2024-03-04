@@ -6,7 +6,12 @@ import (
 
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/runtime/v2/protocompat"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 var _ appmodule.MsgRouter = (*handlerRouter)(nil)
@@ -39,6 +44,36 @@ func (h *handlerRouter) Register(msgName string, handler appmodule.Handler) {
 		h.err = fmt.Errorf("conflicting msg handlers: %s", msgName)
 	}
 	h.handlers[msgName] = handler
+}
+
+func (h *handlerRouter) registerLegacyGRPC(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, md grpc.MethodDesc, ss any) error {
+	requestName, err := protocompat.RequestFullNameFromMethodDesc(sd, md)
+	if err != nil {
+		return err
+	}
+
+	responseName, err := protocompat.ResponseFullNameFromMethodDesc(sd, md)
+	if err != nil {
+		return err
+	}
+
+	// now we create the hybrid handler
+	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, md, ss)
+	if err != nil {
+		return err
+	}
+
+	responseV2Type, err := protoregistry.GlobalTypes.FindMessageByName(responseName)
+	if err != nil {
+		return err
+	}
+
+	h.handlers[string(requestName)] = func(ctx context.Context, msg transaction.Type) (resp transaction.Type, err error) {
+		resp = responseV2Type.New().Interface()
+		return resp, hybridHandler(ctx, msg.(protoiface.MessageV1), resp.(protoiface.MessageV1))
+	}
+
+	return nil
 }
 
 func (h *handlerRouter) build(pre *preHandlerRouter, post *postHandlerRouter) (

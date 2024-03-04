@@ -1,25 +1,8 @@
 package appmodule
 
 import (
-	"cosmossdk.io/core/branch"
-	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/gas"
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/router"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
+	appmodule "cosmossdk.io/core/appmodule/v2"
 )
 
 // Environment is used to get all services to their respective module
-type Environment struct {
-	Logger log.Logger
-
-	BranchService        branch.Service
-	EventService         event.Service
-	GasService           gas.Service
-	HeaderService        header.Service
-	MessageRouterService router.Service
-
-	KVStoreService  store.KVStoreService
-	MemStoreService store.MemoryStoreService
-}
+type Environment = appmodule.Environment

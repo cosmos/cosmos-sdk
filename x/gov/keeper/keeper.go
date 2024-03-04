@@ -42,7 +42,8 @@ type Keeper struct {
 	// Msg server router
 	router baseapp.MessageRouter
 
-	config types.Config
+	// Config represent extra module configuration
+	config Config
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -88,7 +89,7 @@ func (k Keeper) GetAuthority() string {
 func NewKeeper(
 	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
-	router baseapp.MessageRouter, config types.Config, authority string,
+	router baseapp.MessageRouter, config Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -99,7 +100,7 @@ func NewKeeper(
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
-	defaultConfig := types.DefaultConfig()
+	defaultConfig := DefaultConfig()
 	// If MaxMetadataLen not set by app developer, set to default value.
 	if config.MaxTitleLen == 0 {
 		config.MaxTitleLen = defaultConfig.MaxTitleLen

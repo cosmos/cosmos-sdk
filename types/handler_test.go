@@ -14,7 +14,7 @@ func TestChainAnteDecorators(t *testing.T) {
 	// test panic
 	require.Nil(t, sdk.ChainAnteDecorators([]sdk.AnteDecorator{}...))
 
-	ctx, tx := sdk.Context{}, sdk.Tx(nil)
+	ctx, tx := sdk.Context{}.WithExecMode(sdk.ExecModeSimulate), sdk.Tx(nil)
 	mockCtrl := gomock.NewController(t)
 	mockAnteDecorator1 := mock.NewMockAnteDecorator(mockCtrl)
 	mockAnteDecorator1.EXPECT().AnteHandle(gomock.Eq(ctx), gomock.Eq(tx), true, gomock.Any()).Times(1)
@@ -39,7 +39,7 @@ func TestChainPostDecorators(t *testing.T) {
 	require.Nil(t, sdk.ChainPostDecorators([]sdk.PostDecorator{}...))
 
 	// Create empty context as well as transaction
-	ctx := sdk.Context{}
+	ctx := sdk.Context{}.WithExecMode(sdk.ExecModeSimulate)
 	tx := sdk.Tx(nil)
 
 	// Create mocks

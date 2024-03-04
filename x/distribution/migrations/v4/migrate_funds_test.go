@@ -62,7 +62,6 @@ func TestFundsMigration(t *testing.T) {
 		accountKeeper,
 		map[string]bool{},
 		authority.String(),
-		log.NewNopLogger(),
 	)
 
 	// gomock initializations
@@ -73,7 +72,7 @@ func TestFundsMigration(t *testing.T) {
 	// create distribution keeper
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		runtime.NewKVStoreService(keys[disttypes.StoreKey]),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[disttypes.StoreKey]), log.NewNopLogger()),
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,

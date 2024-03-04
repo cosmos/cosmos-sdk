@@ -43,7 +43,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19041](https://github.com/cosmos/cosmos-sdk/pull/19041) Add `appmodule.Environment` interface to fetch different services
 * [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Add `appmodule.Migrations` interface to handle migrations
 * [#19571](https://github.com/cosmos/cosmos-sdk/pull/19571) Add `router.Service` and add it in `appmodule.Environment`
- 
+* [#19617](https://github.com/cosmos/cosmos-sdk/pull/19617) Add DataBaseService to store non-consensus data in a database
+    * Create V2 appmodule with v2 api for runtime/v2
+    * Introduce `Transaction.Tx` for use in runtime/v2
+    * Introduce `HasUpdateValidators` interface and `ValidatorUpdate` struct for validator updates 
+    * Introduce `HasTxValidation` interface for modules to register tx validation handlers
+    * `HasGenesis` interface for modules to register import, export, validation and default genesis handlers. The new api works with `proto.Message`
+    * Add `PreMsghandler`and `PostMsgHandler` for pre and post message hooks
+    * Add `MsgHandler` as an alternative to grpc handlers
+    * Provide separate `MigrationRegistrar` instead of grouping with `RegisterServices`
+
+### Improvements
+
 ### API Breaking Changes
 
 * [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` to `x/tx`.

@@ -431,7 +431,6 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 		i++
 		return false, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -851,7 +850,7 @@ func (k Keeper) Unbond(
 		}
 
 		valAddr, err1 := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
-		if err != nil {
+		if err1 != nil {
 			return amount, err1
 		}
 

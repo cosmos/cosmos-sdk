@@ -310,7 +310,6 @@ func NewSimApp(
 		app.AuthKeeper,
 		BlockedAddresses(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		logger,
 	)
 
 	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
@@ -335,7 +334,7 @@ func NewSimApp(
 
 	app.PoolKeeper = poolkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), logger), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[distrtypes.StoreKey]), logger), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), logger),
 		appCodec, legacyAmino, app.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -378,7 +377,7 @@ func NewSimApp(
 	// by granting the governance module the right to execute the message.
 	// See: https://docs.cosmos.network/main/modules/gov#proposal-messages
 	govRouter := govv1beta1.NewRouter()
-	govConfig := govtypes.DefaultConfig()
+	govConfig := govkeeper.DefaultConfig()
 	/*
 		Example of setting gov params:
 		govConfig.MaxMetadataLen = 10000

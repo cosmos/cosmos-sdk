@@ -80,7 +80,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (crypto/keys) [#18026](https://github.com/cosmos/cosmos-sdk/pull/18026) Made public key generation constant time on `secp256k1`
 * (crypto | x/auth) [#14372](https://github.com/cosmos/cosmos-sdk/pull/18194) Key checks on signatures antehandle.
 * (types) [#18963](https://github.com/cosmos/cosmos-sdk/pull/18963) Swap out amino json encoding of `ABCIMessageLogs` for std lib json encoding
-* (x/auth) [#](https://github.com/cosmos/cosmos-sdk/pull/) Allow empty public keys in `GetSignBytesAdapter`.
+* (x/auth) [#19651](https://github.com/cosmos/cosmos-sdk/pull/19651) Allow empty public keys in `GetSignBytesAdapter`.
 
 ### Bug Fixes
 

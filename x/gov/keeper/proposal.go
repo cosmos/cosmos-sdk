@@ -113,7 +113,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 				return types.ErrInvalidProposalContent.Wrapf("failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 			}
 
-			return errors.New("we don't want to execude the proposal, we just want to check if it can be executed")
+			return errors.New("we don't want to execute the proposal, we just want to check if it can be executed")
 		}); errors.Is(err, types.ErrInvalidProposalContent) {
 			return v1.Proposal{}, err
 		}

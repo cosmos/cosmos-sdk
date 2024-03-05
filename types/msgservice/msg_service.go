@@ -7,13 +7,14 @@ import (
 	"io"
 	"reflect"
 
-	"cosmossdk.io/core/registry"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	proto2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
+
+	"cosmossdk.io/core/registry"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"

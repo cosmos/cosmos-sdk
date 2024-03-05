@@ -43,9 +43,9 @@ var _ InterfaceRegistry = (*interfaceRegistry)(nil)
 
 type interfaceRegistry struct{}
 
-func (i interfaceRegistry) RegisterInterface(string, any, ...gogoproto.Message) {}
+func (i interfaceRegistry) RegisterInterface(string, any, ...protoiface.MessageV1) {}
 
-func (i interfaceRegistry) RegisterImplementations(any, ...gogoproto.Message) {}
+func (i interfaceRegistry) RegisterImplementations(any, ...protoiface.MessageV1) {}
 
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()

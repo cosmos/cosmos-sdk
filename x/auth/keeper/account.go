@@ -6,7 +6,7 @@ import (
 )
 
 // NewAccountWithAddress implements AccountKeeperI.
-func (ak accountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
+func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -17,7 +17,7 @@ func (ak accountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 }
 
 // NewAccount sets the next account number to a given account interface
-func (ak accountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.AccountI {
+func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.AccountI {
 	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
 		panic(err)
 	}
@@ -26,19 +26,19 @@ func (ak accountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.Ac
 }
 
 // HasAccount implements AccountKeeperI.
-func (ak accountKeeper) HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
+func (ak AccountKeeper) HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	store := ctx.KVStore(ak.key)
 	return store.Has(types.AddressStoreKey(addr))
 }
 
 // HasAccountAddressByID checks account address exists by id.
-func (ak accountKeeper) HasAccountAddressByID(ctx sdk.Context, id uint64) bool {
+func (ak AccountKeeper) HasAccountAddressByID(ctx sdk.Context, id uint64) bool {
 	store := ctx.KVStore(ak.key)
 	return store.Has(types.AccountNumberStoreKey(id))
 }
 
 // GetAccount implements AccountKeeperI.
-func (ak accountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
+func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(types.AddressStoreKey(addr))
 	if bz == nil {
@@ -49,7 +49,7 @@ func (ak accountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.A
 }
 
 // GetAccountAddressById returns account address by id.
-func (ak accountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string {
+func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(types.AccountNumberStoreKey(id))
 	if bz == nil {
@@ -59,7 +59,7 @@ func (ak accountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
-func (ak accountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.AccountI) {
+func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.AccountI) {
 	ak.IterateAccounts(ctx, func(acc types.AccountI) (stop bool) {
 		accounts = append(accounts, acc)
 		return false
@@ -69,7 +69,7 @@ func (ak accountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.Accoun
 }
 
 // SetAccount implements AccountKeeperI.
-func (ak accountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
+func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 
@@ -84,7 +84,7 @@ func (ak accountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 
 // RemoveAccount removes an account for the account mapper store.
 // NOTE: this will cause supply invariant violation if called
-func (ak accountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
+func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	store.Delete(types.AddressStoreKey(addr))
@@ -93,7 +93,7 @@ func (ak accountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 
 // IterateAccounts iterates over all the stored accounts and performs a callback function.
 // Stops iteration when callback returns true.
-func (ak accountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.AccountI) (stop bool)) {
+func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.AccountI) (stop bool)) {
 	store := ctx.KVStore(ak.key)
 	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 

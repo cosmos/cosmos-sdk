@@ -4,11 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	authsign "cosmossdk.io/x/auth/signing"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetSignBytesAdapterNoPublicKey(t *testing.T) {

@@ -189,7 +189,7 @@ type BaseApp struct {
 
 	// disableBlockGasMeter will disable the block gas meter if true, block gas meter is tricky to support
 	// when executing transactions in parallel.
-	// when disabled, the block gas meter in context is `nil`.
+	// when disabled, the block gas meter in context is a noop one.
 	//
 	// SAFTY: it's safe to do if validators validates the total gas wanted in the proposal.
 	disableBlockGasMeter bool

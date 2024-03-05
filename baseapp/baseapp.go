@@ -191,7 +191,7 @@ type BaseApp struct {
 	// when executing transactions in parallel.
 	// when disabled, the block gas meter in context is a noop one.
 	//
-	// SAFTY: it's safe to do if validators validates the total gas wanted in the proposal.
+	// SAFETY: it's safe to do if validators validate the total gas wanted in the proposal.
 	disableBlockGasMeter bool
 }
 

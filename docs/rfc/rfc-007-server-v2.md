@@ -15,7 +15,7 @@ Secondly the current design, while it works, can have edge cases. With the combi
 
 ## Proposal
 
-This proposal is centered around modularity and simplicity of the Cosmos SDK. The goal is to allow for more advanced users to build on top of the Cosmos SDK without having to maintain a fork of the Cosmos SDK. Within the design we create clear separations between state transition, application, mempool, client and consensus. These five unique and separate componets interact with each other through well defined interfaces. While we aim to create a generalized framework, we understand that we can not fit every use case into a few simple interfaces, this is why we opted to create the seperation between the five components. If a user would like to extend one componenet they are able to do so without, potentially, needing to fork other components. This brings in a new case in which users will not need to fork the entirety of the Cosmos SDK, but only a single component. 
+This proposal is centered around modularity and simplicity of the Cosmos SDK. The goal is to allow for more advanced users to build on top of the Cosmos SDK without having to maintain a fork of the Cosmos SDK. Within the design we create clear separations between state transition, application, client and consensus. These four unique and separate componets interact with each other through well defined interfaces. While we aim to create a generalized framework, we understand that we can not fit every use case into a few simple interfaces, this is why we opted to create the seperation between the five components. If a user would like to extend one componenet they are able to do so without, potentially, needing to fork other components. This brings in a new case in which users will not need to fork the entirety of the Cosmos SDK, but only a single component.
 
 ### Server
 
@@ -25,9 +25,34 @@ The server is the workhorse of the state machine. It is where all the services a
 
 All services should be treated as services and have `Start` `Stop` and `Refresh` methods. If a service needs to be started and stopped due to handling of different concurrent processes the Service interface is what would be needed. If a service does not have the need to be started and stopped, it will be treated as a component of another service. 
 
+![server v2 diagram](./images/server-v2.png)
+
 #### Consensus
 
-Consensus is part of server and the component that controls the rest of the state machine. It receives a block and tells the STF (state transition function) what to execute, in which order and possibly in parallel. The consensus engine receives multiple service and componenets from the server, application manager, mempool and a smaller component, the transaction codec. 
+Consensus is part of server and the component that controls the rest of the state machine. It receives a block and tells the STF (state transition function) what to execute, in which order and possibly in parallel. The consensus engine receives multiple service and componenets from the server, application manager and many smaller component, the transaction codec. 
+
+#### Mempool
+
+Mempool is a pool of transactions held in memory. Mempool is a componenet of the server/consensus. Being that we are unable to predict how different consensus engines will integrate into the Cosmos SDK, we opted to not have a single mempool interface. Instead, we have a mempool component that is specific to the consensus engine. If a team opts to implement a new consensus engine, they can implement their own mempool or use the defaults we have available.
+
+```go
+// Mempool defines the required methods of an application's mempool.
+type Mempool[T transaction.Tx] interface {
+	// Insert attempts to insert a Tx into the app-side mempool returning
+	// an error upon failure.
+	Insert(context.Context, T) error
+
+	// Select returns an Iterator over the app-side mempool. If txs are specified,
+	// then they shall be incorporated into the Iterator. The Iterator must be
+	// closed by the caller.
+	Select(context.Context, []T) Iterator[T]
+
+	// Remove attempts to remove a transaction from the mempool, returning an error
+	// upon failure.
+	Remove([]T) error
+}
+
+```
 
 #### Transaction Codec
 
@@ -68,96 +93,75 @@ type Tx interface {
 }
 ```
 
-#### Mempool
+#### Application Manager
 
-Mempool is a pool of transactions held in memory. There are three methods on the mempool interface: `Get`, `Insert`, and `Remove`. Depending on the implementation of the mempool and consensus, we could see these three functions called at different times. 
-
-In the CometBFT case, `Insert` & `Remove` is called in consensus, but get is called in the prepare block phase, or what we will begin calling the block building phase.
+The application manager is the component that interacts with the state transition function (STF), storage and consensus. Consensus will pass the blockdata to the application manager. The application manager then opens a reader from storage and passes the block data and the reader to STF. 
 
 
 ```go
-// Mempool defines the required methods of an application's mempool.
-type Mempool[T transaction.Tx] interface {
-	// Insert attempts to insert a Tx into the app-side mempool returning
-	// an error upon failure. Insert will validate the transaction using the txValidator
-	Insert(ctx context.Context, txs T) error
+type BlockRequest[T any] struct {
+	Height            uint64
+	Time              time.Time
+	Hash              []byte
+	Txs               []T
+	ConsensusMessages []Type
+}
 
-	// Get returns a list of transactions to add in a block
-	// where num is the number of txs to get. NOTE: size
-	// represents the size of a TX in bytes.
-	Get(ctx context.Context, size int) ([]T, error)
-
-	// Remove attempts to remove a transaction from the mempool, returning an error
-	// upon failure.
-	Remove(txs []T) error
+type BlockResponse struct {
+	Apphash          []byte
+	ValidatorUpdates []appmodulev2.ValidatorUpdate
+	PreBlockEvents   []event.Event
+	BeginBlockEvents []event.Event
+	TxResults        []TxResult
+	EndBlockEvents   []event.Event
 }
 ```
 
-#### Application Manager
-
-The application manager is the componenet of the state machine which interacts with the STF and consensus. It is responsible for registering all modules and its client interactions on the different layers. 
+![Application Manager](./images/appmanager-flow.png)
 
 
-#### State Transition Function
+#### State Transition Function (STF)
+
+The state transition function (STF) is the component that is responsible for executing the transactions in the block. It is responsible for validating the transactions, executing them and updating the state. STF does not write directly to storage instead it returns a set of changes to the state. The changes are then applied to the storage when consensus decides. 
+
+STF is meant to be used for proving the state transition of a transaction. It will be used in the future for proving in the case of a validity or optimistic proofs. For this reason, STF will not be responsible for gas calculations, gasKV and gas meter, and the cacheKV layer. This removes complexity from the storage layer, allows for a more efficient storage layer and allows for proving in the future.
+
+Application manager and STF do not have the concept of writing to storage or commitment of state. Consensus is responsible for committing state to storage. Storage is responsible for writing state to disk and producing a commit hash to be used as the state root.
+
+![commit flow](./images/commit-flow.png)
 
 
+The benefits of the above approach are that the entire transaction and query flow is concurrently safe. Queries do not block execution of transations, checktx does not block execution, execution does not block query and checktx.
 
-## Abandoned Ideas (Optional)
-
-> As RFCs evolve, it is common that there are ideas that are abandoned. Rather than simply deleting them from the 
-> document, you should try to organize them into sections that make it clear they're abandoned while explaining why they 
-> were abandoned.
-> 
-> When sharing your RFC with others or having someone look back on your RFC in the future, it is common to walk the same 
-> path and fall into the same pitfalls that we've since matured from. Abandoned ideas are a way to recognize that path 
-> and explain the pitfalls and why they were abandoned.
 
 ## Descision
 
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through. 
+We will move forward with the above design. 
 
-## Consequences (optional)
-
-> This section describes the resulting context, after applying the decision. All
-> consequences should be listed here, not just the "positive" ones. A particular
-> decision may have positive, negative, and neutral consequences, but all of them
-> affect the team and project in the future.
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section
-> describing these incompatibilities and their severity. The ADR must explain
-> how the author proposes to deal with these incompatibilities. ADR submissions
-> without a sufficient backwards compatibility treatise may be rejected outright.
+* Modules are required to migrate from sdk.Context to `appmodule.Environment`. For comet specific information, querying the consensus module is required.
+* Legacy params module is not supported any longer in the new designs.
+* 
 
 ### Positive
 
-> {positive consequences}
+* concurrently safe
+* loose coupling between server modules
+* simpler to maintain
+* pre and post message hooks
 
 ### Negative
 
-> {negative consequences}
+* required state compatible migrations for modules
+* no support for legacy params module
 
 ### Neutral
-
-> {neutral consequences}
 
 
 
 ### References
 
-> Links to external materials needed to follow the discussion may be added here.
->
-> In addition, if the discussion in a request for comments leads to any design
-> decisions, it may be helpful to add links to the ADR documents here after the
-> discussion has settled.
 
 ## Discussion
-
-> This section contains the core of the discussion.
->
-> There is no fixed format for this section, but ideally changes to this
-> section should be updated before merging to reflect any discussion that took
-> place on the PR that made those changes.

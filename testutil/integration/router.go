@@ -76,13 +76,13 @@ func NewIntegrationApp(
 		return moduleManager.EndBlock(sdkCtx)
 	})
 
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(interfaceRegistry)
-	bApp.SetMsgServiceRouter(router)
+	msgRouter := baseapp.NewMsgServiceRouter()
+	msgRouter.SetInterfaceRegistry(interfaceRegistry)
+	bApp.SetMsgServiceRouter(msgRouter)
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger()), authtypes.NewModuleAddress("gov").String())
+		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(baseapp.NewGRPCQueryRouter(), msgRouter)), authtypes.NewModuleAddress("gov").String())
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 
 		if err := bApp.LoadLatestVersion(); err != nil {

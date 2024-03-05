@@ -53,7 +53,6 @@ func (s *GenesisTestSuite) SetupTest() {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
@@ -74,7 +73,8 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	s.ctx = s.sdkCtx
 
-	s.keeper = keeper.NewKeeper(env, s.cdc, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(bApp.GRPCQueryRouter(), bApp.MsgServiceRouter()))
+	s.keeper = keeper.NewKeeper(env, s.cdc, accountKeeper, group.DefaultConfig())
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {

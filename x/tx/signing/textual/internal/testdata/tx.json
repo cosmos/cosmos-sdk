@@ -142,7 +142,7 @@
 						"@type": "/cosmos.gov.v1.MsgVote",
 						"proposal_id": 1,
 						"voter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
-						"option": "VOTE_OPTION_ONE",
+						"option": "VOTE_OPTION_YES",
 						"metadata": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Also it ends in  a single ampersand @"
 					}
 				]
@@ -193,7 +193,7 @@
 			{ "title": "Message (1/1)", "content": "/cosmos.gov.v1.MsgVote", "indent": 1 },
 			{ "title": "Proposal id", "content": "1", "indent": 2 },
 			{ "title": "Voter", "content": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs", "indent": 2 },
-			{ "title": "Option", "content": "VOTE_OPTION_ONE", "indent": 2 },
+			{ "title": "Option", "content": "VOTE_OPTION_YES", "indent": 2 },
 			{
 				"title": "Metadata",
 				"content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Also it ends in  a single ampersand @",
@@ -226,7 +226,7 @@
 						"@type": "/cosmos.gov.v1.MsgVote",
 						"proposal_id": 1,
 						"voter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
-						"option": "VOTE_OPTION_ONE",
+						"option": "VOTE_OPTION_YES",
 						"metadata": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Also it ends in  a single ampersand @"
 					}
 				],
@@ -339,7 +339,7 @@
 			{ "title": "Message (2/2)", "content": "/cosmos.gov.v1.MsgVote", "indent": 1 },
 			{ "title": "Proposal id", "content": "1", "indent": 2 },
 			{ "title": "Voter", "content": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs", "indent": 2 },
-			{ "title": "Option", "content": "VOTE_OPTION_ONE", "indent": 2 },
+			{ "title": "Option", "content": "VOTE_OPTION_YES", "indent": 2 },
 			{
 				"title": "Metadata",
 				"content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Also it ends in  a single ampersand @",

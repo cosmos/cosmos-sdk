@@ -25,7 +25,7 @@ The server is the workhorse of the state machine. It is where all the services a
 
 All services should be treated as services and have `Start` `Stop` and `Refresh` methods. If a service needs to be started and stopped due to handling of different concurrent processes the Service interface is what would be needed. If a service does not have the need to be started and stopped, it will be treated as a component of another service. 
 
-![server v2 diagram](./images/server-v2.png)
+![server v2 diagram](./images/serverv2.png)
 
 #### Consensus
 

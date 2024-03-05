@@ -98,16 +98,16 @@ func (msg *KVStoreTx) Hash() [32]byte {
 	return [32]byte{}
 }
 
-func (msg *KVStoreTx) GetGasLimit() uint64 {
-	return 0
+func (msg *KVStoreTx) GetGasLimit() (uint64, error) {
+	return 0, nil
 }
 
-func (msg *KVStoreTx) GetMessages() []proto.Message {
-	return nil
+func (msg *KVStoreTx) GetMessages() ([]proto.Message, error) {
+	return nil, nil
 }
 
-func (msg *KVStoreTx) GetSenders() [][]byte {
-	return nil
+func (msg *KVStoreTx) GetSenders() ([][]byte, error) {
+	return nil, nil
 }
 
 func (msg *KVStoreTx) Type() string {

@@ -141,16 +141,25 @@ func (dtx *DecodedTx) Hash() [32]byte {
 	return sha256.Sum256(bz)
 }
 
-func (dtx *DecodedTx) GetGasLimit() uint64 {
-	return dtx.Tx.AuthInfo.Fee.GasLimit
+func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
+	if dtx == nil || dtx.Tx == nil || dtx.Tx.AuthInfo == nil || dtx.Tx.AuthInfo.Fee == nil {
+		return 0, errors.New("gas limit not available or one or more required fields are nil")
+	}
+	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (dtx *DecodedTx) GetMessages() []proto.Message {
-	return dtx.Messages
+func (dtx *DecodedTx) GetMessages() ([]proto.Message, error) {
+	if dtx == nil || dtx.Messages == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
+	return dtx.Messages, nil
 }
 
-func (dtx *DecodedTx) GetSenders() [][]byte {
-	return dtx.Signers
+func (dtx *DecodedTx) GetSenders() ([][]byte, error) {
+	if dtx == nil || dtx.Signers == nil {
+		return nil, errors.New("senders not available or are nil")
+	}
+	return dtx.Signers, nil
 }
 
 func (dtx *DecodedTx) Bytes() []byte {

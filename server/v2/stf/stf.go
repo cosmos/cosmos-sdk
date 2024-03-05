@@ -123,24 +123,32 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, exec
 			recoveryError = fmt.Errorf("panic during transaction execution: %s", r)
 		}
 	}()
+	// handle error from GetGasLimit
+	gasLimit, gasLimitErr := tx.GetGasLimit()
+	if gasLimitErr != nil {
+		return appmanager.TxResult{
+			Error: gasLimitErr,
+		}
+	}
+
 	if recoveryError != nil {
 		return appmanager.TxResult{
 			Error: recoveryError,
 		}
 	}
 
-	validateGas, validationEvents, err := s.validateTx(ctx, state, tx.GetGasLimit(), tx)
+	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx)
 	if err != nil {
 		return appmanager.TxResult{
 			Error: err,
 		}
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, state, tx.GetGasLimit()-validateGas, tx, execMode)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode)
 	return appmanager.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
-		GasWanted: tx.GetGasLimit(),
+		GasWanted: gasLimit,
 		Resp:      execResp,
 		Error:     err,
 	}
@@ -150,7 +158,11 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, exec
 // If the validation is successful, state is committed
 func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branch(state)
-	validateCtx := s.makeContext(ctx, tx.GetSenders(), validateState, gasLimit, corecontext.ExecModeCheck)
+	txSenders, err := tx.GetSenders()
+	if err != nil {
+		return 0, nil, err
+	}
+	validateCtx := s.makeContext(ctx, txSenders, validateState, gasLimit, corecontext.ExecModeCheck)
 	err = s.doTxValidation(validateCtx, tx)
 	if err != nil {
 		return 0, nil, err
@@ -162,7 +174,11 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit 
 // execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
 func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode) ([]transaction.Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
-	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit, execMode)
+	txSenders, err := tx.GetSenders()
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	execCtx := s.makeContext(ctx, txSenders, execState, gasLimit, execMode)
 
 	// atomic execution of the all messages in a transaction,
 	msgsResp, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode)
@@ -210,8 +226,15 @@ func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint
 
 // runTxMsgs will execute the messages contained in the TX with the provided state.
 func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode) ([]transaction.Type, error) {
-	execCtx := s.makeContext(ctx, tx.GetSenders(), state, gasLimit, execMode)
-	msgs := tx.GetMessages()
+	txSenders, err := tx.GetSenders()
+	if err != nil {
+		return nil, err
+	}
+	execCtx := s.makeContext(ctx, txSenders, state, gasLimit, execMode)
+	msgs, err := tx.GetMessages()
+	if err != nil {
+		return nil, err
+	}
 	msgResps := make([]transaction.Type, len(msgs))
 	for i, msg := range msgs {
 		resp, err := s.handleMsg(execCtx, msg)

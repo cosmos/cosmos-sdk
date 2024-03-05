@@ -82,16 +82,16 @@ func (tx testTx) Hash() [32]byte {
 	return [32]byte{}
 }
 
-func (tx testTx) GetGasLimit() uint64 {
-	return 0
+func (tx testTx) GetGasLimit() (uint64, error) {
+	return 0, nil
 }
 
-func (tx testTx) GetMessages() []protov2.Message {
-	return nil
+func (tx testTx) GetMessages() ([]protov2.Message, error) {
+	return nil, nil
 }
 
-func (tx testTx) GetSenders() [][]byte {
-	return nil
+func (tx testTx) GetSenders() ([][]byte, error) {
+	return nil, nil
 }
 
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
@@ -116,16 +116,16 @@ func (sigErrTx) Hash() [32]byte {
 	return [32]byte{}
 }
 
-func (sigErrTx) GetGasLimit() uint64 {
-	return 0
+func (sigErrTx) GetGasLimit() (uint64, error) {
+	return 0, nil
 }
 
-func (sigErrTx) GetMessages() []protov2.Message {
-	return nil
+func (sigErrTx) GetMessages() ([]protov2.Message, error) {
+	return nil, nil
 }
 
-func (sigErrTx) GetSenders() [][]byte {
-	return nil
+func (sigErrTx) GetSenders() ([][]byte, error) {
+	return nil, nil
 }
 
 func (sigErrTx) Size() int64 { return 0 }

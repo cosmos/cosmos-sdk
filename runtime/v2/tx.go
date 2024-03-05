@@ -20,8 +20,12 @@ type wrapperServerTx struct {
 }
 
 func (w wrapperServerTx) GetMsgs() []sdk.Msg {
-	msgs := make([]sdk.Msg, len(w.Tx.GetMessages()))
-	for i, msg := range w.Tx.GetMessages() {
+	txMsgs, err := w.Tx.GetMessages()
+	if err != nil {
+		panic(err)
+	}
+	msgs := make([]sdk.Msg, len(txMsgs))
+	for i, msg := range txMsgs {
 		msg := dynamicpb.NewMessage(msg.ProtoReflect().Descriptor())
 		proto.Merge(msg, msg.ProtoReflect().Interface())
 		msgs[i] = msg
@@ -31,5 +35,9 @@ func (w wrapperServerTx) GetMsgs() []sdk.Msg {
 }
 
 func (w wrapperServerTx) GetMsgsV2() ([]proto.Message, error) {
-	return w.Tx.GetMessages(), nil
+	txMsgs, err := w.Tx.GetMessages()
+	if err != nil {
+		return nil, err
+	}
+	return txMsgs, nil
 }

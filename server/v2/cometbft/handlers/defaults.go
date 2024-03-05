@@ -147,7 +147,11 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 			}
 
 			if maxBlockGas > 0 {
-				totalTxGas += tx.GetGasLimit()
+				gaslimit, err := tx.GetGasLimit()
+				if err != nil {
+					return fmt.Errorf("failed to get gas limit")
+				}
+				totalTxGas += gaslimit
 				if totalTxGas > maxBlockGas {
 					return fmt.Errorf("total tx gas %d exceeds max block gas %d", totalTxGas, maxBlockGas)
 				}

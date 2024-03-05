@@ -2,6 +2,7 @@ package tx
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -126,16 +127,25 @@ func (w *gogoTxWrapper) computeHashAndBytes() {
 	w.cachedHashed = true
 }
 
-func (w *gogoTxWrapper) GetGasLimit() uint64 {
-	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit
+func (w *gogoTxWrapper) GetGasLimit() (uint64, error) {
+	if w.decodedTx == nil || w.decodedTx.Tx == nil || w.decodedTx.Tx.AuthInfo == nil || w.decodedTx.Tx.AuthInfo.Fee == nil {
+		return 0, errors.New("gas limit not available, one or more required fields are nil")
+	}
+	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (w *gogoTxWrapper) GetMessages() []protov2.Message {
-	return w.decodedTx.Messages
+func (w *gogoTxWrapper) GetMessages() ([]protov2.Message, error) {
+	if w.decodedTx == nil || w.decodedTx.Messages == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
+	return w.decodedTx.Messages, nil
 }
 
-func (w *gogoTxWrapper) GetSenders() [][]byte {
-	return w.decodedTx.Signers
+func (w *gogoTxWrapper) GetSenders() ([][]byte, error) {
+	if w.decodedTx == nil || w.decodedTx.Signers == nil {
+		return nil, errors.New("Senders not available or are nil")
+	}
+	return w.decodedTx.Signers, nil
 }
 
 var (

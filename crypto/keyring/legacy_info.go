@@ -1,6 +1,7 @@
 package keyring
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -77,7 +78,7 @@ func (i legacyLocalInfo) GetAlgo() hd.PubKeyType {
 
 // GetPath returns bip44 path, but not available for this type
 func (i legacyLocalInfo) GetPath() (*hd.BIP44Params, error) {
-	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
+	return nil, errors.New("BIP44 Paths are not available for this type")
 }
 
 // legacyLedgerInfo is the public information about a Ledger key
@@ -155,7 +156,7 @@ func (i legacyOfflineInfo) GetAddress() sdk.AccAddress {
 
 // GetPath returns bip44 path, but not available for this type
 func (i legacyOfflineInfo) GetPath() (*hd.BIP44Params, error) {
-	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
+	return nil, errors.New("BIP44 Paths are not available for this type")
 }
 
 // Deprecated: this structure is not used anymore and it's here only to allow
@@ -213,7 +214,7 @@ func (i LegacyMultiInfo) GetAlgo() hd.PubKeyType {
 
 // GetPath returns bip44 path, but not available for this type
 func (i LegacyMultiInfo) GetPath() (*hd.BIP44Params, error) {
-	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
+	return nil, errors.New("BIP44 Paths are not available for this type")
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -258,7 +259,7 @@ func privKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) {
 	switch linfo := info.(type) {
 	case legacyLocalInfo:
 		if linfo.PrivKeyArmor == "" {
-			return nil, fmt.Errorf("private key not available")
+			return nil, errors.New("private key not available")
 		}
 		priv, err := legacy.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {

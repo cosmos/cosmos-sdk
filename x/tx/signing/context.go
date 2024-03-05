@@ -221,7 +221,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 			var fieldGetter func(protoreflect.Message, int) ([][]byte, error)
 			fieldGetter = func(msg protoreflect.Message, depth int) ([][]byte, error) {
 				if depth > c.maxRecursionDepth {
-					return nil, fmt.Errorf("maximum recursion depth exceeded")
+					return nil, errors.New("maximum recursion depth exceeded")
 				}
 				desc := msg.Descriptor()
 				signerFields, err := getSignersFieldNames(desc)

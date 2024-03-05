@@ -21,7 +21,7 @@ func TestGrant(t *testing.T) {
 	addressCodec := codecaddress.NewBech32Codec("cosmos")
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 

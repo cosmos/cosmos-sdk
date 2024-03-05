@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	protov2 "google.golang.org/protobuf/proto"
 
+	_ "cosmossdk.io/api/cosmos/counter/v1"
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/signing"
 
@@ -234,7 +236,7 @@ func (s *MempoolTestSuite) TestSampleTxs() {
 }
 
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
-	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModuleBasic{})
+	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModule{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
 }
 

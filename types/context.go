@@ -433,16 +433,17 @@ func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
 func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
 	ci := comet.CommitInfo{
 		Round: commit.Round,
+		Votes: make([]comet.VoteInfo, len(commit.Votes)),
 	}
 
-	for _, v := range commit.Votes {
-		ci.Votes = append(ci.Votes, comet.VoteInfo{
+	for i, v := range commit.Votes {
+		ci.Votes[i] = comet.VoteInfo{
 			Validator: comet.Validator{
 				Address: v.Validator.Address,
 				Power:   v.Validator.Power,
 			},
 			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
-		})
+		}
 	}
 
 	return ci

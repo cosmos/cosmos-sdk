@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -51,7 +52,7 @@ type GenTxTestSuite struct {
 }
 
 func (suite *GenTxTestSuite) SetupTest() {
-	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(genutil.AppModuleBasic{})
+	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(genutil.AppModule{})
 	key := storetypes.NewKVStoreKey("a_Store_Key")
 	tkey := storetypes.NewTransientStoreKey("a_transient_store")
 	suite.ctx = testutil.DefaultContext(key, tkey)

@@ -42,7 +42,7 @@ func TestGenesisTestSuite(t *testing.T) {
 func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())

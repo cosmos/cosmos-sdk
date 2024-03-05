@@ -3,13 +3,11 @@ package module
 import (
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/keeper"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -29,13 +27,12 @@ func init() {
 type GroupInputs struct {
 	depinject.In
 
-	Config           *modulev1.Module
-	StoreService     store.KVStoreService
-	Cdc              codec.Codec
-	AccountKeeper    group.AccountKeeper
-	BankKeeper       group.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter baseapp.MessageRouter
+	Config        *modulev1.Module
+	Environment   appmodule.Environment
+	Cdc           codec.Codec
+	AccountKeeper group.AccountKeeper
+	BankKeeper    group.BankKeeper
+	Registry      cdctypes.InterfaceRegistry
 }
 
 type GroupOutputs struct {
@@ -46,9 +43,8 @@ type GroupOutputs struct {
 }
 
 func ProvideModule(in GroupInputs) GroupOutputs {
-	k := keeper.NewKeeper(in.StoreService,
+	k := keeper.NewKeeper(in.Environment,
 		in.Cdc,
-		in.MsgServiceRouter,
 		in.AccountKeeper,
 		group.Config{
 			MaxExecutionPeriod:    in.Config.MaxExecutionPeriod.AsDuration(),

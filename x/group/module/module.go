@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/client/cli"
@@ -28,10 +27,13 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.AppModuleBasic      = AppModule{}
-	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasGenesis          = AppModule{}
-	_ module.HasInvariants       = AppModule{}
+	_ module.HasName               = AppModule{}
+	_ module.HasAminoCodec         = AppModule{}
+	_ module.HasGRPCGateway        = AppModule{}
+	_ module.HasRegisterInterfaces = AppModule{}
+	_ module.AppModuleSimulation   = AppModule{}
+	_ module.HasGenesis            = AppModule{}
+	_ module.HasInvariants         = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
@@ -40,90 +42,58 @@ var (
 )
 
 type AppModule struct {
-	AppModuleBasic
+	cdc      codec.Codec
+	registry cdctypes.InterfaceRegistry
+
 	keeper     keeper.Keeper
 	bankKeeper group.BankKeeper
 	accKeeper  group.AccountKeeper
-	registry   cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
-		keeper:         keeper,
-		bankKeeper:     bk,
-		accKeeper:      ak,
-		registry:       registry,
+		cdc:        cdc,
+		keeper:     keeper,
+		bankKeeper: bk,
+		accKeeper:  ak,
+		registry:   registry,
 	}
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
-
-type AppModuleBasic struct {
-	cdc codec.Codec
-	ac  address.Codec
-}
+func (AppModule) IsAppModule() {}
 
 // Name returns the group module's name.
-func (AppModuleBasic) Name() string {
+func (am AppModule) Name() string {
 	return group.ModuleName
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the group
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(group.NewGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the group module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data group.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
-	}
-	return data.Validate()
-}
-
 // GetTxCmd returns the transaction commands for the group module
-func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.TxCmd(a.Name(), a.ac)
+func (am AppModule) GetTxCmd() *cobra.Command {
+	return cli.TxCmd(am.Name())
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
+func (am AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := group.RegisterQueryHandlerClient(context.Background(), mux, group.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
 // RegisterInterfaces registers the group module's interface types
-func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	group.RegisterInterfaces(registry)
 }
 
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	group.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
-}
-
-// InitGenesis performs genesis initialization for the group module. It returns
-// no validator updates.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	am.keeper.InitGenesis(ctx, cdc, data)
-}
-
-// ExportGenesis returns the exported genesis state as raw bytes for the group
-// module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx, cdc)
-	return cdc.MustMarshalJSON(gs)
 }
 
 // RegisterServices registers module services.
@@ -134,6 +104,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
+// RegisterMigrations registers module migrations
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 	if err := mr.Register(group.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -143,13 +114,37 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	return nil
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock implements the group module's EndBlock.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return EndBlocker(c, am.keeper)
+	return am.keeper.EndBlocker(ctx)
+}
+
+// DefaultGenesis returns default genesis state as raw bytes for the group module.
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(group.NewGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the group module.
+func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+	var data group.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
+	}
+	return data.Validate()
+}
+
+// InitGenesis performs genesis initialization for the group module.
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+	am.keeper.InitGenesis(ctx, cdc, data)
+}
+
+// ExportGenesis returns the exported genesis state as raw bytes for the group module.
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+	gs := am.keeper.ExportGenesis(ctx, cdc)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // GenerateGenesisState creates a randomized GenState of the group module.

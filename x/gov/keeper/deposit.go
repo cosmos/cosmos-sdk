@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/gov/types"
@@ -98,7 +99,7 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 	}
 
 	// the deposit must only contain valid denoms (listed in the min deposit param)
-	if err := k.validateDepositDenom(ctx, params, depositAmount); err != nil {
+	if err := k.validateDepositDenom(params, depositAmount); err != nil {
 		return false, err
 	}
 
@@ -176,14 +177,13 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		return false, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeProposalDeposit,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
-			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-		),
-	)
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeProposalDeposit,
+		event.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
+		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+	); err != nil {
+		return false, err
+	}
 
 	err = k.SetDeposit(ctx, deposit)
 	if err != nil {
@@ -280,7 +280,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
 // required at the time of proposal submission. This threshold amount is determined by
 // the deposit parameters. Returns nil on success, error otherwise.
-func (k Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, initialDeposit sdk.Coins, proposalType v1.ProposalType) error {
+func (k Keeper) validateInitialDeposit(params v1.Params, initialDeposit sdk.Coins, proposalType v1.ProposalType) error {
 	if !initialDeposit.IsValid() || initialDeposit.IsAnyNegative() {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, initialDeposit.String())
 	}
@@ -311,7 +311,7 @@ func (k Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, in
 }
 
 // validateDepositDenom validates if the deposit denom is accepted by the governance module.
-func (k Keeper) validateDepositDenom(ctx context.Context, params v1.Params, depositAmount sdk.Coins) error {
+func (k Keeper) validateDepositDenom(params v1.Params, depositAmount sdk.Coins) error {
 	denoms := []string{}
 	acceptedDenoms := make(map[string]bool, len(params.MinDeposit))
 	for _, coin := range params.MinDeposit {

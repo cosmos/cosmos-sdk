@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/distribution"
 	v4 "cosmossdk.io/x/distribution/migrations/v4"
@@ -19,11 +20,13 @@ import (
 )
 
 func TestMigration(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey("distribution")
 	storeService := runtime.NewKVStoreService(storeKey)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
+
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 
 	addr1 := secp256k1.GenPrivKey().PubKey().Address()
 	consAddr1 := sdk.ConsAddress(addr1)
@@ -35,7 +38,7 @@ func TestMigration(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, consAddr1, gotAddr)
 
-	err = v4.MigrateStore(ctx, storeService, cdc)
+	err = v4.MigrateStore(ctx, env, cdc)
 	require.NoError(t, err)
 
 	sb := collections.NewSchemaBuilder(storeService)

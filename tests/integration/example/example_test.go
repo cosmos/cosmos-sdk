@@ -29,7 +29,7 @@ import (
 func Example() {
 	// in this example we are testing the integration of the following modules:
 	// - mint, which directly depends on auth, bank and staking
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, mint.AppModuleBasic{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, mint.AppModule{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
@@ -40,8 +40,8 @@ func Example() {
 	newCtx := sdk.NewContext(cms, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encodingCfg.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
@@ -118,7 +118,7 @@ func Example() {
 // That module has no dependency on other modules.
 func Example_oneModule() {
 	// in this example we are testing the integration of the auth module:
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
@@ -129,8 +129,8 @@ func Example_oneModule() {
 	newCtx := sdk.NewContext(cms, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encodingCfg.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),

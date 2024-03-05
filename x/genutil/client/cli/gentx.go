@@ -29,7 +29,7 @@ import (
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
+func GenTxCmd(mm *module.Manager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -90,7 +90,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 
-			if err = mbm.ValidateGenesis(cdc, txEncCfg, genesisState); err != nil {
+			if err = mm.ValidateGenesis(cdc, txEncCfg, genesisState); err != nil {
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
@@ -188,8 +188,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return fmt.Errorf("error creating tx builder: %w", err)
 			}
 
-			err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true, true)
-			if err != nil {
+			if err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true, true); err != nil {
 				return errors.Wrap(err, "failed to sign std tx")
 			}
 
@@ -201,7 +200,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				}
 			}
 
-			if err := writeSignedGenTx(clientCtx, outputDocument, stdTx); err != nil {
+			if err := writeSignedGenTx(clientCtx, outputDocument, txBuilder.GetTx()); err != nil {
 				return errors.Wrap(err, "failed to write signed gen tx")
 			}
 

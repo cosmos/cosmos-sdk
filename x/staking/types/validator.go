@@ -259,7 +259,7 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
-	tmProtoPk, err := v.TmConsPublicKey()
+	tmProtoPk, err := v.CmtConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
@@ -273,7 +273,7 @@ func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	tmProtoPk, err := v.TmConsPublicKey()
+	tmProtoPk, err := v.CmtConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
@@ -473,11 +473,6 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	return pk, nil
 }
 
-// Deprecated: use CmtConsPublicKey instead
-func (v Validator) TmConsPublicKey() (cmtprotocrypto.PublicKey, error) {
-	return v.CmtConsPublicKey()
-}
-
 // CmtConsPublicKey casts Validator.ConsensusPubkey to cmtprotocrypto.PubKey.
 func (v Validator) CmtConsPublicKey() (cmtprotocrypto.PublicKey, error) {
 	pk, err := v.ConsPubKey()
@@ -491,6 +486,12 @@ func (v Validator) CmtConsPublicKey() (cmtprotocrypto.PublicKey, error) {
 	}
 
 	return tmPk, nil
+}
+
+// Deprecated: use CmtConsPublicKey instead
+// We do not delete this function as it is part of the ValidatorI interface
+func (v Validator) TmConsPublicKey() (cmtprotocrypto.PublicKey, error) {
+	return v.CmtConsPublicKey()
 }
 
 // GetConsAddr extracts Consensus key address

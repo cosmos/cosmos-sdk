@@ -35,6 +35,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// NOTE: we do not want to replace to the latest API yet
+// NOTE: we do not want to replace to the development version of cosmossdk.io/api yet
 // Until https://github.com/cosmos/cosmos-sdk/issues/19228 is resolved
 // We are tagging x/tx from main and must keep using released versions of x/tx dependencies

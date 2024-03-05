@@ -151,7 +151,7 @@ func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
-// SetSignature sets the aux signer's signature.
+// SetNonCriticalExtensionOptions sets the aux signer's non-critical extension options.
 func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()
 

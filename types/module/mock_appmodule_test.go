@@ -12,6 +12,7 @@ import (
 type AppModuleWithAllExtensions interface {
 	module.AppModule
 	module.HasServices
+	appmodulev2.HasGenesis
 	module.HasInvariants
 	module.HasConsensusVersion
 	module.HasABCIEndBlock
@@ -33,16 +34,7 @@ type AppModuleWithAllExtensionsABCI interface {
 // mocks to be used in module tests.
 type CoreAppModule interface {
 	appmodulev2.AppModule
-	appmodule.HasGenesis
-	appmodulev2.HasBeginBlocker
-	appmodulev2.HasEndBlocker
-	appmodule.HasPrecommit
-	appmodule.HasPrepareCheckState
-}
-
-type CoreAppModulev2 interface {
-	appmodulev2.AppModule
-	appmodulev2.HasGenesis
+	appmodule.HasGenesisAuto
 	appmodulev2.HasBeginBlocker
 	appmodulev2.HasEndBlocker
 	appmodule.HasPrecommit

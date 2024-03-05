@@ -594,7 +594,7 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 }
 
 var (
-	_ appmodule.AppModule   = MockCoreAppModule{}
-	_ appmodule.HasGenesis  = MockCoreAppModule{}
-	_ appmodule.HasServices = MockCoreAppModule{}
+	_ appmodule.AppModule      = MockCoreAppModule{}
+	_ appmodule.HasGenesisAuto = MockCoreAppModule{}
+	_ appmodule.HasServices    = MockCoreAppModule{}
 )

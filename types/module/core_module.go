@@ -44,7 +44,7 @@ type coreAppModuleAdaptor struct {
 
 // DefaultGenesis implements HasGenesis
 func (c coreAppModuleAdaptor) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	if mod, ok := c.module.(appmodule.HasGenesis); ok {
+	if mod, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		target := genesis.RawJSONTarget{}
 		err := mod.DefaultGenesis(target.Target())
 		if err != nil {
@@ -68,7 +68,7 @@ func (c coreAppModuleAdaptor) DefaultGenesis(cdc codec.JSONCodec) json.RawMessag
 
 // ValidateGenesis implements HasGenesis
 func (c coreAppModuleAdaptor) ValidateGenesis(cdc codec.JSONCodec, txConfig client.TxEncodingConfig, bz json.RawMessage) error {
-	if mod, ok := c.module.(appmodule.HasGenesis); ok {
+	if mod, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		source, err := genesis.SourceFromRawJSON(bz)
 		if err != nil {
 			return err
@@ -88,7 +88,7 @@ func (c coreAppModuleAdaptor) ValidateGenesis(cdc codec.JSONCodec, txConfig clie
 
 // ExportGenesis implements HasGenesis
 func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) json.RawMessage {
-	if module, ok := c.module.(appmodule.HasGenesis); ok {
+	if module, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		ctx := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 		target := genesis.RawJSONTarget{}
 		err := module.ExportGenesis(ctx, target.Target())
@@ -109,7 +109,7 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) json.RawMessage
 
 // InitGenesis implements HasGenesis
 func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessage) []abci.ValidatorUpdate {
-	if module, ok := c.module.(appmodule.HasGenesis); ok {
+	if module, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		// core API genesis
 		source, err := genesis.SourceFromRawJSON(bz)
 		if err != nil {

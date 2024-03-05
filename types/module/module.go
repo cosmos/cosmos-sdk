@@ -93,6 +93,8 @@ type HasGRPCGateway interface {
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
 
+type HasGenesis = appmodulev2.HasGenesis
+
 // HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
 type HasABCIGenesis interface {
 	HasGenesisBasics
@@ -203,7 +205,7 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames, func(moduleName string) bool {
 		module := m.Modules[moduleName]
-		if _, hasGenesis := module.(appmodule.HasGenesis); hasGenesis {
+		if _, hasGenesis := module.(appmodule.HasGenesisAuto); hasGenesis {
 			return !hasGenesis
 		}
 
@@ -211,7 +213,7 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 			return !hasABCIGenesis
 		}
 
-		_, hasGenesis := module.(appmodulev2.HasGenesis)
+		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})
 	m.OrderInitGenesis = moduleNames
@@ -221,7 +223,7 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames, func(moduleName string) bool {
 		module := m.Modules[moduleName]
-		if _, hasGenesis := module.(appmodule.HasGenesis); hasGenesis {
+		if _, hasGenesis := module.(appmodule.HasGenesisAuto); hasGenesis {
 			return !hasGenesis
 		}
 
@@ -229,7 +231,7 @@ func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 			return !hasABCIGenesis
 		}
 
-		_, hasGenesis := module.(appmodulev2.HasGenesis)
+		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})
 	m.OrderExportGenesis = moduleNames
@@ -433,7 +435,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 		mod := m.Modules[moduleName]
 		// we might get an adapted module, a native core API module or a legacy module
-		if module, ok := mod.(appmodule.HasGenesis); ok {
+		if module, ok := mod.(appmodule.HasGenesisAuto); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 			// core API genesis
 			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
@@ -445,7 +447,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			if err != nil {
 				return &abci.ResponseInitChain{}, err
 			}
-		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
 				return &abci.ResponseInitChain{}, err
@@ -498,10 +500,10 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.Modules[moduleName]
-		if module, ok := mod.(appmodule.HasGenesis); ok {
+		if module, ok := mod.(appmodule.HasGenesisAuto); ok {
 			// core API genesis
 			channels[moduleName] = make(chan genesisResult)
-			go func(module appmodule.HasGenesis, ch chan genesisResult) {
+			go func(module appmodule.HasGenesisAuto, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				target := genesis.RawJSONTarget{}
 				err := module.ExportGenesis(ctx, target.Target())
@@ -518,9 +520,9 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 
 				ch <- genesisResult{rawJSON, nil}
 			}(module, channels[moduleName])
-		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+		} else if module, ok := mod.(HasGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
-			go func(module appmodulev2.HasGenesis, ch chan genesisResult) {
+			go func(module HasGenesis, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				jm, err := module.ExportGenesis(ctx)
 				if err != nil {
@@ -680,8 +682,10 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 			}
 		} else {
 			sdkCtx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if module, ok := m.Modules[moduleName].(appmodulev2.HasGenesis); ok {
-				module.InitGenesis(sdkCtx, module.DefaultGenesis())
+			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+				if err := module.InitGenesis(sdkCtx, module.DefaultGenesis()); err != nil {
+					return nil, err
+				}
 			}
 			if module, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
 				moduleValUpdates := module.InitGenesis(sdkCtx, module.DefaultGenesis(c.cdc))

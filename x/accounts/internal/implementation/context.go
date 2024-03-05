@@ -156,6 +156,10 @@ func (g gasService) GetBlockGasMeter(ctx context.Context) gas.Meter {
 	return g.gs.GetBlockGasMeter(getParentContext(ctx))
 }
 
+func (g gasService) GetGasConfig(ctx context.Context) gas.GasConfig {
+	return g.gs.GetGasConfig(getParentContext(ctx))
+}
+
 func (g gasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.Context {
 	v := getCtx(ctx)
 	v.parentContext = g.gs.WithGasMeter(v.parentContext, meter)

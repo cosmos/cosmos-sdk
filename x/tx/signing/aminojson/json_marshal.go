@@ -29,6 +29,7 @@ type EncoderOptions struct {
 	// DoNotSortFields when set turns off sorting of field names.
 	DoNotSortFields bool
 	// EnumAsString when set will encode enums as strings instead of integers.
+	// Caution: Enabling this option produce different sign bytes.
 	EnumAsString bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver signing.TypeResolver

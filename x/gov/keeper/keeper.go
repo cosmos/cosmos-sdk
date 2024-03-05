@@ -7,13 +7,12 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	corestoretypes "cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,24 +22,20 @@ type Keeper struct {
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 	poolKeeper types.PoolKeeper
-
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
 
 	// GovHooks
 	hooks types.GovHooks
 
-	// The (unexposed) keys used to access the stores from the Context.
-	storeService corestoretypes.KVStoreService
-
 	// The codec for binary encoding/decoding.
 	cdc codec.Codec
 
+	// Module environment
+	environment appmodule.Environment
+
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
-
-	// Msg server router
-	router baseapp.MessageRouter
 
 	// Config represent extra module configuration
 	config Config
@@ -87,9 +82,9 @@ func (k Keeper) GetAuthority() string {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
+	cdc codec.Codec, env appmodule.Environment, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
-	router baseapp.MessageRouter, config Config, authority string,
+	config Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -114,15 +109,14 @@ func NewKeeper(
 		config.MaxSummaryLen = defaultConfig.MaxSummaryLen
 	}
 
-	sb := collections.NewSchemaBuilder(storeService)
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := &Keeper{
-		storeService:           storeService,
+		environment:            env,
 		authKeeper:             authKeeper,
 		bankKeeper:             bankKeeper,
 		sk:                     sk,
 		poolKeeper:             pk,
 		cdc:                    cdc,
-		router:                 router,
 		config:                 config,
 		authority:              authority,
 		Constitution:           collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
@@ -175,14 +169,8 @@ func (k *Keeper) SetLegacyRouter(router v1beta1.Router) {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
-}
-
-// Router returns the gov keeper's router
-func (k Keeper) Router() baseapp.MessageRouter {
-	return k.router
+func (k Keeper) Logger() log.Logger {
+	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // LegacyRouter returns the gov keeper's legacy router

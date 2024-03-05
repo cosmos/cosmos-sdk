@@ -57,7 +57,7 @@ type ResponsePreBlock interface {
 // HasPreBlocker is the extension interface that modules should implement to run
 // custom logic before BeginBlock.
 type HasPreBlocker interface {
-	AppModule
+	appmodule.AppModule
 	// PreBlock is method that will be run before BeginBlock.
 	PreBlock(context.Context) (ResponsePreBlock, error)
 }
@@ -88,12 +88,12 @@ type HasMsgHandler interface {
 // HasPrepareCheckState is an extension interface that contains information about the AppModule
 // and PrepareCheckState.
 type HasPrepareCheckState interface {
-	AppModule
+	appmodule.AppModule
 	PrepareCheckState(context.Context) error
 }
 
-// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
+// HasPrecommit is an extension interface that contains information about the appmodule.AppModule and Precommit.
 type HasPrecommit interface {
-	AppModule
+	appmodule.AppModule
 	Precommit(context.Context) error
 }

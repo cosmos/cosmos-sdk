@@ -3,13 +3,15 @@ package appmodule
 import (
 	"context"
 	"io"
+
+	appmodule "cosmossdk.io/core/appmodule/v2"
 )
 
 // HasGenesis is the extension interface that modules should implement to handle
 // genesis data and state initialization.
 // WARNING: This interface is experimental and may change at any time.
 type HasGenesis interface {
-	AppModule
+	appmodule.AppModule
 
 	// DefaultGenesis writes the default genesis for this module to the target.
 	DefaultGenesis(GenesisTarget) error

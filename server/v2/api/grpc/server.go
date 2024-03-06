@@ -1,56 +1,52 @@
 package grpc
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 	"cosmossdk.io/log"
+	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/grpc/gogoreflection"
 )
 
-type ClientContext interface {
-	// InterfaceRegistry returns the InterfaceRegistry.
-	InterfaceRegistry() appmanager.InterfaceRegistry
-}
+const serverName = "grpc-server"
 
 type GRPCServer struct {
+	logger log.Logger
+
 	grpcSrv *grpc.Server
-	logger  log.Logger
-	config  Config
+	config  *Config
 }
 
 type GRPCService interface {
-	// RegisterGRPCServer registers gRPC services directly with the gRPC
-	// server.
+	// RegisterGRPCServer registers gRPC services directly with the gRPC server.
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-// NewGRPCServer returns a correctly configured and initialized gRPC server.
-// Note, the caller is responsible for starting the server. See StartGRPCServer.
-func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
-	maxSendMsgSize := cfg.MaxSendMsgSize
-	if maxSendMsgSize == 0 {
-		maxSendMsgSize = DefaultGRPCMaxSendMsgSize
-	}
-
-	maxRecvMsgSize := cfg.MaxRecvMsgSize
-	if maxRecvMsgSize == 0 {
-		maxRecvMsgSize = DefaultGRPCMaxRecvMsgSize
+// New returns a correctly configured and initialized gRPC server.
+// Note, the caller is responsible for starting the server.
+func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry, app GRPCService) (GRPCServer, error) {
+	cfg := DefaultConfig()
+	if v != nil {
+		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
+			return GRPCServer{}, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(clientCtx.InterfaceRegistry()).GRPCCodec()),
-		grpc.MaxSendMsgSize(maxSendMsgSize),
-		grpc.MaxRecvMsgSize(maxRecvMsgSize),
+		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
+		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
+		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 	)
 
 	app.RegisterGRPCServer(grpcSrv)
@@ -62,11 +58,15 @@ func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, 
 	return GRPCServer{
 		grpcSrv: grpcSrv,
 		config:  cfg,
-		logger:  logger.With("module", "grpc-server"),
+		logger:  logger.With(log.ModuleKey, serverName),
 	}, nil
 }
 
-func (g GRPCServer) Start() error {
+func (g GRPCServer) Name() string {
+	return serverName
+}
+
+func (g GRPCServer) Start(ctx context.Context) error {
 	listener, err := net.Listen("tcp", g.config.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", g.config.Address, err)
@@ -89,9 +89,19 @@ func (g GRPCServer) Start() error {
 	return err
 }
 
-func (g GRPCServer) Stop() {
+func (g GRPCServer) Stop(ctx context.Context) error {
 	g.logger.Info("stopping gRPC server...", "address", g.config.Address)
 	g.grpcSrv.GracefulStop()
+
+	return nil
+}
+
+func (g GRPCServer) Config() any {
+	if g.config == nil || g.config == (&Config{}) {
+		return DefaultConfig()
+	}
+
+	return g.config
 }
 
 type protoCodec struct {

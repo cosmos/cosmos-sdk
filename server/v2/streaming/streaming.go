@@ -14,7 +14,7 @@ const pluginEnvKeyPrefix = "COSMOS_SDK"
 
 // HandshakeMap contains a map of each supported streaming's handshake config
 var HandshakeMap = map[string]plugin.HandshakeConfig{
-	"abci": Handshake,
+	"abci": Handshake, // TODO: rename from abci
 }
 
 // PluginMap contains a map of supported gRPC plugins

@@ -2131,7 +2131,7 @@ func (suite *KeeperTestSuite) TestMsgSudoExec() {
 		{
 			name:      "invalid msg (not registered)",
 			input:     invalidMsg,
-			expErrMsg: "unrecognized message route",
+			expErrMsg: "unknown message",
 		},
 		{
 			name:  "valid",

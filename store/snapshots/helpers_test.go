@@ -17,7 +17,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -189,7 +188,7 @@ func (m *mockErrorCommitSnapshotter) SupportedFormats() []uint32 {
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
 	t.Helper()
-	store, err := snapshots.NewStore(dbm.NewMemDB(), t.TempDir())
+	store, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 	hung := newHungCommitSnapshotter()
 	mgr := snapshots.NewManager(store, opts, hung, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
@@ -292,6 +291,7 @@ func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadR
 
 // GetTempDir returns a writable temporary director for the test to use.
 func GetTempDir(tb testing.TB) string {
+	//return "/tmp/snapshots"
 	tb.Helper()
 	// os.MkDir() is used instead of testing.T.TempDir()
 	// see https://github.com/cosmos/cosmos-sdk/pull/8475 and

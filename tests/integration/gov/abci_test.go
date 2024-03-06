@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/gov"
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
@@ -41,7 +40,7 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 	err = suite.GovKeeper.InactiveProposalsQueue.Set(ctx, collections.Join(endTime, proposal.Id), proposal.Id)
 	require.NoError(t, err)
 
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 
 	_, err = suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
@@ -69,7 +68,7 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 	err = suite.GovKeeper.ActiveProposalsQueue.Set(ctx, collections.Join(endTime, proposal.Id), proposal.Id)
 	require.NoError(t, err)
 
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 
 	p, err := suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
@@ -109,7 +108,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod)
 	ctx = ctx.WithHeaderInfo(newHeader)
 
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 }
 
@@ -159,12 +158,12 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithHeaderInfo(newHeader)
 
-	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
+	require.NoError(t, suite.GovKeeper.EndBlocker(ctx))
 
 	newHeader = ctx.HeaderInfo()
 	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(5) * time.Second)
 	ctx = ctx.WithHeaderInfo(newHeader)
-	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
+	require.NoError(t, suite.GovKeeper.EndBlocker(ctx))
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
@@ -246,7 +245,7 @@ func TestProposalDepositRefundFailEndBlocker(t *testing.T) {
 	newHeader.Time = proposal.VotingEndTime.Add(time.Duration(100) * time.Second)
 	ctx = ctx.WithHeaderInfo(newHeader)
 
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err) // no error, means does not halt the chain
 
 	events := ctx.EventManager().Events()
@@ -314,7 +313,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 
 			if tc.proposalType != v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
@@ -395,7 +394,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithHeaderInfo(newHeader)
 
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -450,7 +449,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ctx = ctx.WithHeaderInfo(newHeader)
 
 	// validate that the proposal fails/has been rejected
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 	// check proposal events
 	events := ctx.EventManager().Events()
@@ -553,7 +552,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here the expedited proposal is converted to regular after expiry.
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 			if tc.expeditedPasses {
 				proposal, err = suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
@@ -602,7 +601,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here we validate the converted regular proposal
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)

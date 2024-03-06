@@ -14,11 +14,41 @@ import (
 // by other modules (usually via depinject) as app modules.
 type AppModule = appmodule.AppModule
 
-// HasMigrations is the extension interface that modules should implement to register migrations.
-type HasMigrations = appmodule.HasMigrations
+// HasServices is the extension interface that modules should implement to register
+// implementations of services defined in .proto files.
+type HasServices interface {
+	AppModule
 
-// HasConsensusVersion is the interface for declaring a module consensus version.
-type HasConsensusVersion = appmodule.HasConsensusVersion
+	// RegisterServices registers the module's services with the app's service
+	// registrar.
+	//
+	// Two types of services are currently supported:
+	// - read-only gRPC query services, which are the default.
+	// - transaction message services, which must have the protobuf service
+	//   option "cosmos.msg.v1.service" (defined in "cosmos/msg/v1/service.proto")
+	//   set to true.
+	//
+	// The service registrar will figure out which type of service you are
+	// implementing based on the presence (or absence) of protobuf options. You
+	// do not need to specify this in golang code.
+	RegisterServices(grpc.ServiceRegistrar) error
+}
+
+// ResponsePreBlock represents the response from the PreBlock method.
+// It can modify consensus parameters in storage and signal the caller through the return value.
+// When it returns ConsensusParamsChanged=true, the caller must refresh the consensus parameter in the finalize context.
+// The new context (ctx) must be passed to all the other lifecycle methods.
+type ResponsePreBlock interface {
+	IsConsensusParamsChanged() bool
+}
+
+// HasPreBlocker is the extension interface that modules should implement to run
+// custom logic before BeginBlock.
+type HasPreBlocker interface {
+	AppModule
+	// PreBlock is method that will be run before BeginBlock.
+	PreBlock(context.Context) (ResponsePreBlock, error)
+}
 
 // HasBeginBlocker is the extension interface that modules should implement to run
 // custom logic before transaction processing in a block.
@@ -39,40 +69,4 @@ type HasPrepareCheckState interface {
 type HasPrecommit interface {
 	AppModule
 	Precommit(context.Context) error
-}
-
-// ResponsePreBlock represents the response from the PreBlock method.
-// It can modify consensus parameters in storage and signal the caller through the return value.
-// When it returns ConsensusParamsChanged=true, the caller must refresh the consensus parameter in the finalize context.
-// The new context (ctx) must be passed to all the other lifecycle methods.
-type ResponsePreBlock interface {
-	IsConsensusParamsChanged() bool
-}
-
-// HasPreBlocker is the extension interface that modules should implement to run
-// custom logic before BeginBlock.
-type HasPreBlocker interface {
-	AppModule
-	// PreBlock is method that will be run before BeginBlock.
-	PreBlock(context.Context) (ResponsePreBlock, error)
-}
-
-// HasServices is the extension interface that modules should implement to register
-// implementations of services defined in .proto files.
-type HasServices interface {
-	AppModule
-
-	// RegisterServices registers the module's services with the app's service
-	// registrar.
-	//
-	// Two types of services are currently supported:
-	// - read-only gRPC query services, which are the default.
-	// - transaction message services, which must have the protobuf service
-	//   option "cosmos.msg.v1.service" (defined in "cosmos/msg/v1/service.proto")
-	//   set to true.
-	//
-	// The service registrar will figure out which type of service you are
-	// implementing based on the presence (or absence) of protobuf options. You
-	// do not need to specify this in golang code.
-	RegisterServices(grpc.ServiceRegistrar) error
 }

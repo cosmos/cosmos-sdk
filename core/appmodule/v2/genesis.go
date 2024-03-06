@@ -2,6 +2,7 @@ package appmodule
 
 import (
 	"context"
+	"encoding/json"
 )
 
 // HasGenesis defines a custom genesis handling API implementation.
@@ -10,7 +11,7 @@ import (
 type HasGenesis interface {
 	AppModule
 	DefaultGenesis() Message
-	ValidateGenesis(data Message) error
-	InitGenesis(ctx context.Context, data Message) error
-	ExportGenesis(ctx context.Context) (Message, error)
+	ValidateGenesis(data json.RawMessage) error
+	InitGenesis(ctx context.Context, data json.RawMessage) error
+	ExportGenesis(ctx context.Context) (json.RawMessage, error)
 }

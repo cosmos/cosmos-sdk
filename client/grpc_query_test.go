@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.testClient = testdata.NewQueryClient(queryHelper)
 
 	kvs := runtime.NewKVStoreService(keys[countertypes.StoreKey])
-	counterKeeper := counterkeeper.NewKeeper(kvs, runtime.EventService{})
+	counterKeeper := counterkeeper.NewKeeper(runtime.NewEnvironment(kvs, logger))
 	countertypes.RegisterQueryServer(queryHelper, counterKeeper)
 	s.counterClient = countertypes.NewQueryClient(queryHelper)
 }

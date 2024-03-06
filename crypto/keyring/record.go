@@ -1,7 +1,7 @@
 package keyring
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
 
 	errorsmod "cosmossdk.io/errors"
 

@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/registry"
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

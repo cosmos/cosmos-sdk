@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/tx/signing"
-
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()

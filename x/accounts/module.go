@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"cosmossdk.io/core/registry"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 

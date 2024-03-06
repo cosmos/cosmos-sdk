@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -58,7 +59,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.key = key
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	s.cdc = encCfg.Codec
 
 	ctrl := gomock.NewController(s.T())

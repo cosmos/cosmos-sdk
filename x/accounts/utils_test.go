@@ -89,6 +89,6 @@ func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req
 	}
 }
 
-func (m mockExec) ResponseNameByRequestName(name string) string {
+func (m mockExec) ResponseNameByMsgName(name string) string {
 	return name + "Response"
 }

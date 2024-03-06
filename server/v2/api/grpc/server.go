@@ -8,6 +8,7 @@ import (
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
@@ -32,8 +33,13 @@ type GRPCService interface {
 
 // New returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
-func New(logger log.Logger, interfaceRegistry appmanager.InterfaceRegistry, app GRPCService) (GRPCServer, error) {
-	cfg := DefaultConfig() // TODO get the config from the server
+func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry, app GRPCService) (GRPCServer, error) {
+	cfg := DefaultConfig()
+	if v != nil {
+		if err := v.Unmarshal(&cfg); err != nil {
+			return GRPCServer{}, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),

@@ -28,7 +28,6 @@ type HasCLICommands interface {
 
 // HasConfig is a server module that has a config.
 type HasConfig interface {
-	// Config returns the config of the module.
 	Config() any
 }
 
@@ -92,12 +91,11 @@ func (s *Server) Stop(ctx context.Context) error {
 // CLICommands returns all CLI commands of all modules.
 func (s *Server) CLICommands() CLIConfig {
 	commands := CLIConfig{}
-
 	for _, mod := range s.modules {
 		if climod, ok := mod.(HasCLICommands); ok {
-			commands.Command = append(commands.Command, climod.CLICommands().Command...)
-			commands.Query = append(commands.Query, climod.CLICommands().Query...)
-			commands.Tx = append(commands.Tx, climod.CLICommands().Tx...)
+			commands.Commands = append(commands.Commands, climod.CLICommands().Commands...)
+			commands.Queries = append(commands.Queries, climod.CLICommands().Queries...)
+			commands.Txs = append(commands.Txs, climod.CLICommands().Txs...)
 		}
 	}
 
@@ -118,10 +116,10 @@ func (s *Server) Config(configPath string) (*viper.Viper, error) {
 		if e.Op == fsnotify.Write {
 			srvName := s.Name()
 			s.logger.Info("config file changed", "path", e.Name, "server", srvName)
-			// 		// TODO(@julienrbrt): find a propoer way to reload a module independently of the other modules.
-			// 		if err := s.Reload(context.Background(), srvName); err != nil {
-			// 			s.logger.Error(fmt.Sprintf("failed to reload %s server", srvName), "err", err)
-			// 		}
+			// TODO(@julienrbrt): find a propoer way to reload a module independently of the other modules.
+			// if err := s.Reload(context.Background(), srvName); err != nil {
+			// 	s.logger.Error(fmt.Sprintf("failed to reload %s server", srvName), "err", err)
+			// }
 		}
 	})
 	v.WatchConfig()
@@ -145,7 +143,7 @@ func (s *Server) WriteConfig(configPath string) error {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	if err := os.WriteFile(configPath, b, 0644); err != nil {
+	if err := os.WriteFile(configPath, b, 0o600); err != nil {
 		return fmt.Errorf("failed to write config: %w", err)
 	}
 

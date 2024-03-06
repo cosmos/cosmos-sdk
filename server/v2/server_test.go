@@ -10,6 +10,7 @@ import (
 	grpc "cosmossdk.io/server/v2/api/grpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/spf13/viper"
 )
 
 type mockGRPCService struct {
@@ -23,15 +24,18 @@ func TestServer(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 
 	// TODO we need to have the server gets the latest config
-	grpcServer, err := grpc.New(logger, interfaceRegistry, &mockGRPCService{})
+	grpcServer, err := grpc.New(logger, viper.New(), interfaceRegistry, &mockGRPCService{})
 	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
 
+	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
+
 	server := serverv2.NewServer(
 		logger,
 		grpcServer,
+		mockServer,
 	)
 
 	currentDir, err := os.Getwd()

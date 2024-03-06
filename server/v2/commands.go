@@ -13,14 +13,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Commands(homePath string, modules ...Module) (CLIConfig, error) {
+func Commands(logger log.Logger, homePath string, modules ...Module) (CLIConfig, error) {
 	if len(modules) == 0 {
 		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
 		return CLIConfig{}, errors.New("no modules provided")
 	}
 
-	server := NewServer(log.NewLogger(os.Stdout), modules...)
+	server := NewServer(logger, modules...)
 	v, err := server.Config(filepath.Join(homePath, "config"))
 	if err != nil {
 		return CLIConfig{}, fmt.Errorf("failed to read config: %w", err)
@@ -35,7 +35,7 @@ func Commands(homePath string, modules ...Module) (CLIConfig, error) {
 			}
 
 			srvConfig := Config{StartBlock: true}
-			ctx := context.Background()
+			ctx := cmd.Context()
 			ctx = context.WithValue(ctx, ServerContextKey, srvConfig)
 			ctx, cancelFn := context.WithCancel(ctx)
 			go func() {
@@ -59,7 +59,7 @@ func Commands(homePath string, modules ...Module) (CLIConfig, error) {
 	}
 
 	cmds := server.CLICommands()
-	cmds.Command = append(cmds.Command, startCmd)
+	cmds.Commands = append(cmds.Commands, startCmd)
 
 	return cmds, nil
 }

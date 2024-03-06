@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -11,25 +12,29 @@ import (
 )
 
 // Tally iterates over the votes and updates the tally of a proposal based on the voting power of the voters
-func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
-	validators, err := keeper.getCurrentValidators(ctx)
+func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+	validators, err := k.getCurrentValidators(ctx)
 	if err != nil {
 		return false, false, v1.TallyResult{}, err
 	}
 
-	totalVoterPower, results, err := keeper.calculateVoteResultsAndVotingPower(ctx, proposal.Id, validators)
+	if k.config.CalculateVoteResultsAndVotingPowerFn == nil {
+		k.config.CalculateVoteResultsAndVotingPowerFn = defaultCalculateVoteResultsAndVotingPower
+	}
+
+	totalVoterPower, results, err := k.config.CalculateVoteResultsAndVotingPowerFn(ctx, k, proposal.Id, validators)
 	if err != nil {
 		return false, false, v1.TallyResult{}, err
 	}
 
-	params, err := keeper.Params.Get(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return false, false, v1.TallyResult{}, err
 	}
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	// If there is no staked coins, the proposal fails
-	totalBonded, err := keeper.sk.TotalBondedTokens(ctx)
+	totalBonded, err := k.sk.TotalBondedTokens(ctx)
 	if err != nil {
 		return false, false, v1.TallyResult{}, err
 	}
@@ -47,18 +52,86 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 	switch proposal.ProposalType {
 	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-		return keeper.tallyOptimistic(totalVoterPower, totalBonded, results, params)
+		return k.tallyOptimistic(totalVoterPower, totalBonded, results, params)
 	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
-		return keeper.tallyExpedited(totalVoterPower, totalBonded, results, params)
+		return k.tallyExpedited(totalVoterPower, totalBonded, results, params)
 	case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
-		return keeper.tallyMultipleChoice(totalVoterPower, totalBonded, results, params) // TODO(@julienrbrt): implement in follow up
+		return k.tallyMultipleChoice(totalVoterPower, totalBonded, results, params)
 	default:
-		return keeper.tallyStandard(totalVoterPower, totalBonded, results, params)
+		return k.tallyStandard(ctx, proposal, totalVoterPower, totalBonded, results, params)
 	}
 }
 
 // tallyStandard tallies the votes of a standard proposal
-func (keeper Keeper) tallyStandard(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+// If there is not enough quorum of votes, the proposal fails
+// If no one votes (everyone abstains), proposal fails
+// If more than 1/3 of voters veto, proposal fails
+// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
+// If more than 1/2 of non-abstaining voters vote No, proposal fails
+// Checking for spam votes is done before calling this function
+func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+	tallyResults = v1.NewTallyResultFromMap(results)
+
+	quorumStr := params.Quorum
+	yesQuorumStr := params.YesQuorum
+	thresholdStr := params.Threshold
+	vetoThresholdStr := params.VetoThreshold
+
+	if len(proposal.Messages) > 0 {
+		// check if any of the message has message based params
+		customMessageParams, err := k.MessageBasedParams.Get(ctx, sdk.MsgTypeURL(proposal.Messages[0]))
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
+			return false, false, tallyResults, err
+		} else if err == nil {
+			quorumStr = customMessageParams.GetQuorum()
+			thresholdStr = customMessageParams.GetThreshold()
+			vetoThresholdStr = customMessageParams.GetVetoThreshold()
+			yesQuorumStr = customMessageParams.GetYesQuorum()
+		}
+	}
+
+	// If there is not enough quorum of votes, the proposal fails
+	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
+	quorum, _ := math.LegacyNewDecFromStr(quorumStr)
+	if percentVoting.LT(quorum) {
+		return false, params.BurnVoteQuorum, tallyResults, nil
+	}
+
+	// If no one votes (everyone abstains), proposal fails
+	if totalVoterPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
+		return false, false, tallyResults, nil
+	}
+
+	// If yes quorum enabled and less than yes_quorum of voters vote Yes, proposal fails
+	yesQuorum, _ := math.LegacyNewDecFromStr(yesQuorumStr)
+	if yesQuorum.GT(math.LegacyZeroDec()) && results[v1.OptionYes].Quo(totalVoterPower).LT(yesQuorum) {
+		return false, false, tallyResults, nil
+	}
+
+	// If more than 1/3 of voters veto, proposal fails
+	vetoThreshold, _ := math.LegacyNewDecFromStr(vetoThresholdStr)
+	if results[v1.OptionNoWithVeto].Quo(totalVoterPower).GT(vetoThreshold) {
+		return false, params.BurnVoteVeto, tallyResults, nil
+	}
+
+	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
+	threshold, _ := math.LegacyNewDecFromStr(thresholdStr)
+	if results[v1.OptionYes].Quo(totalVoterPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
+		return true, false, tallyResults, nil
+	}
+
+	// If more than 1/2 of non-abstaining voters vote No, proposal fails
+	return false, false, tallyResults, nil
+}
+
+// tallyExpedited tallies the votes of an expedited proposal
+// If there is not enough quorum of votes, the proposal fails
+// If no one votes (everyone abstains), proposal fails
+// If more than 1/3 of voters veto, proposal fails
+// If more than 2/3 of non-abstaining voters vote Yes, proposal passes
+// If more than 1/2 of non-abstaining voters vote No, proposal fails
+// Checking for spam votes is done before calling this function
+func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	// If there is not enough quorum of votes, the proposal fails
@@ -73,36 +146,9 @@ func (keeper Keeper) tallyStandard(totalVoterPower math.LegacyDec, totalBonded m
 		return false, false, tallyResults, nil
 	}
 
-	// If more than 1/3 of voters veto, proposal fails
-	vetoThreshold, _ := math.LegacyNewDecFromStr(params.VetoThreshold)
-	if results[v1.OptionNoWithVeto].Quo(totalVoterPower).GT(vetoThreshold) {
-		return false, params.BurnVoteVeto, tallyResults, nil
-	}
-
-	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
-	threshold, _ := math.LegacyNewDecFromStr(params.GetThreshold())
-
-	if results[v1.OptionYes].Quo(totalVoterPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
-		return true, false, tallyResults, nil
-	}
-
-	// If more than 1/2 of non-abstaining voters vote No, proposal fails
-	return false, false, tallyResults, nil
-}
-
-// tallyExpedited tallies the votes of an expedited proposal
-func (keeper Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
-	tallyResults = v1.NewTallyResultFromMap(results)
-
-	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
-	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
-	if percentVoting.LT(quorum) {
-		return false, params.BurnVoteQuorum, tallyResults, nil
-	}
-
-	// If no one votes (everyone abstains), proposal fails
-	if totalVoterPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
+	// If yes quorum enabled and less than yes_quorum of voters vote Yes, proposal fails
+	yesQuorum, _ := math.LegacyNewDecFromStr(params.YesQuorum)
+	if yesQuorum.GT(math.LegacyZeroDec()) && results[v1.OptionYes].Quo(totalVoterPower).LT(yesQuorum) {
 		return false, false, tallyResults, nil
 	}
 
@@ -124,7 +170,11 @@ func (keeper Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded 
 }
 
 // tallyOptimistic tallies the votes of an optimistic proposal
-func (keeper Keeper) tallyOptimistic(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+// If proposal has no votes, proposal passes
+// If the threshold of no is reached, proposal fails
+// Any other case, proposal passes
+// Checking for spam votes is done before calling this function
+func (k Keeper) tallyOptimistic(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 	optimisticNoThreshold, _ := math.LegacyNewDecFromStr(params.OptimisticRejectedThreshold)
 
@@ -142,7 +192,10 @@ func (keeper Keeper) tallyOptimistic(totalVoterPower math.LegacyDec, totalBonded
 }
 
 // tallyMultipleChoice tallies the votes of a multiple choice proposal
-func (keeper Keeper) tallyMultipleChoice(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+// If there is not enough quorum of votes, the proposal fails
+// Any other case, proposal passes
+// Checking for spam votes is done before calling this function
+func (k Keeper) tallyMultipleChoice(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	// If there is not enough quorum of votes, the proposal fails
@@ -152,14 +205,16 @@ func (keeper Keeper) tallyMultipleChoice(totalVoterPower math.LegacyDec, totalBo
 		return false, params.BurnVoteQuorum, tallyResults, nil
 	}
 
+	// a multiple choice proposal always passes unless it was spam or quorum was not reached.
+
 	return true, false, tallyResults, nil
 }
 
 // getCurrentValidators fetches all the bonded validators, insert them into currValidators
-func (keeper Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.ValidatorGovInfo, error) {
+func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.ValidatorGovInfo, error) {
 	currValidators := make(map[string]v1.ValidatorGovInfo)
-	if err := keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.ValidatorI) (stop bool) {
-		valBz, err := keeper.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err := k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.ValidatorI) (stop bool) {
+		valBz, err := k.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 		if err != nil {
 			return false
 		}
@@ -181,8 +236,9 @@ func (keeper Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.Va
 
 // calculateVoteResultsAndVotingPower iterate over all votes, tally up the voting power of each validator
 // and returns the votes results from voters
-func (keeper Keeper) calculateVoteResultsAndVotingPower(
+func defaultCalculateVoteResultsAndVotingPower(
 	ctx context.Context,
+	k Keeper,
 	proposalID uint64,
 	validators map[string]v1.ValidatorGovInfo,
 ) (math.LegacyDec, map[v1.VoteOption]math.LegacyDec, error) {
@@ -191,14 +247,14 @@ func (keeper Keeper) calculateVoteResultsAndVotingPower(
 
 	// iterate over all votes, tally up the voting power of each validator
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
-	if err := keeper.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
+	if err := k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
-		voter, err := keeper.authKeeper.AddressCodec().StringToBytes(vote.Voter)
+		voter, err := k.authKeeper.AddressCodec().StringToBytes(vote.Voter)
 		if err != nil {
 			return false, err
 		}
 
-		valAddrStr, err := keeper.sk.ValidatorAddressCodec().BytesToString(voter)
+		valAddrStr, err := k.sk.ValidatorAddressCodec().BytesToString(voter)
 		if err != nil {
 			return false, err
 		}
@@ -209,7 +265,7 @@ func (keeper Keeper) calculateVoteResultsAndVotingPower(
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
-		err = keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation sdk.DelegationI) (stop bool) {
+		err = k.sk.IterateDelegations(ctx, voter, func(index int64, delegation sdk.DelegationI) (stop bool) {
 			valAddrStr := delegation.GetValidatorAddr()
 
 			if val, ok := validators[valAddrStr]; ok {
@@ -236,7 +292,7 @@ func (keeper Keeper) calculateVoteResultsAndVotingPower(
 			return false, err
 		}
 
-		return false, keeper.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
+		return false, k.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
 	}); err != nil {
 		return math.LegacyDec{}, nil, err
 	}

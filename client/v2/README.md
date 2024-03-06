@@ -197,7 +197,7 @@ In order to enable this behavior, set in `AutoCLIOptions()` the `EnhanceCustomCo
 https://github.com/cosmos/cosmos-sdk/blob/fa4d87ef7e6d87aaccc94c337ffd2fe90fcb7a9d/x/gov/autocli.go#L98
 ```
 
-If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetTxCmd()` are defined).
+If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetQueryCmd()` are defined).
 
 ### Use AutoCLI for non module commands
 
@@ -216,3 +216,60 @@ https://github.com/cosmos/cosmos-sdk/blob/main/client/grpc/cmtservice/autocli.go
 To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `hubl`. `hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With `hubl`, you can easily configure a new chain and query modules with just a few simple commands.
 
 For more information on `hubl`, including how to configure a new chain and query a module, see the [Hubl documentation](https://docs.cosmos.network/main/tooling/hubl).
+
+# Off-Chain
+
+Off-chain functionalities allow you to sign and verify files with two commands:
++ `sign-file` for signing a file.
++ `verify-file` for verifying a previously signed file.
+
+Signing a file will result in a Tx with a `MsgSignArbitraryData` as described in the [Off-chain CIP](https://github.com/cosmos/cips/blob/main/cips/cip-X.md).
+
+## Sign a file
+
+To sign a file `sign-file` command offers some helpful flags:
+```text
+      --encoding string          Choose an encoding method for the file content to be added as msg data (no-encoding|base64|hex) (default "no-encoding")
+      --indent string            Choose an indent for the tx (default "  ")
+      --notEmitUnpopulated       Don't show unpopulated fields in the tx
+      --output string            Choose an output format for the tx (json|text (default "json")
+      --output-document string   The document will be written to the given file instead of STDOUT
+```
+
+The `encoding` flag lets you choose how the contents of the file should be encoded. For example:
++ `simd off-chain sign-file alice myFile.json`
+    + ```json
+      {
+        "@type":  "/offchain.MsgSignArbitraryData",
+        "appDomain":  "simd",
+        "signer":  "cosmos1x33fy6rusfprkntvjsfregss7rvsvyy4lkwrqu",
+        "data":  "Hello World!\n"
+      }
+     ```
++ `simd off-chain sign-file alice myFile.json --encoding base64`
+    + ```json
+      {
+        "@type":  "/offchain.MsgSignArbitraryData",
+        "appDomain":  "simd",
+        "signer":  "cosmos1x33fy6rusfprkntvjsfregss7rvsvyy4lkwrqu",
+        "data":  "SGVsbG8gV29ybGQhCg=="
+      }
+     ```
++ `simd off-chain sign-file alice myFile.json --encoding hex`
+    + ```json
+        {
+          "@type":  "/offchain.MsgSignArbitraryData",
+          "appDomain":  "simd",
+          "signer":  "cosmos1x33fy6rusfprkntvjsfregss7rvsvyy4lkwrqu",
+          "data":  "48656c6c6f20576f726c64210a"
+        }
+       ```
+
+## Verify a file
+
+To verify a file only the key name used and the previously signed file are needed.
+
+```text
+➜ simd off-chain verify-file alice signedFile.json
+Verification OK!
+```

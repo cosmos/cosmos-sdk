@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -136,11 +137,11 @@ Examples:
 				}
 
 				if periodClock <= 0 {
-					return fmt.Errorf("period clock was not set")
+					return errors.New("period clock was not set")
 				}
 
 				if periodLimit == nil {
-					return fmt.Errorf("period limit was not set")
+					return errors.New("period limit was not set")
 				}
 
 				periodReset := getPeriodReset(periodClock)
@@ -151,7 +152,6 @@ Examples:
 				periodic := feegrant.PeriodicAllowance{
 					Basic:            basic,
 					Period:           getPeriod(periodClock),
-					PeriodReset:      getPeriodReset(periodClock),
 					PeriodSpendLimit: periodLimit,
 					PeriodCanSpend:   periodLimit,
 				}

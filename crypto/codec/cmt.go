@@ -68,25 +68,3 @@ func ToCmtPubKeyInterface(pk cryptotypes.PubKey) (cmtcrypto.PubKey, error) {
 
 	return encoding.PubKeyFromProto(tmProtoPk)
 }
-
-// ----------------------
-
-// Deprecated: use FromCmtProtoPublicKey instead.
-func FromTmProtoPublicKey(protoPk cmtprotocrypto.PublicKey) (cryptotypes.PubKey, error) {
-	return FromCmtProtoPublicKey(protoPk)
-}
-
-// Deprecated: use ToCmtProtoPublicKey instead.
-func ToTmProtoPublicKey(pk cryptotypes.PubKey) (cmtprotocrypto.PublicKey, error) {
-	return ToCmtProtoPublicKey(pk)
-}
-
-// Deprecated: use FromCmtPubKeyInterface instead.
-func FromTmPubKeyInterface(tmPk cmtcrypto.PubKey) (cryptotypes.PubKey, error) {
-	return FromCmtPubKeyInterface(tmPk)
-}
-
-// Deprecated: use ToCmtPubKeyInterface instead.
-func ToTmPubKeyInterface(pk cryptotypes.PubKey) (cmtcrypto.PubKey, error) {
-	return ToCmtPubKeyInterface(pk)
-}

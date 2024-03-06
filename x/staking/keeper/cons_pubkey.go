@@ -25,8 +25,8 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	ctx context.Context, valAddr sdk.ValAddress,
 	oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin,
 ) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	height := uint64(sdkCtx.BlockHeight())
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	height := uint64(headerInfo.Height)
 	history := types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr.Bytes(),
 		OldConsPubkey:   oldPubKey,
@@ -44,7 +44,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		return err
 	}
 
-	queueTime := sdkCtx.HeaderInfo().Time.Add(ubdTime)
+	queueTime := headerInfo.Time.Add(ubdTime)
 	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime)); err != nil {
 		return err
 	}
@@ -131,8 +131,8 @@ func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) 
 	return pk, nil
 }
 
-// exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
-func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) error {
+// ExceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
+func (k Keeper) ExceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) error {
 	count := 0
 	rng := collections.NewPrefixedPairRange[[]byte, time.Time](valAddr)
 
@@ -179,7 +179,7 @@ func bytesSliceExists(sliceList [][]byte, targetBytes []byte) bool {
 }
 
 // PurgeAllMaturedConsKeyRotatedKeys deletes all the matured key rotations.
-func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime time.Time) error {
+func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx context.Context, maturedTime time.Time) error {
 	maturedRotatedValAddrs, err := k.getAndRemoveAllMaturedRotatedKeys(ctx, maturedTime)
 	if err != nil {
 		return err
@@ -197,7 +197,7 @@ func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime t
 
 // deleteConsKeyIndexKey deletes the keys which forms a with given validator address and time lesser than the given time.
 // eventually there should be only one occurrence since we allow only one rotation for bonding period.
-func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, ts time.Time) error {
+func (k Keeper) deleteConsKeyIndexKey(ctx context.Context, valAddr sdk.ValAddress, ts time.Time) error {
 	rng := new(collections.Range[collections.Pair[[]byte, time.Time]]).
 		StartInclusive(collections.Join(valAddr.Bytes(), time.Time{})).
 		EndInclusive(collections.Join(valAddr.Bytes(), ts))
@@ -208,7 +208,7 @@ func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, t
 }
 
 // getAndRemoveAllMaturedRotatedKeys returns all matured valaddresses.
-func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) ([][]byte, error) {
+func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx context.Context, matureTime time.Time) ([][]byte, error) {
 	valAddrs := [][]byte{}
 
 	// get an iterator for all timeslices from time 0 until the current HeaderInfo time
@@ -226,9 +226,9 @@ func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx sdk.Context, matureTime ti
 
 // GetBlockConsPubKeyRotationHistory returns the rotation history for the current height.
 func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.ConsPubKeyRotationHistory, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 
-	iterator, err := k.RotationHistory.Indexes.Block.MatchExact(ctx, uint64(sdkCtx.BlockHeight()))
+	iterator, err := k.RotationHistory.Indexes.Block.MatchExact(ctx, uint64(headerInfo.Height))
 	if err != nil {
 		return nil, err
 	}

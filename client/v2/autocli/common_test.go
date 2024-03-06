@@ -22,14 +22,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 type fixture struct {
-	conn *testClientConn
-	b    *Builder
+	conn      *testClientConn
+	b         *Builder
+	clientCtx client.Context
 }
 
 func initFixture(t *testing.T) *fixture {
@@ -50,7 +52,7 @@ func initFixture(t *testing.T) *fixture {
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(bank.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, bank.AppModule{})
 	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
 
@@ -60,10 +62,9 @@ func initFixture(t *testing.T) *fixture {
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
 
-	var initClientCtx client.Context
-	initClientCtx = initClientCtx.
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+	clientCtx := client.Context{}.
+		WithAddressCodec(interfaceRegistry.SigningContext().AddressCodec()).
+		WithValidatorAddressCodec(interfaceRegistry.SigningContext().ValidatorAddressCodec()).
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
 		WithKeyring(kr).
 		WithKeyringDir(home).
@@ -79,9 +80,9 @@ func initFixture(t *testing.T) *fixture {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          protoregistry.GlobalFiles,
-			AddressCodec:          initClientCtx.AddressCodec,
-			ValidatorAddressCodec: initClientCtx.ValidatorAddressCodec,
-			ConsensusAddressCodec: initClientCtx.ConsensusAddressCodec,
+			AddressCodec:          clientCtx.AddressCodec,
+			ValidatorAddressCodec: clientCtx.ValidatorAddressCodec,
+			ConsensusAddressCodec: clientCtx.ConsensusAddressCodec,
 			Keyring:               akr,
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
@@ -89,19 +90,19 @@ func initFixture(t *testing.T) *fixture {
 		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    flags.AddTxFlagsToCmd,
-		ClientCtx:         initClientCtx,
 	}
 	assert.NilError(t, b.ValidateAndComplete())
 
 	return &fixture{
-		conn: conn,
-		b:    b,
+		conn:      conn,
+		b:         b,
+		clientCtx: clientCtx,
 	}
 }
 
-func runCmd(conn *testClientConn, b *Builder, command func(moduleName string, b *Builder) (*cobra.Command, error), args ...string) (*bytes.Buffer, error) {
+func runCmd(fixture *fixture, command func(moduleName string, f *fixture) (*cobra.Command, error), args ...string) (*bytes.Buffer, error) {
 	out := &bytes.Buffer{}
-	cmd, err := command("test", b)
+	cmd, err := command("test", fixture)
 	if err != nil {
 		return out, err
 	}
@@ -215,14 +216,13 @@ func TestErrorBuildCommand(t *testing.T) {
 				Tx:    commandDescriptor,
 			},
 		},
-		ClientCtx: b.ClientCtx,
 	}
 
-	_, err := b.BuildMsgCommand(appOptions, nil)
+	_, err := b.BuildMsgCommand(context.Background(), appOptions, nil)
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
 	appOptions.ModuleOptions["test"].Tx = &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
 	appOptions.ModuleOptions["test"].Query = &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
-	_, err = b.BuildMsgCommand(appOptions, nil)
+	_, err = b.BuildMsgCommand(context.Background(), appOptions, nil)
 	assert.ErrorContains(t, err, "can't find service un-existent-service")
 }

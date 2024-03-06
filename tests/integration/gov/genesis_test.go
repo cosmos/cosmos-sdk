@@ -6,11 +6,13 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	_ "cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -98,7 +100,8 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal1.Status == v1.StatusDepositPeriod)
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
-	authGenState := s1.AccountKeeper.ExportGenesis(ctx)
+	authGenState, err := s1.AccountKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
 	bankGenState := s1.BankKeeper.ExportGenesis(ctx)
 	stakingGenState := s1.StakingKeeper.ExportGenesis(ctx)
 
@@ -170,7 +173,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.DeepEqual(t, sdk.Coins(params.MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
-	err = gov.EndBlocker(ctx2, s2.GovKeeper)
+	err = s2.GovKeeper.EndBlocker(ctx2)
 	assert.NilError(t, err)
 
 	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)
@@ -195,4 +198,30 @@ func clearDB(t *testing.T, db *dbm.MemDB) {
 	for _, k := range keys {
 		assert.NilError(t, db.Delete(k))
 	}
+}
+
+func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
+	suite := createTestSuite(t)
+	app := suite.app
+	ctx := app.BaseApp.NewContext(false)
+	require.Panics(t, func() {
+		gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
+			Deposits: v1.Deposits{
+				{
+					ProposalId: 1234,
+					Depositor:  "me",
+					Amount: sdk.Coins{
+						sdk.NewCoin(
+							"stake",
+							sdkmath.NewInt(1234),
+						),
+					},
+				},
+			},
+		})
+	})
+	gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
+	genState, err := gov.ExportGenesis(ctx, suite.GovKeeper)
+	require.NoError(t, err)
+	require.Equal(t, genState, v1.DefaultGenesisState())
 }

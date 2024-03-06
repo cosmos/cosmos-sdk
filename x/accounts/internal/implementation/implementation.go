@@ -4,14 +4,24 @@ import (
 	"context"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Dependencies are passed to the constructor of a smart account.
 type Dependencies struct {
-	SchemaBuilder *collections.SchemaBuilder
-	AddressCodec  address.Codec
+	SchemaBuilder    *collections.SchemaBuilder
+	AddressCodec     address.Codec
+	Environment      appmodule.Environment
+	LegacyStateCodec interface {
+		Marshal(gogoproto.Message) ([]byte, error)
+		Unmarshal([]byte, gogoproto.Message) error
+	}
 }
 
 // AccountCreatorFunc is a function that creates an account.
@@ -19,13 +29,20 @@ type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
-func MakeAccountsMap(addressCodec address.Codec, accounts []AccountCreatorFunc) (map[string]Implementation, error) {
+func MakeAccountsMap(
+	cdc codec.BinaryCodec,
+	addressCodec address.Codec,
+	env appmodule.Environment,
+	accounts []AccountCreatorFunc,
+) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
 	for _, makeAccount := range accounts {
-		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(OpenKVStore)
+		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(openKVStore)
 		deps := Dependencies{
-			SchemaBuilder: stateSchemaBuilder,
-			AddressCodec:  addressCodec,
+			SchemaBuilder:    stateSchemaBuilder,
+			AddressCodec:     addressCodec,
+			Environment:      env,
+			LegacyStateCodec: cdc,
 		}
 		name, accountInterface, err := makeAccount(deps)
 		if err != nil {
@@ -103,6 +120,23 @@ type Implementation struct {
 	QueryHandlersSchema map[string]HandlerSchema
 	// ExecuteHandlersSchema is the schema of the execute handlers.
 	ExecuteHandlersSchema map[string]HandlerSchema
+}
+
+// HasExec returns true if the account can execute the given msg.
+func (i Implementation) HasExec(m ProtoMsg) bool {
+	_, ok := i.ExecuteHandlersSchema[MessageName(m)]
+	return ok
+}
+
+// HasQuery returns true if the account can execute the given request.
+func (i Implementation) HasQuery(m ProtoMsg) bool {
+	_, ok := i.QueryHandlersSchema[MessageName(m)]
+	return ok
+}
+
+// HasInit returns true if the account uses the provided init message.
+func (i Implementation) HasInit(m ProtoMsg) bool {
+	return i.InitHandlerSchema.RequestSchema.Name == MessageName(m)
 }
 
 // MessageSchema defines the schema of a message.

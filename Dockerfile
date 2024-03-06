@@ -12,7 +12,7 @@
 #
 # This image is pushed to the GHCR as https://ghcr.io/cosmos/simapp
 
-FROM golang:1.21-alpine AS build-env
+FROM golang:1.22-alpine AS build-env
 
 # Install minimum necessary dependencies
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev
@@ -28,6 +28,7 @@ COPY api/go.mod api/go.sum ./api/
 COPY core/go.mod core/go.sum ./core/
 COPY collections/go.mod collections/go.sum ./collections/
 COPY store/go.mod store/go.sum ./store/
+COPY x/accounts/go.mod x/accounts/go.sum ./x/accounts/
 COPY x/tx/go.mod x/tx/go.sum /x/tx/
 COPY x/protocolpool/go.mod x/protocolpool/go.sum ./x/protocolpool/
 COPY x/gov/go.mod x/gov/go.sum ./x/gov/
@@ -38,6 +39,7 @@ COPY x/auth/go.mod x/auth/go.sum ./x/auth/
 COPY x/authz/go.mod x/authz/go.sum ./x/authz/
 COPY x/bank/go.mod x/bank/go.sum ./x/bank/
 COPY x/mint/go.mod x/mint/go.sum ./x/mint/
+COPY depinject/go.mod depinject/go.sum ./depinject/
 RUN go mod download
 
 # Add source files

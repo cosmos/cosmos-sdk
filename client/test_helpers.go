@@ -48,7 +48,7 @@ type TestAccountRetriever struct {
 func (t TestAccountRetriever) GetAccount(_ Context, addr sdk.AccAddress) (Account, error) {
 	acc, ok := t.Accounts[addr.String()]
 	if !ok {
-		return nil, fmt.Errorf("account %s not found", addr)
+		return nil, fmt.Errorf("account: account %s not found", addr)
 	}
 
 	return acc, nil
@@ -68,7 +68,7 @@ func (t TestAccountRetriever) GetAccountWithHeight(clientCtx Context, addr sdk.A
 func (t TestAccountRetriever) EnsureExists(_ Context, addr sdk.AccAddress) error {
 	_, ok := t.Accounts[addr.String()]
 	if !ok {
-		return fmt.Errorf("account %s not found", addr)
+		return fmt.Errorf("ensureExists: account %s not found", addr)
 	}
 	return nil
 }
@@ -77,7 +77,7 @@ func (t TestAccountRetriever) EnsureExists(_ Context, addr sdk.AccAddress) error
 func (t TestAccountRetriever) GetAccountNumberSequence(_ Context, addr sdk.AccAddress) (accNum, accSeq uint64, err error) {
 	acc, ok := t.Accounts[addr.String()]
 	if !ok {
-		return 0, 0, fmt.Errorf("account %s not found", addr)
+		return 0, 0, fmt.Errorf("accountNumberSequence: account %s not found", addr)
 	}
 	return acc.Num, acc.Seq, nil
 }

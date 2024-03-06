@@ -24,6 +24,8 @@ type GRPCQueryRouter struct {
 	// hybridHandlers maps the request name to the handler. It is a hybrid handler which seamlessly
 	// handles both gogo and protov2 messages.
 	hybridHandlers map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error
+	// responseByRequestName maps the request name to the response name.
+	responseByRequestName map[string]string
 	// binaryCodec is used to encode/decode binary protobuf messages.
 	binaryCodec codec.BinaryCodec
 	// cdc is the gRPC codec used by the router to correctly unmarshal messages.
@@ -43,8 +45,9 @@ var _ gogogrpc.Server = &GRPCQueryRouter{}
 // NewGRPCQueryRouter creates a new GRPCQueryRouter
 func NewGRPCQueryRouter() *GRPCQueryRouter {
 	return &GRPCQueryRouter{
-		routes:         map[string]GRPCQueryHandler{},
-		hybridHandlers: map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		routes:                map[string]GRPCQueryHandler{},
+		hybridHandlers:        map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		responseByRequestName: map[string]string{},
 	}
 }
 
@@ -133,9 +136,17 @@ func (qrt *GRPCQueryRouter) HybridHandlerByRequestName(name string) []func(ctx c
 	return qrt.hybridHandlers[name]
 }
 
+func (qrt *GRPCQueryRouter) ResponseNameByRequestName(requestName string) string {
+	return qrt.responseByRequestName[requestName]
+}
+
 func (qrt *GRPCQueryRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
 	// extract message name from method descriptor
 	inputName, err := protocompat.RequestFullNameFromMethodDesc(sd, method)
+	if err != nil {
+		return err
+	}
+	outputName, err := protocompat.ResponseFullNameFromMethodDesc(sd, method)
 	if err != nil {
 		return err
 	}
@@ -143,6 +154,8 @@ func (qrt *GRPCQueryRouter) registerHybridHandler(sd *grpc.ServiceDesc, method g
 	if err != nil {
 		return err
 	}
+	// map input name to output name
+	qrt.responseByRequestName[string(inputName)] = string(outputName)
 	qrt.hybridHandlers[string(inputName)] = append(qrt.hybridHandlers[string(inputName)], methodHandler)
 	return nil
 }

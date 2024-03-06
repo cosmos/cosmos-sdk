@@ -13,18 +13,19 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
-	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
+	v1 "cosmossdk.io/api/cosmos/gov/v1"
+	v1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/gov"
 	govcli "cosmossdk.io/x/gov/client/cli"
-	govv1 "cosmossdk.io/x/gov/types/v1"
-	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -61,7 +62,7 @@ func TestCLITestSuite(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.encCfg = testutilmod.MakeTestEncodingConfig(module.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, gov.AppModule{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
@@ -85,15 +86,10 @@ func (s *CLITestSuite) SetupSuite() {
 	}
 	s.clientCtx = ctxGen()
 
-	if testing.Short() {
-		s.T().Skip("skipping test in unit-tests mode.")
-	}
-
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
 
 	granter := accounts[0].Address
 	grantee := accounts[1].Address
-
 	s.createGrant(granter, grantee)
 
 	granteeStr, err := s.baseCtx.AddressCodec.BytesToString(grantee)
@@ -512,7 +508,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
 			err := s.msgSubmitLegacyProposal(s.baseCtx, tc.from,
-				"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
+				"Text Proposal", "No desc", "text",
 				tc.flags...,
 			)
 			s.Require().NoError(err)
@@ -564,7 +560,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 	}
 	spendLimit := sdk.NewCoin("stake", sdkmath.NewInt(1000))
-	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
+	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&v1.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string
@@ -641,7 +637,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 			"valid proposal tx",
 			func() error {
 				return s.msgSubmitLegacyProposal(s.baseCtx, grantee.String(),
-					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
+					"Text Proposal", "No desc", "Text",
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 				)

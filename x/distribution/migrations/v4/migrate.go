@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,8 +20,8 @@ var (
 	NewProposerKey = collections.NewPrefix(1)
 )
 
-func MigrateStore(ctx sdk.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
-	store := storeService.OpenKVStore(ctx)
+func MigrateStore(ctx context.Context, env appmodule.Environment, cdc codec.BinaryCodec) error {
+	store := env.KVStoreService.OpenKVStore(ctx)
 	bz, err := store.Get(OldProposerKey)
 	if err != nil {
 		return err
@@ -37,7 +38,7 @@ func MigrateStore(ctx sdk.Context, storeService store.KVStoreService, cdc codec.
 		return err
 	}
 
-	sb := collections.NewSchemaBuilder(storeService)
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	prevProposer := collections.NewItem(sb, NewProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey))
 	_, err = sb.Build()
 	if err != nil {

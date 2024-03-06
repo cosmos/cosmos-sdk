@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -46,16 +47,17 @@ func NewIntegrationApp(
 	logger log.Logger,
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
+	addressCodec address.Codec,
+	validatorCodec address.Codec,
 	modules map[string]appmodule.AppModule,
 ) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
-	basicModuleManager := module.NewBasicManagerFromManager(moduleManager, nil)
-	basicModuleManager.RegisterInterfaces(interfaceRegistry)
+	moduleManager.RegisterInterfaces(interfaceRegistry)
 
-	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), addressCodec, validatorCodec, authtx.DefaultSignModes)
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 
@@ -76,13 +78,13 @@ func NewIntegrationApp(
 		return moduleManager.EndBlock(sdkCtx)
 	})
 
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(interfaceRegistry)
-	bApp.SetMsgServiceRouter(router)
+	msgRouter := baseapp.NewMsgServiceRouter()
+	msgRouter.SetInterfaceRegistry(interfaceRegistry)
+	bApp.SetMsgServiceRouter(msgRouter)
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
+		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(baseapp.NewGRPCQueryRouter(), msgRouter)), authtypes.NewModuleAddress("gov").String())
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 
 		if err := bApp.LoadLatestVersion(); err != nil {

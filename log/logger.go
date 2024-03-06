@@ -125,10 +125,7 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		logger = logger.Level(logCfg.Level)
 	}
 
-	// TODO: when https://github.com/rs/zerolog/pull/629 is tagged, replace it to use logger.Hooks()
-	for i := range logCfg.Hooks {
-		logger = logger.Hook(logCfg.Hooks[i])
-	}
+	logger = logger.Hook(logCfg.Hooks...)
 
 	return zeroLogWrapper{&logger}
 }
@@ -144,19 +141,19 @@ func (l zeroLogWrapper) Info(msg string, keyVals ...interface{}) {
 	l.Logger.Info().Fields(keyVals).Msg(msg)
 }
 
-// Info takes a message and a set of key/value pairs and logs with level INFO.
+// Warn takes a message and a set of key/value pairs and logs with level WARN.
 // The key of the tuple must be a string.
 func (l zeroLogWrapper) Warn(msg string, keyVals ...interface{}) {
 	l.Logger.Warn().Fields(keyVals).Msg(msg)
 }
 
-// Error takes a message and a set of key/value pairs and logs with level DEBUG.
+// Error takes a message and a set of key/value pairs and logs with level ERROR.
 // The key of the tuple must be a string.
 func (l zeroLogWrapper) Error(msg string, keyVals ...interface{}) {
 	l.Logger.Error().Fields(keyVals).Msg(msg)
 }
 
-// Debug takes a message and a set of key/value pairs and logs with level ERR.
+// Debug takes a message and a set of key/value pairs and logs with level DEBUG.
 // The key of the tuple must be a string.
 func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 	l.Logger.Debug().Fields(keyVals).Msg(msg)

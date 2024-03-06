@@ -388,7 +388,7 @@ Additional `AppModule` extension interfaces either inside or outside of core wil
 these concerns.
 
 In the case of gogo proto and amino interfaces, the registration of these generally should happen as early
-as possible during initialization and in [ADR 057: App Wiring](./adr-057-app-wiring-1.md), protobuf type registration  
+as possible during initialization and in [ADR 057: App Wiring](./adr-057-app-wiring.md), protobuf type registration  
 happens before dependency injection (although this could alternatively be done dedicated DI providers).
 
 gRPC gateway registration should probably be handled by the runtime module, but the core API shouldn't depend on gRPC
@@ -463,10 +463,10 @@ module manager and follow the Cosmos SDK's existing [0-based versioning](https:/
 versioning as well as runtime modularity, new officially supported runtime modules will be created under the
 `cosmossdk.io/runtime` prefix. For each supported consensus engine a semantically-versioned go module should be created
 with a runtime implementation for that consensus engine. For example:
-- `cosmossdk.io/runtime/comet`
-- `cosmossdk.io/runtime/comet/v2`
-- `cosmossdk.io/runtime/rollkit`
-- etc.
+* `cosmossdk.io/runtime/comet`
+* `cosmossdk.io/runtime/comet/v2`
+* `cosmossdk.io/runtime/rollkit`
+* etc.
 
 These runtime modules should attempt to be semantically versioned even if the underlying consensus engine is not. Also,
 because a runtime module is also a first class Cosmos SDK module, it should have a protobuf module config type.
@@ -557,7 +557,7 @@ as by providing service implementations by wrapping `sdk.Context`.
 ## References
 
 * [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
-* [ADR 057: App Wiring](./adr-057-app-wiring-1.md)
+* [ADR 057: App Wiring](./adr-057-app-wiring.md)
 * [ADR 055: ORM](./adr-055-orm.md)
 * [ADR 028: Public Key Addresses](./adr-028-public-key-addresses.md)
 * [Keeping Your Modules Compatible](https://go.dev/blog/module-compatibility)

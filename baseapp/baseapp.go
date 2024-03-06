@@ -17,6 +17,7 @@ import (
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -46,13 +47,14 @@ type (
 )
 
 const (
-	execModeCheck           execMode = iota // Check a transaction
-	execModeReCheck                         // Recheck a (pending) transaction after a commit
-	execModeSimulate                        // Simulate a transaction
-	execModePrepareProposal                 // Prepare a block proposal
-	execModeProcessProposal                 // Process a block proposal
-	execModeVoteExtension                   // Extend or verify a pre-commit vote
-	execModeFinalize                        // Finalize a block proposal
+	execModeCheck               execMode = iota // Check a transaction
+	execModeReCheck                             // Recheck a (pending) transaction after a commit
+	execModeSimulate                            // Simulate a transaction
+	execModePrepareProposal                     // Prepare a block proposal
+	execModeProcessProposal                     // Process a block proposal
+	execModeVoteExtension                       // Extend or verify a pre-commit vote
+	execModeVerifyVoteExtension                 // Verify a vote extension
+	execModeFinalize                            // Finalize a block proposal
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -82,7 +84,7 @@ type BaseApp struct {
 	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
 	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
 	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal
+	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal handler
 	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
 	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
 	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
@@ -110,8 +112,8 @@ type BaseApp struct {
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
 	// - processProposalState: Used for ProcessProposal, which is set based on the
-	// the previous block's state. This state is never committed. In case of
-	// multiple rounds, the state is always reset to the previous block's state.
+	// previous block's state. This state is never committed. In case of multiple
+	// consensus rounds, the state is always reset to the previous block's state.
 	//
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
 	// previous block's state. This state is committed.
@@ -192,7 +194,7 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger,
+		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
 		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
@@ -279,10 +281,8 @@ func (app *BaseApp) Trace() bool {
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
 
-// SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
-func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
-	app.msgServiceRouter = msgServiceRouter
-}
+// GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
+func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
@@ -478,11 +478,20 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // setState sets the BaseApp's state for the corresponding mode with a branched
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
 // multi-store branch, and provided header.
-func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
+func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
+	headerInfo := header.Info{
+		Height:  h.Height,
+		Time:    h.Time,
+		ChainID: h.ChainID,
+		AppHash: h.AppHash,
+	}
 	baseState := &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithBlockHeader(header),
+		ms: ms,
+		ctx: sdk.NewContext(ms, false, app.logger).
+			WithStreamingManager(app.streamingManager).
+			WithBlockHeader(h).
+			WithHeaderInfo(headerInfo),
 	}
 
 	switch mode {
@@ -726,7 +735,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 			return resp, err
 		}
 
-		// append BeginBlock attributes to all events in the EndBlock response
+		// append BeginBlock attributes to all events in the BeginBlock response
 		for i, event := range resp.Events {
 			resp.Events[i].Attributes = append(
 				event.Attributes,
@@ -883,6 +892,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
+		if mode == execModeSimulate {
+			anteCtx = anteCtx.WithExecMode(sdk.ExecMode(execModeSimulate))
+		}
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 
 		if !newCtx.IsZero() {
@@ -943,11 +955,15 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		// Note that the state is still preserved.
 		postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-		newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
-		if err != nil {
-			return gInfo, nil, anteEvents, err
+		newCtx, errPostHandler := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
+		if errPostHandler != nil {
+			return gInfo, nil, anteEvents, errors.Join(err, errPostHandler)
 		}
 
+		// we don't want runTx to panic if runMsgs has failed earlier
+		if result == nil {
+			result = &sdk.Result{}
+		}
 		result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
 	}
 

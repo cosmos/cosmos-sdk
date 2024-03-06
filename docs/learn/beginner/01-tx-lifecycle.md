@@ -51,13 +51,13 @@ appd tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --ga
 
 #### Other Transaction Creation Methods
 
-The command-line is an easy way to interact with an application, but `Tx` can also be created using a [gRPC or REST interface](../advanced/06-grpc_rest.md) or some other entry point defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Lunie.io](https://lunie.io/#/) and signing it with a Ledger Nano S).
+The command-line is an easy way to interact with an application, but `Tx` can also be created using a [gRPC or REST interface](../advanced/06-grpc_rest.md) or some other entry point defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Keplr](https://www.keplr.app/) and signing it with a Ledger Nano S).
 
 ## Addition to Mempool
 
-Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v0.37/spec/p2p/messages/),
+Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v0.38/spec/p2p/legacy-docs/messages/),
 `CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
-[**Mempool**](https://docs.cometbft.com/v0.37/spec/p2p/messages/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+[**Mempool**](https://docs.cometbft.com/v0.37/spec/p2p/legacy-docs/messages/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
 
@@ -77,7 +77,7 @@ changes while in the process of verifying transactions, but still need a copy of
 state in order to answer queries - they should not respond using state with uncommitted changes.
 
 In order to verify a `Tx`, full-nodes call `CheckTx`, which includes both _stateless_ and _stateful_
-checks. Further validation happens later in the [`DeliverTx`](#delivertx) stage. `CheckTx` goes
+checks. Further validation happens later in the [`DeliverTx`](../advanced/00-baseapp.md#delivertx) stage. `CheckTx` goes
 through several steps, beginning with decoding `Tx`.
 
 ### Decoding
@@ -102,7 +102,7 @@ Read [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) for m
 
 #### Guideline
 
-`ValidateBasic` should not be used anymore. Message validation should be performed in the `Msg` service when [handling a message](../../build/building-modules/msg-services#Validation) in a module Msg Server.
+`ValidateBasic` should not be used anymore. Message validation should be performed in the `Msg` service when [handling a message](../../build/building-modules/03-msg-services.md#validation) in a module Msg Server.
 
 ### AnteHandler
 
@@ -164,44 +164,44 @@ As mentioned throughout the documentation `BeginBlock`, `ExecuteTx` and `EndBloc
 Although every full-node operates individually and locally, the outcome is always consistent and unequivocal. This is because the state changes brought about by the messages are predictable, and the transactions are specifically sequenced in the proposed block.
 
 ```text
-		-----------------------
-		|Receive Block Proposal|
-		-----------------------
-							|
-				v
+		--------------------------
+		| Receive Block Proposal |
+		--------------------------
+					|
+					v
 		-------------------------
-		| FinalizeBlock	        |
-		          |
-			  v
-				-------------------
-				| BeginBlock	    | 
-				-------------------
-		          |
-			  v
+		|     FinalizeBlock	    |
+		-------------------------
+		            |
+			  		v
+			-------------------
+			|   BeginBlock	  | 
+			-------------------
+		            |
+			        v
 			--------------------
 			| ExecuteTx(tx0)   |
 			| ExecuteTx(tx1)   |
 			| ExecuteTx(tx2)   |
 			| ExecuteTx(tx3)   |
-			|	.	      |
-			|	.	      |
-			|	.	      |
+			|	    .	       |
+			|		.		   |
+			|		.	       |
 			-------------------
-		          |
-			  v
+		            |
+			        v
 			--------------------
-			| EndBlock	      |
+			|    EndBlock      |
 			--------------------
-		-------------------------
+		            |
+			        v
+		-----------------------
+		|      Consensus      |
+		-----------------------
 		          |
-			  v
+			      v
 		-----------------------
-		| Consensus	      |
-		-----------------------
-		          |
-			  v
-		-----------------------
-		| Commit	      |
+		|     Commit	      |
 		-----------------------
 ```
 
@@ -214,7 +214,7 @@ to during consensus. Under the hood, transaction execution is almost identical t
 Instead of using their `checkState`, full-nodes use `finalizeblock`:
 
 * **Decoding:** Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
-  Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
+  Nodes first unmarshal the transaction, using the [`TxConfig`](./00-app-anatomy.md#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
 
 * **Checks and `AnteHandler`:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage 

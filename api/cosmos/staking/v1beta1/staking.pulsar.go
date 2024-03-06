@@ -2,10 +2,10 @@
 package stakingv1beta1
 
 import (
+	abci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
+	types "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
 	_ "cosmossdk.io/api/amino"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	abci "cosmossdk.io/api/tendermint/abci"
-	types "cosmossdk.io/api/tendermint/types"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"

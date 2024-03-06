@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/x/nft/module"
 	"cosmossdk.io/x/nft/simulation"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -23,7 +24,7 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 	dec := simulation.NewDecodeStore(encCfg.Codec)
 
 	class := nft.Class{

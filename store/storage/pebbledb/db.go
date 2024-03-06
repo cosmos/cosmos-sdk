@@ -10,6 +10,7 @@ import (
 
 	"github.com/cockroachdb/pebble"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 )
@@ -265,7 +266,7 @@ func (db *Database) Prune(version uint64) error {
 	return db.setPruneHeight(version)
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -283,13 +284,13 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 
 	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
+		return nil, err
 	}
 
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -307,7 +308,7 @@ func (db *Database) ReverseIterator(storeKey string, version uint64, start, end 
 
 	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
+		return nil, err
 	}
 
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, true), nil
@@ -371,11 +372,10 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) ([
 		UpperBound: MVCCEncode(prependStoreKey(storeKey, key), version),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
+		return nil, err
 	}
-	defer func() {
-		err = errors.Join(err, itr.Close())
-	}()
+
+	defer itr.Close()
 
 	if !itr.Last() {
 		return nil, store.ErrRecordNotFound

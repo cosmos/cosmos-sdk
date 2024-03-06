@@ -15,7 +15,7 @@ import (
 const chainUpgradeGuide = "https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md"
 
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
-func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
+func ValidateGenesisCmd(mm *module.Manager) *cobra.Command {
 	return &cobra.Command{
 		Use:     "validate [file]",
 		Aliases: []string{"validate-genesis"},
@@ -49,8 +49,10 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				return fmt.Errorf("error unmarshalling genesis doc %s: %w", genesis, err)
 			}
 
-			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
-				return fmt.Errorf("error validating genesis file %s: %w", genesis, err)
+			if mm != nil {
+				if err = mm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
+					return fmt.Errorf("error validating genesis file %s: %w", genesis, err)
+				}
 			}
 
 			fmt.Fprintf(cmd.OutOrStdout(), "File at %s is a valid genesis file\n", genesis)

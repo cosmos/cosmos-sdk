@@ -19,10 +19,10 @@ import (
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -33,7 +33,7 @@ import (
 var (
 	_, _, addr   = testdata.KeyTestPubAddr()
 	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
-	poolAcct     = authtypes.NewModuleAddress(pooltypes.ModuleName)
+	poolAcct     = authtypes.NewModuleAddress(protocolModuleName)
 	govAcctStr   = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 	addrStr      = addr.String()
 	TestProposal = getTestProposal()
@@ -42,7 +42,10 @@ var (
 // mintModuleName duplicates the mint module's name to avoid a cyclic dependency with x/mint.
 // It should be synced with the mint module's name if it is ever changed.
 // See: https://github.com/cosmos/cosmos-sdk/blob/0e34478eb7420b69869ed50f129fc274a97a9b06/x/mint/types/keys.go#L13
-const mintModuleName = "mint"
+const (
+	mintModuleName     = "mint"
+	protocolModuleName = "protocol-pool"
+)
 
 // getTestProposal creates and returns a test proposal message.
 func getTestProposal() []sdk.Msg {
@@ -66,7 +69,7 @@ type mocks struct {
 
 func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
 	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
-	m.acctKeeper.EXPECT().GetModuleAddress(pooltypes.ModuleName).Return(poolAcct).AnyTimes()
+	m.acctKeeper.EXPECT().GetModuleAddress(protocolModuleName).Return(poolAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	m.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 }
@@ -96,7 +99,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	v1.RegisterInterfaces(encCfg.InterfaceRegistry)
 	v1beta1.RegisterInterfaces(encCfg.InterfaceRegistry)
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -109,6 +112,8 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	)
 	baseApp.SetCMS(testCtx.CMS)
 	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+
+	environment := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(baseApp.GRPCQueryRouter(), baseApp.MsgServiceRouter()))
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
@@ -128,7 +133,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 
 	// Gov keeper initializations
 
-	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.poolKeeper, baseApp.MsgServiceRouter(), types.DefaultConfig(), govAcct.String())
+	govKeeper := keeper.NewKeeper(encCfg.Codec, environment, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.poolKeeper, keeper.DefaultConfig(), govAcct.String())
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)

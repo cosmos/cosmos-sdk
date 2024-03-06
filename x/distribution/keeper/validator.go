@@ -124,10 +124,11 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	if err != nil {
 		return err
 	}
+
+	historical.ReferenceCount++
 	if historical.ReferenceCount > 2 {
 		panic("reference count should never exceed 2")
 	}
-	historical.ReferenceCount++
 	return k.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddr, period), historical)
 }
 
@@ -154,7 +155,7 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 		panic(fmt.Sprintf("fraction must be >=0 and <=1, current fraction: %v", fraction))
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	headerinfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
 		return err
@@ -173,8 +174,7 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 	}
 
 	slashEvent := types.NewValidatorSlashEvent(newPeriod, fraction)
-	height := uint64(sdkCtx.BlockHeight())
-
+	height := uint64(headerinfo.Height)
 	return k.ValidatorSlashEvents.Set(
 		ctx,
 		collections.Join3[sdk.ValAddress, uint64, uint64](

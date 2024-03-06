@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/client/v2/autocli"
 	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
@@ -31,13 +33,13 @@ import (
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
-		autoCliOpts        autocli.AppOptions
-		moduleBasicManager module.BasicManager
-		clientCtx          client.Context
+		autoCliOpts   autocli.AppOptions
+		moduleManager *module.Manager
+		clientCtx     client.Context
 	)
 
 	if err := depinject.Inject(
-		depinject.Configs(simapp.AppConfig,
+		depinject.Configs(simapp.AppConfig(),
 			depinject.Supply(
 				log.NewNopLogger(),
 				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
@@ -48,7 +50,7 @@ func NewRootCmd() *cobra.Command {
 			),
 		),
 		&autoCliOpts,
-		&moduleBasicManager,
+		&moduleManager,
 		&clientCtx,
 	); err != nil {
 		panic(err)
@@ -63,7 +65,7 @@ func NewRootCmd() *cobra.Command {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			clientCtx = clientCtx.WithCmdContext(cmd.Context())
+			clientCtx = clientCtx.WithCmdContext(cmd.Context()).WithViper("")
 			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -86,7 +88,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, clientCtx.InterfaceRegistry, clientCtx.Codec, moduleBasicManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, clientCtx.InterfaceRegistry, clientCtx.Codec, moduleManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -103,6 +105,8 @@ func ProvideClientContext(
 	addressCodec address.Codec,
 	validatorAddressCodec runtime.ValidatorAddressCodec,
 	consensusAddressCodec runtime.ConsensusAddressCodec,
+	authConfig *authv1.Module,
+	stakingConfig *stakingv1.Module,
 ) client.Context {
 	var err error
 
@@ -116,16 +120,18 @@ func ProvideClientContext(
 		WithValidatorAddressCodec(validatorAddressCodec).
 		WithConsensusAddressCodec(consensusAddressCodec).
 		WithHomeDir(simapp.DefaultNodeHome).
-		WithViper("") // uses by default the binary name as prefix
+		WithViper(""). // uses by default the binary name as prefix
+		WithAddressPrefix(authConfig.Bech32Prefix).
+		WithValidatorPrefix(stakingConfig.Bech32PrefixValidator)
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
+	clientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	// re-create the tx config grpc instead of bank keeper
+	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
 	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
 	txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
 	if err != nil {

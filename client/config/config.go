@@ -36,8 +36,29 @@ type Config struct {
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client.Context
 // It uses CreateClientConfig internally with no custom template and custom config.
+// Deprecated: use CreateClientConfig instead.
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	return CreateClientConfig(ctx, "", nil)
+}
+
+// ReadDefaultValuesFromDefaultClientConfig reads default values from default client.toml file and updates them in client.Context
+// The client.toml is then discarded.
+func ReadDefaultValuesFromDefaultClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
+	prevHomeDir := ctx.HomeDir
+	dir, err := os.MkdirTemp("", "simapp")
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't create temp dir: %w", err)
+	}
+	defer os.RemoveAll(dir)
+
+	ctx.HomeDir = dir
+	ctx, err = CreateClientConfig(ctx, customClientTemplate, customConfig)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't create client config: %w", err)
+	}
+
+	ctx.HomeDir = prevHomeDir
+	return ctx, nil
 }
 
 // CreateClientConfig reads the client.toml file and returns a new populated client.Context

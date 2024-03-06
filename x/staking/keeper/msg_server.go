@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"strconv"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
@@ -65,7 +67,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", msg.Pubkey.GetCachedValue())
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO: remove this
 	cp := sdkCtx.ConsensusParams()
 	if cp.Validator != nil {
 		pkType := pk.Type()
@@ -148,13 +150,13 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, err
 	}
 
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeCreateValidator,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
-		),
-	})
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCreateValidator,
+		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+		event.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgCreateValidatorResponse{}, nil
 }
@@ -237,14 +239,13 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeEditValidator,
-			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
-			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
-		),
-	})
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeEditValidator,
+		event.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
+		event.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgEditValidatorResponse{}, nil
 }
@@ -301,16 +302,15 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 		}()
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeDelegate,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
-		),
-	})
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeDelegate,
+		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+		event.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgDelegateResponse{}, nil
 }
@@ -375,16 +375,15 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 		}()
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeRedelegate,
-			sdk.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
-			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-	})
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeRedelegate,
+		event.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
+		event.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
+		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+		event.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgBeginRedelegateResponse{
 		CompletionTime: completionTime,
@@ -446,16 +445,15 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 		}()
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeUnbond,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, undelegatedCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-	})
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeUnbond,
+		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+		event.NewAttribute(sdk.AttributeKeyAmount, undelegatedCoin.String()),
+		event.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
@@ -546,8 +544,8 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("amount is greater than the unbonding delegation entry balance")
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if unbondEntry.CompletionTime.Before(sdkCtx.HeaderInfo().Time) {
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	if unbondEntry.CompletionTime.Before(headerInfo.Time) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
 	}
 
@@ -578,15 +576,15 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeCancelUnbondingDelegation,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
-		),
-	)
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCancelUnbondingDelegation,
+		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+		event.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
@@ -601,9 +599,41 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, err
 	}
 
+	// get previous staking params
+	previousParams, err := k.Params.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// store params
 	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
+	}
+
+	// when min commission rate is updated, we need to update the commission rate of all validators
+	if !previousParams.MinCommissionRate.Equal(msg.Params.MinCommissionRate) {
+		minRate := msg.Params.MinCommissionRate
+
+		vals, err := k.GetAllValidators(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, val := range vals {
+			// set the commission rate to min rate
+			if val.Commission.CommissionRates.Rate.LT(minRate) {
+				val.Commission.CommissionRates.Rate = minRate
+				// set the max rate to minRate if it is less than min rate
+				if val.Commission.CommissionRates.MaxRate.LT(minRate) {
+					val.Commission.CommissionRates.MaxRate = minRate
+				}
+
+				val.Commission.UpdateTime = k.environment.HeaderService.GetHeaderInfo(ctx).Time
+				if err := k.SetValidator(ctx, val); err != nil {
+					return nil, fmt.Errorf("failed to set validator after MinCommissionRate param change: %w", err)
+				}
+			}
+		}
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
@@ -655,7 +685,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	err = k.exceedsMaxRotations(ctx, valAddr)
+	err = k.ExceedsMaxRotations(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}

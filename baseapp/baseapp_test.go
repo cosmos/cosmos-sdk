@@ -1,6 +1,7 @@
 package baseapp_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"fmt"
@@ -28,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,9 +45,10 @@ var (
 
 type (
 	BaseAppSuite struct {
-		baseApp  *baseapp.BaseApp
-		cdc      *codec.ProtoCodec
-		txConfig client.TxConfig
+		baseApp   *baseapp.BaseApp
+		cdc       *codec.ProtoCodec
+		txConfig  client.TxConfig
+		logBuffer *bytes.Buffer
 	}
 
 	SnapshotsConfig struct {
@@ -63,11 +64,14 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	t.Helper()
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
+	logBuffer := new(bytes.Buffer)
+	logger := log.NewLogger(logBuffer, log.ColorOption(false))
 
-	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, txConfig.TxDecoder(), opts...)
+	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder(), opts...)
 	require.Equal(t, t.Name(), app.Name())
 
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
@@ -81,9 +85,10 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	require.Nil(t, app.LoadLatestVersion())
 
 	return &BaseAppSuite{
-		baseApp:  app,
-		cdc:      cdc,
-		txConfig: txConfig,
+		baseApp:   app,
+		cdc:       cdc,
+		txConfig:  txConfig,
+		logBuffer: logBuffer,
 	}
 }
 
@@ -494,11 +499,12 @@ func TestBaseAppOptionSeal(t *testing.T) {
 }
 
 func TestTxDecoder(t *testing.T) {
-	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
 	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
 
 	tx := newTxCounter(t, txConfig, 1, 0)
 	txBytes, err := txConfig.TxEncoder()(tx)
@@ -638,7 +644,6 @@ func TestBaseAppPostHandler(t *testing.T) {
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt)
-
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, []byte("foo")})
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -673,6 +678,14 @@ func TestBaseAppPostHandler(t *testing.T) {
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	require.True(t, postHandlerRun)
+
+	// regression test, should not panic when runMsgs fails
+	tx = wonkyMsg(t, suite.txConfig, tx)
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.NotContains(t, suite.logBuffer.String(), "panic recovered in runTx")
 }
 
 // Test and ensure that invalid block heights always cause errors.

@@ -3,6 +3,8 @@ package storage
 import (
 	"fmt"
 
+	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots"
 )
@@ -19,13 +21,23 @@ var (
 
 // StorageStore is a wrapper around the store.VersionedDatabase interface.
 type StorageStore struct {
-	db Database
+	logger log.Logger
+	db     Database
+
+	// pruneOptions defines the pruning configuration.
+	pruneOptions *store.PruneOptions
 }
 
 // NewStorageStore returns a reference to a new StorageStore.
-func NewStorageStore(db Database) *StorageStore {
+func NewStorageStore(db Database, pruneOpts *store.PruneOptions, logger log.Logger) *StorageStore {
+	if pruneOpts == nil {
+		pruneOpts = store.DefaultPruneOptions()
+	}
+
 	return &StorageStore{
-		db: db,
+		logger:       logger,
+		db:           db,
+		pruneOptions: pruneOpts,
 	}
 }
 
@@ -60,7 +72,17 @@ func (ss *StorageStore) ApplyChangeset(version uint64, cs *store.Changeset) erro
 		}
 	}
 
-	return b.Write()
+	if err := b.Write(); err != nil {
+		return err
+	}
+
+	if prune, pruneVersion := ss.pruneOptions.ShouldPrune(version); prune {
+		if err := ss.Prune(pruneVersion); err != nil {
+			ss.logger.Info("failed to prune SS", "prune_version", pruneVersion, "err", err)
+		}
+	}
+
+	return nil
 }
 
 // GetLatestVersion returns the latest version of the store.
@@ -74,12 +96,12 @@ func (ss *StorageStore) SetLatestVersion(version uint64) error {
 }
 
 // Iterator returns an iterator over the specified domain and prefix.
-func (ss *StorageStore) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (ss *StorageStore) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.Iterator(storeKey, version, start, end)
 }
 
 // ReverseIterator returns an iterator over the specified domain and prefix in reverse.
-func (ss *StorageStore) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (ss *StorageStore) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.ReverseIterator(storeKey, version, start, end)
 }
 

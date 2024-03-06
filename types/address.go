@@ -6,20 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"sync/atomic"
 
 	"github.com/hashicorp/golang-lru/simplelru"
 	"sigs.k8s.io/yaml"
 
-	errorsmod "cosmossdk.io/errors"
-
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -74,6 +70,31 @@ const (
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
 	Bech32PrefixConsPub = Bech32MainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
 )
+
+// GetBech32PrefixAccPub returns the Bech32 prefix of an account's public key.
+func GetBech32PrefixAccPub(mainPrefix string) string {
+	return mainPrefix + PrefixPublic
+}
+
+// GetBech32PrefixValAddr returns the Bech32 prefix of a validator's operator address.
+func GetBech32PrefixValAddr(mainPrefix string) string {
+	return mainPrefix + PrefixValidator + PrefixOperator
+}
+
+// GetBech32PrefixValPub returns the Bech32 prefix of a validator's operator public key.
+func GetBech32PrefixValPub(mainPrefix string) string {
+	return mainPrefix + PrefixValidator + PrefixOperator + PrefixPublic
+}
+
+// GetBech32PrefixConsAddr returns the Bech32 prefix of a consensus node address.
+func GetBech32PrefixConsAddr(mainPrefix string) string {
+	return mainPrefix + PrefixValidator + PrefixConsensus
+}
+
+// GetBech32PrefixConsPub returns the Bech32 prefix of a consensus node public key.
+func GetBech32PrefixConsPub(mainPrefix string) string {
+	return mainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
+}
 
 // cache variables
 var (
@@ -157,28 +178,6 @@ func AccAddressFromHexUnsafe(address string) (addr AccAddress, err error) {
 	return AccAddress(bz), err
 }
 
-// VerifyAddressFormat verifies that the provided bytes form a valid address
-// according to the default address rules or a custom address verifier set by
-// GetConfig().SetAddressVerifier().
-// TODO make an issue to get rid of global Config
-// ref: https://github.com/cosmos/cosmos-sdk/issues/9690
-func VerifyAddressFormat(bz []byte) error {
-	verifier := GetConfig().GetAddressVerifier()
-	if verifier != nil {
-		return verifier(bz)
-	}
-
-	if len(bz) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
-	}
-
-	if len(bz) > address.MaxAddrLen {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bz))
-	}
-
-	return nil
-}
-
 // MustAccAddressFromBech32 calls AccAddressFromBech32 and panics on error.
 func MustAccAddressFromBech32(address string) AccAddress {
 	addr, err := AccAddressFromBech32(address)
@@ -191,23 +190,10 @@ func MustAccAddressFromBech32(address string) AccAddress {
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
-	if len(strings.TrimSpace(address)) == 0 {
-		return AccAddress{}, errors.New("empty address string is not allowed")
-	}
-
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
 
-	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	err = VerifyAddressFormat(bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return AccAddress(bz), nil
+	addrCdc := addresscodec.NewBech32Codec(bech32PrefixAccAddr)
+	return addrCdc.StringToBytes(address)
 }
 
 // Returns boolean for whether two AccAddresses are Equal
@@ -343,23 +329,10 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
-	if len(strings.TrimSpace(address)) == 0 {
-		return ValAddress{}, errors.New("empty address string is not allowed")
-	}
-
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
 
-	bz, err := GetFromBech32(address, bech32PrefixValAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	err = VerifyAddressFormat(bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return ValAddress(bz), nil
+	addrCdc := addresscodec.NewBech32Codec(bech32PrefixValAddr)
+	return addrCdc.StringToBytes(address)
 }
 
 // MustValAddressFromBech32 calls ValAddressFromBech32 and panics on error.
@@ -508,23 +481,10 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
-	if len(strings.TrimSpace(address)) == 0 {
-		return ConsAddress{}, errors.New("empty address string is not allowed")
-	}
-
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
 
-	bz, err := GetFromBech32(address, bech32PrefixConsAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	err = VerifyAddressFormat(bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return ConsAddress(bz), nil
+	addrCdc := addresscodec.NewBech32Codec(bech32PrefixConsAddr)
+	return addrCdc.StringToBytes(address)
 }
 
 // get ConsAddress from pubkey

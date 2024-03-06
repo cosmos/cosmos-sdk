@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package cosmos.accounts.v1;
+
+option go_package = "cosmossdk.io/x/accounts/v1";
+
+import "google/protobuf/any.proto";
+
+// Query defines the Query service for the x/accounts module.
+service Query {
+  // AccountQuery runs an account query.
+  rpc AccountQuery(AccountQueryRequest) returns (AccountQueryResponse) {};
+  // Schema returns an x/account schema. Unstable.
+  rpc Schema(SchemaRequest) returns (SchemaResponse) {};
+  // AccountType returns the account type for an address.
+  rpc AccountType(AccountTypeRequest) returns (AccountTypeResponse) {};
+  // AccountNumber returns the account number given the account address.
+  rpc AccountNumber(AccountNumberRequest) returns (AccountNumberResponse) {};
+}
+
+// AccountQueryRequest is the request type for the Query/AccountQuery RPC
+message AccountQueryRequest {
+  // target defines the account to be queried.
+  string target = 1;
+  // request defines the query message being sent to the account.
+  google.protobuf.Any request = 2;
+}
+
+// AccountQueryResponse is the response type for the Query/AccountQuery RPC method.
+message AccountQueryResponse {
+  // response defines the query response of the account.
+  google.protobuf.Any response = 1;
+}
+
+// SchemaResponse is the response type for the Query/Schema RPC method.
+message SchemaRequest {
+  // account_type defines the account type to query the schema for.
+  string account_type = 1;
+}
+
+// SchemaResponse is the response type for the Query/Schema RPC method.
+message SchemaResponse {
+  // Handler defines a schema descriptor for a handler.
+  // Where request and response are names that can be used to lookup the
+  // reflection descriptor.
+  message Handler {
+    // request is the request name
+    string request = 1;
+    // response is the response name
+    string response = 2;
+  }
+  // init_schema defines the schema descriptor for the Init account method.
+  Handler init_schema = 1;
+  // execute_handlers defines the schema descriptor for the Execute account method.
+  repeated Handler execute_handlers = 2;
+  // query_handlers defines the schema descriptor for the Query account method.
+  repeated Handler query_handlers = 3;
+}
+
+// AccountTypeRequest is the request type for the Query/AccountType RPC method.
+message AccountTypeRequest {
+  // address defines the address to query the account type for.
+  string address = 1;
+}
+
+// AccountTypeResponse is the response type for the Query/AccountType RPC method.
+message AccountTypeResponse {
+  // account_type defines the account type for the address.
+  string account_type = 1;
+}
+
+// AccountNumberRequest returns the account number given the address.
+message AccountNumberRequest {
+  // address is the address of the account we want to know the number of.
+  string address = 1;
+}
+
+// AccountNumberResponse is the response returned when querying the
+// account number by address.
+message AccountNumberResponse {
+  // number is the account number of the provided address.
+  uint64 number = 1;
+}

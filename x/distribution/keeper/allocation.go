@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/types"
 
@@ -78,6 +79,11 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		return err
 	}
 
+	// set ToDistribute in protocolpool to keep track of continuous funds distribution
+	if err := k.poolKeeper.SetToDistribute(ctx, amt, k.GetAuthority()); err != nil { // TODO: this should be distribution module account
+		return err
+	}
+
 	if err := k.FeePool.Set(ctx, types.FeePool{DecimalPool: feePool.DecimalPool.Add(re...)}); err != nil {
 		return err
 	}
@@ -98,14 +104,13 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 	}
 
 	// update current commission
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeCommission,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
-		),
-	)
+	if err = k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCommission,
+		event.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
+		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
+	); err != nil {
+		return err
+	}
 	currentCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valBz)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
@@ -131,13 +136,13 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 	}
 
 	// update outstanding rewards
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
-		),
-	)
+	if err = k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeRewards,
+		event.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
+		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
+	); err != nil {
+		return err
+	}
 
 	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {

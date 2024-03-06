@@ -62,14 +62,14 @@ The Cosmos SDK has many stakeholders contributing and shaping the project. The C
 
 The developers work in sprints, which are available in a [GitHub Project](https://github.com/orgs/cosmos/projects/26/views/22). The current EPICs are pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues).
 
-The important development announcements are shared on [Discord](https://discord.com/invite/cosmosnetwork) in the `#dev-announcements` channel.
+The important development announcements are shared on [Discord](https://discord.gg/interchain) in the `#dev-announcements` channel.
 
 To synchronize we have few major meetings:
 
 * Cosmos SDK Sprint Review on Monday and Thursday at 14:00 UTC (limited participation to core devs).
 * Cosmos SDK Community Call on Thursday at 16:00 UTC.
 
-If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@tac0turtle).
+If you would like to join one of the community call, then please contact us on [Discord](https://discord.gg/interchain) or reach out directly to Marko (@tac0turtle).
 
 ## Architecture Decision Records (ADR)
 
@@ -127,10 +127,9 @@ NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 
 ### Pull Request Templates
 
-There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes and an [other template](./.github/PULL_REQUEST_TEMPLATE/other.md) for changes that do not affect production code. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
+There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
 
 * `template=docs.md`
-* `template=other.md`
 
 ### Requesting Reviews
 
@@ -143,7 +142,7 @@ that you would like early feedback and tagging whoever you would like to receive
 Codeowners are marked automatically as the reviewers.
 
 All PRs require at least two review approvals before they can be merged (one review might be acceptable in
-the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) or [other](./.github/PULL_REQUEST_TEMPLATE/other.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
+the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
 for all checked items unless they have indicated otherwise by leaving their handle next to specific
 items. In addition, use the following review explanations:
 
@@ -172,8 +171,8 @@ When writing documentation, follow the [Documentation Writing Guidelines](./docs
 
 Within the Cosmos SDK we have two forms of documenting decisions, Request For Comment (RFC) & Architecture Design Record (ADR). They perform two different functions. The process for assessing if something needs an RFC is located in the respective folders: 
 
-* [RFC Process](./docs/rfc/process.md)
-* [ADR Process](./docs/adr/process.md) 
+* [RFC Process](./docs/rfc/PROCESS.md)
+* [ADR Process](./docs/architecture/PROCESS.md) 
 
 
 ## Dependencies
@@ -200,12 +199,12 @@ For consistency between our CI and the local tests, `GOWORK=off` is set in the `
 When extracting a package to its own go modules, some extra steps are required, for keeping our CI checks and Dev UX:
 
 * Add a CHANGELOG.md / README.md under the new package folder
-* Add the package in [`labeler.yml`](./.github/labeler.yml)
+* Add the package in [`labeler.yml`](./.github/pr_labeler.yml)
 * Add the package in [`go.work.example`](./go.work.example)
 * Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
 * Add tests to github workflow [test.yml](.github/workflows/test.yml) (under submodules)
 * Configure SonarCloud
-    * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
+    * Add `sonar-projects.properties` (see math [sonar-project.properties](./math/sonar-project.properties) for example)
     * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
     * Ask the team to add the project to SonarCloud
 * (optional) Configure a `cosmossdk.io` vanity url by submitting a PR to [cosmos/vanity](https://github.com/cosmos/vanity).

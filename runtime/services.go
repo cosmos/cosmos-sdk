@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 
@@ -9,8 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-func (a *App) registerRuntimeServices(cfg module.Configurator) error {
-	appv1alpha1.RegisterQueryServer(cfg.QueryServer(), services.NewAppQueryService(a.appConfig))
+func (a *App) registerRuntimeServices(cfg module.Configurator) error { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	autocliv1.RegisterQueryServer(cfg.QueryServer(), services.NewAutoCLIQueryService(a.ModuleManager.Modules))
 
 	reflectionSvc, err := services.NewReflectionService()

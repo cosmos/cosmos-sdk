@@ -12,7 +12,10 @@ import (
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -24,13 +27,13 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 
 type eventService struct{}
 
-func (e eventService) Emit(ctx context.Context, event protoiface.MessageV1) error { return nil }
+func (e eventService) Emit(event protoiface.MessageV1) error { return nil }
 
-func (e eventService) EmitKV(ctx context.Context, eventType string, attrs ...event.Attribute) error {
+func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
 	return nil
 }
 
-func (e eventService) EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error {
+func (e eventService) EmitNonConsensus(event protoiface.MessageV1) error {
 	return nil
 }
 
@@ -47,7 +50,9 @@ func (i interfaceRegistry) RegisterImplementations(any, ...gogoproto.Message) {}
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(ss, eventService{}, nil, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
+	env := runtime.NewEnvironment(ss, log.NewNopLogger())
+	env.EventService = eventService{}
+	m, err := NewKeeper(nil, env, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }
@@ -84,6 +89,6 @@ func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req
 	}
 }
 
-func (m mockExec) ResponseNameByRequestName(name string) string {
+func (m mockExec) ResponseNameByMsgName(name string) string {
 	return name + "Response"
 }

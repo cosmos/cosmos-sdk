@@ -55,7 +55,7 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 * **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../../build/building-modules/06-keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
 * **A reference to an [`appCodec`](../advanced/05-encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../advanced/05-encoding.md).
 * **A reference to a [`legacyAmino`](../advanced/05-encoding.md) codec.** Some parts of the Cosmos SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicitly use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
-* **A reference to a [module manager](../../build/building-modules/01-module-manager.md#manager)** and a [basic module manager](../../build/building-modules/01-module-manager.md#basicmanager). The module manager is an object that contains a list of the application's modules. It facilitates operations related to these modules, like registering their [`Msg` service](../advanced/00-baseapp.md#msg-services) and [gRPC `Query` service](../advanced/00-baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
+* **A reference to a [module manager](../../build/building-modules/01-module-manager.md#manager)**. The module manager is an object that contains a list of the application's modules. It facilitates operations related to these modules, like registering their [`Msg` service](../advanced/00-baseapp.md#msg-services) and [gRPC `Query` service](../advanced/00-baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
@@ -73,7 +73,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/types/app.go#L6
 
 Here are the main actions performed by this function:
 
-* Instantiate a new [`codec`](../advanced/05-encoding.md) and initialize the `codec` of each of the application's modules using the [basic manager](../../build/building-modules/01-module-manager.md#basicmanager).
+* Instantiate a new [`codec`](../advanced/05-encoding.md) and initialize the `codec` of each of the application's modules using the module manager.
 * Instantiate a new application with a reference to a `baseapp` instance, a codec, and all the appropriate store keys.
 * Instantiate all the [`keeper`](#keeper) objects defined in the application's `type` using the `NewKeeper` function of each of the application's modules. Note that keepers must be instantiated in the correct order, as the `NewKeeper` of one module might require a reference to another module's `keeper`.
 * Instantiate the application's [module manager](../../build/building-modules/01-module-manager.md#manager) with the [`AppModule`](#application-module-interface) object of each of the application's modules.
@@ -100,7 +100,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L223-L57
 
 The `InitChainer` is a function that initializes the state of the application from a genesis file (i.e. token balances of genesis accounts). It is called when the application receives the `InitChain` message from the CometBFT engine, which happens when the node is started at `appBlockHeight == 0` (i.e. on genesis). The application must set the `InitChainer` in its [constructor](#constructor-function) via the [`SetInitChainer`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetInitChainer) method.
 
-In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../../build/building-modules/08-genesis.md#initgenesis) function of each of the application's modules. This is done by calling the `InitGenesis` function of the module manager, which in turn calls the `InitGenesis` function of each of the modules it contains. Note that the order in which the modules' `InitGenesis` functions must be called has to be set in the module manager using the [module manager's](../../build/building-modules/01-module-manager.md) `SetOrderInitGenesis` method. This is done in the [application's constructor](#application-constructor), and the `SetOrderInitGenesis` has to be called before the `SetInitChainer`.
+In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../../build/building-modules/08-genesis.md#initgenesis) function of each of the application's modules. This is done by calling the `InitGenesis` function of the module manager, which in turn calls the `InitGenesis` function of each of the modules it contains. Note that the order in which the modules' `InitGenesis` functions must be called has to be set in the module manager using the [module manager's](../../build/building-modules/01-module-manager.md) `SetOrderInitGenesis` method. This is done in the [application's constructor](#constructor-function), and the `SetOrderInitGenesis` has to be called before the `SetInitChainer`.
 
 See an example of an `InitChainer` from `simapp`:
 
@@ -125,7 +125,7 @@ The new ctx must be passed to all the other lifecycle methods.
 
 The Cosmos SDK offers developers the possibility to implement automatic execution of code as part of their application. This is implemented through two functions called `BeginBlocker` and `EndBlocker`. They are called when the application receives the `FinalizeBlock` messages from the CometBFT consensus engine, which happens respectively at the beginning and at the end of each block. The application must set the `BeginBlocker` and `EndBlocker` in its [constructor](#constructor-function) via the [`SetBeginBlocker`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetBeginBlocker) and [`SetEndBlocker`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetEndBlocker) methods.
 
-In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of the [`BeginBlock` and `EndBlock`](../../build/building-modules/06-beginblock-endblock.md) functions of each of the application's modules. This is done by calling the `BeginBlock` and `EndBlock` functions of the module manager, which in turn calls the `BeginBlock` and `EndBlock` functions of each of the modules it contains. Note that the order in which the modules' `BeginBlock` and `EndBlock` functions must be called has to be set in the module manager using the `SetOrderBeginBlockers` and `SetOrderEndBlockers` methods, respectively. This is done via the [module manager](../../build/building-modules/01-module-manager.md) in the [application's constructor](#application-constructor), and the `SetOrderBeginBlockers` and `SetOrderEndBlockers` methods have to be called before the `SetBeginBlocker` and `SetEndBlocker` functions.
+In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of the [`BeginBlock` and `EndBlock`](../../build/building-modules/06-beginblock-endblock.md) functions of each of the application's modules. This is done by calling the `BeginBlock` and `EndBlock` functions of the module manager, which in turn calls the `BeginBlock` and `EndBlock` functions of each of the modules it contains. Note that the order in which the modules' `BeginBlock` and `EndBlock` functions must be called has to be set in the module manager using the `SetOrderBeginBlockers` and `SetOrderEndBlockers` methods, respectively. This is done via the [module manager](../../build/building-modules/01-module-manager.md) in the [application's constructor](#constructor-function), and the `SetOrderBeginBlockers` and `SetOrderEndBlockers` methods have to be called before the `SetBeginBlocker` and `SetEndBlocker` functions.
 
 As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as [gas](./04-gas-fees.md) does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
 
@@ -165,7 +165,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/params/encoding
 
 ### Application Module Interface
 
-Modules must implement [interfaces](../../build/building-modules/01-module-manager.md#application-module-interfaces) defined in the Cosmos SDK, [`AppModuleBasic`](../../build/building-modules/01-module-manager.md#appmodulebasic) and [`AppModule`](../../build/building-modules/01-module-manager.md#appmodule). The former implements basic non-dependent elements of the module, such as the `codec`, while the latter handles the bulk of the module methods (including methods that require references to other modules' `keeper`s). Both the `AppModule` and `AppModuleBasic` types are, by convention, defined in a file called `module.go`.
+Modules must implement [interfaces](../../build/building-modules/01-module-manager.md#application-module-interfaces) defined in the Cosmos SDK and [`AppModule`](../../build/building-modules/01-module-manager.md#appmodule). `AppModule` handles the bulk of the module methods (including methods that require references to other modules' `keeper`s).  `AppModule` is, by convention, defined in a file called `module.go`.
 
 `AppModule` exposes a collection of useful methods on the module that facilitates the composition of modules into a coherent application. These methods are called from the [`module manager`](../../build/building-modules/01-module-manager.md#manager), which manages the application's collection of modules.
 
@@ -196,7 +196,7 @@ Each module should also implement the `RegisterServices` method as part of the [
 
 ### gRPC `Query` Services
 
-gRPC `Query` services allow users to query the state using [gRPC](https://grpc.io). They are enabled by default, and can be configured under the `grpc.enable` and `grpc.address` fields inside [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml).
+gRPC `Query` services allow users to query the state using [gRPC](https://grpc.io). They are enabled by default, and can be configured under the `grpc.enable` and `grpc.address` fields inside <!-- markdown-link-check-disable-line -->[`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml).
 
 gRPC `Query` services are defined in the module's Protobuf definition files, specifically inside `query.proto`. The `query.proto` definition file exposes a single `Query` [Protobuf service](https://developers.google.com/protocol-buffers/docs/proto#services). Each gRPC query endpoint corresponds to a service method, starting with the `rpc` keyword, inside the `Query` service.
 
@@ -220,14 +220,14 @@ Along with the type definition, the next important component of the `keeper.go` 
 
 ### Command-Line, gRPC Services and REST Interfaces
 
-Each module defines command-line commands, gRPC services, and REST routes to be exposed to the end-user via the [application's interfaces](#application-interfaces). This enables end-users to create messages of the types defined in the module, or to query the subset of the state managed by the module.
+Each module defines command-line commands, gRPC services, and REST routes to be exposed to the end-user via the [application's interfaces](#application-interface). This enables end-users to create messages of the types defined in the module, or to query the subset of the state managed by the module.
 
 #### CLI
 
 Generally, the [commands related to a module](../../build/building-modules/09-module-interfaces.md#cli) are defined in a folder called `client/cli` in the module's folder. The CLI divides commands into two categories, transactions and queries, defined in `client/cli/tx.go` and `client/cli/query.go`, respectively. Both commands are built on top of the [Cobra Library](https://github.com/spf13/cobra):
 
-* Transactions commands let users generate new transactions so that they can be included in a block and eventually update the state. One command should be created for each [message type](#message-types) defined in the module. The command calls the constructor of the message with the parameters provided by the end-user, and wraps it into a transaction. The Cosmos SDK handles signing and the addition of other transaction metadata.
-* Queries let users query the subset of the state defined by the module. Query commands forward queries to the [application's query router](../advanced/00-baseapp.md#query-routing), which routes them to the appropriate [querier](#querier) the `queryRoute` parameter supplied.
+* Transactions commands let users generate new transactions so that they can be included in a block and eventually update the state. One command should be created for each [message type](#msg-services) defined in the module. The command calls the constructor of the message with the parameters provided by the end-user, and wraps it into a transaction. The Cosmos SDK handles signing and the addition of other transaction metadata.
+* Queries let users query the subset of the state defined by the module. Query commands forward queries to the [application's query router](../advanced/00-baseapp.md#query-routing), which routes them to the appropriate [querier](#grpc-query-services) the `queryRoute` parameter supplied.
 
 #### gRPC
 
@@ -235,7 +235,7 @@ Generally, the [commands related to a module](../../build/building-modules/09-mo
 
 Each module can expose gRPC endpoints called [service methods](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition), which are defined in the [module's Protobuf `query.proto` file](#grpc-query-services). A service method is defined by its name, input arguments, and output response. The module then needs to perform the following actions:
 
-* Define a `RegisterGRPCGatewayRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+* (Optional) Define a `RegisterGRPCGatewayRoutes` method on `AppModule` to wire the client gRPC requests to the correct handler inside the module.
 * For each service method, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
 
 #### gRPC-gateway REST Endpoints
@@ -244,7 +244,7 @@ Some external clients may not wish to use gRPC. In this case, the Cosmos SDK pro
 
 The REST endpoints are defined in the Protobuf files, along with the gRPC services, using Protobuf annotations. Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods. By default, all REST endpoints defined in the SDK have a URL starting with the `/cosmos/` prefix.
 
-The Cosmos SDK also provides a development endpoint to generate [Swagger](https://swagger.io/) definition files for these REST endpoints. This endpoint can be enabled inside the [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml) config file, under the `api.swagger` key.
+The Cosmos SDK also provides a development endpoint to generate [Swagger](https://swagger.io/) definition files for these REST endpoints. This endpoint can be enabled inside the [`app.toml`](https://docs.cosmos.network/main/user/run-node/keyring) config file, under the `api.swagger` key.
 
 ## Application Interface
 

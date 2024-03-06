@@ -31,13 +31,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.13.1
+
+### Features
+
+* [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Add enum as string option to encoder.
+
 ### Improvements
 
 * [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` from `core/coins` to this package under `signing/textual`.
 
+### Bug Fixes
+
+* [#19265](https://github.com/cosmos/cosmos-sdk/pull/19265) Reject denoms that contain a comma.
+
 ## v0.13.0
 
 ### Improvements
+
 * [#18740](https://github.com/cosmos/cosmos-sdk/pull/18740) Support nested messages when fetching signers up to a default depth of 32.
 
 ## v0.12.0

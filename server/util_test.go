@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -50,7 +51,7 @@ func TestGetAppDBBackend(t *testing.T) {
 
 func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T) {
 	tempDir := t.TempDir()
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[servertypes.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -63,6 +64,8 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	serverCtx = server.GetServerContextFromCmd(cmd)
 
 	// Test that config.toml is created
 	configTomlPath := path.Join(tempDir, "config", "config.toml")
@@ -127,7 +130,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("Failed closing config.toml: %v", err)
 	}
 
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[servertypes.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -141,6 +144,8 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	serverCtx = server.GetServerContextFromCmd(cmd)
 
 	if testDbBackend != serverCtx.Config.DBBackend {
 		t.Error("backend was not set from config.toml")
@@ -168,7 +173,7 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 	if err := writer.Close(); err != nil {
 		t.Fatalf("Failed closing app.toml: %v", err)
 	}
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[servertypes.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, tempDir, "")
 
 	cmd.PreRunE = preRunETestImpl
@@ -180,6 +185,8 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(cmd)
+
 	if testHaltTime != serverCtx.Viper.GetInt("halt-time") {
 		t.Error("Halt time was not set from app.toml")
 	}
@@ -188,7 +195,7 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 	const testAddr = "tcp://127.1.2.3:12345"
 	tempDir := t.TempDir()
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[servertypes.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -208,6 +215,8 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(cmd)
+
 	if testAddr != serverCtx.Config.RPC.ListenAddress {
 		t.Error("RPCListenAddress was not set from command flags")
 	}
@@ -216,7 +225,7 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	const testAddr = "tcp://127.1.2.3:12345"
 	tempDir := t.TempDir()
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[servertypes.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -243,6 +252,8 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	serverCtx = server.GetServerContextFromCmd(cmd)
 
 	if testAddr != serverCtx.Config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not set from env. var. %q", envVarName)
@@ -304,7 +315,7 @@ func newPrecedenceCommon(t *testing.T) precedenceCommon {
 	})
 
 	// Set up the command object that is used in this test
-	retval.cmd = server.StartCmd(nil)
+	retval.cmd = server.StartCmd[servertypes.Application](nil)
 	retval.cmd.PersistentFlags().String(flags.FlagHome, tempDir, "")
 	retval.cmd.PreRunE = preRunETestImpl
 
@@ -351,6 +362,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceFlag(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+
 	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
 		t.Fatalf("RPCListenAddress was not set from flag %q", testCommon.flagName)
 	}
@@ -366,6 +379,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceEnvVar(t *testing.T) {
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
 
 	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not set from env. var. %q", testCommon.envVarName)
@@ -383,6 +398,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigFile(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+
 	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not read from file %q", testCommon.configTomlPath)
 	}
@@ -399,6 +416,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
+	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+
 	if serverCtx.Config.RPC.ListenAddress != "tcp://127.0.0.1:26657" {
 		t.Error("RPCListenAddress is not using default")
 	}
@@ -413,7 +432,7 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 	if err := os.Mkdir(subDir, 0o600); err != nil {
 		t.Fatalf("Failed to create sub directory: %v", err)
 	}
-	cmd := server.StartCmd(nil)
+	cmd := server.StartCmd[servertypes.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, subDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
@@ -432,7 +451,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	tempDir := t.TempDir()
 	err := os.Mkdir(filepath.Join(tempDir, "config"), os.ModePerm)
 	require.NoError(t, err)
-	encCfg := testutil.MakeTestEncodingConfig()
+	encCfg := testutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
 	// Run InitCmd to create necessary config files.
 	clientCtx := client.Context{}.WithHomeDir(tempDir).WithCodec(encCfg.Codec)
@@ -440,7 +459,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	serverCtx.Config.SetRoot(tempDir)
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	cmd := genutilcli.InitCmd(module.NewBasicManager())
+	cmd := genutilcli.InitCmd(module.NewManager())
 	cmd.SetArgs([]string{"appnode-test"})
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
@@ -453,7 +472,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run StartCmd.
-	cmd = server.StartCmd(nil)
+	cmd = server.StartCmd[servertypes.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, tempDir, "")
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
 		ctx, err := server.InterceptConfigsAndCreateContext(cmd, "", nil, cmtcfg.DefaultConfig())

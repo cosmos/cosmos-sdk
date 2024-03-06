@@ -71,3 +71,22 @@ func (q queryServer) AccountType(ctx context.Context, request *v1.AccountTypeReq
 		AccountType: accType,
 	}, nil
 }
+
+func (q queryServer) AccountNumber(ctx context.Context, request *v1.AccountNumberRequest) (*v1.AccountNumberResponse, error) {
+	addr, err := q.k.addressCodec.StringToBytes(request.Address)
+	if err != nil {
+		return nil, err
+	}
+	number, err := q.k.AccountByNumber.Get(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.AccountNumberResponse{Number: number}, nil
+}
+
+const (
+	// TODO(tip): evaluate if the following numbers should be parametrised over state, or over the node.
+	SimulateAuthenticateGasLimit   = 1_000_000
+	SimulateBundlerPaymentGasLimit = SimulateAuthenticateGasLimit
+	ExecuteGasLimit                = SimulateAuthenticateGasLimit
+)

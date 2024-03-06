@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +19,7 @@ import (
 )
 
 func Test_runImportCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -122,7 +123,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 }
 
 func Test_runImportHexCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -176,4 +177,38 @@ func Test_runImportHexCmd(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_runImportCmdWithEmptyName(t *testing.T) {
+	cmd := ImportKeyCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	// Now add a temporary keybase
+	kbHome := t.TempDir()
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
+	require.NoError(t, err)
+
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithKeyring(kb).
+		WithInput(mockIn).
+		WithCodec(cdc)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+	cmd.SetArgs([]string{
+		"", "fake-file",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
+
+	cmd = ImportKeyHexCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	testutil.ApplyMockIODiscardOutErr(cmd)
+	cmd.SetArgs([]string{
+		"", "fake-hex",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
 }

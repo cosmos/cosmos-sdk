@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -18,9 +19,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
-
-// GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
-func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
@@ -66,6 +64,8 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {
 			app.logger.Error("failed to set gRPC header", "err", err)
 		}
+
+		app.logger.Debug("gRPC query received of type: " + fmt.Sprintf("%#v", req))
 
 		return handler(grpcCtx, req)
 	}

@@ -13,9 +13,7 @@ const DefaultKeyringServiceName = "cosmos"
 // Config is the structure that holds the SDK configuration parameters.
 // This could be used to initialize certain configuration parameters for the SDK.
 type Config struct {
-	fullFundraiserPath  string
 	bech32AddressPrefix map[string]string
-	addressVerifier     func([]byte) error
 	mtx                 sync.RWMutex
 
 	sealed   bool
@@ -40,7 +38,6 @@ func NewConfig() *Config {
 			"validator_pub":  Bech32PrefixValPub,
 			"consensus_pub":  Bech32PrefixConsPub,
 		},
-		fullFundraiserPath: FullFundraiserPath,
 	}
 }
 
@@ -97,21 +94,6 @@ func (config *Config) SetBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefi
 	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
 }
 
-// SetAddressVerifier builds the Config with the provided function for verifying that addresses
-// have the correct format
-func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
-	config.assertNotSealed()
-	config.addressVerifier = addressVerifier
-}
-
-// Set the FullFundraiserPath (BIP44Prefix) on the config.
-//
-// Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use SetPurpose and SetCoinType instead.
-func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
-	config.assertNotSealed()
-	config.fullFundraiserPath = fullFundraiserPath
-}
-
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
@@ -157,18 +139,6 @@ func (config *Config) GetBech32ValidatorPubPrefix() string {
 // GetBech32ConsensusPubPrefix returns the Bech32 prefix for consensus node public key
 func (config *Config) GetBech32ConsensusPubPrefix() string {
 	return config.bech32AddressPrefix["consensus_pub"]
-}
-
-// GetAddressVerifier returns the function to verify that addresses have the correct format
-func (config *Config) GetAddressVerifier() func([]byte) error {
-	return config.addressVerifier
-}
-
-// GetFullFundraiserPath returns the BIP44Prefix.
-//
-// Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use GetFullBIP44Path instead.
-func (config *Config) GetFullFundraiserPath() string {
-	return config.fullFundraiserPath
 }
 
 func KeyringServiceName() string {

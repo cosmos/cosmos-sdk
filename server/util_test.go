@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -450,7 +451,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	tempDir := t.TempDir()
 	err := os.Mkdir(filepath.Join(tempDir, "config"), os.ModePerm)
 	require.NoError(t, err)
-	encCfg := testutil.MakeTestEncodingConfig()
+	encCfg := testutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
 	// Run InitCmd to create necessary config files.
 	clientCtx := client.Context{}.WithHomeDir(tempDir).WithCodec(encCfg.Codec)

@@ -12,16 +12,19 @@ In this section we describe the changes made in Cosmos SDK' SimApp.
 
 #### Client (`root.go`)
 
-The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.).
+The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.)
+and address bech32 prefixes (address and validator address).
 This is part of the work of abstracting the SDK from the global bech32 config.
 
-This means the address codecs must be provided in the `client.Context` in the application client (usually `root.go`).
+This means the address codecs and prefixes must be provided in the `client.Context` in the application client (usually `root.go`).
 
 ```diff
 clientCtx = clientCtx.
 + WithAddressCodec(addressCodec).
 + WithValidatorAddressCodec(validatorAddressCodec).
-+ WithConsensusAddressCodec(consensusAddressCodec)
++ WithConsensusAddressCodec(consensusAddressCodec).
++ WithAddressPrefix("cosmos").
++ WithValidatorPrefix("cosmosvaloper")
 ```
 
 **When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**

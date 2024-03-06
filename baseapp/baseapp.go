@@ -706,19 +706,16 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
 	if app.preBlocker != nil {
 		ctx := app.finalizeBlockState.Context()
-		rsp, err := app.preBlocker(ctx, req)
-		if err != nil {
+		if err := app.preBlocker(ctx, req); err != nil {
 			return err
 		}
-		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed
+		// ConsensusParams can change in preblocker, so we need to
 		// write the consensus parameters in store to context
-		if rsp.ConsensusParamsChanged {
-			ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
-			// GasMeter must be set after we get a context with updated consensus params.
-			gasMeter := app.getBlockGasMeter(ctx)
-			ctx = ctx.WithBlockGasMeter(gasMeter)
-			app.finalizeBlockState.SetContext(ctx)
-		}
+		ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+		// GasMeter must be set after we get a context with updated consensus params.
+		gasMeter := app.getBlockGasMeter(ctx)
+		ctx = ctx.WithBlockGasMeter(gasMeter)
+		app.finalizeBlockState.SetContext(ctx)
 	}
 	return nil
 }

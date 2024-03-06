@@ -422,24 +422,13 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	require.Equal(t, 2, len(mm.Modules))
 	require.Equal(t, 1, len(mm.OrderPreBlockers))
 
-	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
-		ConsensusParamsChanged: true,
-	}, nil)
-	res, err := mm.PreBlock(sdk.Context{})
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(nil)
+	err := mm.PreBlock(sdk.Context{})
 	require.NoError(t, err)
-	require.True(t, res.ConsensusParamsChanged)
-
-	// test false
-	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
-		ConsensusParamsChanged: false,
-	}, nil)
-	res, err = mm.PreBlock(sdk.Context{})
-	require.NoError(t, err)
-	require.False(t, res.ConsensusParamsChanged)
 
 	// test error
 	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(nil, errors.New("some error"))
-	_, err = mm.PreBlock(sdk.Context{})
+	err = mm.PreBlock(sdk.Context{})
 	require.EqualError(t, err, "some error")
 }
 

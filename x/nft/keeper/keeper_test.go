@@ -17,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -52,7 +53,7 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	// suite setup
 	s.addrs = simtestutil.CreateIncrementalAccounts(3)
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModule{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))

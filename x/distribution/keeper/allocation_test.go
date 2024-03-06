@@ -21,6 +21,7 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +32,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -91,7 +92,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -223,7 +224,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)

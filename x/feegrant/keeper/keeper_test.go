@@ -17,6 +17,7 @@ import (
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -44,7 +45,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addrs = simtestutil.CreateIncrementalAccounts(20)
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(suite.T())

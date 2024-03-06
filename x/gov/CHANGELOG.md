@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#19592](https://github.com/cosmos/cosmos-sdk/pull/19592) Add custom tally function.
 * [#19304](https://github.com/cosmos/cosmos-sdk/pull/19304) Add `MsgSudoExec` for allowing executing any message as a sudo.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Add message based params configuration.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote to proposals.
@@ -59,6 +60,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19481](https://github.com/cosmos/cosmos-sdk/pull/19481) Migrate module to use `appmodule.Environment`; `NewKeeper` now takes `appmodule.Environment` instead of a store service and no `baseapp.MessageRouter` anymore.
+* [#19481](https://github.com/cosmos/cosmos-sdk/pull/19481) v1beta1 proposal handlers now take a `context.Context` instead of an `sdk.Context`. 
+* [#19592](https://github.com/cosmos/cosmos-sdk/pull/19592) `types.Config` and `types.DefaultConfig` have been moved to the keeper package in order to support the custom tallying function.
 * [#19349](https://github.com/cosmos/cosmos-sdk/pull/19349) Simplify state management in `x/gov`. Note `k.VotingPeriodProposals` and `k.SetProposal` are no longer needed and have been removed.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a `ProposalType` parameter instead.
 * [#17496](https://github.com/cosmos/cosmos-sdk/pull/17496) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type.

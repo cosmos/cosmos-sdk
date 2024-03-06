@@ -10,7 +10,7 @@ import (
 
 var Register = RegisterModule
 
-// Register registers a module with the global module registry. The provided
+// RegisterModule registers a module with the global module registry. The provided
 // protobuf message is used only to uniquely identify the protobuf module config
 // type. The instance of the protobuf message used in the actual configuration
 // will be injected into the container and can be requested by a provider

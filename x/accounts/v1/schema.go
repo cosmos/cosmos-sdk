@@ -1,9 +1,9 @@
 package v1
 
 import (
+	"slices"
 	"strings"
 
-	"golang.org/x/exp/slices"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/x/accounts/internal/implementation"

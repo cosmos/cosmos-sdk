@@ -599,7 +599,4 @@ func (m *Manager) snapshot(height int64) {
 }
 
 // Close the snapshot database.
-func (m *Manager) Close() error {
-	m.logger.Info("snapshotManager Close Database")
-	return m.store.db.Close()
-}
+func (m *Manager) Close() error { return nil }

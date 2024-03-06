@@ -118,17 +118,18 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	decorator := ante.NewCircuitBreakerDecorator(&am.keeper)
 
 	// setup AnteDecorators
 	anteDecorators := []sdk.AnteDecorator{
-		ante.NewCircuitBreakerDecorator(&am.keeper),
+		decorator,
 	}
 
 	// create the AnteHandler by chaining the AnteDecorators
 	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
 
 	// execute the AnteHandler
-	_, err := anteHandler(sdkCtx, runtime.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate)
+	_, err := decorator.AnteHandle(sdkCtx, runtime.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate, anteHandler)
 
 	return err
 }

@@ -1,9 +1,11 @@
 package serverv2_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -19,12 +21,30 @@ type mockGRPCService struct {
 
 func (m *mockGRPCService) RegisterGRPCServer(gogogrpc.Server) {}
 
+// TODO split this test into multiple tests
+// test read config
+// test write config
+// test server configs
+// test start empty
+// test start config exists
+// test stop
 func TestServer(t *testing.T) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	configPath := filepath.Join(currentDir, "testdata", "app.toml")
+
+	v, err := serverv2.ReadConfig(configPath)
+	if err != nil {
+		v = viper.New()
+	}
+
 	logger := log.NewLogger(os.Stdout)
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 
-	// TODO we need to have the server gets the latest config
-	grpcServer, err := grpc.New(logger, viper.New(), interfaceRegistry, &mockGRPCService{})
+	grpcServer, err := grpc.New(logger, v, interfaceRegistry, &mockGRPCService{})
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -38,13 +58,15 @@ func TestServer(t *testing.T) {
 		mockServer,
 	)
 
-	currentDir, err := os.Getwd()
-	if err != nil {
-		t.Log(err)
+	serverCfgs := server.Configs()
+	if serverCfgs[grpcServer.Name()].(*grpc.Config).Address != grpc.DefaultConfig().Address {
+		t.Logf("config is not equal: %v", serverCfgs[grpcServer.Name()])
 		t.Fail()
 	}
-
-	configPath := filepath.Join(currentDir, "app.toml")
+	if serverCfgs[mockServer.Name()].(*mockServerConfig).MockFieldOne != MockServerDefaultConfig().MockFieldOne {
+		t.Logf("config is not equal: %v", serverCfgs[mockServer.Name()])
+		t.Fail()
+	}
 
 	// write config
 	if err := server.WriteConfig(configPath); err != nil {
@@ -52,19 +74,33 @@ func TestServer(t *testing.T) {
 		t.Fail()
 	}
 
-	// read config
-	v, err := server.Config(configPath)
+	v, err = serverv2.ReadConfig(configPath)
 	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	if v == nil {
-		t.Log("config is nil")
+		t.Log(err) // config should be created by WriteConfig
 		t.FailNow()
 	}
-
 	if v.GetString(grpcServer.Name()+".address") != grpc.DefaultConfig().Address {
 		t.Logf("config is not equal: %v", v)
+		t.Fail()
+	}
+
+	// start empty
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, serverv2.ServerContextKey, serverv2.Config{StartBlock: true})
+	ctx, cancelFn := context.WithCancel(ctx)
+	go func() {
+		// wait 5sec and cancel context
+		<-time.After(5 * time.Second)
+		cancelFn()
+
+		if err := server.Stop(ctx); err != nil {
+			t.Logf("failed to stop servers: %s", err)
+			t.Fail()
+		}
+	}()
+
+	if err := server.Start(ctx); err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 }

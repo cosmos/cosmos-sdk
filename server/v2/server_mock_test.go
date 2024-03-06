@@ -6,16 +6,21 @@ import (
 	"math/rand"
 )
 
+type mockServerConfig struct {
+	MockFieldOne string `mapstructure:"mock_field" toml:"mock_field" comment:"Mock field"`
+	MockFieldTwo int    `mapstructure:"mock_field_two" toml:"mock_field_two" comment:"Mock field two"`
+}
+
+func MockServerDefaultConfig() *mockServerConfig {
+	return &mockServerConfig{
+		MockFieldOne: "default",
+		MockFieldTwo: 1,
+	}
+}
+
 type mockServer struct {
 	name string
 	ch   chan string
-}
-
-func NewServer(name string) *mockServer {
-	return &mockServer{
-		name: name,
-		ch:   make(chan string, 100),
-	}
 }
 
 func (s *mockServer) Name() string {
@@ -40,12 +45,6 @@ func (s *mockServer) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *mockServer) Config() interface{} {
-	return struct {
-		MockFieldOne string `mapstructure:"mock_field" toml:"mock_field" comment:"Mock field"`
-		MockFieldTwo int    `mapstructure:"mock_field_two" toml:"mock_field_two" comment:"Mock field two"`
-	}{
-		MockFieldOne: "mock",
-		MockFieldTwo: 2,
-	}
+func (s *mockServer) Config() any {
+	return MockServerDefaultConfig()
 }

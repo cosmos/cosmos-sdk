@@ -19,6 +19,8 @@ import (
 	"cosmossdk.io/server/v2/core/appmanager"
 )
 
+const serverName = "grpc-server"
+
 type GRPCServer struct {
 	logger log.Logger
 
@@ -32,11 +34,11 @@ type GRPCService interface {
 }
 
 // New returns a correctly configured and initialized gRPC server.
-// Note, the caller is responsible for starting the server. See StartGRPCServer.
+// Note, the caller is responsible for starting the server.
 func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry, app GRPCService) (GRPCServer, error) {
 	cfg := DefaultConfig()
 	if v != nil {
-		if err := v.Unmarshal(&cfg); err != nil {
+		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
 			return GRPCServer{}, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
@@ -56,12 +58,12 @@ func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.Interfa
 	return GRPCServer{
 		grpcSrv: grpcSrv,
 		config:  cfg,
-		logger:  logger.With(log.ModuleKey, "grpc-server"),
+		logger:  logger.With(log.ModuleKey, serverName),
 	}, nil
 }
 
 func (g GRPCServer) Name() string {
-	return "grpc-server"
+	return serverName
 }
 
 func (g GRPCServer) Start(ctx context.Context) error {

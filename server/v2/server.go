@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -13,8 +12,8 @@ import (
 	"cosmossdk.io/log"
 )
 
-// Module is a server module that can be started and stopped.
-type Module interface {
+// ServerModule is a server module that can be started and stopped.
+type ServerModule interface {
 	Name() string
 
 	Start(context.Context) error
@@ -31,14 +30,27 @@ type HasConfig interface {
 	Config() any
 }
 
-var _ Module = (*Server)(nil)
+var _ ServerModule = (*Server)(nil)
+
+// Configs returns a viper instance of the config file
+func ReadConfig(configPath string) (*viper.Viper, error) {
+	v := viper.New()
+	v.SetConfigFile(configPath)
+	v.SetConfigType("toml")
+	if err := v.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
+	}
+	v.WatchConfig()
+
+	return v, nil
+}
 
 type Server struct {
 	logger  log.Logger
-	modules []Module
+	modules []ServerModule
 }
 
-func NewServer(logger log.Logger, modules ...Module) *Server {
+func NewServer(logger log.Logger, modules ...ServerModule) *Server {
 	return &Server{
 		logger:  logger,
 		modules: modules,
@@ -102,34 +114,8 @@ func (s *Server) CLICommands() CLIConfig {
 	return commands
 }
 
-// Configs returns a viper instance of the config file
-func (s *Server) Config(configPath string) (*viper.Viper, error) {
-	v := viper.New()
-	v.SetConfigFile(configPath)
-	v.SetConfigType("toml")
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
-	}
-
-	v.OnConfigChange(func(e fsnotify.Event) {
-		if e.Op == fsnotify.Write {
-			srvName := s.Name()
-			s.logger.Info("config file changed", "path", e.Name, "server", srvName)
-			// TODO(@julienrbrt): find a propoer way to reload a module independently of the other modules.
-			// if err := s.Reload(context.Background(), srvName); err != nil {
-			// 	s.logger.Error(fmt.Sprintf("failed to reload %s server", srvName), "err", err)
-			// }
-		}
-	})
-	v.WatchConfig()
-
-	return v, nil
-}
-
-// WriteConfig writes the config to the given path.
-// Note: it does not use viper.WriteConfigAs because we do not want to store flag values in the config.
-func (s *Server) WriteConfig(configPath string) error {
+// Configs returns all configs of all server modules.
+func (s *Server) Configs() map[string]any {
 	cfgs := make(map[string]any)
 	for _, mod := range s.modules {
 		if configmod, ok := mod.(HasConfig); ok {
@@ -138,6 +124,13 @@ func (s *Server) WriteConfig(configPath string) error {
 		}
 	}
 
+	return cfgs
+}
+
+// WriteConfig writes the config to the given path.
+// Note: it does not use viper.WriteConfigAs because we do not want to store flag values in the config.
+func (s *Server) WriteConfig(configPath string) error {
+	cfgs := s.Configs()
 	b, err := toml.Marshal(cfgs)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)

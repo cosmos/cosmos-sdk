@@ -6,6 +6,8 @@ import (
 
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/accountstd"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	rotationv1 "cosmossdk.io/x/accounts/testing/rotation/v1"
@@ -24,6 +26,7 @@ func NewMinimalAbstractedAccount(d accountstd.Dependencies) (MinimalAbstractedAc
 	return MinimalAbstractedAccount{
 		PubKey:   collections.NewItem(d.SchemaBuilder, PubKeyPrefix, "pubkey", codec.CollValueV2[secp256k1.PubKey]()),
 		Sequence: collections.NewSequence(d.SchemaBuilder, SequencePrefix, "sequence"),
+		Env:      d.Environment,
 	}, nil
 }
 
@@ -32,6 +35,7 @@ func NewMinimalAbstractedAccount(d accountstd.Dependencies) (MinimalAbstractedAc
 type MinimalAbstractedAccount struct {
 	PubKey   collections.Item[*secp256k1.PubKey]
 	Sequence collections.Sequence
+	Env      appmodule.Environment
 }
 
 func (a MinimalAbstractedAccount) Init(ctx context.Context, msg *rotationv1.MsgInit) (*rotationv1.MsgInitResponse, error) {
@@ -45,6 +49,11 @@ func (a MinimalAbstractedAccount) RotatePubKey(ctx context.Context, msg *rotatio
 // Authenticate authenticates the account, auth always passess.
 func (a MinimalAbstractedAccount) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
 	_, err := a.Sequence.Next(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = a.Env.EventService.EventManager(ctx).EmitKV("account_bundler_authentication", event.NewAttribute("address", msg.Bundler))
+
 	return &account_abstractionv1.MsgAuthenticateResponse{}, err
 }
 

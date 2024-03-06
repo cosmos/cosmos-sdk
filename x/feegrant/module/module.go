@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/auth/ante"
@@ -35,11 +34,11 @@ var (
 	_ module.AppModuleSimulation   = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodulev2.AppModule                       = AppModule{}
-	_ appmodulev2.HasEndBlocker                   = AppModule{}
-	_ appmodule.HasServices                       = AppModule{}
-	_ appmodulev2.HasMigrations                   = AppModule{}
-	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
+	_ appmodulev2.AppModule                         = AppModule{}
+	_ appmodulev2.HasEndBlocker                     = AppModule{}
+	_ appmodule.HasServices                         = AppModule{}
+	_ appmodulev2.HasMigrations                     = AppModule{}
+	_ appmodulev2.HasTxValidation[decode.DecodedTx] = AppModule{}
 )
 
 // AppModule implements an application module for the feegrant module.

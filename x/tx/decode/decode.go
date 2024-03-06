@@ -22,7 +22,7 @@ type DecodedTx struct {
 	TxBodyHasUnknownNonCriticals bool
 }
 
-var _ transaction.Tx = &DecodedTx{}
+var _ transaction.Tx = DecodedTx{}
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {

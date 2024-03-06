@@ -33,14 +33,14 @@ require (
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
-	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/tx v0.13.0 // indirect
+	cosmossdk.io/x/tx v0.13.0
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

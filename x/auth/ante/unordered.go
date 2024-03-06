@@ -37,12 +37,12 @@ func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager) *UnorderedTx
 	}
 }
 
-func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the
 		// unordered value as false, we bypass.
-		return next(ctx, tx, simulate)
+		return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
 	}
 
 	// TTL is defined as a specific block height at which this tx is no longer valid
@@ -70,5 +70,5 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		d.txManager.Add(txHash, ttl)
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
 }

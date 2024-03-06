@@ -14,13 +14,7 @@ type Server struct {
 	logger  log.Logger
 	GRPCSrv *grpc.Server
 	unsafe  bool
-	cfg     Config
-}
-
-// GRPCWebConfig defines configuration for the gRPC-web server.
-type Config struct {
-	// Enable defines if the gRPC-web should be enabled.
-	Enable bool `mapstructure:"enable"`
+	config  Config
 }
 
 func New(logger log.Logger, grpcSrv *grpc.Server, cfg Config, unsafe bool) *Server {
@@ -28,14 +22,14 @@ func New(logger log.Logger, grpcSrv *grpc.Server, cfg Config, unsafe bool) *Serv
 		logger:  logger,
 		GRPCSrv: grpcSrv,
 		unsafe:  unsafe,
-		cfg:     cfg,
+		config:  cfg,
 	}
 }
 
 // Register implements registers a grpc-web server
 func (s *Server) Register(r mux.Router) error {
 	// configure grpc-web server
-	if s.cfg.Enable {
+	if s.config.Enable {
 		var options []grpcweb.Option
 		if s.unsafe {
 			options = append(options,

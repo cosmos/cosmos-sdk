@@ -119,7 +119,9 @@ type MsgRouter interface {
 	Register(msgName string, handler Handler)
 }
 
+// HasMsgHandler is implemented by modules that instead of exposing msg server expose a set of handlers.
 type HasMsgHandlers interface {
+	// RegisterMsgHandlers is implemented by the module that will register msg handlers.
 	RegisterMsgHandlers(router MsgRouter)
 }
 

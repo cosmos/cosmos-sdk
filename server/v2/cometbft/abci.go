@@ -129,17 +129,6 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 		return nil, err
 	}
 
-	/* TODO insertion into the mempool, insertion should a cache tx,
-	type CacheTx struct {
-		// Tx is the transaction.
-		Tx transaction.Tx
-		// Encoded
-		EncodedTx []byte
-	}
-
-	either do this in x/tx or here, but we need to avoid re-encoding the tx due to maliability
-	*/
-
 	cometResp := &abci.ResponseCheckTx{
 		// Code:      resp.Code, //TODO: extract error code from resp.Error
 		GasWanted: uint64ToInt64(resp.GasWanted),
@@ -165,14 +154,17 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 		return nil, err
 	}
 
-	// TODO use rootstore interface and that has LastCommitID
+	cid, err := c.store.LastCommitID()
+	if err != nil {
+		return nil, err
+	}
 
 	return &abci.ResponseInfo{
-		Data:            c.cfg.Name,
-		Version:         c.cfg.Version,
-		AppVersion:      cp.GetVersion().App,
-		LastBlockHeight: int64(version),
-		// LastBlockAppHash: c.store.LastCommittedID().Hash(), // TODO: implement this on store. It's required by CometBFT
+		Data:             c.cfg.Name,
+		Version:          c.cfg.Version,
+		AppVersion:       cp.GetVersion().App,
+		LastBlockHeight:  int64(version),
+		LastBlockAppHash: cid.Hash,
 	}, nil
 }
 
@@ -223,68 +215,14 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 
 // InitChain implements types.Application.
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
+
 	// TODO: won't work for now
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
 		Validators:      req.Validators,
 		AppHash:         []byte{},
 	}, nil
-
-	// valUpdates := []validator.Update{}
-	// for _, v := range req.Validators {
-	// 	pubkey, err := cryptocdc.FromCmtProtoPublicKey(v.PubKey)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	valUpdates = append(valUpdates, validator.Update{
-	// 		PubKey: pubkey.Bytes(),
-	// 		Power:  v.Power,
-	// 	})
-	// }
-
-	// rr := appmanager.RequestInitChain{
-	// 	Time:          req.Time,
-	// 	ChainId:       req.ChainId,
-	// 	AppStateBytes: req.AppStateBytes,
-	// 	InitialHeight: req.InitialHeight,
-	// 	Validators:    valUpdates,
-	// }
-
-	// res, err := c.app.InitChain(ctx, rr)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// abciVals := make(abci.ValidatorUpdates, len(res.Validators))
-	// for i, update := range res.Validators {
-	// 	abciVals[i] = abci.ValidatorUpdate{
-	// 		PubKey: cmtprotocrypto.PublicKey{
-	// 			Sum: &cmtprotocrypto.PublicKey_Ed25519{
-	// 				Ed25519: update.PubKey,
-	// 			},
-	// 		},
-	// 		Power: update.Power,
-	// 	}
-	// }
-
-	// if len(req.Validators) > 0 {
-	// 	if len(req.Validators) != len(abciVals) {
-	// 		return nil, fmt.Errorf(
-	// 			"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
-	// 			len(req.Validators), len(abciVals),
-	// 		)
-	// 	}
-
-	// 	sort.Sort(abci.ValidatorUpdates(req.Validators))
-	// 	sort.Sort(abciVals)
-
-	// 	for i := range abciVals {
-	// 		if !proto.Equal(&abciVals[i], &req.Validators[i]) {
-	// 			return nil, fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i)
-	// 		}
-	// 	}
-	// }
 }
 
 // PrepareProposal implements types.Application.

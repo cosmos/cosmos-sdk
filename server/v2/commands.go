@@ -13,24 +13,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Commands(homePath string, modules ...Module) (CLIConfig, error) {
+func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIConfig, error) {
 	if len(modules) == 0 {
-		// TODO: figure if we should define default modules
+		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
 		return CLIConfig{}, errors.New("no modules provided")
 	}
 
-	server := NewServer(log.NewLogger(os.Stdout), modules...)
-	v, err := server.Config(filepath.Join(homePath, "config"))
+	v, err := ReadConfig(filepath.Join(homePath, "config"))
 	if err != nil {
-		return CLIConfig{}, fmt.Errorf("failed to build server config: %w", err)
+		return CLIConfig{}, fmt.Errorf("failed to read config: %w", err)
 	}
 
+	server := NewServer(logger, modules...)
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := v.BindPFlags(cmd.Flags()); err != nil {
+			if err := v.BindPFlags(cmd.Flags()); err != nil { // the server modules are already instantiated here, so binding the flags is useless.
 				return err
 			}
 
@@ -59,7 +59,7 @@ func Commands(homePath string, modules ...Module) (CLIConfig, error) {
 	}
 
 	cmds := server.CLICommands()
-	cmds.Command = append(cmds.Command, startCmd)
+	cmds.Commands = append(cmds.Commands, startCmd)
 
 	return cmds, nil
 }

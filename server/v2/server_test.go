@@ -26,7 +26,7 @@ func TestServer(t *testing.T) {
 	interfaceRegistry := &grpcClientCtx{codectypes.NewInterfaceRegistry()}
 
 	// TODO we need to have the server gets the latest config
-	grpcServer, err := grpc.New(interfaceRegistry, log, nil, nil)
+	grpcServer, err := grpc.New(interfaceRegistry, log, nil)
 	if err != nil {
 		panic(err)
 	}

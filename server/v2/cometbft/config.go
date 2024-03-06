@@ -1,8 +1,7 @@
 package cometbft
 
 import (
-	cmtcfg "github.com/cometbft/cometbft/config"
-
+	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft/types"
 )
 
@@ -26,5 +25,7 @@ type Config struct {
 	Standalone bool
 	Trace      bool
 
-	CmtConfig *cmtcfg.Config
+	GrpcConfig grpc.Config
+	MempoolConfig
+	// CmtConfig *cmtcfg.Config
 }

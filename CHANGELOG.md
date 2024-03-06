@@ -140,7 +140,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (crypto) [#19541](https://github.com/cosmos/cosmos-sdk/pull/19541) The deprecated `FromTmProtoPublicKey`, `ToTmProtoPublicKey`, `FromTmPubKeyInterface` and `ToTmPubKeyInterface` functions have been removed. Use their replacements (`Cmt` instead of `Tm`) instead.
 * (types) [#19652](https://github.com/cosmos/cosmos-sdk/pull/19652) 
   * Moved`types/module.HasRegisterInterfaces` to `cosmossdk.io/core`.
-  * Moved `RegisterInerfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.LegacyRegistry` interface.
+  * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.LegacyRegistry` interface.
 
 ### Client Breaking Changes
 

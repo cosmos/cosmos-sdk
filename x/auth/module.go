@@ -45,8 +45,8 @@ var (
 // AppModule implements an application module for the auth module.
 type AppModule struct {
 	accountKeeper     keeper.AccountKeeper
-	bankKeeper        types.BankKeeper
-	feegrantKeeper    ante.FeegrantKeeper
+	bankKeeper        types.BankKeeper    // Optional: Required only for FeeDecorator antehandler.
+	feegrantKeeper    ante.FeegrantKeeper // Optional: Required only for FeeDecorator antehandler.
 	randGenAccountsFn types.RandomGenesisAccountsFn
 }
 
@@ -54,9 +54,11 @@ type AppModule struct {
 func (am AppModule) IsAppModule() {}
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, bankKeeper types.BankKeeper, feegrantKeeper ante.FeegrantKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
 		accountKeeper:     accountKeeper,
+		bankKeeper:        bankKeeper,
+		feegrantKeeper:    feegrantKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 	}
 }
@@ -160,11 +162,7 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
-	}
-
-	if am.feegrantKeeper != nil {
-		feeDecorator := ante.NewDeductFeeDecorator(am.accountKeeper, am.bankKeeper, am.feegrantKeeper, nil)
-		anteDecorators = append(anteDecorators, feeDecorator)
+		ante.NewDeductFeeDecorator(am.accountKeeper, am.bankKeeper, am.feegrantKeeper, nil),
 	}
 
 	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)

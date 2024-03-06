@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
@@ -35,6 +36,9 @@ type ModuleInputs struct {
 	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
+
+	BankKeeper     types.BankKeeper
+	FeegrantKeeper ante.FeegrantKeeper
 }
 
 type ModuleOutputs struct {
@@ -70,7 +74,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	k := keeper.NewAccountKeeper(in.Environment, in.Cdc, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
-	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
+	m := NewAppModule(in.Cdc, k, in.BankKeeper, in.FeegrantKeeper, in.RandomGenesisAccountsFn)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

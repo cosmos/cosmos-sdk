@@ -71,6 +71,10 @@ func (g gasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) cont
 	panic("implement me")
 }
 
+func (g gasService) GetGasConfig(ctx context.Context) gas.GasConfig {
+	panic("impl")
+}
+
 func NewEventService() event.Service {
 	return eventService{}
 }

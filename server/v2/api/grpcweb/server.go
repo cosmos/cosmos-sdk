@@ -17,12 +17,6 @@ type Server struct {
 	cfg     Config
 }
 
-// GRPCWebConfig defines configuration for the gRPC-web server.
-type Config struct {
-	// Enable defines if the gRPC-web should be enabled.
-	Enable bool `mapstructure:"enable"`
-}
-
 func New(logger log.Logger, grpcSrv *grpc.Server, cfg Config, unsafe bool) *Server {
 	return &Server{
 		logger:  logger,

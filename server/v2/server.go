@@ -2,11 +2,9 @@ package serverv2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -30,13 +28,7 @@ type HasCLICommands interface {
 // HasConfig is a server module that has a config.
 type HasConfig interface {
 	// Config returns the config of the module.
-	// The returned values are the config struct and the viper instance containing the config.
-	Config() (any, *viper.Viper)
-}
-
-// HasReload is a server module that can be reloaded.
-type HasReload interface {
-	Reload(context.Context) error
+	Config() any
 }
 
 var _ Module = (*Server)(nil)
@@ -96,22 +88,6 @@ func (s *Server) Stop(ctx context.Context) error {
 	return g.Wait()
 }
 
-// Reload reloads a module.
-func (s *Server) Reload(ctx context.Context, moduleName string) error {
-	for _, mod := range s.modules {
-		if mod.Name() == moduleName || moduleName == s.Name() {
-			if reloadmod, ok := mod.(HasReload); ok {
-				s.logger.Debug(fmt.Sprintf("reloading %s server...", moduleName))
-				return reloadmod.Reload(ctx)
-			}
-
-			return errors.New("module does not support reload")
-		}
-	}
-
-	return errors.New("module not found")
-}
-
 // CLICommands returns all CLI commands of all modules.
 func (s *Server) CLICommands() CLIConfig {
 	commands := CLIConfig{}
@@ -127,35 +103,27 @@ func (s *Server) CLICommands() CLIConfig {
 	return commands
 }
 
-// Configs returns the merged config of all modules.
-func (s *Server) Config(configPath string) (*viper.Viper, error) {
+// Configs returns a viper instance of the config file
+func (s *Server) Config(configPath string) *viper.Viper {
 	v := viper.New()
 	v.SetConfigFile(configPath)
 	v.SetConfigName("app")
 	v.SetConfigType("toml")
 	v.ReadInConfig()
-	v.OnConfigChange(func(e fsnotify.Event) {
-		if e.Op == fsnotify.Write {
-			srvName := s.Name()
+	// v.OnConfigChange(func(e fsnotify.Event) {
+	// 	if e.Op == fsnotify.Write {
+	// 		srvName := s.Name()
 
-			s.logger.Info("config file changed", "path", e.Name)
-			// TODO(@julienrbrt): find a propoer way to reload a module independently of the other modules.
-			if err := s.Reload(context.Background(), srvName); err != nil {
-				s.logger.Error(fmt.Sprintf("failed to reload %s server", srvName), "err", err)
-			}
-		}
-	})
+	// 		s.logger.Info("config file changed", "path", e.Name)
+	// 		// TODO(@julienrbrt): find a propoer way to reload a module independently of the other modules.
+	// 		if err := s.Reload(context.Background(), srvName); err != nil {
+	// 			s.logger.Error(fmt.Sprintf("failed to reload %s server", srvName), "err", err)
+	// 		}
+	// 	}
+	// })
 	v.WatchConfig()
 
-	var err error
-	for _, mod := range s.modules {
-		if configmod, ok := mod.(HasConfig); ok {
-			_, nv := configmod.Config()
-			err = errors.Join(err, v.MergeConfigMap(nv.AllSettings()))
-		}
-	}
-
-	return v, err
+	return v
 }
 
 // WriteConfig writes the config to the given path.
@@ -164,7 +132,7 @@ func (s *Server) WriteConfig(configPath string) error {
 	cfgs := make(map[string]any)
 	for _, mod := range s.modules {
 		if configmod, ok := mod.(HasConfig); ok {
-			cfg, _ := configmod.Config()
+			cfg := configmod.Config()
 			cfgs[mod.Name()] = cfg
 		}
 	}

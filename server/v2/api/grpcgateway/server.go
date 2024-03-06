@@ -25,12 +25,6 @@ type Server struct {
 	cfg               Config
 }
 
-// GRPCGatewayConfig defines configuration for the gRPC-gateway server.
-type Config struct {
-	// Enable defines if the gRPC-web should be enabled.
-	Enable bool `mapstructure:"enable"`
-}
-
 // New creates a new gRPC-gateway server.
 func New(logger log.Logger, grpcSrv *grpc.Server, cfg Config, ir jsonpb.AnyResolver) *Server {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.

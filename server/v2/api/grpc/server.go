@@ -1,12 +1,14 @@
 package grpc
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
@@ -23,9 +25,10 @@ type ClientContext interface {
 }
 
 type GRPCServer struct {
+	logger log.Logger
+
 	grpcSrv *grpc.Server
-	logger  log.Logger
-	config  Config
+	config  *Config
 }
 
 type GRPCService interface {
@@ -34,23 +37,15 @@ type GRPCService interface {
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-// NewGRPCServer returns a correctly configured and initialized gRPC server.
+// New returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
-func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
-	maxSendMsgSize := cfg.MaxSendMsgSize
-	if maxSendMsgSize == 0 {
-		maxSendMsgSize = DefaultGRPCMaxSendMsgSize
-	}
-
-	maxRecvMsgSize := cfg.MaxRecvMsgSize
-	if maxRecvMsgSize == 0 {
-		maxRecvMsgSize = DefaultGRPCMaxRecvMsgSize
-	}
+func New(clientCtx ClientContext, logger log.Logger, app GRPCService, v *viper.Viper) (GRPCServer, error) {
+	cfg := readConfig(v)
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(clientCtx.InterfaceRegistry()).GRPCCodec()),
-		grpc.MaxSendMsgSize(maxSendMsgSize),
-		grpc.MaxRecvMsgSize(maxRecvMsgSize),
+		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
+		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 	)
 
 	app.RegisterGRPCServer(grpcSrv)
@@ -66,7 +61,11 @@ func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, 
 	}, nil
 }
 
-func (g GRPCServer) Start() error {
+func (g GRPCServer) Name() string {
+	return "grpc-server"
+}
+
+func (g GRPCServer) Start(ctx context.Context) error {
 	listener, err := net.Listen("tcp", g.config.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", g.config.Address, err)
@@ -89,9 +88,32 @@ func (g GRPCServer) Start() error {
 	return err
 }
 
-func (g GRPCServer) Stop() {
+func (g GRPCServer) Stop(ctx context.Context) error {
 	g.logger.Info("stopping gRPC server...", "address", g.config.Address)
 	g.grpcSrv.GracefulStop()
+
+	return nil
+}
+
+func (g GRPCServer) Config() any {
+	if g.config == nil {
+		return DefaultConfig()
+	}
+
+	return g.config
+}
+
+func readConfig(v *viper.Viper) *Config {
+	var err error
+	cfg := &Config{}
+	if v != nil {
+		err = v.Unmarshal(cfg)
+	}
+	if cfg == nil || err != nil {
+		cfg = DefaultConfig()
+	}
+
+	return cfg
 }
 
 type protoCodec struct {

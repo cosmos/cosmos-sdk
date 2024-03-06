@@ -21,10 +21,7 @@ func Commands(homePath string, modules ...Module) (CLIConfig, error) {
 	}
 
 	server := NewServer(log.NewLogger(os.Stdout), modules...)
-	v, err := server.Config(filepath.Join(homePath, "config"))
-	if err != nil {
-		return CLIConfig{}, fmt.Errorf("failed to build server config: %w", err)
-	}
+	v := server.Config(filepath.Join(homePath, "config"))
 
 	startCmd := &cobra.Command{
 		Use:   "start",
@@ -35,7 +32,7 @@ func Commands(homePath string, modules ...Module) (CLIConfig, error) {
 			}
 
 			srvConfig := Config{StartBlock: true}
-			ctx := cmd.Context()
+			ctx := context.Background()
 			ctx = context.WithValue(ctx, ServerContextKey, srvConfig)
 			ctx, cancelFn := context.WithCancel(ctx)
 			go func() {

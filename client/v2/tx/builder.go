@@ -1,10 +1,9 @@
 package tx
 
 import (
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/gogoproto/types"
 )
 
 type ExtendedTxBuilder interface {
@@ -16,14 +15,15 @@ type ExtendedTxBuilder interface {
 // signatures, and provide canonical bytes to sign over. The transaction must
 // also know how to encode itself.
 type TxBuilder interface {
-	GetTx() TxV2
-	SetMsgs(msgs ...sdk.MsgV2) error
-	SetSignatures(signatures ...signingtypes.SignatureV2) error
+	GetTx() txv1beta1.Tx
+	//SignTx(Signer, Tx) error, txv1beta1.Tx
+
+	SetMsgs(msgs ...*types.Any) error
 	SetMemo(memo string)
-	SetFeeAmount(amount sdk.Coins)
-	SetFeePayer(feePayer sdk.AccAddress)
+	SetFeeAmount(amount txv1beta1.Fee)
+	SetFeePayer(feePayer string)
 	SetGasLimit(limit uint64)
 	SetTimeoutHeight(height uint64)
-	SetFeeGranter(feeGranter sdk.AccAddress)
-	AddAuxSignerData(tx.AuxSignerData) error
+	SetFeeGranter(feeGranter string)
+	SetAuxSignerData(data txv1beta1.AuxSignerData) error
 }

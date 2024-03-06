@@ -92,12 +92,19 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	// execute txs
 	txResults := make([]appmanager.TxResult, len(block.Txs))
 	// TODO: skip first tx if vote extensions are enabled (marko)
+	blockGasMeter := s.getGasMeter(block.MaxBlockGas)
 	for i, txBytes := range block.Txs {
 		// check if we need to return early or continue delivering txs
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize)
+
+		// update block gas, after we get tx result
+		blockGasRemaining := blockGasMeter.Limit() - blockGasMeter.Consumed()
+		txResult := s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize, blockGasRemaining)
+		_ = blockGasMeter.Consume(txResult.GasUsed, "tx") // this is fine if it errors, what we care about is that it fails for subsequent txs.
+
+		txResults[i] = txResult
 	}
 	// end block
 	endBlockEvents, valset, err := s.endBlock(ctx, newState)
@@ -115,7 +122,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 }
 
 // deliverTx executes a TX and returns the result.
-func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, execMode corecontext.ExecMode) appmanager.TxResult {
+func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, execMode corecontext.ExecMode, blockGasRemaining uint64) appmanager.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
 	defer func() {
@@ -128,15 +135,16 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, exec
 			Error: recoveryError,
 		}
 	}
+	txGasLimit := min(tx.GetGasLimit(), blockGasRemaining) // we either use the tx gas limit or the block gas limit.
 
-	validateGas, validationEvents, err := s.validateTx(ctx, state, tx.GetGasLimit(), tx)
+	validateGas, validationEvents, err := s.validateTx(ctx, state, txGasLimit, tx)
 	if err != nil {
 		return appmanager.TxResult{
 			Error: err,
 		}
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, state, tx.GetGasLimit()-validateGas, tx, execMode)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, txGasLimit-validateGas, tx, execMode)
 	return appmanager.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
@@ -294,7 +302,7 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]
 // Simulate simulates the execution of a tx on the provided state.
 func (s STF[T]) Simulate(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) (appmanager.TxResult, store.WriterMap) {
 	simulationState := s.branch(state)
-	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate)
+	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate, gasLimit)
 
 	return txr, simulationState
 }

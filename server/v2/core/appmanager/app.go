@@ -24,6 +24,7 @@ type BlockRequest[T any] struct {
 	Hash              []byte
 	Txs               []T
 	ConsensusMessages []Type
+	MaxBlockGas       uint64
 }
 
 type BlockResponse struct {

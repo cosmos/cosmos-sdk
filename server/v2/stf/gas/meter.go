@@ -1,6 +1,8 @@
 package gas
 
 import (
+	"fmt"
+
 	"cosmossdk.io/core/gas"
 )
 
@@ -29,7 +31,8 @@ func (m *Meter) Limit() gas.Gas {
 func (m *Meter) Consume(requested gas.Gas, _ string) error {
 	remaining := m.limit - m.consumed
 	if requested > remaining {
-		return gas.ErrOutOfGas
+		m.consumed = m.limit // this sets it as fully consumed aka remaining is 0.
+		return fmt.Errorf("%w: requested %d remaining %d", gas.ErrOutOfGas, requested, remaining)
 	}
 	m.consumed += requested
 	return nil

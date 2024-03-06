@@ -241,7 +241,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 
-		if err == xsalsa20symmetric.ErrCiphertextDecrypt {
+		if errors.Is(err, xsalsa20symmetric.ErrCiphertextDecrypt) {
 			return privKey, sdkerrors.ErrWrongPassword
 		}
 	default:

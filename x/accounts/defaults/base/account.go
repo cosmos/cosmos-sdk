@@ -37,7 +37,6 @@ func NewAccount(name string, handlerMap *signing.HandlerMap) accountstd.AccountC
 			PubKey:          collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key", codec.CollValue[secp256k1.PubKey](deps.LegacyStateCodec)),
 			Sequence:        collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
 			addrCodec:       deps.AddressCodec,
-			hs:              deps.HeaderService,
 			signingHandlers: handlerMap,
 		}, nil
 	}

@@ -148,11 +148,19 @@ Additionally, the `appmodule.Environment` interface is introduced to fetch diffe
 This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
 It needs to be passed into a module at instantiation. 
 
-`x/circuit` is used as an example.:
+`x/circuit` is used as an example:
 
 ```go
 app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey])), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
 ```
+
+If your module requires a message server or query server, it should be passed in the environment as well.
+
+```diff
+-govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AuthKeeper, app.BankKeeper,app.StakingKeeper, app.PoolKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
++govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+```
+
 
 ##### Dependency Injection
 
@@ -209,6 +217,11 @@ Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group
 #### `x/gov`
 
 Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
+
+Gov v1beta1 proposal handler has been changed to take in a `context.Context` instead of `sdk.Context`.
+This change was made to allow legacy proposals to be compatible with server/v2.
+If you wish to migrate to server/v2, you should update your proposal handler to take in a `context.Context` and use services.
+On the other hand, if you wish to keep using baseapp, simply unwrap the sdk context in your proposal handler.
 
 #### `x/mint`
 

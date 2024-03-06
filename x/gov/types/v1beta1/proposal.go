@@ -1,6 +1,7 @@
 package v1beta1
 
 import (
+	context "context"
 	"fmt"
 	"strings"
 	"time"
@@ -249,7 +250,7 @@ func IsValidProposalType(ty string) bool {
 // proposals (ie. TextProposal ). Since these are
 // merely signaling mechanisms at the moment and do not affect state, it
 // performs a no-op.
-func ProposalHandler(_ sdk.Context, c Content) error {
+func ProposalHandler(_ context.Context, c Content) error {
 	switch c.ProposalType() {
 	case ProposalTypeText:
 		// both proposal types do not change state so this performs a no-op

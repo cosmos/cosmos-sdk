@@ -5,8 +5,6 @@ import (
 	"encoding/binary"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/gas"
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
 
@@ -137,35 +135,3 @@ func Whoami(ctx context.Context) []byte {
 
 // Funds returns the funds associated with the execution context.
 func Funds(ctx context.Context) sdk.Coins { return getCtx(ctx).funds }
-
-type headerService struct{ hs header.Service }
-
-func (h headerService) GetHeaderInfo(ctx context.Context) header.Info {
-	return h.hs.GetHeaderInfo(getParentContext(ctx))
-}
-
-var _ gas.Service = (*gasService)(nil)
-
-type gasService struct{ gs gas.Service }
-
-func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
-	return g.gs.GetGasMeter(getParentContext(ctx))
-}
-
-func (g gasService) GetBlockGasMeter(ctx context.Context) gas.Meter {
-	return g.gs.GetBlockGasMeter(getParentContext(ctx))
-}
-
-func (g gasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.Context {
-	v := getCtx(ctx)
-	v.parentContext = g.gs.WithGasMeter(v.parentContext, meter)
-	return context.WithValue(v.parentContext, contextKey{}, v)
-}
-
-func (g gasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) context.Context {
-	v := getCtx(ctx)
-	v.parentContext = g.gs.WithBlockGasMeter(v.parentContext, meter)
-	return addCtx(v.parentContext, v)
-}
-
-func getParentContext(ctx context.Context) context.Context { return getCtx(ctx).parentContext }

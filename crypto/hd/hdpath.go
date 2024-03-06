@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/big"
 	"path/filepath"
@@ -88,7 +89,7 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 	}
 
 	if !(change == 0 || change == 1) {
-		return nil, fmt.Errorf("change field can only be 0 or 1")
+		return nil, errors.New("change field can only be 0 or 1")
 	}
 
 	return &BIP44Params{

@@ -8,13 +8,14 @@ import (
 
 	authsign "cosmossdk.io/x/auth/signing"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func TestGetSignBytesAdapterNoPublicKey(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	txConfig := encodingConfig.TxConfig
 	_, _, addr := testdata.KeyTestPubAddr()
 	signerData := authsign.SignerData{

@@ -22,7 +22,7 @@ type Server struct {
 	logger            log.Logger
 	GRPCSrv           *grpc.Server
 	GRPCGatewayRouter *runtime.ServeMux
-	cfg               Config
+	config            Config
 }
 
 // New creates a new gRPC-gateway server.
@@ -49,7 +49,7 @@ func New(logger log.Logger, grpcSrv *grpc.Server, cfg Config, ir jsonpb.AnyResol
 			// GRPC metadata
 			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
 		),
-		cfg: cfg,
+		config: cfg,
 	}
 }
 
@@ -71,7 +71,7 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 // Register implements registers a grpc-gateway server
 func (s *Server) Register(r mux.Router) error {
 	// configure grpc-gatway server
-	if s.cfg.Enable {
+	if s.config.Enable {
 		r.PathPrefix("/").Handler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			// Fall back to grpc gateway server.
 			s.GRPCGatewayRouter.ServeHTTP(w, req)

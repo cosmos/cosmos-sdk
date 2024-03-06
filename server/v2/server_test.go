@@ -1,7 +1,6 @@
 package serverv2_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,46 +8,59 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/core/appmanager"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 )
 
-type grpcClientCtx struct {
-	interfaceRegistry codectypes.InterfaceRegistry
+type mockGRPCService struct {
+	grpc.GRPCService
 }
 
-func (c *grpcClientCtx) InterfaceRegistry() appmanager.InterfaceRegistry {
-	return c.interfaceRegistry
-}
+func (m *mockGRPCService) RegisterGRPCServer(gogogrpc.Server) {}
 
 func TestServer(t *testing.T) {
-	log := log.NewLogger(os.Stdout)
-	interfaceRegistry := &grpcClientCtx{codectypes.NewInterfaceRegistry()}
+	logger := log.NewLogger(os.Stdout)
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
 
 	// TODO we need to have the server gets the latest config
-	grpcServer, err := grpc.New(interfaceRegistry, log, nil)
+	grpcServer, err := grpc.New(logger, interfaceRegistry, &mockGRPCService{})
 	if err != nil {
-		panic(err)
+		t.Log(err)
+		t.Fail()
 	}
 
 	server := serverv2.NewServer(
-		log,
+		logger,
 		grpcServer,
 	)
 
 	currentDir, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		t.Log(err)
+		t.Fail()
 	}
 
 	configPath := filepath.Join(currentDir, "app.toml")
 
 	// write config
 	if err := server.WriteConfig(configPath); err != nil {
-		panic(err)
+		t.Log(err)
+		t.Fail()
 	}
 
 	// read config
-	v := server.Config(configPath)
-	fmt.Println(v)
+	v, err := server.Config(configPath)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	if v == nil {
+		t.Log("config is nil")
+		t.FailNow()
+	}
+
+	if v.GetString(grpcServer.Name()+".address") != grpc.DefaultConfig().Address {
+		t.Logf("config is not equal: %v", v)
+		t.Fail()
+	}
 }

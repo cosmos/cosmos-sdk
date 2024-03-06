@@ -8,7 +8,6 @@ import (
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
@@ -19,11 +18,6 @@ import (
 	"cosmossdk.io/server/v2/core/appmanager"
 )
 
-type ClientContext interface {
-	// InterfaceRegistry returns the InterfaceRegistry.
-	InterfaceRegistry() appmanager.InterfaceRegistry
-}
-
 type GRPCServer struct {
 	logger log.Logger
 
@@ -32,18 +26,17 @@ type GRPCServer struct {
 }
 
 type GRPCService interface {
-	// RegisterGRPCServer registers gRPC services directly with the gRPC
-	// server.
+	// RegisterGRPCServer registers gRPC services directly with the gRPC server.
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
 // New returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
-func New(clientCtx ClientContext, logger log.Logger, app GRPCService, v *viper.Viper) (GRPCServer, error) {
-	cfg := readConfig(v)
+func New(logger log.Logger, interfaceRegistry appmanager.InterfaceRegistry, app GRPCService) (GRPCServer, error) {
+	cfg := DefaultConfig() // TODO get the config from the server
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(clientCtx.InterfaceRegistry()).GRPCCodec()),
+		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 	)
@@ -57,7 +50,7 @@ func New(clientCtx ClientContext, logger log.Logger, app GRPCService, v *viper.V
 	return GRPCServer{
 		grpcSrv: grpcSrv,
 		config:  cfg,
-		logger:  logger.With("module", "grpc-server"),
+		logger:  logger.With(log.ModuleKey, "grpc-server"),
 	}, nil
 }
 
@@ -96,24 +89,11 @@ func (g GRPCServer) Stop(ctx context.Context) error {
 }
 
 func (g GRPCServer) Config() any {
-	if g.config == nil {
+	if g.config == nil || g.config == (&Config{}) {
 		return DefaultConfig()
 	}
 
 	return g.config
-}
-
-func readConfig(v *viper.Viper) *Config {
-	var err error
-	cfg := &Config{}
-	if v != nil {
-		err = v.Unmarshal(cfg)
-	}
-	if cfg == nil || err != nil {
-		cfg = DefaultConfig()
-	}
-
-	return cfg
 }
 
 type protoCodec struct {

@@ -21,7 +21,10 @@ func Commands(homePath string, modules ...Module) (CLIConfig, error) {
 	}
 
 	server := NewServer(log.NewLogger(os.Stdout), modules...)
-	v := server.Config(filepath.Join(homePath, "config"))
+	v, err := server.Config(filepath.Join(homePath, "config"))
+	if err != nil {
+		return CLIConfig{}, fmt.Errorf("failed to read config: %w", err)
+	}
 
 	startCmd := &cobra.Command{
 		Use:   "start",

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -104,26 +105,28 @@ func (s *Server) CLICommands() CLIConfig {
 }
 
 // Configs returns a viper instance of the config file
-func (s *Server) Config(configPath string) *viper.Viper {
+func (s *Server) Config(configPath string) (*viper.Viper, error) {
 	v := viper.New()
 	v.SetConfigFile(configPath)
-	v.SetConfigName("app")
 	v.SetConfigType("toml")
-	v.ReadInConfig()
-	// v.OnConfigChange(func(e fsnotify.Event) {
-	// 	if e.Op == fsnotify.Write {
-	// 		srvName := s.Name()
 
-	// 		s.logger.Info("config file changed", "path", e.Name)
-	// 		// TODO(@julienrbrt): find a propoer way to reload a module independently of the other modules.
-	// 		if err := s.Reload(context.Background(), srvName); err != nil {
-	// 			s.logger.Error(fmt.Sprintf("failed to reload %s server", srvName), "err", err)
-	// 		}
-	// 	}
-	// })
+	if err := v.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
+	}
+
+	v.OnConfigChange(func(e fsnotify.Event) {
+		if e.Op == fsnotify.Write {
+			srvName := s.Name()
+			s.logger.Info("config file changed", "path", e.Name, "server", srvName)
+			// 		// TODO(@julienrbrt): find a propoer way to reload a module independently of the other modules.
+			// 		if err := s.Reload(context.Background(), srvName); err != nil {
+			// 			s.logger.Error(fmt.Sprintf("failed to reload %s server", srvName), "err", err)
+			// 		}
+		}
+	})
 	v.WatchConfig()
 
-	return v
+	return v, nil
 }
 
 // WriteConfig writes the config to the given path.

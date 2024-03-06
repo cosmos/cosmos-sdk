@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -22,7 +23,7 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := testutil.MakeTestEncodingConfig().Codec
+	cdc := testutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	dec := simulation.NewDecodeStore(cdc)
 
 	oneIntBz, err := math.OneInt().Marshal()

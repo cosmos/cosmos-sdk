@@ -33,12 +33,12 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -83,9 +83,7 @@ type HasAminoCodec interface {
 }
 
 // HasRegisterInterfaces is the interface for modules to register their msg types.
-type HasRegisterInterfaces interface {
-	RegisterInterfaces(types.InterfaceRegistry)
-}
+type HasRegisterInterfaces appmodule.HasRegisterInterfaces
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
 type HasGRPCGateway interface {
@@ -317,9 +315,9 @@ func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (m *Manager) RegisterInterfaces(registry types.InterfaceRegistry) {
+func (m *Manager) RegisterInterfaces(registry registry.LegacyRegistry) {
 	for _, b := range m.Modules {
-		if mod, ok := b.(HasRegisterInterfaces); ok {
+		if mod, ok := b.(appmodule.HasRegisterInterfaces); ok {
 			mod.RegisterInterfaces(registry)
 		}
 	}

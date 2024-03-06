@@ -10,10 +10,10 @@ import (
 	reflect "reflect"
 
 	appmodule "cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	types "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
-	types0 "github.com/cosmos/cosmos-sdk/codec/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
@@ -150,7 +150,7 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+func (m *MockAppModuleWithAllExtensions) RegisterInterfaces(arg0 registry.LegacyRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -332,7 +332,7 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+func (m *MockAppModuleWithAllExtensionsABCI) RegisterInterfaces(arg0 registry.LegacyRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }

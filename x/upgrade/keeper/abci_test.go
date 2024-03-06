@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -111,7 +112,7 @@ func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	t.Helper()
 	s := TestSuite{}
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModule{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
@@ -458,7 +459,7 @@ func TestBinaryVersion(t *testing.T) {
 func TestDowngradeVerification(t *testing.T) {
 	// could not use setupTest() here, because we have to use the same key
 	// for the two keepers.
-	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())

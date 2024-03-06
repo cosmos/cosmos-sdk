@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	appmodule "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/appmodule/v2"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -27,6 +27,9 @@ type HasBeginBlocker = appmodule.HasBeginBlocker
 // HasEndBlocker is the extension interface that modules should implement to run
 // custom logic after transaction processing in a block.
 type HasEndBlocker = appmodule.HasEndBlocker
+
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces = appmodule.HasRegisterInterfaces
 
 // HasServices is the extension interface that modules should implement to register
 // implementations of services defined in .proto files.

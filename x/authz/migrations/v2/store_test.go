@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -25,7 +26,7 @@ import (
 )
 
 func TestMigration(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{}, bank.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{}, bank.AppModule{})
 	cdc := encodingConfig.Codec
 
 	authzKey := storetypes.NewKVStoreKey("authz")

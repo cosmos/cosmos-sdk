@@ -9,6 +9,7 @@ import (
 	authsigning "cosmossdk.io/x/auth/signing"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
@@ -39,7 +40,7 @@ var (
 // client.TxBuilder created by the fee payer.
 func TestBuilderWithAux(t *testing.T) {
 	t.Skip("restore when we re-enable aux on the TX builder")
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 

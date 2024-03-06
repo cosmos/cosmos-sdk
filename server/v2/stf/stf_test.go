@@ -64,7 +64,8 @@ func TestSTF(t *testing.T) {
 
 	t.Run("basic tx", func(t *testing.T) {
 		result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
-			Txs: []mock.Tx{mockTx},
+			Txs:         []mock.Tx{mockTx},
+			MaxBlockGas: 200_000,
 		}, state)
 		require.NoError(t, err)
 		stateHas(t, newState, "validate")
@@ -97,7 +98,8 @@ func TestSTF(t *testing.T) {
 		}
 
 		result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
-			Txs: []mock.Tx{mockTx},
+			Txs:         []mock.Tx{mockTx},
+			MaxBlockGas: 200_000, // BLOCK HAS GAS!
 		}, state)
 		require.NoError(t, err)
 		stateNotHas(t, newState, "gas_failure") // assert during out of gas no state changes leaked.
@@ -171,6 +173,36 @@ func TestSTF(t *testing.T) {
 		stateHas(t, newState, "end-block")
 		stateNotHas(t, newState, "validate")
 		stateNotHas(t, newState, "exec")
+	})
+
+	t.Run("fail block out of gas", func(t *testing.T) {
+		t.Run("exec tx out of gas", func(t *testing.T) {
+			s := s.clone()
+
+			mockTx := mock.Tx{
+				Sender:   []byte("sender"),
+				Msg:      wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
+				GasLimit: 100_000,               // TX with gas
+			}
+
+			// this handler will propagate the storage error back, we expect
+			// out of gas immediately at tx validation level.
+			s.doTxValidation = func(ctx context.Context, tx mock.Tx) error {
+				w, err := ctx.(*executionContext).state.GetWriter(actorName)
+				require.NoError(t, err)
+				err = w.Set([]byte("gas_failure"), []byte{})
+				require.Error(t, err)
+				return err
+			}
+
+			result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+				Txs:         []mock.Tx{mockTx},
+				MaxBlockGas: 10, // BLOCK WITHOUT GAS
+			}, state)
+			require.NoError(t, err)
+			stateNotHas(t, newState, "gas_failure") // assert during out of gas no state changes leaked.
+			require.ErrorIs(t, result.TxResults[0].Error, coregas.ErrOutOfGas)
+		})
 	})
 }
 

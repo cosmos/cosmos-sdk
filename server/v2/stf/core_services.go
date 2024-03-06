@@ -54,6 +54,8 @@ func NewGasMeterService() gas.Service {
 
 type gasService struct{}
 
+func (g gasService) GetGasConfig(ctx context.Context) gas.GasConfig { panic("impl") }
+
 func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
 	return ctx.(*executionContext).meter
 }

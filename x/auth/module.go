@@ -54,11 +54,9 @@ type AppModule struct {
 func (am AppModule) IsAppModule() {}
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, bankKeeper types.BankKeeper, feegrantKeeper ante.FeegrantKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
 		accountKeeper:     accountKeeper,
-		bankKeeper:        bankKeeper,
-		feegrantKeeper:    feegrantKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 	}
 }

@@ -46,7 +46,7 @@ import (
 // Deprecated: use the embed extension interfaces instead, when needed.
 type AppModuleBasic interface {
 	HasName
-	appmodule.HasRegisterInterfaces
+	HasRegisterInterfaces
 	HasGRPCGateway
 	HasAminoCodec
 }
@@ -58,7 +58,7 @@ type AppModule interface {
 	appmodule.AppModule
 
 	HasName
-	appmodule.HasRegisterInterfaces
+	HasRegisterInterfaces
 }
 
 // HasName allows the module to provide its own name for legacy purposes.
@@ -81,6 +81,9 @@ type HasGenesisBasics interface {
 type HasAminoCodec interface {
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 }
+
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces appmodule.HasRegisterInterfaces
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
 type HasGRPCGateway interface {

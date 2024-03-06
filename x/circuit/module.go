@@ -11,6 +11,9 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/x/circuit/ante"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
 
@@ -18,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -30,8 +34,9 @@ var (
 	_ module.HasRegisterInterfaces = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodulev2.AppModule = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ appmodulev2.AppModule                       = AppModule{}
+	_ appmodule.HasServices                       = AppModule{}
+	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
 )
 
 // AppModule implements an application module for the circuit module.
@@ -107,6 +112,25 @@ func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data j
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
+}
+
+// TxValidator implements appmodule.HasTxValidation.
+// It replaces auth ante handlers for server/v2
+func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// setup AnteDecorators
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewCircuitBreakerDecorator(&am.keeper),
+	}
+
+	// create the AnteHandler by chaining the AnteDecorators
+	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
+
+	// execute the AnteHandler
+	_, err := anteHandler(sdkCtx, runtime.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate)
+
+	return err
 }
 
 func RegisterPreMessageHooks(builder any) {

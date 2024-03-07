@@ -54,6 +54,11 @@ func NewGasMeterService() gas.Service {
 
 type gasService struct{}
 
+// GetGasConfig implements gas.Service.
+func (g gasService) GetGasConfig(ctx context.Context) gas.GasConfig {
+	panic("unimplemented")
+}
+
 func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
 	return ctx.(*executionContext).meter
 }

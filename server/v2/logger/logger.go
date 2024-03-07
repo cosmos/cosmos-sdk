@@ -7,20 +7,22 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	serverv2 "cosmossdk.io/server/v2"
 )
 
-// NewLogger creates a the default SDK logger.
+// New creates a the default SDK logger.
 // It reads the log level and format from the server context.
 func New(v *viper.Viper, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
-	if v.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
+	if v.GetString(serverv2.FlagLogFormat) == serverv2.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
 	}
+	opts = append(opts,
+		log.ColorOption(!v.GetBool(serverv2.FlagLogNoColor)),
+		log.TraceOption(v.GetBool(serverv2.FlagTrace)))
 
 	// check and set filter level or keys for the logger if any
-	logLvlStr := v.GetString(flags.FlagLogLevel)
+	logLvlStr := v.GetString(serverv2.FlagLogLevel)
 	if logLvlStr == "" {
 		return log.NewLogger(out, opts...), nil
 	}
@@ -39,8 +41,5 @@ func New(v *viper.Viper, out io.Writer) (log.Logger, error) {
 		opts = append(opts, log.LevelOption(logLvl))
 	}
 
-	// Check if the flag for trace logging is set and enable stack traces if so.
-	opts = append(opts, log.TraceOption(viper.GetBool("trace")))
-
-	return log.NewLogger(out, opts...).With(log.ModuleKey, "server"), nil
+	return log.NewLogger(out, opts...), nil
 }

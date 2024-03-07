@@ -175,6 +175,7 @@ replace (
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
 	cosmossdk.io/server/v2/core => ../../server/v2/core
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
+	cosmossdk.io/store/v2 => ../../store
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution

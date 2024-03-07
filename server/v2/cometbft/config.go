@@ -26,6 +26,7 @@ type Config struct {
 	Trace      bool   `mapstructure:"trace" toml:"trace"`
 
 	GrpcConfig grpc.Config
+
 	MempoolConfig
 	// CmtConfig *cmtcfg.Config
 }

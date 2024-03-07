@@ -10,14 +10,13 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -29,16 +28,16 @@ func init() {
 const ConsensusVersion uint64 = 3
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.HasGenesis            = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ module.HasAminoCodec            = AppModule{}
+	_ module.HasGRPCGateway           = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.HasGenesis               = AppModule{}
 
-	_ appmodulev2.AppModule     = AppModule{}
-	_ appmodule.HasPreBlocker   = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodulev2.HasMigrations = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasPreBlocker = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
 )
 
 // AppModule implements the sdk.AppModule interface
@@ -79,7 +78,7 @@ func (AppModule) GetTxCmd() *cobra.Command {
 }
 
 // RegisterInterfaces registers interfaces and implementations of the upgrade module.
-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	types.RegisterInterfaces(registry)
 }
 

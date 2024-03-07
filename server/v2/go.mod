@@ -3,11 +3,15 @@ module cosmossdk.io/server/v2
 go 1.21
 
 replace (
+	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
+	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/server/v2 => .
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/core => ./core
 	cosmossdk.io/server/v2/stf => ./stf
+	github.com/cosmos/cosmos-sdk => ./../.. // we should not import the sdk (!)
 )
 
 require (

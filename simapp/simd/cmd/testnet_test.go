@@ -16,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -46,7 +47,7 @@ func Test_TestnetCmd(t *testing.T) {
 	require.Len(t, moduleManager.Modules, 7)
 
 	home := t.TempDir()
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, staking.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, staking.AppModule{})
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)

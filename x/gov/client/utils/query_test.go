@@ -15,6 +15,7 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
@@ -54,7 +55,7 @@ func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*coretypes.R
 }
 
 func TestGetPaginatedVotes(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(gov.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, gov.AppModule{})
 
 	type testCase struct {
 		description string

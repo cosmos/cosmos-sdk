@@ -12,6 +12,7 @@ import (
 	cbtypes "cosmossdk.io/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,7 @@ func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	mockclientCtx := client.Context{}.
 		WithTxConfig(encCfg.TxConfig)
 

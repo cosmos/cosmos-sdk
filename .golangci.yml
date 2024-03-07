@@ -11,6 +11,7 @@ run:
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"
     - crypto/keys/secp256k1/internal/*
+    - types/coin_regex.go
 
 build-tags:
   - e2e

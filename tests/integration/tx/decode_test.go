@@ -30,6 +30,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -43,8 +44,8 @@ import (
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.
 func TestDecode(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		auth.AppModule{}, authzmodule.AppModule{}, bank.AppModule{}, consensus.AppModule{},
-		distribution.AppModule{}, evidence.AppModule{}, feegrantmodule.AppModule{},
+		codectestutil.CodecOptions{}, auth.AppModule{}, authzmodule.AppModule{}, bank.AppModule{},
+		consensus.AppModule{}, distribution.AppModule{}, evidence.AppModule{}, feegrantmodule.AppModule{},
 		gov.AppModule{}, groupmodule.AppModule{}, mint.AppModule{},
 		slashing.AppModule{}, staking.AppModule{}, upgrade.AppModule{}, vesting.AppModule{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino

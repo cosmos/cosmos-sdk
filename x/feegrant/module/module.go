@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
@@ -24,12 +25,12 @@ import (
 )
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.AppModuleSimulation   = AppModule{}
-	_ module.HasGenesis            = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ module.HasAminoCodec            = AppModule{}
+	_ module.HasGRPCGateway           = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.AppModuleSimulation      = AppModule{}
+	_ module.HasGenesis               = AppModule{}
 
 	_ appmodulev2.AppModule     = AppModule{}
 	_ appmodulev2.HasEndBlocker = AppModule{}
@@ -72,7 +73,7 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the feegrant module's interface types
-func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	feegrant.RegisterInterfaces(registry)
 }
 

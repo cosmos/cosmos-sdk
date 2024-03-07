@@ -7,7 +7,9 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
@@ -21,11 +23,11 @@ import (
 )
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.AppModuleSimulation   = AppModule{}
-	_ module.HasGenesis            = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ module.HasGRPCGateway           = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.AppModuleSimulation      = AppModule{}
+	_ module.HasGenesis               = AppModule{}
 
 	_ appmodulev2.AppModule = AppModule{}
 )
@@ -70,7 +72,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // RegisterInterfaces registers the nft module's interface types
-func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	nft.RegisterInterfaces(registry)
 }
 

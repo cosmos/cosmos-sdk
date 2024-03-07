@@ -5,22 +5,23 @@ package cosmos.app.v1alpha2;
 // ModuleBundleDescriptor is a descriptor for a bundle of modules packaged in a single compilation unit.
 message ModuleBundleDescriptor {
   // The modules provided in the bundle.
-  repeated ModuleDescriptor modules = 1;
+  repeated ModuleInitDescriptor modules = 1;
+
 }
 
-message ModuleDescriptor {
+message ModuleInitDescriptor {
   // module_name is the unique name of the module. It should generally refer to the name of
   // a proto type which defines the module's configuration.
   string module_name = 1;
 
   // The inputs to the module.
-  repeated Input inputs = 2;
+  repeated ModuleInput inputs = 2;
 
   // The outputs of the module.
-  repeated Output outputs = 3;
+  repeated ModuleOutput outputs = 3;
 }
 
-message Input {
+message ModuleInput {
   InputType input = 1;
   bool optional = 2;
 
@@ -38,22 +39,38 @@ message Input {
       // A dynamic proto client.
       DynamicProtoClient dynamic_proto_client = 4;
 
-      // specifies that the
+      // Specifies the module's configuration object as a dependency.
       bool module_config = 5;
     }
   }
 }
 
-message Output {
+message ModuleOutput {
   oneof type {
     // An implementation of a proto service.
-    ProtoService proto_service = 1;
+    ProtoService service = 1;
 
     // A handler for a single proto message.
-    ProtoMessageHandler proto_message_handler = 2;
+    ProtoMessageHandler message_handler = 2;
 
     // A store service implementation.
     StoreService store = 3;
+
+    // A handler for a proto message that will be called whenever an event of the specified type is emitted.
+    // These hooks can cancel the operation which emitted the event if they return an error.
+    ProtoMessageHandler event_hook = 4;
+
+    // A handler for a proto message that will be called before the specified message is handled by its
+    // actual handler. The order of such handlers must be defined at the runtime level.
+    // These handlers can cancel the operation if an error is returned.
+    ProtoMessageHandler pre_handler = 5;
+
+    // A handler for a proto message that will be called after the specified message is handled by its
+    // actual handler. The order of such handlers must be defined at the runtime level.
+    // In most cases, if you want to have a side effect for some action, you should actually use
+    // an event hook. Only use this if you know what you're doing.
+    // These handlers can cancel the operation if an error is returned.
+    ProtoMessageHandler post_handler = 6;
   }
 }
 
@@ -73,8 +90,9 @@ message ProtoService {
 // ProtoMessageHandler defines a client or server implementation of a proto message handler.
 //
 // For handler implementations, if the message defines cosmos.msg.v1.signer then it is
-// treated as a transaction handler. Otherwise it is treated as an event handler.
-// The proto message must be defined in a proto file in the module bundle's proto descriptors.
+// treated as a transaction handler. Otherwise it is treated as an internal message handler.
+// The proto message must be defined in a proto file in the module bundle's proto descriptors
+// or as part of a virtual_file_descriptor field somewhere in the module bundle.
 //
 // Clients will treat all messages as transaction messages.
 message ProtoMessageHandler {
@@ -83,6 +101,15 @@ message ProtoMessageHandler {
 
   // The encoding of the proto message.
   Encoding encoding = 2;
+
+  // The optional name of the response this handler returns if any. Note that using this method to define
+  // handlers makes it hard to coordinate the response type with clients, so actual service definitions
+  // should be preferred here.
+  string response_name = 3;
+
+  // An optional "virtual" proto file descriptor that can be used to dynamically declare a protobuf
+  // compatible type (say for instance in Rust structs), without actually defining a .proto file.
+  bytes virtual_file_descriptor = 4;
 }
 
 // StoreService specifies a client or server implementation of a store service.
@@ -99,7 +126,15 @@ message ProtoMessageHandler {
 // - ReverseIterate - same params as iterate
 // - IteratorNext - ctx is the return value of Iterate or ReverseIterate, p1 is the output key pointer, p2 is the output value pointer
 // - IteratorClose - ctx is the return value of Iterate or ReverseIterate, p1 and p2 are unused
+//
+// Unordered store services do not define any of of the iteration methods.
 message StoreService {
+  enum Type {
+    TYPE_ORDERED_DEFAULT = 0;
+    TYPE_UNORDERED = 1;
+  }
+
+  Type type = 1;
 }
 
 // A client which dynamically routes proto messages or invokes proto service methods
@@ -111,4 +146,24 @@ message DynamicProtoClient {
 // Encoding defines a module bundle's encoding. It is assumed that
 enum Encoding {
   ENCODING_ZERO_PB_UNSPECIFIED = 0;
+}
+
+message AccountHandlerDescriptor {
+  // handler_name is the unique name of this handler type as specified by
+  // its proto configuration object.
+  string handler_name = 1;
+
+  // The inputs to the account handler.
+  repeated AccountInput inputs = 2;
+
+  // The outputs of the account handler.
+  repeated AccountOutput outputs = 3;
+}
+
+message AccountInput {
+
+}
+
+message AccountOutput {
+
 }

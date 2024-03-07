@@ -15,6 +15,7 @@ import (
 	minttestutil "cosmossdk.io/x/mint/testutil"
 	"cosmossdk.io/x/mint/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +39,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger())

@@ -13,13 +13,14 @@ import (
 	groupmodule "cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/group/simulation"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(groupmodule.AppModule{}, bank.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, groupmodule.AppModule{}, bank.AppModule{})
 	cdc := encodingConfig.Codec
 
 	s := rand.NewSource(1)

@@ -12,16 +12,19 @@ In this section we describe the changes made in Cosmos SDK' SimApp.
 
 #### Client (`root.go`)
 
-The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.).
+The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.)
+and address bech32 prefixes (address and validator address).
 This is part of the work of abstracting the SDK from the global bech32 config.
 
-This means the address codecs must be provided in the `client.Context` in the application client (usually `root.go`).
+This means the address codecs and prefixes must be provided in the `client.Context` in the application client (usually `root.go`).
 
 ```diff
 clientCtx = clientCtx.
 + WithAddressCodec(addressCodec).
 + WithValidatorAddressCodec(validatorAddressCodec).
-+ WithConsensusAddressCodec(consensusAddressCodec)
++ WithConsensusAddressCodec(consensusAddressCodec).
++ WithAddressPrefix("cosmos").
++ WithValidatorPrefix("cosmosvaloper")
 ```
 
 **When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
@@ -148,10 +151,24 @@ Additionally, the `appmodule.Environment` interface is introduced to fetch diffe
 This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
 It needs to be passed into a module at instantiation. 
 
-`x/circuit` is used as an example.:
+`x/circuit` is used as an example:
 
 ```go
 app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey])), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
+```
+
+If your module requires a message server or query server, it should be passed in the environment as well.
+
+```diff
+-govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AuthKeeper, app.BankKeeper,app.StakingKeeper, app.PoolKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
++govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+```
+
+The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.LegacyRegistry` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.LegacyRegistry` interface.
+
+```diff
+-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
++func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 ```
 
 ##### Dependency Injection
@@ -209,6 +226,11 @@ Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group
 #### `x/gov`
 
 Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
+
+Gov v1beta1 proposal handler has been changed to take in a `context.Context` instead of `sdk.Context`.
+This change was made to allow legacy proposals to be compatible with server/v2.
+If you wish to migrate to server/v2, you should update your proposal handler to take in a `context.Context` and use services.
+On the other hand, if you wish to keep using baseapp, simply unwrap the sdk context in your proposal handler.
 
 #### `x/mint`
 

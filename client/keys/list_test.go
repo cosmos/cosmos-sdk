@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -39,7 +40,7 @@ func Test_runListCmd(t *testing.T) {
 	kbHome2 := t.TempDir()
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn, cdc)
 	assert.NilError(t, err)
 
@@ -92,7 +93,7 @@ func Test_runListCmd(t *testing.T) {
 func Test_runListKeyTypeCmd(t *testing.T) {
 	cmd := ListKeyTypesCmd()
 
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	kbHome := t.TempDir()
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 

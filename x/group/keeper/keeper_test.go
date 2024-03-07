@@ -24,6 +24,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -54,7 +55,7 @@ func (s *TestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(group.StoreKey)
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{}, bank.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, bank.AppModule{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 
 	// setup gomock and initialize some globally expected executions

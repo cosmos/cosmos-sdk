@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/x/feegrant/module"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -23,7 +24,7 @@ import (
 )
 
 func TestMigration(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 	cdc := encodingConfig.Codec
 	ac := addresscodec.NewBech32Codec("cosmos")
 

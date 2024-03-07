@@ -10,6 +10,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -56,8 +57,8 @@ type SignerProvider interface {
 }
 
 type InterfaceRegistry interface {
-	RegisterInterface(name string, iface any, impls ...gogoproto.Message)
-	RegisterImplementations(iface any, impls ...gogoproto.Message)
+	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
+	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
 }
 
 func NewKeeper(
@@ -90,7 +91,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env.HeaderService, env.GasService, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}

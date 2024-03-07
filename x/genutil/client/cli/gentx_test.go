@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -42,7 +43,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(genutil.AppModule{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(codectestutil.CodecOptions{}, genutil.AppModule{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).

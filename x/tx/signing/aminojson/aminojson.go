@@ -44,6 +44,7 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 		h.encoder = NewEncoder(EncoderOptions{
 			FileResolver: options.FileResolver,
 			TypeResolver: options.TypeResolver,
+			EnumAsString: false, // ensure enum as string is disabled
 		})
 	} else {
 		h.encoder = *options.Encoder

@@ -7,22 +7,22 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/params/keeper"
 	"cosmossdk.io/x/params/types/proposal"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.AppModuleSimulation   = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ module.HasAminoCodec            = AppModule{}
+	_ module.HasGRPCGateway           = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.AppModuleSimulation      = AppModule{}
 
 	_ appmodule.AppModule   = AppModule{}
 	_ appmodule.HasServices = AppModule{}
@@ -64,7 +64,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 }
 
 // RegisterInterfaces registers the module's interface types
-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	proposal.RegisterInterfaces(registry)
 }
 

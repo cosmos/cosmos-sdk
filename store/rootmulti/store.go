@@ -460,7 +460,7 @@ func (rs *Store) Commit() types.CommitID {
 	rs.removalMap = make(map[types.StoreKey]bool)
 
 	if err := rs.handlePruning(version); err != nil {
-		panic(err)
+		rs.logger.Info("pruning failed at height", version, "err", err)
 	}
 
 	return types.CommitID{

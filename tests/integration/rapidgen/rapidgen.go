@@ -218,11 +218,6 @@ var (
 		// upgrade
 		GenType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, GenOpts.WithDisallowNil()),
 		GenType(&upgradetypes.MsgCancelUpgrade{}, &upgradeapi.MsgCancelUpgrade{}, GenOpts),
-
-		// vesting
-		GenType(&vestingtypes.MsgCreateVestingAccount{}, &vestingapi.MsgCreateVestingAccount{}, GenOpts),
-		GenType(&vestingtypes.MsgCreatePermanentLockedAccount{}, &vestingapi.MsgCreatePermanentLockedAccount{}, GenOpts),
-		GenType(&vestingtypes.MsgCreatePeriodicVestingAccount{}, &vestingapi.MsgCreatePeriodicVestingAccount{}, GenOpts),
 	}
 	NonsignableTypes = []GeneratedType{
 		GenType(&authtypes.Params{}, &authapi.Params{}, GenOpts),

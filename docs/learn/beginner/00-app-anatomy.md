@@ -55,7 +55,7 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 * **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../../build/building-modules/06-keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
 * **A reference to an [`appCodec`](../advanced/05-encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../advanced/05-encoding.md).
 * **A reference to a [`legacyAmino`](../advanced/05-encoding.md) codec.** Some parts of the Cosmos SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicitly use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
-* **A reference to a [module manager](../../build/building-modules/01-module-manager.md#manager)** and a [basic module manager](../../build/building-modules/01-module-manager.md#basicmanager). The module manager is an object that contains a list of the application's modules. It facilitates operations related to these modules, like registering their [`Msg` service](../advanced/00-baseapp.md#msg-services) and [gRPC `Query` service](../advanced/00-baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
+* **A reference to a [module manager](../../build/building-modules/01-module-manager.md#manager)**. The module manager is an object that contains a list of the application's modules. It facilitates operations related to these modules, like registering their [`Msg` service](../advanced/00-baseapp.md#msg-services) and [gRPC `Query` service](../advanced/00-baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
@@ -73,7 +73,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/types/app.go#L6
 
 Here are the main actions performed by this function:
 
-* Instantiate a new [`codec`](../advanced/05-encoding.md) and initialize the `codec` of each of the application's modules using the [basic manager](../../build/building-modules/01-module-manager.md#basicmanager).
+* Instantiate a new [`codec`](../advanced/05-encoding.md) and initialize the `codec` of each of the application's modules using the module manager.
 * Instantiate a new application with a reference to a `baseapp` instance, a codec, and all the appropriate store keys.
 * Instantiate all the [`keeper`](#keeper) objects defined in the application's `type` using the `NewKeeper` function of each of the application's modules. Note that keepers must be instantiated in the correct order, as the `NewKeeper` of one module might require a reference to another module's `keeper`.
 * Instantiate the application's [module manager](../../build/building-modules/01-module-manager.md#manager) with the [`AppModule`](#application-module-interface) object of each of the application's modules.
@@ -165,7 +165,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/params/encoding
 
 ### Application Module Interface
 
-Modules must implement [interfaces](../../build/building-modules/01-module-manager.md#application-module-interfaces) defined in the Cosmos SDK, [`AppModuleBasic`](../../build/building-modules/01-module-manager.md#appmodulebasic) and [`AppModule`](../../build/building-modules/01-module-manager.md#appmodule). The former implements basic non-dependent elements of the module, such as the `codec`, while the latter handles the bulk of the module methods (including methods that require references to other modules' `keeper`s). Both the `AppModule` and `AppModuleBasic` types are, by convention, defined in a file called `module.go`.
+Modules must implement [interfaces](../../build/building-modules/01-module-manager.md#application-module-interfaces) defined in the Cosmos SDK and [`AppModule`](../../build/building-modules/01-module-manager.md#appmodule). `AppModule` handles the bulk of the module methods (including methods that require references to other modules' `keeper`s).  `AppModule` is, by convention, defined in a file called `module.go`.
 
 `AppModule` exposes a collection of useful methods on the module that facilitates the composition of modules into a coherent application. These methods are called from the [`module manager`](../../build/building-modules/01-module-manager.md#manager), which manages the application's collection of modules.
 
@@ -235,7 +235,7 @@ Generally, the [commands related to a module](../../build/building-modules/09-mo
 
 Each module can expose gRPC endpoints called [service methods](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition), which are defined in the [module's Protobuf `query.proto` file](#grpc-query-services). A service method is defined by its name, input arguments, and output response. The module then needs to perform the following actions:
 
-* Define a `RegisterGRPCGatewayRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+* (Optional) Define a `RegisterGRPCGatewayRoutes` method on `AppModule` to wire the client gRPC requests to the correct handler inside the module.
 * For each service method, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
 
 #### gRPC-gateway REST Endpoints

@@ -930,19 +930,6 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 	}
-
-	// Transaction with an unregistered message
-	{
-		txBuilder := suite.txConfig.NewTxBuilder()
-		err = txBuilder.SetMsgs(&testdata.MsgCreateDog{})
-		require.NoError(t, err)
-		tx := txBuilder.GetTx()
-
-		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
-		space, code, _ := errorsmod.ABCIInfo(err, false)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)
-	}
 }
 
 func TestABCI_TxGasLimits(t *testing.T) {
@@ -1817,7 +1804,10 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-			err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit)
+			ctx = ctx.WithBlockHeight(req.Height).WithChainID(bapp.ChainID())
+			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
+			ctx = ctx.WithCometInfo(info)
+			err := baseapp.ValidateVoteExtensions(ctx, valStore, req.LocalLastCommit)
 			if err != nil {
 				return nil, err
 			}
@@ -2124,7 +2114,10 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			txs := [][]byte{}
-			if err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, app.ChainID(), req.LocalLastCommit); err != nil {
+			ctx = ctx.WithBlockHeight(req.Height).WithChainID(app.ChainID())
+			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
+			ctx = ctx.WithCometInfo(info)
+			if err := baseapp.ValidateVoteExtensions(ctx, valStore, req.LocalLastCommit); err != nil {
 				return nil, err
 			}
 			// add all VE as txs (in a real scenario we would need to check signatures too)

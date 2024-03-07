@@ -1,12 +1,12 @@
 package types
 
 import (
+	"cosmossdk.io/core/registry"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/auth/vesting/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -27,7 +27,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterface associates protoName with AccountI and VestingAccount
 // Interfaces and creates a registry of it's concrete implementations
-func RegisterInterfaces(registry types.InterfaceRegistry) {
+func RegisterInterfaces(registry registry.LegacyRegistry) {
 	registry.RegisterInterface(
 		"cosmos.vesting.v1beta1.VestingAccount",
 		(*exported.VestingAccount)(nil),

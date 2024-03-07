@@ -5,19 +5,26 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/appmodule/v2"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
 // for extension interfaces. It provides no functionality itself, but is the
 // type that all valid app modules should provide so that they can be identified
 // by other modules (usually via depinject) as app modules.
-type AppModule interface {
-	// IsAppModule is a dummy method to tag a struct as implementing an AppModule.
-	IsAppModule()
+type AppModule = appmodule.AppModule
 
-	// IsOnePerModuleType is a dummy method to help depinject resolve modules.
-	IsOnePerModuleType()
+// HasMigrations is the extension interface that modules should implement to register migrations.
+type HasMigrations interface {
+	AppModule
+
+	// RegisterMigrations registers the module's migrations with the app's migrator.
+	RegisterMigrations(MigrationRegistrar) error
 }
+
+// HasConsensusVersion is the interface for declaring a module consensus version.
+type HasConsensusVersion = appmodule.HasConsensusVersion
 
 // HasServices is the extension interface that modules should implement to register
 // implementations of services defined in .proto files.
@@ -39,14 +46,6 @@ type HasServices interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
-// HasMigrations is the extension interface that modules should implement to register migrations.
-type HasMigrations interface {
-	AppModule
-
-	// RegisterMigrations registers the module's migrations with the app's migrator.
-	RegisterMigrations(MigrationRegistrar) error
-}
-
 // ResponsePreBlock represents the response from the PreBlock method.
 // It can modify consensus parameters in storage and signal the caller through the return value.
 // When it returns ConsensusParamsChanged=true, the caller must refresh the consensus parameter in the finalize context.
@@ -65,23 +64,14 @@ type HasPreBlocker interface {
 
 // HasBeginBlocker is the extension interface that modules should implement to run
 // custom logic before transaction processing in a block.
-type HasBeginBlocker interface {
-	AppModule
-
-	// BeginBlock is a method that will be run before transactions are processed in
-	// a block.
-	BeginBlock(context.Context) error
-}
+type HasBeginBlocker = appmodule.HasBeginBlocker
 
 // HasEndBlocker is the extension interface that modules should implement to run
 // custom logic after transaction processing in a block.
-type HasEndBlocker interface {
-	AppModule
+type HasEndBlocker = appmodule.HasEndBlocker
 
-	// EndBlock is a method that will be run after transactions are processed in
-	// a block.
-	EndBlock(context.Context) error
-}
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces = appmodule.HasRegisterInterfaces
 
 // MsgHandlerRouter is implemented by the runtime provider.
 type MsgHandlerRouter interface {

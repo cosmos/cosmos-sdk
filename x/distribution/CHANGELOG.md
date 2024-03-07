@@ -31,6 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19445](https://github.com/cosmos/cosmos-sdk/pull/19445) `appmodule.Environment` is received on the Keeper to get access to different application services
 * [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Use collections for `PreviousProposer` and `ValidatorSlashEvents`:
     * remove from `Keeper`: `GetPreviousProposerConsAddr`, `SetPreviousProposerConsAddr`, `GetValidatorHistoricalReferenceCount`, `GetValidatorSlashEvent`, `SetValidatorSlashEvent`.
 * [#16483](https://github.com/cosmos/cosmos-sdk/pull/16483) use collections for `DelegatorStartingInfo` state management:

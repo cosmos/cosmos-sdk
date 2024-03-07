@@ -1176,3 +1176,51 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 	// unbondingID comes from a global counter -> gaps in unbondingIDs are OK as long as every unbondingID is unique
 	require.Equal(uint64(2), resUnbonding.Entries[1].UnbondingId)
 }
+
+func (s *KeeperTestSuite) TestUndelegateWithDustShare() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	addrDels, valAddrs := createValAddrs(2)
+
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	// construct the validators[0] & slash 1stake
+	amt := math.NewInt(100)
+	validator := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
+	validator, _ = validator.AddTokensFromDel(amt)
+	validator = validator.RemoveTokens(math.NewInt(1))
+	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+
+	// first add a validators[0] to delegate too
+	bond1to1 := stakingtypes.NewDelegation(addrDels[0].String(), valAddrs[0].String(), math.LegacyNewDec(100))
+	require.NoError(keeper.SetDelegation(ctx, bond1to1))
+	resBond, err := keeper.Delegations.Get(ctx, collections.Join(addrDels[0], valAddrs[0]))
+	require.NoError(err)
+	require.Equal(bond1to1, resBond)
+
+	// second delegators[1] add a validators[0] to delegate
+	bond2to1 := stakingtypes.NewDelegation(addrDels[1].String(), valAddrs[0].String(), math.LegacyNewDec(1))
+	validator, delegatorShare := validator.AddTokensFromDel(math.NewInt(1))
+	bond2to1.Shares = delegatorShare
+	_ = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+	require.NoError(keeper.SetDelegation(ctx, bond2to1))
+	resBond, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[1], valAddrs[0]))
+	require.NoError(err)
+	require.Equal(bond2to1, resBond)
+
+	// check delegation state
+	delegations, err := keeper.GetValidatorDelegations(ctx, valAddrs[0])
+	require.NoError(err)
+	require.Equal(2, len(delegations))
+
+	// undelegate all delegator[0]'s delegate
+	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[0].String(), valAddrs[0].String(), sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(99))))
+	require.NoError(err)
+
+	// remain only delegator[1]'s delegate
+	delegations, err = keeper.GetValidatorDelegations(ctx, valAddrs[0])
+	require.NoError(err)
+	require.Equal(1, len(delegations))
+	require.Equal(delegations[0].DelegatorAddress, addrDels[1].String())
+}

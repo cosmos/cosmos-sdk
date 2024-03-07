@@ -384,7 +384,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.55.0
+golangci_version=v1.56.2
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:
@@ -425,7 +425,6 @@ proto-all: proto-format proto-lint proto-gen
 
 #? proto-gen: Generate Protobuf files
 proto-gen:
-	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protocgen.sh
 
 #? proto-swagger-gen: Generate Protobuf Swagger

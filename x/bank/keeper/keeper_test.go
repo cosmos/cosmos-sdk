@@ -27,6 +27,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -129,9 +130,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
-	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -140,12 +141,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx
 	suite.authKeeper = authKeeper
 	suite.bankKeeper = keeper.NewBaseKeeper(
+		env,
 		encCfg.Codec,
-		storeService,
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
-		log.NewNopLogger(),
 	)
 
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -300,15 +300,14 @@ func (suite *KeeperTestSuite) TestPrependSendRestriction() {
 }
 
 func (suite *KeeperTestSuite) TestGetAuthority() {
-	storeService := runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey))
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey)), log.NewNopLogger())
 	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
 		return keeper.NewBaseKeeper(
-			moduletestutil.MakeTestEncodingConfig().Codec,
-			storeService,
+			env,
+			moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec,
 			suite.authKeeper,
 			nil,
 			authority,
-			log.NewNopLogger(),
 		)
 	}
 

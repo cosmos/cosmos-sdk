@@ -39,7 +39,6 @@ func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddres
 		signingInfo = types.NewValidatorSigningInfo(
 			consStr,
 			blockHeight,
-			0,
 			time.Unix(0, 0),
 			false,
 			0,

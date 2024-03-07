@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -34,9 +35,7 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	distTxCmd.AddCommand(
-		NewWithdrawAllRewardsCmd(),
-	)
+	distTxCmd.AddCommand(NewWithdrawAllRewardsCmd())
 
 	return distTxCmd
 }
@@ -62,7 +61,7 @@ func NewWithdrawAllRewardsCmd() *cobra.Command {
 			// The transaction cannot be generated offline since it requires a query
 			// to get all the validators.
 			if clientCtx.Offline {
-				return fmt.Errorf("cannot generate tx in offline mode")
+				return errors.New("cannot generate tx in offline mode")
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)

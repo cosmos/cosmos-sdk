@@ -41,6 +41,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -87,7 +88,8 @@ func initFixture(tb testing.TB) *fixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, consensusparamtypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, evidence.AppModuleBasic{}).Codec
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, evidence.AppModule{})
+	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -104,8 +106,8 @@ func initFixture(tb testing.TB) *fixture {
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -117,12 +119,11 @@ func initFixture(tb testing.TB) *fixture {
 		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
-		log.NewNopLogger(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
@@ -131,7 +132,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(slashingKeeper.Hooks()))
 
-	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
+	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger()), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
@@ -142,13 +143,16 @@ func initFixture(tb testing.TB) *fixture {
 	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry())
 	evidenceModule := evidence.NewAppModule(*evidenceKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
-		authtypes.ModuleName:     authModule,
-		banktypes.ModuleName:     bankModule,
-		stakingtypes.ModuleName:  stakingModule,
-		slashingtypes.ModuleName: slashingModule,
-		evidencetypes.ModuleName: evidenceModule,
-	})
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName:     authModule,
+			banktypes.ModuleName:     bankModule,
+			stakingtypes.ModuleName:  stakingModule,
+			slashingtypes.ModuleName: slashingModule,
+			evidencetypes.ModuleName: evidenceModule,
+		})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
@@ -203,7 +207,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	consaddrStr, err := f.stakingKeeper.ConsensusAddressCodec().BytesToString(valpubkey.Address())
 	assert.NilError(t, err)
-	info := slashingtypes.NewValidatorSigningInfo(consaddrStr, f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	info := slashingtypes.NewValidatorSigningInfo(consaddrStr, f.sdkCtx.BlockHeight(), time.Unix(0, 0), false, int64(0))
 	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.sdkCtx, sdk.ConsAddress(valpubkey.Address()), info)
 	assert.NilError(t, err)
 	// handle a signature to set signing info
@@ -271,7 +275,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Time: time.Now()})
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithHeaderInfo(header.Info{Height: 1, Time: time.Now()})
 	populateValidators(t, f)
 
 	power := int64(100)
@@ -306,8 +310,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)
-	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1, Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
 
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
 

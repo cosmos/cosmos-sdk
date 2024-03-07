@@ -3,7 +3,7 @@ package counter
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -29,9 +29,7 @@ func NewAccount(d accountstd.Dependencies) (Account, error) {
 		Owner:          collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		Counter:        collections.NewItem(d.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
 		TestStateCodec: collections.NewItem(d.SchemaBuilder, TestStateCodecPrefix, "test_state_codec", codec.CollValue[counterv1.MsgTestDependencies](d.LegacyStateCodec)),
-		hs:             d.HeaderService,
 		addressCodec:   d.AddressCodec,
-		gs:             d.GasService,
 	}, nil
 }
 
@@ -71,7 +69,7 @@ func (a Account) IncreaseCounter(ctx context.Context, msg *counterv1.MsgIncrease
 		return nil, err
 	}
 	if !bytes.Equal(sender, owner) {
-		return nil, fmt.Errorf("sender is not the owner of the account")
+		return nil, errors.New("sender is not the owner of the account")
 	}
 	counter, err := a.Counter.Get(ctx)
 	if err != nil {
@@ -123,7 +121,7 @@ func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDepen
 	// test funds
 	funds := accountstd.Funds(ctx)
 	if len(funds) == 0 {
-		return nil, fmt.Errorf("expected funds")
+		return nil, errors.New("expected funds")
 	}
 
 	return &counterv1.MsgTestDependenciesResponse{

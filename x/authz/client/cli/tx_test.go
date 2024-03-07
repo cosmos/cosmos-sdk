@@ -16,12 +16,14 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/authz/client/cli"
 	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
+	authz "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -50,7 +52,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(bank.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(codectestutil.CodecOptions{}, bank.AppModule{}, authz.AppModule{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 
 	s.baseCtx = client.Context{}.

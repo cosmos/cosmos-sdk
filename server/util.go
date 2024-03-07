@@ -324,7 +324,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 }
 
 // add server commands
-func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFlags types.ModuleInitFlags) {
+func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], addStartFlags types.ModuleInitFlags) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
 		Aliases: []string{"cometbft", "tendermint"},
@@ -355,7 +355,7 @@ func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFl
 }
 
 // AddTestnetCreatorCommand allows chains to create a testnet from the state existing in their node's data directory.
-func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFlags types.ModuleInitFlags) {
+func AddTestnetCreatorCommand[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], addStartFlags types.ModuleInitFlags) {
 	testnetCreateCmd := InPlaceTestnetCreator(appCreator)
 	addStartFlags(testnetCreateCmd)
 	rootCmd.AddCommand(testnetCreateCmd)

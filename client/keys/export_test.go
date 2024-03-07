@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -19,7 +20,7 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	testCases := []struct {
 		name                  string
 		keyringBackend        string

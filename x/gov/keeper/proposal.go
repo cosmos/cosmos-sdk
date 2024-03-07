@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/gov/types"
@@ -38,7 +39,6 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		}
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	msgs := []string{} // will hold a string slice of all Msg type URLs.
 
 	// Loop through all messages and confirm that each has a handler and the gov module account as the only signer
@@ -83,10 +83,8 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, sdk.AccAddress(signers[0]).String())
 		}
 
-		// use the msg service router to see that there is a valid route for that message.
-		handler := k.router.Handler(msg)
-		if handler == nil {
-			return v1.Proposal{}, errorsmod.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
+		if err := k.environment.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrUnroutableProposalMsg, err.Error())
 		}
 
 		// Only if it's a MsgExecLegacyContent we try to execute the
@@ -98,14 +96,27 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		if !ok {
 			continue
 		}
-		cacheCtx, _ := sdkCtx.CacheContext()
-		if _, err := handler(cacheCtx, msg); err != nil {
-			if errors.Is(types.ErrNoProposalHandlerExists, err) {
-				return v1.Proposal{}, err
-			}
-			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalContent, err.Error())
+
+		content, err := v1.LegacyContentFromMessage(msg)
+		if err != nil {
+			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidProposalContent, "%+v", err)
 		}
 
+		// Ensure that the content has a respective handler
+		if !k.legacyRouter.HasRoute(content.ProposalRoute()) {
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
+		}
+
+		if err = k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+			handler := k.legacyRouter.GetRoute(content.ProposalRoute())
+			if err := handler(ctx, content); err != nil {
+				return types.ErrInvalidProposalContent.Wrapf("failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
+			}
+
+			return errors.New("we don't want to execute the proposal, we just want to check if it can be executed")
+		}); errors.Is(err, types.ErrInvalidProposalContent) {
+			return v1.Proposal{}, err
+		}
 	}
 
 	proposalID, err := k.ProposalID.Next(ctx)
@@ -113,7 +124,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
-	submitTime := sdkCtx.HeaderInfo().Time
+	submitTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*params.MaxDepositPeriod), metadata, title, summary, proposer, proposalType)
 	if err != nil {
 		return v1.Proposal{}, err
@@ -133,20 +144,19 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSubmitProposal,
-			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-			sdk.NewAttribute(types.AttributeKeyProposalMessages, strings.Join(msgs, ",")),
-		),
-	)
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeSubmitProposal,
+		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+		event.NewAttribute(types.AttributeKeyProposalMessages, strings.Join(msgs, ",")),
+	); err != nil {
+		return v1.Proposal{}, fmt.Errorf("failed to emit event: %w", err)
+	}
 
 	return proposal, nil
 }
 
 // CancelProposal will cancel proposal before the voting period ends
 func (k Keeper) CancelProposal(ctx context.Context, proposalID uint64, proposer string) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	proposal, err := k.Proposals.Get(ctx, proposalID)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -178,7 +188,7 @@ func (k Keeper) CancelProposal(ctx context.Context, proposalID uint64, proposer 
 
 	// Check proposal is not too far in voting period to be canceled
 	if proposal.VotingEndTime != nil {
-		currentTime := sdkCtx.HeaderInfo().Time
+		currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 
 		maxCancelPeriodRate := sdkmath.LegacyMustNewDecFromStr(params.ProposalCancelMaxPeriod)
 		maxCancelPeriod := time.Duration(float64(proposal.VotingEndTime.Sub(*proposal.VotingStartTime)) * maxCancelPeriodRate.MustFloat64()).Round(time.Second)
@@ -209,7 +219,7 @@ func (k Keeper) CancelProposal(ctx context.Context, proposalID uint64, proposer 
 		return err
 	}
 
-	k.Logger(ctx).Info(
+	k.Logger().Info(
 		"proposal is canceled by proposer",
 		"proposal", proposal.Id,
 		"proposer", proposal.Proposer,
@@ -243,8 +253,7 @@ func (k Keeper) DeleteProposal(ctx context.Context, proposalID uint64) error {
 
 // ActivateVotingPeriod activates the voting period of a proposal
 func (k Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Proposal) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	startTime := sdkCtx.HeaderInfo().Time
+	startTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	proposal.VotingStartTime = &startTime
 
 	params, err := k.Params.Get(ctx)
@@ -264,7 +273,7 @@ func (k Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Proposal) 
 			customMessageParams, err := k.MessageBasedParams.Get(ctx, sdk.MsgTypeURL(proposal.Messages[0]))
 			if err == nil {
 				votingPeriod = customMessageParams.VotingPeriod
-			} else if err != nil && !errors.Is(err, collections.ErrNotFound) {
+			} else if !errors.Is(err, collections.ErrNotFound) {
 				return err
 			}
 		}

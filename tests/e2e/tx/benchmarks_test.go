@@ -47,7 +47,7 @@ func BenchmarkTx(b *testing.B) {
 	val := s.network.GetValidators()[0]
 	txBuilder := mkTxBuilder(b, s)
 	// Convert the txBuilder to a tx.Tx.
-	protoTx, err := txBuilderToProtoTx(txBuilder)
+	protoTx, err := txBuilder.GetTx().(interface{ AsTx() (*tx.Tx, error) }).AsTx()
 	assert.NilError(b, err)
 	// Encode the txBuilder to txBytes.
 	txBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())

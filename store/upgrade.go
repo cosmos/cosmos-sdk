@@ -1,6 +1,6 @@
 package store
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 // StoreUpgrades defines a series of transformations to apply the RootStore upon
 // loading a version.

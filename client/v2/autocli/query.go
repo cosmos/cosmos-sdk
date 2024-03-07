@@ -111,6 +111,7 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
 	encoderOptions := aminojson.EncoderOptions{
 		Indent:          "  ",
+		EnumAsString:    true,
 		DoNotSortFields: true,
 		TypeResolver:    b.TypeResolver,
 		FileResolver:    b.FileResolver,

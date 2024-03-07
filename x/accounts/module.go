@@ -4,17 +4,16 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -51,13 +50,11 @@ type AppModule struct {
 
 func (m AppModule) IsAppModule() {}
 
-func (m AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+func (AppModule) Name() string { return ModuleName }
 
-func (m AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
+func (m AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, v1.MsgServiceDesc())
 }
-
-func (m AppModule) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // App module services
 
@@ -99,8 +96,6 @@ func (m AppModule) ExportGenesis(ctx context.Context, jsonCodec codec.JSONCodec)
 	}
 	return jsonCodec.MustMarshalJSON(gs)
 }
-
-func (AppModule) Name() string { return ModuleName }
 
 func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.TxCmd(ModuleName)

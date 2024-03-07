@@ -1,25 +1,17 @@
-## Module Bundle ABI
-
-A group of modules in a single compilation unit is called a module bundle.
-
-Module bundles expose the following functions (shown with Rust syntax for clarity):
-* `fn file_descriptor_set() -> Vec<u8>` - returns the proto file descriptor set of the module bundle, can be gzip or bzip2 compressed and the magic bytes of the compression format can be used to detect it.
-* `fn default_encoding() -> u32` (optional) - returns the default encoding of the module bundle as defined by the `Encoding` enum. If this function is not implemented, the default encoding is assumed to be ZeroPB.
-* `fn module_descriptors() -> Vec<u8>`- returns a byte array containing `ModuleBundleDescriptor` encoded with the default encoding. 
-* `fn init(init_data: Vec<u8) -> usize` - initializes the module bundle with the given init data and returns a handle to the router. The init data is the data that the module bundle needs to initialize itself. The return value is the handle to the router, which is an integer that is used to route messages to the module bundle.
-* `fn invoke(router_handle: usize, method: usize, context: usize, caller: usize, p1: *mut (), p2: *mut ()) -> usize` - routes a message handler. 
-Its exact implementation may vary a bit depending on the encoding used, but this signature assumes zeropb and fixed sized 64kb buffers. The `router_handle` parameter is the router returned by `init`, the `method` parameter is the method index, the `context` parameter is the context pointer, `caller` is the optional ID of the caller for authentication when methods use it, and the `p1` and `p2` parameters are generally the request and response points, but their use may depend on the method being invoked. The return value is the response code but its use may depend on the method being invoked.
-* `fn deinit(usize)` -> () - deinitializes the module bundle and frees the resources associated with it. The parameter is the router handle returned by `init`.
-* `alloc` and `free` as necessary for the encodings used - for zeropb, these functions always return single 64kb buffers.
-
-The host must define a single import function, `invoke_host` which has a very similar signature to invoke above and is used by modules to call methods routed by the host. The module bundle may be able to route some messages to other modules in the bundle without using the host, but only in the case when the interaction can be properly authorized (which is easy with queries, possible with proposed "internal" services, and more complex with messages where authentication is done via the signer field).
 
 ## Example Module
 
 ```rust
 // the module attribute specifies the services that the module provides
 // so that these can be used to generate the descriptor and router code
-#[module(services=[MsgServer, QueryServer, InternalServer, BeginBlocker])]
+#[module(services=[
+    MsgServer,
+    QueryServer,
+    InternalServer,
+    BeginBlocker,
+    Handler<SomeMsg>,
+    EventHook<SomeEvent>,
+])]
 struct Bank {
     // the module defines its dependencies as fields
     // and the module attribute uses this to generate
@@ -61,18 +53,14 @@ impl BeginBlocker for Bank {
     }
 }
 
-impl Bank {
-    // the handler attribute can be used to define a message handler that
-    // isn't part of a proto service
-    #[handler]
-    fn handle_some_msg(&self, ctx: &mut zeropb::Context, msg: &SomeMsg) -> zeropb::Result<()> {
+impl Handler<SomeMsg> for Bank {
+    fn handler(&self, ctx: &mut zeropb::Context, msg: &SomeMsg) -> zeropb::Result<()> {
         // ...
     }
-    
-    // the event_hook attribute can be used to define an event hook that
-    // is called whenever the specified event is emitted
-    #[event_hook]
-    fn handle_some_event(&self, ctx: &mut zeropb::Context, event: &SomeEvent) -> zeropb::Result<()> {
+}
+
+impl EventHook<SomeEvent> for Bank {
+    fn on_event(&self, ctx: &mut zeropb::Context, event: &SomeEvent) -> zeropb::Result<()> {
         // ...
     }
 }
@@ -86,7 +74,6 @@ impl Bank {
 
 This code would define all functions needed for the module bundle and expose them via WASM, FFI or some other mechanism
 depending on the target environment.
-
 
 ## ZeroInit
 
@@ -116,3 +103,19 @@ With this layout, the host can actually encode the whole `ModuleBundle` struct u
 `init` can return the same pointer which can be called by invoke directly. There is essentially zero initialization needed
 The host can cache the proto and module descriptors and even the value of the module bundle itself, so if this were
 used for WASM, the WASM module could be loaded and initialized with a single very quick call to the host.
+
+## Module Bundle ABI
+
+A group of modules in a single compilation unit is called a module bundle.
+
+Module bundles expose the following functions (shown with Rust syntax for clarity):
+* `fn file_descriptor_set() -> Vec<u8>` - returns the proto file descriptor set of the module bundle, can be gzip or bzip2 compressed and the magic bytes of the compression format can be used to detect it.
+* `fn default_encoding() -> u32` (optional) - returns the default encoding of the module bundle as defined by the `Encoding` enum. If this function is not implemented, the default encoding is assumed to be ZeroPB.
+* `fn module_descriptors() -> Vec<u8>`- returns a byte array containing `ModuleBundleDescriptor` encoded with the default encoding.
+* `fn init(init_data: Vec<u8) -> usize` - initializes the module bundle with the given init data and returns a handle to the router. The init data is the data that the module bundle needs to initialize itself. The return value is the handle to the router, which is an integer that is used to route messages to the module bundle.
+* `fn invoke(router_handle: usize, method: usize, context: usize, caller: usize, p1: *mut (), p2: *mut ()) -> usize` - routes a message handler.
+  Its exact implementation may vary a bit depending on the encoding used, but this signature assumes zeropb and fixed sized 64kb buffers. The `router_handle` parameter is the router returned by `init`, the `method` parameter is the method index, the `context` parameter is the context pointer, `caller` is the optional ID of the caller for authentication when methods use it, and the `p1` and `p2` parameters are generally the request and response points, but their use may depend on the method being invoked. The return value is the response code but its use may depend on the method being invoked.
+* `fn deinit(usize)` -> () - deinitializes the module bundle and frees the resources associated with it. The parameter is the router handle returned by `init`.
+* `alloc` and `free` as necessary for the encodings used - for zeropb, these functions always return single 64kb buffers.
+
+The host must define a single import function, `invoke_host` which has a very similar signature to invoke above and is used by modules to call methods routed by the host. The module bundle may be able to route some messages to other modules in the bundle without using the host, but only in the case when the interaction can be properly authorized (which is easy with queries, possible with proposed "internal" services, and more complex with messages where authentication is done via the signer field).

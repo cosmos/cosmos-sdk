@@ -36,6 +36,8 @@ pub use repeated::{Repeated, ScalarRepeated, RepeatedWriter, RepeatedIter, Scala
 mod context;
 mod result;
 mod code;
+mod server;
+mod module_id;
 
 pub use context::{Context};
 
@@ -44,6 +46,8 @@ pub use code::{Code};
 pub use client::{Connection, connection_invoke};
 
 pub use result::{Result, ok, err_code, err_msg};
+
+pub use module_id::{ModuleID};
 
 #[cfg(test)]
 mod tests {

@@ -19,9 +19,9 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 	consAddr2 := sdk.ConsAddress(sdk.AccAddress([]byte("addr2_______________")))
 
-	info1 := types.NewValidatorSigningInfo(consAddr1, int64(4), int64(3),
+	info1 := types.NewValidatorSigningInfo(consAddr1, int64(4),
 		time.Now().UTC().Add(100000000000), false, int64(10))
-	info2 := types.NewValidatorSigningInfo(consAddr2, int64(5), int64(4),
+	info2 := types.NewValidatorSigningInfo(consAddr2, int64(5),
 		time.Now().UTC().Add(10000000000), false, int64(10))
 
 	keeper.SetValidatorSigningInfo(ctx, consAddr1, info1)

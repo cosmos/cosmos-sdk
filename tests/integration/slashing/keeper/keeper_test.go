@@ -58,9 +58,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.slashingKeeper.SetParams(ctx, testutil.TestParams())
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 5, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
 
-	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3),
+	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4),
 		time.Unix(2, 0), false, int64(10))
-	info2 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4),
+	info2 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5),
 		time.Unix(2, 0), false, int64(10))
 
 	s.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), info1)
@@ -169,7 +169,6 @@ func (s *KeeperTestSuite) TestHandleNewValidator() {
 	info, found := s.slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	s.Require().True(found)
 	s.Require().Equal(s.slashingKeeper.SignedBlocksWindow(ctx)+1, info.StartHeight)
-	s.Require().Equal(int64(2), info.IndexOffset)
 	s.Require().Equal(int64(1), info.MissedBlocksCounter)
 	s.Require().Equal(time.Unix(0, 0).UTC(), info.JailedUntil)
 
@@ -308,7 +307,6 @@ func (s *KeeperTestSuite) TestValidatorDippingInAndOut() {
 	s.Require().True(found)
 	s.Require().Equal(int64(700), signInfo.StartHeight)
 	s.Require().Equal(int64(0), signInfo.MissedBlocksCounter)
-	s.Require().Equal(int64(0), signInfo.IndexOffset)
 
 	// some blocks pass
 	height = int64(5000)

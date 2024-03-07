@@ -16,7 +16,6 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
 		consAddr,
 		ctx.BlockHeight(),
-		int64(3),
 		time.Unix(2, 0),
 		false,
 		int64(10),
@@ -29,7 +28,7 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	info, found := keeper.GetValidatorSigningInfo(ctx, consAddr)
 	require.True(found)
 	require.Equal(info.StartHeight, ctx.BlockHeight())
-	require.Equal(info.IndexOffset, int64(3))
+	require.Equal(info.IndexOffset, int64(0))
 	require.Equal(info.JailedUntil, time.Unix(2, 0).UTC())
 	require.Equal(info.MissedBlocksCounter, int64(10))
 

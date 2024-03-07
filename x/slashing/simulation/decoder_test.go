@@ -29,7 +29,7 @@ func TestDecodeStore(t *testing.T) {
 	depinject.Inject(testutil.AppConfig, &cdc)
 	dec := simulation.NewDecodeStore(cdc)
 
-	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
+	info := types.NewValidatorSigningInfo(consAddr1, 0, time.Now().UTC(), false, 0)
 	missed := []byte{1} // we want to display the bytes for simulation diffs
 	bz, err := cdc.MarshalInterface(delPk1)
 	require.NoError(t, err)

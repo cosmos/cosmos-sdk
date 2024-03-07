@@ -1,0 +1,22 @@
+// Since: cosmos-sdk 0.46
+syntax = "proto3";
+
+package cosmos.epochs.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/epochs/v1beta1/genesis.proto";
+
+option go_package = "cosmossdk.io/x/epochs/types";
+
+// EventCreateGroup is an event emitted when a group is created.
+message EventEpochEnd {
+
+  int64 epoch_number = 1;
+}
+
+// EventUpdateGroup is an event emitted when a group is updated.
+message EventEpochStart {
+
+  int64 epoch_number     = 1;
+  int64 epoch_start_time = 2;
+}

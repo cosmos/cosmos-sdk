@@ -89,7 +89,7 @@ func KVStoreHandler(storeKey storetypes.StoreKey) bam.MsgServiceHandler {
 	}
 }
 
-// KV basic kv structure
+// KV is a basic kv structure
 type KV struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`

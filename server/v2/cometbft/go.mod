@@ -4,6 +4,11 @@ go 1.21
 
 replace (
 	cosmossdk.io/core => ../../../core
+	github.com/cosmos/cosmos-sdk => ../../../
+	cosmossdk.io/x/accounts => ../../../x/accounts
+	cosmossdk.io/x/bank => ../../../x/bank
+	cosmossdk.io/x/staking => ../../../x/staking
+	cosmossdk.io/x/auth => ../../../x/auth
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
 	cosmossdk.io/server/v2/core => ../core
@@ -14,6 +19,7 @@ replace (
 )
 
 require (
+	cosmossdk.io/api v0.7.3
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1
 	cosmossdk.io/api v0.7.3
 	cosmossdk.io/core v0.12.0
@@ -30,6 +36,7 @@ require (
 )
 
 require (
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect

@@ -14,14 +14,15 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"cosmossdk.io/core/registry"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described
 // in `sd` into the registry.
-func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc) {
+func RegisterMsgServiceDesc(registry registry.LegacyRegistry, sd *grpc.ServiceDesc) {
 	fdBytesUnzipped := unzip(proto.FileDescriptor(sd.Metadata.(string)))
 	if fdBytesUnzipped == nil {
 		panic(fmt.Errorf("error unzipping file description for MsgService %s", sd.ServiceName))

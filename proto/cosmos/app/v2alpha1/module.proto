@@ -2,39 +2,113 @@ syntax = "proto3";
 
 package cosmos.app.v1alpha2;
 
-message BundleDescriptor {
-  bytes file_descriptor_set = 1;
-  repeated ModuleDescriptor modules = 2;
+// ModuleBundleDescriptor is a descriptor for a bundle of modules packaged in a single compilation unit.
+message ModuleBundleDescriptor {
+  // The modules provided in the bundle.
+  repeated ModuleDescriptor modules = 1;
 }
 
 message ModuleDescriptor {
+  // module_name is the unique name of the module. It should generally refer to the name of
+  // a proto type which defines the module's configuration.
   string module_name = 1;
+
+  // The inputs to the module.
   repeated Input inputs = 2;
+
+  // The outputs of the module.
   repeated Output outputs = 3;
 }
 
 message Input {
-  ServiceDescriptor service = 1;
+  InputType input = 1;
   bool optional = 2;
-}
 
-message Output {
-  ServiceDescriptor service = 1;
-}
+  message InputType {
+    oneof type {
+      // A client to a proto service.
+      ProtoMessageHandler proto_service = 1;
 
-message ServiceDescriptor {
-  oneof service_type {
-    ProtoServiceDescriptor proto = 1;
+      // A client that routes a single proto message to a handler.
+      ProtoService proto_message_handler = 2;
+
+      // A store client.
+      StoreService store = 3;
+
+      // A dynamic proto client.
+      DynamicProtoClient dynamic_proto_client = 4;
+
+      // specifies that the
+      bool module_config = 5;
+    }
   }
 }
 
-message ProtoServiceDescriptor {
-  string service_name = 1;
-  Encoding encoding = 2;
-  repeated string methods = 3;
+message Output {
+  oneof type {
+    // An implementation of a proto service.
+    ProtoService proto_service = 1;
+
+    // A handler for a single proto message.
+    ProtoMessageHandler proto_message_handler = 2;
+
+    // A store service implementation.
+    StoreService store = 3;
+  }
 }
 
+// ProtoService defines a client or server implementation of a proto service.
+// The service must be defined in a proto file
+// in the module bundle's proto descriptors. Methods are assumed to be
+// defined in the order declared in proto file.
+message ProtoService {
+  // The name of the proto service.
+  string name = 1;
+
+  // The encoding used for request and response messages.
+  Encoding encoding = 2;
+}
+
+
+// ProtoMessageHandler defines a client or server implementation of a proto message handler.
+//
+// For handler implementations, if the message defines cosmos.msg.v1.signer then it is
+// treated as a transaction handler. Otherwise it is treated as an event handler.
+// The proto message must be defined in a proto file in the module bundle's proto descriptors.
+//
+// Clients will treat all messages as transaction messages.
+message ProtoMessageHandler {
+  // The name of the proto message.
+  string name = 1;
+
+  // The encoding of the proto message.
+  Encoding encoding = 2;
+}
+
+// StoreService specifies a client or server implementation of a store service.
+// It is not defined as a proto service because this will involve a separate encoding
+// step which makes interaction with the store unnecessarily less efficient.
+//
+// Store services define the following unary methods which use the module bundles invoke function in the following ways:
+// - Get - p1 is the key, and p2 is the value output
+// - Set - p1 is the key, and p2 is the value input
+// - Delete - p1 is the key, p2 is unused
+// - Has - p1 is the key, p2 is unused
+// - Iterate - p1 is the start key, p2 is the end key, and the return value is either an error code or the context pointer
+//   to be used for iteration
+// - ReverseIterate - same params as iterate
+// - IteratorNext - ctx is the return value of Iterate or ReverseIterate, p1 is the output key pointer, p2 is the output value pointer
+// - IteratorClose - ctx is the return value of Iterate or ReverseIterate, p1 and p2 are unused
+message StoreService {
+}
+
+// A client which dynamically routes proto messages or invokes proto service methods
+// based on the message or method name.
+message DynamicProtoClient {
+  Encoding encoding = 1;
+}
+
+// Encoding defines a module bundle's encoding. It is assumed that
 enum Encoding {
-  ENCODING_PROTO_BINARY_UNSPECIFIED = 0;
-  ENCODING_ZEROPB = 1;
+  ENCODING_ZERO_PB_UNSPECIFIED = 0;
 }

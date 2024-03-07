@@ -37,7 +37,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorMissedBlockBitArrayKey",
 			v1.ValidatorMissedBlockBitArrayKey(consAddr, 2),
-			types.ValidatorMissedBlockBitArrayKey(consAddr, 2),
+			v2.ValidatorMissedBlockBitArrayKey(consAddr, 2),
 		},
 		{
 			"AddrPubkeyRelationKey",

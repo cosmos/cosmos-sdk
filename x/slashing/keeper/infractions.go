@@ -46,17 +46,31 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx sdk.Context, params types
 	// Update signed block bit array & counter
 	// This counter just tracks the sum of the bit array
 	// That way we avoid needing to read/write the whole array each time
-	previous := k.GetValidatorMissedBlockBitArray(ctx, consAddr, index)
+	previous, err := k.GetMissedBlockBitmapValue(ctx, consAddr, index)
+	if err != nil {
+		panic(fmt.Sprintf("Expected to get missed block bitmap value for validator %s at index %d but not found, error: %v", consAddr, index, err))
+	}
+
 	missed := !signed
 	switch {
 	case !previous && missed:
-		// Array value has changed from not missed to missed, increment counter
-		k.SetValidatorMissedBlockBitArray(ctx, consAddr, index, true)
+		// Bitmap value has changed from not missed to missed, so we flip the bit
+		// and increment the counter.
+		if err := k.SetMissedBlockBitmapValue(ctx, consAddr, index, true); err != nil {
+			panic(fmt.Sprintf("Expected to set missed block bitmap value for validator %s at index %d but not found, error: %v", consAddr, index, err))
+		}
+
 		signInfo.MissedBlocksCounter++
+
 	case previous && !missed:
-		// Array value has changed from missed to not missed, decrement counter
-		k.SetValidatorMissedBlockBitArray(ctx, consAddr, index, false)
+		// Bitmap value has changed from missed to not missed, so we flip the bit
+		// and decrement the counter.
+		if err := k.SetMissedBlockBitmapValue(ctx, consAddr, index, false); err != nil {
+			panic(fmt.Sprintf("Expected to set missed block bitmap value for validator %s at index %d but not found, error: %v", consAddr, index, err))
+		}
+
 		signInfo.MissedBlocksCounter--
+
 	default:
 		// Array value at this index has not changed, no need to update counter
 	}
@@ -115,7 +129,10 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx sdk.Context, params types
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0
-			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
+			err = k.DeleteMissedBlockBitmap(ctx, consAddr)
+			if err != nil {
+				panic(fmt.Sprintf("Expected to delete missed block bitmap for validator %s but not found, error: %v", consAddr, err))
+			}
 
 			logger.Info(
 				"slashing and jailing validator due to liveness fault",

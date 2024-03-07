@@ -34,7 +34,9 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 			panic(err)
 		}
 		for _, missed := range array.MissedBlocks {
-			keeper.SetValidatorMissedBlockBitArray(ctx, address, missed.Index, missed.Missed)
+			if err := keeper.SetMissedBlockBitmapValue(ctx, address, missed.Index, missed.Missed); err != nil {
+				panic(err)
+			}
 		}
 	}
 
@@ -57,7 +59,10 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 			ValidatorSigningInfo: info,
 		})
 
-		localMissedBlocks := keeper.GetValidatorMissedBlocks(ctx, address)
+		localMissedBlocks, err := keeper.GetValidatorMissedBlocks(ctx, address)
+		if err != nil {
+			panic(err)
+		}
 
 		missedBlocks = append(missedBlocks, types.ValidatorMissedBlocks{
 			Address:      bechAddr,

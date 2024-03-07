@@ -28,7 +28,7 @@ require (
 	github.com/cosmos/ledger-cosmos-go v0.13.3
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.3
+	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/gorilla/handlers v1.5.2
@@ -59,7 +59,7 @@ require (
 	golang.org/x/sync v0.6.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240205150955-31a09d347014
 	google.golang.org/grpc v1.62.0
-	google.golang.org/protobuf v1.32.0
+	google.golang.org/protobuf v1.33.0
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 	sigs.k8s.io/yaml v1.4.0

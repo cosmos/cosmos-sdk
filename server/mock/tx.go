@@ -16,7 +16,7 @@ import (
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-// KVStoreTx an sdk.Tx which is its own sdk.Msg.
+// KVStoreTx is an sdk.Tx which is its own sdk.Msg.
 type KVStoreTx struct {
 	key     []byte
 	value   []byte

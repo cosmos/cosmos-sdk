@@ -56,10 +56,6 @@ require (
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/storage v1.36.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -285,4 +281,5 @@ replace (
 	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
 	cosmossdk.io/server/v2/core => ../server/v2/core
 	cosmossdk.io/server/v2/stf => ../server/v2/stf
+	cosmossdk.io/store/v2 => ../store
 )

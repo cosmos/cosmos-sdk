@@ -68,10 +68,6 @@ require (
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
-	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -198,6 +194,7 @@ replace (
 	cosmossdk.io/server/v2/appmanager => ./server/v2/appmanager
 	cosmossdk.io/server/v2/core => ./server/v2/core
 	cosmossdk.io/server/v2/stf => ./server/v2/stf
+	cosmossdk.io/store/v2 => ./store
 	cosmossdk.io/x/accounts => ./x/accounts
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank

@@ -11,6 +11,7 @@ replace (
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
 	cosmossdk.io/server/v2/core => ../../server/v2/core
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
+	cosmossdk.io/store/v2 => ../../store
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/auth => ../../x/auth
 	cosmossdk.io/x/authz => ../../x/authz
@@ -41,6 +42,7 @@ require (
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store v1.0.2
+	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.0
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.11

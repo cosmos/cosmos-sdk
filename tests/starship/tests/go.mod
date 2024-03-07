@@ -27,6 +27,7 @@ replace (
 	cosmossdk.io/server/v2/appmanager => ../../../server/v2/appmanager
 	cosmossdk.io/server/v2/core => ../../../server/v2/core
 	cosmossdk.io/server/v2/stf => ../../../server/v2/stf
+	cosmossdk.io/store/v2 => ../../../store
 )
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
@@ -78,10 +79,6 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/store v1.0.2 // indirect
 	cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130 // indirect
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000 // indirect

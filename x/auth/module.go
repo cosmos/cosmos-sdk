@@ -12,7 +12,6 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
@@ -162,7 +161,7 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	}
 
 	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
-	_, err := anteHandler(sdkCtx, runtime.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate)
+	_, err := anteHandler(sdkCtx, nil /** do not import runtime **/, sdkCtx.ExecMode() == sdk.ExecModeSimulate)
 	return err
 }
 

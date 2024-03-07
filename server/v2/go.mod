@@ -5,13 +5,12 @@ go 1.21
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../../x/tx
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/server/v2 => .
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/core => ./core
 	cosmossdk.io/server/v2/stf => ./stf
-	github.com/cosmos/cosmos-sdk => ./../.. // we should not import the sdk (!)
+	cosmossdk.io/x/tx => ../../x/tx
 )
 
 require (
@@ -33,6 +32,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.1.1
 	github.com/prometheus/client_golang v1.18.0
 	github.com/prometheus/common v0.47.0
+	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
@@ -42,6 +42,8 @@ require (
 )
 
 require (
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/x/tx v0.13.0 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
@@ -80,7 +82,6 @@ require (
 	github.com/prometheus/client_model v0.6.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rs/cors v1.8.3 // indirect
-	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
@@ -92,7 +93,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
-	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a // indirect
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

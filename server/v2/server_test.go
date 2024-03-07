@@ -10,8 +10,8 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 )
 
@@ -20,6 +20,16 @@ type mockGRPCService struct {
 }
 
 func (m *mockGRPCService) RegisterGRPCServer(gogogrpc.Server) {}
+
+type mockInterfaceRegistry struct{}
+
+func (*mockInterfaceRegistry) Resolve(typeUrl string) (gogoproto.Message, error) {
+	panic("not implemented")
+}
+func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string {
+	panic("not implemented")
+}
+func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
 
 // TODO split this test into multiple tests
 // test read config
@@ -42,9 +52,7 @@ func TestServer(t *testing.T) {
 	}
 
 	logger := log.NewLogger(os.Stdout)
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-
-	grpcServer, err := grpc.New(logger, v, interfaceRegistry, &mockGRPCService{})
+	grpcServer, err := grpc.New(logger, v, &mockInterfaceRegistry{}, &mockGRPCService{})
 	if err != nil {
 		t.Log(err)
 		t.Fail()

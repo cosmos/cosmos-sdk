@@ -2,10 +2,10 @@
 
 set -o errexit
 
-SIMAPP_REGEX="cosmossdk.io/simapp"
 CWD=$(pwd)
 
 # no simapp imports in modules
+SIMAPP_REGEX="cosmossdk.io/simapp"
 find . -type f -name 'go.mod' -print0 | while IFS= read -r -d '' file
 do
   d=$(dirname "$file")

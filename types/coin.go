@@ -871,11 +871,8 @@ func ValidateDenom(denom string) error {
 		if !MatchDenom(denomBytes) {
 			return fmt.Errorf("invalid denom: %s", denom)
 		}
-	} else {
-		// If reDnm has been initialized, use it for matching.
-		if !reDnm.MatchString(denom) {
-			return fmt.Errorf("invalid denom: %s", denom)
-		}
+	} else if !reDnm.MatchString(denom) { // If reDnm has been initialized, use it for matching.
+		return fmt.Errorf("invalid denom: %s", denom)
 	}
 
 	return nil

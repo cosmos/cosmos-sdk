@@ -223,8 +223,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 	require.Equal(t, 3, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
-	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx))
-	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx))
+	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx)).AnyTimes().Return(json.RawMessage(`{"key1": "value1"}`), nil)
+	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx)).AnyTimes().Return(json.RawMessage(`{"key2": "value2"}`), nil)
 
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),

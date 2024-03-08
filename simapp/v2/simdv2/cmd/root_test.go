@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/simapp/simd/cmd"
 	"cosmossdk.io/simapp/v2"
+	"cosmossdk.io/simapp/v2/simdv2/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"

@@ -319,10 +319,7 @@ func NewSimApp(
 			ValidatorAddressCodec: signingCtx.ValidatorAddressCodec(),
 		},
 	}
-	txConfig, err = authtx.NewTxConfigWithOptions(
-		appCodec,
-		txConfigOpts,
-	)
+	txConfig, err = authtx.NewTxConfigWithOptions(appCodec, txConfigOpts)
 	if err != nil {
 		panic(err)
 	}

@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestTotalSupply() {
 			if tc.expErrMsg != "" {
 				suite.Require().ErrorContains(suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis), tc.expErrMsg)
 			} else {
-				suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis)
+				suite.Require().NoError(suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis))
 				totalSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
 				suite.Require().NoError(err)
 

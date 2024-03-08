@@ -76,10 +76,12 @@ const (
 	FlagShutdownGrace       = "shutdown-grace"
 
 	// state sync-related flags
+
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
 
 	// api-related flags
+
 	FlagAPIEnable             = "api.enable"
 	FlagAPISwagger            = "api.swagger"
 	FlagAPIAddress            = "api.address"
@@ -90,15 +92,18 @@ const (
 	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
 
 	// gRPC-related flags
+
 	flagGRPCOnly      = "grpc-only"
 	flagGRPCEnable    = "grpc.enable"
 	flagGRPCAddress   = "grpc.address"
 	flagGRPCWebEnable = "grpc-web.enable"
 
 	// mempool flags
+
 	FlagMempoolMaxTxs = "mempool.max-txs"
 
 	// testnet keys
+
 	KeyIsTestnet             = "is-testnet"
 	KeyNewChainID            = "new-chain-ID"
 	KeyNewOpAddr             = "new-operator-addr"

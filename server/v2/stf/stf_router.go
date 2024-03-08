@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 var ErrNoHandler = errors.New("no handler")
@@ -124,4 +126,13 @@ func buildHandler(handler appmodulev2.Handler, preHandlers []appmodulev2.PreMsgH
 		err = globalPostHandler(ctx, msg, msgResp)
 		return msgResp, err
 	}
+}
+
+// msgTypeURL returns the TypeURL of a proto message.
+func msgTypeURL(msg gogoproto.Message) string {
+	if m, ok := msg.(proto.Message); ok {
+		return string(m.ProtoReflect().Descriptor().FullName())
+	}
+
+	return gogoproto.MessageName(msg)
 }

@@ -27,8 +27,8 @@ type AppI[T transaction.Tx] interface {
 	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, corestore.WriterMap, error)
 	ValidateTx(ctx context.Context, tx T) (coreappmanager.TxResult, error)
 	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, corestore.WriterMap, error)
-	Query(ctx context.Context, version uint64, request coreappmanager.Type) (coreappmanager.Type, error)
-	QueryWithState(ctx context.Context, state corestore.ReaderMap, request coreappmanager.Type) (coreappmanager.Type, error)
+	Query(ctx context.Context, version uint64, request transaction.Type) (transaction.Type, error)
+	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Type) (transaction.Type, error)
 
 	Logger() log.Logger
 	ModuleManager() *MM

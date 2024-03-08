@@ -86,9 +86,11 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
+	_ = stfMsgHandler
+
 	a.app.stf = stf.NewSTF[transaction.Tx](
-		stfMsgHandler,
-		stfMsgHandler,
+		nil, // stfMsgHandler, // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
+		nil, // stfMsgHandler  // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
 		a.app.moduleManager.PreBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,

@@ -26,10 +26,9 @@ func (g gasService) GetBlockGasMeter(ctx context.Context) gas.Meter {
 }
 
 func (g gasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.Context {
-	panic("impl")
+	panic("unimplemented")
 }
 
 func (g gasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) context.Context {
-	// TODO implement me
-	panic("implement me")
+	panic("unimplemented")
 }

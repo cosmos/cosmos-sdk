@@ -405,8 +405,8 @@ schema = 3
     version = "v0.6.0"
     hash = "sha256-TAD0mm7msYHo99yoNijeYzlDD0i1Vg3uTetpkDUWQo8="
   [mod."github.com/prometheus/common"]
-    version = "v0.49.0"
-    hash = "sha256-jDD8MAv4kervfJWlIX22ErjUrE5w8S7F8PQEO8/QN/w="
+    version = "v0.50.0"
+    hash = "sha256-zDhmdO4gGiyKyLuNrMnsoY3pkb9fGZIAHcjP8j26HQI="
   [mod."github.com/prometheus/procfs"]
     version = "v0.12.0"
     hash = "sha256-Y4ZZmxIpVCO67zN3pGwSk2TcI88zvmGJkgwq9DRTwFw="
@@ -517,11 +517,11 @@ schema = 3
     version = "v0.15.0"
     hash = "sha256-ANSnGmd525BfnkMZpCmu6deMPFGADtnZx3lmZpdm2aM="
   [mod."golang.org/x/net"]
-    version = "v0.21.0"
-    hash = "sha256-LfiqMpPtqvW/eLkfx6Ebr5ksqKbQli6uq06c/+XrBsw="
+    version = "v0.22.0"
+    hash = "sha256-pcefO4noO9I6mATKBWF6shgIjZvFg0kDsV1Jo/NsFns="
   [mod."golang.org/x/oauth2"]
-    version = "v0.17.0"
-    hash = "sha256-M2ZZQZt449RJL18YpzGiAiqfGsDVMsr1IVWbYp/G/go="
+    version = "v0.18.0"
+    hash = "sha256-TX4CvtvHU+SGSmqlxaQqlgJjlJiOtLGYAZa0zeBfZak="
   [mod."golang.org/x/sync"]
     version = "v0.6.0"
     hash = "sha256-LLims/wjDZtIqlYCVHREewcUOX4hwRwplEuZKPOJ/HI="

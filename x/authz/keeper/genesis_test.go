@@ -91,7 +91,8 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	suite.Require().NotEqual(genesis, newGenesis)
 	suite.Require().Empty(newGenesis)
 
-	suite.keeper.InitGenesis(suite.ctx, genesis)
+	err = suite.keeper.InitGenesis(suite.ctx, genesis)
+	suite.Require().NoError(err)
 	newGenesis = suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().Equal(genesis, newGenesis)
 }

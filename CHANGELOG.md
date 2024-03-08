@@ -44,6 +44,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (baseapp) [#19626](https://github.com/cosmos/cosmos-sdk/pull/19626) Adds `DisableBlockGasMeter` option to `BaseApp`, which removes the block gas meter during transaction execution.
 
+### Improvements
+
+* (x/auth) [#19651](https://github.com/cosmos/cosmos-sdk/pull/19651) Allow empty public keys in `GetSignBytesAdapter`.
+
 ### Bug Fixes
 
 * (x/auth) [#19549](https://github.com/cosmos/cosmos-sdk/pull/19549) Accept custom get signers when injecting `x/auth/tx`.

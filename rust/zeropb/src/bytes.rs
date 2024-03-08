@@ -1,4 +1,5 @@
 use core::{borrow::Borrow, marker::PhantomData, ptr, slice::from_raw_parts};
+use cosmossdk_core::Code;
 
 use crate::error::Error;
 use crate::rel_ptr::{alloc_rel_ptr, resolve_rel_ptr, resolve_start_extent, MAX_EXTENT};
@@ -33,7 +34,7 @@ impl Bytes {
             let (start, extent_ptr) = resolve_start_extent(base);
             let last_extent = *extent_ptr;
             if last_extent as usize == MAX_EXTENT {
-                return err_code_raw(crate::Code::ResourceExhausted)
+                return err_code_raw(Code::ResourceExhausted)
             }
 
             let write_head = (start + last_extent as usize) as *mut u8;
@@ -48,15 +49,19 @@ impl Bytes {
             })
         }
     }
-}
 
-impl<'a> Borrow<[u8]> for Bytes {
-    fn borrow(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         unsafe {
             let base = (self as *const Self).cast::<u8>();
             let target = resolve_rel_ptr(base, self.offset, self.length);
             from_raw_parts(target, self.length as usize)
         }
+    }
+}
+
+impl<'a> Borrow<[u8]> for Bytes {
+    fn borrow(&self) -> &[u8] {
+        self.as_slice()
     }
 }
 
@@ -72,14 +77,14 @@ impl<'a> BytesWriter<'a> {
         unsafe {
             let extent = *self.extent_ptr;
             if extent != self.last_extent {
-                return err_code_raw(crate::Code::Internal);
+                return err_code_raw(Code::Internal);
             }
 
             let len = content.len();
             self.bz.length += len as u16;
             let next_extent = extent as usize + len;
             if next_extent > MAX_EXTENT {
-                return err_code_raw(crate::Code::ResourceExhausted);
+                return err_code_raw(Code::ResourceExhausted);
             }
 
             ptr::copy_nonoverlapping(content.as_ptr(), self.write_head, len);

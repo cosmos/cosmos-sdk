@@ -11,3 +11,4 @@ rend = { version = "0.4.1", default-features = false }
 num_enum = { version = "0.7.1", default-features = false }
 thiserror-no-std = "2.0.2"
 lol_alloc = "0.4.0"
+cosmossdk_core = {path = "../cosmossdk_core"}

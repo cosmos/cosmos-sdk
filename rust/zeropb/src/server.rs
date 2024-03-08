@@ -1,4 +1,4 @@
-use crate::{Code, Context};
+use cosmossdk_core::{Code, Context};
 
 pub trait Server {
     fn service_name(&self) -> &'static str;

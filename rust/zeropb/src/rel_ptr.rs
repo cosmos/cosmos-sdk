@@ -1,3 +1,4 @@
+use cosmossdk_core::Code;
 use crate::result::{err_code_raw, RawResult};
 
 pub(crate) const MAX_EXTENT: usize = 0x10000 - 2;
@@ -32,12 +33,12 @@ pub(crate) unsafe fn alloc_rel_ptr(
     let base = base_ptr as usize;
     let offset = target - base;
     if offset > i16::MAX as usize {
-        return err_code_raw(crate::Code::OutOfRange);
+        return err_code_raw(Code::OutOfRange);
     }
 
     let next_extent = alloc_start + len;
     if next_extent > MAX_EXTENT {
-        return err_code_raw(crate::Code::ResourceExhausted);
+        return err_code_raw(Code::ResourceExhausted);
     }
 
     *extent_ptr = next_extent as u16;

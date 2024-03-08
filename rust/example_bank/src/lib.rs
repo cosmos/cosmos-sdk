@@ -1,7 +1,9 @@
-use cosmossdk_core::Router;
-use state_objects::UBigMap;
+use dashu_int::UBig;
+use cosmossdk_core::{Code, Router};
+use state_objects::{Map, Pair, UBigMap};
 use zeropb::Server;
 use crate::example::bank::v1::bank::{MsgSend, MsgSendResponse, MsgServer};
+use core::borrow::Borrow;
 
 pub mod example {
     pub mod bank {
@@ -14,19 +16,24 @@ pub mod example {
 }
 
 pub struct Bank {
-    balances: UBigMap<([u8], [u8])>,
+    send_enabled: Map<state_objects::Bytes, bool>,
+    balances: UBigMap<Pair<state_objects::Bytes, state_objects::Str>>,
+    supplies: UBigMap<state_objects::Str>,
 }
 
 impl MsgServer for Bank {
-    fn send(&self, ctx: &mut ::zeropb::Context, req: &MsgSend) -> ::zeropb::Result<MsgSendResponse> {
-        self.balances.safe_sub(ctx, todo!(), todo!()?;
-        todo!()
-    }
-}
+    fn send(&self, ctx: &mut ::cosmossdk_core::Context, req: &MsgSend) -> ::zeropb::Result<MsgSendResponse> {
+        // checking send enabled uses last block state so no need to synchronize reads
+        if !self.send_enabled.get_last_block(ctx, req.from.borrow())? {
+            return ::zeropb::err_msg(Code::Unavailable, "send disabled for denom");
+        }
 
-impl Router for Bank {
-    fn route(&self, route_id: u64, ctx: usize, p0: usize, p1: usize) -> usize {
-        <dyn MsgServer as Server>::route(self, route_id, todo!(), todo!(), todo!());
-        todo!()
+        // blocking safe sub must synchronize reads and writes
+        self.balances.safe_sub(ctx, &Pair(req.from.borrow(), req.denom.borrow()), &UBig::ZERO)?;
+
+        // non-blocking add to recipient won't fail, so no need to synchronize writes
+        self.balances.add(ctx, &Pair(req.to.borrow(), req.denom.borrow()), &UBig::ZERO);
+
+        zeropb::ok()
     }
 }

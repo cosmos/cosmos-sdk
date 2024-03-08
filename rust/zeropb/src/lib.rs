@@ -33,15 +33,10 @@ mod repeated;
 
 pub use repeated::{Repeated, ScalarRepeated, RepeatedWriter, RepeatedIter, ScalarRepeatedWriter};
 
-mod context;
 mod result;
 mod code;
 mod server;
 mod module_id;
-
-pub use context::{Context};
-
-pub use code::{Code};
 
 pub use client::{Client, Connection, connection_invoke};
 

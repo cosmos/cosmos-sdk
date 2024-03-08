@@ -1,5 +1,6 @@
 use num_enum::TryFromPrimitive;
-use crate::{Context, Root, ZeroCopy};
+use cosmossdk_core::{Code, Context};
+use crate::{Root, ZeroCopy};
 use crate::module_id::ModuleID;
 use crate::root::RawRoot;
 use crate::result::{Result};
@@ -29,19 +30,19 @@ pub fn connection_invoke<I: ZeroCopy, O: ZeroCopy>(connection: Connection, metho
             #[cfg(not(target_arch = "wasm32"))]
             {
                 return Err(crate::Error {
-                    code: crate::Code::Internal,
+                    code: Code::Internal,
                     msg: Root::empty(),
                 });
             }
         } else {
             code = connection(method_id, ctx.id, req.unsafe_unwrap() as usize, res_ptr as usize);
         }
-        let code = crate::Code::try_from_primitive(code as u8).map_err(|_| crate::Error {
-            code: crate::Code::Internal,
+        let code = Code::try_from_primitive(code as u8).map_err(|_| crate::Error {
+            code: Code::Internal,
             msg: Root::empty(),
         })?;
         match code {
-            crate::Code::Ok => {
+            Code::Ok => {
                 Ok(Root::unsafe_wrap(res_ptr))
             }
             _ => Err(crate::Error {

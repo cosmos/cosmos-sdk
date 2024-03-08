@@ -1,5 +1,6 @@
 use core::result;
-use crate::{Code, Error, Root, Str, ZeroCopy};
+use cosmossdk_core::Code;
+use crate::{Error, Root, Str, ZeroCopy};
 
 pub type RawResult<T> = result::Result<T, Error>;
 pub type Result<T> = RawResult<Root<T>>;

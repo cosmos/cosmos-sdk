@@ -1,7 +1,4 @@
-pub struct Context {}
-
-pub struct ReadContext {}
-
-pub struct BeginWriteContext {}
-
-pub struct WriteContext {}
+#[repr(transparent)]
+pub struct Context {
+    pub id: u64,
+}

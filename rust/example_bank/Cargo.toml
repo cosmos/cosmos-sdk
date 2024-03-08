@@ -9,3 +9,4 @@ edition = "2021"
 zeropb = {path = "../zeropb"}
 cosmossdk_core = {path = "../cosmossdk_core"}
 state_objects = {path = "../state_objects"}
+dashu-int = "0.4.1"

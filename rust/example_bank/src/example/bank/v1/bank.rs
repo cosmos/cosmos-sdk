@@ -23,7 +23,7 @@ unsafe impl zeropb::ZeroCopy for QueryBalanceResponse {}
 pub trait MsgServer {
     fn send(
         &self,
-        ctx: &mut ::zeropb::Context,
+        ctx: &mut ::cosmossdk_core::Context,
         req: &MsgSend,
     ) -> ::zeropb::Result<MsgSendResponse>;
 }
@@ -34,22 +34,22 @@ impl ::zeropb::Server for dyn MsgServer {
     fn route(
         &self,
         method_id: u64,
-        ctx: &mut ::zeropb::Context,
+        ctx: &mut ::cosmossdk_core::Context,
         req: *mut u8,
         res: *mut *mut u8,
-    ) -> ::zeropb::Code {
+    ) -> ::cosmossdk_core::Code {
         unsafe {
             let result: ::zeropb::RawResult<*mut u8> = match method_id {
                 1u64 => {
                     self.send(ctx, &*(req as *const MsgSend))
                         .map(|res| res.unsafe_unwrap())
                 }
-                _ => return ::zeropb::Code::Unimplemented,
+                _ => return ::cosmossdk_core::Code::Unimplemented,
             };
             match result {
                 Ok(ptr) => {
                     *res = ptr;
-                    ::zeropb::Code::Ok
+                    ::cosmossdk_core::Code::Ok
                 }
                 Err(err) => {
                     let ptr = err.msg.unsafe_unwrap();
@@ -69,7 +69,7 @@ pub struct MsgClient {
 impl MsgClient {
     pub fn send(
         &self,
-        ctx: &mut zeropb::Context,
+        ctx: &mut cosmossdk_core::Context,
         req: zeropb::Root<MsgSend>,
     ) -> zeropb::Result<MsgSendResponse> {
         ::zeropb::connection_invoke(self.connection, 1u64, ctx, req)
@@ -83,7 +83,7 @@ impl ::zeropb::Client for MsgClient {
 pub trait QueryServer {
     fn balance(
         &self,
-        ctx: &mut ::zeropb::Context,
+        ctx: &mut ::cosmossdk_core::Context,
         req: &QueryBalance,
     ) -> ::zeropb::Result<QueryBalanceResponse>;
 }
@@ -94,22 +94,22 @@ impl ::zeropb::Server for dyn QueryServer {
     fn route(
         &self,
         method_id: u64,
-        ctx: &mut ::zeropb::Context,
+        ctx: &mut ::cosmossdk_core::Context,
         req: *mut u8,
         res: *mut *mut u8,
-    ) -> ::zeropb::Code {
+    ) -> ::cosmossdk_core::Code {
         unsafe {
             let result: ::zeropb::RawResult<*mut u8> = match method_id {
                 1u64 => {
                     self.balance(ctx, &*(req as *const QueryBalance))
                         .map(|res| res.unsafe_unwrap())
                 }
-                _ => return ::zeropb::Code::Unimplemented,
+                _ => return ::cosmossdk_core::Code::Unimplemented,
             };
             match result {
                 Ok(ptr) => {
                     *res = ptr;
-                    ::zeropb::Code::Ok
+                    ::cosmossdk_core::Code::Ok
                 }
                 Err(err) => {
                     let ptr = err.msg.unsafe_unwrap();
@@ -129,7 +129,7 @@ pub struct QueryClient {
 impl QueryClient {
     pub fn balance(
         &self,
-        ctx: &mut zeropb::Context,
+        ctx: &mut cosmossdk_core::Context,
         req: zeropb::Root<QueryBalance>,
     ) -> zeropb::Result<QueryBalanceResponse> {
         ::zeropb::connection_invoke(self.connection, 1u64, ctx, req)

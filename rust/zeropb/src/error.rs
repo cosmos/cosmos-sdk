@@ -1,9 +1,19 @@
 use core::fmt::Debug;
-use crate::{Code, Root, Str};
+use cosmossdk_core::Code;
+use crate::{Root, Str};
 
 pub struct Error {
     pub code: Code,
     pub msg: Root<Str>,
+}
+
+impl From<Code> for Error {
+    fn from(value: Code) -> Self {
+        Self {
+            code: value,
+            msg: Root::empty(),
+        }
+    }
 }
 
 impl Debug for Error {

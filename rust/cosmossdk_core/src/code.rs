@@ -1,6 +1,3 @@
-// use crate::r#enum::{Enum, ZeroCopyEnum};
-// use crate::str::Str;
-// use crate::zerocopy::ZeroCopy;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 #[repr(u8)]
@@ -24,7 +21,3 @@ pub enum Code {
     DataLoss = 15,
     Unauthenticated = 16,
 }
-
-// unsafe impl ZeroCopyEnum for Code {
-//     const MAX_VALUE: u8 = 16;
-// }

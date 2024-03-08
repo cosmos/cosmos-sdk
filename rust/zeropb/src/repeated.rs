@@ -5,7 +5,7 @@ use core::iter::Iterator;
 use core::marker::PhantomData;
 use core::mem::{align_of, size_of};
 use core::ptr::{NonNull, null};
-use crate::Code::ResourceExhausted;
+use cosmossdk_core::Code::ResourceExhausted;
 use crate::result::{err_code_raw, RawResult};
 
 use crate::zerocopy::ZeroCopy;

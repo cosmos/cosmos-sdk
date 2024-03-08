@@ -14,7 +14,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
@@ -154,4 +155,49 @@ func (s *AnteTestSuite) TestDeductFees() {
 	_, err = antehandler(s.ctx, tx, false)
 
 	s.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
+}
+
+func (s *AnteTestSuite) TestDeductFees_WithName() {
+	s.SetupTest(false) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(gasLimit)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
+
+	// Set transacting account with sufficient funds
+	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200)))
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	s.Require().NoError(err)
+
+	feeCollectorAcc := s.app.AccountKeeper.GetModuleAccount(s.ctx, types.FeeCollectorName)
+	// pick a simapp module account
+	altCollectorName := "distribution"
+	altCollectorAcc := s.app.AccountKeeper.GetModuleAccount(s.ctx, altCollectorName)
+	s.Require().True(s.app.BankKeeper.GetAllBalances(s.ctx, feeCollectorAcc.GetAddress()).Empty())
+	altBalance := s.app.BankKeeper.GetAllBalances(s.ctx, altCollectorAcc.GetAddress())
+
+	// Run the transaction through a handler chain that deducts fees into altCollectorAcc.
+	dfd := ante.NewDeductFeeDecoratorWithName(s.app.AccountKeeper, s.app.BankKeeper, nil, nil, altCollectorName)
+	antehandler := sdk.ChainAnteDecorators(dfd)
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err)
+
+	s.Require().True(s.app.BankKeeper.GetAllBalances(s.ctx, feeCollectorAcc.GetAddress()).Empty())
+	newAltBalance := s.app.BankKeeper.GetAllBalances(s.ctx, altCollectorAcc.GetAddress())
+	s.Require().True(newAltBalance.IsAllGTE(altBalance))
+	s.Require().False(newAltBalance.IsEqual(altBalance))
 }

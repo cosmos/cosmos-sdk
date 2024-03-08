@@ -23,24 +23,30 @@ type TxFeeChecker func(ctx context.Context, tx transaction.Tx) (sdk.Coins, int64
 // Call next AnteHandler if fees are successfully deducted.
 // CONTRACT: The Tx must implement the FeeTx interface to use DeductFeeDecorator.
 type DeductFeeDecorator struct {
-	accountKeeper  AccountKeeper
-	bankKeeper     types.BankKeeper
-	feegrantKeeper FeegrantKeeper
-	txFeeChecker   TxFeeChecker
-	minGasPrices   sdk.DecCoins
+	accountKeeper    AccountKeeper
+	bankKeeper       types.BankKeeper
+	feegrantKeeper   FeegrantKeeper
+	txFeeChecker     TxFeeChecker
+	feeCollectorName string
 }
 
-func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) *DeductFeeDecorator {
-	dfd := &DeductFeeDecorator{
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		feegrantKeeper: fk,
-		txFeeChecker:   tfc,
-		minGasPrices:   sdk.NewDecCoins(),
+func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) DeductFeeDecorator {
+	return NewDeductFeeDecoratorWithName(ak, bk, fk, tfc, types.FeeCollectorName)
+}
+
+// NewDeductFeeDecoratorWithName returns a DeductFeeDecorator using a custom fee collector module account.
+// Agoric note: for collecting fees in the reserve account.
+func NewDeductFeeDecoratorWithName(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker, feeCollectorName string) DeductFeeDecorator {
+	if tfc == nil {
+		tfc = checkTxFeeWithValidatorMinGasPrices
 	}
 
-	if tfc == nil {
-		dfd.txFeeChecker = dfd.checkTxFeeWithValidatorMinGasPrices
+	return DeductFeeDecorator{
+		accountKeeper:    ak,
+		bankKeeper:       bk,
+		feegrantKeeper:   fk,
+		txFeeChecker:     tfc,
+		feeCollectorName: feeCollectorName,
 	}
 
 	return dfd
@@ -91,8 +97,8 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transacti
 		}
 	}
 
-	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
+	if addr := dfd.accountKeeper.GetModuleAddress(dfd.feeCollectorName); addr == nil {
+		return fmt.Errorf("fee collector module account (%s) has not been set", dfd.feeCollectorName)
 	}
 
 	feePayer := feeTx.FeePayer()
@@ -123,7 +129,8 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transacti
 
 	// deduct the fees
 	if !fee.IsZero() {
-		if err := DeductFees(dfd.bankKeeper, ctx, deductFeesFrom, fee); err != nil {
+		err := DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, fee, dfd.feeCollectorName)
+		if err != nil {
 			return err
 		}
 	}
@@ -141,13 +148,14 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transacti
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper types.BankKeeper, ctx context.Context, acc []byte, fees sdk.Coins) error {
+func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins, feeCollectorName string) error {
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	if err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.FeeCollectorName, fees); err != nil {
-		return fmt.Errorf("failed to deduct fees: %w", err)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), feeCollectorName, fees)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
 
 	return nil

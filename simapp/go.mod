@@ -236,6 +236,7 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
+	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/core => ../core
 	cosmossdk.io/depinject => ../depinject
@@ -271,14 +272,4 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-)
-
-// server v2 integration
-replace (
-	cosmossdk.io/api => ../api
-	cosmossdk.io/runtime/v2 => ../runtime/v2
-	cosmossdk.io/server/v2 => ../server/v2
-	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
-	cosmossdk.io/server/v2/core => ../server/v2/core
-	cosmossdk.io/server/v2/stf => ../server/v2/stf
 )

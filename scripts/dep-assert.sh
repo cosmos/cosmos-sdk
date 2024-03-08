@@ -19,13 +19,19 @@ do
   fi
 done
 
-# no runtime/v2 imports in x/ modules
+# no runtime/v2 or server/v2 imports in x/ modules
 RUNTIMEV2_REGEX="cosmossdk.io/runtime/v2"
+SEVERV2_REGEX="cosmossdk.io/server/v2"
 find ./x/ -type f -name 'go.mod' -print0 | while IFS= read -r -d '' file
 do
   d=$(dirname "$file")
   if cd "$CWD/$d" && go list -test -f '{{ .Imports }}' ./... | grep -q -E "${RUNTIMEV2_REGEX}"; then
     echo "${d} has a dependency on runtime/v2!"
+    exit 1
+  fi
+
+  if cd "$CWD/$d" && go list -test -f '{{ .Imports }}' ./... | grep -q -E "${SEVERV2_REGEX}"; then
+    echo "${d} has a dependency on server/v2!"
     exit 1
   fi
 done

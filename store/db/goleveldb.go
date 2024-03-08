@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cast"
 	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/errors"
+	dberrors "github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -15,6 +15,7 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/errors"
 )
 
 // GoLevelDB implements RawDB using github.com/syndtr/goleveldb/leveldb.
@@ -54,11 +55,11 @@ func NewGoLevelDBWithOpts(name, dir string, o *opt.Options) (*GoLevelDB, error) 
 // Get implements RawDB.
 func (db *GoLevelDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 	res, err := db.db.Get(key, nil)
 	if err != nil {
-		if err == errors.ErrNotFound {
+		if err == dberrors.ErrNotFound {
 			return nil, nil
 		}
 		return nil, err
@@ -78,10 +79,10 @@ func (db *GoLevelDB) Has(key []byte) (bool, error) {
 // Set implements RawDB.
 func (db *GoLevelDB) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if value == nil {
-		return store.ErrValueNil
+		return errors.ErrValueNil
 	}
 	if err := db.db.Put(key, value, nil); err != nil {
 		return err
@@ -92,10 +93,10 @@ func (db *GoLevelDB) Set(key, value []byte) error {
 // SetSync implements RawDB.
 func (db *GoLevelDB) SetSync(key, value []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if value == nil {
-		return store.ErrValueNil
+		return errors.ErrValueNil
 	}
 	if err := db.db.Put(key, value, &opt.WriteOptions{Sync: true}); err != nil {
 		return err
@@ -106,7 +107,7 @@ func (db *GoLevelDB) SetSync(key, value []byte) error {
 // Delete implements RawDB.
 func (db *GoLevelDB) Delete(key []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if err := db.db.Delete(key, nil); err != nil {
 		return err
@@ -117,7 +118,7 @@ func (db *GoLevelDB) Delete(key []byte) error {
 // DeleteSync implements RawDB.
 func (db *GoLevelDB) DeleteSync(key []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	err := db.db.Delete(key, &opt.WriteOptions{Sync: true})
 	if err != nil {
@@ -195,7 +196,7 @@ func (db *GoLevelDB) NewBatchWithSize(size int) store.RawBatch {
 // Iterator implements RawDB.
 func (db *GoLevelDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 	itr := db.db.NewIterator(&util.Range{Start: start, Limit: end}, nil)
 	return newGoLevelDBIterator(itr, start, end, false), nil
@@ -204,7 +205,7 @@ func (db *GoLevelDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 // ReverseIterator implements RawDB.
 func (db *GoLevelDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 	itr := db.db.NewIterator(&util.Range{Start: start, Limit: end}, nil)
 	return newGoLevelDBIterator(itr, start, end, true), nil
@@ -363,13 +364,13 @@ func newGoLevelDBBatchWithSize(db *GoLevelDB, size int) *goLevelDBBatch {
 // Set implements RawBatch.
 func (b *goLevelDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if value == nil {
-		return store.ErrValueNil
+		return errors.ErrValueNil
 	}
 	if b.batch == nil {
-		return store.ErrBatchClosed
+		return errors.ErrBatchClosed
 	}
 	b.batch.Put(key, value)
 	return nil
@@ -378,10 +379,10 @@ func (b *goLevelDBBatch) Set(key, value []byte) error {
 // Delete implements RawBatch.
 func (b *goLevelDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if b.batch == nil {
-		return store.ErrBatchClosed
+		return errors.ErrBatchClosed
 	}
 	b.batch.Delete(key)
 	return nil
@@ -399,7 +400,7 @@ func (b *goLevelDBBatch) WriteSync() error {
 
 func (b *goLevelDBBatch) write(sync bool) error {
 	if b.batch == nil {
-		return store.ErrBatchClosed
+		return errors.ErrBatchClosed
 	}
 	err := b.db.db.Write(b.batch, &opt.WriteOptions{Sync: sync})
 	if err != nil {
@@ -421,7 +422,7 @@ func (b *goLevelDBBatch) Close() error {
 // GetByteSize implements RawBatch
 func (b *goLevelDBBatch) GetByteSize() (int, error) {
 	if b.batch == nil {
-		return 0, store.ErrBatchClosed
+		return 0, errors.ErrBatchClosed
 	}
 	return len(b.batch.Dump()), nil
 }

@@ -7,6 +7,9 @@ import (
 	appmodule "cosmossdk.io/core/appmodule/v2"
 )
 
+// HasGenesis defines a custom genesis handling API implementation.
+type HasGenesis = appmodule.HasGenesis
+
 // HasGenesisAuto is the extension interface that modules should implement to handle
 // genesis data and state initialization.
 // WARNING: This interface is experimental and may change at any time.

@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -64,7 +63,7 @@ func NewIntegrationApp(
 
 	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
-			if m, ok := mod.(appmodulev2.HasGenesis); ok {
+			if m, ok := mod.(module.HasGenesis); ok {
 				m.InitGenesis(ctx, m.DefaultGenesis())
 			}
 		}

@@ -7,10 +7,10 @@ service Msg {
 }
 
 message MsgSend {
-  string from = 1;
-  string to = 2;
+  bytes from = 1;
+  bytes to = 2;
   string denom = 3;
-  uint64 amount = 4;
+  bytes amount = 4;
 }
 
 message MsgSendResponse {}
@@ -20,10 +20,10 @@ service Query {
 }
 
 message QueryBalance {
-  string address = 1;
+  bytes address = 1;
   string denom = 2;
 }
 
 message QueryBalanceResponse {
-  uint64 balance = 1;
+  bytes balance = 1;
 }

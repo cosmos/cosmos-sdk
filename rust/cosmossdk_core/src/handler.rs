@@ -1,4 +1,4 @@
-use zeropb::Context;
+use zeropb::{Context, ZeroCopy};
 
 use crate::router::Router;
 

@@ -28,7 +28,7 @@ fn gen_service_server(fd: &FileDescriptorProto, service: &ServiceDescriptorProto
     }
 
     ctx.add_item(quote!(
-        trait #name {
+        pub trait #name {
             #(#methods)*
         }
     ))?;
@@ -103,7 +103,7 @@ fn gen_service_client(fd: &FileDescriptorProto, service: &ServiceDescriptorProto
     let svc_name = service.name.clone().unwrap();
     let client_name = format_ident!("{}Client", svc_name);
     ctx.add_item(quote!(
-        struct #client_name {
+        pub struct #client_name {
             connection: zeropb::Connection,
             service_id: u64,
         }
@@ -146,7 +146,7 @@ pub(crate) fn gen_client_method(
     let output_type = gen_message_name(&output_type)?;
 
     Ok(quote!(
-        fn #method_name(&self, ctx: &mut zeropb::Context, req: zeropb::Root<#input_type>) -> zeropb::Result<#output_type> {
+        pub fn #method_name(&self, ctx: &mut zeropb::Context, req: zeropb::Root<#input_type>) -> zeropb::Result<#output_type> {
             ::zeropb::connection_invoke(self.connection, #i, ctx, req)
         }
     ))

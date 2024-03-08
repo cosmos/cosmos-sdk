@@ -59,6 +59,11 @@ impl Handler<SomeMsg> for Bank {
     }
 }
 
+#[derive(ZeroPB)]
+struct SomeMsg {
+  sender: zeropb::Str
+}
+
 impl EventHook<SomeEvent> for Bank {
     fn on_event(&self, ctx: &mut zeropb::Context, event: &SomeEvent) -> zeropb::Result<()> {
         // ...

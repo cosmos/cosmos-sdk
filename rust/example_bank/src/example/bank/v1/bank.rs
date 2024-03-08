@@ -1,9 +1,9 @@
 #[repr(C)]
 pub struct MsgSend {
-    pub from: ::zeropb::Str,
-    pub to: ::zeropb::Str,
+    pub from: ::zeropb::Bytes,
+    pub to: ::zeropb::Bytes,
     pub denom: ::zeropb::Str,
-    pub amount: u64,
+    pub amount: ::zeropb::Bytes,
 }
 unsafe impl zeropb::ZeroCopy for MsgSend {}
 #[repr(C)]
@@ -11,16 +11,16 @@ pub struct MsgSendResponse {}
 unsafe impl zeropb::ZeroCopy for MsgSendResponse {}
 #[repr(C)]
 pub struct QueryBalance {
-    pub address: ::zeropb::Str,
+    pub address: ::zeropb::Bytes,
     pub denom: ::zeropb::Str,
 }
 unsafe impl zeropb::ZeroCopy for QueryBalance {}
 #[repr(C)]
 pub struct QueryBalanceResponse {
-    pub balance: u64,
+    pub balance: ::zeropb::Bytes,
 }
 unsafe impl zeropb::ZeroCopy for QueryBalanceResponse {}
-trait MsgServer {
+pub trait MsgServer {
     fn send(
         &self,
         ctx: &mut ::zeropb::Context,
@@ -62,12 +62,12 @@ impl ::zeropb::Server for dyn MsgServer {
         }
     }
 }
-struct MsgClient {
+pub struct MsgClient {
     connection: zeropb::Connection,
     service_id: u64,
 }
 impl MsgClient {
-    fn send(
+    pub fn send(
         &self,
         ctx: &mut zeropb::Context,
         req: zeropb::Root<MsgSend>,
@@ -80,7 +80,7 @@ impl ::zeropb::Client for MsgClient {
         "example.bank.v1.Msg"
     }
 }
-trait QueryServer {
+pub trait QueryServer {
     fn balance(
         &self,
         ctx: &mut ::zeropb::Context,
@@ -122,12 +122,12 @@ impl ::zeropb::Server for dyn QueryServer {
         }
     }
 }
-struct QueryClient {
+pub struct QueryClient {
     connection: zeropb::Connection,
     service_id: u64,
 }
 impl QueryClient {
-    fn balance(
+    pub fn balance(
         &self,
         ctx: &mut zeropb::Context,
         req: zeropb::Root<QueryBalance>,

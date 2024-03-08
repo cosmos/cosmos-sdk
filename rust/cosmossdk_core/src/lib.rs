@@ -7,12 +7,14 @@ mod code;
 mod router;
 mod result;
 mod context;
+mod module;
 // mod store;
 // mod service;
 // mod client;
 
 pub use code::Code;
-pub use router::Router;
+pub use router::{Server};
+pub use module::{Module};
 pub use context::{Context};
 pub use result::Result;
 

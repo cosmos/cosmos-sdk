@@ -68,11 +68,10 @@ fn gen_server_impl(fd: &FileDescriptorProto, service: &ServiceDescriptorProto, n
     let full_name = format!("{}.{}", package_name, service.name.clone().unwrap());
 
     ctx.add_item(quote!(
-        impl ::zeropb::Server for dyn #name
-        {
-            fn service_name(&self) -> &'static str {
-                #full_name
-            }
+        impl ::cosmossdk_core::Server for dyn #name {
+            // fn service_name(&self) -> &'static str {
+            //     #full_name
+            // }
 
             fn route(&self, method_id: u64, ctx: &mut ::cosmossdk_core::Context, req: *mut u8, res: *mut *mut u8) -> ::cosmossdk_core::Code {
                 unsafe {

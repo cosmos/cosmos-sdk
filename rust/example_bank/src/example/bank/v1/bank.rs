@@ -27,10 +27,7 @@ pub trait MsgServer {
         req: &MsgSend,
     ) -> ::zeropb::Result<MsgSendResponse>;
 }
-impl ::zeropb::Server for dyn MsgServer {
-    fn service_name(&self) -> &'static str {
-        "example.bank.v1.Msg"
-    }
+impl ::cosmossdk_core::Server for dyn MsgServer {
     fn route(
         &self,
         method_id: u64,
@@ -87,10 +84,7 @@ pub trait QueryServer {
         req: &QueryBalance,
     ) -> ::zeropb::Result<QueryBalanceResponse>;
 }
-impl ::zeropb::Server for dyn QueryServer {
-    fn service_name(&self) -> &'static str {
-        "example.bank.v1.Query"
-    }
+impl ::cosmossdk_core::Server for dyn QueryServer {
     fn route(
         &self,
         method_id: u64,

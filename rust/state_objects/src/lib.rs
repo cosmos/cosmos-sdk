@@ -102,7 +102,11 @@ impl <K:KeyCodec> UBigMap<K> {
         todo!()
     }
 
-    pub fn add(&self, ctx: &mut Context, key: &K::In<'_>, value: &UBig) {
+    pub fn add(&self, ctx: &mut Context, key: &K::In<'_>, value: &UBig) -> cosmossdk_core::Result<UBig> {
+        todo!()
+    }
+
+    pub fn add_later(&self, ctx: &mut Context, key: &K::In<'_>, value: &UBig) {
         todo!()
     }
 }

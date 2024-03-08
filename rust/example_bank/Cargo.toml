@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 zeropb = {path = "../zeropb"}
 cosmossdk_core = {path = "../cosmossdk_core"}
+cosmossdk_macros = {path = "../cosmossdk_macros"}
 state_objects = {path = "../state_objects"}
 dashu-int = "0.4.1"

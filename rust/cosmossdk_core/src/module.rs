@@ -1,10 +1,7 @@
-use crate::router::Router;
+use crate::{Code, Context};
 
-pub trait Module: Router {
-    fn describe(descriptor: &mut crate::types::cosmos::core::v1alpha1::bundle::ModuleInitDescriptor) -> zeropb::Result<()>;
-}
-
-pub trait ModuleBundle: Router {
-    fn describe(descriptor: &mut crate::types::cosmos::core::v1alpha1::bundle::ModuleBundleDescriptor) -> zeropb::Result<()>;
+pub trait Module {
+    // fn describe(descriptor: &mut crate::types::cosmos::core::v1alpha1::bundle::ModuleInitDescriptor) -> zeropb::Result<()>;
+    fn route(&self, route_id: u64, ctx: &mut Context, req: *mut u8, res: *mut *mut u8) -> Code;
 }
 

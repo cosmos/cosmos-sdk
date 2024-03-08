@@ -85,18 +85,6 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transacti
 		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must implement the FeeTx interface")
 	}
 
-	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
-	}
-
-	fee := feeTx.GetFee()
-	if execMode != transaction.ExecModeSimulate {
-		fee, priority, err = dfd.txFeeChecker(ctx, tx)
-		if err != nil {
-			return 0, err
-		}
-	}
-
 	if addr := dfd.accountKeeper.GetModuleAddress(dfd.feeCollectorName); addr == nil {
 		return fmt.Errorf("fee collector module account (%s) has not been set", dfd.feeCollectorName)
 	}

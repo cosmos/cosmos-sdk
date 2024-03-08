@@ -40,20 +40,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (auth) [#407](https://github.com/agoric-labs/cosmos-sdk/pull/407) Configurable fee collector module account in DeductFeeDecorator.
-* (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Unit tests and documentation for event history.
-* (deps) [#412](https://github.com/agoric-labs/cosmos-sdk/pull/412) Bump iavl to v0.19.7
-* (server) [#409](https://github.com/agoric-labs/cosmos-sdk/pull/409) Flag to select ABCI client type.
-* (server) [#416](https://github.com/agoric-labs/cosmos-sdk/pull/416) Config entry to select ABCI client type.
-* (server) [#419](https://github.com/agoric-labs/cosmos-sdk/pull/419) More unit tests for flag vs toml precedence for ABCI client type.
-
-### Bug Fixes
-
-* (baseapp) [#413](https://github.com/agoric-labs/cosmos-sdk/pull/413) Ignore events from simulated transactions
-* (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Avoid duplicates in event history.
 
 ### API Breaking
 
 * (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support
+
+## `v0.46.16-alpha.agoric.2.1` - 2024-03-08
+
+### Improvements
+
+* (auth) #??? Configurable fee collector module account in DeductFeeDecorator. (backport #407)
 
 ## `v0.46.16-alpha.agoric.2` - 2024-02-08
 

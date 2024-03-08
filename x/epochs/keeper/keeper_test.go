@@ -39,6 +39,13 @@ func (s *KeeperTestSuite) SetupTest() {
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
 	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(s.EpochsKeeper))
+	grpcQueryService := &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: queryRouter,
+		Ctx:             s.Ctx,
+	}
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	grpcQueryService.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	s.queryClient = types.NewQueryClient(grpcQueryService)
 }
 
 func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper, appmodule.Environment) {

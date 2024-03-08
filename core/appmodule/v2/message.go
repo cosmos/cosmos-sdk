@@ -9,7 +9,7 @@ import (
 // Message aliases protoiface.MessageV1 for convenience.
 type Message = protoiface.MessageV1
 
-func messageName[M Message]() string {
+func MessageName[M Message]() string {
 	switch m := any(*new(M)).(type) {
 	case protov2.Message:
 		return string(m.ProtoReflect().Descriptor().FullName())

@@ -20,11 +20,11 @@ import (
 func NewRouterService(storeService store.KVStoreService, queryRouter *baseapp.GRPCQueryRouter, msgRouter baseapp.MessageRouter) router.Service {
 	return &routerService{
 		queryRouterService: &queryRouterService{
-			storeService: storeService, // TODO: this will be used later on as authenticating modules before routing
+			storeService: storeService, // TODO: this will be used later on for authenticating modules before routing
 			router:       queryRouter,
 		},
 		msgRouterService: &msgRouterService{
-			storeService: storeService, // TODO: this will be used later on as authenticating modules before routing
+			storeService: storeService, // TODO: this will be used later on for authenticating modules before routing
 			router:       msgRouter,
 		},
 	}

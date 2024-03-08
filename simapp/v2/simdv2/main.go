@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/simapp/simd/cmd"
 	"cosmossdk.io/simapp/v2"
+	"cosmossdk.io/simapp/v2/simdv2/cmd"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )

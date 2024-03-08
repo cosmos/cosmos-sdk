@@ -1,4 +1,4 @@
-package logger
+package serverv2
 
 import (
 	"io"
@@ -7,22 +7,21 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
 )
 
-// New creates a the default SDK logger.
+// NewLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
-func New(v *viper.Viper, out io.Writer) (log.Logger, error) {
+func NewLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
-	if v.GetString(serverv2.FlagLogFormat) == serverv2.OutputFormatJSON {
+	if v.GetString(FlagLogFormat) == OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
 	}
 	opts = append(opts,
-		log.ColorOption(!v.GetBool(serverv2.FlagLogNoColor)),
-		log.TraceOption(v.GetBool(serverv2.FlagTrace)))
+		log.ColorOption(!v.GetBool(FlagLogNoColor)),
+		log.TraceOption(v.GetBool(FlagTrace)))
 
 	// check and set filter level or keys for the logger if any
-	logLvlStr := v.GetString(serverv2.FlagLogLevel)
+	logLvlStr := v.GetString(FlagLogLevel)
 	if logLvlStr == "" {
 		return log.NewLogger(out, opts...), nil
 	}

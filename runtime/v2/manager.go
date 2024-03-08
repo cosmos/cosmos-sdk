@@ -12,7 +12,6 @@ import (
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
@@ -515,8 +514,8 @@ func registerMethod(cdc codec.BinaryCodec, stfRouter *stf.MsgRouterBuilder, sd *
 		return err
 	}
 
-	return stfRouter.RegisterHandler(string(requestName), func(ctx context.Context, msg transaction.Type) (resp transaction.Type, err error) {
-		resp = responseV2Type.New().Interface()
-		return resp, hybridHandler(ctx, msg.(protoiface.MessageV1), resp.(protoiface.MessageV1))
+	return stfRouter.RegisterHandler(string(requestName), func(ctx context.Context, msg appmodulev2.Message) (resp appmodulev2.Message, err error) {
+		resp = responseV2Type.New().Interface().(appmodulev2.Message)
+		return resp, hybridHandler(ctx, msg, resp)
 	})
 }

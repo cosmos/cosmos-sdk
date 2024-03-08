@@ -5,10 +5,8 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
-const (
-	// MsgInterfaceProtoName defines the protobuf name of the cosmos Msg interface
-	MsgInterfaceProtoName = "cosmos.base.v1beta1.Msg"
-)
+// MsgInterfaceProtoName defines the protobuf name of the cosmos Msg interface
+const MsgInterfaceProtoName = "cosmos.base.v1beta1.Msg"
 
 type ProtoCodec interface {
 	Marshal(v gogoproto.Message) ([]byte, error)

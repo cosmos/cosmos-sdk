@@ -41,6 +41,7 @@ func NewAppModule(
 	deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 	genTxValidator types.MessageValidator,
+	cdc codec.Codec,
 ) module.AppModule {
 	return AppModule{
 		accountKeeper:    accountKeeper,
@@ -48,6 +49,7 @@ func NewAppModule(
 		deliverTx:        deliverTx,
 		txEncodingConfig: txEncodingConfig,
 		genTxValidator:   genTxValidator,
+		cdc:              cdc,
 	}
 }
 

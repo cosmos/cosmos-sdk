@@ -83,7 +83,6 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	suite.Require().NoError(err)
 	genesis := suite.keeper.ExportGenesis(suite.ctx)
 
-	// TODO, recheck!
 	// Clear keeper
 	err = suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
 	suite.Require().NoError(err)

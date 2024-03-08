@@ -26,8 +26,9 @@ func MatchDenom(data []byte) bool {
     %%{
         # Define character classes
         special = '/' | ':' | '.' | '_' | '-';
+        alphabetNumber = [a-zA-Z0-9];
 
-        denom_pattern = [a-zA-Z] (alnum | special);
+        denom_pattern = [a-zA-Z] (alphabetNumber | special){2,127};
 
 
         # Combined pattern for matching either a denomination or a decimal amount

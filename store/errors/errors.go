@@ -1,4 +1,4 @@
-package store
+package errors
 
 import (
 	"fmt"
@@ -7,9 +7,12 @@ import (
 )
 
 // StoreCodespace defines the store package's unique error code space.
-const StoreCodespace = "store"
+const StoreCodespace = "storev2"
 
 var (
+	// ErrInvalidProof is returned when a proof is invalid
+	ErrInvalidProof = errors.Register(StoreCodespace, 2, "invalid proof")
+
 	// ErrTxDecode is returned if we cannot parse a transaction
 	ErrTxDecode = errors.Register(StoreCodespace, 3, "tx parse error")
 

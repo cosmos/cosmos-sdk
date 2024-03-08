@@ -8,11 +8,13 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/linxGnu/grocksdb"
 	"slices"
+
+	"github.com/linxGnu/grocksdb"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
 )
@@ -98,7 +100,7 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
 	if version < db.tsLow {
-		return nil, store.ErrVersionPruned{EarliestVersion: db.tsLow}
+		return nil, errors.ErrVersionPruned{EarliestVersion: db.tsLow}
 	}
 
 	return db.storage.GetCF(
@@ -165,11 +167,11 @@ func (db *Database) Prune(version uint64) error {
 
 func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
-		return nil, store.ErrStartAfterEnd
+		return nil, errors.ErrStartAfterEnd
 	}
 
 	prefix := storePrefix(storeKey)
@@ -181,11 +183,11 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 
 func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
-		return nil, store.ErrStartAfterEnd
+		return nil, errors.ErrStartAfterEnd
 	}
 
 	prefix := storePrefix(storeKey)

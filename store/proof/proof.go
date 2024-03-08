@@ -6,10 +6,8 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	"cosmossdk.io/errors"
+	storeerrors "cosmossdk.io/store/v2/errors"
 )
-
-// ErrInvalidProof is returned when a proof is invalid
-var ErrInvalidProof = errors.Register("store", 2, "invalid proof")
 
 // Proof operation types
 const (
@@ -100,7 +98,7 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	// calculate root from proof
 	root, err := op.Proof.Calculate()
 	if err != nil {
-		return nil, errors.Wrapf(ErrInvalidProof, "could not calculate root for proof: %v", err)
+		return nil, errors.Wrapf(storeerrors.ErrInvalidProof, "could not calculate root for proof: %v", err)
 	}
 
 	// Only support an existence proof or nonexistence proof (batch proofs currently unsupported)
@@ -109,17 +107,17 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 		// Args are nil, so we verify the absence of the key.
 		absent := ics23.VerifyNonMembership(op.Spec, root, op.Proof, op.Key)
 		if !absent {
-			return nil, errors.Wrapf(ErrInvalidProof, "proof did not verify absence of key: %s", string(op.Key))
+			return nil, errors.Wrapf(storeerrors.ErrInvalidProof, "proof did not verify absence of key: %s", string(op.Key))
 		}
 
 	case 1:
 		// Args is length 1, verify existence of key with value args[0]
 		if !ics23.VerifyMembership(op.Spec, root, op.Proof, op.Key, args[0]) {
-			return nil, errors.Wrapf(ErrInvalidProof, "proof did not verify existence of key %s with given value %x", op.Key, args[0])
+			return nil, errors.Wrapf(storeerrors.ErrInvalidProof, "proof did not verify existence of key %s with given value %x", op.Key, args[0])
 		}
 
 	default:
-		return nil, errors.Wrapf(ErrInvalidProof, "args must be length 0 or 1, got: %d", len(args))
+		return nil, errors.Wrapf(storeerrors.ErrInvalidProof, "args must be length 0 or 1, got: %d", len(args))
 	}
 
 	return [][]byte{root}, nil

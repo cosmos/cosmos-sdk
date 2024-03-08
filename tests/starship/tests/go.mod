@@ -34,7 +34,6 @@ replace (
 	cosmossdk.io/x/protocolpool => ../../../x/protocolpool
 	cosmossdk.io/x/slashing => ../../../x/slashing
 	cosmossdk.io/x/staking => ../../../x/staking
-	cosmossdk.io/x/tx => ../../../x/tx
 	cosmossdk.io/x/upgrade => ../../../x/upgrade
 )
 
@@ -79,7 +78,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/tx v0.13.0 // indirect
+	cosmossdk.io/x/tx v0.13.1 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

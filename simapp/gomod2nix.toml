@@ -37,6 +37,9 @@ schema = 3
   [mod."cosmossdk.io/store"]
     version = "v1.0.2"
     hash = "sha256-mEaBNfU892M3V6qTMEDXb1GLaywlyouTRC5XfVqNSMs="
+  [mod."cosmossdk.io/x/tx"]
+    version = "v0.13.1"
+    hash = "sha256-dHv2Zx8xbqfv1Gq0syh33G7TFJOVx4857QMH4b8Jj9k="
   [mod."filippo.io/edwards25519"]
     version = "v1.1.0"
     hash = "sha256-9ACANrgWZSd5HYPfDZHY8DVbPSC9LOMgy8deq3rDOoc="

@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/x/tx v0.13.0
+	cosmossdk.io/x/tx v0.13.1
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0
@@ -175,5 +175,4 @@ replace (
 	cosmossdk.io/x/mint => ../mint
 	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
-	cosmossdk.io/x/tx => ../tx
 )

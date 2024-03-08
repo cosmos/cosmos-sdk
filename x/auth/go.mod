@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v0.13.0
+	cosmossdk.io/x/tx v0.13.1
 	github.com/cometbft/cometbft v0.38.5
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/cosmos/cosmos-sdk v0.51.0
@@ -174,5 +174,4 @@ replace (
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking
-	cosmossdk.io/x/tx => ../tx
 )

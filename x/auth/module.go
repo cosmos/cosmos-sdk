@@ -124,7 +124,6 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 // InitGenesis performs genesis initialization for the auth module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 	var genesisState types.GenesisState
-	fmt.Println(am.cdc)
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}

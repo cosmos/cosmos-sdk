@@ -73,8 +73,8 @@ type HasName interface {
 type HasGenesisBasics interface {
 	HasName
 
-	DefaultGenesis(codec.JSONCodec) json.RawMessage
-	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
+	DefaultGenesis() json.RawMessage
+	ValidateGenesis(json.RawMessage) error
 }
 
 // HasAminoCodec is the interface for modules that have amino codec registration.
@@ -91,6 +91,7 @@ type HasGRPCGateway interface {
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
 
+// HasGenesis is the extension interface for stateful genesis methods.
 type HasGenesis = appmodulev2.HasGenesis
 
 // HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
@@ -320,11 +321,11 @@ func (m *Manager) RegisterInterfaces(registry registry.LegacyRegistry) {
 }
 
 // DefaultGenesis provides default genesis information for all modules
-func (m *Manager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
+func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, b := range m.Modules {
 		if mod, ok := b.(HasGenesisBasics); ok {
-			genesisData[mod.Name()] = mod.DefaultGenesis(cdc)
+			genesisData[mod.Name()] = mod.DefaultGenesis()
 		} else if mod, ok := b.(HasName); ok {
 			genesisData[mod.Name()] = []byte("{}")
 		}
@@ -334,11 +335,11 @@ func (m *Manager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage
 }
 
 // ValidateGenesis performs genesis state validation for all modules
-func (m *Manager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
+func (m *Manager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for _, b := range m.Modules {
 		// first check if the module is an adapted Core API Module
 		if mod, ok := b.(HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[mod.Name()]); err != nil {
+			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
 			}
 		}
@@ -686,7 +687,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 				}
 			}
 			if module, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
-				moduleValUpdates := module.InitGenesis(sdkCtx, module.DefaultGenesis(c.cdc))
+				moduleValUpdates := module.InitGenesis(sdkCtx, module.DefaultGenesis())
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {

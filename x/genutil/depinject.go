@@ -40,6 +40,6 @@ func ProvideModule(in ModuleInputs) appmodule.AppModule {
 		in.GenTxValidator = types.DefaultMessageValidator
 	}
 
-	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config, in.GenTxValidator, in.Cdc)
+	m := NewAppModule(in.Cdc, in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config, in.GenTxValidator)
 	return m
 }

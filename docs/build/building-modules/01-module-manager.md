@@ -30,6 +30,8 @@ There are 2 main application module interfaces:
 
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
+<!-- TO UPDATE - THIS IS SEVERELY OUTDATED -->
+
 * (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
 * (legacy) [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
 * (legacy) [`module.HasGenesis`](#modulehasgenesis) for inter-dependent genesis-related module functionalities.

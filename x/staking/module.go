@@ -131,14 +131,14 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the staking module.
-func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 

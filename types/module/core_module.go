@@ -43,7 +43,7 @@ type coreAppModuleAdaptor struct {
 }
 
 // DefaultGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+func (c coreAppModuleAdaptor) DefaultGenesis() json.RawMessage {
 	if mod, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		target := genesis.RawJSONTarget{}
 		err := mod.DefaultGenesis(target.Target())
@@ -60,14 +60,14 @@ func (c coreAppModuleAdaptor) DefaultGenesis(cdc codec.JSONCodec) json.RawMessag
 	}
 
 	if mod, ok := c.module.(HasGenesisBasics); ok {
-		return mod.DefaultGenesis(cdc)
+		return mod.DefaultGenesis()
 	}
 
 	return nil
 }
 
 // ValidateGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) ValidateGenesis(cdc codec.JSONCodec, txConfig client.TxEncodingConfig, bz json.RawMessage) error {
+func (c coreAppModuleAdaptor) ValidateGenesis(bz json.RawMessage) error {
 	if mod, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		source, err := genesis.SourceFromRawJSON(bz)
 		if err != nil {
@@ -80,7 +80,7 @@ func (c coreAppModuleAdaptor) ValidateGenesis(cdc codec.JSONCodec, txConfig clie
 	}
 
 	if mod, ok := c.module.(HasGenesisBasics); ok {
-		return mod.ValidateGenesis(cdc, txConfig, bz)
+		return mod.ValidateGenesis(bz)
 	}
 
 	return nil
@@ -102,6 +102,10 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) json.RawMessage
 		}
 
 		return rawJSON
+	}
+
+	if mod, ok := c.module.(HasABCIGenesis); ok {
+		return mod.ExportGenesis(ctx)
 	}
 
 	if mod, ok := c.module.(HasGenesis); ok {

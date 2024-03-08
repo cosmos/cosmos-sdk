@@ -36,20 +36,20 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
+	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper,
 	deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 	genTxValidator types.MessageValidator,
-	cdc codec.Codec,
 ) module.AppModule {
 	return AppModule{
+		cdc:              cdc,
 		accountKeeper:    accountKeeper,
 		stakingKeeper:    stakingKeeper,
 		deliverTx:        deliverTx,
 		txEncodingConfig: txEncodingConfig,
 		genTxValidator:   genTxValidator,
-		cdc:              cdc,
 	}
 }
 
@@ -62,18 +62,18 @@ func (AppModule) Name() string {
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the genutil module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the genutil module.
-func (b AppModule) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder(), b.genTxValidator)
+	return types.ValidateGenesis(&data, am.txEncodingConfig.TxJSONDecoder(), am.genTxValidator)
 }
 
 // InitGenesis performs genesis initialization for the genutil module.
@@ -89,7 +89,7 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) []abc
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
 func (am AppModule) ExportGenesis(_ context.Context) json.RawMessage {
-	return am.DefaultGenesis(am.cdc)
+	return am.DefaultGenesis()
 }
 
 // GenTxValidator returns the genutil module's genesis transaction validator.

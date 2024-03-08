@@ -22,20 +22,16 @@ trait PostHandler<Request, Response = ()> {
     fn post_handle(&self, ctx: &mut Context, req: &Request, res: &mut Response) -> zeropb::Result<()>;
 }
 
-impl<T, Request, Response> Router for T
-    where T: Handler<Request, Response>
+impl<Request, Response> Router for dyn Handler<Request, Response>
 {
-    fn route(&self, method_id: u64, ctx: usize, caller_id: u64, p0: usize, p1: usize) -> usize {
-        let res = self.handle(todo!(), todo!());
-        0
+    fn route(&self, route_id: u64, ctx: usize, p0: usize, p1: usize) -> usize {
+        todo!()
     }
 }
 
-impl<T, Request, Response> Router for T
-    where T: InternalHandler<Request, Response>
+impl<Request, Response> Router for dyn InternalHandler<Request, Response>
 {
-    fn route(&self, method_id: u64, ctx: usize, caller_id: u64, p0: usize, p1: usize) -> usize {
-        let res = self.handle(todo!(), todo!(), todo!());
-        0
+    fn route(&self, route_id: u64, ctx: usize, p0: usize, p1: usize) -> usize {
+        todo!()
     }
 }

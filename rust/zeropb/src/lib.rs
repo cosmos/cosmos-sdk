@@ -43,7 +43,7 @@ pub use context::{Context};
 
 pub use code::{Code};
 
-pub use client::{Connection, connection_invoke};
+pub use client::{Client, Connection, connection_invoke};
 
 pub use server::Server;
 

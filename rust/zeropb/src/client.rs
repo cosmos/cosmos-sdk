@@ -4,6 +4,10 @@ use crate::module_id::ModuleID;
 use crate::root::RawRoot;
 use crate::result::{Result};
 
+pub trait Client {
+    fn service_name(&self) -> &'static str;
+}
+
 /// cbindgen:ignore
 #[cfg(target_arch = "wasm32")]
 #[link(wasm_import_module = "ZeroPB")]

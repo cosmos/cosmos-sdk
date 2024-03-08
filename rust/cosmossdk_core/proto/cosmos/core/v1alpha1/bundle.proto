@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package cosmos.app.v1alpha1;
+package cosmos.core.v1alpha1;
 
 // ModuleBundleDescriptor is a descriptor for a bundle of modules packaged in a single compilation unit.
 message ModuleBundleDescriptor {
@@ -89,7 +89,7 @@ message ProtoService {
   string name = 1;
 
   // The encoding used for request and response messages.
-  Encoding encoding = 2;
+//  Encoding encoding = 2;
 }
 
 
@@ -105,17 +105,17 @@ message ProtoMessageHandler {
   // The name of the proto message.
   string name = 1;
 
-  // The encoding of the proto message.
-  Encoding encoding = 2;
-
   // The optional name of the response this handler returns if any. Note that using this method to define
   // handlers makes it hard to coordinate the response type with clients, so actual service definitions
   // should be preferred here.
-  string response_name = 3;
+  string response_name = 2;
 
   // An optional "virtual" proto file descriptor that can be used to dynamically declare a protobuf
   // compatible type (say for instance in Rust structs), without actually defining a .proto file.
-  bytes virtual_file_descriptor = 4;
+  bytes virtual_file_descriptor = 3;
+
+  // The encoding of the proto message.
+  //  Encoding encoding = 4;
 }
 
 // StoreService specifies a client or server implementation of a store service.
@@ -135,24 +135,24 @@ message ProtoMessageHandler {
 //
 // Unordered store services do not define any of of the iteration methods.
 message StoreService {
-  enum Type {
-    TYPE_ORDERED_DEFAULT = 0;
-    TYPE_UNORDERED = 1;
-  }
-
-  Type type = 1;
+////  enum Type {
+////    TYPE_ORDERED_DEFAULT = 0;
+////    TYPE_UNORDERED = 1;
+////  }
+//
+//  Type type = 1;
 }
 
 // A client which dynamically routes proto messages or invokes proto service methods
 // based on the message or method name.
 message DynamicProtoClient {
-  Encoding encoding = 1;
+//  Encoding encoding = 1;
 }
 
 // Encoding defines a module bundle's encoding. It is assumed that
-enum Encoding {
-  ENCODING_ZERO_PB_UNSPECIFIED = 0;
-}
+//enum Encoding {
+//  ENCODING_ZERO_PB_UNSPECIFIED = 0;
+//}
 
 message AccountHandlerDescriptor {
   // handler_name is the unique name of this handler type as specified by

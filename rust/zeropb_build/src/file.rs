@@ -8,7 +8,7 @@ pub(crate) fn gen_file(file: &FileDescriptorProto, ctx: &mut Context) -> anyhow:
         gen_message(message, ctx)?;
     }
     for service in file.service.iter() {
-        gen_service(service, ctx)?;
+        gen_service(file, service, ctx)?;
     }
     Ok(())
 }

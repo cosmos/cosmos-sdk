@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package example.bank.v1;
+
+service Msg {
+  rpc Send(MsgSend) returns (MsgSendResponse);
+}
+
+message MsgSend {
+  string from = 1;
+  string to = 2;
+  string denom = 3;
+  uint64 amount = 4;
+}
+
+message MsgSendResponse {}
+
+service Query {
+  rpc Balance(QueryBalance) returns (QueryBalanceResponse);
+}
+
+message QueryBalance {
+  string address = 1;
+  string denom = 2;
+}
+
+message QueryBalanceResponse {
+  uint64 balance = 1;
+}

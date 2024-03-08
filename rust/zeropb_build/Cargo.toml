@@ -15,3 +15,7 @@ syn = "2.0.52"
 quote = "1.0.35"
 prettyplease = "0.2.16"
 proc-macro2 = "1.0.78"
+
+[[bin]]
+name = "protoc-gen-zeropb-rs"
+path = "src/main.rs"

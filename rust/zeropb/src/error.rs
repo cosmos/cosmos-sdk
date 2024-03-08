@@ -2,8 +2,8 @@ use core::fmt::Debug;
 use crate::{Code, Root, Str};
 
 pub struct Error {
-    pub(crate) code: Code,
-    pub(crate) msg: Root<Str>,
+    pub code: Code,
+    pub msg: Root<Str>,
 }
 
 impl Debug for Error {

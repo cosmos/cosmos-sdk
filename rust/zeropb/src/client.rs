@@ -11,9 +11,9 @@ extern "C" {
     fn host_invoke(ctx: u64, method_id: u64, req: *const u8, res: *mut *mut u8) -> u64;
 }
 
-pub type Connection = extern "C" fn(u64, u64, *const u8, *mut *mut u8) -> u64;
+pub type Connection = extern "C" fn(u64, u64, usize, usize) -> u64;
 
-pub fn connection_invoke<I: ZeroCopy, O: ZeroCopy>(connection: Connection, method_id: u64, ctx: &mut Context, caller: &ModuleID, req: Root<I>) -> Result<O> {
+pub fn connection_invoke<I: ZeroCopy, O: ZeroCopy>(connection: Connection, method_id: u64, ctx: &mut Context, req: Root<I>) -> Result<O> {
     unsafe {
         let mut res_ptr: *mut u8 = core::ptr::null_mut();
         let mut code = 0;
@@ -30,7 +30,7 @@ pub fn connection_invoke<I: ZeroCopy, O: ZeroCopy>(connection: Connection, metho
                 });
             }
         } else {
-            code = connection(method_id, ctx.id, req.unsafe_unwrap(), &mut res_ptr);
+            code = connection(method_id, ctx.id, req.unsafe_unwrap() as usize, res_ptr as usize);
         }
         let code = crate::Code::try_from_primitive(code as u8).map_err(|_| crate::Error {
             code: crate::Code::Internal,

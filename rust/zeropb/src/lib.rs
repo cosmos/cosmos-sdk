@@ -45,7 +45,9 @@ pub use code::{Code};
 
 pub use client::{Connection, connection_invoke};
 
-pub use result::{Result, ok, err_code, err_msg};
+pub use server::Server;
+
+pub use result::{RawResult, Result, ok, err_code, err_msg};
 
 pub use module_id::{ModuleID};
 

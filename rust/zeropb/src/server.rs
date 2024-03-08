@@ -1,6 +1,5 @@
-use crate::Context;
-use crate::module_id::ModuleID;
+use crate::{Code, Context};
 
-trait Server<S> {
-    fn route<S>(ctx: u64, method_id: u64, ctx: &mut Context, caller: &ModuleID, req: *const u8, res: *mut *mut u8) -> u64;
+pub trait Server {
+    fn route(&self, method_id: u64, ctx: &mut Context, req: *mut u8, res: *mut *mut u8) -> Code;
 }

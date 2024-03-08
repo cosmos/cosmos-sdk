@@ -38,7 +38,7 @@ pub fn compile_fd(bz: &[u8]) -> std::io::Result<()> {
     let out_dir = env::var_os("OUT_DIR").unwrap();
     let dest_path = Path::new(&out_dir).join(fd.name.unwrap().replace(".proto", ".rs"));
     fs::create_dir_all(dest_path.parent().unwrap()).unwrap();
-    let contents = ctx.header + "\n" + &ctx.body;
+    let contents = ctx.to_string();
     fs::write(&dest_path, contents)?;
     Ok(())
 }

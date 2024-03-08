@@ -35,6 +35,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
+## Unreleased
+
+### Improvements
+
+* (auth) [#407](https://github.com/agoric-labs/cosmos-sdk/pull/407) Configurable fee collector module account in DeductFeeDecorator.
+
+### API Breaking
+
+* (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support
+
+## `v0.46.16-alpha.agoric.2.1` - 2024-03-08
+
+### Improvements
+
+* (auth) #??? Configurable fee collector module account in DeductFeeDecorator. (backport #407)
+
 ## `v0.46.16-alpha.agoric.2` - 2024-02-08
 
 * Agoric/agoric-sdk#8871 Have `tx gov submit-proposal` accept either new or legacy syntax

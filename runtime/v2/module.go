@@ -71,7 +71,6 @@ func init() {
 			ProvideKVStoreKey,
 			ProvideEnvironment,
 			ProvideModuleManager,
-			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
 		),
@@ -196,12 +195,6 @@ func ProvideKVStoreKey(config *runtimev2.Module, key depinject.ModuleKey, app *A
 	return storeKey
 }
 
-func ProvideTransientStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.TransientStoreKey {
-	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
-	registerStoreKey(app, storeKey)
-	return storeKey
-}
-
 func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
@@ -213,16 +206,12 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	appmodulev2.Environment,
 	store.KVStoreService,
 	store.MemoryStoreService,
-	store.TransientStoreService,
 ) {
 	kvStoreKey := ProvideKVStoreKey(config, key, app)
 	kvService := stf.NewKVStoreService([]byte(kvStoreKey.Name()))
 
 	memStoreKey := ProvideMemoryStoreKey(key, app)
 	memService := stf.NewMemoryStoreService([]byte(memStoreKey.Name()))
-
-	transientStoreKey := ProvideTransientStoreKey(key, app)
-	transientService := stf.NewTransientStoreService([]byte(transientStoreKey.Name()))
 
 	env := appmodulev2.Environment{
 		Logger:          logger,
@@ -234,7 +223,7 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		MemStoreService: memService,
 	}
 
-	return env, kvService, memService, transientService
+	return env, kvService, memService
 }
 
 type (

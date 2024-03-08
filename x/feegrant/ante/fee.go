@@ -7,13 +7,13 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-
-	"cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/feegrant"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+const feeCollectorName = "fee_collector"
 
 type FeegrantKeeper interface {
 	UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
@@ -78,8 +78,8 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
+	if addr := dfd.accountKeeper.GetModuleAddress(feeCollectorName); addr == nil {
+		return fmt.Errorf("fee collector module account (%s) has not been set", feeCollectorName)
 	}
 
 	feePayer := feeTx.FeePayer()
@@ -124,12 +124,12 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc []byte, fees sdk.Coins) error {
+func DeductFees(bankKeeper feegrant.BankKeeper, ctx sdk.Context, acc []byte, fees sdk.Coins) error {
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(acc), types.FeeCollectorName, fees)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(acc), feeCollectorName, fees)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}

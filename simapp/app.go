@@ -698,7 +698,7 @@ func (app *SimApp) AutoCliOpts() autocli.AppOptions {
 
 // DefaultGenesis returns a default genesis from the registered AppModule's.
 func (a *SimApp) DefaultGenesis() map[string]json.RawMessage {
-	return a.ModuleManager.DefaultGenesis(a.appCodec)
+	return a.ModuleManager.DefaultGenesis()
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

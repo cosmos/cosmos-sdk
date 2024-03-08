@@ -63,6 +63,10 @@ func (c coreAppModuleAdaptor) DefaultGenesis() json.RawMessage {
 		return mod.DefaultGenesis()
 	}
 
+	if mod, ok := c.module.(HasGenesis); ok {
+		return mod.DefaultGenesis()
+	}
+
 	return nil
 }
 
@@ -80,6 +84,10 @@ func (c coreAppModuleAdaptor) ValidateGenesis(bz json.RawMessage) error {
 	}
 
 	if mod, ok := c.module.(HasGenesisBasics); ok {
+		return mod.ValidateGenesis(bz)
+	}
+
+	if mod, ok := c.module.(HasGenesis); ok {
 		return mod.ValidateGenesis(bz)
 	}
 

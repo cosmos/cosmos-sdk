@@ -223,8 +223,6 @@ func TestManager_ExportGenesis(t *testing.T) {
 	require.Equal(t, 3, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
 	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx))
 	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx))
 
@@ -236,23 +234,23 @@ func TestManager_ExportGenesis(t *testing.T) {
 }`),
 	}
 
-	res, err := mm.ExportGenesis(ctx, cdc)
+	res, err := mm.ExportGenesis(ctx)
 	require.NoError(t, err)
 	require.Equal(t, want, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{})
+	res, err = mm.ExportGenesisForModules(ctx, []string{})
 	require.NoError(t, err)
 	require.Equal(t, want, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1"})
+	res, err = mm.ExportGenesisForModules(ctx, []string{"module1"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module2"})
+	res, err = mm.ExportGenesisForModules(ctx, []string{"module2"})
 	require.NoError(t, err)
 	require.NotEqual(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, res)
 
-	_, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+	_, err = mm.ExportGenesisForModules(ctx, []string{"module1", "modulefoo"})
 	require.Error(t, err)
 }
 
@@ -333,8 +331,6 @@ func TestCoreAPIManager_ExportGenesis(t *testing.T) {
 	require.Equal(t, 2, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{
   "someField": "someKey"
@@ -344,23 +340,23 @@ func TestCoreAPIManager_ExportGenesis(t *testing.T) {
 }`),
 	}
 
-	res, err := mm.ExportGenesis(ctx, cdc)
+	res, err := mm.ExportGenesis(ctx)
 	require.NoError(t, err)
 	require.Equal(t, want, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{})
+	res, err = mm.ExportGenesisForModules(ctx, []string{})
 	require.NoError(t, err)
 	require.Equal(t, want, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1"})
+	res, err = mm.ExportGenesisForModules(ctx, []string{"module1"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]json.RawMessage{"module1": want["module1"]}, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module2"})
+	res, err = mm.ExportGenesisForModules(ctx, []string{"module2"})
 	require.NoError(t, err)
 	require.NotEqual(t, map[string]json.RawMessage{"module1": want["module1"]}, res)
 
-	_, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+	_, err = mm.ExportGenesisForModules(ctx, []string{"module1", "modulefoo"})
 	require.Error(t, err)
 }
 

@@ -144,7 +144,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#19652](https://github.com/cosmos/cosmos-sdk/pull/19652) 
     * Moved`types/module.HasRegisterInterfaces` to `cosmossdk.io/core`.
     * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.LegacyRegistry` interface.
-* (types) [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) All genesis interfaces now don't take `codec.JsonCodec`. Every module has the codec already, passing it created an unneeded dependency
+* (types) [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) All genesis interfaces now don't take `codec.JsonCodec`. Every module has the codec already, passing it created an unneeded dependency. Additionally, to reflect this change, the module manager does not take a codec either.
 
 ### Client Breaking Changes
 

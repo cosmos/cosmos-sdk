@@ -46,8 +46,9 @@ import (
 
 // Deprecated: use the embed extension interfaces instead, when needed.
 type AppModuleBasic interface {
+	appmodulev2.HasRegisterInterfaces
+
 	HasName
-	HasRegisterInterfaces
 	HasGRPCGateway
 	HasAminoCodec
 }
@@ -56,10 +57,10 @@ type AppModuleBasic interface {
 // its functionality has been moved to extension interfaces.
 // Deprecated: use appmodule.AppModule with a combination of extension interfaces interfaces instead.
 type AppModule interface {
-	appmodulev2.AppModule
-
 	HasName
-	HasRegisterInterfaces
+
+	appmodulev2.AppModule
+	appmodulev2.HasRegisterInterfaces
 }
 
 // HasName allows the module to provide its own name for legacy purposes.
@@ -84,7 +85,7 @@ type HasAminoCodec interface {
 }
 
 // HasRegisterInterfaces is the interface for modules to register their msg types.
-type HasRegisterInterfaces appmodule.HasRegisterInterfaces
+type HasRegisterInterfaces appmodulev2.HasRegisterInterfaces
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
 type HasGRPCGateway interface {
@@ -477,12 +478,12 @@ func (m *Manager) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, genesisData ma
 }
 
 // ExportGenesis performs export genesis functionality for modules
-func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) (map[string]json.RawMessage, error) {
-	return m.ExportGenesisForModules(ctx, cdc, []string{})
+func (m *Manager) ExportGenesis(ctx sdk.Context) (map[string]json.RawMessage, error) {
+	return m.ExportGenesisForModules(ctx, []string{})
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules
-func (m *Manager) ExportGenesisForModules(ctx sdk.Context, _ codec.JSONCodec, modulesToExport []string) (map[string]json.RawMessage, error) {
+func (m *Manager) ExportGenesisForModules(ctx sdk.Context, modulesToExport []string) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.OrderExportGenesis
 	}

@@ -12,16 +12,19 @@ In this section we describe the changes made in Cosmos SDK' SimApp.
 
 #### Client (`root.go`)
 
-The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.).
+The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.)
+and address bech32 prefixes (address and validator address).
 This is part of the work of abstracting the SDK from the global bech32 config.
 
-This means the address codecs must be provided in the `client.Context` in the application client (usually `root.go`).
+This means the address codecs and prefixes must be provided in the `client.Context` in the application client (usually `root.go`).
 
 ```diff
 clientCtx = clientCtx.
 + WithAddressCodec(addressCodec).
 + WithValidatorAddressCodec(validatorAddressCodec).
-+ WithConsensusAddressCodec(consensusAddressCodec)
++ WithConsensusAddressCodec(consensusAddressCodec).
++ WithAddressPrefix("cosmos").
++ WithValidatorPrefix("cosmosvaloper")
 ```
 
 **When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
@@ -161,6 +164,12 @@ If your module requires a message server or query server, it should be passed in
 +govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 ```
 
+The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.LegacyRegistry` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.LegacyRegistry` interface.
+
+```diff
+-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
++func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
+```
 
 ##### Dependency Injection
 

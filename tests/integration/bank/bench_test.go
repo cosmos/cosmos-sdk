@@ -15,6 +15,7 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,7 +83,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	_, err = baseApp.Commit()
 	require.NoError(b, err)
 
-	txGen := moduletestutil.MakeTestTxConfig()
+	txGen := moduletestutil.MakeTestTxConfig(codectestutil.CodecOptions{})
 	txEncoder := txGen.TxEncoder()
 
 	// pre-compute all txs
@@ -140,7 +141,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	_, err = baseApp.Commit()
 	require.NoError(b, err)
 
-	txGen := moduletestutil.MakeTestTxConfig()
+	txGen := moduletestutil.MakeTestTxConfig(codectestutil.CodecOptions{})
 	txEncoder := txGen.TxEncoder()
 
 	// pre-compute all txs

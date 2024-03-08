@@ -18,6 +18,7 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,7 +51,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 		testCases[int64(height)] = testCase{}
 	}
 
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	for height := range testCases {
 		testCases[height] = testCase{
 			oldKey:         v5.GetLegacyHistoricalInfoKey(height),
@@ -80,7 +81,7 @@ func createHistoricalInfo(height int64, chainID string) *stakingtypes.Historical
 }
 
 func TestDelegationsByValidatorMigrations(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(staking.AppModule{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, staking.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(v5.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)

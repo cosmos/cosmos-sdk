@@ -53,18 +53,21 @@ impl ValueCodec for bool {
 //     type In = u64;
 // }
 
-pub struct Map<K, V> {}
+pub struct Map<K, V> {
+    _k: std::marker::PhantomData<K>,
+    _v: std::marker::PhantomData<V>
+}
 
 impl <K:KeyCodec, V: ValueCodec> Map<K, V> {
-    pub fn get(&self, ctx: &cosmossdk_core::Context, key: &K::In) -> cosmossdk_core::Result<&V::Out> {
+    pub fn get(&self, ctx: &cosmossdk_core::Context, key: &K::In<'_>) -> cosmossdk_core::Result<&V::Out> {
         todo!()
     }
 
-    pub fn get_last_block(&self, ctx: &cosmossdk_core::Context, key: &K::In) -> cosmossdk_core::Result<&V::Out> {
+    pub fn get_last_block(&self, ctx: &cosmossdk_core::Context, key: &K::In<'_>) -> cosmossdk_core::Result<&V::Out> {
         todo!()
     }
 
-    pub fn set(&self, ctx: &cosmossdk_core::Context, key: K::In, value: &V::In) -> cosmossdk_core::Result<()> {
+    pub fn set(&self, ctx: &cosmossdk_core::Context, key: K::In<'_>, value: &V::In) -> cosmossdk_core::Result<()> {
         todo!()
     }
 }

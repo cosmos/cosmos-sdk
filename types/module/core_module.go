@@ -104,6 +104,14 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) json.RawMessage
 		return rawJSON
 	}
 
+	if mod, ok := c.module.(HasGenesis); ok {
+		eg, err := mod.ExportGenesis(ctx)
+		if err != nil {
+			panic(err)
+		}
+		return eg
+	}
+
 	return nil
 }
 
@@ -124,6 +132,14 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessag
 
 	if mod, ok := c.module.(HasABCIGenesis); ok {
 		return mod.InitGenesis(ctx, bz)
+	}
+
+	if mod, ok := c.module.(HasGenesis); ok {
+		err := mod.InitGenesis(ctx, bz)
+		if err != nil {
+			panic(err)
+		}
+
 	}
 	return nil
 }

@@ -423,7 +423,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
+func (m *Manager) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -481,7 +481,7 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) (map[strin
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules
-func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, modulesToExport []string) (map[string]json.RawMessage, error) {
+func (m *Manager) ExportGenesisForModules(ctx sdk.Context, _ codec.JSONCodec, modulesToExport []string) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.OrderExportGenesis
 	}

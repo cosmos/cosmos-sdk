@@ -37,19 +37,48 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* (slashing) [#19458](https://github.com/cosmos/cosmos-sdk/pull/19458) Avoid writing SignInfo's for validator's who did not miss a block. (Every BeginBlock)
-* (slashing) [#18959](https://github.com/cosmos/cosmos-sdk/pull/18959) Slight speedup to Slashing Beginblock logic
+* (store) [#525](https://github.com/osmosis-labs/cosmos-sdk/pull/525) CacheKV speedups
+* (slashing) [#548](https://github.com/osmosis-labs/cosmos-sdk/pull/548) Implement v0.50 slashing bitmap logic
+* (slashing) [#543](https://github.com/osmosis-labs/cosmos-sdk/pull/543) Make slashing not write sign info every block
+
+## IAVL v23 v1 Releases
+
+## [Unreleased IAVL v1]
+
+* (x/slashing) [#541](https://github.com/osmosis-labs/cosmos-sdk/pull/541) Slashing speedup with getting params
+* (x/bank) [#547](https://github.com/osmosis-labs/cosmos-sdk/pull/547) Speedup to UnmarshalBalanceCompat
+* (store) [#558](https://github.com/osmosis-labs/cosmos-sdk/pull/558) Gracefully log when there is a pruning error instead of panic
+* (store) [#561](https://github.com/osmosis-labs/cosmos-sdk/pull/561) Enable fast nodes at a per module level
+
+## [v0.47.5-v23-osmo-1-iavl-v2](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1-iavl-v1)
+
+* (store) [#537](https://github.com/osmosis-labs/cosmos-sdk/pull/537) Fix IAVL db grow issue
+
+## [v0.47.5-v23-osmo-1-iavl-v1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1-iavl-v1)
+
+* (store) [#534](https://github.com/osmosis-labs/cosmos-sdk/pull/534) IAVL v1
+
+## IAVL v23 v0 Releases
+
+## [Unreleased IAVL v0]
+
+* (deps) [#530](https://github.com/osmosis-labs/cosmos-sdk/pull/530) Bump go to 1.20
+* (x/slashing) [#540](https://github.com/osmosis-labs/cosmos-sdk/pull/540) Slashing speedup with getting params
+* (x/bank) [#546](https://github.com/osmosis-labs/cosmos-sdk/pull/546) Speedup to UnmarshalBalanceCompat
+* (store) [#560](https://github.com/osmosis-labs/cosmos-sdk/pull/560) Enable fast nodes at a per module level
+
+## [v0.47.5-v23-osmo-1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1)
 
 ## [v0.47.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.5) - 2023-09-01
 
 ### Features
 
 * (client/rpc) [#17274](https://github.com/cosmos/cosmos-sdk/pull/17274) Add `QueryEventForTxCmd` cmd to subscribe and wait event for transaction by hash.
-* (keyring) [#17424](https://github.com/cosmos/cosmos-sdk/pull/17424) Allows to import private keys encoded in hex. 
+* (keyring) [#17424](https://github.com/cosmos/cosmos-sdk/pull/17424) Allows to import private keys encoded in hex.
 
 ### Improvements
 
-* (x/gov) [#17387](https://github.com/cosmos/cosmos-sdk/pull/17387) Add `MsgSubmitProposal` `SetMsgs` method. 
+* (x/gov) [#17387](https://github.com/cosmos/cosmos-sdk/pull/17387) Add `MsgSubmitProposal` `SetMsgs` method.
 * (x/gov) [#17354](https://github.com/cosmos/cosmos-sdk/issues/17354) Emit `VoterAddr` in `proposal_vote` event.
 * (x/group, x/gov) [#17220](https://github.com/cosmos/cosmos-sdk/pull/17220) Add `--skip-metadata` flag in `draft-proposal` to skip metadata prompt.
 * (x/genutil) [#17296](https://github.com/cosmos/cosmos-sdk/pull/17296) Add `MigrateHandler` to allow reuse migrate genesis related function.

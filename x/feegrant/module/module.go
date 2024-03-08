@@ -12,13 +12,17 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/feegrant/ante"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/tx/decode"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -30,10 +34,11 @@ var (
 	_ module.AppModuleSimulation   = AppModule{}
 	_ module.HasGenesis            = AppModule{}
 
-	_ appmodulev2.AppModule     = AppModule{}
-	_ appmodulev2.HasEndBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodulev2.HasMigrations = AppModule{}
+	_ appmodulev2.AppModule                         = AppModule{}
+	_ appmodulev2.HasEndBlocker                     = AppModule{}
+	_ appmodule.HasServices                         = AppModule{}
+	_ appmodulev2.HasMigrations                     = AppModule{}
+	_ appmodulev2.HasTxValidation[decode.DecodedTx] = AppModule{}
 )
 
 // AppModule implements an application module for the feegrant module.
@@ -148,4 +153,24 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // EndBlock returns the end blocker for the feegrant module.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return EndBlocker(ctx, am.keeper)
+}
+
+// TxValidator implements appmodule.HasTxValidation.
+// It replaces auth ante handlers for server/v2
+func (am AppModule) TxValidator(ctx context.Context, tx decode.DecodedTx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	decorator := ante.NewDeductFeeDecorator(am.accountKeeper, am.bankKeeper, am.keeper, nil)
+
+	// setup AnteDecorators
+	anteDecorators := []sdk.AnteDecorator{
+		decorator,
+	}
+
+	// create the AnteHandler by chaining the AnteDecorators
+	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
+
+	// execute the AnteHandler
+	_, err := decorator.AnteHandle(sdkCtx, runtime.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate, anteHandler)
+
+	return err
 }

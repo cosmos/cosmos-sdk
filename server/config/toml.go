@@ -77,6 +77,16 @@ iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 # Default is false.
 iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 
+# IAVLFastNodeModuleWhitelist defines the whitelist of modules that will use fast nodes.
+# If this is empty and IAVLDisableFastNode is false, all modules will use fast nodes.
+# If this is empty and IAVLDisableFastNode is true, no modules will use fast nodes.
+# If this is populated but IAVLDisableFastNode is true, no modules will use fast nodes.
+# If this is populated and IAVLDisableFastNode is false, only modules in the whitelist will use fast nodes.
+#
+# Example:
+# ["lockup", "superfluid"]
+iavl-fastnode-module-whitelist = [{{ range .BaseConfig.IAVLFastNodeModuleWhitelist }}{{ printf "%q, " . }}{{end}}]
+
 # IAVLLazyLoading enable/disable the lazy loading of iavl store.
 # Default is false.
 iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}

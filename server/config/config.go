@@ -95,6 +95,13 @@ type BaseConfig struct {
 	// IAVLDisableFastNode enables or disables the fast sync node.
 	IAVLDisableFastNode bool `mapstructure:"iavl-disable-fastnode"`
 
+	// IAVLFastNodeModuleWhitelist defines the whitelist of modules that will use fast nodes.
+	// If this is empty and IAVLDisableFastNode is false, all modules will use fast nodes.
+	// If this is empty and IAVLDisableFastNode is true, no modules will use fast nodes.
+	// If this is populated but IAVLDisableFastNode is true, no modules will use fast nodes.
+	// If this is populated and IAVLDisableFastNode is false, only modules in the whitelist will use fast nodes.
+	IAVLFastNodeModuleWhitelist []string `mapstructure:"iavl-fastnode-module-whitelist"`
+
 	// IAVLLazyLoading enable/disable the lazy loading of iavl store.
 	IAVLLazyLoading bool `mapstructure:"iavl-lazy-loading"`
 

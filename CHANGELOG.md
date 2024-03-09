@@ -47,18 +47,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased IAVL v1]
 
-## [v0.47.5-v23-osmo-1-iavl-v4](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1-iavl-v4)
+## [v0.47.5-v23-osmo-4-iavl-v1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-4-iavl-v1)
 
 * (config) [#563](https://github.com/osmosis-labs/cosmos-sdk/pull/563) Set lockup as the default whitelisted fast nodes module
 
-## [v0.47.5-v23-osmo-1-iavl-v3](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1-iavl-v3)
+## [v0.47.5-v23-osmo-3-iavl-v1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-3-iavl-v1)
 
 * (x/slashing) [#541](https://github.com/osmosis-labs/cosmos-sdk/pull/541) Slashing speedup with getting params
 * (x/bank) [#547](https://github.com/osmosis-labs/cosmos-sdk/pull/547) Speedup to UnmarshalBalanceCompat
 * (store) [#558](https://github.com/osmosis-labs/cosmos-sdk/pull/558) Gracefully log when there is a pruning error instead of panic
 * (store) [#561](https://github.com/osmosis-labs/cosmos-sdk/pull/561) Enable fast nodes at a per module level
 
-## [v0.47.5-v23-osmo-1-iavl-v2](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1-iavl-v2)
+## [v0.47.5-v23-osmo-2-iavl-v1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-2-iavl-v1)
 
 * (store) [#537](https://github.com/osmosis-labs/cosmos-sdk/pull/537) Fix IAVL db grow issue
 

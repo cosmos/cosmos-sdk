@@ -139,6 +139,10 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 // signing unordered transactions with amino is prohibited. Otherwise, it returns nil indicating that the
 // transaction is valid.
 func rejectAminoUnorderedTx(authInfo *v1beta1.AuthInfo, body *v1beta1.TxBody) error {
+	if !body.Unordered {
+		return nil
+	}
+
 	for _, info := range authInfo.SignerInfos {
 		single, ok := info.ModeInfo.Sum.(*v1beta1.ModeInfo_Single_)
 		if !ok {

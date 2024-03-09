@@ -1,0 +1,37 @@
+syntax = "proto3";
+package cosmos.accountlink.v1;
+
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "cosmossdk.io/x/accountlink/types";
+
+// Msg defines the circuit Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // Register create a relationship between an base account and a smart account
+  rpc Register(MsgRegister) returns (MsgRegisterResponse);
+}
+
+// MsgRegister defines the Msg/Register request type.
+message MsgRegister {
+  option (cosmos.msg.v1.signer) = "owner";
+
+  // owner is the owner of the account
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // account is the address of the account that we want to establish a relationship
+  string account = 2;
+
+  // account_type is the smart account account type
+  string account_type = 3;
+
+  // messages are a set of message that will be executed for
+  // checking certain condition
+  repeated google.protobuf.Any messages = 4;
+}
+
+// MsgRegisterResponse defines the Msg/RegisterResponse response type.
+message MsgRegisterResponse {}

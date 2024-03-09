@@ -81,6 +81,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	vestingv1 "cosmossdk.io/x/vesting"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -291,6 +292,11 @@ func NewSimApp(
 		// TESTING: do not add
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
+		// new vesting account
+		accountstd.AddAccount(vestingv1.CONTINUOUS_VESTING_ACCOUNT, vestingv1.NewContinuousVestingAccount),
+		accountstd.AddAccount(vestingv1.PERIODIC_VESTING_ACCOUNT, vestingv1.NewPeriodicVestingAccount),
+		accountstd.AddAccount(vestingv1.DELAYED_VESTING_ACCOUNT, vestingv1.NewDelayedVestingAccount),
+		accountstd.AddAccount(vestingv1.PERMANENT_VESTING_ACCOUNT, vestingv1.NewPermanentLockedAccount),
 		// PRODUCTION: add
 		baseaccount.NewAccount("base", txConfig.SignModeHandler()),
 	)

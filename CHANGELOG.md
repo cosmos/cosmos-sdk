@@ -47,6 +47,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased IAVL v1]
 
+## [v0.47.5-v23-osmo-1-iavl-v4](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1-iavl-v4)
+
+* (config) [#563](https://github.com/osmosis-labs/cosmos-sdk/pull/563) Set lockup as the default whitelisted fast nodes module
+
 ## [v0.47.5-v23-osmo-1-iavl-v3](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-1-iavl-v3)
 
 * (x/slashing) [#541](https://github.com/osmosis-labs/cosmos-sdk/pull/541) Slashing speedup with getting params
@@ -65,6 +69,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## IAVL v23 v0 Releases
 
 ## [Unreleased IAVL v0]
+
+## [v0.47.5-v23-osmo-3](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-3)
+
+* (config) [#563](https://github.com/osmosis-labs/cosmos-sdk/pull/563) Set lockup as the default whitelisted fast nodes module
 
 ## [v0.47.5-v23-osmo-2](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-2)
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -33,7 +34,7 @@ var (
 
 func TestAuxTxBuilder(t *testing.T) {
 	counterModule := counter.AppModule{}
-	cdc := moduletestutil.MakeTestEncodingConfig(counterModule).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, counterModule).Codec
 	reg := codectypes.NewInterfaceRegistry()
 
 	testdata.RegisterInterfaces(reg)

@@ -1,12 +1,12 @@
 package authz
 
 import (
+	"cosmossdk.io/core/registry"
 	bank "cosmossdk.io/x/bank/types"
 	staking "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -23,7 +23,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry
-func RegisterInterfaces(registry types.InterfaceRegistry) {
+func RegisterInterfaces(registry registry.LegacyRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgGrant{},
 		&MsgRevoke{},

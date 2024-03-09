@@ -9,12 +9,12 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -22,13 +22,13 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.AppModule             = AppModule{}
-	_ module.AppModuleSimulation   = AppModule{}
-	_ module.HasGenesis            = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ module.HasAminoCodec            = AppModule{}
+	_ module.HasGRPCGateway           = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.AppModule                = AppModule{}
+	_ module.AppModuleSimulation      = AppModule{}
+	_ module.HasGenesis               = AppModule{}
 
 	_ appmodule.AppModule   = AppModule{}
 	_ appmodule.HasServices = AppModule{}
@@ -71,7 +71,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	types.RegisterInterfaces(registry)
 }
 

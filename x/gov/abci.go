@@ -30,7 +30,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		}
 
 		// called when proposal become inactive
-		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
+		cacheCtx, writeCache := ctx.CacheContext()
+		err := keeper.Hooks().AfterProposalFailedMinDeposit(cacheCtx, proposal.Id)
+		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
+			writeCache()
+		} else {
+			keeper.Logger(ctx).Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
+		}
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -142,7 +148,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		keeper.SetProposal(ctx, proposal)
 
 		// when proposal become active
-		keeper.Hooks().AfterProposalVotingPeriodEnded(ctx, proposal.Id)
+		cacheCtx, writeCache := ctx.CacheContext()
+		err := keeper.Hooks().AfterProposalVotingPeriodEnded(cacheCtx, proposal.Id)
+		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
+			writeCache()
+		} else {
+			keeper.Logger(ctx).Error("failed to execute AfterProposalVotingPeriodEnded hook", "error", err)
+		}
 
 		logger.Info(
 			"proposal tallied",

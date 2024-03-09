@@ -374,14 +374,21 @@ func (k Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, granter, 
 	return nil
 }
 
+// NOTE: backported from v50
 // DequeueAndDeleteExpiredGrants deletes expired grants from the state and grant queue.
-func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context) error {
+func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context, limit int) error {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := store.Iterator(GrantQueuePrefix, sdk.InclusiveEndBytes(GrantQueueTimePrefix(ctx.BlockTime())))
 	defer iterator.Close()
 
+	count := 0
 	for ; iterator.Valid(); iterator.Next() {
+		// limit the amount of iterations to avoid taking too much time
+		if count >= limit {
+			return nil
+		}
+
 		var queueItem authz.GrantQueueItem
 		if err := k.cdc.Unmarshal(iterator.Value(), &queueItem); err != nil {
 			return err
@@ -397,6 +404,8 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context) error {
 		for _, typeURL := range queueItem.MsgTypeUrls {
 			store.Delete(grantStoreKey(grantee, granter, typeURL))
 		}
+
+		count++
 	}
 
 	return nil

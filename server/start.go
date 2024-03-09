@@ -939,6 +939,7 @@ func addStartNodeFlags(cmd *cobra.Command, defaultNodeHome string) {
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
+	cmd.Flags().StringArray(FlagIAVLFastNodeModuleWhitelist, []string{"lockup"}, "Comma separated list of modules to enable fast node for")
 
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
 

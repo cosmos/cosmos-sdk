@@ -26,6 +26,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	cdctestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -175,7 +176,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	require.NoError(t, err)
 	sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-	txConfig := moduletestutil.MakeTestTxConfig()
+	txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
@@ -255,7 +256,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-			txConfig := moduletestutil.MakeTestTxConfig()
+			txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 			_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 			if tc.expPass {
 				require.NoError(t, err)
@@ -308,7 +309,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
+		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -363,7 +364,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
+		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 

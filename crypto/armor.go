@@ -62,7 +62,7 @@ var BcryptSecurityParameter uint32 = 12
 //-----------------------------------------------------------------
 // add armor
 
-// Armor the InfoBytes
+// ArmorInfoBytes armor the InfoBytes
 func ArmorInfoBytes(bz []byte) string {
 	header := map[string]string{
 		headerType:    "Info",
@@ -72,7 +72,7 @@ func ArmorInfoBytes(bz []byte) string {
 	return EncodeArmor(blockTypeKeyInfo, header, bz)
 }
 
-// Armor the PubKeyBytes
+// ArmorPubKeyBytes armor the PubKeyBytes
 func ArmorPubKeyBytes(bz []byte, algo string) string {
 	header := map[string]string{
 		headerVersion: "0.0.1",
@@ -87,7 +87,7 @@ func ArmorPubKeyBytes(bz []byte, algo string) string {
 //-----------------------------------------------------------------
 // remove armor
 
-// Unarmor the InfoBytes
+// UnarmorInfoBytes unarmor the InfoBytes
 func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypeKeyInfo)
 	if err != nil {
@@ -142,7 +142,7 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 //-----------------------------------------------------------------
 // encrypt/decrypt with armor
 
-// Encrypt and armor the private key.
+// EncryptArmorPrivKey encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
@@ -241,7 +241,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 
-		if err == xsalsa20symmetric.ErrCiphertextDecrypt {
+		if errors.Is(err, xsalsa20symmetric.ErrCiphertextDecrypt) {
 			return privKey, sdkerrors.ErrWrongPassword
 		}
 	default:

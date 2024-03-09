@@ -19,6 +19,7 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -52,7 +53,7 @@ type GenTxTestSuite struct {
 }
 
 func (suite *GenTxTestSuite) SetupTest() {
-	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(genutil.AppModule{})
+	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, genutil.AppModule{})
 	key := storetypes.NewKVStoreKey("a_Store_Key")
 	tkey := storetypes.NewTransientStoreKey("a_transient_store")
 	suite.ctx = testutil.DefaultContext(key, tkey)

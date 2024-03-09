@@ -1,11 +1,11 @@
 package types
 
 import (
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/evidence/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -19,7 +19,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry.
-func RegisterInterfaces(registry types.InterfaceRegistry) {
+func RegisterInterfaces(registry registry.LegacyRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSubmitEvidence{})
 	registry.RegisterInterface(
 		"cosmos.evidence.v1beta1.Evidence",

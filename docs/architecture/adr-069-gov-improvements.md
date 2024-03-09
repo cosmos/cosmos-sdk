@@ -164,19 +164,15 @@ Due to the vote option change, each proposal can have the same tallying method.
 
 However, chains may want to change the tallying function (weighted vote per voting power) of `x/gov` for a different algorithm (using a quadratic function on the voter stake, for instance).
 
-The custom tallying function can be passed to the `x/gov` keeper with the following interface:
+The custom tallying function can be passed to the `x/gov` keeper config:
 
 ```go
-type Tally interface{
-    // to be decided
-
-    // Calculate calculates the tally result
-    Calculate(proposal v1.Proposal, govKeeper GovKeeper, stakingKeeper StakingKeeper) govv1.TallyResult
-    // IsAccepted returns true if the proposal passes/is accepted
-    IsAccepted() bool
-    // BurnDeposit returns true if the proposal deposit should be burned
-    BurnDeposit() bool
-}
+type CalculateVoteResultsAndVotingPowerFn func(
+	ctx context.Context,
+	keeper Keeper,
+	proposalID uint64,
+	validators map[string]v1.ValidatorGovInfo,
+) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error)
 ```
 
 ## Consequences

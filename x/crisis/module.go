@@ -10,10 +10,10 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
@@ -24,10 +24,10 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.HasGenesis            = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ module.HasAminoCodec            = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.HasGenesis               = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
@@ -74,7 +74,7 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	types.RegisterInterfaces(registry)
 }
 

@@ -13,13 +13,14 @@ import (
 	"cosmossdk.io/x/authz/simulation"
 	banktypes "cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	s := rand.NewSource(1)

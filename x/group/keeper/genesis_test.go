@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -52,8 +53,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(group.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
@@ -74,7 +74,8 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	s.ctx = s.sdkCtx
 
-	s.keeper = keeper.NewKeeper(env, s.cdc, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(bApp.GRPCQueryRouter(), bApp.MsgServiceRouter()))
+	s.keeper = keeper.NewKeeper(env, s.cdc, accountKeeper, group.DefaultConfig())
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {

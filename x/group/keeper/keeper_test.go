@@ -24,6 +24,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -52,13 +53,10 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	s.blockTime = time.Now().Round(0).UTC()
 	key := storetypes.NewKVStoreKey(group.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{}, bank.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, bank.AppModule{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
-
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(s.T())
@@ -79,8 +77,9 @@ func (s *TestSuite) SetupTest() {
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithRouterService(bApp.GRPCQueryRouter(), bApp.MsgServiceRouter()))
 	config := group.DefaultConfig()
-	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
+	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, s.accountKeeper, config)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 

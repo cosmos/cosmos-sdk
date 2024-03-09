@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	govtypes "cosmossdk.io/x/gov/types"
@@ -28,7 +31,7 @@ func NewMsgServerImpl(keeper *Keeper) v1.MsgServer {
 var _ v1.MsgServer = msgServer{}
 
 // SubmitProposal implements the MsgServer.SubmitProposal method.
-func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
+func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
 	proposer, err := k.authKeeper.AddressCodec().StringToBytes(msg.GetProposer())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
@@ -67,7 +70,6 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
@@ -76,11 +78,11 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	if msg.Expedited { // checking for backward compatibility
 		msg.ProposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 	}
-	if err := k.validateInitialDeposit(ctx, params, msg.GetInitialDeposit(), msg.ProposalType); err != nil {
+	if err := k.validateInitialDeposit(params, msg.GetInitialDeposit(), msg.ProposalType); err != nil {
 		return nil, err
 	}
 
-	if err := k.validateDepositDenom(ctx, params, msg.GetInitialDeposit()); err != nil {
+	if err := k.validateDepositDenom(params, msg.GetInitialDeposit()); err != nil {
 		return nil, err
 	}
 
@@ -95,8 +97,8 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}
 
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
-	ctx.GasMeter().ConsumeGas(
-		3*ctx.KVGasConfig().WriteCostPerByte*uint64(len(bytes)),
+	k.environment.GasService.GetGasMeter(ctx).Consume(
+		3*k.environment.GasService.GetGasConfig(ctx).WriteCostPerByte*uint64(len(bytes)),
 		"submit proposal",
 	)
 
@@ -106,11 +108,12 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}
 
 	if votingStarted {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(govtypes.EventTypeSubmitProposal,
-				sdk.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
-			),
-		)
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+			govtypes.EventTypeSubmitProposal,
+			event.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
+		); err != nil {
+			return nil, errors.Wrapf(err, "failed to emit event: %s", govtypes.EventTypeSubmitProposal)
+		}
 	}
 
 	return &v1.MsgSubmitProposalResponse{
@@ -158,36 +161,33 @@ func (k msgServer) SubmitMultipleChoiceProposal(ctx context.Context, msg *v1.Msg
 }
 
 // CancelProposal implements the MsgServer.CancelProposal method.
-func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
+func (k msgServer) CancelProposal(ctx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
 	_, err := k.authKeeper.AddressCodec().StringToBytes(msg.Proposer)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.Keeper.CancelProposal(ctx, msg.ProposalId, msg.Proposer); err != nil {
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			govtypes.EventTypeCancelProposal,
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer),
-			sdk.NewAttribute(govtypes.AttributeKeyProposalID, fmt.Sprint(msg.ProposalId)),
-		),
-	)
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		govtypes.EventTypeCancelProposal,
+		event.NewAttribute(sdk.AttributeKeySender, msg.Proposer),
+		event.NewAttribute(govtypes.AttributeKeyProposalID, fmt.Sprint(msg.ProposalId)),
+	); err != nil {
+		return nil, errors.Wrapf(err, "failed to emit event: %s", govtypes.EventTypeCancelProposal)
+	}
 
 	return &v1.MsgCancelProposalResponse{
 		ProposalId:     msg.ProposalId,
-		CanceledTime:   ctx.HeaderInfo().Time,
-		CanceledHeight: uint64(ctx.BlockHeight()),
+		CanceledTime:   k.environment.HeaderService.GetHeaderInfo(ctx).Time,
+		CanceledHeight: uint64(k.environment.HeaderService.GetHeaderInfo(ctx).Height),
 	}, nil
 }
 
 // ExecLegacyContent implements the MsgServer.ExecLegacyContent method.
-func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegacyContent) (*v1.MsgExecLegacyContentResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (k msgServer) ExecLegacyContent(ctx context.Context, msg *v1.MsgExecLegacyContent) (*v1.MsgExecLegacyContentResponse, error) {
 	govAcct, err := k.authKeeper.AddressCodec().BytesToString(k.GetGovernanceAccount(ctx).GetAddress())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid governance account address: %s", err)
@@ -277,7 +277,7 @@ func (k msgServer) VoteWeighted(ctx context.Context, msg *v1.MsgVoteWeighted) (*
 }
 
 // Deposit implements the MsgServer.Deposit method.
-func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDepositResponse, error) {
+func (k msgServer) Deposit(ctx context.Context, msg *v1.MsgDeposit) (*v1.MsgDepositResponse, error) {
 	accAddr, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
@@ -287,19 +287,18 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	votingStarted, err := k.Keeper.AddDeposit(ctx, msg.ProposalId, accAddr, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
 
 	if votingStarted {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				govtypes.EventTypeProposalDeposit,
-				sdk.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalId)),
-			),
-		)
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+			govtypes.EventTypeProposalDeposit,
+			event.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalId)),
+		); err != nil {
+			return nil, errors.Wrapf(err, "failed to emit event: %s", govtypes.EventTypeProposalDeposit)
+		}
 	}
 
 	return &v1.MsgDepositResponse{}, nil
@@ -374,27 +373,32 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 		}
 	}
 
-	handler := k.router.Handler(sudoedMsg)
-	if handler == nil {
-		return nil, errors.Wrapf(govtypes.ErrInvalidProposal, "unrecognized message route: %s", sdk.MsgTypeURL(sudoedMsg))
+	var msgResp protoiface.MessageV1
+	if err := k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+		// TODO add route check here
+		if err := k.environment.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
+			return errors.Wrapf(govtypes.ErrInvalidProposal, err.Error())
+		}
+
+		msgResp, err = k.environment.RouterService.MessageRouterService().InvokeUntyped(ctx, sudoedMsg)
+		if err != nil {
+			return errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	msgResp, err := handler(sdkCtx, sudoedMsg)
+	// TODO(@julienrbrt): check if events are properly emitted
+
+	msgRespBytes, err := k.cdc.MarshalJSON(msgResp)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
+		return nil, errors.Wrapf(err, "failed to marshal sudo-ed message response; message %v", msgResp)
 	}
-
-	// emit the events from the executed message
-	events := msgResp.Events
-	sdkEvents := make([]sdk.Event, 0, len(events))
-	for _, event := range events {
-		sdkEvents = append(sdkEvents, sdk.Event(event))
-	}
-	sdkCtx.EventManager().EmitEvents(sdkEvents)
 
 	return &v1.MsgSudoExecResponse{
-		Result: msgResp.Data,
+		Result: msgRespBytes,
 	}, nil
 }
 

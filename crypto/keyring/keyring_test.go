@@ -1119,7 +1119,7 @@ func TestNewAccount(t *testing.T) {
 			bip39Passphrease: "",
 			algo:             hd.Secp256k1,
 			mnemonic:         "fresh enact fresh ski large bicycle marine abandon motor end pact mixture annual elite bind fan write warrior adapt common manual cool happy dutch",
-			expectedErr:      fmt.Errorf("Invalid byte at position"),
+			expectedErr:      errors.New("invalid byte at position"),
 		},
 		{
 			name:             "in memory invalid mnemonic",
@@ -1129,7 +1129,7 @@ func TestNewAccount(t *testing.T) {
 			bip39Passphrease: "",
 			algo:             hd.Secp256k1,
 			mnemonic:         "malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
-			expectedErr:      fmt.Errorf("Invalid mnemonic"),
+			expectedErr:      errors.New("invalid mnemonic"),
 		},
 	}
 	for _, tt := range tests {

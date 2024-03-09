@@ -13,13 +13,14 @@ import (
 	"cosmossdk.io/x/nft/simulation"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(nftmodule.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, nftmodule.AppModule{})
 
 	s := rand.NewSource(1)
 	r := rand.New(s)

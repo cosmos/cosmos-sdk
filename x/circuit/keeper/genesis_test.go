@@ -75,7 +75,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		DisabledTypeUrls:   []string{url},
 	}
 
-	s.keeper.InitGenesis(s.ctx, genesisState)
+	err = s.keeper.InitGenesis(s.ctx, genesisState)
+	s.Require().NoError(err)
 
 	exported, err := s.keeper.ExportGenesis(s.ctx)
 	s.Require().NoError(err)

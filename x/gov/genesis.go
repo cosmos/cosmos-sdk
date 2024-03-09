@@ -118,7 +118,7 @@ func ExportGenesis(ctx context.Context, k *keeper.Keeper) (*v1.GenesisState, err
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// export proposals votes
@@ -128,7 +128,7 @@ func ExportGenesis(ctx context.Context, k *keeper.Keeper) (*v1.GenesisState, err
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &v1.GenesisState{

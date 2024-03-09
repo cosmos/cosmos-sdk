@@ -94,7 +94,6 @@ func TestValidateVoteExtensions(t *testing.T) {
 		votes = append(votes, ve)
 	}
 
-
 	eci, ci := extendedCommitToLastCommit(abci.ExtendedCommitInfo{Round: 0, Votes: votes})
 	f.sdkCtx = f.sdkCtx.WithCometInfo(ci)
 

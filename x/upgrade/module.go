@@ -43,7 +43,6 @@ var (
 
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
-	cdc    codec.Codec
 	keeper *keeper.Keeper
 }
 

@@ -73,7 +73,8 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 		uint64(60*60*8766/5),
 	)
 
-	s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
+	err := s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
+	s.Require().NoError(err)
 
 	minter, err := s.keeper.Minter.Get(s.sdkCtx)
 	s.Require().Equal(genesisState.Minter, minter)

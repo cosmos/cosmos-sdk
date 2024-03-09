@@ -106,6 +106,109 @@ func TestDecode(t *testing.T) {
 	}
 }
 
+func TestDecodeAmino(t *testing.T) {
+	accSeq := uint64(2)
+
+	pkAny, err := anyutil.New(&secp256k1.PubKey{Key: []byte("foo")})
+	require.NoError(t, err)
+	var signerInfo []*txv1beta1.SignerInfo
+	signerInfo = append(signerInfo, &txv1beta1.SignerInfo{
+		PublicKey: pkAny,
+		ModeInfo: &txv1beta1.ModeInfo{
+			Sum: &txv1beta1.ModeInfo_Single_{
+				Single: &txv1beta1.ModeInfo_Single{
+					Mode: signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				},
+			},
+		},
+		Sequence: accSeq,
+	})
+
+	signingCtx, err := signing.NewContext(signing.Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyAddressCodec{},
+	})
+	require.NoError(t, err)
+	decoder, err := decode.NewDecoder(decode.Options{
+		SigningContext: signingCtx,
+	})
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name  string
+		msg   proto.Message
+		tx    *txv1beta1.Tx
+		error string
+	}{
+		{
+			name: "happy path",
+			msg:  &bankv1beta1.MsgSend{},
+			tx: &txv1beta1.Tx{
+				Body: &txv1beta1.TxBody{
+					Memo:          "memo",
+					TimeoutHeight: 0,
+				},
+				AuthInfo: &txv1beta1.AuthInfo{
+					SignerInfos: signerInfo,
+					Fee: &txv1beta1.Fee{
+						Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+						GasLimit: 100,
+						Payer:    "payer",
+						Granter:  "",
+					},
+				},
+				Signatures: nil,
+			},
+		},
+		{
+			name: "unordered tx with amino",
+			msg:  &testpb.A{},
+			tx: &txv1beta1.Tx{
+				Body: &txv1beta1.TxBody{
+					Memo:          "memo",
+					TimeoutHeight: 0,
+					Unordered:     true,
+				},
+				AuthInfo: &txv1beta1.AuthInfo{
+					SignerInfos: signerInfo,
+					Fee: &txv1beta1.Fee{
+						Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+						GasLimit: 100,
+						Payer:    "payer",
+						Granter:  "",
+					},
+				},
+				Signatures: nil,
+			},
+			error: "signing unordered txs with amino is prohibited",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := proto.Marshal(tc.msg)
+			require.NoError(t, err)
+
+			anyMsg, err := anyutil.New(tc.msg)
+			require.NoError(t, err)
+			tc.tx.Body.Messages = []*anypb.Any{anyMsg}
+			txBytes, err := proto.Marshal(tc.tx)
+			require.NoError(t, err)
+
+			decodeTx, err := decoder.Decode(txBytes)
+			if tc.error != "" {
+				require.EqualError(t, err, tc.error)
+				return
+			}
+			require.NoError(t, err)
+
+			require.Equal(t,
+				fmt.Sprintf("/%s", tc.msg.ProtoReflect().Descriptor().FullName()),
+				decodeTx.Tx.Body.Messages[0].TypeUrl)
+		})
+	}
+}
+
 type dummyAddressCodec struct{}
 
 func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) {

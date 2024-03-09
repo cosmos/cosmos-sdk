@@ -42,7 +42,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
-* (types) [#19511](https://github.com/cosmos/cosmos-sdk/pull/19511) Replace regex parsing of denom validation to direct matching methods.
 * (runtime) [#19571](https://github.com/cosmos/cosmos-sdk/pull/19571) Implement `core/router.Service` it in runtime. This service is present in all modules (when using depinject).
 * (types) [#19164](https://github.com/cosmos/cosmos-sdk/pull/19164) Add a ValueCodec for the math.Uint type that can be used in collections maps.
 * (types) [#19281](https://github.com/cosmos/cosmos-sdk/pull/19281) Added a new method, `IsGT`, for `types.Coin`. This method is used to check if a `types.Coin` is greater than another `types.Coin`.
@@ -142,8 +141,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (server) [#18909](https://github.com/cosmos/cosmos-sdk/pull/18909) Remove configuration endpoint on grpc reflection endpoint in favour of auth module bech32prefix endpoint already exposed.
 * (crypto) [#19541](https://github.com/cosmos/cosmos-sdk/pull/19541) The deprecated `FromTmProtoPublicKey`, `ToTmProtoPublicKey`, `FromTmPubKeyInterface` and `ToTmPubKeyInterface` functions have been removed. Use their replacements (`Cmt` instead of `Tm`) instead.
 * (types) [#19652](https://github.com/cosmos/cosmos-sdk/pull/19652) 
-  * Moved`types/module.HasRegisterInterfaces` to `cosmossdk.io/core`.
-  * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.LegacyRegistry` interface.
+    * Moved`types/module.HasRegisterInterfaces` to `cosmossdk.io/core`.
+    * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.LegacyRegistry` interface.
 
 ### Client Breaking Changes
 

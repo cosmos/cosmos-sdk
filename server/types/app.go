@@ -56,7 +56,7 @@ type (
 		// CommitMultiStore return the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore
 
-		// Return the snapshot manager
+		// SnapshotManager return the snapshot manager
 		SnapshotManager() *snapshots.Manager
 
 		// Close is called in start cmd to gracefully cleanup resources.

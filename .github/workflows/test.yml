@@ -26,9 +26,9 @@ jobs:
         go-arch: ["amd64", "arm", "arm64"]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version-file: 'go.mod'
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -44,9 +44,9 @@ jobs:
     container: tendermintdev/docker-tm-db-testing
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version-file: 'go.mod'
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -67,9 +67,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version-file: 'go.mod'
       - name: Create a file with all core Cosmos SDK pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
@@ -101,9 +101,9 @@ jobs:
         part: ["00", "01", "02", "03"]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version-file: 'go.mod'
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
@@ -180,9 +180,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version-file: 'go.mod'
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -203,9 +203,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version-file: 'go.mod'
       - name: Display go version
         run: go version
       - name: Install runsim
@@ -220,9 +221,9 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version-file: 'go.mod'
       - name: Display go version
         run: go version
       - uses: technote-space/get-diff-action@v6.0.1

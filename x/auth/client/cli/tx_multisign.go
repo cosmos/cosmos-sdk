@@ -78,7 +78,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 		}
 		parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		if err != nil {
-			return
+			return err
 		}
 
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())

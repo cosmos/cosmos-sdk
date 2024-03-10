@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine AS build
+FROM golang:1.22.1-alpine AS build
 
 RUN apk add build-base git linux-headers
 

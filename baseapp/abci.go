@@ -66,7 +66,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	if app.initChainer == nil {
-		return
+		return res
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)

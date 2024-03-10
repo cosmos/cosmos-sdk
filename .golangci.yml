@@ -6,7 +6,6 @@ run:
 linters:
   disable-all: true
   enable:
-    - depguard
     - dogsled
     - exportloopref
     - goconst

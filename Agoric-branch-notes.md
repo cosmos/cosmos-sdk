@@ -1,25 +1,35 @@
-We have:
+We use the following branches:
 
-- `Agoric` - the head of this branch should be eventually used by the
-  [agoric-sdk](https://github.com/Agoric/agoric-sdk).
+- `Agoric` - the trunk for our cosmos-sdk fork, used by [agoric-sdk](https://github.com/Agoric/agoric-sdk).
+    - New features which we plan to use in a near-future release are added here.
+    - Most releases are tagged here.
+- `Agoric-vX.Y.Z-alpha.agoric.A.x` - a lazily-created release branch.
+    - Branched off of release tag `vX.Y.Z-alpha.agoric.A`.
+    - Created when we need a new release that omits some changes present on trunk.
+    - Prefer to contain only cherry-picks from trunk.
+- Pattern can be extended to sub-sub-branches should the need arise.
+
+Tag convention:
+
+- `vX.Y.Z-alpha.agoric.A` for tagged releases on the `Agoric` branch:
+    - `vX.Y.Z` is the version of the latest integrated cosmos/cosmos-sdk release.
+    - The `A` is an increasing sequence resetting to `1` after the integration of a new cosmos/cosmos-sdk release.
+- `vX.Y.Z-alpha.agoric.A.B` for "patch" releases on branch `Agoric-vX.Y.Z-alpha.agoric.A.x`.
+    - `B` starts at 1 and increases sequentially.
+- Pattern can be extended to releases on sub-sub-branches should the need arise.
+
+For new features:
+
+- New features should be landed on `Agoric` first, then cherry-picked to a release branch as needed.
+- Create a new development branch off of `Agoric`.
+- Test, review, merge PR with `automerge` label for mergify.io
+    - Don't forget to update `CHANGELOG-Agoric.md` with the change and a link to its PR.
+
+Upon new cosmos-sdk releases, see [upgrading the Interchain Stack](https://github.com/Agoric/agoric-sdk/wiki/Upgrading-the-Interchain-Stack).
+
+Historical work:
 - [ag0](https://github.com/Agoric/ag0) [Agoric mainnet](https://agoric.com)
   phase 0's [gaiad-equivalent](https://github.com/cosmos/gaia)
 - `Agoric-ag0` - should be identical to
   [cosmos/cosmos-sdk](https://github.com/cosmos/cosmos-sdk) + changes needed by
   `ag0`
-
-For new features:
-
-- Create a new development branch off of `Agoric` or `Agoric-ag0`
-- Test, review, merge PR with `automerge` label for mergify.io
-- Add `backport/ag0` label or `backport/Agoric` to have mergify port the PR to
-  the other branch
-
-Upon new cosmos-sdk releases:
-
-- Say we now have `cosmos/cosmos-sdk@v0.43.0-rc0`
-- Merge `upstream/v0.43.0-rc0` into `Agoric`, create tag `v0.43.0-rc0.agoric`
-- Push tag to origin
-- Use that tag in the `agoric-sdk/go.mod` in the `replace` directive for `cosmos-sdk`
-- build `agoric-sdk` and do any manual tests locally
-- submit a PR against `agoric-sdk` for CI tests to run, then merge

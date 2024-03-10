@@ -8,13 +8,16 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 num_enum = { version = "0.7.1", default-features = false }
-lol_alloc = "0.4.0"
-tonic = { version = "0.10.2", optional = true }
-#zeropb = { path = "../zeropb" }
+mockall = {version = "0.12.1", optional = true}
+cosmossdk_macros = { path = "../cosmossdk_macros" }
+#lol_alloc = "0.4.0"
+
+[dev-dependencies]
+mockall = "0.12.1"
 
 [features]
 default = []
-tonic = ["dep:tonic"]
+test-util = ["dep:mockall"]
 
 [build-dependencies]
 cbindgen = "0.26.0"

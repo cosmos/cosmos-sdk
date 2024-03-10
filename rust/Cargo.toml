@@ -4,6 +4,6 @@ members = [
     "zeropb", "zeropb_derive", "zeropb_build",
     "cosmossdk_macros", "cosmossdk_core",
     "state_objects",
-    "example_module", "example_module2", "counter_pb", "unaligned", "example_bank",
+    "example_module", "example_module2", "counter_pb", "unaligned", "example_bank", "state_objects_macros", "cosmos_prost_build",
 ]
 

@@ -27,7 +27,7 @@ pub trait MsgServer {
         req: &MsgSend,
     ) -> ::zeropb::Result<MsgSendResponse>;
 }
-impl ::cosmossdk_core::Server for dyn MsgServer {
+impl ::cosmossdk_core::Router for dyn MsgServer {
     fn route(
         &self,
         method_id: u64,
@@ -84,7 +84,7 @@ pub trait QueryServer {
         req: &QueryBalance,
     ) -> ::zeropb::Result<QueryBalanceResponse>;
 }
-impl ::cosmossdk_core::Server for dyn QueryServer {
+impl ::cosmossdk_core::Router for dyn QueryServer {
     fn route(
         &self,
         method_id: u64,

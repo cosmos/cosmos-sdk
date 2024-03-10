@@ -1,3 +1,6 @@
+extern crate core;
+extern crate num_enum;
+use core::convert::{From};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 #[repr(u8)]

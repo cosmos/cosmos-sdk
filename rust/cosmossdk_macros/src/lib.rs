@@ -53,3 +53,8 @@ pub fn module_bundle(attr: TokenStream, item: TokenStream) -> TokenStream {
     println!("item: \"{}\"", item.to_string());
     item
 }
+
+#[proc_macro_attribute]
+pub fn cfg_alloc(attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}

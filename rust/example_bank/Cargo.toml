@@ -10,4 +10,8 @@ zeropb = {path = "../zeropb"}
 cosmossdk_core = {path = "../cosmossdk_core"}
 cosmossdk_macros = {path = "../cosmossdk_macros"}
 state_objects = {path = "../state_objects"}
+state_objects_macros = {path = "../state_objects_macros"}
 dashu-int = "0.4.1"
+
+[dev-dependencies]
+cosmossdk_core = {path = "../cosmossdk_core", features = ["test-util"]}

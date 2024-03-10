@@ -9,13 +9,13 @@ pub trait State: Client {
 }
 
 pub trait KeyCodec {
-    type In: ?Sized;
+    type In<'a>;
     type Out;
-    type Keys: ?Sized;
+    type Keys<'a>;
 
-    fn encode<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()>;
+    fn encode<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()>;
 
-    fn encode_non_terminal<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()> {
+    fn encode_non_terminal<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()> {
         Self::encode(buf, key)
     }
 
@@ -36,11 +36,11 @@ pub trait Reader {
 }
 
 pub trait ValueCodec {
-    type In;
+    type In<'a>;
     type Out;
-    type Keys;
+    type Keys<'a>;
 
-    fn encode<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()>;
+    fn encode<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()>;
 
     fn decode<B: Reader>(buf: &B) -> Result<Self::Out>;
 }
@@ -49,18 +49,16 @@ pub trait ValueCodec {
 //     type In = u64;
 // }
 
-pub type Bytes = Vec<u8>;
-
-impl KeyCodec for Bytes {
-    type In = [u8];
+impl KeyCodec for Vec<u8> {
+    type In<'a> = &'a [u8];
     type Out = Vec<u8>;
-    type Keys = str;
+    type Keys<'a> = &'a str;
 
-    fn encode<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()> {
+    fn encode<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()> {
         buf.write(key)
     }
 
-    fn encode_non_terminal<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()> {
+    fn encode_non_terminal<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()> {
         // TODO variant encode length
         let len = key.len() as u16;
         buf.write(&len.to_le_bytes())?;
@@ -68,21 +66,21 @@ impl KeyCodec for Bytes {
     }
 
     fn decode<B: Reader>(buf: &B) -> Result<Self::Out> {
-        buf.read_all().into()
+        buf.read_all().map(|x| x.to_vec())
     }
 
     fn decode_non_terminal<B: Reader>(buf: &B) -> Result<Self::Out> {
         let len = u16::from_le_bytes(buf.read(2)?.try_into().unwrap());
-        buf.read(len as usize).into()
+        buf.read(len as usize).map(|x| x.to_vec())
     }
 }
 
 impl <P1: KeyCodec, P2: KeyCodec> KeyCodec for (P1, P2) {
-    type In<'a> = (&'a P2::In, &'a P2::In) where <P2 as KeyCodec>::In: 'a;
+    type In<'a> = (P1::In<'a>, P2::In<'a>);
     type Out = (P1::Out, P2::Out);
-    type Keys<'a> = ();
+    type Keys<'a> = (P1::Keys<'a>, P2::Keys<'a>);
 
-    fn encode<B: Writer>(buf: &mut B, key: Self::In) -> Result<()> {
+    fn encode<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()> {
         todo!()
     }
 
@@ -117,15 +115,15 @@ impl <P1: KeyCodec, P2: KeyCodec> KeyCodec for (P1, P2) {
 // }
 
 impl KeyCodec for String {
-    type In = str;
+    type In<'a> = &'a str;
     type Out = String;
-    type Keys = str;
+    type Keys<'a> = &'a str;
 
-    fn encode<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()> {
+    fn encode<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()> {
         todo!()
     }
 
-    fn encode_non_terminal<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()> {
+    fn encode_non_terminal<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()> {
         todo!()
     }
 
@@ -139,11 +137,11 @@ impl KeyCodec for String {
 }
 
 impl ValueCodec for bool {
-    type In = bool;
+    type In<'a> = bool;
     type Out = bool;
-    type Keys = str;
+    type Keys<'a> = &'a str;
 
-    fn encode<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()> {
+    fn encode<B: Writer>(buf: &mut B, key: Self::In<'_>) -> Result<()> {
         todo!()
     }
 
@@ -175,7 +173,7 @@ pub struct Map<K, V> {
 }
 
 impl <K:KeyCodec, V: ValueCodec> Map<K, V> {
-    pub fn new(store: StoreClient, prefix: &[u8], name: String, keys: &K::Keys, values: &V::Keys) -> Map<K, V> {
+    pub fn new(store: StoreClient, prefix: &[u8], name: String, keys_names: K::Keys<'_>, values_names: &V::Keys<'_>) -> Map<K, V> {
         Self {
             _k: std::marker::PhantomData,
             _v: std::marker::PhantomData,
@@ -184,15 +182,15 @@ impl <K:KeyCodec, V: ValueCodec> Map<K, V> {
         }
     }
 
-    pub fn get(&self, ctx: &cosmossdk_core::Context, key: &K::In) -> cosmossdk_core::Result<&V::Out> {
+    pub fn get(&self, ctx: &cosmossdk_core::Context, key: K::In<'_>) -> cosmossdk_core::Result<V::Out> {
         todo!()
     }
 
-    pub fn get_stale(&self, ctx: &cosmossdk_core::Context, key: &K::In) -> cosmossdk_core::Result<&V::Out> {
+    pub fn get_stale(&self, ctx: &cosmossdk_core::Context, key: K::In<'_>) -> cosmossdk_core::Result<V::Out> {
         todo!()
     }
 
-    pub fn set(&self, ctx: &cosmossdk_core::Context, key: &K::In, value: &V::In) -> cosmossdk_core::Result<()> {
+    pub fn set(&self, ctx: &cosmossdk_core::Context, key: K::In<'_>, value: &V::In<'_>) -> cosmossdk_core::Result<()> {
         todo!()
     }
 }
@@ -202,21 +200,23 @@ impl <K:KeyCodec, V: ValueCodec> Map<K, V> {
 // }
 //
 impl ValueCodec for UBig {
-    type In = UBig;
+    type In<'a> = &'a UBig;
     type Out = UBig;
-    type Keys = String;
+    type Keys<'a> = &'a str;
 
-    fn encode<B: Writer>(buf: &mut B, key: &Self::In) -> Result<()> {
-        let bytes = key.to_bytes_le();
-        let len = bytes.len() as u16;
-        buf.write(&len.to_le_bytes())?;
-        buf.write(&bytes)
+    fn encode<B: Writer>(buf: &mut B, key: &UBig) -> Result<()> {
+        // let bytes = key.to_le_bytes();
+        // let len = bytes.len() as u16;
+        // buf.write(&len.to_le_bytes())?;
+        // buf.write(&bytes)
+        todo!()
     }
 
     fn decode<B: Reader>(buf: &B) -> Result<Self::Out> {
-        let len = u16::from_le_bytes(buf.read(2)?.try_into().unwrap());
-        let bytes = buf.read(len as usize)?;
-        Ok(UBig::from_bytes_le(bytes))
+        // let len = u16::from_le_bytes(buf.read(2)?.try_into().unwrap());
+        // let bytes = buf.read(len as usize)?;
+        // Ok(UBig::from_bytes_le(bytes))
+        todo!()
     }
 }
 
@@ -225,27 +225,27 @@ pub struct UBigMap<K> {
 }
 
 impl <K:KeyCodec> UBigMap<K> {
-    pub fn has(&self, ctx: &Context, key: &K::In) ->cosmossdk_core::Result<bool> {
+    pub fn has(&self, ctx: &Context, key: K::In<'_>) ->cosmossdk_core::Result<bool> {
         todo!()
     }
 
-    pub fn read(&self, ctx: &Context, key: &K::In) ->cosmossdk_core::Result<UBig> {
+    pub fn read(&self, ctx: &Context, key: K::In<'_>) ->cosmossdk_core::Result<UBig> {
         todo!()
     }
 
-    pub fn delete(&self, ctx: &mut Context, key: &K::In) -> cosmossdk_core::Result<()> {
+    pub fn delete(&self, ctx: &mut Context, key: K::In<'_>) -> cosmossdk_core::Result<()> {
         todo!()
     }
 
-    pub fn safe_sub(&self, ctx: &mut Context, key: &K::In, value: &UBig) -> cosmossdk_core::Result<UBig> {
+    pub fn safe_sub(&self, ctx: &mut Context, key: K::In<'_>, value: &UBig) -> cosmossdk_core::Result<UBig> {
         todo!()
     }
 
-    pub fn add(&self, ctx: &mut Context, key: &K::In, value: &UBig) -> cosmossdk_core::Result<UBig> {
+    pub fn add(&self, ctx: &mut Context, key: K::In<'_>, value: &UBig) -> cosmossdk_core::Result<UBig> {
         todo!()
     }
 
-    pub fn add_lazy(&self, ctx: &mut Context, key: &K::In, value: &UBig) {
+    pub fn add_lazy(&self, ctx: &mut Context, key: K::In<'_>, value: &UBig) {
         todo!()
     }
 }

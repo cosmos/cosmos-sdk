@@ -46,7 +46,7 @@ pub(crate) fn gen_server_method(
     let output_type = method.output_type.clone().unwrap();
     let output_type_name = gen_message_name(&output_type)?;
     Ok(quote!(
-        fn #method_name(&self, ctx: &mut ::cosmossdk_core::Context, req: &#input_type_name) -> ::zeropb::Result<#output_type_name>;
+        fn #method_name(&self, ctx: &mut ::cosmossdk_core::Context, req: &#input_type_name) -> ::cosmossdk_core::Result<#output_type_name>;
     ))
 }
 
@@ -68,33 +68,35 @@ fn gen_server_impl(fd: &FileDescriptorProto, service: &ServiceDescriptorProto, n
     let full_name = format!("{}.{}", package_name, service.name.clone().unwrap());
 
     ctx.add_item(quote!(
-        impl ::cosmossdk_core::Server for dyn #name {
+        impl ::cosmossdk_core::Router for dyn #name { }
+
+        // impl ::cosmossdk_core::Server for dyn #name {
             // fn service_name(&self) -> &'static str {
             //     #full_name
             // }
 
-            fn route(&self, method_id: u64, ctx: &mut ::cosmossdk_core::Context, req: *mut u8, res: *mut *mut u8) -> ::cosmossdk_core::Code {
-                unsafe {
-                    let result: ::zeropb::RawResult<*mut u8> = match method_id {
-                        #(#matches)*
-                        _ => return ::cosmossdk_core::Code::Unimplemented,
-                    };
-                    match result {
-                        Ok(ptr) => {
-                            *res = ptr;
-                            ::cosmossdk_core::Code::Ok
-                        }
-                        Err(err) => {
-                            let ptr = err.msg.unsafe_unwrap();
-                            if ptr != core::ptr::null_mut() {
-                                *res = ptr;
-                            }
-                            err.code
-                        }
-                    }
-                }
-            }
-        }
+            // fn route(&self, method_id: u64, ctx: &mut ::cosmossdk_core::Context, req: *mut u8, res: *mut *mut u8) -> ::cosmossdk_core::Code {
+            //     unsafe {
+            //         let result: ::zeropb::RawResult<*mut u8> = match method_id {
+            //             #(#matches)*
+            //             _ => return ::cosmossdk_core::Code::Unimplemented,
+            //         };
+            //         match result {
+            //             Ok(ptr) => {
+            //                 *res = ptr;
+            //                 ::cosmossdk_core::Code::Ok
+            //             }
+            //             Err(err) => {
+            //                 let ptr = err.msg.unsafe_unwrap();
+            //                 if ptr != core::ptr::null_mut() {
+            //                     *res = ptr;
+            //                 }
+            //                 err.code
+            //             }
+            //         }
+            //     }
+            // }
+        // }
     ))
 }
 
@@ -145,8 +147,9 @@ pub(crate) fn gen_client_method(
     let output_type = gen_message_name(&output_type)?;
 
     Ok(quote!(
-        pub fn #method_name(&self, ctx: &mut cosmossdk_core::Context, req: zeropb::Root<#input_type>) -> zeropb::Result<#output_type> {
-            ::zeropb::connection_invoke(self.connection, #i, ctx, req)
+        pub fn #method_name(&self, ctx: &mut ::cosmossdk_core::Context, req: ::zeropb::Root<#input_type>) -> ::cosmossdk_core::Result<#output_type> {
+            // ::zeropb::connection_invoke(self.connection, #i, ctx, req)
+            todo!()
         }
     ))
 }

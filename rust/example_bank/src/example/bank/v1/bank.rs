@@ -25,40 +25,9 @@ pub trait MsgServer {
         &self,
         ctx: &mut ::cosmossdk_core::Context,
         req: &MsgSend,
-    ) -> ::zeropb::Result<MsgSendResponse>;
+    ) -> ::cosmossdk_core::Result<MsgSendResponse>;
 }
-impl ::cosmossdk_core::Router for dyn MsgServer {
-    fn route(
-        &self,
-        method_id: u64,
-        ctx: &mut ::cosmossdk_core::Context,
-        req: *mut u8,
-        res: *mut *mut u8,
-    ) -> ::cosmossdk_core::Code {
-        unsafe {
-            let result: ::zeropb::RawResult<*mut u8> = match method_id {
-                1u64 => {
-                    self.send(ctx, &*(req as *const MsgSend))
-                        .map(|res| res.unsafe_unwrap())
-                }
-                _ => return ::cosmossdk_core::Code::Unimplemented,
-            };
-            match result {
-                Ok(ptr) => {
-                    *res = ptr;
-                    ::cosmossdk_core::Code::Ok
-                }
-                Err(err) => {
-                    let ptr = err.msg.unsafe_unwrap();
-                    if ptr != core::ptr::null_mut() {
-                        *res = ptr;
-                    }
-                    err.code
-                }
-            }
-        }
-    }
-}
+impl ::cosmossdk_core::Router for dyn MsgServer {}
 pub struct MsgClient {
     connection: zeropb::Connection,
     service_id: u64,
@@ -66,10 +35,10 @@ pub struct MsgClient {
 impl MsgClient {
     pub fn send(
         &self,
-        ctx: &mut cosmossdk_core::Context,
-        req: zeropb::Root<MsgSend>,
-    ) -> zeropb::Result<MsgSendResponse> {
-        ::zeropb::connection_invoke(self.connection, 1u64, ctx, req)
+        ctx: &mut ::cosmossdk_core::Context,
+        req: ::zeropb::Root<MsgSend>,
+    ) -> ::cosmossdk_core::Result<MsgSendResponse> {
+        todo!()
     }
 }
 impl ::zeropb::Client for MsgClient {
@@ -82,40 +51,9 @@ pub trait QueryServer {
         &self,
         ctx: &mut ::cosmossdk_core::Context,
         req: &QueryBalance,
-    ) -> ::zeropb::Result<QueryBalanceResponse>;
+    ) -> ::cosmossdk_core::Result<QueryBalanceResponse>;
 }
-impl ::cosmossdk_core::Router for dyn QueryServer {
-    fn route(
-        &self,
-        method_id: u64,
-        ctx: &mut ::cosmossdk_core::Context,
-        req: *mut u8,
-        res: *mut *mut u8,
-    ) -> ::cosmossdk_core::Code {
-        unsafe {
-            let result: ::zeropb::RawResult<*mut u8> = match method_id {
-                1u64 => {
-                    self.balance(ctx, &*(req as *const QueryBalance))
-                        .map(|res| res.unsafe_unwrap())
-                }
-                _ => return ::cosmossdk_core::Code::Unimplemented,
-            };
-            match result {
-                Ok(ptr) => {
-                    *res = ptr;
-                    ::cosmossdk_core::Code::Ok
-                }
-                Err(err) => {
-                    let ptr = err.msg.unsafe_unwrap();
-                    if ptr != core::ptr::null_mut() {
-                        *res = ptr;
-                    }
-                    err.code
-                }
-            }
-        }
-    }
-}
+impl ::cosmossdk_core::Router for dyn QueryServer {}
 pub struct QueryClient {
     connection: zeropb::Connection,
     service_id: u64,
@@ -123,10 +61,10 @@ pub struct QueryClient {
 impl QueryClient {
     pub fn balance(
         &self,
-        ctx: &mut cosmossdk_core::Context,
-        req: zeropb::Root<QueryBalance>,
-    ) -> zeropb::Result<QueryBalanceResponse> {
-        ::zeropb::connection_invoke(self.connection, 1u64, ctx, req)
+        ctx: &mut ::cosmossdk_core::Context,
+        req: ::zeropb::Root<QueryBalance>,
+    ) -> ::cosmossdk_core::Result<QueryBalanceResponse> {
+        todo!()
     }
 }
 impl ::zeropb::Client for QueryClient {

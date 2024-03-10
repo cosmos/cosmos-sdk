@@ -1,6 +1,6 @@
 use dashu_int::UBig;
 use cosmossdk_core::{Code, Context, Module, Router};
-use state_objects::{Index, Map, Str, UBigMap};
+use state_objects::{Index, Map, UBigMap};
 use crate::example::bank::v1::bank::{MsgSend, MsgSendResponse, MsgServer};
 use core::borrow::Borrow;
 use cosmossdk_macros::{module};
@@ -16,7 +16,7 @@ pub mod example {
     }
 }
 
-#[module(name = "example.bank.v1", services=[MsgServer])]
+// #[module(name = "example.bank.v1", services=[MsgServer])]
 pub struct Bank {
     state: BankState,
 }
@@ -56,21 +56,24 @@ pub struct BankState {
 // }
 
 impl MsgServer for Bank {
-    fn send(&self, ctx: &mut Context, req: &MsgSend) -> ::zeropb::Result<MsgSendResponse> {
+    fn send(&self, ctx: &mut Context, req: &MsgSend) -> ::cosmossdk_core::Result<MsgSendResponse> {
         // checking send enabled uses last block state so no need to synchronize reads
         if !self.state.send_enabled.get_stale(ctx, req.denom.borrow())? {
-            return ::zeropb::err_msg(Code::Unavailable, "send disabled for denom");
+            // return ::zeropb::err_msg(Code::Unavailable, "send disabled for denom");
+            todo!()
         }
 
-        let amount = UBig::from_bytes(req.amount.borrow()).map_err(|_| ::zeropb::err_msg(Code::InvalidArgument, "amount must be a valid UBig"))?;
+        let amount = UBig::from_le_bytes(req.amount.borrow());
 
         // blocking safe sub must synchronize reads and writes
-        self.state.balances.safe_sub(ctx, &(req.from.borrow(), req.denom.borrow()), &amount)?;
+        self.state.balances.safe_sub(ctx, (req.from.borrow(), req.denom.borrow()), &amount)?;
         //
         // non-blocking add to recipient won't fail, so no need to synchronize writes
-        self.state.balances.add_lazy(ctx, &(req.to.borrow(), req.denom.borrow()), &amount);
+        self.state.balances.add_lazy(ctx, (req.to.borrow(), req.denom.borrow()), &amount);
 
-        zeropb::ok()
+        // zeropb::ok()
+        // Ok(())
+        todo!()
     }
 }
 

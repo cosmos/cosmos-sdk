@@ -7,10 +7,11 @@
 While early in our monthly release cadence, this release includes a few notable fixes:
 
 * Fix a bypass delagator slashing: [GHSA-86h5-xcpx-cfqc](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-86h5-xcpx-cfqc)
+* Fix an issue in `baseapp.ValidateVoteExtensions` helper: [GHSA-95rx-m9m5-m94v](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-95rx-m9m5-m94v)
 * Allow to provide custom signers for `x/auth/tx` using depinject
 
 We recommended to upgrade to this patch release as soon as possible.  
-When upgrading from <= v0.50.3, please ensure that 2/3 of the validator power upgrade to v0.50.4.
+When upgrading from <= v0.50.4, please ensure that 2/3 of the validator power upgrade to v0.50.5.
 
 ## 📝 Changelog
 

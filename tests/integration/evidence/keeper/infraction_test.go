@@ -261,7 +261,11 @@ func TestHandleDoubleSign(t *testing.T) {
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	tstaking.Ctx = ctx
 	tstaking.Denom = stakingParams.BondDenom
-	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
+	accAddr, err := f.accountKeeper.AddressCodec().BytesToString(operatorAddr)
+	assert.NilError(t, err)
+	opAddr, err := f.stakingKeeper.ValidatorAddressCodec().BytesToString(operatorAddr)
+	assert.NilError(t, err)
+	tstaking.Undelegate(accAddr, opAddr, totalBond, true)
 
 	// query evidence from store
 	iter, err := f.evidenceKeeper.Evidences.Iterate(ctx, nil)
@@ -424,7 +428,11 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	tstaking.Ctx = ctx
 	tstaking.Denom = stakingParams.BondDenom
-	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
+	accAddr, err := f.accountKeeper.AddressCodec().BytesToString(operatorAddr)
+	assert.NilError(t, err)
+	opAddr, err := f.stakingKeeper.ValidatorAddressCodec().BytesToString(operatorAddr)
+	assert.NilError(t, err)
+	tstaking.Undelegate(accAddr, opAddr, totalBond, true)
 
 	// query evidence from store
 	var evidences []exported.Evidence

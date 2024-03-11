@@ -188,7 +188,11 @@ func SimulateMsgCreateValidator(
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg, err := types.NewMsgCreateValidator(address.String(), simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
+		addr, err := k.ValidatorAddressCodec().BytesToString(address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate validator address"), nil, err
+		}
+		msg, err := types.NewMsgCreateValidator(addr, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to create CreateValidator message"), nil, err
 		}

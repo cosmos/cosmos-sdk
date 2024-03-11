@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/x/params/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
@@ -38,7 +39,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(paramsmodule.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, paramsmodule.AppModule{})
 	suite.cdc = encodingConfig.Codec
 	suite.amino = encodingConfig.Amino
 

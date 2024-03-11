@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/runtime/protoiface"
 
-	appmodule "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/appmodule/v2"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -57,7 +57,7 @@ type ResponsePreBlock interface {
 // HasPreBlocker is the extension interface that modules should implement to run
 // custom logic before BeginBlock.
 type HasPreBlocker interface {
-	AppModule
+	appmodule.AppModule
 	// PreBlock is method that will be run before BeginBlock.
 	PreBlock(context.Context) (ResponsePreBlock, error)
 }
@@ -69,6 +69,9 @@ type HasBeginBlocker = appmodule.HasBeginBlocker
 // HasEndBlocker is the extension interface that modules should implement to run
 // custom logic after transaction processing in a block.
 type HasEndBlocker = appmodule.HasEndBlocker
+
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces = appmodule.HasRegisterInterfaces
 
 // MsgHandlerRouter is implemented by the runtime provider.
 type MsgHandlerRouter interface {
@@ -88,12 +91,12 @@ type HasMsgHandler interface {
 // HasPrepareCheckState is an extension interface that contains information about the AppModule
 // and PrepareCheckState.
 type HasPrepareCheckState interface {
-	AppModule
+	appmodule.AppModule
 	PrepareCheckState(context.Context) error
 }
 
-// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
+// HasPrecommit is an extension interface that contains information about the appmodule.AppModule and Precommit.
 type HasPrecommit interface {
-	AppModule
+	appmodule.AppModule
 	Precommit(context.Context) error
 }

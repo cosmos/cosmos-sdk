@@ -52,10 +52,11 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
 func SimulationOperations(app runtime.AppSimI, cdc codec.Codec, config simtypes.Config) []simtypes.WeightedOperation {
+	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
-		TxConfig:  authtx.NewTxConfig(cdc, authtx.DefaultSignModes), // TODO(tip): we should extract this from app
+		TxConfig:  authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), // TODO(tip): we should extract this from app
 		BondDenom: sdk.DefaultBondDenom,
 	}
 

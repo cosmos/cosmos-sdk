@@ -13,7 +13,6 @@ const DefaultKeyringServiceName = "cosmos"
 // Config is the structure that holds the SDK configuration parameters.
 // This could be used to initialize certain configuration parameters for the SDK.
 type Config struct {
-	fullFundraiserPath  string
 	bech32AddressPrefix map[string]string
 	mtx                 sync.RWMutex
 
@@ -39,7 +38,6 @@ func NewConfig() *Config {
 			"validator_pub":  Bech32PrefixValPub,
 			"consensus_pub":  Bech32PrefixConsPub,
 		},
-		fullFundraiserPath: FullFundraiserPath,
 	}
 }
 
@@ -94,14 +92,6 @@ func (config *Config) SetBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefi
 	config.assertNotSealed()
 	config.bech32AddressPrefix["consensus_addr"] = addressPrefix
 	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
-}
-
-// Set the FullFundraiserPath (BIP44Prefix) on the config.
-//
-// Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use SetPurpose and SetCoinType instead.
-func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
-	config.assertNotSealed()
-	config.fullFundraiserPath = fullFundraiserPath
 }
 
 // Seal seals the config such that the config state could not be modified further

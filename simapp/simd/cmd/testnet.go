@@ -375,7 +375,7 @@ func initGenFiles(
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
-	appGenState := mm.DefaultGenesis(clientCtx.Codec)
+	appGenState := mm.DefaultGenesis()
 
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState

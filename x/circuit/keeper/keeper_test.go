@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/x/circuit/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -40,7 +41,7 @@ type fixture struct {
 
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
-	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, circuit.AppModule{})
 	ac := addresscodec.NewBech32Codec("cosmos")
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 

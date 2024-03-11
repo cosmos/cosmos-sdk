@@ -640,7 +640,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 		return nil, nil, err
 	}
 	if !pubKey.Equals(ledgerPubKey) {
-		return nil, nil, fmt.Errorf("the public key that the user attempted to sign with %v does not match the public key on the ledger device %v", pubKey.String(), ledgerPubKey.String())
+		return nil, nil, fmt.Errorf("the public key that the user attempted to sign with does not match the public key on the ledger device. %v does not match %v", pubKey.String(), ledgerPubKey.String())
 	}
 
 	switch signMode {

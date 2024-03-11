@@ -14,7 +14,6 @@ import (
 	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
 	corestore "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -59,7 +58,7 @@ type App struct {
 	appConfig *appv1alpha1.Config
 
 	// modules configuration
-	storeKeys         []storetypes.StoreKey
+	storeKeys         []string
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
@@ -100,24 +99,26 @@ func (a *App) Close() error {
 // This method should only be used for registering extra stores
 // wiich is necessary for modules that not registered using the app config.
 // To be used in combination of RegisterModules.
-func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
+func (a *App) RegisterStores(keys ...string) error {
 	a.storeKeys = append(a.storeKeys, keys...)
 	// a.MountStores(keys...)
+
+	// TODO verify if still needed
 
 	return nil
 }
 
 // GetStoreKeys returns all the stored store keys.
-func (a *App) GetStoreKeys() []storetypes.StoreKey {
+func (a *App) GetStoreKeys() []string {
 	return a.storeKeys
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
 // NOTE: This should only be used in testing.
-func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
-	i := slices.IndexFunc(a.storeKeys, func(s storetypes.StoreKey) bool { return s.Name() == storeKey })
+func (a *App) UnsafeFindStoreKey(storeKey string) string {
+	i := slices.Index(a.storeKeys, storeKey)
 	if i == -1 {
-		return nil
+		return ""
 	}
 
 	return a.storeKeys[i]

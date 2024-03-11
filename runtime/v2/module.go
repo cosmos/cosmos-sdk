@@ -24,7 +24,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -167,7 +166,7 @@ func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec 
 	return interfaceRegistry, nil
 }
 
-func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
+func registerStoreKey(wrapper *AppBuilder, key string) {
 	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
 }
 
@@ -180,25 +179,32 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 	return nil
 }
 
-func ProvideKVStoreKey(config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
+type (
+	KVStoreKey     string
+	MemoryStoreKey string
+)
+
+func ProvideKVStoreKey(config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) KVStoreKey {
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
 	if override != nil {
 		storeKeyName = override.KvStoreKey
+		if storeKeyName == "" {
+			panic(fmt.Sprintf("store key name for module %s cannot be empty", key.Name()))
+		}
 	} else {
 		storeKeyName = key.Name()
 	}
 
-	storeKey := storetypes.NewKVStoreKey(storeKeyName)
-	registerStoreKey(app, storeKey)
-	return storeKey
+	registerStoreKey(app, storeKeyName)
+	return KVStoreKey(storeKeyName)
 }
 
-func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
-	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
+func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) MemoryStoreKey {
+	storeKey := fmt.Sprintf("memory:%s", key.Name())
 	registerStoreKey(app, storeKey)
-	return storeKey
+	return MemoryStoreKey(storeKey)
 }
 
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
@@ -208,10 +214,10 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	store.MemoryStoreService,
 ) {
 	kvStoreKey := ProvideKVStoreKey(config, key, app)
-	kvService := stf.NewKVStoreService([]byte(kvStoreKey.Name()))
+	kvService := stf.NewKVStoreService([]byte(kvStoreKey))
 
 	memStoreKey := ProvideMemoryStoreKey(key, app)
-	memService := stf.NewMemoryStoreService([]byte(memStoreKey.Name()))
+	memService := stf.NewMemoryStoreService([]byte(memStoreKey))
 
 	env := appmodulev2.Environment{
 		Logger:          logger,

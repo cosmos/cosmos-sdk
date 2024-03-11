@@ -29,7 +29,7 @@ require (
 	github.com/cosmos/iavl v0.20.1
 	github.com/cosmos/ledger-cosmos-go v0.12.4
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.3
+	github.com/golang/protobuf v1.5.4
 	github.com/google/gofuzz v1.2.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0

@@ -3,9 +3,9 @@ package v1_test
 import (
 	"testing"
 
-	v1 "cosmossdk.io/x/gov/types/v1"
-
 	"github.com/stretchr/testify/require"
+
+	v1 "cosmossdk.io/x/gov/types/v1"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

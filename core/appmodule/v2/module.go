@@ -21,8 +21,6 @@ type AppModule interface {
 
 // HasPreBlocker is the extension interface that modules should implement to run
 // custom logic before BeginBlock.
-// It can modify consensus parameters in storage and signal the caller through the return value.
-// The new context (ctx) must be passed to all the other lifecycle methods.
 type HasPreBlocker interface {
 	AppModule
 	// PreBlock is method that will be run before BeginBlock.

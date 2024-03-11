@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/iavl v1.0.1
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/go-metrics v0.5.1
 	github.com/hashicorp/go-plugin v1.5.2
@@ -22,7 +22,7 @@ require (
 	github.com/tidwall/btree v1.7.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	google.golang.org/grpc v1.60.0
-	google.golang.org/protobuf v1.32.0
+	google.golang.org/protobuf v1.33.0
 	gotest.tools/v3 v3.5.1
 )
 

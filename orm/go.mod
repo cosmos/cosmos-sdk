@@ -16,7 +16,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	google.golang.org/grpc v1.58.3
-	google.golang.org/protobuf v1.32.0
+	google.golang.org/protobuf v1.33.0
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 )
@@ -40,7 +40,7 @@ require (
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect

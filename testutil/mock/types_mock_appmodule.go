@@ -659,12 +659,11 @@ func (mr *MockCoreAppModuleWithPreBlockMockRecorder) IsOnePerModuleType() *gomoc
 }
 
 // PreBlock mocks base method.
-func (m *MockCoreAppModuleWithPreBlock) PreBlock(arg0 context.Context) (appmodule.ResponsePreBlock, error) {
+func (m *MockCoreAppModuleWithPreBlock) PreBlock(arg0 context.Context) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PreBlock", arg0)
-	ret0, _ := ret[0].(appmodule.ResponsePreBlock)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // PreBlock indicates an expected call of PreBlock.

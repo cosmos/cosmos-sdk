@@ -38,6 +38,7 @@ func NewAccount(name string, handlerMap *signing.HandlerMap) accountstd.AccountC
 			Sequence:        collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
 			addrCodec:       deps.AddressCodec,
 			signingHandlers: handlerMap,
+			hs:              deps.Environment.HeaderService,
 		}, nil
 	}
 }

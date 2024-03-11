@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package cosmos.accounts.defaults.multisig.v1;
+
+option go_package = "cosmossdk.io/x/accounts/multisig/base/v1";
+
+// MsgInit is used to initialize a multisig account.
+message MsgInit {
+  // pub_key defines the pubkey bytes of the multisig members.
+  repeated bytes pub_keys = 1;
+
+  repeated uint64 weights = 2;
+
+  // algo defines the algorithm used for the multisig. secp256k1, bls12_381, etc.
+  string algo = 3;
+
+  int64 threshold = 4;
+
+  int64 quorum = 5;
+
+  // voting_period is the duration in seconds for the voting period.
+  int64 voting_period = 6;
+
+  // revote defines if participants can change their vote.
+  bool revote = 7;
+
+  // early_execution defines if the multisig can be executed before the voting period ends.
+  bool early_execution = 8;
+}
+
+// MsgInitResponse is the response returned after base account initialization.
+// This is empty.
+message MsgInitResponse {}
+
+// MsgSwapPubKey is used to change the pubkey for the account.
+message MsgModifyParticipants {
+  repeated Operation operations = 1;
+}
+
+enum OperationType {
+  OPERATION_TYPE_UNSPECIFIED = 0;
+  OPERATION_TYPE_ADD         = 1;
+  OPERATION_TYPE_REMOVE      = 2;
+  OPERATION_TYPE_UPDATE      = 3;
+}
+
+message Operation {
+  OperationType type    = 1; // add, remove, update
+  bytes         pub_key = 2;
+  uint64        weight  = 3;
+}
+
+// MsgSwapPubKeyResponse is the response for the MsgSwapPubKey message.
+// This is empty.
+message MsgModifyParticipantsResponse {}
+
+// QuerySequence is the request for the account sequence.
+message QuerySequence {}
+
+// QuerySequenceResponse returns the sequence of the account.
+message QuerySequenceResponse {
+  // sequence is the current sequence of the account.
+  uint64 sequence = 1;
+}

@@ -76,7 +76,6 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -133,7 +132,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 			if defaultDenom != "" {
 				sdk.DefaultBondDenom = defaultDenom
 			}
-			appGenState := mm.DefaultGenesis(cdc)
+			appGenState := mm.DefaultGenesis()
 
 			appState, err := json.MarshalIndent(appGenState, "", " ")
 			if err != nil {

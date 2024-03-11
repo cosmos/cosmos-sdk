@@ -182,16 +182,16 @@ Previous module migrations have been removed. It is required to migrate to v0.50
 
 ##### Genesis Interface
 
-All genesis interfaces have been migrated to take context.Context instead of sdk.Context.
+All genesis interfaces have been migrated to take context.Context instead of sdk.Context. Secondly, the codec is no longer passed in by the framework. The codec is now passed in by the module.
 
 ```go
 // InitGenesis performs genesis initialization for the authz module.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the authz
 // module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 }
 ```
 

@@ -242,7 +242,7 @@ func (a *App) LoadHeight(height int64) error {
 
 // DefaultGenesis returns a default genesis from the registered AppModule's.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.ModuleManager.DefaultGenesis(a.cdc)
+	return a.ModuleManager.DefaultGenesis()
 }
 
 // GetStoreKeys returns all the stored store keys.

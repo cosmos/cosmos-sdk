@@ -8,11 +8,11 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -36,16 +36,17 @@ var (
 	_ appmodule.HasServices = AppModule{}
 
 	_ module.HasName             = AppModule{}
-	_ module.HasGenesis          = AppModule{}
+	_ appmodulev2.HasGenesis     = AppModule{}
 	_ module.HasConsensusVersion = AppModule{}
 )
 
-func NewAppModule(k Keeper) AppModule {
-	return AppModule{k: k}
+func NewAppModule(cdc codec.Codec, k Keeper) AppModule {
+	return AppModule{k: k, cdc: cdc}
 }
 
 type AppModule struct {
-	k Keeper
+	cdc codec.Codec
+	k   Keeper
 }
 
 func (m AppModule) IsAppModule() {}
@@ -67,34 +68,37 @@ func (m AppModule) RegisterServices(registar grpc.ServiceRegistrar) error {
 
 // App module genesis
 
-func (AppModule) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessage {
-	return jsonCodec.MustMarshalJSON(&v1.GenesisState{})
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(&v1.GenesisState{})
 }
 
-func (AppModule) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (am AppModule) ValidateGenesis(message json.RawMessage) error {
 	gs := &v1.GenesisState{}
-	if err := jsonCodec.UnmarshalJSON(message, gs); err != nil {
+	if err := am.cdc.UnmarshalJSON(message, gs); err != nil {
 		return err
 	}
 	// Add validation logic for gs here
 	return nil
 }
 
-func (m AppModule) InitGenesis(ctx context.Context, jsonCodec codec.JSONCodec, message json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, message json.RawMessage) error {
 	gs := &v1.GenesisState{}
-	jsonCodec.MustUnmarshalJSON(message, gs)
-	err := m.k.ImportState(ctx, gs)
-	if err != nil {
-		panic(err)
+	if err := am.cdc.UnmarshalJSON(message, gs); err != nil {
+		return err
 	}
+	err := am.k.ImportState(ctx, gs)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (m AppModule) ExportGenesis(ctx context.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-	gs, err := m.k.ExportState(ctx)
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	gs, err := am.k.ExportState(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return jsonCodec.MustMarshalJSON(gs)
+	return am.cdc.MarshalJSON(gs)
 }
 
 func (AppModule) GetTxCmd() *cobra.Command {

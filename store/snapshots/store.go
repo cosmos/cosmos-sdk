@@ -223,7 +223,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 			skip[height] = true
 			continue
 		}
-		err = s.Delete(height, uint32(format))
+		err = s.Delete(height, format)
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to prune snapshots")
 		}
@@ -382,7 +382,7 @@ func (s *Store) parseMetadataFilename(filename string) (height uint64, format ui
 		return 0, 0, errors.Wrapf(err, "invalid snapshot metadata filename %s", filename)
 	}
 	format = uint32(f)
-	if filename != filepath.Base(s.pathMetadata(height, uint32(format))) {
+	if filename != filepath.Base(s.pathMetadata(height, format)) {
 		return 0, 0, fmt.Errorf("invalid snapshot metadata filename %s", filename)
 	}
 	return height, format, nil

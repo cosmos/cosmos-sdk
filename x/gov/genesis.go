@@ -13,20 +13,20 @@ import (
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
+func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) error {
 	err := k.ProposalID.Set(ctx, data.StartingProposalId)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = k.Params.Set(ctx, *data.Params)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = k.Constitution.Set(ctx, data.Constitution)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// check if the deposits pool account exists
@@ -39,7 +39,7 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 	for _, deposit := range data.Deposits {
 		err := k.SetDeposit(ctx, *deposit)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		totalDeposits = totalDeposits.Add(deposit.Amount...)
 	}
@@ -47,11 +47,11 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 	for _, vote := range data.Votes {
 		addr, err := ak.AddressCodec().StringToBytes(vote.Voter)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		err = k.Votes.Set(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(addr)), *vote)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -60,16 +60,16 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 		case v1.StatusDepositPeriod:
 			err := k.InactiveProposalsQueue.Set(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id), proposal.Id)
 			if err != nil {
-				panic(err)
+				return err
 			}
 		case v1.StatusVotingPeriod:
 			err := k.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
 			if err != nil {
-				panic(err)
+				return err
 			}
 		}
 		if err := k.Proposals.Set(ctx, proposal.Id, *proposal); err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -83,6 +83,7 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 	if !balance.Equal(totalDeposits) {
 		panic(fmt.Sprintf("expected module account was %s but we got %s", balance.String(), totalDeposits.String()))
 	}
+	return nil
 }
 
 // ExportGenesis - output genesis parameters
@@ -117,7 +118,7 @@ func ExportGenesis(ctx context.Context, k *keeper.Keeper) (*v1.GenesisState, err
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// export proposals votes
@@ -127,7 +128,7 @@ func ExportGenesis(ctx context.Context, k *keeper.Keeper) (*v1.GenesisState, err
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &v1.GenesisState{

@@ -145,7 +145,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		group.ModuleName: genesisBytes,
 	}
 
-	s.keeper.InitGenesis(sdkCtx, cdc, genesisData[group.ModuleName])
+	err = s.keeper.InitGenesis(sdkCtx, cdc, genesisData[group.ModuleName])
+	s.Require().NoError(err)
 
 	for i, g := range genesisState.Groups {
 		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{

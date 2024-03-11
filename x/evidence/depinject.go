@@ -45,7 +45,7 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Environment, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec)
-	m := NewAppModule(*k, in.EvidenceHandlers...)
+	m := NewAppModule(in.Cdc, *k, in.EvidenceHandlers...)
 
 	return ModuleOutputs{EvidenceKeeper: *k, Module: m}
 }

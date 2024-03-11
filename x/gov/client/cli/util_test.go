@@ -368,7 +368,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			name:     "only deposit invalid coins",
 			fromAddr: nil,
 			args:     []string{argDeposit, "not really coins"},
-			expErr:   []string{"invalid deposit", "invalid decimal coin expression", "not really coins"},
+			expErr:   []string{"invalid deposit", "invalid character in denomination"},
 		},
 		{
 			name:     "only deposit two coins",
@@ -398,19 +398,19 @@ func TestReadGovPropFlags(t *testing.T) {
 			name:     "only deposit coin 1 of 3 bad",
 			fromAddr: nil,
 			args:     []string{argDeposit, "1bad^coin,2bcoin,3ccoin"},
-			expErr:   []string{"invalid deposit", "invalid decimal coin expression", "1bad^coin"},
+			expErr:   []string{"invalid deposit", "invalid character in denomination"},
 		},
 		{
 			name:     "only deposit coin 2 of 3 bad",
 			fromAddr: nil,
 			args:     []string{argDeposit, "1acoin,2bad^coin,3ccoin"},
-			expErr:   []string{"invalid deposit", "invalid decimal coin expression", "2bad^coin"},
+			expErr:   []string{"invalid deposit", "invalid character in denomination"},
 		},
 		{
 			name:     "only deposit coin 3 of 3 bad",
 			fromAddr: nil,
 			args:     []string{argDeposit, "1acoin,2bcoin,3bad^coin"},
-			expErr:   []string{"invalid deposit", "invalid decimal coin expression", "3bad^coin"},
+			expErr:   []string{"invalid deposit", "invalid character in denomination"},
 		},
 		// As far as I can tell, there's no way to make flagSet.GetString return an error for a defined string flag.
 		// So I don't have a test for the "could not read deposit" error case.

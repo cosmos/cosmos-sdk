@@ -72,6 +72,11 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		}
 	}
 
+	funds := accountstd.Funds(ctx)
+	if !funds.Equal(totalCoins) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid funding amount, should be equal to total coins lockup")
+	}
+
 	sortedAmt := totalCoins.Sort()
 	for _, coin := range sortedAmt {
 		err := pva.OriginalLocking.Set(ctx, coin.Denom, coin.Amount)

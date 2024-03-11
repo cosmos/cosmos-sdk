@@ -84,15 +84,8 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupA
 	}
 
 	funds := accountstd.Funds(ctx)
-	if !funds.Equal(msg.Amount) {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid funding amount, should be equal to lockup amount")
-	}
 
-	if err := validateAmount(msg.Amount); err != nil {
-		return nil, err
-	}
-
-	sortedAmt := msg.Amount.Sort()
+	sortedAmt := funds.Sort()
 	for _, coin := range sortedAmt {
 		err = bva.OriginalLocking.Set(ctx, coin.Denom, coin.Amount)
 		if err != nil {
@@ -317,7 +310,10 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, err
 	}
 
-	return &lockuptypes.MsgWithdrawResponse{}, nil
+	return &lockuptypes.MsgWithdrawResponse{
+		Reciever:       msg.ToAddress,
+		AmountReceived: amount,
+	}, nil
 }
 
 func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {

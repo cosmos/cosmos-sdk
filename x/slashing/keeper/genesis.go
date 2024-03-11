@@ -10,7 +10,7 @@ import (
 
 // InitGenesis initializes default parameters and the keeper's address to
 // pubkey map.
-func (keeper Keeper) InitGenesis(ctx context.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
+func (keeper Keeper) InitGenesis(ctx context.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) error {
 	err := stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator sdk.ValidatorI) bool {
 			consPk, err := validator.ConsPubKey()
@@ -26,36 +26,37 @@ func (keeper Keeper) InitGenesis(ctx context.Context, stakingKeeper types.Stakin
 		},
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, info := range data.SigningInfos {
 		address, err := keeper.sk.ConsensusAddressCodec().StringToBytes(info.Address)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		err = keeper.ValidatorSigningInfo.Set(ctx, address, info.ValidatorSigningInfo)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
 	for _, array := range data.MissedBlocks {
 		address, err := keeper.sk.ConsensusAddressCodec().StringToBytes(array.Address)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		for _, missed := range array.MissedBlocks {
 			if err := keeper.SetMissedBlockBitmapValue(ctx, address, missed.Index, missed.Missed); err != nil {
-				panic(err)
+				return err
 			}
 		}
 	}
 
 	if err := keeper.Params.Set(ctx, data.Params); err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 // ExportGenesis writes the current store values

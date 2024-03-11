@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -23,6 +24,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,6 +47,7 @@ type TestSuite struct {
 	blockTime       time.Time
 	bankKeeper      *grouptestutil.MockBankKeeper
 	accountKeeper   *grouptestutil.MockAccountKeeper
+	environment     appmodule.Environment
 }
 
 func (s *TestSuite) SetupTest() {
@@ -51,7 +55,7 @@ func (s *TestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(group.StoreKey)
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{}, bank.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, bank.AppModule{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 
 	// setup gomock and initialize some globally expected executions
@@ -73,10 +77,13 @@ func (s *TestSuite) SetupTest() {
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithRouterService(bApp.GRPCQueryRouter(), bApp.MsgServiceRouter()))
 	config := group.DefaultConfig()
-	s.groupKeeper = keeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
+	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, s.accountKeeper, config)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
+
+	s.environment = env
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
@@ -269,7 +276,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		s.Run(msg, func() {
 			pID := spec.preRun(s.sdkCtx)
 
-			err := module.EndBlocker(spec.newCtx, s.groupKeeper)
+			err := s.groupKeeper.EndBlocker(spec.newCtx)
 			s.Require().NoError(err)
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pID,
@@ -331,7 +338,7 @@ func (s *TestSuite) TestPruneProposals() {
 	s.sdkCtx = s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(expirationTime)})
 
 	// Prune Expired Proposals
-	err = s.groupKeeper.PruneProposals(s.sdkCtx)
+	err = s.groupKeeper.PruneProposals(s.sdkCtx, s.environment)
 	s.Require().NoError(err)
 	postPrune, err := s.groupKeeper.Proposal(s.ctx, &queryProposal)
 	s.Require().Nil(postPrune)
@@ -454,9 +461,9 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().Equal("1", result.Tally.YesCount)
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
 	s.NotPanics(func() {
-		err := module.EndBlocker(ctx, s.groupKeeper)
+		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {
 			panic(err)
 		}
@@ -521,9 +528,9 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	ctx := s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(votingPeriod + 1)})
 
 	// Tally the result. This saves the tally result to state.
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
 	s.NotPanics(func() {
-		err := module.EndBlocker(ctx, s.groupKeeper)
+		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {
 			panic(err)
 		}
@@ -536,9 +543,9 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	})
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
 	s.NotPanics(func() {
-		err := module.EndBlocker(ctx, s.groupKeeper)
+		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {
 			panic(err)
 		}

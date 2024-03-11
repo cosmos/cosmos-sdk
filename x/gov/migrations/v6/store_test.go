@@ -13,13 +13,14 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestMigrateStore(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(gov.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, gov.AppModule{}).Codec
 	govKey := storetypes.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, storetypes.NewTransientStoreKey("transient_test"))
 	storeService := runtime.NewKVStoreService(govKey)
@@ -37,7 +38,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run migrations.
-	err = v6.MigrateStore(ctx, paramsCollection, proposalCollection)
+	err = v6.MigrateStore(ctx, storeService, paramsCollection, proposalCollection)
 	require.NoError(t, err)
 
 	// Check params

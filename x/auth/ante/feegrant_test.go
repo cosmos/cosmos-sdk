@@ -56,13 +56,14 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 		"paying with no account": {
 			fee:   1,
-			valid: false,
-			err:   sdkerrors.ErrUnknownAddress,
+			valid: true,
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				// Do not register the account
 				priv, _, addr := testdata.KeyTestPubAddr()
+				acc := authtypes.NewBaseAccountWithAddress(addr)
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(nil).Times(2)
 				return TestAccount{
-					acc:  authtypes.NewBaseAccountWithAddress(addr),
+					acc:  acc,
 					priv: priv,
 				}, nil
 			},
@@ -77,8 +78,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 		"no fee with no account": {
 			fee:   0,
-			valid: false,
-			err:   sdkerrors.ErrUnknownAddress,
+			valid: true,
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				// Do not register the account
 				priv, _, addr := testdata.KeyTestPubAddr()
@@ -145,7 +145,9 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			suite := SetupTestSuite(t, false)
-			protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry), tx.DefaultSignModes)
+			cdc := codec.NewProtoCodec(suite.encCfg.InterfaceRegistry)
+			signingCtx := suite.encCfg.InterfaceRegistry.SigningContext()
+			protoTxCfg := tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
 			// this just tests our handler
 			dfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, suite.feeGrantKeeper, nil)
 			feeAnteHandler := sdk.ChainAnteDecorators(dfd)

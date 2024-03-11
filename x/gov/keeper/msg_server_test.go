@@ -740,6 +740,19 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			expErr:    true,
 			expErrMsg: `option:VOTE_OPTION_ONE weight:"-1.000000000000000000" : invalid vote option`,
 		},
+		"individual weight > 1 but weights sum == 1": {
+			preRun: func() uint64 {
+				return proposalID
+			},
+			option: v1.WeightedVoteOptions{
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDec(2)),
+				v1.NewWeightedVoteOption(v1.OptionNo, sdkmath.LegacyNewDec(-1)),
+			},
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: `option:VOTE_OPTION_ONE weight:"2.000000000000000000" : invalid vote option`,
+		},
 		"empty options": {
 			preRun: func() uint64 {
 				return proposalID
@@ -784,7 +797,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			expErr:    true,
 			expErrMsg: "optimistic proposals can only be rejected: invalid vote option",
 		},
-		"weight sum < 1": {
+		"weights sum < 1": {
 			preRun: func() uint64 {
 				return proposalID
 			},
@@ -2118,7 +2131,7 @@ func (suite *KeeperTestSuite) TestMsgSudoExec() {
 		{
 			name:      "invalid msg (not registered)",
 			input:     invalidMsg,
-			expErrMsg: "unrecognized message route",
+			expErrMsg: "unknown message",
 		},
 		{
 			name:  "valid",

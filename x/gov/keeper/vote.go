@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
@@ -15,13 +16,18 @@ import (
 
 // AddVote adds a vote on a specific proposal
 func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
-	// Check if proposal is in voting period.
-	inVotingPeriod, err := k.VotingPeriodProposals.Has(ctx, proposalID)
+	// get proposal
+	proposal, err := k.Proposals.Get(ctx, proposalID)
 	if err != nil {
+		if stderrors.Is(err, collections.ErrNotFound) {
+			return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		}
+
 		return err
 	}
 
-	if !inVotingPeriod {
+	// check if proposal is in voting period.
+	if proposal.Status != v1.StatusVotingPeriod {
 		return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
@@ -29,16 +35,10 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		return err
 	}
 
-	// get proposal
-	proposal, err := k.Proposals.Get(ctx, proposalID)
-	if err != nil {
-		return err
-	}
-
 	for _, option := range options {
 		switch proposal.ProposalType {
 		case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-			if option.Option != v1.OptionNo && option.Option != v1.OptionSpam {
+			if option.Option != v1.OptionNo {
 				return errors.Wrap(types.ErrInvalidVote, "optimistic proposals can only be rejected")
 			}
 		case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
@@ -75,22 +75,15 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 	}
 
 	// called after a vote on a proposal is cast
-	err = k.Hooks().AfterProposalVote(ctx, proposalID, voterAddr)
-	if err != nil {
+	if err = k.Hooks().AfterProposalVote(ctx, proposalID, voterAddr); err != nil {
 		return err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeProposalVote,
-			sdk.NewAttribute(types.AttributeKeyVoter, voterAddr.String()),
-			sdk.NewAttribute(types.AttributeKeyOption, options.String()),
-			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-		),
+	return k.environment.EventService.EventManager(ctx).EmitKV(types.EventTypeProposalVote,
+		event.NewAttribute(types.AttributeKeyVoter, voterAddr.String()),
+		event.NewAttribute(types.AttributeKeyOption, options.String()),
+		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 	)
-
-	return nil
 }
 
 // deleteVotes deletes all the votes from a given proposalID.

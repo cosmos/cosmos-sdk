@@ -5,9 +5,9 @@ package keyring
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
-	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

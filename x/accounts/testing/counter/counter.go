@@ -3,7 +3,7 @@ package counter
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -29,9 +29,7 @@ func NewAccount(d accountstd.Dependencies) (Account, error) {
 		Owner:          collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		Counter:        collections.NewItem(d.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
 		TestStateCodec: collections.NewItem(d.SchemaBuilder, TestStateCodecPrefix, "test_state_codec", codec.CollValue[counterv1.MsgTestDependencies](d.LegacyStateCodec)),
-		hs:             d.HeaderService,
 		addressCodec:   d.AddressCodec,
-		gs:             d.GasService,
 	}, nil
 }
 
@@ -60,6 +58,7 @@ func (a Account) Init(ctx context.Context, msg *counterv1.MsgInit) (*counterv1.M
 	if err != nil {
 		return nil, err
 	}
+	// check funds
 	return &counterv1.MsgInitResponse{}, nil
 }
 
@@ -70,7 +69,7 @@ func (a Account) IncreaseCounter(ctx context.Context, msg *counterv1.MsgIncrease
 		return nil, err
 	}
 	if !bytes.Equal(sender, owner) {
-		return nil, fmt.Errorf("sender is not the owner of the account")
+		return nil, errors.New("sender is not the owner of the account")
 	}
 	counter, err := a.Counter.Get(ctx)
 	if err != nil {
@@ -114,17 +113,23 @@ func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDepen
 	chainID := a.hs.GetHeaderInfo(ctx).ChainID
 
 	// test gas meter
-	gasBefore := a.gs.GetGasMeter(ctx).Limit()
-	a.gs.GetGasMeter(ctx).Consume(gasBefore, "before")
-	a.gs.GetGasMeter(ctx).Consume(10, "test")
-	gasAfter := a.gs.GetGasMeter(ctx).Limit()
-	a.gs.GetGasMeter(ctx).Consume(gasBefore, "After")
+	gm := a.gs.GetGasMeter(ctx)
+	gasBefore := gm.Limit() - gm.Remaining()
+	gm.Consume(10, "test")
+	gasAfter := gm.Limit() - gm.Remaining()
+
+	// test funds
+	funds := accountstd.Funds(ctx)
+	if len(funds) == 0 {
+		return nil, errors.New("expected funds")
+	}
 
 	return &counterv1.MsgTestDependenciesResponse{
 		ChainId:   chainID,
 		Address:   meStr,
 		BeforeGas: gasBefore,
 		AfterGas:  gasAfter,
+		Funds:     funds,
 	}, nil
 }
 

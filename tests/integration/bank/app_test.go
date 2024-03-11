@@ -25,6 +25,8 @@ import (
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	cdctestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -100,6 +102,7 @@ type suite struct {
 	AccountKeeper      types.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
 	App                *runtime.App
+	TxConfig           client.TxConfig
 }
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
@@ -128,7 +131,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper)
+		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
 
 	res.App = app
 
@@ -173,7 +176,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	require.NoError(t, err)
 	sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-	txConfig := moduletestutil.MakeTestTxConfig()
+	txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
@@ -223,7 +226,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		},
 		{
 			desc:       "wrong accNum should pass Simulate, but not Deliver",
-			msgs:       []sdk.Msg{multiSendMsg1, multiSendMsg2},
+			msgs:       []sdk.Msg{multiSendMsg1},
 			accNums:    []uint64{1}, // wrong account number
 			accSeqs:    []uint64{1},
 			expSimPass: true, // doesn't check signature
@@ -251,19 +254,20 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Logf("testing %s", tc.desc)
-		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
-		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
-		if tc.expPass {
-			require.NoError(t, err)
-		} else {
-			require.Error(t, err)
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			header := header.Info{Height: baseApp.LastBlockHeight() + 1}
+			txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
+			_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+			if tc.expPass {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+			}
 
-		for _, eb := range tc.expectedBalances {
-			checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
-		}
+			for _, eb := range tc.expectedBalances {
+				checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
+			}
+		})
 	}
 }
 
@@ -305,7 +309,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
+		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -360,7 +364,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
+		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -438,8 +442,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(tt *testing.T) {
 			header := header.Info{Height: s.App.LastBlockHeight() + 1}
-			txGen := moduletestutil.MakeTestTxConfig()
-			_, _, err = simtestutil.SignCheckDeliver(tt, txGen, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
+			_, _, err = simtestutil.SignCheckDeliver(tt, s.TxConfig, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
 			if len(tc.expInError) > 0 {
 				require.Error(tt, err)
 				for _, exp := range tc.expInError {

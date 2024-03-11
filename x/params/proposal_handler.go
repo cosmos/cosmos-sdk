@@ -1,6 +1,7 @@
 package params
 
 import (
+	"context"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -14,10 +15,14 @@ import (
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal
 func NewParamChangeProposalHandler(k keeper.Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
+	return func(ctx context.Context, content govtypes.Content) error {
+		// UnwrapSDKContext makes x/params baseapp compatible only and not server/v2
+		// We should investigate if we want to make x/params server/v2 compatible
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 		switch c := content.(type) {
 		case *proposal.ParameterChangeProposal:
-			return handleParameterChangeProposal(ctx, k, c)
+			return handleParameterChangeProposal(sdkCtx, k, c)
 
 		default:
 			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized param proposal content type: %T", c)

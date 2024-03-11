@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 )
@@ -19,7 +20,7 @@ func TestStorageTestSuite(t *testing.T) {
 				db.SetSync(false)
 			}
 
-			return storage.NewStorageStore(db), err
+			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
 		},
 		EmptyBatchSize: 12,
 	}

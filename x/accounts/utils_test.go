@@ -12,7 +12,10 @@ import (
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -40,14 +43,16 @@ var _ InterfaceRegistry = (*interfaceRegistry)(nil)
 
 type interfaceRegistry struct{}
 
-func (i interfaceRegistry) RegisterInterface(string, any, ...gogoproto.Message) {}
+func (i interfaceRegistry) RegisterInterface(string, any, ...protoiface.MessageV1) {}
 
-func (i interfaceRegistry) RegisterImplementations(any, ...gogoproto.Message) {}
+func (i interfaceRegistry) RegisterImplementations(any, ...protoiface.MessageV1) {}
 
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(nil, ss, eventService{}, nil, nil, nil, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
+	env := runtime.NewEnvironment(ss, log.NewNopLogger())
+	env.EventService = eventService{}
+	m, err := NewKeeper(nil, env, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }
@@ -84,6 +89,6 @@ func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req
 	}
 }
 
-func (m mockExec) ResponseNameByRequestName(name string) string {
+func (m mockExec) ResponseNameByMsgName(name string) string {
 	return name + "Response"
 }

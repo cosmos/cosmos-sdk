@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/rapidproto"
@@ -29,6 +30,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -42,10 +44,10 @@ import (
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.
 func TestDecode(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
-		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
-		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{},
-		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
+		codectestutil.CodecOptions{}, auth.AppModule{}, authzmodule.AppModule{}, bank.AppModule{},
+		consensus.AppModule{}, distribution.AppModule{}, evidence.AppModule{}, feegrantmodule.AppModule{},
+		gov.AppModule{}, groupmodule.AppModule{}, mint.AppModule{},
+		slashing.AppModule{}, staking.AppModule{}, upgrade.AppModule{}, vesting.AppModule{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
 	fee := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
@@ -83,6 +85,16 @@ func TestDecode(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
 			rapid.Check(t, func(t *rapid.T) {
 				msg := gen.Draw(t, "msg")
+				signers, err := encCfg.TxConfig.SigningContext().GetSigners(msg)
+				if len(signers) == 0 {
+					return
+				}
+				if err != nil {
+					if strings.Contains(err.Error(), "empty address string is not allowed") {
+						return
+					}
+					require.NoError(t, err)
+				}
 				gogo := tt.Gogo
 				sanity := tt.Pulsar
 

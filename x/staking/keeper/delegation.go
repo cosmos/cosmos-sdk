@@ -165,7 +165,7 @@ func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddre
 // GetUnbondingDelegationsFromValidator returns all unbonding delegations from a
 // particular validator.
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
+	store := k.environment.KVStoreService.OpenKVStore(ctx)
 	rng := collections.NewPrefixedPairRange[[]byte, []byte](valAddr)
 	err = k.UnbondingDelegationByValIndex.Walk(
 		ctx,
@@ -431,7 +431,6 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 		i++
 		return false, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -653,11 +652,10 @@ func (k Keeper) InsertRedelegationQueue(ctx context.Context, red types.Redelegat
 // the queue.
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet, err error) {
 	var keys []time.Time
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
-	rng := (&collections.Range[time.Time]{}).EndInclusive(sdkCtx.HeaderInfo().Time)
+	rng := (&collections.Range[time.Time]{}).EndInclusive(headerInfo.Time)
 	err = k.RedelegationQueue.Walk(ctx, rng, func(key time.Time, value types.DVVTriplets) (bool, error) {
 		keys = append(keys, key)
 		matureRedelegations = append(matureRedelegations, value.Triplets...)
@@ -852,7 +850,7 @@ func (k Keeper) Unbond(
 		}
 
 		valAddr, err1 := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
-		if err != nil {
+		if err1 != nil {
 			return amount, err1
 		}
 
@@ -891,7 +889,7 @@ func (k Keeper) getBeginInfo(
 	if err != nil && errors.Is(err, types.ErrNoValidatorFound) {
 		return completionTime, height, false, nil
 	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)
 	if err != nil {
 		return completionTime, height, false, err
@@ -901,8 +899,8 @@ func (k Keeper) getBeginInfo(
 	switch {
 	case errors.Is(err, types.ErrNoValidatorFound) || validator.IsBonded():
 		// the longest wait - just unbonding period from now
-		completionTime = sdkCtx.HeaderInfo().Time.Add(unbondingTime)
-		height = sdkCtx.BlockHeight()
+		completionTime = headerInfo.Time.Add(unbondingTime)
+		height = headerInfo.Height
 
 		return completionTime, height, false, nil
 
@@ -957,9 +955,9 @@ func (k Keeper) Undelegate(
 		return time.Time{}, math.Int{}, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	completionTime := sdkCtx.HeaderInfo().Time.Add(unbondingTime)
-	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.BlockHeight(), completionTime, returnAmount)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	completionTime := headerInfo.Time.Add(unbondingTime)
+	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, headerInfo.Height, completionTime, returnAmount)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
@@ -987,8 +985,8 @@ func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, v
 	}
 
 	balances := sdk.NewCoins()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ctxTime := sdkCtx.HeaderInfo().Time
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	ctxTime := headerInfo.Time
 
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
@@ -1132,8 +1130,8 @@ func (k Keeper) CompleteRedelegation(
 	}
 
 	balances := sdk.NewCoins()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ctxTime := sdkCtx.HeaderInfo().Time
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	ctxTime := headerInfo.Time
 
 	// loop through all the entries and complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {
@@ -1196,11 +1194,15 @@ func (k Keeper) ValidateUnbondAmount(
 		return shares, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid shares amount")
 	}
 
-	// Cap the shares at the delegation's shares. Shares being greater could occur
-	// due to rounding, however we don't want to truncate the shares or take the
-	// minimum because we want to allow for the full withdraw of shares from a
-	// delegation.
-	if shares.GT(delShares) {
+	// Depending on the share, amount can be smaller than unit amount(1stake).
+	// If the remain amount after unbonding is smaller than the minimum share,
+	// it's completely unbonded to avoid leaving dust shares.
+	tolerance, err := validator.SharesFromTokens(math.OneInt())
+	if err != nil {
+		return shares, err
+	}
+
+	if delShares.Sub(shares).LT(tolerance) {
 		shares = delShares
 	}
 

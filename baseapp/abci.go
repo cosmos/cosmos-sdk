@@ -1199,7 +1199,7 @@ func checkNegativeHeight(height int64) error {
 	return nil
 }
 
-// createQueryContext creates a new sdk.Context for a query, taking as args
+// CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
 func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
@@ -1251,14 +1251,19 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	ctx := sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.Context().BlockHeader())
+		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  height,
+		}).
+		WithBlockHeader(app.checkState.Context().BlockHeader())
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)
 		if ok {
 			cInfo, err := rms.GetCommitInfo(height)
 			if cInfo != nil && err == nil {
-				ctx = ctx.WithHeaderInfo(coreheader.Info{Time: cInfo.Timestamp})
+				ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height, Time: cInfo.Timestamp})
 			}
 		}
 	}

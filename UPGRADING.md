@@ -5,7 +5,59 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
-### Unordered Transactions
+### SimApp
+
+In this section we describe the changes made in Cosmos SDK' SimApp.
+**These changes are directly applicable to your application wiring.**
+
+#### Client (`root.go`)
+
+The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.)
+and address bech32 prefixes (address and validator address).
+This is part of the work of abstracting the SDK from the global bech32 config.
+
+This means the address codecs and prefixes must be provided in the `client.Context` in the application client (usually `root.go`).
+
+```diff
+clientCtx = clientCtx.
++ WithAddressCodec(addressCodec).
++ WithValidatorAddressCodec(validatorAddressCodec).
++ WithConsensusAddressCodec(consensusAddressCodec).
++ WithAddressPrefix("cosmos").
++ WithValidatorPrefix("cosmosvaloper")
+```
+
+**When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
+
+Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
+
+#### Server (`app.go`)
+
+##### Module Manager
+
+The basic module manager has been deleted. It was not necessary anymore and was simplified to use the `module.Manager` directly.
+It can be removed from your `app.go`.
+
+For depinject users, it isn't necessary anymore to supply a `map[string]module.AppModuleBasic` for customizing the app module basic instantiation.
+The custom parameters (such as genutil message validator or gov proposal handler, or evidence handler) can directly be supplied.
+When requiring a module manager in `root.go`, inject `*module.Manager` using `depinject.Inject`. 
+
+For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInterfaces` on the module manager:
+
+```diff
+-app.BasicModuleManager = module.NewBasicManagerFromManager(...)
+-app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
+-app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
++app.ModuleManager.RegisterLegacyAminoCodec(legacyAmino)
++app.ModuleManager.RegisterInterfaces(interfaceRegistry)
+```
+
+##### AnteHandlers
+
+The `GasConsumptionDecorator` and `IncreaseSequenceDecorator` have been merged with the SigVerificationDecorator, so you'll
+need to remove them both from your app.go code, they will yield to unresolvable symbols when compiling.
+
+#### Unordered Transactions
 
 The Cosmos SDK now supports unordered transactions. This means that transactions
 can be executed in any order and doesn't require the client to deal with or manage
@@ -80,74 +132,66 @@ used as a TTL for the transaction and is used to provide replay protection. See
 [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md)
 for more details.
 
-### Params
+### Protobuf
 
-* Params migrations were removed. It is required to migrate to 0.50 prior to upgrading to v0.51.
-
-### SimApp
-
-In this section we describe the changes made in Cosmos SDK' SimApp.
-**These changes are directly applicable to your application wiring.**
-
-#### AnteHandlers
-
-The GasConsumptionDecorator and IncreaseSequenceDecorator have been merged with the SigVerificationDecorator, so you'll
-need to remove them both from your app.go code, they will yield to unresolvable symbols when compiling.
-
-#### Client (`root.go`)
-
-The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.).
-This is part of the work of abstracting the SDK from the global bech32 config.
-
-This means the address codecs must be provided in the `client.Context` in the application client (usually `root.go`).
-
-```diff
-clientCtx = clientCtx.
-+ WithAddressCodec(addressCodec).
-+ WithValidatorAddressCodec(validatorAddressCodec).
-+ WithConsensusAddressCodec(consensusAddressCodec)
-```
-
-**When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
-
-Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
-
-#### Dependency Injection 
-
-<!-- explain app_config.go changes -->
-
-### Core
-
-`appmodule.Environment` interface was introduced to fetch different services from the application. This can be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services. It needs to be passed into a module at instantiation. 
-
-Circuit Breaker is used as an example. 
-
-```go
-app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey]), nil), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
-```
+The `cosmossdk.io/api/tendermint` package has been removed as CometBFT now publishes its protos to `buf.build/tendermint` and `buf.build/cometbft`.
+There is no longer a need for the Cosmos SDK to host these protos for itself and its dependencies.
+That package containing proto v2 generated code, but the SDK now uses [buf generated go SDK instead](https://buf.build/docs/bsr/generated-sdks/go).
+If you were depending on `cosmossdk.io/api/tendermint`, please use the buf generated go SDK instead, or ask CometBFT host the generated proto v2 code.
 
 ### Modules
 
 #### `**all**`
 
-##### Dependency Injection 
+##### Core API
+
+Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
+
+Additionally, the `appmodule.Environment` interface is introduced to fetch different services from the application.
+This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
+It needs to be passed into a module at instantiation. 
+
+`x/circuit` is used as an example:
+
+```go
+app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey])), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
+```
+
+If your module requires a message server or query server, it should be passed in the environment as well.
+
+```diff
+-govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AuthKeeper, app.BankKeeper,app.StakingKeeper, app.PoolKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
++govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+```
+
+The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.LegacyRegistry` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.LegacyRegistry` interface.
+
+```diff
+-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
++func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
+```
+
+##### Dependency Injection
 
 Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appconfig`.
 All modules using dependency injection must update their imports.
 
+##### Params
+
+Previous module migrations have been removed. It is required to migrate to v0.50 prior to upgrading to v0.51 for not missing any module migrations.
+
 ##### Genesis Interface
 
-All genesis interfaces have been migrated to take context.Context instead of sdk.Context.
+All genesis interfaces have been migrated to take context.Context instead of sdk.Context. Secondly, the codec is no longer passed in by the framework. The codec is now passed in by the module.
 
-```golang
-// InitGenesis performs genesis initialization for the authz module. It returns
-// no validator updates.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+```go
+// InitGenesis performs genesis initialization for the authz module.
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the authz
 // module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 }
 ```
 
@@ -160,7 +204,6 @@ For modules that have migrated, verify you are checking against `collections.Err
 #### `x/auth`
 
 Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`
-
 
 #### `x/authz`
 
@@ -184,6 +227,11 @@ Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group
 
 Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
 
+Gov v1beta1 proposal handler has been changed to take in a `context.Context` instead of `sdk.Context`.
+This change was made to allow legacy proposals to be compatible with server/v2.
+If you wish to migrate to server/v2, you should update your proposal handler to take in a `context.Context` and use services.
+On the other hand, if you wish to keep using baseapp, simply unwrap the sdk context in your proposal handler.
+
 #### `x/mint`
 
 Mint was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/mint`
@@ -196,14 +244,13 @@ Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/sl
 
 Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
 
-
 #### `x/params`
 
 A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
 
 #### `x/protocolpool`
 
-Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x
+Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x.
 
 Example:
 

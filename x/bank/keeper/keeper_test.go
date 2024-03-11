@@ -27,6 +27,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -129,9 +130,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
-	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -140,12 +141,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx
 	suite.authKeeper = authKeeper
 	suite.bankKeeper = keeper.NewBaseKeeper(
+		env,
 		encCfg.Codec,
-		storeService,
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
-		log.NewNopLogger(),
 	)
 
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -172,7 +172,6 @@ func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, accAddr).Return(true)
 }
 
 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
@@ -183,18 +182,15 @@ func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender, receiver *
 	suite.authKeeper.EXPECT().GetModuleAddress(sender.Name).Return(sender.GetAddress())
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, receiver.Name).Return(receiver)
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, sender.GetAddress()).Return(sender)
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, receiver.GetAddress()).Return(true)
 }
 
 func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.BaseAccount, moduleAcc *authtypes.ModuleAccount) {
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, moduleAcc.GetAddress()).Return(true)
 }
 
 func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
-	suite.authKeeper.EXPECT().HasAccount(ctx, receiver).Return(true)
 }
 
 func (suite *KeeperTestSuite) mockFundAccount(receiver sdk.AccAddress) {
@@ -205,9 +201,6 @@ func (suite *KeeperTestSuite) mockFundAccount(receiver sdk.AccAddress) {
 func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []sdk.AccountI, outputs []sdk.AccAddress) {
 	for _, input := range inputs {
 		suite.authKeeper.EXPECT().GetAccount(suite.ctx, input.GetAddress()).Return(input)
-	}
-	for _, output := range outputs {
-		suite.authKeeper.EXPECT().HasAccount(suite.ctx, output).Return(true)
 	}
 }
 
@@ -307,15 +300,14 @@ func (suite *KeeperTestSuite) TestPrependSendRestriction() {
 }
 
 func (suite *KeeperTestSuite) TestGetAuthority() {
-	storeService := runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey))
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey)), log.NewNopLogger())
 	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
 		return keeper.NewBaseKeeper(
-			moduletestutil.MakeTestEncodingConfig().Codec,
-			storeService,
+			env,
+			moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec,
 			suite.authKeeper,
 			nil,
 			authority,
-			log.NewNopLogger(),
 		)
 	}
 

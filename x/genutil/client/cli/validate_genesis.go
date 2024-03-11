@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -15,7 +14,7 @@ import (
 const chainUpgradeGuide = "https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md"
 
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
-func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
+func ValidateGenesisCmd(mm *module.Manager) *cobra.Command {
 	return &cobra.Command{
 		Use:     "validate [file]",
 		Aliases: []string{"validate-genesis"},
@@ -23,9 +22,6 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 		Short:   "Validates the genesis file at the default location or at the location passed as an arg",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			cdc := clientCtx.Codec
 
 			// Load default if passed no args, otherwise load passed file
 			var genesis string
@@ -49,8 +45,10 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				return fmt.Errorf("error unmarshalling genesis doc %s: %w", genesis, err)
 			}
 
-			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
-				return fmt.Errorf("error validating genesis file %s: %w", genesis, err)
+			if mm != nil {
+				if err = mm.ValidateGenesis(genState); err != nil {
+					return fmt.Errorf("error validating genesis file %s: %w", genesis, err)
+				}
 			}
 
 			fmt.Fprintf(cmd.OutOrStdout(), "File at %s is a valid genesis file\n", genesis)

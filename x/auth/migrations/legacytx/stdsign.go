@@ -23,7 +23,7 @@ import (
 type LegacyMsg interface {
 	sdk.Msg
 
-	// Get the canonical byte representation of the Msg.
+	// GetSignBytes get the canonical byte representation of the Msg.
 	GetSignBytes() []byte
 }
 
@@ -92,7 +92,7 @@ type StdSignature struct {
 	Signature          []byte                          `json:"signature" yaml:"signature"`
 }
 
-// Deprecated
+// Deprecated: NewStdSignature returns a std signature
 func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
 	return StdSignature{PubKey: pk, Signature: sig}
 }

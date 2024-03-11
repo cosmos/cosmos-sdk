@@ -2,9 +2,9 @@
 package tendermintv1beta1
 
 import (
+	types "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
+	version "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/version"
 	_ "cosmossdk.io/api/amino"
-	types "cosmossdk.io/api/tendermint/types"
-	version "cosmossdk.io/api/tendermint/version"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"

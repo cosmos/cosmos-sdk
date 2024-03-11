@@ -38,7 +38,7 @@ type CommitStore struct {
 	multiTrees map[string]Tree
 
 	// pruneOptions is the pruning configuration.
-	pruneOptions *store.PruneOptions
+	pruneOptions *store.PruneOptions // TODO are there no default prune options?
 }
 
 // NewCommitStore creates a new CommitStore instance.

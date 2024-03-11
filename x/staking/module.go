@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
@@ -18,7 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -28,19 +29,19 @@ const (
 )
 
 var (
-	_ module.AppModuleSimulation   = AppModule{}
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.HasInvariants         = AppModule{}
-	_ module.HasABCIGenesis        = AppModule{}
-	_ module.HasABCIEndBlock       = AppModule{}
+	_ module.AppModuleSimulation      = AppModule{}
+	_ module.HasName                  = AppModule{}
+	_ module.HasAminoCodec            = AppModule{}
+	_ module.HasGRPCGateway           = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.HasInvariants            = AppModule{}
+	_ module.HasABCIGenesis           = AppModule{}
+	_ module.HasABCIEndBlock          = AppModule{}
 
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasMigrations   = AppModule{}
+	_ appmodulev2.AppModule       = AppModule{}
+	_ appmodulev2.HasBeginBlocker = AppModule{}
+	_ appmodule.HasServices       = AppModule{}
+	_ appmodulev2.HasMigrations   = AppModule{}
 
 	_ depinject.OnePerModuleType = AppModule{}
 )
@@ -82,7 +83,7 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the module's interface types
-func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -169,22 +170,22 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 }
 
 // EndBlock returns the end blocker for the staking module.
-func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
+func (am AppModule) EndBlock(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) {
 	cometValidatorUpdates, err := am.keeper.EndBlocker(ctx) // TODO: refactor to return appmodule.ValidatorUpdate higher up the stack
 	if err != nil {
 		return nil, err
 	}
 
-	validatorUpdates := make([]appmodule.ValidatorUpdate, len(cometValidatorUpdates))
+	validatorUpdates := make([]appmodulev2.ValidatorUpdate, len(cometValidatorUpdates))
 	for i, v := range cometValidatorUpdates {
 		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = appmodule.ValidatorUpdate{
+			validatorUpdates[i] = appmodulev2.ValidatorUpdate{
 				PubKey:     ed25519,
 				PubKeyType: "ed25519",
 				Power:      v.Power,
 			}
 		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = appmodule.ValidatorUpdate{
+			validatorUpdates[i] = appmodulev2.ValidatorUpdate{
 				PubKey:     secp256k1,
 				PubKeyType: "secp256k1",
 				Power:      v.Power,

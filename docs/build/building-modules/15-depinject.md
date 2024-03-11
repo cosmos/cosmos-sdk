@@ -123,12 +123,8 @@ All methods, structs and their fields must be public for `depinject`.
     https://github.com/cosmos/cosmos-sdk/blob/f4bdec3433373cc4950f4680743e969495763fbb/x/group/module/module.go#L64-L65
     ```
 
-
-
-
-
 The module is now ready to be used with `depinject` by a chain developer.
 
 ## Integrate in an application
 
-The App Wiring is done in `app_config.go` / `app.yaml` and `app_v2.go` and is explained in detail in the [overview of `app_v2.go`](https://docs.cosmos.network/main/build/building-apps/app-go-v2).
+The App Wiring is done in `app_config.go` / `app.yaml` and `app_di.go` and is explained in detail in the [overview of `app_di.go`](https://docs.cosmos.network/main/build/building-apps/app-go-v2).

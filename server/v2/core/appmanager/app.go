@@ -3,8 +3,9 @@ package appmanager
 import (
 	"time"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 )
 
 type QueryRequest struct {
@@ -23,12 +24,12 @@ type BlockRequest[T any] struct {
 	Time              time.Time
 	Hash              []byte
 	Txs               []T
-	ConsensusMessages []Type
+	ConsensusMessages []transaction.Type
 }
 
 type BlockResponse struct {
 	Apphash          []byte
-	ValidatorUpdates []appmodule.ValidatorUpdate
+	ValidatorUpdates []appmodulev2.ValidatorUpdate
 	PreBlockEvents   []event.Event
 	BeginBlockEvents []event.Event
 	TxResults        []TxResult
@@ -38,13 +39,13 @@ type BlockResponse struct {
 type RequestInitChain struct {
 	Time          time.Time
 	ChainId       string
-	Validators    []appmodule.ValidatorUpdate
+	Validators    []appmodulev2.ValidatorUpdate
 	AppStateBytes []byte
 	InitialHeight int64
 }
 
 type ResponseInitChain struct {
-	Validators []appmodule.ValidatorUpdate
+	Validators []appmodulev2.ValidatorUpdate
 	AppHash    []byte
 }
 
@@ -52,6 +53,6 @@ type TxResult struct {
 	Events    []event.Event
 	GasUsed   uint64
 	GasWanted uint64
-	Resp      []Type
+	Resp      []transaction.Type
 	Error     error
 }

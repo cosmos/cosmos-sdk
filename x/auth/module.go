@@ -9,8 +9,9 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
@@ -18,7 +19,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -35,10 +35,11 @@ var (
 	_ module.HasName             = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 
-	_ appmodule.AppModule                       = AppModule{}
-	_ appmodule.HasTxValidation[transaction.Tx] = AppModule{}
-	_ appmodule.HasServices                     = AppModule{}
-	_ appmodule.HasMigrations                   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
+
+	_ appmodulev2.AppModule                       = AppModule{}
+	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
+	_ appmodulev2.HasMigrations                   = AppModule{}
 )
 
 // AppModule implements an application module for the auth module.
@@ -76,7 +77,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 }
 
 // RegisterInterfaces registers interfaces and implementations of the auth module.
-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -160,7 +161,7 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	}
 
 	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
-	_, err := anteHandler(sdkCtx, runtime.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate)
+	_, err := anteHandler(sdkCtx, nil /** do not import runtime **/, sdkCtx.ExecMode() == sdk.ExecModeSimulate)
 	return err
 }
 

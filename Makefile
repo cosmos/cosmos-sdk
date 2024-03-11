@@ -7,7 +7,6 @@ export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
-SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
@@ -43,7 +42,7 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1_manual
+  build_tags += app_v1
 endif
 
 # DB backend selection
@@ -121,6 +120,7 @@ build-linux-arm64:
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	cd ${CURRENT_DIR}/simapp && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+	cd ${CURRENT_DIR}/simapp/v2 && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
@@ -384,7 +384,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.55.0
+golangci_version=v1.56.2
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:

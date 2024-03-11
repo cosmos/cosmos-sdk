@@ -16,10 +16,10 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/handlers"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
@@ -33,13 +33,8 @@ const (
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
-type (
-	VerifyVoteExtensionFunc func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
-	ExtendVoteFunc          func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
-)
-
 type Consensus[T transaction.Tx] struct {
-	app             appmanager.AppManager[T]
+	app             *appmanager.AppManager[T]
 	cfg             Config
 	store           types.Store
 	logger          log.Logger
@@ -48,9 +43,6 @@ type Consensus[T transaction.Tx] struct {
 	snapshotManager *snapshots.Manager
 	mempool         mempool.Mempool[T]
 
-	verifyVoteExt VerifyVoteExtensionFunc
-	extendVote    ExtendVoteFunc
-
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
 	// committed block. TODO(tip): check if concurrency is really needed
@@ -58,10 +50,12 @@ type Consensus[T transaction.Tx] struct {
 
 	prepareProposalHandler handlers.PrepareHandler[T]
 	processProposalHandler handlers.ProcessHandler[T]
+	verifyVoteExt          handlers.VerifyVoteExtensionhandler
+	extendVote             handlers.ExtendVoteHandler
 }
 
 func NewConsensus[T transaction.Tx](
-	app appmanager.AppManager[T],
+	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	store types.Store,
 	cfg Config,
@@ -72,6 +66,44 @@ func NewConsensus[T transaction.Tx](
 		app:     app,
 		cfg:     cfg,
 	}
+}
+
+func (c *Consensus[T]) SetMempool(mp mempool.Mempool[T]) {
+	c.mempool = mp
+}
+
+func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
+	c.streaming = sm
+}
+
+// SetSnapshotManager sets the snapshot manager for the Consensus.
+// The snapshot manager is responsible for managing snapshots of the Consensus state.
+// It allows for creating, storing, and restoring snapshots of the Consensus state.
+// The provided snapshot manager will be used by the Consensus to handle snapshots.
+func (c *Consensus[T]) SetSnapshotManager(sm *snapshots.Manager) {
+	c.snapshotManager = sm
+}
+
+// RegisterExtensions registers the given extensions with the consensus module's snapshot manager.
+// It allows additional snapshotter implementations to be used for creating and restoring snapshots.
+func (c *Consensus[T]) RegisterExtensions(extensions ...snapshots.ExtensionSnapshotter) {
+	c.snapshotManager.RegisterExtensions(extensions...)
+}
+
+func (c *Consensus[T]) SetPrepareProposalHandler(handler handlers.PrepareHandler[T]) {
+	c.prepareProposalHandler = handler
+}
+
+func (c *Consensus[T]) SetProcessProposalHandler(handler handlers.ProcessHandler[T]) {
+	c.processProposalHandler = handler
+}
+
+func (c *Consensus[T]) SetExtendVoteExtension(handler handlers.ExtendVoteHandler) {
+	c.extendVote = handler
+}
+
+func (c *Consensus[T]) SetVerifyVoteExtension(handler handlers.VerifyVoteExtensionhandler) {
+	c.verifyVoteExt = handler
 }
 
 // BlockData is used to keep some data about the last committed block. Currently
@@ -96,17 +128,6 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 	if err != nil {
 		return nil, err
 	}
-
-	/* TODO insertion into the mempool, insertion should a cache tx,
-	type CacheTx struct {
-		// Tx is the transaction.
-		Tx transaction.Tx
-		// Encoded
-		EncodedTx []byte
-	}
-
-	either do this in x/tx or here, but we need to avoid re-encoding the tx due to maliability
-	*/
 
 	cometResp := &abci.ResponseCheckTx{
 		// Code:      resp.Code, //TODO: extract error code from resp.Error
@@ -133,14 +154,17 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 		return nil, err
 	}
 
-	// TODO use rootstore interface and that has LastCommitID
+	cid, err := c.store.LastCommitID()
+	if err != nil {
+		return nil, err
+	}
 
 	return &abci.ResponseInfo{
-		Data:            c.cfg.Name,
-		Version:         c.cfg.Version,
-		AppVersion:      cp.GetVersion().App,
-		LastBlockHeight: int64(version),
-		// LastBlockAppHash: c.store.LastCommittedID().Hash(), // TODO: implement this on store. It's required by CometBFT
+		Data:             c.cfg.Name,
+		Version:          c.cfg.Version,
+		AppVersion:       cp.GetVersion().App,
+		LastBlockHeight:  int64(version),
+		LastBlockAppHash: cid.Hash,
 	}, nil
 }
 
@@ -191,6 +215,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 
 // InitChain implements types.Application.
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
 	// TODO: won't work for now
 	return &abci.ResponseInitChain{
@@ -198,62 +223,6 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 		Validators:      req.Validators,
 		AppHash:         []byte{},
 	}, nil
-
-	// valUpdates := []validator.Update{}
-	// for _, v := range req.Validators {
-	// 	pubkey, err := cryptocdc.FromCmtProtoPublicKey(v.PubKey)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	valUpdates = append(valUpdates, validator.Update{
-	// 		PubKey: pubkey.Bytes(),
-	// 		Power:  v.Power,
-	// 	})
-	// }
-
-	// rr := appmanager.RequestInitChain{
-	// 	Time:          req.Time,
-	// 	ChainId:       req.ChainId,
-	// 	AppStateBytes: req.AppStateBytes,
-	// 	InitialHeight: req.InitialHeight,
-	// 	Validators:    valUpdates,
-	// }
-
-	// res, err := c.app.InitChain(ctx, rr)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// abciVals := make(abci.ValidatorUpdates, len(res.Validators))
-	// for i, update := range res.Validators {
-	// 	abciVals[i] = abci.ValidatorUpdate{
-	// 		PubKey: cmtprotocrypto.PublicKey{
-	// 			Sum: &cmtprotocrypto.PublicKey_Ed25519{
-	// 				Ed25519: update.PubKey,
-	// 			},
-	// 		},
-	// 		Power: update.Power,
-	// 	}
-	// }
-
-	// if len(req.Validators) > 0 {
-	// 	if len(req.Validators) != len(abciVals) {
-	// 		return nil, fmt.Errorf(
-	// 			"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
-	// 			len(req.Validators), len(abciVals),
-	// 		)
-	// 	}
-
-	// 	sort.Sort(abci.ValidatorUpdates(req.Validators))
-	// 	sort.Sort(abciVals)
-
-	// 	for i := range abciVals {
-	// 		if !proto.Equal(&abciVals[i], &req.Validators[i]) {
-	// 			return nil, fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i)
-	// 		}
-	// 	}
-	// }
 }
 
 // PrepareProposal implements types.Application.

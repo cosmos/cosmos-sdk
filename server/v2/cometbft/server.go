@@ -1,105 +1,224 @@
 package cometbft
 
-// TODO: implement the server (facu)
+import (
+	"context"
+	"fmt"
 
-// import (
-// 	"context"
-// 	"fmt"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/handlers"
+	cometlog "cosmossdk.io/server/v2/cometbft/log"
+	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/types"
+	"cosmossdk.io/store/v2/snapshots"
+	abciserver "github.com/cometbft/cometbft/abci/server"
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	"github.com/cometbft/cometbft/proxy"
+	cmttypes "github.com/cometbft/cometbft/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+)
 
-// 	"cosmossdk.io/log"
-// 	"cosmossdk.io/server/v2/appmanager"
-// 	cometlog "cosmossdk.io/server/v2/cometbft/log"
-// 	"cosmossdk.io/server/v2/cometbft/types"
-// 	"cosmossdk.io/core/transaction"
-// 	"cosmossdk.io/store/v2/snapshots"
-// 	abciserver "github.com/cometbft/cometbft/abci/server"
-// 	abci "github.com/cometbft/cometbft/abci/types"
-// 	cmtcfg "github.com/cometbft/cometbft/config"
-// 	"github.com/cometbft/cometbft/node"
-// 	"github.com/cometbft/cometbft/p2p"
-// 	pvm "github.com/cometbft/cometbft/privval"
-// 	"github.com/cometbft/cometbft/proxy"
-// 	// genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-// )
+const (
+	flagWithComet     = "with-comet"
+	flagAddress       = "address"
+	flagTransport     = "transport"
+	flagTraceStore    = "trace-store"
+	flagCPUProfile    = "cpu-profile"
+	FlagMinGasPrices  = "minimum-gas-prices"
+	FlagQueryGasLimit = "query-gas-limit"
+	FlagHaltHeight    = "halt-height"
+	FlagHaltTime      = "halt-time"
+	FlagTrace         = "trace"
+)
 
-// type CometBFTServer struct {
-// 	Node   *node.Node
-// 	app    abci.Application
-// 	logger log.Logger
+type CometBFTServer[T transaction.Tx] struct {
+	Node   *node.Node
+	App    *Consensus[T]
+	logger log.Logger
 
-// 	config    Config
-// 	cleanupFn func()
-// }
+	config    Config
+	cleanupFn func()
+}
 
-// func NewCometBFTServer[T transaction.Tx](logger log.Logger, app appmanager.AppManager[T], cfg Config, voteExtHandler types.VoteExtensionsHandler) *CometBFTServer {
-// 	logger = logger.With("module", "cometbft-server")
-// 	return &CometBFTServer{
-// 		logger: logger,
-// 		app:    NewConsensus[T](app, nil, nil, cfg),
-// 		config: cfg,
-// 	}
-// }
+// App is an interface that represents an application in the CometBFT server.
+// It provides methods to access the app manager, logger, and store.
+type App[T transaction.Tx] interface {
+	GetApp() *appmanager.AppManager[T]
+	GetLogger() log.Logger
+	GetStore() types.Store
+}
 
-// func (s *CometBFTServer) Start(ctx context.Context) error {
-// 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
-// 	if s.config.Standalone {
-// 		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.app)
-// 		if err != nil {
-// 			return fmt.Errorf("error creating listener: %w", err)
-// 		}
+func NewCometBFTServer[T transaction.Tx](
+	app App[T],
+	cfg Config,
+) *CometBFTServer[T] {
+	logger := app.GetLogger().With("module", "cometbft-server")
 
-// 		svr.SetLogger(wrappedLogger)
+	// create noop mempool
+	mempool := mempool.NoOpMempool[T]{}
 
-// 		return svr.Start()
-// 	}
+	// create consensus
+	consensus := NewConsensus[T](app.GetApp(), mempool, app.GetStore(), cfg)
 
-// 	nodeKey, err := p2p.LoadOrGenNodeKey(s.config.CmtConfig.NodeKeyFile())
-// 	if err != nil {
-// 		return err
-// 	}
+	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
+	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
+	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
+	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
 
-// 	s.Node, err = node.NewNode(
-// 		ctx,
-// 		s.config.CmtConfig,
-// 		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
-// 		nodeKey,
-// 		proxy.NewLocalClientCreator(s.app),
-// 		getGenDocProvider(s.config.CmtConfig),
-// 		cmtcfg.DefaultDBProvider,
-// 		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),
-// 		wrappedLogger,
-// 	)
-// 	if err != nil {
-// 		return err
-// 	}
+	ss, ok := app.GetStore().GetStateStorage().(snapshots.StorageSnapshotter)
+	if !ok {
+		panic("snapshots are not supported for this store")
+	}
+	sc, ok := app.GetStore().GetStateCommitment().(snapshots.CommitSnapshotter)
+	if !ok {
+		panic("snapshots are not supported for this store")
+	}
 
-// 	s.cleanupFn = func() {
-// 		if s.Node != nil && s.Node.IsRunning() {
-// 			_ = s.Node.Stop()
-// 		}
-// 	}
+	store, err := GetSnapshotStore(nil)
+	if err != nil {
+		panic(err)
+	}
 
-// 	return s.Node.Start()
-// }
+	sm := snapshots.NewManager(store, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
+	consensus.SetSnapshotManager(sm)
 
-// func (s *CometBFTServer) Stop() error {
-// 	defer s.cleanupFn()
-// 	if s.Node != nil {
-// 		return s.Node.Stop()
-// 	}
-// 	return nil
-// }
+	return &CometBFTServer[T]{
+		logger: logger,
+		App:    consensus,
+		config: cfg,
+	}
 
-// // returns a function which returns the genesis doc from the genesis file.
-// func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
-// 	return func() (node.ChecksummedGenesisDoc, error) {
-// 		// TODO: re-add this after fixing deps
-// 		// appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
-// 		// if err != nil {
-// 		// 	return nil, err
-// 		// }
+}
 
-// 		// return appGenesis.ToGenesisDoc()
-// 		return node.ChecksummedGenesisDoc{}, nil
-// 	}
-// }
+func (s *CometBFTServer[T]) Name() string {
+	return "cometbft"
+}
+
+func (s *CometBFTServer[T]) Start(ctx context.Context) error {
+	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
+	if s.config.Standalone {
+		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.App)
+		if err != nil {
+			return fmt.Errorf("error creating listener: %w", err)
+		}
+
+		svr.SetLogger(wrappedLogger)
+
+		return svr.Start()
+	}
+
+	nodeKey, err := p2p.LoadOrGenNodeKey(s.config.CmtConfig.NodeKeyFile())
+	if err != nil {
+		return err
+	}
+
+	s.Node, err = node.NewNodeWithContext(
+		ctx,
+		s.config.CmtConfig,
+		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
+		nodeKey,
+		proxy.NewLocalClientCreator(s.App),
+		getGenDocProvider(s.config.CmtConfig),
+		cmtcfg.DefaultDBProvider,
+		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),
+		wrappedLogger,
+	)
+	if err != nil {
+		return err
+	}
+
+	s.cleanupFn = func() {
+		if s.Node != nil && s.Node.IsRunning() {
+			_ = s.Node.Stop()
+		}
+	}
+
+	return s.Node.Start()
+}
+
+func (s *CometBFTServer[T]) Stop(_ context.Context) error {
+	defer s.cleanupFn()
+	if s.Node != nil {
+		return s.Node.Stop()
+	}
+	return nil
+}
+
+func (s *CometBFTServer[T]) Config() (any, *viper.Viper) {
+	v := viper.New()
+	v.SetConfigFile("???") // TODO: where do we set this
+	v.SetConfigName("config")
+	v.SetConfigType("toml")
+	v.ReadInConfig()
+	return nil, nil
+}
+
+// returns a function which returns the genesis doc from the genesis file.
+func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
+	return func() (*cmttypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
+
+		return appGenesis.ToGenesisDoc()
+	}
+}
+
+func (s *CometBFTServer[T]) StartCmdFlags() pflag.FlagSet {
+	flags := *pflag.NewFlagSet("cometbft", pflag.ExitOnError)
+	flags.Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
+	flags.String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
+	flags.String(flagTransport, "socket", "Transport protocol: socket, grpc")
+	flags.String(flagTraceStore, "", "Enable KVStore tracing to an output file")
+	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	flags.Uint64(FlagQueryGasLimit, 0, "Maximum gas a Rest/Grpc query can consume. Blank and 0 imply unbounded.")
+	flags.Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
+	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
+	flags.String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
+	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
+	return flags
+}
+
+func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
+	return serverv2.CLIConfig{
+		Command: []*cobra.Command{
+			s.StatusCommand(),
+			s.ShowNodeIDCmd(),
+			s.ShowValidatorCmd(),
+			s.ShowAddressCmd(),
+			s.VersionCmd(),
+			s.QueryBlockCmd(),
+			s.QueryBlocksCmd(),
+			s.QueryBlockResultsCmd(),
+			cmtcmd.ResetAllCmd,
+			cmtcmd.ResetStateCmd,
+		},
+	}
+}
+
+/*
+
+// Set on abci.go
+func SetCodec? <- I think we can get this from app manager too. Is codec.Codec fine?
+func SetSnapshotManager (?)
+
+API routes
+SetServer grpc
+grpc gateway
+streaming
+telemetry
+cli commands
+
+
+
+*/

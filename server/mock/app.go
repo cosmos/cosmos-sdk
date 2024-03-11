@@ -89,13 +89,13 @@ func KVStoreHandler(storeKey storetypes.StoreKey) bam.MsgServiceHandler {
 	}
 }
 
-// basic KV structure
+// KV is a basic kv structure
 type KV struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
-// What Genesis JSON is formatted as
+// GenesisJSON what genesis JSON is formatted as
 type GenesisJSON struct {
 	Values []KV `json:"values"`
 }
@@ -144,7 +144,7 @@ func AppGenStateEmpty(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.
 	return
 }
 
-// Manually write the handlers for this custom message
+// MsgServer manually write the handlers for this custom message
 type MsgServer interface {
 	Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error)
 }

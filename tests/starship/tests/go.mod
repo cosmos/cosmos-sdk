@@ -22,11 +22,6 @@ replace (
 	cosmossdk.io/client/v2 => ../../../client/v2
 	cosmossdk.io/core => ../../../core
 	cosmossdk.io/depinject => ../../../depinject
-	cosmossdk.io/runtime/v2 => ../../../runtime/v2
-	cosmossdk.io/server/v2 => ../../../server/v2
-	cosmossdk.io/server/v2/appmanager => ../../../server/v2/appmanager
-	cosmossdk.io/server/v2/core => ../../../server/v2/core
-	cosmossdk.io/server/v2/stf => ../../../server/v2/stf
 )
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
@@ -59,7 +54,7 @@ require (
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-sdk v0.51.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.62.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -78,15 +73,11 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/store v1.0.2 // indirect
 	cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130 // indirect
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
-	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190 // indirect
+	cosmossdk.io/x/distribution v0.0.0-20240227221813-a248d05f70f4 // indirect
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a // indirect
@@ -210,9 +201,9 @@ require (
 	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.18.0 // indirect
+	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.6.0 // indirect
-	github.com/prometheus/common v0.47.0 // indirect
+	github.com/prometheus/common v0.49.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
@@ -245,14 +236,14 @@ require (
 	go.opentelemetry.io/otel/metric v1.22.0 // indirect
 	go.opentelemetry.io/otel/trace v1.22.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
-	golang.org/x/oauth2 v0.16.0 // indirect
+	golang.org/x/oauth2 v0.17.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/term v0.17.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.18.0 // indirect

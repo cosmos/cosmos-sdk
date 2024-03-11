@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -98,7 +99,7 @@ x: "10"
 }
 
 func TestGetFromFields(t *testing.T) {
-	cfg := testutil.MakeTestEncodingConfig()
+	cfg := testutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	path := hd.CreateHDPath(118, 0, 0).String()
 
 	testCases := []struct {

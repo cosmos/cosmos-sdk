@@ -1,10 +1,10 @@
 package tx
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/address"
-	authcodec "cosmossdk.io/x/auth/codec"
 	txdecode "cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -76,12 +76,15 @@ var DefaultSignModes = []signingtypes.SignMode{
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
-func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMode,
-	customSignModes ...txsigning.SignModeHandler,
+func NewTxConfig(protoCodec codec.Codec, addressCodec, validatorAddressCodec address.Codec, enabledSignModes []signingtypes.SignMode, customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
 		EnabledSignModes: enabledSignModes,
 		CustomSignModes:  customSignModes,
+		SigningOptions: &txsigning.Options{
+			AddressCodec:          addressCodec,
+			ValidatorAddressCodec: validatorAddressCodec,
+		},
 	})
 	if err != nil {
 		panic(err)
@@ -89,13 +92,12 @@ func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMod
 	return txConfig
 }
 
-// NewDefaultSigningOptions returns the sdk default signing options used by x/tx.  This includes account and
+// NewSigningOptions returns signing options used by x/tx. This includes account and
 // validator address prefix enabled codecs.
-func NewDefaultSigningOptions() (*txsigning.Options, error) {
-	sdkConfig := sdk.GetConfig()
+func NewSigningOptions(addressCodec, validatorAddressCodec address.Codec) (*txsigning.Options, error) {
 	return &txsigning.Options{
-		AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
-		ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
+		AddressCodec:          addressCodec,
+		ValidatorAddressCodec: validatorAddressCodec,
 	}, nil
 }
 
@@ -105,10 +107,7 @@ func NewDefaultSigningOptions() (*txsigning.Options, error) {
 func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
 	var err error
 	if configOpts.SigningOptions == nil {
-		configOpts.SigningOptions, err = NewDefaultSigningOptions()
-		if err != nil {
-			return nil, err
-		}
+		return nil, errors.New("signing options not provided")
 	}
 	if configOpts.SigningContext == nil {
 		configOpts.SigningContext, err = txsigning.NewContext(*configOpts.SigningOptions)
@@ -179,10 +178,7 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	var err error
 	if configOptions.SigningContext == nil {
 		if configOptions.SigningOptions == nil {
-			configOptions.SigningOptions, err = NewDefaultSigningOptions()
-			if err != nil {
-				return nil, err
-			}
+			return nil, errors.New("signing options not provided")
 		}
 		if configOptions.SigningOptions.FileResolver == nil {
 			configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()

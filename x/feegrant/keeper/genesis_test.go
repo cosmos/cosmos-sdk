@@ -17,6 +17,7 @@ import (
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -43,7 +44,7 @@ func initFixture(t *testing.T) *genesisFixture {
 	t.Helper()
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)

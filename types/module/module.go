@@ -33,13 +33,14 @@ import (
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -84,9 +85,7 @@ type HasAminoCodec interface {
 }
 
 // HasRegisterInterfaces is the interface for modules to register their msg types.
-type HasRegisterInterfaces interface {
-	RegisterInterfaces(types.InterfaceRegistry)
-}
+type HasRegisterInterfaces appmodule.HasRegisterInterfaces
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
 type HasGRPCGateway interface {
@@ -125,7 +124,7 @@ type HasConsensusVersion = appmodule.HasConsensusVersion
 // HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
 type HasABCIEndBlock interface {
 	AppModule
-	EndBlock(context.Context) ([]appmodule.ValidatorUpdate, error)
+	EndBlock(context.Context) ([]appmodulev2.ValidatorUpdate, error)
 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
@@ -312,9 +311,9 @@ func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (m *Manager) RegisterInterfaces(registry types.InterfaceRegistry) {
+func (m *Manager) RegisterInterfaces(registry registry.LegacyRegistry) {
 	for _, b := range m.Modules {
-		if mod, ok := b.(HasRegisterInterfaces); ok {
+		if mod, ok := b.(appmodule.HasRegisterInterfaces); ok {
 			mod.RegisterInterfaces(registry)
 		}
 	}
@@ -737,7 +736,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 // modules.
 func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
-	validatorUpdates := []appmodule.ValidatorUpdate{}
+	validatorUpdates := []appmodulev2.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {

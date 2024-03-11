@@ -33,7 +33,7 @@ func (m Migrator) Migrate2to3(ctx context.Context) error {
 // Migrate3to4 migrates the x/distribution module state to use collections
 // Additionally it migrates distribution fee pool to use protocol pool module account
 func (m Migrator) Migrate3to4(ctx context.Context) error {
-	if err := v4.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc); err != nil {
+	if err := v4.MigrateStore(ctx, m.keeper.environment, m.keeper.cdc); err != nil {
 		return err
 	}
 

@@ -32,7 +32,7 @@ var ErrMismatchedHashAndPassword = errors.New("crypto/bcrypt: hashedPassword is 
 // be a bcrypt hash.
 var ErrHashTooShort = errors.New("crypto/bcrypt: hashedSecret too short to be a bcrypted password")
 
-// The error returned from CompareHashAndPassword when a hash was created with
+// HashVersionTooNewError the error returned from CompareHashAndPassword when a hash was created with
 // a bcrypt algorithm newer than this implementation.
 type HashVersionTooNewError byte
 
@@ -40,7 +40,7 @@ func (hv HashVersionTooNewError) Error() string {
 	return fmt.Sprintf("crypto/bcrypt: bcrypt algorithm version '%c' requested is newer than current version '%c'", byte(hv), majorVersion)
 }
 
-// The error returned from CompareHashAndPassword when a hash starts with something other than '$'
+// InvalidHashPrefixError the error returned from CompareHashAndPassword when a hash starts with something other than '$'
 type InvalidHashPrefixError byte
 
 func (ih InvalidHashPrefixError) Error() string {
@@ -266,7 +266,7 @@ func (p *hashed) decodeVersion(sbytes []byte) (int, error) {
 	return n, nil
 }
 
-// sbytes should begin where decodeVersion left off.
+// decodeCost sbytes should begin where decodeVersion left off.
 func (p *hashed) decodeCost(sbytes []byte) (int, error) {
 	cost, err := strconv.Atoi(string(sbytes[0:2]))
 	if err != nil {

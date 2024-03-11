@@ -3,8 +3,9 @@ package handlers
 import (
 	"context"
 
-	"cosmossdk.io/core/transaction"
 	cmttypes "github.com/cometbft/cometbft/types"
+
+	"cosmossdk.io/core/transaction"
 )
 
 // TxSelector defines a helper type that assists in selecting transactions during

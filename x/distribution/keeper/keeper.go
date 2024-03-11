@@ -8,7 +8,8 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/distribution/types"
@@ -20,7 +21,7 @@ import (
 
 // Keeper of the distribution store
 type Keeper struct {
-	storeService  store.KVStoreService
+	environment   appmodule.Environment
 	cdc           codec.BinaryCodec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
@@ -57,7 +58,7 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, storeService store.KVStoreService,
+	cdc codec.BinaryCodec, env appmodule.Environment,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
 	feeCollectorName, authority string,
 ) Keeper {
@@ -66,9 +67,9 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	sb := collections.NewSchemaBuilder(storeService)
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
-		storeService:     storeService,
+		environment:      env,
 		cdc:              cdc,
 		authKeeper:       ak,
 		bankKeeper:       bk,
@@ -146,8 +147,7 @@ func (k Keeper) GetAuthority() string {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx context.Context) log.Logger {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.Logger().With(log.ModuleKey, "x/"+types.ModuleName)
+	return k.environment.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 }
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
@@ -165,13 +165,12 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSetWithdrawAddress,
-			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
-		),
-	)
+	if err = k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeSetWithdrawAddress,
+		event.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
+	); err != nil {
+		return err
+	}
 
 	return k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddr, withdrawAddr)
 }
@@ -251,13 +250,13 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 		}
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawCommission,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-		),
+	err = k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeWithdrawCommission,
+		event.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return commission, nil
 }

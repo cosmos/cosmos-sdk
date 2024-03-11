@@ -3,7 +3,7 @@ package simapp
 import (
 	"context"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
@@ -23,7 +23,7 @@ const UpgradeName = "v050-to-v051"
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
-		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
+		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodulev2.VersionMap) (appmodulev2.VersionMap, error) {
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)

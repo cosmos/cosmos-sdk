@@ -102,7 +102,7 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	return nil
 }
 
-// AminoUnpacker is an AnyUnpacker provided for backwards compatibility with
+// AminoPacker is provided for backwards compatibility with
 // amino for the binary marshaling phase
 type AminoPacker struct {
 	Cdc *amino.Codec
@@ -123,7 +123,7 @@ func (a AminoPacker) UnpackAny(any *Any, _ interface{}) error {
 	return err
 }
 
-// AminoUnpacker is an AnyUnpacker provided for backwards compatibility with
+// AminoJSONUnpacker is an AnyUnpacker provided for backwards compatibility with
 // amino for the JSON marshaling phase
 type AminoJSONUnpacker struct {
 	Cdc *amino.Codec
@@ -160,7 +160,7 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	return nil
 }
 
-// AminoUnpacker is an AnyUnpacker provided for backwards compatibility with
+// AminoJSONPacker is an AnyUnpacker provided for backwards compatibility with
 // amino for the JSON un-marshaling phase
 type AminoJSONPacker struct {
 	Cdc *amino.Codec

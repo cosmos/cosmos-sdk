@@ -205,6 +205,7 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	app := suite.app
 	ctx := app.BaseApp.NewContext(false)
 
+	params := v1.DefaultParams()
 	err := gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
 		Deposits: v1.Deposits{
 			{
@@ -218,8 +219,9 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 				},
 			},
 		},
+		Params: &params,
 	})
-	require.NoError(t, err)
+	require.Error(t, err)
 	err = gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
 	require.NoError(t, err)
 	genState, err := gov.ExportGenesis(ctx, suite.GovKeeper)

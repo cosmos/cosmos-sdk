@@ -423,7 +423,7 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// test error
-	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(nil, errors.New("some error"))
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
 	err = mm.PreBlock(sdk.Context{})
 	require.EqualError(t, err, "some error")
 }

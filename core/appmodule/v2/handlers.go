@@ -7,12 +7,13 @@ import (
 )
 
 type (
-	// PreMsgHandler is a handler that is executed before Handler. If it errors the execution reverts.
-	PreMsgHandler = func(ctx context.Context, msg Message) error
 	// Handler handles the state transition of the provided message.
 	Handler = func(ctx context.Context, msg Message) (msgResp Message, err error)
-	// PostMsgHandler runs after Handler, only if Handler does not error. If PostMsgHandler errors
-	// then the execution is reverted.
+	// PreMsgHandler is a handler that is executed before Handler.
+	// If it errors the execution reverts.
+	PreMsgHandler = func(ctx context.Context, msg Message) error
+	// PostMsgHandler runs after Handler, only if Handler does not error.
+	// If PostMsgHandler errors then the execution is reverted.
 	PostMsgHandler = func(ctx context.Context, msg, msgResp Message) error
 )
 
@@ -43,7 +44,7 @@ func RegisterHandler[R interface{ Register(string, Handler) }, Req, Resp Message
 		}
 		return handler(ctx, typed)
 	}
-	router.Register(messageName[Req](), untypedHandler)
+	router.Register(MessageName[Req](), untypedHandler)
 }
 
 // RegisterPreHandler is a helper function that modules can use to not lose type safety when registering PreMsgHandler to the
@@ -70,7 +71,7 @@ func RegisterPreHandler[Req Message](
 		}
 		return handler(ctx, typed)
 	}
-	router.Register(messageName[Req](), untypedHandler)
+	router.Register(MessageName[Req](), untypedHandler)
 }
 
 // RegisterPostHandler is a helper function that modules can use to not lose type safety when registering handlers to the
@@ -101,7 +102,7 @@ func RegisterPostHandler[Req, Resp Message](
 		}
 		return handler(ctx, typed, typedResp)
 	}
-	router.Register(messageName[Req](), untypedHandler)
+	router.Register(MessageName[Req](), untypedHandler)
 }
 
 // msg handler
@@ -123,7 +124,9 @@ type MsgRouter interface {
 	Register(msgName string, handler Handler)
 }
 
+// HasMsgHandler is implemented by modules that instead of exposing msg server expose a set of handlers.
 type HasMsgHandlers interface {
+	// RegisterMsgHandlers is implemented by the module that will register msg handlers.
 	RegisterMsgHandlers(router MsgRouter)
 }
 

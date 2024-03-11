@@ -14,11 +14,9 @@ import (
 // by other modules (usually via depinject) as app modules.
 type AppModule = appmodule.AppModule
 
-// HasMigrations is the extension interface that modules should implement to register migrations.
-type HasMigrations = appmodule.HasMigrations
-
-// HasConsensusVersion is the interface for declaring a module consensus version.
-type HasConsensusVersion = appmodule.HasConsensusVersion
+// HasPreBlocker is the extension interface that modules should implement to run
+// custom logic before BeginBlock.
+type HasPreBlocker = appmodule.HasPreBlocker
 
 // HasBeginBlocker is the extension interface that modules should implement to run
 // custom logic before transaction processing in a block.
@@ -28,34 +26,8 @@ type HasBeginBlocker = appmodule.HasBeginBlocker
 // custom logic after transaction processing in a block.
 type HasEndBlocker = appmodule.HasEndBlocker
 
-// HasPrepareCheckState is an extension interface that contains information about the AppModule
-// and PrepareCheckState.
-type HasPrepareCheckState interface {
-	AppModule
-	PrepareCheckState(context.Context) error
-}
-
-// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
-type HasPrecommit interface {
-	AppModule
-	Precommit(context.Context) error
-}
-
-// ResponsePreBlock represents the response from the PreBlock method.
-// It can modify consensus parameters in storage and signal the caller through the return value.
-// When it returns ConsensusParamsChanged=true, the caller must refresh the consensus parameter in the finalize context.
-// The new context (ctx) must be passed to all the other lifecycle methods.
-type ResponsePreBlock interface {
-	IsConsensusParamsChanged() bool
-}
-
-// HasPreBlocker is the extension interface that modules should implement to run
-// custom logic before BeginBlock.
-type HasPreBlocker interface {
-	AppModule
-	// PreBlock is method that will be run before BeginBlock.
-	PreBlock(context.Context) (ResponsePreBlock, error)
-}
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces = appmodule.HasRegisterInterfaces
 
 // HasServices is the extension interface that modules should implement to register
 // implementations of services defined in .proto files.
@@ -75,4 +47,17 @@ type HasServices interface {
 	// implementing based on the presence (or absence) of protobuf options. You
 	// do not need to specify this in golang code.
 	RegisterServices(grpc.ServiceRegistrar) error
+}
+
+// HasPrepareCheckState is an extension interface that contains information about the AppModule
+// and PrepareCheckState.
+type HasPrepareCheckState interface {
+	appmodule.AppModule
+	PrepareCheckState(context.Context) error
+}
+
+// HasPrecommit is an extension interface that contains information about the appmodule.AppModule and Precommit.
+type HasPrecommit interface {
+	appmodule.AppModule
+	Precommit(context.Context) error
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -38,7 +39,7 @@ func TestParseQueryResponse(t *testing.T) {
 func TestReadTxFromFile(t *testing.T) {
 	t.Parallel()
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
@@ -74,7 +75,7 @@ func TestReadTxFromFile(t *testing.T) {
 func TestReadTxsFromFile(t *testing.T) {
 	t.Parallel()
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
@@ -138,7 +139,7 @@ func TestReadTxsFromFile(t *testing.T) {
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	txConfig := encodingConfig.TxConfig
 
 	clientCtx := client.Context{}

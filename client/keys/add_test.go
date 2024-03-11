@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -28,7 +29,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
 
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
@@ -149,7 +150,7 @@ func Test_runAddCmdMultisigDupKeys(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
 
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
@@ -217,7 +218,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 	pubkey1 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtObiFVE4s+9+RX5SP8TN9r2mxpoaT4eGj9CJfK7VRzN"}`
 	pubkey2 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/se1vkqgdQ7VJQCM4mxN+L+ciGhnnJ4XYsQCRBMrdRi"}`
 	b64Pubkey := "QWhnOHhpdXBJcGZ2UlR2ak5la1ExclROUThTOW96YjdHK2RYQmFLVjl4aUo="
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 
 	testData := []struct {
 		name  string
@@ -349,7 +350,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 func TestAddRecoverFileBackend(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()

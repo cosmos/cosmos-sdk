@@ -28,6 +28,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Api Breaking Changes
 
 * [#19482](https://github.com/cosmos/cosmos-sdk/pull/19482) `appmodule.Environment` is passed to `NewKeeper` instead of individual services
+* [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) `NewAppModule` now takes in a `codec.Codec` as its first argument
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.1.0) - 2023-11-07
 

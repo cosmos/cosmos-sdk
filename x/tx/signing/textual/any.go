@@ -83,7 +83,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 
 	typeURL := screens[0].Content
 	msgType, err := ar.tr.typeResolver.FindMessageByURL(typeURL)
-	if err == protoregistry.NotFound {
+	if errors.Is(err, protoregistry.NotFound) {
 		// If the proto v2 registry doesn't have this message, then we use
 		// protoFiles (which can e.g. be initialized to gogo's MergedRegistry)
 		// to retrieve the message descriptor, and then use dynamicpb on that

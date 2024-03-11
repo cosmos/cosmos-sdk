@@ -5,22 +5,16 @@ import (
 	"errors"
 	"fmt"
 
-	abci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto" // TODO: use protov2
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/core/appmanager"
+
+	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/core/store"
 )
-
-// PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations
-// over the list of proposed transactions. It can return a modified list of txs to include in the proposal.
-type PrepareHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) ([]T, error)
-
-// ProcessHandler is a function that takes a list of transactions and returns a boolean and an error.
-// If the verification of a transaction fails, the boolean is false and the error is non-nil.
-type ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) error
 
 type AppManager[T transaction.Tx] interface {
 	ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error)
@@ -155,5 +149,37 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 		}
 
 		return nil
+	}
+}
+
+// NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
+// return the transactions sent by the client's request.
+func NoOpPrepareProposal[T transaction.Tx]() PrepareHandler[T] {
+	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
+		return txs, nil
+	}
+}
+
+// NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
+// return ACCEPT.
+func NoOpProcessProposal[T transaction.Tx]() ProcessHandler[T] {
+	return func(context.Context, AppManager[T], []T, proto.Message) error {
+		return nil
+	}
+}
+
+// NoOpExtendVote defines a no-op ExtendVote handler. It will always return an
+// empty byte slice as the vote extension.
+func NoOpExtendVote() ExtendVoteHandler {
+	return func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
+	}
+}
+
+// NoOpVerifyVoteExtensionHandler defines a no-op VerifyVoteExtension handler. It
+// will always return an ACCEPT status with no error.
+func NoOpVerifyVoteExtensionHandler() VerifyVoteExtensionhandler {
+	return func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	}
 }

@@ -8,8 +8,8 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/stf"
 	corestore "cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/server/v2/stf"
 )
 
 // AppManager is a coordinator for all things related to an application
@@ -21,7 +21,7 @@ type AppManager[T transaction.Tx] struct {
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
 	importState func(ctx context.Context, src map[string]io.Reader) error
 
-	stf stf.STF[T] // consider if instead of having an interface (which is boxed?), we could have another type Parameter defining STF.
+	stf stf.STFI[T]
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T]) (*appmanager.BlockResponse, corestore.WriterMap, error) {
@@ -65,7 +65,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
-func (a AppManager[T]) Query(ctx context.Context, version uint64, request appmanager.Type) (appmanager.Type, error) {
+func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Type) (transaction.Type, error) {
 	// if version is provided attempt to do a height query.
 	if version != 0 {
 		queryState, err := a.db.StateAt(version)
@@ -86,6 +86,6 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request appmanager.Type) (appmanager.Type, error) {
+func (a AppManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Type) (transaction.Type, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

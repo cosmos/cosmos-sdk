@@ -3,8 +3,6 @@ package counter
 import (
 	modulev1 "cosmossdk.io/api/cosmos/counter/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
-	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
@@ -26,9 +24,8 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	StoreService storetypes.KVStoreService
-	EventManager event.Service
+	Config      *modulev1.Module
+	Environment appmodule.Environment
 }
 
 type ModuleOutputs struct {
@@ -39,7 +36,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.StoreService, in.EventManager)
+	k := keeper.NewKeeper(in.Environment)
 	m := NewAppModule(k)
 
 	return ModuleOutputs{

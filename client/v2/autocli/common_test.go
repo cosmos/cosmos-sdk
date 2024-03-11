@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -51,7 +52,7 @@ func initFixture(t *testing.T) *fixture {
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(bank.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, bank.AppModule{})
 	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
 
@@ -62,8 +63,8 @@ func initFixture(t *testing.T) *fixture {
 	banktypes.RegisterInterfaces(interfaceRegistry)
 
 	clientCtx := client.Context{}.
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithAddressCodec(interfaceRegistry.SigningContext().AddressCodec()).
+		WithValidatorAddressCodec(interfaceRegistry.SigningContext().ValidatorAddressCodec()).
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
 		WithKeyring(kr).
 		WithKeyringDir(home).

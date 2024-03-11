@@ -11,13 +11,14 @@ import (
 	"cosmossdk.io/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestGetCommandEncode(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	txConfig := encodingConfig.TxConfig
 	cdc := encodingConfig.Codec
 
@@ -47,7 +48,7 @@ func TestGetCommandEncode(t *testing.T) {
 }
 
 func TestGetCommandDecode(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	txConfig := encodingConfig.TxConfig
 	cdc := encodingConfig.Codec
 

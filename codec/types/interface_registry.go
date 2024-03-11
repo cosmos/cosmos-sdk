@@ -9,7 +9,9 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/runtime/protoiface"
 
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/tx/signing"
 )
 
@@ -33,24 +35,7 @@ type AnyUnpacker interface {
 type InterfaceRegistry interface {
 	AnyUnpacker
 	jsonpb.AnyResolver
-
-	// RegisterInterface associates protoName as the public name for the
-	// interface passed in as iface. This is to be used primarily to create
-	// a public facing registry of interface implementations for clients.
-	// protoName should be a well-chosen public facing name that remains stable.
-	// RegisterInterface takes an optional list of impls to be registered
-	// as implementations of iface.
-	//
-	// Ex:
-	//   registry.RegisterInterface("cosmos.base.v1beta1.Msg", (*sdk.Msg)(nil))
-	RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)
-
-	// RegisterImplementations registers impls as concrete implementations of
-	// the interface iface.
-	//
-	// Ex:
-	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
-	RegisterImplementations(iface interface{}, impls ...proto.Message)
+	registry.LegacyRegistry
 
 	// ListAllInterfaces list the type URLs of all registered interfaces.
 	ListAllInterfaces() []string
@@ -158,7 +143,7 @@ func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (Interfac
 	}, nil
 }
 
-func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...proto.Message) {
+func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...protoiface.MessageV1) {
 	typ := reflect.TypeOf(iface)
 	if typ.Elem().Kind() != reflect.Interface {
 		panic(fmt.Errorf("%T is not an interface type", iface))
@@ -188,7 +173,7 @@ func (registry *interfaceRegistry) EnsureRegistered(impl interface{}) error {
 //
 // This function PANICs if different concrete types are registered under the
 // same typeURL.
-func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
+func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...protoiface.MessageV1) {
 	for _, impl := range impls {
 		typeURL := MsgTypeURL(impl)
 		registry.registerImpl(iface, typeURL, impl)

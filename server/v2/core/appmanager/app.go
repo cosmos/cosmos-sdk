@@ -5,6 +5,7 @@ import (
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 )
 
 type QueryRequest struct {
@@ -23,7 +24,7 @@ type BlockRequest[T any] struct {
 	Time              time.Time
 	Hash              []byte
 	Txs               []T
-	ConsensusMessages []Type
+	ConsensusMessages []transaction.Type
 }
 
 type BlockResponse struct {
@@ -52,6 +53,6 @@ type TxResult struct {
 	Events    []event.Event
 	GasUsed   uint64
 	GasWanted uint64
-	Resp      []Type
+	Resp      []transaction.Type
 	Error     error
 }

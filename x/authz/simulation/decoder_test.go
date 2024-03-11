@@ -13,13 +13,14 @@ import (
 	"cosmossdk.io/x/authz/simulation"
 	banktypes "cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestDecodeStore(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	dec := simulation.NewDecodeStore(encCfg.Codec)

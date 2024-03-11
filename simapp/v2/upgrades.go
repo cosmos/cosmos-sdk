@@ -4,7 +4,7 @@ import (
 	"context"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/x/accounts"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -35,12 +35,12 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{
+		storeUpgrades := store.StoreUpgrades{
+			Add: []string{
 				accounts.ModuleName,
 				protocolpooltypes.ModuleName,
 			},
-			Deleted: []string{
+			Delete: []string{
 				crisistypes.ModuleName, // The SDK discontinued the crisis module in v0.51.0
 			},
 		}

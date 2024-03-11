@@ -30,7 +30,7 @@ type AppBuilder struct {
 
 // DefaultGenesis returns a default genesis from the registered AppModule's.
 func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
-	return a.app.moduleManager.DefaultGenesis(a.app.cdc)
+	return a.app.moduleManager.DefaultGenesis()
 }
 
 // RegisterModules registers the provided modules with the module manager.
@@ -79,21 +79,18 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 		return nil, err
 	}
 
-	stfMsgHandler, err := a.app.msgRouterBuilder.build(a.app.preMsgRouterBuilder, a.app.postMsgRouterBuilder)
+	stfMsgHandler, err := a.app.msgRouterBuilder.Build()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build STF message handler: %w", err)
 	}
 
-	stfQueryMsgHandler, err := a.app.queryRouterBuilder.build(nil, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to build STF message query handler: %w", err)
-	}
-
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
+	_ = stfMsgHandler
+
 	a.app.stf = stf.NewSTF[transaction.Tx](
-		stfMsgHandler,
-		stfQueryMsgHandler,
+		nil, // stfMsgHandler, // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
+		nil, // stfMsgHandler  // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
 		a.app.moduleManager.PreBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,

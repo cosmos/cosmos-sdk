@@ -7,21 +7,24 @@ import (
 	"fmt"
 	"sort"
 
+	"golang.org/x/exp/maps"
+	"google.golang.org/grpc"
+	protobuf "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/client"
+	"cosmossdk.io/runtime/v2/protocompat"
+	"cosmossdk.io/server/v2/stf"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
-	"golang.org/x/exp/maps"
-	"google.golang.org/grpc"
-	protobuf "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 type MM struct {
@@ -104,13 +107,13 @@ func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 // DefaultGenesis provides default genesis information for all modules
-func (m *MM) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
+func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, b := range m.modules {
 		if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			_ = mod // TODO, support appmodulev2 genesis
 		} else if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
-			genesisData[mod.Name()] = mod.DefaultGenesis(cdc)
+			genesisData[mod.Name()] = mod.DefaultGenesis()
 		} else if mod, ok := b.(sdkmodule.HasName); ok {
 			genesisData[mod.Name()] = []byte("{}")
 		}
@@ -120,13 +123,13 @@ func (m *MM) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for all modules
-func (m *MM) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
+func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for _, b := range m.modules {
 		// first check if the module is an adapted Core API Module
 		if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			_ = mod // TODO, support appmodulev2 genesis
 		} else if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[mod.Name()]); err != nil {
+			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
 			}
 		}
@@ -220,7 +223,7 @@ func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error 
 	return func(ctx context.Context, txs []transaction.Tx) error {
 		for _, moduleName := range m.config.PreBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasPreBlocker); ok {
-				if _, err := module.PreBlock(ctx); err != nil {
+				if err := module.PreBlock(ctx); err != nil {
 					return fmt.Errorf("failed to run preblock for %s: %w", moduleName, err)
 				}
 			}
@@ -277,10 +280,10 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 				}
 			}
 			if mod, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
-				mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
+				mod.InitGenesis(ctx, mod.DefaultGenesis())
 			}
 			if mod, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
-				moduleValUpdates := mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
+				moduleValUpdates := mod.InitGenesis(ctx, mod.DefaultGenesis())
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
 					return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
@@ -298,31 +301,10 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 func (m *MM) RegisterServices(app *App) error {
 	for _, module := range m.modules {
 		// register msg + query
-		services, hasServices := module.(appmodule.HasServices)
-		if hasServices {
+		if services, ok := module.(appmodule.HasServices); ok {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
 				return err
 			}
-		}
-
-		// register msg handlers
-		if h, ok := module.(appmodulev2.HasMsgHandlers); ok {
-			if hasServices {
-				return fmt.Errorf("a module cannot have both handlers and services")
-			}
-			h.RegisterMsgHandlers(app.msgRouterBuilder)
-		}
-
-		if h, ok := module.(appmodulev2.HasPreMsgHandlers); ok {
-			h.RegisterPreMsgHandlers(app.preMsgRouterBuilder)
-		}
-
-		if h, ok := module.(appmodulev2.HasPostMsgHandlers); ok {
-			h.RegisterPostMsgHandlers(app.postMsgRouterBuilder)
-		}
-
-		if h, ok := module.(appmodulev2.HasQueryHandlers); ok {
-			h.RegisterQueryHandlers(app.queryRouterBuilder)
 		}
 
 		// register migrations
@@ -331,6 +313,8 @@ func (m *MM) RegisterServices(app *App) error {
 				return err
 			}
 		}
+
+		// TODO: register pre and post msg
 	}
 
 	return nil
@@ -459,8 +443,8 @@ var _ grpc.ServiceRegistrar = (*configurator)(nil)
 
 type configurator struct {
 	cdc            codec.BinaryCodec
-	stfQueryRouter *handlerRouter
-	stfMsgRouter   *handlerRouter
+	stfQueryRouter *stf.MsgRouterBuilder
+	stfMsgRouter   *stf.MsgRouterBuilder
 	registry       *protoregistry.Files
 	err            error
 }
@@ -489,7 +473,7 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
 		// TODO(tip): what if a query is not deterministic?
-		err := c.stfQueryRouter.registerLegacyGRPC(c.cdc, sd, md, ss)
+		err := registerMethod(c.cdc, c.stfQueryRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
 		}
@@ -499,10 +483,38 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 
 func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
-		err := c.stfMsgRouter.registerLegacyGRPC(c.cdc, sd, md, ss)
+		err := registerMethod(c.cdc, c.stfMsgRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
 		}
 	}
 	return nil
+}
+
+func registerMethod(cdc codec.BinaryCodec, stfRouter *stf.MsgRouterBuilder, sd *grpc.ServiceDesc, md grpc.MethodDesc, ss interface{}) error {
+	requestName, err := protocompat.RequestFullNameFromMethodDesc(sd, md)
+	if err != nil {
+		return err
+	}
+
+	responseName, err := protocompat.ResponseFullNameFromMethodDesc(sd, md)
+	if err != nil {
+		return err
+	}
+
+	// now we create the hybrid handler
+	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, md, ss)
+	if err != nil {
+		return err
+	}
+
+	responseV2Type, err := protoregistry.GlobalTypes.FindMessageByName(responseName)
+	if err != nil {
+		return err
+	}
+
+	return stfRouter.RegisterHandler(string(requestName), func(ctx context.Context, msg appmodulev2.Message) (resp appmodulev2.Message, err error) {
+		resp = responseV2Type.New().Interface().(appmodulev2.Message)
+		return resp, hybridHandler(ctx, msg, resp)
+	})
 }

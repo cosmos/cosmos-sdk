@@ -78,7 +78,7 @@ func (a *App) ModuleManager() *MM {
 
 // DefaultGenesis returns a default genesis from the registered modules.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.moduleManager.DefaultGenesis(a.cdc)
+	return a.moduleManager.DefaultGenesis()
 }
 
 // LoadLatest loads the latest version.

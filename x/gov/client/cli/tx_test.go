@@ -144,7 +144,7 @@ func (s *CLITestSuite) TestNewCmdSubmitProposal() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
-			"invalid decimal coin expression",
+			"invalid character in coin string",
 		},
 		{
 			"valid proposal",

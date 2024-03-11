@@ -30,7 +30,7 @@ var (
 	_ module.HasGRPCGateway           = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ module.AppModuleSimulation      = AppModule{}
-	_ module.HasGenesis               = AppModule{}
+	_ appmodulev2.HasGenesis          = AppModule{}
 
 	_ appmodulev2.AppModule       = AppModule{}
 	_ appmodulev2.HasBeginBlocker = AppModule{}
@@ -40,15 +40,17 @@ const ConsensusVersion = 1
 
 // AppModule implements the AppModule interface for the evidence module.
 type AppModule struct {
+	cdc              codec.Codec
 	evidenceHandlers []eviclient.EvidenceHandler
 	keeper           keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(keeper keeper.Keeper, evidenceHandlers ...eviclient.EvidenceHandler) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, evidenceHandlers ...eviclient.EvidenceHandler) AppModule {
 	return AppModule{
 		keeper:           keeper,
 		evidenceHandlers: evidenceHandlers,
+		cdc:              cdc,
 	}
 }
 
@@ -95,14 +97,14 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
-func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var gs types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
+	if err := am.cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
@@ -110,19 +112,23 @@ func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingCo
 }
 
 // InitGenesis performs the evidence module's genesis initialization
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, bz json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, bz json.RawMessage) error {
 	var gs types.GenesisState
-	err := cdc.UnmarshalJSON(bz, &gs)
+	err := am.cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
+		return err
 	}
 
-	InitGenesis(ctx, am.keeper, &gs)
+	return InitGenesis(ctx, am.keeper, &gs)
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(ExportGenesis(ctx, am.keeper))
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	gs, err := ExportGenesis(ctx, am.keeper)
+	if err != nil {
+		return nil, err
+	}
+	return am.cdc.MarshalJSON(gs)
 }
 
 // ConsensusVersion implements HasConsensusVersion

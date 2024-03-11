@@ -204,23 +204,26 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.app
 	ctx := app.BaseApp.NewContext(false)
-	require.Panics(t, func() {
-		gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
-			Deposits: v1.Deposits{
-				{
-					ProposalId: 1234,
-					Depositor:  "me",
-					Amount: sdk.Coins{
-						sdk.NewCoin(
-							"stake",
-							sdkmath.NewInt(1234),
-						),
-					},
+
+	params := v1.DefaultParams()
+	err := gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
+		Deposits: v1.Deposits{
+			{
+				ProposalId: 1234,
+				Depositor:  "me",
+				Amount: sdk.Coins{
+					sdk.NewCoin(
+						"stake",
+						sdkmath.NewInt(1234),
+					),
 				},
 			},
-		})
+		},
+		Params: &params,
 	})
-	gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
+	require.Error(t, err)
+	err = gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
+	require.NoError(t, err)
 	genState, err := gov.ExportGenesis(ctx, suite.GovKeeper)
 	require.NoError(t, err)
 	require.Equal(t, genState, v1.DefaultGenesisState())

@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"regexp"
 	"runtime/debug"
 	"strings"
@@ -25,7 +24,6 @@ func DescriptorKebabName(descriptor protoreflect.Descriptor) string {
 
 // DescriptorDocs returns the leading comments of the descriptor.
 func DescriptorDocs(descriptor protoreflect.Descriptor) string {
-	fmt.Println(descriptor.ParentFile().SourceLocations())
 	return descriptor.ParentFile().SourceLocations().ByDescriptor(descriptor).LeadingComments
 }
 

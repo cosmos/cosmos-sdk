@@ -700,9 +700,7 @@ func (app *SimApp) TxConfig() client.TxConfig {
 func (app *SimApp) AutoCliOpts() autocli.AppOptions {
 	modules := make(map[string]appmodule.AppModule, 0)
 	for _, m := range app.ModuleManager.Modules {
-		fmt.Println("module", m)
 		if moduleWithName, ok := m.(module.HasName); ok {
-			fmt.Println("module name", moduleWithName.Name())
 			moduleName := moduleWithName.Name()
 			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
 				modules[moduleName] = appModule

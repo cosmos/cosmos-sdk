@@ -20,6 +20,11 @@ type DecodedTx struct {
 	TxRaw                        *v1beta1.TxRaw
 	Signers                      [][]byte
 	TxBodyHasUnknownNonCriticals bool
+
+	// Cache for hash and full bytes
+	cachedHash   [32]byte
+	cachedBytes  []byte
+	cachedHashed bool
 }
 
 var _ transaction.Tx = &DecodedTx{}
@@ -133,12 +138,10 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 
 // Hash implements the interface for the Tx interface.
 func (dtx *DecodedTx) Hash() [32]byte {
-	bz, err := proto.Marshal(dtx.TxRaw)
-	if err != nil {
-		panic(err)
+	if !dtx.cachedHashed {
+		dtx.computeHashAndBytes()
 	}
-
-	return sha256.Sum256(bz)
+	return dtx.cachedHash
 }
 
 func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
@@ -163,9 +166,19 @@ func (dtx *DecodedTx) GetSenders() ([][]byte, error) {
 }
 
 func (dtx *DecodedTx) Bytes() []byte {
+	if !dtx.cachedHashed {
+		dtx.computeHashAndBytes()
+	}
+	return dtx.cachedBytes
+}
+
+func (dtx *DecodedTx) computeHashAndBytes() {
 	bz, err := proto.Marshal(dtx.TxRaw)
 	if err != nil {
 		panic(err)
 	}
-	return bz
+
+	dtx.cachedBytes = bz
+	dtx.cachedHash = sha256.Sum256(bz)
+	dtx.cachedHashed = true
 }

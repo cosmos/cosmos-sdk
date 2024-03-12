@@ -3,8 +3,8 @@ module cosmossdk.io/x/gov
 go 1.21
 
 require (
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
-	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.33.0-20230509103710-5e5b9fdd0180.1 // indirect
+	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.33.0-20231117195010-33ed361a9051.1 // indirect
 	cosmossdk.io/api v0.7.3
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7

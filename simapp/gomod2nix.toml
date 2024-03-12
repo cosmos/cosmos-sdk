@@ -2,11 +2,11 @@ schema = 3
 
 [mod]
   [mod."buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go"]
-    version = "v1.32.0-20230509103710-5e5b9fdd0180.1"
-    hash = "sha256-+BS0SWZDFyUHohKwCt2pN3ybSR8NZ8DcfqZxhcJn4ho="
+    version = "v1.33.0-20230509103710-5e5b9fdd0180.1"
+    hash = "sha256-MwiW5ycryMhDAX6LJtOzbZd+xW+VcqnLExIKfy2VMFY="
   [mod."buf.build/gen/go/tendermint/tendermint/protocolbuffers/go"]
-    version = "v1.32.0-20231117195010-33ed361a9051.1"
-    hash = "sha256-7T1OD5XbhEPpd9GTBihHsqLNBsAAd4aaxLQ8rmWboLk="
+    version = "v1.33.0-20231117195010-33ed361a9051.1"
+    hash = "sha256-UlCjYF+b4olRWZVSBJBUxnhgL+8e2G0YWD80bShpGIU="
   [mod."cloud.google.com/go"]
     version = "v0.112.0"
     hash = "sha256-lmNLoqmLURfxu+a6V/SeoP8xVn0Wi2SD7uxxAtSjm+o="

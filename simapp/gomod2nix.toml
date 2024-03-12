@@ -135,8 +135,8 @@ schema = 3
     version = "v1.4.11"
     hash = "sha256-hXJIGN8Arg09ldCgrSyYZK+xMelYavEj2I3ltxJfAqE="
   [mod."github.com/cosmos/iavl"]
-    version = "v1.0.1"
-    hash = "sha256-owSjZEVLrFoLjO/wm8bxbVLhqRv/uX+8usdVMnbOn/s="
+    version = "v1.1.0"
+    hash = "sha256-chYiPJd/AVcWp5PzMS3ZzcGRbYKVF+OahD7NLEgIVok="
   [mod."github.com/cosmos/ics23/go"]
     version = "v0.10.0"
     hash = "sha256-KYEv727BO/ht63JO02xiKFGFAddg41Ve9l2vSSZZBq0="

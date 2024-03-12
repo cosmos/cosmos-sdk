@@ -85,15 +85,13 @@ type HasAminoCodec interface {
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 }
 
-// HasRegisterInterfaces is the interface for modules to register their msg types.
-type HasRegisterInterfaces appmodulev2.HasRegisterInterfaces
-
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
 type HasGRPCGateway interface {
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
 
 // HasGenesis is the extension interface for stateful genesis methods.
+// Prefer directly importing appmodulev2 or appmodule instead of using this alias.
 type HasGenesis = appmodulev2.HasGenesis
 
 // HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
@@ -325,15 +323,13 @@ func (m *Manager) RegisterInterfaces(registry registry.LegacyRegistry) {
 // DefaultGenesis provides default genesis information for all modules
 func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
-	for _, b := range m.Modules {
+	for name, b := range m.Modules {
 		if mod, ok := b.(HasGenesisBasics); ok {
 			genesisData[mod.Name()] = mod.DefaultGenesis()
-		} else if mod, ok := b.(HasName); ok {
-			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
-				genesisData[mod.Name()] = modgen.DefaultGenesis()
-			} else {
-				genesisData[mod.Name()] = []byte("{}")
-			}
+		} else if mod, ok := b.(appmodule.HasGenesis); ok {
+			genesisData[name] = mod.DefaultGenesis()
+		} else {
+			genesisData[name] = []byte("{}")
 		}
 	}
 
@@ -342,17 +338,14 @@ func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for all modules
 func (m *Manager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
-	for _, b := range m.Modules {
-		// first check if the module is an adapted Core API Module
+	for name, b := range m.Modules {
 		if mod, ok := b.(HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
 			}
-		} else if mod, ok := b.(HasName); ok {
-			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
-				if err := modgen.ValidateGenesis(genesisData[mod.Name()]); err != nil {
-					return err
-				}
+		} else if mod, ok := b.(appmodule.HasGenesis); ok {
+			if err := mod.ValidateGenesis(genesisData[name]); err != nil {
+				return err
 			}
 		}
 	}

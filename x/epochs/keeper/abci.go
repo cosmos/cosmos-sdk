@@ -1,9 +1,9 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"time"
-	"context"
 
 	"cosmossdk.io/x/epochs/types"
 
@@ -13,12 +13,12 @@ import (
 // BeginBlocker of epochs module.
 func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
+	err := k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
 		logger := k.Logger()
 
 		// If blocktime < initial epoch start time, return
 		if k.environment.HeaderService.GetHeaderInfo(ctx).Time.Before(epochInfo.StartTime) {
-			return
+			return false
 		}
 		// if epoch counting hasn't started, signal we need to start.
 		shouldInitialEpochStart := !epochInfo.EpochCountingStarted
@@ -37,10 +37,13 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 			epochInfo.CurrentEpochStartTime = epochInfo.StartTime
 			logger.Info(fmt.Sprintf("Starting new epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 		} else {
-			k.environment.EventService.EventManager(ctx).Emit(&types.EventEpochEnd{
-					EpochNumber: epochInfo.CurrentEpoch,
-				},
-			)
+			err := k.environment.EventService.EventManager(ctx).Emit(&types.EventEpochEnd{
+				EpochNumber: epochInfo.CurrentEpoch,
+			})
+			if err != nil {
+				return false
+			}
+
 			k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
 			epochInfo.CurrentEpoch += 1
 			epochInfo.CurrentEpochStartTime = epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
@@ -48,11 +51,14 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 		}
 
 		// emit new epoch start event, set epoch info, and run BeforeEpochStart hook
-		k.environment.EventService.EventManager(ctx).Emit(&types.EventEpochStart{
-			EpochNumber: epochInfo.CurrentEpoch,
+		err := k.environment.EventService.EventManager(ctx).Emit(&types.EventEpochStart{
+			EpochNumber:    epochInfo.CurrentEpoch,
 			EpochStartTime: epochInfo.CurrentEpochStartTime.Unix(),
 		})
-		err := k.setEpochInfo(ctx, epochInfo)
+		if err != nil {
+			return false
+		}
+		err = k.setEpochInfo(ctx, epochInfo)
 		if err != nil {
 			logger.Error(fmt.Sprintf("Error set epoch infor with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 			return false
@@ -61,5 +67,5 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 
 		return false
 	})
-	return nil
+	return err
 }

@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/x/epochs/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -28,9 +29,10 @@ func NewQuerier(k Keeper) Querier {
 func (q Querier) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
+	epochs, err := q.Keeper.AllEpochInfos(ctx)
 	return &types.QueryEpochsInfoResponse{
-		Epochs: q.Keeper.AllEpochInfos(ctx),
-	}, nil
+		Epochs: epochs,
+	}, err
 }
 
 // CurrentEpoch provides current epoch of specified identifier.

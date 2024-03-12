@@ -1,12 +1,11 @@
 package keeper
 
 import (
-	"cosmossdk.io/log"
-
-	"cosmossdk.io/x/epochs/types"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
+	"cosmossdk.io/x/epochs/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

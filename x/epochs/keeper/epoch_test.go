@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"time"
 
-	"cosmossdk.io/x/epochs/types"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/epochs/types"
 )
 
 func (s *KeeperTestSuite) TestAddEpochInfo() {
@@ -80,7 +80,8 @@ func (s *KeeperTestSuite) TestEpochLifeCycle() {
 	s.SetupTest()
 
 	epochInfo := types.NewGenesisEpochInfo("monthly", time.Hour*24*30)
-	s.EpochsKeeper.AddEpochInfo(s.Ctx, epochInfo)
+	err := s.EpochsKeeper.AddEpochInfo(s.Ctx, epochInfo)
+	s.Require().NoError(err)
 	epochInfoSaved := s.EpochsKeeper.GetEpochInfo(s.Ctx, "monthly")
 	// setup expected epoch info
 	expectedEpochInfo := epochInfo
@@ -88,7 +89,8 @@ func (s *KeeperTestSuite) TestEpochLifeCycle() {
 	expectedEpochInfo.CurrentEpochStartHeight = s.Ctx.BlockHeight()
 	s.Require().Equal(expectedEpochInfo, epochInfoSaved)
 
-	allEpochs := s.EpochsKeeper.AllEpochInfos(s.Ctx)
+	allEpochs, err := s.EpochsKeeper.AllEpochInfos(s.Ctx)
+	s.Require().NoError(err)
 	s.Require().Len(allEpochs, 4)
 	s.Require().Equal(allEpochs[0].Identifier, "day") // alphabetical order
 	s.Require().Equal(allEpochs[1].Identifier, "hour")

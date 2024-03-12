@@ -1,17 +1,18 @@
 package types_test
 
 import (
+	"context"
 	"strconv"
 	"testing"
-	"context"
+
+	"github.com/stretchr/testify/suite"
 
 	errors "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/epochs/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/x/epochs/types"
 )
 
 type KeeperTestSuite struct {
@@ -127,11 +128,13 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 
 			s.NotPanics(func() {
 				if epochActionSelector == 0 {
-					hooks.BeforeEpochStart(s.Ctx, "id", 0)
+					err := hooks.BeforeEpochStart(s.Ctx, "id", 0)
+					s.Require().NoError(err)
 					s.Require().Equal(events("id", 0, dummyBeforeEpochStartEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, before epoch event check", tcIndex)
 				} else if epochActionSelector == 1 {
-					hooks.AfterEpochEnd(s.Ctx, "id", 0)
+					err := hooks.AfterEpochEnd(s.Ctx, "id", 0)
+					s.Require().NoError(err)
 					s.Require().Equal(events("id", 0, dummyAfterEpochEndEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, after epoch event check", tcIndex)
 				}

@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/epochs/types"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
@@ -32,9 +32,11 @@ func TestEpochsInitGenesis(t *testing.T) {
 
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status
-	epochInfos := epochsKeeper.AllEpochInfos(ctx)
+	epochInfos, err := epochsKeeper.AllEpochInfos(ctx)
+	require.NoError(t, err)
 	for _, epochInfo := range epochInfos {
-		epochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+		err := epochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+		require.NoError(t, err)
 	}
 
 	now := time.Now()

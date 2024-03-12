@@ -5,9 +5,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/epochs/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"cosmossdk.io/x/epochs/keeper"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -27,14 +27,13 @@ type ModuleInputs struct {
 	Config      *modulev1.Module
 	Cdc         codec.Codec
 	Environment appmodule.Environment
-
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
 	EpochKeeper keeper.Keeper
-	Module     appmodule.AppModule
+	Module      appmodule.AppModule
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {

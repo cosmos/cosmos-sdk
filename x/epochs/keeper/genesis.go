@@ -19,6 +19,10 @@ func (k Keeper) InitGenesis(ctx context.Context, genState types.GenesisState) {
 // ExportGenesis returns the capability module's exported genesis.
 func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	genesis := types.DefaultGenesis()
-	genesis.Epochs = k.AllEpochInfos(ctx)
+	epochs, err := k.AllEpochInfos(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis.Epochs = epochs
 	return genesis
 }

@@ -2,8 +2,9 @@ package testutil
 
 import (
 	"math/rand"
-	"golang.org/x/exp/constraints"
 	"sort"
+
+	"golang.org/x/exp/constraints"
 )
 
 func RandSliceElem[E any](r *rand.Rand, elems []E) (E, bool) {

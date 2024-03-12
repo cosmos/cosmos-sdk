@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"cosmossdk.io/x/epochs/types"
@@ -21,7 +22,7 @@ func RandomizedEpochs(r *rand.Rand) []types.EpochInfo {
 	n := r.Intn(11)
 	var epochs []types.EpochInfo
 	for i := 0; i < n; i++ {
-		identifier := "identifier-" + string(i)
+		identifier := "identifier-" + strconv.Itoa(i)
 		duration := GenDuration(r)
 		epoch := types.NewGenesisEpochInfo(identifier, duration)
 		epochs = append(epochs, epoch)
@@ -31,7 +32,6 @@ func RandomizedEpochs(r *rand.Rand) []types.EpochInfo {
 
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(simState *module.SimulationState) {
-	
 	epochs := RandomizedEpochs(simState.Rand)
 	epochsGenesis := types.GenesisState{
 		Epochs: epochs,

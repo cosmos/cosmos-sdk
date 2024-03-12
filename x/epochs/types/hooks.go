@@ -1,15 +1,15 @@
 package types
 
 import (
+	"context"
 	fmt "fmt"
 	"strconv"
-	"context"
 
 	"github.com/hashicorp/go-metrics"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type EpochHooks interface {

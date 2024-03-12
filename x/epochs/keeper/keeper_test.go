@@ -4,11 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
@@ -17,8 +12,13 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	epochskeeper "cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/types"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -49,6 +49,8 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper, appmodule.Environment) {
+	t.Helper()
+
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	environment := runtime.NewEnvironment(storeService, log.NewNopLogger())
@@ -73,10 +75,17 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func SetEpochStartTime(ctx sdk.Context, epochsKeeper epochskeeper.Keeper) {
-	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
+	epochs, err := epochsKeeper.AllEpochInfos(ctx)
+	if err != nil {
+		panic(err)
+	}
+	for _, epoch := range epochs {
 		epoch.StartTime = ctx.BlockTime()
-		epochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
-		err := epochsKeeper.AddEpochInfo(ctx, epoch)
+		err := epochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
+		if err != nil {
+			panic(err)
+		}
+		err = epochsKeeper.AddEpochInfo(ctx, epoch)
 		if err != nil {
 			panic(err)
 		}

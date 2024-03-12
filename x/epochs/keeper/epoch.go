@@ -36,8 +36,8 @@ func (k Keeper) AddEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
 	}
 	epoch.CurrentEpochStartHeight = k.environment.HeaderService.GetHeaderInfo(ctx).Height
 
-	k.setEpochInfo(ctx, epoch)
-	return nil
+	err = k.setEpochInfo(ctx, epoch)
+	return err
 }
 
 // setEpochInfo set epoch info.
@@ -79,13 +79,13 @@ func (k Keeper) IterateEpochInfo(ctx context.Context, fn func(index int64, epoch
 }
 
 // AllEpochInfos iterate through epochs to return all epochs info.
-func (k Keeper) AllEpochInfos(ctx context.Context) []types.EpochInfo {
+func (k Keeper) AllEpochInfos(ctx context.Context) ([]types.EpochInfo, error) {
 	epochs := []types.EpochInfo{}
-	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
+	err := k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
 		epochs = append(epochs, epochInfo)
 		return false
 	})
-	return epochs
+	return epochs, err
 }
 
 // NumBlocksSinceEpochStart returns the number of blocks since the epoch started.

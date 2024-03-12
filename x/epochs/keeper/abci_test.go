@@ -5,13 +5,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/x/epochs/types"
-
 	"golang.org/x/exp/maps"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/epochs/types"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 // This test is responsible for testing how epochs increment based off
@@ -85,8 +84,10 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			suite.SetupTest()
 			suite.Ctx = suite.Ctx.WithHeaderInfo(header.Info{Height: 1, Time: block1Time})
 			initialEpoch := initializeBlankEpochInfoFields(test.initialEpochInfo, defaultIdentifier, defaultDuration)
-			suite.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
-			suite.EpochsKeeper.BeginBlocker(suite.Ctx)
+			err := suite.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
+			suite.Require().NoError(err)
+			err = suite.EpochsKeeper.BeginBlocker(suite.Ctx)
+			suite.Require().NoError(err)
 
 			// get sorted heights
 			heights := maps.Keys(test.blockHeightTimePairs)
@@ -94,7 +95,8 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			for _, h := range heights {
 				// for each height in order, run begin block
 				suite.Ctx = suite.Ctx.WithHeaderInfo(header.Info{Height: int64(h), Time: test.blockHeightTimePairs[h]})
-				suite.EpochsKeeper.BeginBlocker(suite.Ctx)
+				err := suite.EpochsKeeper.BeginBlocker(suite.Ctx)
+				suite.Require().NoError(err)
 			}
 			expEpoch := initializeBlankEpochInfoFields(test.expEpochInfo, initialEpoch.Identifier, initialEpoch.Duration)
 			actEpoch := suite.EpochsKeeper.GetEpochInfo(suite.Ctx, initialEpoch.Identifier)
@@ -119,9 +121,11 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	ctx, epochsKeeper, _ := Setup(t)
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status
-	epochInfos := epochsKeeper.AllEpochInfos(ctx)
+	epochInfos, err := epochsKeeper.AllEpochInfos(ctx)
+	require.NoError(t, err)
 	for _, epochInfo := range epochInfos {
-		epochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+		err := epochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+		require.NoError(t, err)
 	}
 
 	now := time.Now()
@@ -153,7 +157,8 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 
 	// after 1 week
 	ctx = ctx.WithHeaderInfo(header.Info{Height: 2, Time: now.Add(week)})
-	epochsKeeper.BeginBlocker(ctx)
+	err = epochsKeeper.BeginBlocker(ctx)
+	require.NoError(t, err)
 
 	// epoch not started yet
 	epochInfo = epochsKeeper.GetEpochInfo(ctx, "monthly")
@@ -164,7 +169,8 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 
 	// after 1 month
 	ctx = ctx.WithHeaderInfo(header.Info{Height: 3, Time: now.Add(month)})
-	epochsKeeper.BeginBlocker(ctx)
+	err = epochsKeeper.BeginBlocker(ctx)
+	require.NoError(t, err)
 
 	// epoch started
 	epochInfo = epochsKeeper.GetEpochInfo(ctx, "monthly")

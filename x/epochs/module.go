@@ -106,7 +106,7 @@ func (am AppModule) InitGenesis(ctx context.Context, bz json.RawMessage) error {
 		return (fmt.Errorf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
 	}
 
-	return am.keeper.InitGenesis(ctx, gs) 
+	return am.keeper.InitGenesis(ctx, gs)
 }
 
 // ExportGenesis returns the epochs module's exported genesis state as raw JSON bytes.

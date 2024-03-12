@@ -82,7 +82,8 @@ func TestEpochsInitGenesis(t *testing.T) {
 		},
 	}
 
-	epochsKeeper.InitGenesis(ctx, genesisState)
+	err = epochsKeeper.InitGenesis(ctx, genesisState)
+	require.NoError(t, err)
 	epochInfo, err := epochsKeeper.EpochInfo.Get(ctx, "monthly")
 	require.NoError(t, err)
 	require.Equal(t, epochInfo.Identifier, "monthly")

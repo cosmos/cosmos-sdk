@@ -1,5 +1,6 @@
 package types
 
+// EpochHookFailedMetricName
 // epoch_hook_failed
 //
 // counter that is increased if epoch hook fails

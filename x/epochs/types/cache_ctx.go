@@ -1,14 +1,15 @@
 package types
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"runtime"
 	"runtime/debug"
-	"context"
 
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/core/appmodule"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

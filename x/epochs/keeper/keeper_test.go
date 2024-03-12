@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
@@ -64,7 +65,8 @@ func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper, appmodule.Environmen
 	)
 	epochsKeeper = epochsKeeper.SetHooks(types.NewMultiEpochHooks())
 	ctx.WithHeaderInfo(header.Info{Height: 1, Time: time.Now().UTC(), ChainID: "epochs"})
-	epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
+	err := epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
+	require.NoError(t, err)
 	SetEpochStartTime(ctx, epochsKeeper)
 
 	return ctx, epochsKeeper, environment

@@ -7,8 +7,9 @@ import (
 
 	"github.com/hashicorp/go-metrics"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"cosmossdk.io/core/appmodule"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 type EpochHooks interface {

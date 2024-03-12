@@ -135,7 +135,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	initialBlockHeight := int64(1)
 	ctx = ctx.WithHeaderInfo(header.Info{Height: initialBlockHeight, Time: now})
 
-	epochsKeeper.InitGenesis(ctx, types.GenesisState{
+	err = epochsKeeper.InitGenesis(ctx, types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
@@ -148,6 +148,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	// epoch not started yet
 	epochInfo, err := epochsKeeper.EpochInfo.Get(ctx, "monthly")

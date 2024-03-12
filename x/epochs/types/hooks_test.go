@@ -7,12 +7,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	errors "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/epochs/types"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -140,7 +140,7 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 					s.Require().Equal(events("id", 0, dummyBeforeEpochStartEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, before epoch event check", tcIndex)
 				} else if epochActionSelector == 1 {
-					err := hooks.AfterEpochEnd(s.Ctx, "id", 0 , s.environment)
+					err := hooks.AfterEpochEnd(s.Ctx, "id", 0, s.environment)
 					s.Require().NoError(err)
 					s.Require().Equal(events("id", 0, dummyAfterEpochEndEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, after epoch event check", tcIndex)

@@ -149,7 +149,6 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessag
 		if err := mod.InitGenesis(ctx, bz); err != nil {
 			return nil, err
 		}
-
 	}
 
 	return nil, nil

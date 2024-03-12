@@ -64,7 +64,7 @@ func panicCatchingEpochHook(
 	moduleName string,
 	isBeforeEpoch bool,
 ) {
-	wrappedHookFn := func(ctx sdk.Context) error {
+	wrappedHookFn := func(ctx context.Context) error {
 		return hookFn(ctx, epochIdentifier, epochNumber)
 	}
 	// TODO: Thread info for which hook this is, may be dependent on larger hook system refactoring

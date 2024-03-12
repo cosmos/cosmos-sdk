@@ -84,14 +84,14 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesis())
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
-func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var gs types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
+	if err := am.cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
@@ -99,19 +99,23 @@ func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingCo
 }
 
 // InitGenesis performs the evidence module's genesis initialization
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, bz json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, bz json.RawMessage) error {
 	var gs types.GenesisState
-	err := cdc.UnmarshalJSON(bz, &gs)
+	err := am.cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
+		return (fmt.Errorf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
 	}
 
-	am.keeper.InitGenesis(ctx, gs)
+	return am.keeper.InitGenesis(ctx, gs) 
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return am.cdc.MarshalJSON(gs)
 }
 
 // ConsensusVersion implements HasConsensusVersion

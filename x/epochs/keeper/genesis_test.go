@@ -16,7 +16,8 @@ func TestEpochsExportGenesis(t *testing.T) {
 	chainStartTime := ctx.BlockTime()
 	chainStartHeight := ctx.BlockHeight()
 
-	genesis := epochsKeeper.ExportGenesis(ctx)
+	genesis, err := epochsKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
 	require.Len(t, genesis.Epochs, 3)
 
 	expectedEpochs := types.DefaultGenesis().Epochs

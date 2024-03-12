@@ -323,7 +323,11 @@ func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 		if mod, ok := b.(HasGenesisBasics); ok {
 			genesisData[mod.Name()] = mod.DefaultGenesis()
 		} else if mod, ok := b.(HasName); ok {
-			genesisData[mod.Name()] = []byte("{}")
+			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
+				genesisData[mod.Name()] = modgen.DefaultGenesis()
+			} else {
+				genesisData[mod.Name()] = []byte("{}")
+			}
 		}
 	}
 
@@ -337,6 +341,12 @@ func (m *Manager) ValidateGenesis(genesisData map[string]json.RawMessage) error 
 		if mod, ok := b.(HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
+			}
+		} else if mod, ok := b.(HasName); ok {
+			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
+				if err := modgen.ValidateGenesis(genesisData[mod.Name()]); err != nil {
+					return err
+				}
 			}
 		}
 	}

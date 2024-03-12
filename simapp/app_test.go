@@ -239,7 +239,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis().Times(1).Return(mockDefaultGenesis)
 	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(mockDefaultGenesis)).Times(1)
-	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
+	// mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule
 

@@ -39,6 +39,8 @@ type (
 // a proposer in PrepareProposal. It returns an error if any signature is invalid
 // or if unexpected vote extensions and/or signatures are found or less than 2/3
 // power is received.
+// NOTE: From v0.50.5 `currentHeight` and `chainID` arguments are ignored for fixing an issue.
+// They will be removed from the function in v0.51+.
 func ValidateVoteExtensions(
 	ctx sdk.Context,
 	valStore ValidatorStore,

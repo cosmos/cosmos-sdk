@@ -8,14 +8,14 @@ import (
 	"cosmossdk.io/core/comet"
 )
 
-var _ comet.BlockInfo = (*cometInfo)(nil)
-
+// NewBlockInfo returns a new BlockInfo instance
+// This function should be only used in tests
 func NewBlockInfo(
 	misbehavior []abci.Misbehavior,
 	validatorsHash []byte,
 	proposerAddress []byte,
 	lastCommit abci.CommitInfo,
-) *cometInfo {
+) comet.BlockInfo {
 	return &cometInfo{
 		Misbehavior:     misbehavior,
 		ValidatorsHash:  validatorsHash,

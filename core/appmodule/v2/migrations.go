@@ -11,8 +11,7 @@ type HasConsensusVersion interface {
 	ConsensusVersion() uint64
 }
 
-// HasMigrations is implemented by a module which upgrades or has upgraded
-// to a new consensus version.
+// HasMigrations is implemented by a module which upgrades or has upgraded to a new consensus version.
 type HasMigrations interface {
 	AppModule
 	HasConsensusVersion
@@ -21,6 +20,7 @@ type HasMigrations interface {
 	RegisterMigrations(MigrationRegistrar) error
 }
 
+// MigrationRegistrar is the interface for registering in-place store migrations.
 type MigrationRegistrar interface {
 	// Register registers an in-place store migration for a module. The
 	// handler is a migration script to perform in-place migrations from version

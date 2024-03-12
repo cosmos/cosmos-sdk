@@ -113,7 +113,9 @@ func (a *autocliConfigurator) RegisterMigration(string, uint64, module.Migration
 	return nil
 }
 
-func (a *autocliConfigurator) Register(string, uint64, func(context.Context) error) error { return nil }
+func (a *autocliConfigurator) Register(string, uint64, appmodule.MigrationHandler) error {
+	return nil
+}
 
 func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	if a.registryCache == nil {

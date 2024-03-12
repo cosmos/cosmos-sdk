@@ -81,7 +81,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipGenesisInvariants = cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
 	}
 
-	m := NewAppModule(k, skipGenesisInvariants)
+	m := NewAppModule(k, in.Codec, skipGenesisInvariants)
 
 	return ModuleOutputs{CrisisKeeper: k, Module: m}
 }

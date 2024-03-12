@@ -22,7 +22,6 @@ import (
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
@@ -108,13 +107,13 @@ func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 // DefaultGenesis provides default genesis information for all modules
-func (m *MM) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
+func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, b := range m.modules {
 		if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			_ = mod // TODO, support appmodulev2 genesis
 		} else if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
-			genesisData[mod.Name()] = mod.DefaultGenesis(cdc)
+			genesisData[mod.Name()] = mod.DefaultGenesis()
 		} else if mod, ok := b.(sdkmodule.HasName); ok {
 			genesisData[mod.Name()] = []byte("{}")
 		}
@@ -124,13 +123,13 @@ func (m *MM) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for all modules
-func (m *MM) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
+func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for _, b := range m.modules {
 		// first check if the module is an adapted Core API Module
 		if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			_ = mod // TODO, support appmodulev2 genesis
 		} else if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[mod.Name()]); err != nil {
+			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
 			}
 		}
@@ -224,7 +223,7 @@ func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error 
 	return func(ctx context.Context, txs []transaction.Tx) error {
 		for _, moduleName := range m.config.PreBlockers {
 			if module, ok := m.modules[moduleName].(appmodule.HasPreBlocker); ok {
-				if _, err := module.PreBlock(ctx); err != nil {
+				if err := module.PreBlock(ctx); err != nil {
 					return fmt.Errorf("failed to run preblock for %s: %w", moduleName, err)
 				}
 			}
@@ -281,10 +280,10 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 				}
 			}
 			if mod, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
-				mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
+				mod.InitGenesis(ctx, mod.DefaultGenesis())
 			}
 			if mod, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
-				moduleValUpdates := mod.InitGenesis(ctx, m.cdc, mod.DefaultGenesis(m.cdc))
+				moduleValUpdates := mod.InitGenesis(ctx, mod.DefaultGenesis())
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
 					return nil, fmt.Errorf("validator InitGenesis update is already set by another module")

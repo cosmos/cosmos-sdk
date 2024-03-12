@@ -1028,7 +1028,10 @@ func (s *coinTestSuite) TestValidateDenom() {
 	}{
 		{"", false},
 		{"stake", true},
+		{"stake,", false},
 		{"me coin", false},
+		{"me coin much", false},
+		{"not a coin", false},
 		{"foo:bar", true}, // special characters '/' | ':' | '.' | '_' | '-' are allowed
 		{"atom10", true},  // number in denom is allowed
 		{"transfer/channelToA/uatom", true},

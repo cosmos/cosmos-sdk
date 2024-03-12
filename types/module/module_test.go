@@ -177,7 +177,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	// this should panic since the validator set is empty even after init genesis
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1)
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1)
 	_, err := mm.InitGenesis(ctx, cdc, genesisData)
 	require.ErrorContains(t, err, "validator set is empty after InitGenesis")
 
@@ -194,16 +194,16 @@ func TestManager_InitGenesis(t *testing.T) {
 	mockAppModuleABCI2.EXPECT().Name().Times(2).Return("module2")
 	mmABCI := module.NewManager(mockAppModuleABCI1, mockAppModuleABCI2)
 	// panic because more than one module returns validator set updates
-	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModuleABCI2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModuleABCI2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	_, err = mmABCI.InitGenesis(ctx, cdc, genesisData)
 	require.ErrorContains(t, err, "validator InitGenesis updates already set by a previous module")
 
 	// happy path
 
 	mm2 := module.NewManager(mockAppModuleABCI1, mockAppModule2, module.CoreAppModuleAdaptor("module3", mockAppModule3))
-	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1)
+	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module2"])).Times(1)
 	mockAppModule3.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
 	_, err = mm2.InitGenesis(ctx, cdc, genesisData)
 	require.NoError(t, err)
@@ -223,10 +223,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 	require.Equal(t, 3, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
-	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).AnyTimes().Return(json.RawMessage(`{"key1": "value1"}`))
-	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).AnyTimes().Return(json.RawMessage(`{"key2": "value2"}`))
+	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx)).AnyTimes().Return(json.RawMessage(`{"key1": "value1"}`), nil)
+	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx)).AnyTimes().Return(json.RawMessage(`{"key2": "value2"}`), nil)
 
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
@@ -236,23 +234,23 @@ func TestManager_ExportGenesis(t *testing.T) {
 }`),
 	}
 
-	res, err := mm.ExportGenesis(ctx, cdc)
+	res, err := mm.ExportGenesis(ctx)
 	require.NoError(t, err)
 	require.Equal(t, want, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{})
+	res, err = mm.ExportGenesisForModules(ctx, []string{})
 	require.NoError(t, err)
 	require.Equal(t, want, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1"})
+	res, err = mm.ExportGenesisForModules(ctx, []string{"module1"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module2"})
+	res, err = mm.ExportGenesisForModules(ctx, []string{"module2"})
 	require.NoError(t, err)
 	require.NotEqual(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, res)
 
-	_, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+	_, err = mm.ExportGenesisForModules(ctx, []string{"module1", "modulefoo"})
 	require.Error(t, err)
 }
 
@@ -333,8 +331,6 @@ func TestCoreAPIManager_ExportGenesis(t *testing.T) {
 	require.Equal(t, 2, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{
   "someField": "someKey"
@@ -344,23 +340,23 @@ func TestCoreAPIManager_ExportGenesis(t *testing.T) {
 }`),
 	}
 
-	res, err := mm.ExportGenesis(ctx, cdc)
+	res, err := mm.ExportGenesis(ctx)
 	require.NoError(t, err)
 	require.Equal(t, want, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{})
+	res, err = mm.ExportGenesisForModules(ctx, []string{})
 	require.NoError(t, err)
 	require.Equal(t, want, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1"})
+	res, err = mm.ExportGenesisForModules(ctx, []string{"module1"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]json.RawMessage{"module1": want["module1"]}, res)
 
-	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module2"})
+	res, err = mm.ExportGenesisForModules(ctx, []string{"module2"})
 	require.NoError(t, err)
 	require.NotEqual(t, map[string]json.RawMessage{"module1": want["module1"]}, res)
 
-	_, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+	_, err = mm.ExportGenesisForModules(ctx, []string{"module1", "modulefoo"})
 	require.Error(t, err)
 }
 
@@ -422,24 +418,13 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	require.Equal(t, 2, len(mm.Modules))
 	require.Equal(t, 1, len(mm.OrderPreBlockers))
 
-	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
-		ConsensusParamsChanged: true,
-	}, nil)
-	res, err := mm.PreBlock(sdk.Context{})
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(nil)
+	err := mm.PreBlock(sdk.Context{})
 	require.NoError(t, err)
-	require.True(t, res.ConsensusParamsChanged)
-
-	// test false
-	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
-		ConsensusParamsChanged: false,
-	}, nil)
-	res, err = mm.PreBlock(sdk.Context{})
-	require.NoError(t, err)
-	require.False(t, res.ConsensusParamsChanged)
 
 	// test error
-	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(nil, errors.New("some error"))
-	_, err = mm.PreBlock(sdk.Context{})
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
+	err = mm.PreBlock(sdk.Context{})
 	require.EqualError(t, err, "some error")
 }
 
@@ -594,7 +579,7 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 }
 
 var (
-	_ appmodule.AppModule   = MockCoreAppModule{}
-	_ appmodule.HasGenesis  = MockCoreAppModule{}
-	_ appmodule.HasServices = MockCoreAppModule{}
+	_ appmodule.AppModule      = MockCoreAppModule{}
+	_ appmodule.HasGenesisAuto = MockCoreAppModule{}
+	_ appmodule.HasServices    = MockCoreAppModule{}
 )

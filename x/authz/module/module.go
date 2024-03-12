@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/authz"
@@ -32,7 +33,7 @@ var (
 	_ module.HasGRPCGateway           = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ module.AppModuleSimulation      = AppModule{}
-	_ module.HasGenesis               = AppModule{}
+	_ appmodulev2.HasGenesis          = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
@@ -109,14 +110,14 @@ func (AppModule) GetTxCmd() *cobra.Command {
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the authz module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(authz.DefaultGenesisState())
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(authz.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the authz module.
-func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var data authz.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
 		return errors.Wrapf(err, "failed to unmarshal %s genesis state", authz.ModuleName)
 	}
 
@@ -124,16 +125,18 @@ func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodin
 }
 
 // InitGenesis performs genesis initialization for the authz module.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 	var genesisState authz.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.keeper.InitGenesis(ctx, &genesisState)
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		return err
+	}
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the authz module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 	gs := am.keeper.ExportGenesis(ctx)
-	return cdc.MustMarshalJSON(gs)
+	return am.cdc.MarshalJSON(gs)
 }
 
 // ConsensusVersion implements HasConsensusVersion.

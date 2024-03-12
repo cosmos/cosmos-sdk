@@ -202,15 +202,17 @@ func (app *BaseApp) Name() string {
 	return app.name
 }
 
-// AppVersion returns the application's protocol version.
-func (app *BaseApp) AppVersion(ctx sdk.Context) uint64 {
+func (app *BaseApp) InitAppVersion(ctx sdk.Context) {
 	if app.appVersion == 0 && app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
 		var vp tmproto.VersionParams
-
 		app.paramStore.Get(ctx, ParamStoreKeyVersionParams, &vp)
 		// set the app version
 		app.appVersion = vp.AppVersion
 	}
+}
+
+// AppVersion returns the application's protocol version.
+func (app *BaseApp) AppVersion() uint64 {
 	return app.appVersion
 }
 

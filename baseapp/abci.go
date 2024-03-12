@@ -14,6 +14,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
@@ -38,12 +39,15 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
+	if req.ConsensusParams != nil && req.ConsensusParams.Version != nil {
+		initHeader.Version = tmversion.Consensus{App: req.ConsensusParams.Version.AppVersion}
+	}
 
 	// If req.InitialHeight is > 1, then we set the initial version in the
 	// stores.
 	if req.InitialHeight > 1 {
 		app.initialHeight = req.InitialHeight
-		initHeader = tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
+		initHeader.Height = req.InitialHeight
 		err := app.cms.SetInitialVersion(req.InitialHeight)
 		if err != nil {
 			panic(err)
@@ -131,8 +135,8 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 		if err != nil {
 			panic(err)
 		}
-		// get and set the app version
-		_ = app.AppVersion(ctx)
+		// initialise the app version by checking if it is already in state
+		app.InitAppVersion(ctx)
 	}
 	return abci.ResponseInfo{
 		Data:             app.name,

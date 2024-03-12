@@ -3,7 +3,8 @@ package tx
 import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/gogoproto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type ExtendedTxBuilder interface {
@@ -16,14 +17,19 @@ type ExtendedTxBuilder interface {
 // also know how to encode itself.
 type TxBuilder interface {
 	GetTx() txv1beta1.Tx
-	//SignTx(Signer, Tx) error, txv1beta1.Tx
-
-	SetMsgs(msgs ...*types.Any) error
+	Sign() error
+	SetMsgs(msgs ...anypb.Any) error
 	SetMemo(memo string)
 	SetFeeAmount(amount txv1beta1.Fee)
 	SetFeePayer(feePayer string)
 	SetGasLimit(limit uint64)
 	SetTimeoutHeight(height uint64)
 	SetFeeGranter(feeGranter string)
+	SetUnordered(v bool)
 	SetAuxSignerData(data txv1beta1.AuxSignerData) error
+}
+
+type TxBuilderProvider interface {
+	NewTxBuilder() TxBuilder
+	WrapTxBuilder(sdk.Tx) (TxBuilder, error)
 }

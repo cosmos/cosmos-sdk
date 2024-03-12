@@ -3,7 +3,6 @@ package tx
 import (
 	"bufio"
 	"context"
-	authsigning "cosmossdk.io/x/auth/signing"
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -168,119 +167,6 @@ func CalculateGas(
 	}
 
 	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
-}
-
-// Sign signs a given tx with a named key. The bytes signed over are canconical.
-// The resulting signature will be added to the transaction builder overwriting the previous
-// ones if overwrite=true (otherwise, the signature will be appended).
-// Signing a transaction with mutltiple signers in the DIRECT mode is not supported and will
-// return an error.
-// An error is returned upon failure.
-func Sign(ctx context.Context, txf Factory, name string, txBuilder TxBuilder, overwriteSig bool) error {
-	if txf.keybase == nil {
-		return errors.New("keybase must be set prior to signing a transaction")
-	}
-
-	var err error
-	signMode := txf.signMode
-	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		// use the SignModeHandler's default mode if unspecified
-		signMode, err = authsigning.APISignModeToInternal(txf.txConfig.SignModeHandler().DefaultMode())
-		if err != nil {
-			return err
-		}
-	}
-
-	pubKey, err := txf.keybase.GetPubKey(name)
-	if err != nil {
-		return err
-	}
-
-	signerData := authsigning.SignerData{
-		ChainID:       txf.chainID,
-		AccountNumber: txf.accountNumber,
-		Sequence:      txf.sequence,
-		PubKey:        pubKey,
-		Address:       sdk.AccAddress(pubKey.Address()).String(),
-	}
-
-	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
-	// TxBuilder under the hood, and SignerInfos is needed to generated the
-	// sign bytes. This is the reason for setting SetSignatures here, with a
-	// nil signature.
-	//
-	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
-	// also doesn't affect its generated sign bytes, so for code's simplicity
-	// sake, we put it here.
-	sigData := signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: nil,
-	}
-	sig := signing.SignatureV2{
-		PubKey:   pubKey,
-		Data:     &sigData,
-		Sequence: txf.Sequence(),
-	}
-
-	var prevSignatures []signing.SignatureV2
-	if !overwriteSig {
-		prevSignatures, err = txBuilder.GetTx().GetSignaturesV2()
-		if err != nil {
-			return err
-		}
-	}
-	// Overwrite or append signer infos.
-	var sigs []signing.SignatureV2
-	if overwriteSig {
-		sigs = []signing.SignatureV2{sig}
-	} else {
-		sigs = append(sigs, prevSignatures...)
-		sigs = append(sigs, sig)
-	}
-	if err := txBuilder.SetSignatures(sigs...); err != nil {
-		return err
-	}
-
-	if err := checkMultipleSigners(txBuilder.GetTx()); err != nil {
-		return err
-	}
-
-	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
-	if err != nil {
-		return err
-	}
-
-	// Sign those bytes
-	sigBytes, err := txf.keybase.Sign(name, bytesToSign, signMode)
-	if err != nil {
-		return err
-	}
-
-	// Construct the SignatureV2 struct
-	sigData = signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: sigBytes,
-	}
-	sig = signing.SignatureV2{
-		PubKey:   pubKey,
-		Data:     &sigData,
-		Sequence: txf.Sequence(),
-	}
-
-	if overwriteSig {
-		err = txBuilder.SetSignatures(sig)
-	} else {
-		prevSignatures = append(prevSignatures, sig)
-		err = txBuilder.SetSignatures(prevSignatures...)
-	}
-
-	if err != nil {
-		return fmt.Errorf("unable to set signatures on payload: %w", err)
-	}
-
-	// Run optional preprocessing if specified. By default, this is unset
-	// and will return nil.
-	return txf.PreprocessTx(name, txBuilder)
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.

@@ -36,7 +36,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 	epochInfos, err := epochsKeeper.AllEpochInfos(ctx)
 	require.NoError(t, err)
 	for _, epochInfo := range epochInfos {
-		err := epochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+		err := epochsKeeper.EpochInfo.Remove(ctx, epochInfo.Identifier)
 		require.NoError(t, err)
 	}
 
@@ -83,7 +83,8 @@ func TestEpochsInitGenesis(t *testing.T) {
 	}
 
 	epochsKeeper.InitGenesis(ctx, genesisState)
-	epochInfo := epochsKeeper.GetEpochInfo(ctx, "monthly")
+	epochInfo, err := epochsKeeper.EpochInfo.Get(ctx, "monthly")
+	require.NoError(t, err)
 	require.Equal(t, epochInfo.Identifier, "monthly")
 	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
 	require.Equal(t, epochInfo.Duration, time.Hour*24)

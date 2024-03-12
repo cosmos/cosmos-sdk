@@ -35,7 +35,7 @@ var (
 
 const ConsensusVersion = 1
 
-// AppModule implements the AppModule interface for the evidence module.
+// AppModule implements the AppModule interface for the epochs module.
 type AppModule struct {
 	cdc    codec.Codec
 	keeper keeper.Keeper
@@ -52,28 +52,28 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
-// Name returns the evidence module's name.
+// Name returns the epochs module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers the evidence module's types to the LegacyAmino codec.
+// RegisterLegacyAminoCodec registers the epochs module's types for the given codec.
 func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the evidence module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the epochs module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// GetTxCmd returns the evidence module's root tx command.
+// GetTxCmd returns the epochs module's root tx command.
 func (am AppModule) GetTxCmd() *cobra.Command {
 	return nil
 }
 
-// RegisterInterfaces registers the evidence module's interface types
+// RegisterInterfaces registers the epochs module's interface types
 func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 }
 
@@ -83,12 +83,12 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// DefaultGenesis returns the evidence module's default genesis state.
+// DefaultGenesis returns the epochs module's default genesis state.
 func (am AppModule) DefaultGenesis() json.RawMessage {
 	return am.cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the evidence module.
+// ValidateGenesis performs genesis state validation for the epochs module.
 func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := am.cdc.UnmarshalJSON(bz, &gs); err != nil {
@@ -98,7 +98,7 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	return gs.Validate()
 }
 
-// InitGenesis performs the evidence module's genesis initialization
+// InitGenesis performs the epochs module's genesis initialization
 func (am AppModule) InitGenesis(ctx context.Context, bz json.RawMessage) error {
 	var gs types.GenesisState
 	err := am.cdc.UnmarshalJSON(bz, &gs)
@@ -109,7 +109,7 @@ func (am AppModule) InitGenesis(ctx context.Context, bz json.RawMessage) error {
 	return am.keeper.InitGenesis(ctx, gs) 
 }
 
-// ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
+// ExportGenesis returns the epochs module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 	gs, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
@@ -121,19 +121,19 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
+// BeginBlock executes all ABCI BeginBlock logic respective to the epochs module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	return am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the evidence module.
+// GenerateGenesisState creates a randomized GenState of the epochs module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// RegisterStoreDecoder registers a decoder for evidence module's types
+// RegisterStoreDecoder registers a decoder for epochs module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }

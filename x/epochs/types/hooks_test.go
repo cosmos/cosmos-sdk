@@ -11,13 +11,17 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/epochs/types"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
-	Ctx sdk.Context
+	Ctx         sdk.Context
+	environment appmodule.Environment
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -25,7 +29,10 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	s.Ctx = testutil.DefaultContext(storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test"))
+	s.environment = runtime.NewEnvironment(storeService, log.NewNopLogger())
 }
 
 func dummyAfterEpochEndEvent(epochIdentifier string, epochNumber int64) sdk.Event {
@@ -60,7 +67,7 @@ func (*dummyEpochHook) GetModuleName() string {
 	return "dummy"
 }
 
-func (hook *dummyEpochHook) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+func (hook *dummyEpochHook) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error {
 	if hook.shouldPanic {
 		panic("dummyEpochHook is panicking")
 	}
@@ -71,7 +78,7 @@ func (hook *dummyEpochHook) AfterEpochEnd(ctx context.Context, epochIdentifier s
 	return nil
 }
 
-func (hook *dummyEpochHook) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+func (hook *dummyEpochHook) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error {
 	if hook.shouldPanic {
 		panic("dummyEpochHook is panicking")
 	}
@@ -128,12 +135,12 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 
 			s.NotPanics(func() {
 				if epochActionSelector == 0 {
-					err := hooks.BeforeEpochStart(s.Ctx, "id", 0)
+					err := hooks.BeforeEpochStart(s.Ctx, "id", 0, s.environment)
 					s.Require().NoError(err)
 					s.Require().Equal(events("id", 0, dummyBeforeEpochStartEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, before epoch event check", tcIndex)
 				} else if epochActionSelector == 1 {
-					err := hooks.AfterEpochEnd(s.Ctx, "id", 0)
+					err := hooks.AfterEpochEnd(s.Ctx, "id", 0 , s.environment)
 					s.Require().NoError(err)
 					s.Require().Equal(events("id", 0, dummyAfterEpochEndEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, after epoch event check", tcIndex)

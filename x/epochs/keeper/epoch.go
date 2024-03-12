@@ -8,15 +8,6 @@ import (
 	"cosmossdk.io/x/epochs/types"
 )
 
-// GetEpochInfo returns epoch info by identifier.
-func (k Keeper) GetEpochInfo(ctx context.Context, identifier string) types.EpochInfo {
-	epoch, err := k.EpochInfo.Get(ctx, identifier)
-	if err != nil {
-		return types.EpochInfo{}
-	}
-	return epoch
-}
-
 // AddEpochInfo adds a new epoch info. Will return an error if the epoch fails validation,
 // or re-uses an existing identifier.
 // This method also sets the start time if left unset, and sets the epoch start height.
@@ -26,7 +17,11 @@ func (k Keeper) AddEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
 		return err
 	}
 	// Check if identifier already exists
-	if (k.GetEpochInfo(ctx, epoch.Identifier) != types.EpochInfo{}) {
+	isExist, err := k.EpochInfo.Has(ctx, epoch.Identifier)
+	if err != nil {
+		return err
+	}
+	if isExist {
 		return fmt.Errorf("epoch with identifier %s already exists", epoch.Identifier)
 	}
 
@@ -36,19 +31,7 @@ func (k Keeper) AddEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
 	}
 	epoch.CurrentEpochStartHeight = k.environment.HeaderService.GetHeaderInfo(ctx).Height
 
-	err = k.setEpochInfo(ctx, epoch)
-	return err
-}
-
-// setEpochInfo set epoch info.
-func (k Keeper) setEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
-	err := k.EpochInfo.Set(ctx, epoch.Identifier, epoch)
-	return err
-}
-
-// DeleteEpochInfo delete epoch info.
-func (k Keeper) DeleteEpochInfo(ctx context.Context, identifier string) error {
-	err := k.EpochInfo.Remove(ctx, identifier)
+	err = k.EpochInfo.Set(ctx, epoch.Identifier, epoch)
 	return err
 }
 
@@ -93,8 +76,8 @@ func (k Keeper) AllEpochInfos(ctx context.Context) ([]types.EpochInfo, error) {
 // would return 0.
 // Calling it any point in block N+1 (assuming the epoch doesn't increment) would return 1.
 func (k Keeper) NumBlocksSinceEpochStart(ctx context.Context, identifier string) (int64, error) {
-	epoch := k.GetEpochInfo(ctx, identifier)
-	if (epoch == types.EpochInfo{}) {
+	epoch, err := k.EpochInfo.Get(ctx, identifier)
+	if err != nil {
 		return 0, fmt.Errorf("epoch with identifier %s not found", identifier)
 	}
 	return k.environment.HeaderService.GetHeaderInfo(ctx).Height - epoch.CurrentEpochStartHeight, nil

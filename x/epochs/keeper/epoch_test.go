@@ -58,7 +58,8 @@ func (s *KeeperTestSuite) TestAddEpochInfo() {
 			err := s.EpochsKeeper.AddEpochInfo(s.Ctx, test.addedEpochInfo)
 			if !test.expErr {
 				s.Require().NoError(err)
-				actualEpochInfo := s.EpochsKeeper.GetEpochInfo(s.Ctx, test.addedEpochInfo.Identifier)
+				actualEpochInfo, err := s.EpochsKeeper.EpochInfo.Get(s.Ctx, test.addedEpochInfo.Identifier)
+				s.Require().NoError(err)
 				s.Require().Equal(test.expEpochInfo, actualEpochInfo)
 			} else {
 				s.Require().Error(err)
@@ -82,7 +83,8 @@ func (s *KeeperTestSuite) TestEpochLifeCycle() {
 	epochInfo := types.NewGenesisEpochInfo("monthly", time.Hour*24*30)
 	err := s.EpochsKeeper.AddEpochInfo(s.Ctx, epochInfo)
 	s.Require().NoError(err)
-	epochInfoSaved := s.EpochsKeeper.GetEpochInfo(s.Ctx, "monthly")
+	epochInfoSaved, err := s.EpochsKeeper.EpochInfo.Get(s.Ctx, "monthly")
+	s.Require().NoError(err)
 	// setup expected epoch info
 	expectedEpochInfo := epochInfo
 	expectedEpochInfo.StartTime = s.Ctx.BlockTime()

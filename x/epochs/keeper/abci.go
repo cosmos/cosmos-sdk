@@ -58,7 +58,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 		if err != nil {
 			return false
 		}
-		err = k.setEpochInfo(ctx, epochInfo)
+		err = k.EpochInfo.Set(ctx, epochInfo.Identifier, epochInfo)
 		if err != nil {
 			logger.Error(fmt.Sprintf("Error set epoch infor with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 			return false

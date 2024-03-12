@@ -26,7 +26,7 @@ We refer to the period in between two timer ticks as an "epoch".
 
 Every timer has a unique identifier.
 Every epoch will have a start time, and an end time, where `end time = start time + timer interval`.
-On Osmosis mainnet, we only utilize one identifier, with a time interval of `one day`.
+On mainnet, we only utilize one identifier, with a time interval of `one day`.
 
 The timer will tick at the first block whose blocktime is greater than the timer end time,
 and set the start as the prior timer end time. (Notably, its not set to the block time!)
@@ -35,7 +35,7 @@ until the timer has caught up.
 
 ## State
 
-The Epochs module keeps a single [`EpochInfo`](https://github.com/osmosis-labs/osmosis/blob/b4befe4f3eb97ebb477323234b910c4afafab9b7/proto/osmosis/epochs/genesis.proto#L12) per identifier.
+The Epochs module keeps a single `EpochInfo` per identifier.
 This contains the current state of the timer with the corresponding identifier.
 Its fields are modified at every timer tick.
 EpochInfos are initialized as part of genesis initialization or upgrade logic,
@@ -137,7 +137,7 @@ service Query {
 Query the currently running epochInfos
 
 ```sh
-osmosisd query epochs epoch-infos
+appd query epochs epoch-infos
 ```
 
 ::: details Example
@@ -169,7 +169,7 @@ epochs:
 Query the current epoch by the specified identifier
 
 ```sh
-osmosisd query epochs current-epoch [identifier]
+appd query epochs current-epoch [identifier]
 ```
 
 ::: details Example
@@ -177,7 +177,7 @@ osmosisd query epochs current-epoch [identifier]
 Query the current `day` epoch:
 
 ```sh
-osmosisd query epochs current-epoch day
+appd query epochs current-epoch day
 ```
 
 Which in this example outputs:

@@ -81,7 +81,7 @@ func SetEpochStartTime(ctx sdk.Context, epochsKeeper epochskeeper.Keeper) {
 	}
 	for _, epoch := range epochs {
 		epoch.StartTime = ctx.BlockTime()
-		err := epochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
+		err := epochsKeeper.EpochInfo.Remove(ctx, epoch.Identifier)
 		if err != nil {
 			panic(err)
 		}

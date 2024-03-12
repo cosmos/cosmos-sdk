@@ -7,16 +7,15 @@ import (
 
 	"github.com/hashicorp/go-metrics"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/core/appmodule"
 )
 
 type EpochHooks interface {
 	// the first block whose timestamp is after the duration is counted as the end of the epoch
-	AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error
+	AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error
 	// new epoch is next block of epoch end block
-	BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error
+	BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error
 	// Returns the name of the module implementing epoch hook.
 	GetModuleName() string
 }
@@ -41,35 +40,35 @@ func NewMultiEpochHooks(hooks ...EpochHooks) MultiEpochHooks {
 }
 
 // AfterEpochEnd is called when epoch is going to be ended, epochNumber is the number of epoch that is ending.
-func (h MultiEpochHooks) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+func (h MultiEpochHooks) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error {
 	for _, hook := range h {
-		panicCatchingEpochHook(ctx, hook.AfterEpochEnd, epochIdentifier, epochNumber, h.GetModuleName(), !isBeforeEpoch)
+		panicCatchingEpochHook(ctx, hook.AfterEpochEnd, epochIdentifier, epochNumber, h.GetModuleName(), !isBeforeEpoch, env)
 	}
 	return nil
 }
 
 // BeforeEpochStart is called when epoch is going to be started, epochNumber is the number of epoch that is starting.
-func (h MultiEpochHooks) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+func (h MultiEpochHooks) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error {
 	for _, hook := range h {
-		panicCatchingEpochHook(ctx, hook.BeforeEpochStart, epochIdentifier, epochNumber, hook.GetModuleName(), isBeforeEpoch)
+		panicCatchingEpochHook(ctx, hook.BeforeEpochStart, epochIdentifier, epochNumber, hook.GetModuleName(), isBeforeEpoch, env)
 	}
 	return nil
 }
 
 func panicCatchingEpochHook(
 	ctx context.Context,
-	hookFn func(ctx context.Context, epochIdentifier string, epochNumber int64) error,
+	hookFn func(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error,
 	epochIdentifier string,
 	epochNumber int64,
 	moduleName string,
 	isBeforeEpoch bool,
+	env appmodule.Environment,
 ) {
 	wrappedHookFn := func(ctx context.Context) error {
-		return hookFn(ctx, epochIdentifier, epochNumber)
+		return hookFn(ctx, epochIdentifier, epochNumber, env)
 	}
 	// TODO: Thread info for which hook this is, may be dependent on larger hook system refactoring
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	err := baseapp.ApplyFuncIfNoError(sdkCtx, wrappedHookFn)
+	err := ApplyFuncIfNoError(ctx, env, wrappedHookFn)
 	if err != nil {
 		telemetry.IncrCounterWithLabels([]string{}, 1, []metrics.Label{
 			{
@@ -86,6 +85,6 @@ func panicCatchingEpochHook(
 			},
 		})
 
-		sdkCtx.Logger().Error(fmt.Sprintf("error in epoch hook %v", err))
+		env.Logger.Error(fmt.Sprintf("error in epoch hook %v", err))
 	}
 }

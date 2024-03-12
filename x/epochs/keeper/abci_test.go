@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"sort"
 	"testing"
 	"time"
 
@@ -9,8 +10,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/epochs/types"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 // This test is responsible for testing how epochs increment based off
@@ -91,7 +90,8 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 
 			// get sorted heights
 			heights := maps.Keys(test.blockHeightTimePairs)
-			testutil.SortSlice(heights)
+			sort.Slice(heights, func(i, j int) bool { return heights[i] < heights[j] })
+
 			for _, h := range heights {
 				// for each height in order, run begin block
 				suite.Ctx = suite.Ctx.WithHeaderInfo(header.Info{Height: int64(h), Time: test.blockHeightTimePairs[h]})
@@ -99,7 +99,8 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 				suite.Require().NoError(err)
 			}
 			expEpoch := initializeBlankEpochInfoFields(test.expEpochInfo, initialEpoch.Identifier, initialEpoch.Duration)
-			actEpoch := suite.EpochsKeeper.GetEpochInfo(suite.Ctx, initialEpoch.Identifier)
+			actEpoch, err := suite.EpochsKeeper.EpochInfo.Get(suite.Ctx, initialEpoch.Identifier)
+			suite.Require().NoError(err)
 			suite.Require().Equal(expEpoch, actEpoch)
 		})
 	}
@@ -124,7 +125,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	epochInfos, err := epochsKeeper.AllEpochInfos(ctx)
 	require.NoError(t, err)
 	for _, epochInfo := range epochInfos {
-		err := epochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+		err := epochsKeeper.EpochInfo.Remove(ctx, epochInfo.Identifier)
 		require.NoError(t, err)
 	}
 
@@ -149,7 +150,8 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	})
 
 	// epoch not started yet
-	epochInfo := epochsKeeper.GetEpochInfo(ctx, "monthly")
+	epochInfo, err := epochsKeeper.EpochInfo.Get(ctx, "monthly")
+	require.NoError(t, err)
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, initialBlockHeight)
 	require.Equal(t, epochInfo.CurrentEpochStartTime, time.Time{})
@@ -161,7 +163,8 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// epoch not started yet
-	epochInfo = epochsKeeper.GetEpochInfo(ctx, "monthly")
+	epochInfo, err = epochsKeeper.EpochInfo.Get(ctx, "monthly")
+	require.NoError(t, err)
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, initialBlockHeight)
 	require.Equal(t, epochInfo.CurrentEpochStartTime, time.Time{})
@@ -173,7 +176,8 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// epoch started
-	epochInfo = epochsKeeper.GetEpochInfo(ctx, "monthly")
+	epochInfo, err = epochsKeeper.EpochInfo.Get(ctx, "monthly")
+	require.NoError(t, err)
 	require.Equal(t, epochInfo.CurrentEpoch, int64(1))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())

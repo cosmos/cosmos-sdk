@@ -8,8 +8,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/x/epochs/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -26,9 +24,7 @@ func NewQuerier(k Keeper) Querier {
 }
 
 // EpochInfos provide running epochInfos.
-func (q Querier) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-
+func (q Querier) EpochInfos(ctx context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
 	epochs, err := q.Keeper.AllEpochInfos(ctx)
 	return &types.QueryEpochsInfoResponse{
 		Epochs: epochs,
@@ -36,7 +32,7 @@ func (q Querier) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) 
 }
 
 // CurrentEpoch provides current epoch of specified identifier.
-func (q Querier) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochRequest) (*types.QueryCurrentEpochResponse, error) {
+func (q Querier) CurrentEpoch(ctx context.Context, req *types.QueryCurrentEpochRequest) (*types.QueryCurrentEpochResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -44,10 +40,8 @@ func (q Querier) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochReq
 		return nil, status.Error(codes.InvalidArgument, "identifier is empty")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-
-	info := q.Keeper.GetEpochInfo(ctx, req.Identifier)
-	if info.Identifier != req.Identifier {
+	info, err := q.Keeper.EpochInfo.Get(ctx, req.Identifier)
+	if err != nil {
 		return nil, errors.New("not available identifier")
 	}
 

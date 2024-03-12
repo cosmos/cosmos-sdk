@@ -3,7 +3,7 @@ package baseapp
 import (
 	"context"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 )
 
 const InitialAppVersion uint64 = 0

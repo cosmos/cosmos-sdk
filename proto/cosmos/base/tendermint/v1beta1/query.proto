@@ -4,12 +4,12 @@ package cosmos.base.tendermint.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
-import "tendermint/p2p/types.proto";
-import "tendermint/types/types.proto";
+import "cometbft/v1/p2p/types.proto";
+import "cometbft/v1/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
-import "tendermint/types/block.proto";
+import "cometbft/v1/types/block.proto";
 import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";

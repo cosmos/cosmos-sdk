@@ -17,13 +17,13 @@ import (
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -98,9 +98,9 @@ func (m *MM) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (m *MM) RegisterInterfaces(registry registry.LegacyRegistry) {
 	for _, b := range m.modules {
-		if mod, ok := b.(sdkmodule.HasRegisterInterfaces); ok {
+		if mod, ok := b.(appmodulev2.HasRegisterInterfaces); ok {
 			mod.RegisterInterfaces(registry)
 		}
 	}
@@ -110,12 +110,14 @@ func (m *MM) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, b := range m.modules {
-		if mod, ok := b.(appmodulev2.HasGenesis); ok {
-			_ = mod // TODO, support appmodulev2 genesis
-		} else if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
 			genesisData[mod.Name()] = mod.DefaultGenesis()
 		} else if mod, ok := b.(sdkmodule.HasName); ok {
-			genesisData[mod.Name()] = []byte("{}")
+			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
+				genesisData[mod.Name()] = modgen.DefaultGenesis()
+			} else {
+				genesisData[mod.Name()] = []byte("{}")
+			}
 		}
 	}
 
@@ -125,12 +127,15 @@ func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 // ValidateGenesis performs genesis state validation for all modules
 func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for _, b := range m.modules {
-		// first check if the module is an adapted Core API Module
-		if mod, ok := b.(appmodulev2.HasGenesis); ok {
-			_ = mod // TODO, support appmodulev2 genesis
-		} else if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
+			}
+		} else if mod, ok := b.(sdkmodule.HasName); ok {
+			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
+				if err := modgen.ValidateGenesis(genesisData[mod.Name()]); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -222,7 +227,7 @@ func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdate
 func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error {
 	return func(ctx context.Context, txs []transaction.Tx) error {
 		for _, moduleName := range m.config.PreBlockers {
-			if module, ok := m.modules[moduleName].(appmodule.HasPreBlocker); ok {
+			if module, ok := m.modules[moduleName].(appmodulev2.HasPreBlocker); ok {
 				if err := module.PreBlock(ctx); err != nil {
 					return fmt.Errorf("failed to run preblock for %s: %w", moduleName, err)
 				}
@@ -279,9 +284,6 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 					return nil, fmt.Errorf("failed to run InitGenesis for %s: %w", moduleName, err)
 				}
 			}
-			if mod, ok := m.modules[moduleName].(sdkmodule.HasGenesis); ok {
-				mod.InitGenesis(ctx, mod.DefaultGenesis())
-			}
 			if mod, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
 				moduleValUpdates := mod.InitGenesis(ctx, mod.DefaultGenesis())
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
@@ -325,7 +327,7 @@ func (m *MM) RegisterServices(app *App) error {
 func (m *MM) validateConfig() error {
 	if err := m.assertNoForgottenModules("PreBlockers", m.config.PreBlockers, func(moduleName string) bool {
 		module := m.modules[moduleName]
-		_, hasBlock := module.(appmodule.HasPreBlocker)
+		_, hasBlock := module.(appmodulev2.HasPreBlocker)
 		return !hasBlock
 	}); err != nil {
 		return err

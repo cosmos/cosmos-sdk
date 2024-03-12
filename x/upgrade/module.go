@@ -151,6 +151,6 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // PreBlock calls the upgrade module hooks
 //
 // CONTRACT: this is called *before* all other modules' BeginBlock functions
-func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
+func (am AppModule) PreBlock(ctx context.Context) error {
 	return am.keeper.PreBlocker(ctx)
 }

@@ -29,10 +29,11 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.NotBondedPoolName, types.BondedPoolName, gomock.Any())
 	_ = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
-	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	selfDelegation := types.NewDelegation(val0AccAddr.String(), s.valAddressToString(addrVals[0]), issuedShares)
+	val0AccAddr, err := s.accountKeeper.AddressCodec().BytesToString(addrVals[0])
+	s.Require().NoError(err)
+	selfDelegation := types.NewDelegation(val0AccAddr, s.valAddressToString(addrVals[0]), issuedShares)
 
-	err := stakingKeeper.SetDelegation(ctx, selfDelegation)
+	err = stakingKeeper.SetDelegation(ctx, selfDelegation)
 	s.Require().NoError(err)
 
 	validators, err := stakingKeeper.GetAllValidators(ctx)
@@ -167,8 +168,9 @@ func (s *KeeperTestSuite) setValidators(n int) {
 
 		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.NotBondedPoolName, types.BondedPoolName, gomock.Any())
 		_ = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
-		val0AccAddr := sdk.AccAddress(addrVals[i].Bytes())
-		selfDelegation := types.NewDelegation(val0AccAddr.String(), addr, issuedShares)
+		accAddr, err := s.accountKeeper.AddressCodec().BytesToString(addrVals[i])
+		s.Require().NoError(err)
+		selfDelegation := types.NewDelegation(accAddr, addr, issuedShares)
 		err = stakingKeeper.SetDelegation(ctx, selfDelegation)
 		s.Require().NoError(err)
 

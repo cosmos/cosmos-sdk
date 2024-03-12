@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	coreaddress "cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
@@ -32,7 +33,8 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 }
 
 // SimulateMsgUpdateParams returns a random MsgUpdateParams
-func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
+// TODO: return errors
+func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account, addressCodec coreaddress.Codec) sdk.Msg {
 	// use the default gov module account address as authority
 	var authority sdk.AccAddress = address.Module("gov")
 
@@ -44,8 +46,13 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) 
 	params.UnbondingTime = time.Duration(simtypes.RandTimestamp(r).UnixNano())
 	params.MinCommissionRate = simtypes.RandomDecAmount(r, sdkmath.LegacyNewDec(1))
 
+	addr, err := addressCodec.BytesToString(authority)
+	if err != nil {
+
+	}
+
 	return &types.MsgUpdateParams{
-		Authority: authority.String(),
+		Authority: addr,
 		Params:    params,
 	}
 }

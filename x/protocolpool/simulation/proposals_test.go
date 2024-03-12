@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/x/protocolpool/simulation"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -32,7 +33,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgCommunityPoolSpend, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgCommunityPoolSpend, w0.DefaultWeight())
 
-	msg := w0.MsgSimulatorFn()(r, ctx, accounts)
+	msg := w0.MsgSimulatorFn()(r, ctx, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
 	msgCommunityPoolSpend, ok := msg.(*pooltypes.MsgCommunityPoolSpend)
 	assert.Assert(t, ok)
 

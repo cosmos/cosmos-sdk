@@ -56,7 +56,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 	ok := ubd1.String() == ubd2.String()
 	require.True(t, ok)
 
-	vAddr3, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr2)
+	vAddr3, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr3)
 	require.NoError(t, err)
 	ubd2.ValidatorAddress = vAddr3
 

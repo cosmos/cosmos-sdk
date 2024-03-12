@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	coreaddress "cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/slashing/types"
 
@@ -32,7 +33,7 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 }
 
 // SimulateMsgUpdateParams returns a random MsgUpdateParams
-func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
+func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account, addressCodec coreaddress.Codec) sdk.Msg {
 	// use the default gov module account address as authority
 	var authority sdk.AccAddress = address.Module("gov")
 

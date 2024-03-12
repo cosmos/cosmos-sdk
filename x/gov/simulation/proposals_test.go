@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/x/gov/simulation"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -30,7 +31,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightSubmitTextProposal, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightTextProposal, w0.DefaultWeight())
 
-	msg := w0.MsgSimulatorFn()(r, ctx, accounts)
+	msg := w0.MsgSimulatorFn()(r, ctx, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
 	assert.Assert(t, msg == nil)
 }
 

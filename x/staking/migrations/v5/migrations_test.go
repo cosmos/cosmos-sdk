@@ -97,7 +97,9 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := 1; i < 11; i++ {
-		del1 := stakingtypes.NewDelegation(accAddrs[i].String(), valAddr, sdkmath.LegacyNewDec(100))
+		accAddr, err := codecOpts.GetAddressCodec().BytesToString(accAddrs[i])
+		assert.NoError(t, err)
+		del1 := stakingtypes.NewDelegation(accAddr, valAddr, sdkmath.LegacyNewDec(100))
 		store.Set(v5.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
 		addedDels = append(addedDels, del1)
 	}

@@ -69,13 +69,14 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
-
+	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(stakingtypes.GovModuleName))
+	s.Require().NoError(err)
 	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
 		env,
 		accountKeeper,
 		bankKeeper,
-		authtypes.NewModuleAddress(stakingtypes.GovModuleName).String(),
+		authority,
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
 	)
@@ -360,7 +361,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 		100,
 		func(i int64) {
 			ubd := stakingtypes.UnbondingDelegation{
-				DelegatorAddress: delAddrs[i].String(),
+				DelegatorAddress: s.addressToString(delAddrs[i]),
 				ValidatorAddress: s.valAddressToString(valAddrs[i]),
 				Entries: []stakingtypes.UnbondingDelegationEntry{
 					{
@@ -385,7 +386,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 		100,
 		func(i int64) {
 			ubd := stakingtypes.UnbondingDelegation{
-				DelegatorAddress: delAddrs[i].String(),
+				DelegatorAddress: s.addressToString(delAddrs[i]),
 				ValidatorAddress: s.valAddressToString(valAddrs[i]),
 				Entries: []stakingtypes.UnbondingDelegationEntry{
 					{
@@ -545,7 +546,7 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 			dvvTriplets := stakingtypes.DVVTriplets{
 				Triplets: []stakingtypes.DVVTriplet{
 					{
-						DelegatorAddress:    addrs[i].String(),
+						DelegatorAddress:    s.addressToString(addrs[i]),
 						ValidatorSrcAddress: s.valAddressToString(valAddrs[i]),
 						ValidatorDstAddress: s.valAddressToString(valAddrs[i+1]),
 					},
@@ -568,7 +569,7 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 			dvvTriplets := stakingtypes.DVVTriplets{
 				Triplets: []stakingtypes.DVVTriplet{
 					{
-						DelegatorAddress:    addrs[i].String(),
+						DelegatorAddress:    s.addressToString(addrs[i]),
 						ValidatorSrcAddress: s.valAddressToString(valAddrs[i]),
 						ValidatorDstAddress: s.valAddressToString(valAddrs[i+1]),
 					},

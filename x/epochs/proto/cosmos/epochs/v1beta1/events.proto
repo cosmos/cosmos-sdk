@@ -1,4 +1,4 @@
-// Since: cosmos-sdk 0.46
+// Since: x/epochs 0.1.0
 syntax = "proto3";
 
 package cosmos.epochs.v1beta1;

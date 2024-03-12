@@ -28,9 +28,9 @@ Every timer has a unique identifier.
 Every epoch will have a start time, and an end time, where `end time = start time + timer interval`.
 On mainnet, we only utilize one identifier, with a time interval of `one day`.
 
-The timer will tick at the first block whose blocktime is greater than the timer end time,
-and set the start as the prior timer end time. (Notably, its not set to the block time!)
-This means that if the chain has been down for awhile, you will get one timer tick per block,
+The timer will tick at the first block whose block time is greater than the timer end time,
+and set the start as the prior timer end time. (Notably, it's not set to the block time!)
+This means that if the chain has been down for a while, you will get one timer tick per block,
 until the timer has caught up.
 
 ## State

@@ -1,7 +1,11 @@
 package types
 
 import (
-	sdkmath "cosmossdk.io/math"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+
+	"cosmossdk.io/math"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Delay, in blocks, between when validator updates are returned to the

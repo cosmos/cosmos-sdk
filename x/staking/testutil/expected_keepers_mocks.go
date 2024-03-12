@@ -10,9 +10,9 @@ import (
 
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
-	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
+	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	types0 "github.com/cosmos/cosmos-sdk/crypto/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -408,7 +408,7 @@ func (mr *MockValidatorSetMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 inter
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockValidatorSet) SlashWithInfractionReason(arg0 context.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 types0.Infraction) (math.Int, error) {
+func (m *MockValidatorSet) SlashWithInfractionReason(arg0 context.Context, arg1 types1.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 v1beta1.Infraction) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(math.Int)

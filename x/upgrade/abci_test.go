@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule"

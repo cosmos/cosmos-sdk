@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/math"

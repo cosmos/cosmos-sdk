@@ -3,8 +3,7 @@ package types
 import (
 	"sort"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/gogoproto/proto"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"

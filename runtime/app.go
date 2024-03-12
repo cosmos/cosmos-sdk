@@ -153,7 +153,7 @@ func (a *App) Load(loadLatest bool) error {
 }
 
 // PreBlocker application updates every pre block
-func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) error {
 	return a.ModuleManager.PreBlock(ctx)
 }
 
@@ -242,7 +242,7 @@ func (a *App) LoadHeight(height int64) error {
 
 // DefaultGenesis returns a default genesis from the registered AppModule's.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.ModuleManager.DefaultGenesis(a.cdc)
+	return a.ModuleManager.DefaultGenesis()
 }
 
 // GetStoreKeys returns all the stored store keys.

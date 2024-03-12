@@ -26,7 +26,7 @@ type Keeper interface {
 	SendKeeper
 	WithMintCoinsRestriction(types.MintingRestrictionFn) BaseKeeper
 
-	InitGenesis(context.Context, *types.GenesisState)
+	InitGenesis(context.Context, *types.GenesisState) error
 	ExportGenesis(context.Context) *types.GenesisState
 
 	GetSupply(ctx context.Context, denom string) sdk.Coin

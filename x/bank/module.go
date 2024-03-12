@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/bank/client/cli"
 	"cosmossdk.io/x/bank/keeper"
@@ -19,7 +19,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -34,7 +33,7 @@ var (
 	_ module.HasGRPCGateway           = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ module.AppModuleSimulation      = AppModule{}
-	_ module.HasGenesis               = AppModule{}
+	_ appmodulev2.HasGenesis          = AppModule{}
 	_ module.HasInvariants            = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
@@ -119,14 +118,14 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the bank module.
-func (AppModule) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
@@ -134,20 +133,20 @@ func (AppModule) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig,
 }
 
 // InitGenesis performs genesis initialization for the bank module.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	start := time.Now()
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		return err
+	}
 
-	am.keeper.InitGenesis(ctx, &genesisState)
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the bank
 // module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 	gs := am.keeper.ExportGenesis(ctx)
-	return cdc.MustMarshalJSON(gs)
+	return am.cdc.MarshalJSON(gs)
 }
 
 // ConsensusVersion implements HasConsensusVersion

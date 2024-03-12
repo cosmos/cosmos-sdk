@@ -42,11 +42,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (baseapp) [#19626](https://github.com/cosmos/cosmos-sdk/pull/19626) Adds `DisableBlockGasMeter` option to `BaseApp`, which removes the block gas meter during transaction execution.
+* (baseapp) [#19626](https://github.com/cosmos/cosmos-sdk/pull/19626) Add `DisableBlockGasMeter` option to `BaseApp`, which removes the block gas meter during transaction execution.
 
 ### Improvements
 
-* (x/distribution) [#19707](https://github.com/cosmos/cosmos-sdk/pull/19707) Add autocli config for `DelegationTotalRewards` for CLI constistency with `q rewards` commands in previous versions.
+* (x/distribution) [#19707](https://github.com/cosmos/cosmos-sdk/pull/19707) Add autocli config for `DelegationTotalRewards` for CLI consistency with `q rewards` commands in previous versions.
 * (x/auth) [#19651](https://github.com/cosmos/cosmos-sdk/pull/19651) Allow empty public keys in `GetSignBytesAdapter`.
 
 ### Bug Fixes

@@ -3,7 +3,6 @@ package tx
 import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -18,7 +17,7 @@ type ExtendedTxBuilder interface {
 type TxBuilder interface {
 	GetTx() txv1beta1.Tx
 	Sign() error
-	SetMsgs(msgs ...anypb.Any) error
+	SetMsgs(msgs ...*anypb.Any) error
 	SetMemo(memo string)
 	SetFeeAmount(amount txv1beta1.Fee)
 	SetFeePayer(feePayer string)
@@ -26,10 +25,11 @@ type TxBuilder interface {
 	SetTimeoutHeight(height uint64)
 	SetFeeGranter(feeGranter string)
 	SetUnordered(v bool)
+	SetSignatures(doc txv1beta1.SignDoc) error
 	SetAuxSignerData(data txv1beta1.AuxSignerData) error
 }
 
 type TxBuilderProvider interface {
 	NewTxBuilder() TxBuilder
-	WrapTxBuilder(sdk.Tx) (TxBuilder, error)
+	WrapTxBuilder(txv1beta1.Tx) (TxBuilder, error)
 }

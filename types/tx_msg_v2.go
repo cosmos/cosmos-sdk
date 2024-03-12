@@ -19,26 +19,7 @@ type (
 	// TxV2 defines an interface a transaction must fulfill.
 	TxV2 interface {
 		// GetMsgs gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
-		GetMsgs() ([]protov2.Message, error)
-	}
-
-	// TxV2WithFee defines the interface to be implemented by Tx to use the FeeDecorators
-	TxV2WithFee interface {
-		TxV2
-		Fee
-	}
-
-	// TxV2WithMemo must have GetMemo() method to use ValidateMemoDecorator
-	TxV2WithMemo interface {
-		TxV2
-		GetMemo() string
-	}
-
-	// TxV2WithTimeoutHeight extends the Tx interface by allowing a transaction to
-	// set a height timeout.
-	TxV2WithTimeoutHeight interface {
-		TxV2
-		GetTimeoutHeight() uint64
+		GetMsgs() ([]MsgV2, error)
 	}
 
 	// TxV2Decoder unmarshals transaction bytes

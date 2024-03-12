@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"context"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/math"
 	authsigning "cosmossdk.io/x/auth/signing"
@@ -44,14 +45,6 @@ type Factory struct {
 }
 
 func NewFactoryCLI(clientCtx txContext, flagSet *pflag.FlagSet) (Factory, error) {
-	if clientCtx.Viper == nil {
-		clientCtx = clientCtx.WithViper("")
-	}
-
-	if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
-		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
-	}
-
 	var accNum, accSeq uint64
 	if clientCtx.Offline {
 		if flagSet.Changed(flags.FlagAccountNumber) && flagSet.Changed(flags.FlagSequence) {
@@ -275,7 +268,7 @@ func (f Factory) BuildSimTx(msgs ...sdk.MsgV2) ([]byte, error) {
 		return nil, err
 	}
 
-	encoder := f.txConfig.TxEncoder()
+	encoder := f.codec.TxEncoder()
 	if encoder == nil {
 		return nil, fmt.Errorf("cannot simulate tx: tx encoder is nil")
 	}
@@ -283,9 +276,9 @@ func (f Factory) BuildSimTx(msgs ...sdk.MsgV2) ([]byte, error) {
 	return encoder(txb.GetTx())
 }
 
-// WithTxConfig returns a copy of the Factory with an updated TxConfig.
-func (f Factory) WithTxConfig(g TxConfig) Factory {
-	f.txConfig = g
+// WithTxParameters returns a copy of the Factory with an updated TxConfig.
+func (f Factory) WithTxParameters(p TxParameters) Factory {
+	f.TxParameters = p
 	return f
 }
 
@@ -496,7 +489,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder TxBuilder, ov
 	signMode := txf.signMode
 	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode, err = authsigning.APISignModeToInternal(txf.txConfig.SignModeHandler().DefaultMode())
+		signMode, err = authsigning.APISignModeToInternal(txf.signingConfig.SignModeHandler().DefaultMode())
 		if err != nil {
 			return err
 		}

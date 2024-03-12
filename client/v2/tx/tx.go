@@ -27,7 +27,7 @@ func (gr GasEstimateResponse) String() string {
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxCLI(clientCtx txContext, flagSet *pflag.FlagSet, msgs ...sdk.MsgV2) error {
+func GenerateOrBroadcastTxCLI(clientCtx txContext, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf, err := NewFactoryCLI(clientCtx, flagSet)
 	if err != nil {
 		return err

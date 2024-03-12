@@ -318,6 +318,14 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		}
 	}
 
+	if clientCtx.Viper == nil {
+		clientCtx = clientCtx.WithViper("")
+	}
+
+	if err = clientCtx.Viper.BindPFlags(flagSet); err != nil {
+		return clientCtx, fmt.Errorf("failed to bind flags to viper: %w", err)
+	}
+
 	return clientCtx, nil
 }
 

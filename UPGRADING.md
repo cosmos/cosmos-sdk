@@ -164,6 +164,12 @@ If your module requires a message server or query server, it should be passed in
 +govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 ```
 
+The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.LegacyRegistry` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.LegacyRegistry` interface.
+
+```diff
+-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
++func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
+```
 
 ##### Dependency Injection
 
@@ -176,16 +182,16 @@ Previous module migrations have been removed. It is required to migrate to v0.50
 
 ##### Genesis Interface
 
-All genesis interfaces have been migrated to take context.Context instead of sdk.Context.
+All genesis interfaces have been migrated to take context.Context instead of sdk.Context. Secondly, the codec is no longer passed in by the framework. The codec is now passed in by the module.
 
 ```go
 // InitGenesis performs genesis initialization for the authz module.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the authz
 // module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 }
 ```
 

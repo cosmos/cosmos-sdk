@@ -11,29 +11,29 @@ import (
 )
 
 // InitGenesis sets distribution information for genesis
-func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
+func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error {
 	var moduleHoldings sdk.DecCoins
 
 	if err := k.FeePool.Set(ctx, data.FeePool); err != nil {
-		panic(err)
+		return err
 	}
 
 	if err := k.Params.Set(ctx, data.Params); err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
 		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.DelegatorAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.WithdrawAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		err = k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddress, withdrawAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -42,74 +42,74 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 		var err error
 		previousProposer, err = k.stakingKeeper.ConsensusAddressCodec().StringToBytes(data.PreviousProposer)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
 	if err := k.PreviousProposer.Set(ctx, previousProposer); err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, rew := range data.OutstandingRewards {
 		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(rew.ValidatorAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		err = k.ValidatorOutstandingRewards.Set(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
 		if err != nil {
-			panic(err)
+			return err
 		}
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
 		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(acc.ValidatorAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		err = k.ValidatorsAccumulatedCommission.Set(ctx, valAddr, acc.Accumulated)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
 		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(his.ValidatorAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(sdk.ValAddress(valAddr), his.Period), his.Rewards)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
 		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(cur.ValidatorAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		err = k.ValidatorCurrentRewards.Set(ctx, valAddr, cur.Rewards)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 	for _, del := range data.DelegatorStartingInfos {
 		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.ValidatorAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), del.StartingInfo)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 	for _, evt := range data.ValidatorSlashEvents {
 		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(evt.ValidatorAddress)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		err = k.ValidatorSlashEvents.Set(
@@ -122,7 +122,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 			evt.ValidatorSlashEvent,
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -142,18 +142,19 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 	if !balances.Equal(moduleHoldingsInt) {
 		panic(fmt.Sprintf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt))
 	}
+	return nil
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
 	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	params, err := k.Params.Get(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var dwi []types.DelegatorWithdrawInfo
@@ -165,12 +166,12 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	pp, err := k.PreviousProposer.Get(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
@@ -184,7 +185,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	},
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	acc := make([]types.ValidatorAccumulatedCommissionRecord, 0)
@@ -196,7 +197,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
@@ -211,7 +212,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		},
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	cur := make([]types.ValidatorCurrentRewardsRecord, 0)
@@ -225,7 +226,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		},
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
@@ -238,7 +239,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
@@ -256,8 +257,8 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		},
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes)
+	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes), nil
 }

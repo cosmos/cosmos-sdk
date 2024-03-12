@@ -39,7 +39,7 @@ type ModuleDB interface {
 	//  func NewAppModule(keeper keeper.Keeper) AppModule {
 	//    return AppModule{HasGenesis: keeper.GenesisHandler()}
 	//  }
-	GenesisHandler() appmodule.HasGenesis
+	GenesisHandler() appmodule.HasGenesis // TODO should be appmodule.HasGenesisAuto with core v1
 
 	private()
 }
@@ -212,7 +212,7 @@ func (m moduleDB) GetTable(message proto.Message) ormtable.Table {
 	return m.tablesByName[message.ProtoReflect().Descriptor().FullName()]
 }
 
-func (m moduleDB) GenesisHandler() appmodule.HasGenesis {
+func (m moduleDB) GenesisHandler() appmodule.HasGenesis { // TODO should be appmodule.HasGenesisAuto with core v1
 	return appModuleGenesisWrapper{m}
 }
 

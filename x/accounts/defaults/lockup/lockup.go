@@ -51,7 +51,7 @@ func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
 		WithdrawedCoins:  collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
 		addressCodec:     d.AddressCodec,
-		headerService:    d.HeaderService,
+		headerService:    d.Environment.HeaderService,
 		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 	}
 

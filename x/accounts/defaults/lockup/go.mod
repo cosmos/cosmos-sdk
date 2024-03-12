@@ -166,19 +166,19 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ../../../.
+replace github.com/cosmos/cosmos-sdk => ../../../../.
 
 replace (
-	cosmossdk.io/api => ../../../api
-	cosmossdk.io/depinject => ../../../depinject
-	cosmossdk.io/x/accounts => ./..
-	cosmossdk.io/x/auth => ../../auth
-	cosmossdk.io/x/bank => ../../bank
-	cosmossdk.io/x/distribution => ../../distribution
-	cosmossdk.io/x/gov => ../../gov
-	cosmossdk.io/x/mint => ../../mint
-	cosmossdk.io/x/protocolpool => ../../protocolpool
-	cosmossdk.io/x/slashing => ../../slashing
-	cosmossdk.io/x/staking => ../../staking
+	cosmossdk.io/api => ../../../../api
+	cosmossdk.io/depinject => ../../../../depinject
+	cosmossdk.io/x/accounts => ../../.
+	cosmossdk.io/x/auth => ../../../auth
+	cosmossdk.io/x/bank => ../../../bank
+	cosmossdk.io/x/distribution => ../../../distribution
+	cosmossdk.io/x/gov => ../../../gov
+	cosmossdk.io/x/mint => ../../../mint
+	cosmossdk.io/x/protocolpool => ../../../protocolpool
+	cosmossdk.io/x/slashing => ../../../slashing
+	cosmossdk.io/x/staking => ../../../staking
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )

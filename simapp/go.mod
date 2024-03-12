@@ -243,7 +243,7 @@ replace (
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
-	cosmossdk.io/x/accounts/lockup => ../x/accounts/lockup
+	cosmossdk.io/x/accounts/lockup => ../x/accounts/defaults/lockup
 	cosmossdk.io/x/auth => ../x/auth
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank

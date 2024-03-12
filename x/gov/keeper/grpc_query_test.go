@@ -1486,36 +1486,25 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					Id:     1,
 					Status: v1.StatusFailed,
 					FinalTallyResult: &v1.TallyResult{
-						YesCount:         "4",
-						AbstainCount:     "1",
-						NoCount:          "0",
-						NoWithVetoCount:  "0",
-						OptionOneCount:   "4",
-						OptionTwoCount:   "1",
-						OptionThreeCount: "0",
-						OptionFourCount:  "0",
-						SpamCount:        "0",
+						YesCount:        "4",
+						AbstainCount:    "1",
+						NoCount:         "0",
+						NoWithVetoCount: "0",
 					},
 					SubmitTime:      &propTime,
 					VotingStartTime: &propTime,
 					VotingEndTime:   &propTime,
 					Metadata:        "proposal metadata",
 				}
-				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
-				suite.Require().NoError(err)
+				suite.govKeeper.SetProposal(suite.ctx, proposal)
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
-					YesCount:         "4",
-					AbstainCount:     "1",
-					NoCount:          "0",
-					NoWithVetoCount:  "0",
-					OptionOneCount:   "4",
-					OptionTwoCount:   "1",
-					OptionThreeCount: "0",
-					OptionFourCount:  "0",
-					SpamCount:        "0",
+					YesCount:        "4",
+					AbstainCount:    "1",
+					NoCount:         "0",
+					NoWithVetoCount: "0",
 				}
 			},
 			true,
@@ -1668,15 +1657,13 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 						AbstainCount:    "1",
 						NoCount:         "0",
 						NoWithVetoCount: "0",
-						SpamCount:       "0",
 					},
 					SubmitTime:      &propTime,
 					VotingStartTime: &propTime,
 					VotingEndTime:   &propTime,
 					Metadata:        "proposal metadata",
 				}
-				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
-				suite.Require().NoError(err)
+				suite.govKeeper.SetProposal(suite.ctx, proposal)
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 

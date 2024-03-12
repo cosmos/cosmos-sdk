@@ -27,6 +27,7 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -46,11 +47,11 @@ import (
 
 // Deprecated: use the embed extension interfaces instead, when needed.
 type AppModuleBasic interface {
-	appmodulev2.HasRegisterInterfaces
-
 	HasName
 	HasGRPCGateway
 	HasAminoCodec
+
+	appmodulev2.HasRegisterInterfaces
 }
 
 // AppModule is the form for an application module. Most of
@@ -98,8 +99,8 @@ type HasGenesis = appmodulev2.HasGenesis
 // HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
 type HasABCIGenesis interface {
 	HasGenesisBasics
-	InitGenesis(context.Context, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(context.Context) json.RawMessage
+	InitGenesis(context.Context, json.RawMessage) ([]ValidatorUpdate, error)
+	ExportGenesis(context.Context) (json.RawMessage, error)
 }
 
 // HasInvariants is the interface for registering invariants.
@@ -114,19 +115,19 @@ type HasServices interface {
 	RegisterServices(Configurator)
 }
 
-// HasConsensusVersion is the interface for declaring a module consensus version.
-type HasConsensusVersion interface {
-	// ConsensusVersion is a sequence number for state-breaking change of the
-	// module. It should be incremented on each consensus-breaking change
-	// introduced by the module. To avoid wrong/empty versions, the initial version
-	// should be set to 1.
-	ConsensusVersion() uint64
-}
+// MigrationHandler is the migration function that each module registers.
+type MigrationHandler func(sdk.Context) error
+
+// VersionMap is a map of moduleName -> version
+type VersionMap appmodule.VersionMap
+
+// ValidatorUpdate is the type for validator updates.
+type ValidatorUpdate = appmodulev2.ValidatorUpdate
 
 // HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
 type HasABCIEndBlock interface {
 	AppModule
-	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
+	EndBlock(context.Context) ([]ValidatorUpdate, error)
 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
@@ -328,7 +329,11 @@ func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 		if mod, ok := b.(HasGenesisBasics); ok {
 			genesisData[mod.Name()] = mod.DefaultGenesis()
 		} else if mod, ok := b.(HasName); ok {
-			genesisData[mod.Name()] = []byte("{}")
+			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
+				genesisData[mod.Name()] = modgen.DefaultGenesis()
+			} else {
+				genesisData[mod.Name()] = []byte("{}")
+			}
 		}
 	}
 
@@ -342,6 +347,12 @@ func (m *Manager) ValidateGenesis(genesisData map[string]json.RawMessage) error 
 		if mod, ok := b.(HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
+			}
+		} else if mod, ok := b.(HasName); ok {
+			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
+				if err := modgen.ValidateGenesis(genesisData[mod.Name()]); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -425,8 +436,8 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
-	var validatorUpdates []abci.ValidatorUpdate
+func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
+	var validatorUpdates []ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
@@ -454,7 +465,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, genesisData ma
 			}
 		} else if module, ok := mod.(HasABCIGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			moduleValUpdates := module.InitGenesis(ctx, genesisData[moduleName])
+			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
+			if err != nil {
+				return &abci.ResponseInitChain{}, err
+			}
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
@@ -472,8 +486,32 @@ func (m *Manager) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, genesisData ma
 		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
+	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
+	for i, v := range validatorUpdates {
+		var pubkey cmtcryptoproto.PublicKey
+		switch v.PubKeyType {
+		case "ed25519":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Ed25519{
+					Ed25519: v.PubKey,
+				},
+			}
+		case "secp256k1":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
+					Secp256K1: v.PubKey,
+				},
+			}
+		}
+
+		cometValidatorUpdates[i] = abci.ValidatorUpdate{
+			PubKey: pubkey,
+			Power:  v.Power,
+		}
+	}
+
 	return &abci.ResponseInitChain{
-		Validators: validatorUpdates,
+		Validators: cometValidatorUpdates,
 	}, nil
 }
 
@@ -535,7 +573,11 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, modulesToExport []str
 			channels[moduleName] = make(chan genesisResult)
 			go func(module HasABCIGenesis, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
-				ch <- genesisResult{module.ExportGenesis(ctx), nil}
+				jm, err := module.ExportGenesis(ctx)
+				if err != nil {
+					ch <- genesisResult{nil, err}
+				}
+				ch <- genesisResult{jm, nil}
 			}(module, channels[moduleName])
 		}
 	}
@@ -589,12 +631,6 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 			"all modules must be defined when setting %s, missing: %v", setOrderFnName, missing))
 	}
 }
-
-// MigrationHandler is the migration function that each module registers.
-type MigrationHandler func(sdk.Context) error
-
-// VersionMap is a map of moduleName -> version
-type VersionMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules. This
 // function MUST be called inside an x/upgrade UpgradeHandler.
@@ -663,7 +699,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := uint64(0)
-		if module, ok := module.(HasConsensusVersion); ok {
+		if module, ok := module.(appmodule.HasConsensusVersion); ok {
 			toVersion = module.ConsensusVersion()
 		}
 
@@ -688,7 +724,11 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 				}
 			}
 			if module, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
-				moduleValUpdates := module.InitGenesis(sdkCtx, module.DefaultGenesis())
+				moduleValUpdates, err := module.InitGenesis(sdkCtx, module.DefaultGenesis())
+				if err != nil {
+					return nil, err
+				}
+
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
@@ -741,7 +781,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 // modules.
 func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
-	validatorUpdates := []abci.ValidatorUpdate{}
+	validatorUpdates := []ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
@@ -766,8 +806,32 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 		}
 	}
 
+	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
+	for i, v := range validatorUpdates {
+		var pubkey cmtcryptoproto.PublicKey
+		switch v.PubKeyType {
+		case "ed25519":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Ed25519{
+					Ed25519: v.PubKey,
+				},
+			}
+		case "secp256k1":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
+					Secp256K1: v.PubKey,
+				},
+			}
+		}
+
+		cometValidatorUpdates[i] = abci.ValidatorUpdate{
+			PubKey: pubkey,
+			Power:  v.Power,
+		}
+	}
+
 	return sdk.EndBlock{
-		ValidatorUpdates: validatorUpdates,
+		ValidatorUpdates: cometValidatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}, nil
 }
@@ -805,7 +869,7 @@ func (m *Manager) GetVersionMap() VersionMap {
 	vermap := make(VersionMap)
 	for name, v := range m.Modules {
 		version := uint64(0)
-		if v, ok := v.(HasConsensusVersion); ok {
+		if v, ok := v.(appmodule.HasConsensusVersion); ok {
 			version = v.ConsensusVersion()
 		}
 		name := name

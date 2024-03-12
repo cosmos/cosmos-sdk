@@ -574,9 +574,11 @@ func (mr *MockBankKeeperMockRecorder) HasSupply(ctx, denom interface{}) *gomock.
 }
 
 // InitGenesis mocks base method.
-func (m *MockBankKeeper) InitGenesis(arg0 context.Context, arg1 *types.GenesisState) {
+func (m *MockBankKeeper) InitGenesis(arg0 context.Context, arg1 *types.GenesisState) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "InitGenesis", arg0, arg1)
+	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // InitGenesis indicates an expected call of InitGenesis.

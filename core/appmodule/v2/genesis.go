@@ -10,7 +10,7 @@ import (
 // migration of existing modules to the new app module API. It is intended to be replaced by collections
 type HasGenesis interface {
 	AppModule
-	DefaultGenesis() Message
+	DefaultGenesis() json.RawMessage
 	ValidateGenesis(data json.RawMessage) error
 	InitGenesis(ctx context.Context, data json.RawMessage) error
 	ExportGenesis(ctx context.Context) (json.RawMessage, error)

@@ -18,6 +18,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/v2"
+	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
 
@@ -37,7 +38,7 @@ type Store struct {
 // NewStore creates a new snapshot store.
 func NewStore(dir string) (*Store, error) {
 	if dir == "" {
-		return nil, errors.Wrap(store.ErrLogic, "snapshot directory not given")
+		return nil, errors.Wrap(storeerrors.ErrLogic, "snapshot directory not given")
 	}
 	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
@@ -60,7 +61,7 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	saving := s.saving[height]
 	s.mtx.Unlock()
 	if saving {
-		return errors.Wrapf(store.ErrConflict,
+		return errors.Wrapf(storeerrors.ErrConflict,
 			"snapshot for height %v format %v is currently being saved", height, format)
 	}
 	if err := os.RemoveAll(s.pathSnapshot(height, format)); err != nil {
@@ -222,7 +223,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 			skip[height] = true
 			continue
 		}
-		err = s.Delete(height, uint32(format))
+		err = s.Delete(height, format)
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to prune snapshots")
 		}
@@ -248,7 +249,7 @@ func (s *Store) Save(
 ) (*types.Snapshot, error) {
 	defer DrainChunks(chunks)
 	if height == 0 {
-		return nil, errors.Wrap(store.ErrLogic, "snapshot height cannot be 0")
+		return nil, errors.Wrap(storeerrors.ErrLogic, "snapshot height cannot be 0")
 	}
 
 	s.mtx.Lock()
@@ -256,7 +257,7 @@ func (s *Store) Save(
 	s.saving[height] = true
 	s.mtx.Unlock()
 	if saving {
-		return nil, errors.Wrapf(store.ErrConflict,
+		return nil, errors.Wrapf(storeerrors.ErrConflict,
 			"a snapshot for height %v is already being saved", height)
 	}
 	defer func() {
@@ -381,7 +382,7 @@ func (s *Store) parseMetadataFilename(filename string) (height uint64, format ui
 		return 0, 0, errors.Wrapf(err, "invalid snapshot metadata filename %s", filename)
 	}
 	format = uint32(f)
-	if filename != filepath.Base(s.pathMetadata(height, uint32(format))) {
+	if filename != filepath.Base(s.pathMetadata(height, format)) {
 		return 0, 0, fmt.Errorf("invalid snapshot metadata filename %s", filename)
 	}
 	return height, format, nil
@@ -399,10 +400,10 @@ func (s *Store) validateMetadataPath(path string) error {
 // legacyV1DecodeKey decodes a legacy snapshot key used in a raw kv store.
 func legacyV1DecodeKey(k []byte) (uint64, uint32, error) {
 	if len(k) != 13 {
-		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key with length %v", len(k))
+		return 0, 0, errors.Wrapf(storeerrors.ErrLogic, "invalid snapshot key with length %v", len(k))
 	}
 	if k[0] != keyPrefixSnapshot {
-		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key prefix %x", k[0])
+		return 0, 0, errors.Wrapf(storeerrors.ErrLogic, "invalid snapshot key prefix %x", k[0])
 	}
 
 	height := binary.BigEndian.Uint64(k[1:9])

@@ -45,7 +45,7 @@ func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
 	t.Log("Verify that a panic happens at the upgrade height")
 	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
 
-	_, err := s.preModule.PreBlock(newCtx)
+	err := s.preModule.PreBlock(newCtx)
 	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
@@ -53,7 +53,7 @@ func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
 		return vm, nil
 	})
 
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 
 	s.VerifyCleared(t, newCtx)
@@ -63,7 +63,7 @@ func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, pro
 	t.Helper()
 	t.Log("Verify that a panic happens at the upgrade height")
 
-	_, err := s.preModule.PreBlock(newCtx)
+	err := s.preModule.PreBlock(newCtx)
 	require.ErrorContains(t, err, "UPGRADE \""+proposalName+"\" NEEDED at height: ")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
@@ -71,7 +71,7 @@ func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, pro
 		return vm, nil
 	})
 
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 
 	s.VerifyCleared(t, newCtx)
@@ -175,21 +175,21 @@ func TestHaltIfTooNew(t *testing.T) {
 	})
 
 	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
-	_, err := s.preModule.PreBlock(newCtx)
+	err := s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we error if we have a registered handler ahead of time")
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "future", Height: s.ctx.HeaderInfo().Height + 3})
 	require.NoError(t, err)
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.EqualError(t, err, "BINARY UPDATED BEFORE TRIGGER! UPGRADE \"future\" - in binary but not executed on chain. Downgrade your binary")
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we no longer panic if the plan is on time")
 
 	futCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 3, Time: time.Now()})
-	_, err = s.preModule.PreBlock(futCtx)
+	err = s.preModule.PreBlock(futCtx)
 	require.NoError(t, err)
 	require.Equal(t, 1, called)
 
@@ -223,7 +223,7 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 func TestNoSpuriousUpgrades(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
-	_, err := s.preModule.PreBlock(s.ctx)
+	err := s.preModule.PreBlock(s.ctx)
 	require.NoError(t, err)
 }
 
@@ -260,7 +260,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	s.VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
 
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 
 	t.Log("Verify a second proposal also is being cleared")
@@ -268,7 +268,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	require.NoError(t, err)
 
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipTwo})
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 
 	// To ensure verification is being done only after both upgrades are cleared
@@ -295,7 +295,7 @@ func TestUpgradeSkippingOne(t *testing.T) {
 
 	// Setting block height of proposal test
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 
 	t.Log("Verify the second proposal is not skipped")
@@ -328,7 +328,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 
 	// Setting block height of proposal test
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 
 	// A new proposal with height in skipUpgradeHeights
@@ -336,7 +336,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	require.NoError(t, err)
 	// Setting block height of proposal test2
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipTwo})
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 
 	t.Log("Verify a new proposal is not skipped")
@@ -357,7 +357,7 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 	t.Log("Verify if upgrade happens without skip upgrade")
-	_, err = s.preModule.PreBlock(newCtx)
+	err = s.preModule.PreBlock(newCtx)
 	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height:")
 
 	s.VerifyDoUpgrade(t)
@@ -447,7 +447,7 @@ func TestBinaryVersion(t *testing.T) {
 
 	for _, tc := range testCases {
 		ctx := tc.preRun()
-		_, err := s.preModule.PreBlock(ctx)
+		err := s.preModule.PreBlock(ctx)
 		if tc.expectError {
 			require.Error(t, err)
 		} else {
@@ -486,7 +486,7 @@ func TestDowngradeVerification(t *testing.T) {
 	})
 
 	// successful upgrade.
-	_, err = m.PreBlock(ctx)
+	err = m.PreBlock(ctx)
 	require.NoError(t, err)
 	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
@@ -536,7 +536,7 @@ func TestDowngradeVerification(t *testing.T) {
 			tc.preRun(k, ctx, name)
 		}
 
-		_, err = m.PreBlock(ctx)
+		err = m.PreBlock(ctx)
 		if tc.expectError {
 			require.Error(t, err, name)
 		} else {

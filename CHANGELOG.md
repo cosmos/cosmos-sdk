@@ -158,7 +158,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 * (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
 
-## [v0.50.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.5) - 2024-03-11
+## [v0.50.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.5) - 2024-03-12
 
 ### Features
 
@@ -171,6 +171,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+* (x/gov) [#19725](https://github.com/cosmos/cosmos-sdk/pull/19725) Fetch a failed proposal tally from proposal.FinalTallyResult in the gprc query.
 * (types) [#19709](https://github.com/cosmos/cosmos-sdk/pull/19709) Fix skip staking genesis export when using `CoreAppModuleAdaptor` / `CoreAppModuleBasicAdaptor` for it.
 * (x/auth) [#19549](https://github.com/cosmos/cosmos-sdk/pull/19549) Accept custom get signers when injecting `x/auth/tx`.
 * (x/staking) Fix a possible bypass of delegator slashing: [GHSA-86h5-xcpx-cfqc](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-86h5-xcpx-cfqc)

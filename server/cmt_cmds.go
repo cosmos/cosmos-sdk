@@ -155,7 +155,7 @@ func VersionCmd() *cobra.Command {
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				CometBFT:      cmtversion.TMCoreSemVer,
+				CometBFT:      cmtversion.CMTSemVer,
 				ABCI:          cmtversion.ABCIVersion,
 				BlockProtocol: cmtversion.BlockProtocol,
 				P2PProtocol:   cmtversion.P2PProtocol,

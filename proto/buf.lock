@@ -24,5 +24,4 @@ deps:
   - remote: buf.build
     owner: cometbft
     repository: cometbft
-    commit: 33ed361a90514289beabf3189e1d7665
-    digest: shake256:038267e06294714fd883610626554b04a127b576b4e253befb4206cb72d5d3c1eeccacd4b9ec8e3fb891f7c14e1cb0f770c077d2989638995b0a61c85afedb1d
+    commit: 4a62c99d422068a5165429b62a7eb824df46cca9

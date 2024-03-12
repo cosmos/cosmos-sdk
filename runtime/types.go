@@ -27,8 +27,8 @@ type AppI interface {
 	// Application updates every end block.
 	EndBlocker(ctx sdk.Context) (sdk.EndBlock, error)
 
-	// Application update at chain (i.e app) initialization.
-	InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error)
+	// InitChainer update at chain (i.e app) initialization.
+	InitChainer(ctx sdk.Context, req *abci.InfoRequest) (*abci.InfoResponse, error)
 
 	// Loads the app at a given height.
 	LoadHeight(height int64) error

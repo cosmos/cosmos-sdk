@@ -156,7 +156,7 @@ func (a *App) Load(loadLatest bool) error {
 }
 
 // PreBlocker application updates every pre block
-func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (a *App) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {
 	return a.ModuleManager.PreBlock(ctx)
 }
 
@@ -181,7 +181,7 @@ func (a *App) PrepareCheckStater(ctx sdk.Context) {
 }
 
 // InitChainer initializes the chain.
-func (a *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+func (a *App) InitChainer(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InfoResponse, error) {
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)

@@ -94,8 +94,8 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 			clientCtx := val.ClientCtx
 			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
 
-			req := abci.RequestQuery{
-				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
+			req := abci.QueryRequest{
+				Path:   "store/bank/key",
 				Height: tc.reqHeight,
 				Data:   address.MustLengthPrefix(val.Address),
 				Prove:  true,

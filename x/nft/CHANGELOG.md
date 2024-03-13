@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* [#19713](https://github.com/cosmos/cosmos-sdk/pull/19713) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic
+* [#19713](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/nft/v0.1.0) - 2023-11-07
 

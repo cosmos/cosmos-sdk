@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	_ module.HasName                  = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.HasName = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
 // AppModule implements an application module

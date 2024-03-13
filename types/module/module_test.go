@@ -172,16 +172,14 @@ func TestManager_InitGenesis(t *testing.T) {
 	require.Equal(t, 3, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
-	// this should panic since the validator set is empty even after init genesis
+	// this should error since the validator set is empty even after init genesis
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1)
-	_, err := mm.InitGenesis(ctx, cdc, genesisData)
+	_, err := mm.InitGenesis(ctx, genesisData)
 	require.ErrorContains(t, err, "validator set is empty after InitGenesis")
 
-	// test panic
+	// test error
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
 		"module2": json.RawMessage(`{"key": "value"}`),
@@ -193,19 +191,19 @@ func TestManager_InitGenesis(t *testing.T) {
 	mockAppModuleABCI1.EXPECT().Name().Times(4).Return("module1")
 	mockAppModuleABCI2.EXPECT().Name().Times(2).Return("module2")
 	mmABCI := module.NewManager(mockAppModuleABCI1, mockAppModuleABCI2)
-	// panic because more than one module returns validator set updates
-	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModuleABCI2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	_, err = mmABCI.InitGenesis(ctx, cdc, genesisData)
+	// errors because more than one module returns validator set updates
+	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
+	mockAppModuleABCI2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module2"])).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
+	_, err = mmABCI.InitGenesis(ctx, genesisData)
 	require.ErrorContains(t, err, "validator InitGenesis updates already set by a previous module")
 
 	// happy path
 
 	mm2 := module.NewManager(mockAppModuleABCI1, mockAppModule2, module.CoreAppModuleAdaptor("module3", mockAppModule3))
-	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module2"])).Times(1)
 	mockAppModule3.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
-	_, err = mm2.InitGenesis(ctx, cdc, genesisData)
+	_, err = mm2.InitGenesis(ctx, genesisData)
 	require.NoError(t, err)
 }
 
@@ -268,15 +266,15 @@ func TestManager_EndBlock(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
-	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
+	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
 	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1)
 	ret, err := mm.EndBlock(sdk.Context{})
 	require.NoError(t, err)
 	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
-	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
-	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
+	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
+	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
 	_, err = mm.EndBlock(sdk.Context{})
 	require.Error(t, err)
 }
@@ -307,13 +305,11 @@ func TestCoreAPIManager_InitGenesis(t *testing.T) {
 	require.Equal(t, 1, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	// this should panic since the validator set is empty even after init genesis
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
-	_, err := mm.InitGenesis(ctx, cdc, genesisData)
+	_, err := mm.InitGenesis(ctx, genesisData)
 	require.ErrorContains(t, err, "validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction")
 
 	// TODO: add happy path test. We are not returning any validator updates, this will come with the services.

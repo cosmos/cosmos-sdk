@@ -3,8 +3,9 @@ package baseapp
 import (
 	"context"
 
-	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 type TxExecutor func(

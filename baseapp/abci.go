@@ -805,7 +805,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	// vote extensions, so skip those.
 	txResults, err := app.executeTxs(ctx, req.Txs)
 	if err != nil {
-		// usually due to cancelled
+		// usually due to canceled
 		return nil, err
 	}
 

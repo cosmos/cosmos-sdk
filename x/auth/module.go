@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
@@ -30,8 +29,8 @@ const (
 var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasName             = AppModule{}
-	_ appmodulev2.HasGenesis     = AppModule{}
 
+	_ appmodule.HasGenesis    = AppModule{}
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasServices   = AppModule{}
 	_ appmodule.HasMigrations = AppModule{}

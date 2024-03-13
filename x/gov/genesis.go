@@ -32,7 +32,7 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 	// check if the deposits pool account exists
 	moduleAcc := k.GetGovernanceAccount(ctx)
 	if moduleAcc == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+		return fmt.Errorf("%s module account has not been set", types.ModuleName)
 	}
 
 	var totalDeposits sdk.Coins
@@ -79,9 +79,9 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 		ak.SetModuleAccount(ctx, moduleAcc)
 	}
 
-	// check if total deposits equals balance, if it doesn't panic because there were export/import errors
+	// check if total deposits equals balance, if it doesn't return an error
 	if !balance.Equal(totalDeposits) {
-		panic(fmt.Sprintf("expected module account was %s but we got %s", balance.String(), totalDeposits.String()))
+		return fmt.Errorf("expected module account was %s but we got %s", balance.String(), totalDeposits.String())
 	}
 	return nil
 }

@@ -50,7 +50,10 @@ func (ts *defaultTxSelector[T]) Clear() {
 
 func (ts *defaultTxSelector[T]) SelectTxForProposal(_ context.Context, maxTxBytes, maxBlockGas uint64, tx T) bool {
 	txSize := uint64(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{tx.Bytes()}))
-	txGasLimit := tx.GetGasLimit()
+	txGasLimit, err := tx.GetGasLimit()
+	if err != nil {
+		return false
+	}
 
 	// only add the transaction to the proposal if we have enough capacity
 	if (txSize + ts.totalTxBytes) <= maxTxBytes {

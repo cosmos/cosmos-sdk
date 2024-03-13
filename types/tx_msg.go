@@ -8,6 +8,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/core/transaction"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -51,6 +53,7 @@ type (
 	// Tx defines an interface a transaction must fulfill.
 	Tx interface {
 		HasMsgs
+		transaction.Tx
 
 		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
 		GetMsgsV2() ([]protov2.Message, error)

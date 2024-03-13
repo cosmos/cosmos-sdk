@@ -20,9 +20,14 @@ type DecodedTx struct {
 	TxRaw                        *v1beta1.TxRaw
 	Signers                      [][]byte
 	TxBodyHasUnknownNonCriticals bool
+
+	// Cache for hash and full bytes
+	cachedHash   [32]byte
+	cachedBytes  []byte
+	cachedHashed bool
 }
 
-var _ transaction.Tx = DecodedTx{}
+var _ transaction.Tx = &DecodedTx{}
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {
@@ -133,26 +138,49 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 
 // Hash implements the interface for the Tx interface.
 func (dtx DecodedTx) Hash() [32]byte {
-	bz, err := proto.Marshal(dtx.TxRaw)
-	if err != nil {
-		panic(err)
+	if !dtx.cachedHashed {
+		dtx = dtx.computeHashAndBytes()
 	}
-
-	return sha256.Sum256(bz)
+	return dtx.cachedHash
 }
 
-func (dtx DecodedTx) GetGasLimit() uint64 {
-	return dtx.Tx.AuthInfo.Fee.GasLimit
+func (dtx DecodedTx) GetGasLimit() (uint64, error) {
+	if dtx.Tx == nil || dtx.Tx.AuthInfo == nil || dtx.Tx.AuthInfo.Fee == nil {
+		return 0, errors.New("gas limit not available or one or more required fields are nil")
+	}
+	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (dtx DecodedTx) GetMessages() []proto.Message {
-	return dtx.Messages
+func (dtx DecodedTx) GetMessages() ([]proto.Message, error) {
+	if len(dtx.Messages) == 0 || dtx.Messages == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
+	return dtx.Messages, nil
 }
 
-func (dtx DecodedTx) GetSenders() [][]byte {
-	return dtx.Signers
+func (dtx DecodedTx) GetSenders() ([][]byte, error) {
+	if dtx.Signers == nil {
+		return nil, errors.New("senders not available or are nil")
+	}
+	return dtx.Signers, nil
 }
 
 func (dtx DecodedTx) Bytes() []byte {
-	return dtx.TxRaw.BodyBytes
+	if !dtx.cachedHashed {
+		dtx = dtx.computeHashAndBytes()
+	}
+	return dtx.cachedBytes
+}
+
+func (dtx DecodedTx) computeHashAndBytes() DecodedTx {
+	if !dtx.cachedHashed {
+		bz, err := proto.Marshal(dtx.TxRaw)
+		if err != nil {
+			panic(err)
+		}
+		dtx.cachedBytes = bz
+		dtx.cachedHash = sha256.Sum256(bz)
+		dtx.cachedHashed = true
+	}
+	return dtx
 }

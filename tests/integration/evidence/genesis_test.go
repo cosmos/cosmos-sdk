@@ -105,13 +105,12 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			tc.malleate()
 
 			if tc.expPass {
-				suite.NotPanics(func() {
-					evidence.InitGenesis(suite.ctx, suite.keeper, genesisState)
-				})
+				err := evidence.InitGenesis(suite.ctx, suite.keeper, genesisState)
+				suite.NoError(err)
 			} else {
-				suite.Panics(func() {
-					evidence.InitGenesis(suite.ctx, suite.keeper, genesisState)
-				})
+				err := evidence.InitGenesis(suite.ctx, suite.keeper, genesisState)
+				suite.Error(err)
+
 			}
 
 			tc.posttests()
@@ -151,13 +150,13 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 			tc.malleate()
 
 			if tc.expPass {
-				suite.NotPanics(func() {
-					evidence.ExportGenesis(suite.ctx, suite.keeper)
-				})
+
+				_, err := evidence.ExportGenesis(suite.ctx, suite.keeper)
+				suite.Require().NoError(err)
+
 			} else {
-				suite.Panics(func() {
-					evidence.ExportGenesis(suite.ctx, suite.keeper)
-				})
+				_, err := evidence.ExportGenesis(suite.ctx, suite.keeper)
+				suite.Require().Error(err)
 			}
 
 			tc.posttests()

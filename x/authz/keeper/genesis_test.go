@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -48,7 +49,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -82,7 +83,6 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	suite.Require().NoError(err)
 	genesis := suite.keeper.ExportGenesis(suite.ctx)
 
-	// TODO, recheck!
 	// Clear keeper
 	err = suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
 	suite.Require().NoError(err)
@@ -90,7 +90,8 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	suite.Require().NotEqual(genesis, newGenesis)
 	suite.Require().Empty(newGenesis)
 
-	suite.keeper.InitGenesis(suite.ctx, genesis)
+	err = suite.keeper.InitGenesis(suite.ctx, genesis)
+	suite.Require().NoError(err)
 	newGenesis = suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().Equal(genesis, newGenesis)
 }

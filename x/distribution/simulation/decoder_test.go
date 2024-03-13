@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/x/distribution/simulation"
 	"cosmossdk.io/x/distribution/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -24,7 +25,7 @@ var (
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	cdc := encodingConfig.Codec
 
 	dec := simulation.NewDecodeStore(cdc)

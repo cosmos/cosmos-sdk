@@ -12,13 +12,14 @@ import (
 	"cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/feegrant/simulation"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	moduletypes "github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 	s := rand.NewSource(1)
 	r := rand.New(s)
 

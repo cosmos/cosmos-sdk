@@ -33,6 +33,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,7 +67,8 @@ func initFixture(t *testing.T) *fixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, pooltypes.StoreKey, stakingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, distribution.AppModule{}, protocolpool.AppModule{}).Codec
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{})
+	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -138,13 +140,16 @@ func initFixture(t *testing.T) *fixture {
 		},
 	})
 
-	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, map[string]appmodule.AppModule{
-		authtypes.ModuleName:    authModule,
-		banktypes.ModuleName:    bankModule,
-		stakingtypes.ModuleName: stakingModule,
-		distrtypes.ModuleName:   distrModule,
-		pooltypes.ModuleName:    poolModule,
-	})
+	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc,
+		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName:    authModule,
+			banktypes.ModuleName:    bankModule,
+			stakingtypes.ModuleName: stakingModule,
+			distrtypes.ModuleName:   distrModule,
+			pooltypes.ModuleName:    poolModule,
+		})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

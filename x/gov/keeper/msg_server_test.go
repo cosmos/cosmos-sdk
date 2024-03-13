@@ -726,7 +726,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"0.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"0.000000000000000000" : invalid vote option`,
 		},
 		"negative weight": {
 			preRun: func() uint64 {
@@ -738,7 +738,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"-1.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"-1.000000000000000000" : invalid vote option`,
 		},
 		"individual weight > 1 but weights sum == 1": {
 			preRun: func() uint64 {
@@ -751,7 +751,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"2.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"2.000000000000000000" : invalid vote option`,
 		},
 		"empty options": {
 			preRun: func() uint64 {
@@ -1368,7 +1368,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"0.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"0.000000000000000000" : invalid vote option`,
 		},
 		"negative weight": {
 			preRun: func() uint64 {
@@ -1383,7 +1383,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"-1.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"-1.000000000000000000" : invalid vote option`,
 		},
 		"empty options": {
 			preRun: func() uint64 {
@@ -2131,7 +2131,7 @@ func (suite *KeeperTestSuite) TestMsgSudoExec() {
 		{
 			name:      "invalid msg (not registered)",
 			input:     invalidMsg,
-			expErrMsg: "unrecognized message route",
+			expErrMsg: "unknown message",
 		},
 		{
 			name:  "valid",

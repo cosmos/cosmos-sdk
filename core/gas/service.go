@@ -39,6 +39,8 @@ type Service interface {
 
 	// WithBlockGasMeter returns a new context with the provided block-level gas meter.
 	WithBlockGasMeter(ctx context.Context, meter Meter) context.Context
+
+	GetGasConfig(ctx context.Context) GasConfig
 }
 
 // Meter represents a gas meter for modules consumption
@@ -47,4 +49,14 @@ type Meter interface {
 	Refund(amount Gas, descriptor string)
 	Remaining() Gas
 	Limit() Gas
+}
+
+type GasConfig struct {
+	HasCost          Gas
+	DeleteCost       Gas
+	ReadCostFlat     Gas
+	ReadCostPerByte  Gas
+	WriteCostFlat    Gas
+	WriteCostPerByte Gas
+	IterNextCostFlat Gas
 }

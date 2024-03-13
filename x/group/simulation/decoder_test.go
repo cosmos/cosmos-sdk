@@ -12,13 +12,14 @@ import (
 	"cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/group/simulation"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestDecodeStore(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 	cdc := encodingConfig.Codec
 	dec := simulation.NewDecodeStore(cdc)
 

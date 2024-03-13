@@ -38,7 +38,8 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 
 	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, types.DefaultParams()))
 
-	exportGenesis := suite.bankKeeper.ExportGenesis(ctx)
+	exportGenesis, err := suite.bankKeeper.ExportGenesis(ctx)
+	suite.Require().NoError(err)
 
 	suite.Require().Len(exportGenesis.Params.SendEnabled, 0) //nolint:staticcheck // we're testing the old way here
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
@@ -67,7 +68,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	g := types.DefaultGenesisState()
 	g.DenomMetadata = []types.Metadata{m}
 	bk := suite.bankKeeper
-	bk.InitGenesis(suite.ctx, g)
+	suite.Require().NoError(bk.InitGenesis(suite.ctx, g))
 
 	m2, found := bk.GetDenomMetaData(suite.ctx, m.Base)
 	suite.Require().True(found)
@@ -88,36 +89,35 @@ func (suite *KeeperTestSuite) TestTotalSupply() {
 	suite.Require().NoError(err)
 
 	testcases := []struct {
-		name        string
-		genesis     *types.GenesisState
-		expSupply   sdk.Coins
-		expPanic    bool
-		expPanicMsg string
+		name      string
+		genesis   *types.GenesisState
+		expSupply sdk.Coins
+		expErrMsg string
 	}{
 		{
 			"calculation NOT matching genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, sdk.NewCoins(sdk.NewCoin("wrongcoin", sdkmath.NewInt(1))), defaultGenesis.DenomMetadata, defaultGenesis.SendEnabled),
-			nil, true, "genesis supply is incorrect, expected 1wrongcoin, got 21barcoin,11foocoin",
+			nil, "genesis supply is incorrect, expected 1wrongcoin, got 21barcoin,11foocoin",
 		},
 		{
 			"calculation matches genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, totalSupply, defaultGenesis.DenomMetadata, defaultGenesis.SendEnabled),
-			totalSupply, false, "",
+			totalSupply, "",
 		},
 		{
 			"calculation is correct, empty genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, nil, defaultGenesis.DenomMetadata, defaultGenesis.SendEnabled),
-			totalSupply, false, "",
+			totalSupply, "",
 		},
 	}
 
 	for _, tc := range testcases {
 		tc := tc
 		suite.Run(tc.name, func() {
-			if tc.expPanic {
-				suite.PanicsWithError(tc.expPanicMsg, func() { suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis) })
+			if tc.expErrMsg != "" {
+				suite.Require().ErrorContains(suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis), tc.expErrMsg)
 			} else {
-				suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis)
+				suite.Require().NoError(suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis))
 				totalSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
 				suite.Require().NoError(err)
 

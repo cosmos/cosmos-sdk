@@ -774,9 +774,17 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get conskey"), nil, err
 		}
+		consAddress, err := k.ConsensusAddressCodec().BytesToString(cons)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting consensus address"), nil, err
+		}
 
 		acc, _ := simtypes.RandomAcc(r, accs)
-		if sdk.ConsAddress(cons).String() == sdk.ConsAddress(acc.ConsKey.PubKey().Address()).String() {
+		accAddress, err := k.ConsensusAddressCodec().BytesToString(acc.ConsKey.PubKey().Address())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting consensus address"), nil, err
+		}
+		if consAddress == accAddress {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "new pubkey and current pubkey should be different"), nil, nil
 		}
 

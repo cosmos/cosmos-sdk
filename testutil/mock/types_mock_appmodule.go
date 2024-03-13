@@ -10,10 +10,8 @@ import (
 	reflect "reflect"
 
 	appmodule "cosmossdk.io/core/appmodule"
-	appmodule0 "cosmossdk.io/core/appmodule/v2"
 	registry "cosmossdk.io/core/registry"
-	types "github.com/cometbft/cometbft/abci/types"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -41,6 +39,20 @@ func (m *MockAppModuleWithAllExtensions) EXPECT() *MockAppModuleWithAllExtension
 	return m.recorder
 }
 
+// ConsensusVersion mocks base method.
+func (m *MockAppModuleWithAllExtensions) ConsensusVersion() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConsensusVersion")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// ConsensusVersion indicates an expected call of ConsensusVersion.
+func (mr *MockAppModuleWithAllExtensionsMockRecorder) ConsensusVersion() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusVersion", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).ConsensusVersion))
+}
+
 // DefaultGenesis mocks base method.
 func (m *MockAppModuleWithAllExtensions) DefaultGenesis() json.RawMessage {
 	m.ctrl.T.Helper()
@@ -56,10 +68,10 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) DefaultGenesis() *gomock.C
 }
 
 // EndBlock mocks base method.
-func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]appmodule0.ValidatorUpdate, error) {
+func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]appmodule0.ValidatorUpdate)
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -150,7 +162,7 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInterfaces(arg0 in
 }
 
 // RegisterInvariants mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterInvariants(arg0 types0.InvariantRegistry) {
+func (m *MockAppModuleWithAllExtensions) RegisterInvariants(arg0 types.InvariantRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInvariants", arg0)
 }
@@ -210,6 +222,20 @@ func (m *MockAppModuleWithAllExtensionsABCI) EXPECT() *MockAppModuleWithAllExten
 	return m.recorder
 }
 
+// ConsensusVersion mocks base method.
+func (m *MockAppModuleWithAllExtensionsABCI) ConsensusVersion() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConsensusVersion")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// ConsensusVersion indicates an expected call of ConsensusVersion.
+func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) ConsensusVersion() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusVersion", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).ConsensusVersion))
+}
+
 // DefaultGenesis mocks base method.
 func (m *MockAppModuleWithAllExtensionsABCI) DefaultGenesis() json.RawMessage {
 	m.ctrl.T.Helper()
@@ -225,10 +251,10 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) DefaultGenesis() *gomo
 }
 
 // EndBlock mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) EndBlock(arg0 context.Context) ([]appmodule0.ValidatorUpdate, error) {
+func (m *MockAppModuleWithAllExtensionsABCI) EndBlock(arg0 context.Context) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]appmodule0.ValidatorUpdate)
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -240,11 +266,12 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) EndBlock(arg0 interfac
 }
 
 // ExportGenesis mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) ExportGenesis(arg0 context.Context) json.RawMessage {
+func (m *MockAppModuleWithAllExtensionsABCI) ExportGenesis(arg0 context.Context) (json.RawMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0)
 	ret0, _ := ret[0].(json.RawMessage)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ExportGenesis indicates an expected call of ExportGenesis.
@@ -254,11 +281,12 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) ExportGenesis(arg0 int
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) InitGenesis(arg0 context.Context, arg1 json.RawMessage) []types.ValidatorUpdate {
+func (m *MockAppModuleWithAllExtensionsABCI) InitGenesis(arg0 context.Context, arg1 json.RawMessage) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
-	return ret0
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // InitGenesis indicates an expected call of InitGenesis.
@@ -318,7 +346,7 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInterfaces(arg
 }
 
 // RegisterInvariants mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types0.InvariantRegistry) {
+func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types.InvariantRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInvariants", arg0)
 }

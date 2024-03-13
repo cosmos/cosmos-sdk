@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/core/store"
@@ -35,7 +35,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 
 // RegisterModules registers the provided modules with the module manager.
 // This is the primary hook for integrating with modules which are not registered using the app config.
-func (a *AppBuilder) RegisterModules(modules ...appmodule.AppModule) error {
+func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 	for _, appModule := range modules {
 		if mod, ok := appModule.(sdkmodule.HasName); ok {
 			name := mod.Name()
@@ -44,7 +44,7 @@ func (a *AppBuilder) RegisterModules(modules ...appmodule.AppModule) error {
 			}
 			a.app.moduleManager.modules[name] = appModule
 
-			if mod, ok := appModule.(sdkmodule.HasRegisterInterfaces); ok {
+			if mod, ok := appModule.(appmodulev2.HasRegisterInterfaces); ok {
 				mod.RegisterInterfaces(a.app.interfaceRegistry)
 			}
 

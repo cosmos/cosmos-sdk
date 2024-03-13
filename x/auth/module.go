@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/auth/ante"
@@ -33,13 +32,11 @@ const (
 var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasName             = AppModule{}
-	_ appmodulev2.HasGenesis     = AppModule{}
 
-	_ appmodule.HasServices = AppModule{}
-
-	_ appmodulev2.AppModule                       = AppModule{}
-	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
-	_ appmodulev2.HasMigrations                   = AppModule{}
+	_ appmodule.HasGenesis    = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
 )
 
 // AppModule implements an application module for the auth module.

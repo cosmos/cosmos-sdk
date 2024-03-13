@@ -480,30 +480,30 @@ func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureDat
 // Signing a transaction with mutltiple signers in the DIRECT mode is not supported and will
 // return an error.
 // An error is returned upon failure.
-func Sign(ctx context.Context, txf Factory, name string, txBuilder TxBuilder, overwriteSig bool) error {
-	if txf.keybase == nil {
+func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, overwriteSig bool) error {
+	if f.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
 
 	var err error
-	signMode := txf.signMode
+	signMode := f.signMode
 	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode, err = authsigning.APISignModeToInternal(txf.signingConfig.SignModeHandler().DefaultMode())
+		signMode, err = authsigning.APISignModeToInternal(f.signingConfig.SignModeHandler().DefaultMode())
 		if err != nil {
 			return err
 		}
 	}
 
-	pubKey, err := txf.keybase.GetPubKey(name)
+	pubKey, err := f.keybase.GetPubKey(name)
 	if err != nil {
 		return err
 	}
 
 	signerData := authsigning.SignerData{
-		ChainID:       txf.chainID,
-		AccountNumber: txf.accountNumber,
-		Sequence:      txf.sequence,
+		ChainID:       f.chainID,
+		AccountNumber: f.accountNumber,
+		Sequence:      f.sequence,
 		PubKey:        pubKey,
 		Address:       sdk.AccAddress(pubKey.Address()).String(),
 	}
@@ -517,13 +517,13 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder TxBuilder, ov
 	// also doesn't affect its generated sign bytes, so for code's simplicity
 	// sake, we put it here.
 	sigData := signing.SingleSignatureData{
-		SignMode:  txf.signMode,
+		SignMode:  signMode,
 		Signature: nil,
 	}
 	sig := signing.SignatureV2{
 		PubKey:   pubKey,
 		Data:     &sigData,
-		Sequence: txf.Sequence(),
+		Sequence: f.sequence,
 	}
 
 	var prevSignatures []signing.SignatureV2
@@ -549,13 +549,13 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder TxBuilder, ov
 		return err
 	}
 
-	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, f.signingConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
 
 	// Sign those bytes
-	sigBytes, err := txf.keybase.Sign(name, bytesToSign, signMode)
+	sigBytes, err := f.keybase.Sign(name, bytesToSign, signMode)
 	if err != nil {
 		return err
 	}
@@ -568,7 +568,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder TxBuilder, ov
 	sig = signing.SignatureV2{
 		PubKey:   pubKey,
 		Data:     &sigData,
-		Sequence: txf.Sequence(),
+		Sequence: f.sequence,
 	}
 
 	if overwriteSig {
@@ -584,5 +584,5 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder TxBuilder, ov
 
 	// Run optional preprocessing if specified. By default, this is unset
 	// and will return nil.
-	return txf.PreprocessTx(name, txBuilder)
+	return f.PreprocessTx(name, txBuilder)
 }

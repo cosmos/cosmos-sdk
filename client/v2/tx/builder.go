@@ -16,7 +16,6 @@ type ExtendedTxBuilder interface {
 // also know how to encode itself.
 type TxBuilder interface {
 	GetTx() txv1beta1.Tx
-	Sign() error
 	SetMsgs(msgs ...*anypb.Any) error
 	SetMemo(memo string)
 	SetFeeAmount(amount txv1beta1.Fee)

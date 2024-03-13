@@ -155,7 +155,10 @@ func SimulateMsgSubmitProposal(
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgs := []sdk.Msg{}
-		proposalMsg := msgSim(r, ctx, accs, ak.AddressCodec())
+		proposalMsg, err := msgSim(r, ctx, accs, ak.AddressCodec())
+		if err != nil {
+			return simtypes.OperationMsg{}, nil, err
+		}
 		if proposalMsg != nil {
 			msgs = append(msgs, proposalMsg)
 		}

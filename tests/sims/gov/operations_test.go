@@ -56,8 +56,8 @@ func (m MockWeightedProposals) DefaultWeight() int {
 }
 
 func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
-	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account, _ address.Codec) sdk.Msg {
-		return nil
+	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account, _ address.Codec) (sdk.Msg, error) {
+		return nil, nil
 	}
 }
 

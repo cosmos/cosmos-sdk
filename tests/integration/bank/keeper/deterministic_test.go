@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	denomRegex   = sdk.DefaultCoinDenomRegex()
+	denomRegex   = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
 	addr1        = sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
 	coin1        = sdk.NewCoin("denom", math.NewInt(10))
 	metadataAtom = banktypes.Metadata{

@@ -7,10 +7,10 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -20,12 +20,12 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
+	_ module.HasName        = AppModule{}
+	_ module.HasAminoCodec  = AppModule{}
+	_ module.HasGRPCGateway = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
 // AppModule implements an application module
@@ -61,7 +61,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	types.RegisterInterfaces(registry)
 }
 

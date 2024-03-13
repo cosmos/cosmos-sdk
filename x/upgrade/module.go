@@ -10,13 +10,13 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -28,16 +28,16 @@ func init() {
 const ConsensusVersion uint64 = 3
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.HasGenesis            = AppModule{}
+	_ module.HasName        = AppModule{}
+	_ module.HasAminoCodec  = AppModule{}
+	_ module.HasGRPCGateway = AppModule{}
 
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasPreBlocker = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasPreBlocker         = AppModule{}
+	_ appmodule.HasServices           = AppModule{}
+	_ appmodule.HasMigrations         = AppModule{}
+	_ appmodule.HasGenesis            = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
 // AppModule implements the sdk.AppModule interface
@@ -78,7 +78,7 @@ func (AppModule) GetTxCmd() *cobra.Command {
 }
 
 // RegisterInterfaces registers interfaces and implementations of the upgrade module.
-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -105,24 +105,24 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 }
 
 // DefaultGenesis is an empty object
-func (AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
+func (AppModule) DefaultGenesis() json.RawMessage {
 	return []byte("{}")
 }
 
 // ValidateGenesis is always successful, as we ignore the value
-func (AppModule) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, _ json.RawMessage) error {
+func (AppModule) ValidateGenesis(_ json.RawMessage) error {
 	return nil
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(ctx context.Context, _ codec.JSONCodec, _ json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, _ json.RawMessage) error {
 	// set version map automatically if available
 	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
 		// chains can still use a custom init chainer for setting the version map
 		// this means that we need to combine the manually wired modules version map with app wiring enabled modules version map
 		moduleVM, err := am.keeper.GetModuleVersionMap(ctx)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		for name, version := range moduleVM {
@@ -133,14 +133,15 @@ func (am AppModule) InitGenesis(ctx context.Context, _ codec.JSONCodec, _ json.R
 
 		err = am.keeper.SetModuleVersionMap(ctx, versionMap)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
+	return nil
 }
 
 // ExportGenesis is always empty, as InitGenesis does nothing either
-func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.RawMessage {
-	return am.DefaultGenesis(cdc)
+func (am AppModule) ExportGenesis(_ context.Context) (json.RawMessage, error) {
+	return am.DefaultGenesis(), nil
 }
 
 // ConsensusVersion implements HasConsensusVersion
@@ -149,6 +150,6 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // PreBlock calls the upgrade module hooks
 //
 // CONTRACT: this is called *before* all other modules' BeginBlock functions
-func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
+func (am AppModule) PreBlock(ctx context.Context) error {
 	return am.keeper.PreBlocker(ctx)
 }

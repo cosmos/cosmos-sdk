@@ -64,7 +64,9 @@ func NewIntegrationApp(
 	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
-				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
+				if err := m.InitGenesis(ctx, m.DefaultGenesis()); err != nil {
+					return nil, err
+				}
 			}
 		}
 

@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -26,6 +24,7 @@ var (
 
 // AppModule implements an application module for the genutil module.
 type AppModule struct {
+	cdc              codec.Codec
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
 	deliverTx        genesis.TxHandler
@@ -35,6 +34,7 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
+	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper,
 	deliverTx genesis.TxHandler,
@@ -42,6 +42,7 @@ func NewAppModule(
 	genTxValidator types.MessageValidator,
 ) module.AppModule {
 	return AppModule{
+		cdc:              cdc,
 		accountKeeper:    accountKeeper,
 		stakingKeeper:    stakingKeeper,
 		deliverTx:        deliverTx,
@@ -59,34 +60,54 @@ func (AppModule) Name() string {
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the genutil module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the genutil module.
-func (b AppModule) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder(), b.genTxValidator)
+	return types.ValidateGenesis(&data, am.txEncodingConfig.TxJSONDecoder(), am.genTxValidator)
 }
 
 // InitGenesis performs genesis initialization for the genutil module.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+	am.cdc.MustUnmarshalJSON(data, &genesisState)
+	cometValidatorUpdates, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return validators
+
+	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
+	for i, v := range cometValidatorUpdates {
+		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     ed25519,
+				PubKeyType: "ed25519",
+				Power:      v.Power,
+			}
+		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     secp256k1,
+				PubKeyType: "secp256k1",
+				Power:      v.Power,
+			}
+		} else {
+			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
+		}
+	}
+
+	return validatorUpdates, nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
-func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.RawMessage {
-	return am.DefaultGenesis(cdc)
+func (am AppModule) ExportGenesis(_ context.Context) (json.RawMessage, error) {
+	return am.DefaultGenesis(), nil
 }
 
 // GenTxValidator returns the genutil module's genesis transaction validator.
@@ -98,4 +119,4 @@ func (am AppModule) GenTxValidator() types.MessageValidator {
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // RegisterInterfaces implements module.AppModule.
-func (AppModule) RegisterInterfaces(codectypes.InterfaceRegistry) {}
+func (AppModule) RegisterInterfaces(registry.LegacyRegistry) {}

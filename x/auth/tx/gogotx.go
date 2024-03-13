@@ -1,6 +1,8 @@
 package tx
 
 import (
+	"crypto/sha256"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -100,9 +102,60 @@ type gogoTxWrapper struct {
 	fees        sdk.Coins
 	feePayer    []byte
 	feeGranter  []byte
+
+	// Cache for hash and full bytes
+	cachedHash   [32]byte
+	cachedBytes  []byte
+	cachedHashed bool
 }
 
 func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
+
+func (w *gogoTxWrapper) Bytes() []byte {
+	if !w.cachedHashed {
+		w.computeHashAndBytes()
+	}
+	return w.cachedBytes
+}
+
+func (w *gogoTxWrapper) Hash() [32]byte {
+	if !w.cachedHashed {
+		w.computeHashAndBytes()
+	}
+	return w.cachedHash
+}
+
+func (w *gogoTxWrapper) computeHashAndBytes() {
+	bz, err := proto.Marshal(w.decodedTx.TxRaw)
+	if err != nil {
+		panic(err)
+	}
+
+	w.cachedBytes = bz
+	w.cachedHash = sha256.Sum256(bz)
+	w.cachedHashed = true
+}
+
+func (w *gogoTxWrapper) GetGasLimit() (uint64, error) {
+	if w.decodedTx == nil || w.decodedTx.Tx == nil || w.decodedTx.Tx.AuthInfo == nil || w.decodedTx.Tx.AuthInfo.Fee == nil {
+		return 0, errors.New("gas limit not available, one or more required fields are nil")
+	}
+	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit, nil
+}
+
+func (w *gogoTxWrapper) GetMessages() ([]protov2.Message, error) {
+	if w.decodedTx == nil || w.decodedTx.Messages == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
+	return w.decodedTx.Messages, nil
+}
+
+func (w *gogoTxWrapper) GetSenders() ([][]byte, error) {
+	if w.decodedTx == nil || w.decodedTx.Signers == nil {
+		return nil, errors.New("Senders not available or are nil")
+	}
+	return w.decodedTx.Signers, nil
+}
 
 var (
 	_ authsigning.Tx             = &gogoTxWrapper{}

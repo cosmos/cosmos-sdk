@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/x/authz"
 	"errors"
+
+	"cosmossdk.io/x/authz"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

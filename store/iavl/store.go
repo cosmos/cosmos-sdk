@@ -8,6 +8,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
+	iavldb "github.com/cosmos/iavl/db"
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
@@ -39,6 +40,28 @@ type Store struct {
 	metrics metrics.StoreMetrics
 }
 
+var _ iavldb.DB = (*dbWrapper)(nil)
+
+type dbWrapper struct {
+	dbm.DB
+}
+
+func (i *dbWrapper) Iterator(start, end []byte) (iavldb.Iterator, error) {
+	return i.DB.Iterator(start, end)
+}
+
+func (i *dbWrapper) ReverseIterator(start, end []byte) (iavldb.Iterator, error) {
+	return i.DB.ReverseIterator(start, end)
+}
+
+func (i *dbWrapper) NewBatch() iavldb.Batch {
+	return i.DB.NewBatch()
+}
+
+func (i *dbWrapper) NewBatchWithSize(i2 int) iavldb.Batch {
+	return i.DB.NewBatchWithSize(i2)
+}
+
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
@@ -51,7 +74,8 @@ func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.Commit
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
 func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
-	tree := iavl.NewMutableTree(db, cacheSize, disableFastNode, logger, iavl.InitialVersionOption(initialVersion))
+	idb := &dbWrapper{db}
+	tree := iavl.NewMutableTree(idb, cacheSize, disableFastNode, logger, iavl.InitialVersionOption(initialVersion))
 
 	isUpgradeable, err := tree.IsUpgradeable()
 	if err != nil {

@@ -12,9 +12,9 @@ import (
 )
 
 // InitGenesis initializes the bank module's state from a given genesis state.
-func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisState) {
+func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisState) error {
 	if err := k.SetParams(ctx, genState.Params); err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, se := range genState.GetAllSendEnabled() {
@@ -28,13 +28,13 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 		addr := balance.GetAddress()
 		bz, err := k.ak.AddressCodec().StringToBytes(addr)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		for _, coin := range balance.Coins {
 			err := k.Balances.Set(ctx, collections.Join(sdk.AccAddress(bz), coin.Denom), coin.Amount)
 			if err != nil {
-				panic(err)
+				return err
 			}
 		}
 
@@ -43,7 +43,7 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 	totalSupply := totalSupplyMap.ToCoins()
 
 	if !genState.Supply.Empty() && !genState.Supply.Equal(totalSupply) {
-		panic(fmt.Errorf("genesis supply is incorrect, expected %v, got %v", genState.Supply, totalSupply))
+		return fmt.Errorf("genesis supply is incorrect, expected %v, got %v", genState.Supply, totalSupply)
 	}
 
 	for _, supply := range totalSupply {
@@ -53,6 +53,7 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 	for _, meta := range genState.DenomMetadata {
 		k.SetDenomMetaData(ctx, meta)
 	}
+	return nil
 }
 
 // ExportGenesis returns the bank module's genesis state.

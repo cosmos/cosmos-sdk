@@ -4,19 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -32,16 +29,14 @@ const gasCostPerIteration = uint64(20)
 type Keeper struct {
 	environment appmodule.Environment
 	cdc         codec.Codec
-	router      baseapp.MessageRouter
 	authKeeper  authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(env appmodule.Environment, cdc codec.Codec, router baseapp.MessageRouter, ak authz.AccountKeeper) Keeper {
+func NewKeeper(env appmodule.Environment, cdc codec.Codec, ak authz.AccountKeeper) Keeper {
 	return Keeper{
 		environment: env,
 		cdc:         cdc,
-		router:      router,
 		authKeeper:  ak,
 	}
 }
@@ -151,29 +146,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			}
 		}
 
-		handler := k.router.Handler(msg)
-		if handler == nil {
-			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
-		}
-
-		msgResp, err := handler(sdkCtx, msg)
+		// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
+		_, err = k.environment.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
 		if err != nil {
-			return nil, errorsmod.Wrapf(err, "failed to execute message; message %v", msg)
+			return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
 		}
-
-		results[i] = msgResp.Data
-
-		// emit the events from the dispatched actions
-		for i = range msgResp.Events {
-			err := k.environment.EventService.EventManager(ctx).EmitKV(
-				"dispatch actions",
-				event.NewAttribute("authz_msg_index", strconv.Itoa(i)),
-			)
-			if err != nil {
-				return nil, err
-			}
-		}
-
 	}
 
 	return results, nil

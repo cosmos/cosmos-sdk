@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/group"
 
@@ -13,37 +11,37 @@ import (
 )
 
 // InitGenesis initializes the group module's genesis state.
-func (k Keeper) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (k Keeper) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) error {
 	var genesisState group.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	store := k.environment.KVStoreService.OpenKVStore(ctx)
 
 	if err := k.groupTable.Import(store, genesisState.Groups, genesisState.GroupSeq); err != nil {
-		panic(errors.Wrap(err, "groups"))
+		return errors.Wrap(err, "groups")
 	}
 
 	if err := k.groupMemberTable.Import(store, genesisState.GroupMembers, 0); err != nil {
-		panic(errors.Wrap(err, "group members"))
+		return errors.Wrap(err, "group members")
 	}
 
 	if err := k.groupPolicyTable.Import(store, genesisState.GroupPolicies, 0); err != nil {
-		panic(errors.Wrap(err, "group policies"))
+		return errors.Wrap(err, "group policies")
 	}
 
 	if err := k.groupPolicySeq.InitVal(store, genesisState.GroupPolicySeq); err != nil {
-		panic(errors.Wrap(err, "group policy account seq"))
+		return errors.Wrap(err, "group policy account seq")
 	}
 
 	if err := k.proposalTable.Import(store, genesisState.Proposals, genesisState.ProposalSeq); err != nil {
-		panic(errors.Wrap(err, "proposals"))
+		return errors.Wrap(err, "proposals")
 	}
 
 	if err := k.voteTable.Import(store, genesisState.Votes, 0); err != nil {
-		panic(errors.Wrap(err, "votes"))
+		return errors.Wrap(err, "votes")
 	}
 
-	return []abci.ValidatorUpdate{}
+	return nil
 }
 
 // ExportGenesis returns the group module's exported genesis.

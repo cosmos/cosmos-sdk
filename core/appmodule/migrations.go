@@ -1,16 +1,17 @@
 package appmodule
 
-import "context"
+import (
+	"cosmossdk.io/core/appmodule/v2"
+)
 
-type MigrationRegistrar interface {
-	// Register registers an in-place store migration for a module. The
-	// handler is a migration script to perform in-place migrations from version
-	// `fromVersion` to version `fromVersion+1`.
-	//
-	// EACH TIME a module's ConsensusVersion increments, a new migration MUST
-	// be registered using this function. If a migration handler is missing for
-	// a particular function, the upgrade logic (see RunMigrations function)
-	// will panic. If the ConsensusVersion bump does not introduce any store
-	// changes, then a no-op function must be registered here.
-	Register(moduleName string, fromVersion uint64, handler func(context.Context) error) error
-}
+// HasConsensusVersion is the interface for declaring a module consensus version.
+type HasConsensusVersion = appmodule.HasConsensusVersion
+
+// HasMigrations is implemented by a module which upgrades or has upgraded to a new consensus version.
+type HasMigrations = appmodule.HasMigrations
+
+// MigrationRegistrar is the interface for registering in-place store migrations.
+type MigrationRegistrar = appmodule.MigrationRegistrar
+
+// MigrationHandler is the migration function that each module registers.
+type MigrationHandler = appmodule.MigrationHandler

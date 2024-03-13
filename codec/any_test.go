@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -71,7 +72,7 @@ func TestMarshalAny(t *testing.T) {
 
 func TestMarshalProtoPubKey(t *testing.T) {
 	require := require.New(t)
-	ccfg := testutil.MakeTestEncodingConfig()
+	ccfg := testutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 
@@ -111,7 +112,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 // helper functions
 func TestMarshalProtoInterfacePubKey(t *testing.T) {
 	require := require.New(t)
-	ccfg := testutil.MakeTestEncodingConfig()
+	ccfg := testutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 

@@ -17,10 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	authtx "cosmossdk.io/x/auth/tx"
 
-	"cosmossdk.io/core/comet"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
@@ -61,13 +62,6 @@ func newTestValidator() testValidator {
 
 func (t testValidator) toValidator(power int64) abci.Validator {
 	return abci.Validator{
-		Address: t.consAddr.Bytes(),
-		Power:   power,
-	}
-}
-
-func (t testValidator) toSDKValidator(power int64) comet.Validator {
-	return comet.Validator{
 		Address: t.consAddr.Bytes(),
 		Power:   power,
 	}
@@ -139,7 +133,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsHappyPath() {
 	extSig2, err := s.vals[2].privKey.Sign(bz)
 	s.Require().NoError(err)
 
-	s.ctx = s.ctx.WithBlockHeight(3) // enable vote-extensions
+	s.ctx = s.ctx.WithBlockHeight(3).WithHeaderInfo(header.Info{Height: 3, ChainID: chainID}) // enable vote-extensions
 
 	llc := abci.ExtendedCommitInfo{
 		Round: 0,
@@ -475,9 +469,10 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	// create a codec for marshaling
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
 	// create a baseapp along with a tx config for tx generation
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
 	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), dbm.NewMemDB(), txConfig.TxDecoder())
 
 	// create a proposal handler
@@ -572,7 +567,8 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSelection() {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	signingCtx := cdc.InterfaceRegistry().SigningContext()
+	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
 
 	var (
 		secret1 = []byte("secret1")
@@ -776,23 +772,6 @@ func extendedCommitToLastCommit(ec abci.ExtendedCommitInfo) (abci.ExtendedCommit
 	return ec, comet.Info{
 		LastCommit: lastCommit,
 	}
-}
-
-type voteInfos []comet.VoteInfo
-
-func (v voteInfos) Len() int {
-	return len(v)
-}
-
-func (v voteInfos) Less(i, j int) bool {
-	if v[i].Validator.Power == v[j].Validator.Power {
-		return bytes.Compare(v[i].Validator.Address, v[j].Validator.Address) == -1
-	}
-	return v[i].Validator.Power > v[j].Validator.Power
-}
-
-func (v voteInfos) Swap(i, j int) {
-	v[i], v[j] = v[j], v[i]
 }
 
 type extendedVoteInfos []abci.ExtendedVoteInfo

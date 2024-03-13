@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/types"
 
@@ -22,13 +21,13 @@ import (
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
-func (k Keeper) PreBlocker(ctx context.Context) (appmodule.ResponsePreBlock, error) {
+func (k Keeper) PreBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	blockHeight := k.environment.HeaderService.GetHeaderInfo(ctx).Height
 	plan, err := k.GetUpgradePlan(ctx)
 	if err != nil && !errors.Is(err, types.ErrNoUpgradePlanFound) {
-		return nil, err
+		return err
 	}
 	found := err == nil
 
@@ -43,7 +42,7 @@ func (k Keeper) PreBlocker(ctx context.Context) (appmodule.ResponsePreBlock, err
 		if !found || !plan.ShouldExecute(blockHeight) || (plan.ShouldExecute(blockHeight) && k.IsSkipHeight(blockHeight)) {
 			lastAppliedPlan, _, err := k.GetLastCompletedUpgrade(ctx)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
@@ -54,15 +53,13 @@ func (k Keeper) PreBlocker(ctx context.Context) (appmodule.ResponsePreBlock, err
 					appVersion = cp.Version.App
 				}
 
-				return nil, fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)
+				return fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)
 			}
 		}
 	}
 
 	if !found {
-		return &sdk.ResponsePreBlock{
-			ConsensusParamsChanged: false,
-		}, nil
+		return nil
 	}
 
 	logger := k.Logger(ctx)
@@ -76,11 +73,9 @@ func (k Keeper) PreBlocker(ctx context.Context) (appmodule.ResponsePreBlock, err
 
 			// Clear the upgrade plan at current height
 			if err := k.ClearUpgradePlan(ctx); err != nil {
-				return nil, err
+				return err
 			}
-			return &sdk.ResponsePreBlock{
-				ConsensusParamsChanged: false,
-			}, nil
+			return nil
 		}
 
 		// Prepare shutdown if we don't have an upgrade handler for this upgrade name (meaning this software is out of date)
@@ -89,27 +84,23 @@ func (k Keeper) PreBlocker(ctx context.Context) (appmodule.ResponsePreBlock, err
 			// store migrations.
 			err := k.DumpUpgradeInfoToDisk(blockHeight, plan)
 			if err != nil {
-				return nil, fmt.Errorf("unable to write upgrade info to filesystem: %w", err)
+				return fmt.Errorf("unable to write upgrade info to filesystem: %w", err)
 			}
 
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
 			logger.Error(upgradeMsg)
 
 			// Returning an error will end up in a panic
-			return nil, errors.New(upgradeMsg)
+			return errors.New(upgradeMsg)
 		}
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
 		logger.Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
 		sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 		if err := k.ApplyUpgrade(sdkCtx, plan); err != nil {
-			return nil, err
+			return err
 		}
-		return &sdk.ResponsePreBlock{
-			// the consensus parameters might be modified in the migration,
-			// refresh the consensus parameters in context.
-			ConsensusParamsChanged: true,
-		}, nil
+		return nil
 	}
 
 	// if we have a pending upgrade, but it is not yet time, make sure we did not
@@ -119,11 +110,9 @@ func (k Keeper) PreBlocker(ctx context.Context) (appmodule.ResponsePreBlock, err
 		logger.Error(downgradeMsg)
 
 		// Returning an error will end up in a panic
-		return nil, errors.New(downgradeMsg)
+		return errors.New(downgradeMsg)
 	}
-	return &sdk.ResponsePreBlock{
-		ConsensusParamsChanged: false,
-	}, nil
+	return nil
 }
 
 // BuildUpgradeNeededMsg prints the message that notifies that an upgrade is needed.

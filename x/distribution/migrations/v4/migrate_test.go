@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/distribution"
 	v4 "cosmossdk.io/x/distribution/migrations/v4"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -20,7 +21,7 @@ import (
 )
 
 func TestMigration(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey("distribution")
 	storeService := runtime.NewKVStoreService(storeKey)
 	tKey := storetypes.NewTransientStoreKey("transient_test")

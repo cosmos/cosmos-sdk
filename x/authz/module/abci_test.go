@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -30,9 +31,8 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	key := storetypes.NewKVStoreKey(keeper.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
 	ctx := testCtx.Ctx
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
@@ -66,7 +66,8 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	authzKeeper := keeper.NewKeeper(env, encCfg.Codec, baseApp.MsgServiceRouter(), accountKeeper)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(baseApp.GRPCQueryRouter(), baseApp.MsgServiceRouter()))
+	authzKeeper := keeper.NewKeeper(env, encCfg.Codec, accountKeeper)
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {
 		err := authzKeeper.SaveGrant(ctx, grantee, granter, sendAuthz, exp)

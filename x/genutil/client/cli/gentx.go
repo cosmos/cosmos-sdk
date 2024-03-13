@@ -90,7 +90,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 
-			if err = mm.ValidateGenesis(cdc, txEncCfg, genesisState); err != nil {
+			if err = mm.ValidateGenesis(genesisState); err != nil {
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 

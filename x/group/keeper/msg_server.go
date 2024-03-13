@@ -850,27 +850,21 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 	// Execute proposal payload.
 	var logs string
 	if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
-		// Caching context so that we don't update the store in case of failure.
-		cacheCtx, flush := ctx.CacheContext()
-
 		addr, err := k.accKeeper.AddressCodec().StringToBytes(policyInfo.Address)
 		if err != nil {
 			return nil, err
 		}
 
 		decisionPolicy := policyInfo.DecisionPolicy.GetCachedValue().(group.DecisionPolicy)
-		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy); err != nil {
+
+		if err := k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+			return k.doExecuteMsgs(ctx, proposal, addr, decisionPolicy)
+		}); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", proposal.Id, err.Error())
 			k.Logger().Info("proposal execution failed", "cause", err, "proposalID", proposal.Id)
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
-			flush()
-
-			for _, res := range results {
-				// NOTE: The sdk msg handler creates a new EventManager, so events must be correctly propagated back to the current context
-				ctx.EventManager().EmitEvents(res.GetEvents())
-			}
 		}
 	}
 

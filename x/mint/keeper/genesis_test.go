@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +43,7 @@ func TestGenesisTestSuite(t *testing.T) {
 func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -72,7 +73,8 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 		uint64(60*60*8766/5),
 	)
 
-	s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
+	err := s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
+	s.Require().NoError(err)
 
 	minter, err := s.keeper.Minter.Get(s.sdkCtx)
 	s.Require().Equal(genesisState.Minter, minter)
@@ -86,6 +88,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	s.Require().Equal(genesisState.Params, params)
 	s.Require().NoError(err)
 
-	genesisState2 := s.keeper.ExportGenesis(s.sdkCtx)
+	genesisState2, err := s.keeper.ExportGenesis(s.sdkCtx)
+	s.Require().NoError(err)
 	s.Require().Equal(genesisState, genesisState2)
 }

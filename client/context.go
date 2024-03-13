@@ -79,6 +79,10 @@ type Context struct {
 	AddressCodec          address.Codec
 	ValidatorAddressCodec address.Codec
 	ConsensusAddressCodec address.Codec
+
+	// Bech32 address prefixes.
+	AddressPrefix   string
+	ValidatorPrefix string
 }
 
 // WithCmdContext returns a copy of the context with an updated context.Context,
@@ -305,7 +309,7 @@ func (ctx Context) WithAux(isAux bool) Context {
 	return ctx
 }
 
-// WithLedgerHasProto returns the context with the provided boolean value, indicating
+// WithLedgerHasProtobuf returns the context with the provided boolean value, indicating
 // whether the target Ledger application can support Protobuf payloads.
 func (ctx Context) WithLedgerHasProtobuf(val bool) Context {
 	ctx.LedgerHasProtobuf = val
@@ -334,6 +338,18 @@ func (ctx Context) WithValidatorAddressCodec(validatorAddressCodec address.Codec
 // WithConsensusAddressCodec returns the context with the provided consensus address codec.
 func (ctx Context) WithConsensusAddressCodec(consensusAddressCodec address.Codec) Context {
 	ctx.ConsensusAddressCodec = consensusAddressCodec
+	return ctx
+}
+
+// WithAddressPrefix returns the context with the provided address bech32 prefix.
+func (ctx Context) WithAddressPrefix(addressPrefix string) Context {
+	ctx.AddressPrefix = addressPrefix
+	return ctx
+}
+
+// WithValidatorPrefix returns the context with the provided validator bech32 prefix.
+func (ctx Context) WithValidatorPrefix(validatorPrefix string) Context {
+	ctx.ValidatorPrefix = validatorPrefix
 	return ctx
 }
 

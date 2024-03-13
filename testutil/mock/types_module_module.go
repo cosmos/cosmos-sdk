@@ -9,12 +9,10 @@ import (
 	json "encoding/json"
 	reflect "reflect"
 
-	appmodule "cosmossdk.io/core/appmodule/v2"
 	registry "cosmossdk.io/core/registry"
-	types "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -376,11 +374,12 @@ func (mr *MockHasABCIGenesisMockRecorder) DefaultGenesis() *gomock.Call {
 }
 
 // ExportGenesis mocks base method.
-func (m *MockHasABCIGenesis) ExportGenesis(arg0 context.Context) json.RawMessage {
+func (m *MockHasABCIGenesis) ExportGenesis(arg0 context.Context) (json.RawMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0)
 	ret0, _ := ret[0].(json.RawMessage)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ExportGenesis indicates an expected call of ExportGenesis.
@@ -390,11 +389,12 @@ func (mr *MockHasABCIGenesisMockRecorder) ExportGenesis(arg0 interface{}) *gomoc
 }
 
 // InitGenesis mocks base method.
-func (m *MockHasABCIGenesis) InitGenesis(arg0 context.Context, arg1 json.RawMessage) []types.ValidatorUpdate {
+func (m *MockHasABCIGenesis) InitGenesis(arg0 context.Context, arg1 json.RawMessage) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
-	return ret0
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // InitGenesis indicates an expected call of InitGenesis.
@@ -455,7 +455,7 @@ func (m *MockHasInvariants) EXPECT() *MockHasInvariantsMockRecorder {
 }
 
 // RegisterInvariants mocks base method.
-func (m *MockHasInvariants) RegisterInvariants(arg0 types0.InvariantRegistry) {
+func (m *MockHasInvariants) RegisterInvariants(arg0 types.InvariantRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInvariants", arg0)
 }
@@ -525,10 +525,10 @@ func (m *MockHasABCIEndBlock) EXPECT() *MockHasABCIEndBlockMockRecorder {
 }
 
 // EndBlock mocks base method.
-func (m *MockHasABCIEndBlock) EndBlock(arg0 context.Context) ([]appmodule.ValidatorUpdate, error) {
+func (m *MockHasABCIEndBlock) EndBlock(arg0 context.Context) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]appmodule.ValidatorUpdate)
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -14,8 +14,9 @@ import (
 type AppModuleWithAllExtensions interface {
 	module.AppModule
 	module.HasServices
-	appmodulev2.HasGenesis
 	module.HasInvariants
+	appmodulev2.HasConsensusVersion
+	appmodulev2.HasGenesis
 	module.HasABCIEndBlock
 	module.HasName
 }
@@ -26,6 +27,7 @@ type AppModuleWithAllExtensionsABCI interface {
 	module.HasServices
 	module.HasABCIGenesis
 	module.HasInvariants
+	appmodulev2.HasConsensusVersion
 	module.HasABCIEndBlock
 	module.HasName
 }

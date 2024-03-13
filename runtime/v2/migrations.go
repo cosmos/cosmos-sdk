@@ -4,32 +4,32 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 )
 
-var _ appmodule.MigrationRegistrar = (*migrationRegistrar)(nil)
+var _ appmodulev2.MigrationRegistrar = (*migrationRegistrar)(nil)
 
 type migrationRegistrar struct {
 	// migrations is a map of moduleName -> fromVersion -> migration script handler
-	migrations map[string]map[uint64]appmodule.MigrationHandler
+	migrations map[string]map[uint64]appmodulev2.MigrationHandler
 }
 
 // newMigrationRegistrar is contructor for registering in-place store migrations for modules.
 func newMigrationRegistrar() *migrationRegistrar {
 	return &migrationRegistrar{
-		migrations: make(map[string]map[uint64]appmodule.MigrationHandler),
+		migrations: make(map[string]map[uint64]appmodulev2.MigrationHandler),
 	}
 }
 
 // Register registers an in-place store migration for a module.
 // It permits to register modules migrations that have migrated to serverv2 but still be compatible with baseapp.
-func (mr *migrationRegistrar) Register(moduleName string, fromVersion uint64, handler appmodule.MigrationHandler) error {
+func (mr *migrationRegistrar) Register(moduleName string, fromVersion uint64, handler appmodulev2.MigrationHandler) error {
 	if fromVersion == 0 {
 		return fmt.Errorf("module migration versions should start at 1: %s", moduleName)
 	}
 
 	if mr.migrations[moduleName] == nil {
-		mr.migrations[moduleName] = map[uint64]appmodule.MigrationHandler{}
+		mr.migrations[moduleName] = map[uint64]appmodulev2.MigrationHandler{}
 	}
 
 	if mr.migrations[moduleName][fromVersion] != nil {

@@ -7,11 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-<<<<<<< HEAD
 	"github.com/cockroachdb/errors"
-=======
 	"github.com/stretchr/testify/assert"
->>>>>>> 5424b55c5 (fix(crypto): error if incorrect ledger public key (#19691))
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

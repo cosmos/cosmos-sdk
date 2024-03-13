@@ -109,15 +109,13 @@ func (m *MM) RegisterInterfaces(registry registry.LegacyRegistry) {
 // DefaultGenesis provides default genesis information for all modules
 func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
-	for _, b := range m.modules {
+	for name, b := range m.modules {
 		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
 			genesisData[mod.Name()] = mod.DefaultGenesis()
-		} else if mod, ok := b.(sdkmodule.HasName); ok {
-			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
-				genesisData[mod.Name()] = modgen.DefaultGenesis()
-			} else {
-				genesisData[mod.Name()] = []byte("{}")
-			}
+		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
+			genesisData[name] = mod.DefaultGenesis()
+		} else {
+			genesisData[name] = []byte("{}")
 		}
 	}
 
@@ -126,16 +124,14 @@ func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for all modules
 func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
-	for _, b := range m.modules {
+	for name, b := range m.modules {
 		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
 			}
-		} else if mod, ok := b.(sdkmodule.HasName); ok {
-			if modgen, ok := b.(appmodulev2.HasGenesis); ok {
-				if err := modgen.ValidateGenesis(genesisData[mod.Name()]); err != nil {
-					return err
-				}
+		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
+			if err := mod.ValidateGenesis(genesisData[name]); err != nil {
+				return err
 			}
 		}
 	}
@@ -254,6 +250,7 @@ func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
 }
 
 // TODO write as descriptive godoc as module manager v1.
+// TODO include feedback from https://github.com/cosmos/cosmos-sdk/issues/15120
 func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (appmodulev2.VersionMap, error) {
 	updatedVM := appmodulev2.VersionMap{}
 	for _, moduleName := range m.config.OrderMigrations {
@@ -279,13 +276,17 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 			}
 		} else {
 			m.logger.Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if mod, ok := m.modules[moduleName].(appmodulev2.HasGenesis); ok {
+			if mod, ok := m.modules[moduleName].(appmodule.HasGenesis); ok {
 				if err := mod.InitGenesis(ctx, mod.DefaultGenesis()); err != nil {
 					return nil, fmt.Errorf("failed to run InitGenesis for %s: %w", moduleName, err)
 				}
 			}
 			if mod, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
-				moduleValUpdates := mod.InitGenesis(ctx, mod.DefaultGenesis())
+				moduleValUpdates, err := mod.InitGenesis(ctx, mod.DefaultGenesis())
+				if err != nil {
+					return nil, err
+				}
+
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
 					return nil, fmt.Errorf("validator InitGenesis update is already set by another module")

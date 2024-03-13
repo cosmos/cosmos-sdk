@@ -21,21 +21,19 @@ import (
 const (
 	ModuleName = "accounts"
 	StoreKey   = "_" + ModuleName // unfortunately accounts collides with auth store key
+
+	ConsensusVersion = 1
 )
 
 // ModuleAccountAddress defines the x/accounts module address.
 var ModuleAccountAddress = address.Module(ModuleName)
 
-const (
-	ConsensusVersion = 1
-)
-
 var (
-	_ module.HasName    = AppModule{}
-	_ module.HasGenesis = AppModule{}
+	_ module.HasName = AppModule{}
 
 	_ appmodule.AppModule           = AppModule{}
 	_ appmodule.HasServices         = AppModule{}
+	_ appmodule.HasGenesis          = AppModule{}
 	_ appmodule.HasConsensusVersion = AppModule{}
 )
 

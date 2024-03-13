@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,12 +20,12 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName                  = AppModule{}
-	_ module.HasAminoCodec            = AppModule{}
-	_ module.HasGRPCGateway           = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.HasName        = AppModule{}
+	_ module.HasAminoCodec  = AppModule{}
+	_ module.HasGRPCGateway = AppModule{}
 
-	_ appmodulev2.AppModule = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
 // AppModule implements an application module

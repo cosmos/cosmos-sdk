@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/proto"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	errorsmod "cosmossdk.io/errors"
@@ -95,6 +95,22 @@ func NewTx(key, value string, accAddress sdk.AccAddress) *KVStoreTx {
 	}
 }
 
+func (msg *KVStoreTx) Hash() [32]byte {
+	return [32]byte{}
+}
+
+func (msg *KVStoreTx) GetGasLimit() (uint64, error) {
+	return 0, nil
+}
+
+func (msg *KVStoreTx) GetMessages() ([]proto.Message, error) {
+	return nil, nil
+}
+
+func (msg *KVStoreTx) GetSenders() ([][]byte, error) {
+	return nil, nil
+}
+
 func (msg *KVStoreTx) Type() string {
 	return "kvstore_tx"
 }
@@ -103,8 +119,8 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
-func (msg *KVStoreTx) GetReflectMessages() ([]protoreflect.Message, error) {
-	return []protoreflect.Message{(&bankv1beta1.MsgSend{FromAddress: msg.address.String()}).ProtoReflect()}, nil // this is a hack for tests
+func (msg *KVStoreTx) GetMsgsV2() ([]proto.Message, error) {
+	return []proto.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}}, nil // this is a hack for tests
 }
 
 func (msg *KVStoreTx) GetSignBytes() []byte {

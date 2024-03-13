@@ -585,13 +585,21 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 	if err != nil {
 		return
 	}
+	ledgerPubKey := priv.PubKey()
+	pubKey, err := k.GetPubKey()
+	if err != nil {
+		return nil, nil, err
+	}
+	if !pubKey.Equals(ledgerPubKey) {
+		return nil, nil, fmt.Errorf("the public key that the user attempted to sign with does not match the public key on the ledger device. %v does not match %v", pubKey.String(), ledgerPubKey.String())
+	}
 
 	sig, err = priv.Sign(msg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return sig, priv.PubKey(), nil
+	return sig, ledgerPubKey, nil
 }
 
 func newOSBackendKeyringConfig(appName, dir string, buf io.Reader) keyring.Config {

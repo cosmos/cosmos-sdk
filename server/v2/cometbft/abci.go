@@ -16,10 +16,10 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/handlers"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
@@ -33,13 +33,8 @@ const (
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
-type (
-	VerifyVoteExtensionFunc func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
-	ExtendVoteFunc          func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
-)
-
 type Consensus[T transaction.Tx] struct {
-	app             appmanager.AppManager[T]
+	app             *appmanager.AppManager[T]
 	cfg             Config
 	store           types.Store
 	logger          log.Logger
@@ -48,9 +43,6 @@ type Consensus[T transaction.Tx] struct {
 	snapshotManager *snapshots.Manager
 	mempool         mempool.Mempool[T]
 
-	verifyVoteExt VerifyVoteExtensionFunc
-	extendVote    ExtendVoteFunc
-
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
 	// committed block. TODO(tip): check if concurrency is really needed
@@ -58,10 +50,12 @@ type Consensus[T transaction.Tx] struct {
 
 	prepareProposalHandler handlers.PrepareHandler[T]
 	processProposalHandler handlers.ProcessHandler[T]
+	verifyVoteExt          handlers.VerifyVoteExtensionhandler
+	extendVote             handlers.ExtendVoteHandler
 }
 
 func NewConsensus[T transaction.Tx](
-	app appmanager.AppManager[T],
+	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	store types.Store,
 	cfg Config,
@@ -72,6 +66,44 @@ func NewConsensus[T transaction.Tx](
 		app:     app,
 		cfg:     cfg,
 	}
+}
+
+func (c *Consensus[T]) SetMempool(mp mempool.Mempool[T]) {
+	c.mempool = mp
+}
+
+func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
+	c.streaming = sm
+}
+
+// SetSnapshotManager sets the snapshot manager for the Consensus.
+// The snapshot manager is responsible for managing snapshots of the Consensus state.
+// It allows for creating, storing, and restoring snapshots of the Consensus state.
+// The provided snapshot manager will be used by the Consensus to handle snapshots.
+func (c *Consensus[T]) SetSnapshotManager(sm *snapshots.Manager) {
+	c.snapshotManager = sm
+}
+
+// RegisterExtensions registers the given extensions with the consensus module's snapshot manager.
+// It allows additional snapshotter implementations to be used for creating and restoring snapshots.
+func (c *Consensus[T]) RegisterExtensions(extensions ...snapshots.ExtensionSnapshotter) {
+	c.snapshotManager.RegisterExtensions(extensions...)
+}
+
+func (c *Consensus[T]) SetPrepareProposalHandler(handler handlers.PrepareHandler[T]) {
+	c.prepareProposalHandler = handler
+}
+
+func (c *Consensus[T]) SetProcessProposalHandler(handler handlers.ProcessHandler[T]) {
+	c.processProposalHandler = handler
+}
+
+func (c *Consensus[T]) SetExtendVoteExtension(handler handlers.ExtendVoteHandler) {
+	c.extendVote = handler
+}
+
+func (c *Consensus[T]) SetVerifyVoteExtension(handler handlers.VerifyVoteExtensionhandler) {
+	c.verifyVoteExt = handler
 }
 
 // BlockData is used to keep some data about the last committed block. Currently

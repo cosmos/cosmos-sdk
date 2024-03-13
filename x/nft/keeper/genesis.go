@@ -9,24 +9,25 @@ import (
 
 // InitGenesis initializes the nft module's genesis state from a given
 // genesis state.
-func (k Keeper) InitGenesis(ctx context.Context, data *nft.GenesisState) {
+func (k Keeper) InitGenesis(ctx context.Context, data *nft.GenesisState) error {
 	for _, class := range data.Classes {
 		if err := k.SaveClass(ctx, *class); err != nil {
-			panic(err)
+			return err
 		}
 	}
 	for _, entry := range data.Entries {
 		for _, nft := range entry.Nfts {
 			owner, err := k.ac.StringToBytes(entry.Owner)
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			if err := k.Mint(ctx, *nft, owner); err != nil {
-				panic(err)
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 // ExportGenesis returns a GenesisState for a given context.

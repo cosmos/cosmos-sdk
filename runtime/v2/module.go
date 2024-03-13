@@ -17,6 +17,7 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -34,7 +35,7 @@ import (
 )
 
 var (
-	_ appmodule.AppModule   = appModule{}
+	_ appmodulev2.AppModule = appModule{}
 	_ appmodule.HasServices = appModule{}
 )
 
@@ -70,7 +71,6 @@ func init() {
 			ProvideKVStoreKey,
 			ProvideEnvironment,
 			ProvideModuleManager,
-			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
 		),
@@ -83,7 +83,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	*codec.LegacyAmino,
 	*AppBuilder,
 	*stf.MsgRouterBuilder,
-	appmodule.AppModule,
+	appmodulev2.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
 	error,
@@ -139,7 +139,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
-func ProvideModuleManager(logger log.Logger, cdc codec.Codec, config *runtimev2.Module, modules map[string]appmodule.AppModule) *MM {
+func ProvideModuleManager(logger log.Logger, cdc codec.Codec, config *runtimev2.Module, modules map[string]appmodulev2.AppModule) *MM {
 	return NewModuleManager(logger, cdc, config, modules)
 }
 
@@ -195,12 +195,6 @@ func ProvideKVStoreKey(config *runtimev2.Module, key depinject.ModuleKey, app *A
 	return storeKey
 }
 
-func ProvideTransientStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.TransientStoreKey {
-	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
-	registerStoreKey(app, storeKey)
-	return storeKey
-}
-
 func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
@@ -208,11 +202,10 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 }
 
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment(config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) (
-	appmodule.Environment,
+func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) (
+	appmodulev2.Environment,
 	store.KVStoreService,
 	store.MemoryStoreService,
-	store.TransientStoreService,
 ) {
 	kvStoreKey := ProvideKVStoreKey(config, key, app)
 	kvService := stf.NewKVStoreService([]byte(kvStoreKey.Name()))
@@ -220,19 +213,17 @@ func ProvideEnvironment(config *runtimev2.Module, key depinject.ModuleKey, app *
 	memStoreKey := ProvideMemoryStoreKey(key, app)
 	memService := stf.NewMemoryStoreService([]byte(memStoreKey.Name()))
 
-	transientStoreKey := ProvideTransientStoreKey(key, app)
-	transientService := stf.NewTransientStoreService([]byte(transientStoreKey.Name()))
-
-	env := appmodule.Environment{
-		BranchService:   nil,
+	env := appmodulev2.Environment{
+		Logger:          logger,
+		BranchService:   nil, // TODO
 		EventService:    stf.NewEventService(),
 		GasService:      stf.NewGasMeterService(),
-		HeaderService:   nil,
+		HeaderService:   nil, // TODO
 		KVStoreService:  kvService,
 		MemStoreService: memService,
 	}
 
-	return env, kvService, memService, transientService
+	return env, kvService, memService
 }
 
 type (

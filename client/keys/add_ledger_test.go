@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -39,7 +40,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	// Prepare a keybase
 	kbHome := t.TempDir()
 
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
 		WithCodec(cdc).
@@ -97,7 +98,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
@@ -144,7 +145,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 }
 
 func Test_runAddCmdLedgerDryRun(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	testData := []struct {
 		name  string
 		args  []string

@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -23,9 +22,6 @@ func ValidateGenesisCmd(mm *module.Manager) *cobra.Command {
 		Short:   "Validates the genesis file at the default location or at the location passed as an arg",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			cdc := clientCtx.Codec
 
 			// Load default if passed no args, otherwise load passed file
 			var genesis string
@@ -50,7 +46,7 @@ func ValidateGenesisCmd(mm *module.Manager) *cobra.Command {
 			}
 
 			if mm != nil {
-				if err = mm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
+				if err = mm.ValidateGenesis(genState); err != nil {
 					return fmt.Errorf("error validating genesis file %s: %w", genesis, err)
 				}
 			}

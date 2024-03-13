@@ -27,8 +27,8 @@ type AppI[T transaction.Tx] interface {
 	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, corestore.WriterMap, error)
 	ValidateTx(ctx context.Context, tx T) (coreappmanager.TxResult, error)
 	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, corestore.WriterMap, error)
-	Query(ctx context.Context, version uint64, request coreappmanager.Type) (coreappmanager.Type, error)
-	QueryWithState(ctx context.Context, state corestore.ReaderMap, request coreappmanager.Type) (coreappmanager.Type, error)
+	Query(ctx context.Context, version uint64, request transaction.Type) (transaction.Type, error)
+	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Type) (transaction.Type, error)
 
 	Logger() log.Logger
 	ModuleManager() *MM
@@ -51,7 +51,7 @@ type App struct {
 	stf                *stf.STF[transaction.Tx]
 	msgRouterBuilder   *stf.MsgRouterBuilder
 	queryRouterBuilder *stf.MsgRouterBuilder
-	db                 Store
+	db                 Store // TODO: double check
 
 	// app configuration
 	logger    log.Logger
@@ -78,7 +78,7 @@ func (a *App) ModuleManager() *MM {
 
 // DefaultGenesis returns a default genesis from the registered modules.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.moduleManager.DefaultGenesis(a.cdc)
+	return a.moduleManager.DefaultGenesis()
 }
 
 // LoadLatest loads the latest version.
@@ -121,4 +121,12 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 	}
 
 	return a.storeKeys[i]
+}
+
+func (a *App) GetStore() Store {
+	return a.db
+}
+
+func (a *App) GetLogger() log.Logger {
+	return a.logger
 }

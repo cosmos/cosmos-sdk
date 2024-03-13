@@ -12,6 +12,7 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/storage"
 )
 
@@ -148,12 +149,12 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 
 func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
 	if targetVersion < db.earliestVersion {
-		return nil, store.ErrVersionPruned{EarliestVersion: db.earliestVersion}
+		return nil, storeerrors.ErrVersionPruned{EarliestVersion: db.earliestVersion}
 	}
 
 	prefixedVal, err := getMVCCSlice(db.storage, storeKey, key, targetVersion)
 	if err != nil {
-		if errors.Is(err, store.ErrRecordNotFound) {
+		if errors.Is(err, storeerrors.ErrRecordNotFound) {
 			return nil, nil
 		}
 
@@ -268,11 +269,11 @@ func (db *Database) Prune(version uint64) error {
 
 func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
-		return nil, store.ErrStartAfterEnd
+		return nil, storeerrors.ErrStartAfterEnd
 	}
 
 	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), 0)
@@ -292,11 +293,11 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 
 func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
-		return nil, store.ErrStartAfterEnd
+		return nil, storeerrors.ErrStartAfterEnd
 	}
 
 	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), 0)
@@ -378,7 +379,7 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) ([
 	defer itr.Close()
 
 	if !itr.Last() {
-		return nil, store.ErrRecordNotFound
+		return nil, storeerrors.ErrRecordNotFound
 	}
 
 	_, vBz, ok := SplitMVCCKey(itr.Key())

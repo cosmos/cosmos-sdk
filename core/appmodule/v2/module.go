@@ -3,6 +3,7 @@ package appmodule
 import (
 	"context"
 
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 )
 
@@ -16,6 +17,14 @@ type AppModule interface {
 
 	// IsOnePerModuleType is a dummy method to help depinject resolve modules.
 	IsOnePerModuleType()
+}
+
+// HasPreBlocker is the extension interface that modules should implement to run
+// custom logic before BeginBlock.
+type HasPreBlocker interface {
+	AppModule
+	// PreBlock is method that will be run before BeginBlock.
+	PreBlock(context.Context) error
 }
 
 // HasBeginBlocker is the extension interface that modules should implement to run
@@ -89,4 +98,9 @@ type ValidatorUpdate struct {
 	PubKey     []byte
 	PubKeyType string
 	Power      int64 // updated power of the validtor
+}
+
+// HasRegisterInterfaces is the interface for modules to register their msg types.
+type HasRegisterInterfaces interface {
+	RegisterInterfaces(registry.LegacyRegistry)
 }

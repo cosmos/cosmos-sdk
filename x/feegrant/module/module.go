@@ -11,8 +11,8 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/ante"
 	"cosmossdk.io/x/feegrant/client/cli"
@@ -27,17 +27,18 @@ import (
 )
 
 var (
-	_ module.HasName               = AppModule{}
-	_ module.HasAminoCodec         = AppModule{}
-	_ module.HasGRPCGateway        = AppModule{}
-	_ module.HasRegisterInterfaces = AppModule{}
-	_ module.AppModuleSimulation   = AppModule{}
-	_ module.HasGenesis            = AppModule{}
+	_ module.HasName             = AppModule{}
+	_ module.HasAminoCodec       = AppModule{}
+	_ module.HasGRPCGateway      = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
 
-	_ appmodulev2.AppModule                         = AppModule{}
-	_ appmodulev2.HasEndBlocker                     = AppModule{}
-	_ appmodule.HasServices                         = AppModule{}
-	_ appmodulev2.HasMigrations                     = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasEndBlocker         = AppModule{}
+	_ appmodule.HasServices           = AppModule{}
+	_ appmodule.HasMigrations         = AppModule{}
+	_ appmodule.HasGenesis            = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+
 	_ appmodulev2.HasTxValidation[decode.DecodedTx] = AppModule{}
 )
 
@@ -76,7 +77,7 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the feegrant module's interface types
-func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 	feegrant.RegisterInterfaces(registry)
 }
 
@@ -112,14 +113,14 @@ func (am AppModule) RegisterMigrations(mr appmodulev2.MigrationRegistrar) error 
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(feegrant.DefaultGenesisState())
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(feegrant.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.
-func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var data feegrant.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
 		return errors.Wrapf(err, "failed to unmarshal %s genesis state", feegrant.ModuleName)
 	}
 
@@ -127,24 +128,27 @@ func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodin
 }
 
 // InitGenesis performs genesis initialization for the feegrant module.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, bz json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, bz json.RawMessage) error {
 	var gs feegrant.GenesisState
-	cdc.MustUnmarshalJSON(bz, &gs)
+	if err := am.cdc.UnmarshalJSON(bz, &gs); err != nil {
+		return err
+	}
 
 	err := am.keeper.InitGenesis(ctx, &gs)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the feegrant module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 	gs, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return cdc.MustMarshalJSON(gs)
+	return am.cdc.MarshalJSON(gs)
 }
 
 // ConsensusVersion implements HasConsensusVersion
@@ -170,7 +174,7 @@ func (am AppModule) TxValidator(ctx context.Context, tx decode.DecodedTx) error 
 	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
 
 	// execute the AnteHandler
-	_, err := decorator.AnteHandle(sdkCtx, runtime.ServerTxToSDKTx(tx), sdkCtx.ExecMode() == sdk.ExecModeSimulate, anteHandler)
+	_, err := decorator.AnteHandle(sdkCtx, nil /** do not import runtime **/, sdkCtx.ExecMode() == sdk.ExecModeSimulate, anteHandler)
 
 	return err
 }

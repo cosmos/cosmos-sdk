@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +55,7 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 }
 
 func TestGenesisAccountIterator(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	cdc := encodingConfig.Codec
 
 	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))

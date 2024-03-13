@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/module"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -18,7 +19,7 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res []abci.ValidatorUpdate, err error) {
+func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]module.ValidatorUpdate, error) {
 	bondedTokens := math.ZeroInt()
 	notBondedTokens := math.ZeroInt()
 
@@ -176,6 +177,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	}
 
 	// don't need to run CometBFT updates if we exported
+	var cometValidatorUpdates []abci.ValidatorUpdate
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
 			valAddr, err := k.validatorAddressCodec.StringToBytes(lv.Address)
@@ -195,18 +197,37 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 
 			update := validator.ABCIValidatorUpdate(k.PowerReduction(ctx))
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
-			res = append(res, update)
+			cometValidatorUpdates = append(cometValidatorUpdates, update)
 		}
 	} else {
 		var err error
 
-		res, err = k.ApplyAndReturnValidatorSetUpdates(ctx)
+		cometValidatorUpdates, err = k.ApplyAndReturnValidatorSetUpdates(ctx)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return res, nil
+	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
+	for i, v := range cometValidatorUpdates {
+		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     ed25519,
+				PubKeyType: "ed25519",
+				Power:      v.Power,
+			}
+		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     secp256k1,
+				PubKeyType: "secp256k1",
+				Power:      v.Power,
+			}
+		} else {
+			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
+		}
+	}
+
+	return validatorUpdates, nil
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper. The

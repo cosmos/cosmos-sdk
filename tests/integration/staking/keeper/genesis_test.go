@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -128,12 +129,24 @@ func TestInitGenesis(t *testing.T) {
 	assert.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
-
+	validatorUpdates := make([]module.ValidatorUpdate, len(abcivals))
 	for i, val := range validators {
 		abcivals[i] = val.ABCIValidatorUpdate((f.stakingKeeper.PowerReduction(f.sdkCtx)))
+		if ed25519 := abcivals[i].PubKey.GetEd25519(); len(ed25519) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     ed25519,
+				PubKeyType: "ed25519",
+				Power:      abcivals[i].Power,
+			}
+		} else if secp256k1 := abcivals[i].PubKey.GetSecp256K1(); len(secp256k1) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     secp256k1,
+				PubKeyType: "secp256k1",
+				Power:      abcivals[i].Power,
+			}
+		}
 	}
-
-	assert.DeepEqual(t, abcivals, vals)
+	assert.DeepEqual(t, validatorUpdates, vals)
 }
 
 func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
@@ -230,11 +243,24 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	assert.NilError(t, err)
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
+	validatorUpdates := make([]module.ValidatorUpdate, len(abcivals))
 	for i, val := range validators[:100] {
 		abcivals[i] = val.ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
+		if ed25519 := abcivals[i].PubKey.GetEd25519(); len(ed25519) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     ed25519,
+				PubKeyType: "ed25519",
+				Power:      abcivals[i].Power,
+			}
+		} else if secp256k1 := abcivals[i].PubKey.GetSecp256K1(); len(secp256k1) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     secp256k1,
+				PubKeyType: "secp256k1",
+				Power:      abcivals[i].Power,
+			}
+		}
 	}
-
 	// remove genesis validator
 	vals = vals[:100]
-	assert.DeepEqual(t, abcivals, vals)
+	assert.DeepEqual(t, validatorUpdates, vals)
 }

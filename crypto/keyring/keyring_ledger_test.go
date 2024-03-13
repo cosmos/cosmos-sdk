@@ -189,7 +189,7 @@ func TestSignWithLedger(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sig, pub, err := SignWithLedger(tc.record, tc.msg, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+			sig, pub, err := SignWithLedger(tc.record, tc.msg)
 			assert.Equal(t, tc.wantSig, sig)
 			assert.Equal(t, tc.wantPub, pub)
 			if tc.wantErr {

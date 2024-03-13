@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
@@ -19,7 +20,14 @@ type DecodedTx struct {
 	TxRaw                        *v1beta1.TxRaw
 	Signers                      [][]byte
 	TxBodyHasUnknownNonCriticals bool
+
+	// Cache for hash and full bytes
+	cachedHash   [32]byte
+	cachedBytes  []byte
+	cachedHashed bool
 }
+
+var _ transaction.Tx = &DecodedTx{}
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {
@@ -130,22 +138,47 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 
 // Hash implements the interface for the Tx interface.
 func (dtx *DecodedTx) Hash() [32]byte {
+	if !dtx.cachedHashed {
+		dtx.computeHashAndBytes()
+	}
+	return dtx.cachedHash
+}
+
+func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
+	if dtx == nil || dtx.Tx == nil || dtx.Tx.AuthInfo == nil || dtx.Tx.AuthInfo.Fee == nil {
+		return 0, errors.New("gas limit not available or one or more required fields are nil")
+	}
+	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
+}
+
+func (dtx *DecodedTx) GetMessages() ([]proto.Message, error) {
+	if dtx == nil || dtx.Messages == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
+	return dtx.Messages, nil
+}
+
+func (dtx *DecodedTx) GetSenders() ([][]byte, error) {
+	if dtx == nil || dtx.Signers == nil {
+		return nil, errors.New("senders not available or are nil")
+	}
+	return dtx.Signers, nil
+}
+
+func (dtx *DecodedTx) Bytes() []byte {
+	if !dtx.cachedHashed {
+		dtx.computeHashAndBytes()
+	}
+	return dtx.cachedBytes
+}
+
+func (dtx *DecodedTx) computeHashAndBytes() {
 	bz, err := proto.Marshal(dtx.TxRaw)
 	if err != nil {
 		panic(err)
 	}
 
-	return sha256.Sum256(bz)
-}
-
-func (dtx *DecodedTx) GetGasLimit() uint64 {
-	return dtx.Tx.AuthInfo.Fee.GasLimit
-}
-
-func (dtx *DecodedTx) GetMessages() []proto.Message {
-	return dtx.Messages
-}
-
-func (dtx *DecodedTx) GetSenders() [][]byte {
-	return dtx.Signers
+	dtx.cachedBytes = bz
+	dtx.cachedHash = sha256.Sum256(bz)
+	dtx.cachedHashed = true
 }

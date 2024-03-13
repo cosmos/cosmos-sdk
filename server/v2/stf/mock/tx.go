@@ -3,6 +3,7 @@ package mock
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -22,16 +23,22 @@ func (t Tx) Hash() [32]byte {
 	return sha256.Sum256(t.Bytes())
 }
 
-func (t Tx) GetMessages() []transaction.Type {
-	return []transaction.Type{t.Msg}
+func (t Tx) GetMessages() ([]transaction.Type, error) {
+	if t.Msg == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
+	return []transaction.Type{t.Msg}, nil
 }
 
-func (t Tx) GetSenders() []transaction.Identity {
-	return []transaction.Identity{t.Sender}
+func (t Tx) GetSenders() ([]transaction.Identity, error) {
+	if t.Sender == nil {
+		return nil, errors.New("senders not available or are nil")
+	}
+	return []transaction.Identity{t.Sender}, nil
 }
 
-func (t Tx) GetGasLimit() uint64 {
-	return t.GasLimit
+func (t Tx) GetGasLimit() (uint64, error) {
+	return t.GasLimit, nil
 }
 
 type encodedTx struct {

@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19742](https://github.com/cosmos/cosmos-sdk/pull/19742) `NewStakeAuthorization` now takes `address.Codec` as argument.
 * [#18198](https://github.com/cosmos/cosmos-sdk/pull/18198): `Validator` and `Delegator` interfaces were moved to `github.com/cosmos/cosmos-sdk/types` to avoid interface dependency on staking in other modules. 
 * [#17778](https://github.com/cosmos/cosmos-sdk/pull/17778) Use collections for `Params`
     * remove from `Keeper`: `GetParams`, `SetParams`

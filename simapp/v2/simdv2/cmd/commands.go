@@ -4,11 +4,12 @@ import (
 	"errors"
 	"os"
 
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/cometbft"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	"cosmossdk.io/simapp/v2"
@@ -22,8 +23,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
+	// TODO migrate all server dependencies to server/v2
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	// end TODO
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -43,6 +47,7 @@ func initRootCmd(
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
+		startCommand(),
 		// pruning.Cmd(newApp),
 		// snapshot.Cmd(newApp),
 	)
@@ -58,6 +63,21 @@ func initRootCmd(
 		keys.Commands(),
 		offchain.OffChain(),
 	)
+}
+
+func startCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "start",
+		Short: "Start the application",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			sa := simapp.NewSimApp(serverCtx.Viper)
+			am := sa.App.AppManager
+			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), cometbft.Config{})
+			return nil
+		},
+	}
+	return cmd
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
@@ -116,15 +136,6 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-// newApp creates the application
-func newApp(
-	logger log.Logger,
-	db runtimev2.Store,
-	appOpts servertypes.AppOptions,
-) runtimev2.AppI[transaction.Tx] {
-	return simapp.NewSimApp(logger, db, true, appOpts)
-}
-
 // appExport creates a new simapp (optionally at a given height) and exports state.
 func appExport(
 	logger log.Logger,
@@ -153,13 +164,13 @@ func appExport(
 
 	var simApp *simapp.SimApp
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, db, false, appOpts)
+		simApp = simapp.NewSimApp(appOpts)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, db, true, appOpts)
+		simApp = simapp.NewSimApp(appOpts)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

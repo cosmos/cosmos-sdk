@@ -44,6 +44,8 @@ require (
 	google.golang.org/protobuf v1.33.0
 )
 
+require cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
+
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
@@ -283,4 +285,5 @@ replace (
 	cosmossdk.io/server/v2/core => ../../server/v2/core
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.1
 )

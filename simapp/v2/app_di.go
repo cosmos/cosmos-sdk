@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -25,6 +24,7 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"cosmossdk.io/runtime/v2"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -82,9 +82,6 @@ func AppConfig() depinject.Config {
 
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
-	logger log.Logger,
-	db runtime.Store,
-	loadLatest bool,
 	appOpts servertypes.AppOptions,
 ) *SimApp {
 	var (
@@ -98,8 +95,6 @@ func NewSimApp(
 			depinject.Supply(
 				// supply the application options
 				appOpts,
-				// supply the logger
-				logger,
 
 				// ADVANCED CONFIGURATION
 
@@ -170,7 +165,7 @@ func NewSimApp(
 		panic(err)
 	}
 
-	app.App, err = appBuilder.Build(db)
+	app.App, err = appBuilder.Build()
 	if err != nil {
 		panic(err)
 	}

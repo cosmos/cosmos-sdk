@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	corestore "cosmossdk.io/server/v2/core/store"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -25,6 +26,8 @@ import (
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
+	storev2 "cosmossdk.io/store/v2"
+	rootstorev2 "cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -66,19 +69,20 @@ func (m appModule) IsAppModule()        {}
 func init() {
 	appconfig.Register(&runtimev2.Module{},
 		appconfig.Provide(
-			ProvideApp,
+			ProvideAppBuilder,
 			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
 			ProvideEnvironment,
 			ProvideModuleManager,
 			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
+			ProvideRootStoreV2,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 
-func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
+func ProvideAppBuilder(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
@@ -127,6 +131,7 @@ type AppInputs struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       *codec.LegacyAmino
 	Logger            log.Logger
+	Store             Store
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -137,6 +142,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+	app.db = inputs.Store
 }
 
 func ProvideModuleManager(logger log.Logger, cdc codec.Codec, config *runtimev2.Module, modules map[string]appmodulev2.AppModule) *MM {
@@ -271,4 +277,40 @@ func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddress
 	return addresscodec.NewBech32Codec(in.AuthConfig.Bech32Prefix),
 		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixValidator),
 		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixConsensus)
+}
+
+func ProvideRootStoreV2(logger log.Logger) Store {
+	rs, err := rootstorev2.New(logger, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+	return &StoreV2Adapter{rs}
+}
+
+var _ Store = (*StoreV2Adapter)(nil)
+
+// StoreV2Adapter is a PoC adapter for core store -> store v2 interface.
+// TODO: I think it'd be better if store v2 was just used directly, but as it stands the interfaces are incompatible.
+type StoreV2Adapter struct {
+	storev2.RootStore
+}
+
+func (s StoreV2Adapter) LatestVersion() (uint64, error) {
+	v, _, err := s.RootStore.StateLatest()
+	return v, err
+}
+
+func (s StoreV2Adapter) StateLatest() (uint64, corestore.ReaderMap, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s StoreV2Adapter) StateAt(version uint64) (corestore.ReaderMap, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s StoreV2Adapter) StateCommit(changes []corestore.StateChanges) (corestore.Hash, error) {
+	//TODO implement me
+	panic("implement me")
 }

@@ -58,7 +58,8 @@ func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
+// TODO with db removed as an input parameter I think this can moved earlier in start up without an explicit build step
+func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -72,8 +73,6 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 	if a.txValidator == nil {
 		a.txValidator = a.app.moduleManager.TxValidation()
 	}
-
-	a.app.db = db
 
 	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
 		return nil, err

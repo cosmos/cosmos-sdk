@@ -4,7 +4,6 @@ import (
 	"context"
 	"cosmossdk.io/x/authz"
 	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

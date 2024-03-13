@@ -11,8 +11,7 @@ import (
 
 	appmodule "cosmossdk.io/core/appmodule"
 	registry "cosmossdk.io/core/registry"
-	types "github.com/cometbft/cometbft/abci/types"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -69,10 +68,10 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) DefaultGenesis() *gomock.C
 }
 
 // EndBlock mocks base method.
-func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]types.ValidatorUpdate, error) {
+func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -163,7 +162,7 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInterfaces(arg0 in
 }
 
 // RegisterInvariants mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterInvariants(arg0 types0.InvariantRegistry) {
+func (m *MockAppModuleWithAllExtensions) RegisterInvariants(arg0 types.InvariantRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInvariants", arg0)
 }
@@ -252,10 +251,10 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) DefaultGenesis() *gomo
 }
 
 // EndBlock mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) EndBlock(arg0 context.Context) ([]types.ValidatorUpdate, error) {
+func (m *MockAppModuleWithAllExtensionsABCI) EndBlock(arg0 context.Context) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -282,10 +281,10 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) ExportGenesis(arg0 int
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) InitGenesis(arg0 context.Context, arg1 json.RawMessage) ([]types.ValidatorUpdate, error) {
+func (m *MockAppModuleWithAllExtensionsABCI) InitGenesis(arg0 context.Context, arg1 json.RawMessage) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -347,7 +346,7 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInterfaces(arg
 }
 
 // RegisterInvariants mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types0.InvariantRegistry) {
+func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types.InvariantRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInvariants", arg0)
 }

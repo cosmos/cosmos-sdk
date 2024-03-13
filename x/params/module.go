@@ -18,14 +18,14 @@ import (
 )
 
 var (
-	_ module.HasName                  = AppModule{}
-	_ module.HasAminoCodec            = AppModule{}
-	_ module.HasGRPCGateway           = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-	_ module.AppModuleSimulation      = AppModule{}
+	_ module.HasName             = AppModule{}
+	_ module.HasAminoCodec       = AppModule{}
+	_ module.HasGRPCGateway      = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
 
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasServices           = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
 // ConsensusVersion defines the current x/params module consensus version.

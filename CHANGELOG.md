@@ -59,9 +59,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (types) [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) `PreBlock` now returns only an error for consistency with server/v2. The SDK has upgraded x/upgrade accordingly. `ResponsePreBlock` hence has been removed.
 * (server) [#19455](https://github.com/cosmos/cosmos-sdk/pull/19455) Allow calling back into the application struct in PostSetup.
-* (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) The notion of basic manager does not exist anymore.
+* (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) The notion of basic manager does not exist anymore (and all related helpers).
     * The module manager now can do everything that the basic manager was doing.
-    * `AppModuleBasic` has been deprecated for extension interfaces. Modules can now implement `HasRegisterInterfaces`, `HasGRPCGateway` and `HasAminoCodec` when relevant.
+    * `AppModuleBasic` has been deprecated for extension interfaces.
+    * Modules can now implement `appmodule.HasRegisterInterfaces`, `modue.HasGRPCGateway` and `module.HasAminoCodec` when relevant.
     * SDK modules now directly implement those extension interfaces on `AppModule` instead of `AppModuleBasic`.
 * (client/keys) [#18950](https://github.com/cosmos/cosmos-sdk/pull/18950) Improve `<appd> keys add`, `<appd> keys import` and `<appd> keys rename` by checking name validation.
 * (client/keys) [#18745](https://github.com/cosmos/cosmos-sdk/pull/18745) Improve `<appd> keys export` and `<appd> keys mnemonic` by adding --yes option to skip interactive confirmation.
@@ -82,6 +83,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (crypto | x/auth) [#14372](https://github.com/cosmos/cosmos-sdk/pull/18194) Key checks on signatures antehandle.
 * (types) [#18963](https://github.com/cosmos/cosmos-sdk/pull/18963) Swap out amino json encoding of `ABCIMessageLogs` for std lib json encoding
 * (x/auth) [#19651](https://github.com/cosmos/cosmos-sdk/pull/19651) Allow empty public keys in `GetSignBytesAdapter`.
+* (x/genutil) [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) Update genesis api to match new `appmodule.HasGenesis` interface.
 
 ### Bug Fixes
 
@@ -144,7 +146,9 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#19652](https://github.com/cosmos/cosmos-sdk/pull/19652) 
     * Moved`types/module.HasRegisterInterfaces` to `cosmossdk.io/core`.
     * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.LegacyRegistry` interface.
-* (types) [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) All genesis interfaces now don't take `codec.JsonCodec`. Every module has the codec already, passing it created an unneeded dependency. Additionally, to reflect this change, the module manager does not take a codec either.
+* (types) [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) and [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) All genesis interfaces now don't take `codec.JsonCodec`.
+    * Every module has the codec already, passing it created an unneeded dependency.
+    * Additionally, to reflect this change, the module manager does not take a codec either.
 
 ### Client Breaking Changes
 

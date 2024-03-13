@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/registry"
@@ -77,14 +75,34 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs genesis initialization for the genutil module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]abci.ValidatorUpdate, error) {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
-	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+	cometValidatorUpdates, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
 	if err != nil {
 		return nil, err
 	}
-	return validators, nil
+
+	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
+	for i, v := range cometValidatorUpdates {
+		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     ed25519,
+				PubKeyType: "ed25519",
+				Power:      v.Power,
+			}
+		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
+			validatorUpdates[i] = module.ValidatorUpdate{
+				PubKey:     secp256k1,
+				PubKeyType: "secp256k1",
+				Power:      v.Power,
+			}
+		} else {
+			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
+		}
+	}
+
+	return validatorUpdates, nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.

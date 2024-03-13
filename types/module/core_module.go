@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -101,7 +100,7 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) (json.RawMessag
 		target := genesis.RawJSONTarget{}
 		err := module.ExportGenesis(ctx, target.Target())
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		rawJSON, err := target.JSON()
@@ -132,7 +131,7 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) (json.RawMessag
 }
 
 // InitGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessage) ([]abci.ValidatorUpdate, error) {
+func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessage) ([]ValidatorUpdate, error) {
 	if module, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		// core API genesis
 		source, err := genesis.SourceFromRawJSON(bz)
@@ -140,22 +139,23 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessag
 			return nil, err
 		}
 
-		err = module.InitGenesis(ctx, source)
-		if err != nil {
+		if err = module.InitGenesis(ctx, source); err != nil {
 			return nil, err
 		}
 	}
 
 	if mod, ok := c.module.(HasABCIGenesis); ok {
-		return mod.InitGenesis(ctx, bz)
-	}
-
-	if mod, ok := c.module.(HasGenesis); ok {
-		err := mod.InitGenesis(ctx, bz)
+		moduleValUpdates, err := mod.InitGenesis(ctx, bz)
 		if err != nil {
 			return nil, err
 		}
+		return moduleValUpdates, nil
+	}
 
+	if mod, ok := c.module.(HasGenesis); ok {
+		if err := mod.InitGenesis(ctx, bz); err != nil {
+			return nil, err
+		}
 	}
 	return nil, nil
 }

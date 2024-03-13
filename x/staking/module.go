@@ -150,7 +150,10 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]mo
 
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
 
-	cometValidatorUpdates := am.keeper.InitGenesis(ctx, &genesisState) // TODO: refactor to return ValidatorUpdate higher up the stack
+	cometValidatorUpdates, err := am.keeper.InitGenesis(ctx, &genesisState) // TODO: refactor to return ValidatorUpdate higher up the stack
+	if err != nil {
+		return nil, err
+	}
 	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
 	for i, v := range cometValidatorUpdates {
 		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
@@ -175,7 +178,15 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]mo
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking module.
 func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	return am.cdc.MarshalJSON(am.keeper.ExportGenesis(ctx))
+	genesis, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		return nil, err
+	}
+	marshalJSON, err := am.cdc.MarshalJSON(genesis)
+	if err != nil {
+		return nil, err
+	}
+	return marshalJSON, nil
 }
 
 // ConsensusVersion implements HasConsensusVersion

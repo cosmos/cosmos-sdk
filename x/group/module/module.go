@@ -144,7 +144,10 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 
 // ExportGenesis returns the exported genesis state as raw bytes for the group module.
 func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	gs := am.keeper.ExportGenesis(ctx, am.cdc)
+	gs, err := am.keeper.ExportGenesis(ctx, am.cdc)
+	if err != nil {
+		return nil, err
+	}
 	return am.cdc.MarshalJSON(gs)
 }
 

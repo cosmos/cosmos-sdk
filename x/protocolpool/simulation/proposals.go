@@ -28,7 +28,7 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	}
 }
 
-func SimulateMsgCommunityPoolSpend(r *rand.Rand, _ sdk.Context, _ []simtypes.Account, addressCodec coreaddress.Codec) (sdk.Msg, error) {
+func SimulateMsgCommunityPoolSpend(r *rand.Rand, _ sdk.Context, _ []simtypes.Account, _ coreaddress.Codec) (sdk.Msg, error) {
 	// use the default gov module account address as authority
 	var authority sdk.AccAddress = address.Module("gov")
 

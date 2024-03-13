@@ -483,6 +483,8 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
 	)
 
+	fastNodeModuleWhitelist := ParseModuleWhitelist(appOpts)
+
 	return []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(FlagMinGasPrices))),
@@ -495,7 +497,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
-		baseapp.SetIAVLFastNodeModuleWhitelist(cast.ToStringSlice(appOpts.Get(FlagIAVLFastNodeModuleWhitelist))),
+		baseapp.SetIAVLFastNodeModuleWhitelist(fastNodeModuleWhitelist),
 		baseapp.SetMempool(
 			mempool.NewSenderNonceMempool(
 				mempool.SenderNonceMaxTxOpt(cast.ToInt(appOpts.Get(FlagMempoolMaxTxs))),
@@ -522,4 +524,22 @@ func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 	}
 
 	return snapshotStore, nil
+}
+
+func ParseModuleWhitelist(appOpts types.AppOptions) []string {
+	var whitelist []string
+	if wl, ok := appOpts.Get(FlagIAVLFastNodeModuleWhitelist).([]string); ok {
+		// Trim the brackets from the string
+		trimmed := strings.Trim(wl[0], "[]")
+		// If the trimmed string is not empty, split it into a slice of strings
+		if trimmed != "" {
+			// Split the string into a slice of strings using space and comma as the separators
+			whitelist = strings.FieldsFunc(trimmed, func(c rune) bool {
+				return c == ' ' || c == ','
+			})
+		}
+	} else {
+		whitelist = cast.ToStringSlice(appOpts.Get(FlagIAVLFastNodeModuleWhitelist))
+	}
+	return whitelist
 }

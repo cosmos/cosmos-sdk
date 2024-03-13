@@ -493,6 +493,8 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 
 		app.paramStore.Get(ctx, ParamStoreKeyVersionParams, &vp)
 		cp.Version = &vp
+	} else if app.appVersion != 0 {
+		cp.Version = &tmproto.VersionParams{AppVersion: app.appVersion}
 	}
 
 	return cp
@@ -518,9 +520,16 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
 	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
 	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
-	// NOTE: we only persist the app version from v2 onwards
-	if cp.Version != nil && cp.Version.AppVersion >= 2 {
+	if app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
 		app.paramStore.Set(ctx, ParamStoreKeyVersionParams, cp.Version)
+	}
+}
+
+// SetInitialAppVersionInConsensusParams sets the initial app version
+// in the consensus params if it has not yet been set.
+func (app *BaseApp) SetInitialAppVersionInConsensusParams(ctx sdk.Context, version uint64) {
+	if !app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
+		app.paramStore.Set(ctx, ParamStoreKeyVersionParams, &tmproto.VersionParams{AppVersion: version})
 	}
 }
 

@@ -150,14 +150,21 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) []abc
 	var genesisState types.GenesisState
 
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
-
-	return am.keeper.InitGenesis(ctx, &genesisState)
+	res, err := am.keeper.InitGenesis(ctx, &genesisState)
+	if err != nil {
+		return nil
+	}
+	return res
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking
 // module.
 func (am AppModule) ExportGenesis(ctx context.Context) json.RawMessage {
-	return am.cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
+	genesis, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		return nil
+	}
+	return am.cdc.MustMarshalJSON(genesis)
 }
 
 // ConsensusVersion implements HasConsensusVersion

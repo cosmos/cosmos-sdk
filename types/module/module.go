@@ -565,14 +565,12 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, modulesToExport []str
 		} else if module, ok := mod.(HasABCIGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
 			go func(module HasABCIGenesis, ch chan genesisResult) {
-				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
-				exportGenesis, err := module.ExportGenesis(ctx)
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+				jm, err := module.ExportGenesis(ctx)
 				if err != nil {
 					ch <- genesisResult{nil, err}
-				} else {
-					// avoid race conditions
-					ch <- genesisResult{exportGenesis, nil}
 				}
+				ch <- genesisResult{jm, nil}
 			}(module, channels[moduleName])
 		}
 	}

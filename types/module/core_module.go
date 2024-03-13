@@ -112,11 +112,7 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) (json.RawMessag
 	}
 
 	if mod, ok := c.module.(HasABCIGenesis); ok {
-		eg, err := mod.ExportGenesis(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return eg, nil
+		return mod.ExportGenesis(ctx)
 	}
 
 	if mod, ok := c.module.(HasGenesis); ok {
@@ -124,6 +120,7 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) (json.RawMessag
 		if err != nil {
 			return nil, err
 		}
+
 		return eg, nil
 	}
 
@@ -145,11 +142,7 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessag
 	}
 
 	if mod, ok := c.module.(HasABCIGenesis); ok {
-		moduleValUpdates, err := mod.InitGenesis(ctx, bz)
-		if err != nil {
-			return nil, err
-		}
-		return moduleValUpdates, nil
+		return mod.InitGenesis(ctx, bz)
 	}
 
 	if mod, ok := c.module.(HasGenesis); ok {
@@ -157,6 +150,7 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessag
 			return nil, err
 		}
 	}
+
 	return nil, nil
 }
 

@@ -375,11 +375,12 @@ func (mr *MockHasABCIGenesisMockRecorder) DefaultGenesis() *gomock.Call {
 }
 
 // ExportGenesis mocks base method.
-func (m *MockHasABCIGenesis) ExportGenesis(arg0 context.Context) json.RawMessage {
+func (m *MockHasABCIGenesis) ExportGenesis(arg0 context.Context) (json.RawMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0)
 	ret0, _ := ret[0].(json.RawMessage)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ExportGenesis indicates an expected call of ExportGenesis.
@@ -389,11 +390,12 @@ func (mr *MockHasABCIGenesisMockRecorder) ExportGenesis(arg0 interface{}) *gomoc
 }
 
 // InitGenesis mocks base method.
-func (m *MockHasABCIGenesis) InitGenesis(arg0 context.Context, arg1 json.RawMessage) []types.ValidatorUpdate {
+func (m *MockHasABCIGenesis) InitGenesis(arg0 context.Context, arg1 json.RawMessage) ([]types.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
 	ret0, _ := ret[0].([]types.ValidatorUpdate)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // InitGenesis indicates an expected call of InitGenesis.

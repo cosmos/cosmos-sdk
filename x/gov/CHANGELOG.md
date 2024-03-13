@@ -67,7 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a `ProposalType` parameter instead.
 * [#17496](https://github.com/cosmos/cosmos-sdk/pull/17496) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Move `QueryProposalVotesParams` and `QueryVoteParams` from the `types/v1` package to `utils` and remove unused `querier.go` file.
-* [#19713](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.
 
 ### Deprecated
 

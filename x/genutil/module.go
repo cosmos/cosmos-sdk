@@ -77,19 +77,19 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs genesis initialization for the genutil module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]abci.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
 	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return validators
+	return validators, nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
-func (am AppModule) ExportGenesis(_ context.Context) json.RawMessage {
-	return am.DefaultGenesis()
+func (am AppModule) ExportGenesis(_ context.Context) (json.RawMessage, error) {
+	return am.DefaultGenesis(), nil
 }
 
 // GenTxValidator returns the genutil module's genesis transaction validator.

@@ -98,8 +98,8 @@ type HasGenesis = appmodulev2.HasGenesis
 // HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
 type HasABCIGenesis interface {
 	HasGenesisBasics
-	InitGenesis(context.Context, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(context.Context) json.RawMessage
+	InitGenesis(context.Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
+	ExportGenesis(context.Context) (json.RawMessage, error)
 }
 
 // HasInvariants is the interface for registering invariants.
@@ -454,8 +454,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, genesisData ma
 			}
 		} else if module, ok := mod.(HasABCIGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			moduleValUpdates := module.InitGenesis(ctx, genesisData[moduleName])
-
+			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
+			if err != nil {
+				return &abci.ResponseInitChain{}, err
+			}
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
@@ -534,8 +536,14 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, modulesToExport []str
 		} else if module, ok := mod.(HasABCIGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
 			go func(module HasABCIGenesis, ch chan genesisResult) {
-				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
-				ch <- genesisResult{module.ExportGenesis(ctx), nil}
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+				exportGenesis, err := module.ExportGenesis(ctx)
+				if err != nil {
+					ch <- genesisResult{nil, err}
+				} else {
+					// avoid race conditions
+					ch <- genesisResult{exportGenesis, nil}
+				}
 			}(module, channels[moduleName])
 		}
 	}
@@ -688,7 +696,10 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 				}
 			}
 			if module, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
-				moduleValUpdates := module.InitGenesis(sdkCtx, module.DefaultGenesis())
+				moduleValUpdates, err := module.InitGenesis(sdkCtx, module.DefaultGenesis())
+				if err != nil {
+					return nil, err
+				}
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {

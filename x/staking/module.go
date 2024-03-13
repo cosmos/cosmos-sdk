@@ -146,25 +146,25 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs genesis initialization for the staking module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]abci.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
 
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
 	res, err := am.keeper.InitGenesis(ctx, &genesisState)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return res
+	return res, nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking
 // module.
-func (am AppModule) ExportGenesis(ctx context.Context) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 	genesis, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return am.cdc.MustMarshalJSON(genesis)
+	return am.cdc.MustMarshalJSON(genesis), nil
 }
 
 // ConsensusVersion implements HasConsensusVersion

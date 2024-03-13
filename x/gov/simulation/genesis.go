@@ -153,7 +153,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(YesQuorum, &yesQuorum, simState.Rand, func(r *rand.Rand) { yesQuorum = GenQuorum(r) })
 
 	var expeditedQuorum sdkmath.LegacyDec
-	simState.AppParams.GetOrGenerate(YesQuorum, &expeditedQuorum, simState.Rand, func(r *rand.Rand) { expeditedQuorum = GenQuorum(r) })
+	simState.AppParams.GetOrGenerate(ExpeditedQuorum, &expeditedQuorum, simState.Rand, func(r *rand.Rand) { expeditedQuorum = GenQuorum(r) })
 
 	var threshold sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(Threshold, &threshold, simState.Rand, func(r *rand.Rand) { threshold = GenThreshold(r) })

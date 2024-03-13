@@ -22,10 +22,14 @@ import (
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	"cosmossdk.io/server/v2/cometbft/flags"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"google.golang.org/protobuf/encoding/protojson"
+)
+
+// Defaults for flags
+const (
+	DefaultPage  = 1
+	DefaultLimit = 30
 )
 
 func (s *CometBFTServer[T]) rpcClient() (rpc.CometRPC, error) {
@@ -133,10 +137,12 @@ func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := s.config.CmtConfig
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
-			// TODO: use address codec?
-			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
+			valConsAddr, err := s.consAddrCodec.BytesToString(privValidator.GetAddress().Bytes())
+			if err != nil {
+				return err
+			}
 
-			cmd.Println(valConsAddr.String())
+			cmd.Println(valConsAddr)
 			return nil
 		},
 	}
@@ -216,8 +222,8 @@ for. Each module documents its respective events under 'xx_events.md'.
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().Int(flags.FlagPage, DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int(flags.FlagLimit, DefaultLimit, "Query number of transactions results per page returned")
 	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per CometBFT's query semantics")
 	cmd.Flags().String(auth.FlagOrderBy, "", "The ordering semantics (asc|dsc)")
 	_ = cmd.MarkFlagRequired(auth.FlagQuery)

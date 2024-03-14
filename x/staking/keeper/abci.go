@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"time"
 
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // BeginBlocker will persist the current header and validator set as a historical entry

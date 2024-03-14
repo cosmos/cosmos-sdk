@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -16,6 +15,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 func bootstrapGenesisTest(t *testing.T, numAddrs int) (*fixture, []sdk.AccAddress) {

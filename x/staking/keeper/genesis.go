@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/module"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -12,6 +11,7 @@ import (
 	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each

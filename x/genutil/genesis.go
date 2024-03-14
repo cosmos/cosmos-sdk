@@ -3,11 +3,11 @@ package genutil
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"cosmossdk.io/core/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -42,5 +42,5 @@ func InitGenesis(
 		}
 		return validatorUpdates, nil
 	}
-	return
+	return nil, nil
 }

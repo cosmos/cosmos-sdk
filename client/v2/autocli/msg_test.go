@@ -112,6 +112,7 @@ func goldenLoad(t *testing.T, filename string) []byte {
 }
 
 func assertNormalizedJSONEqual(t *testing.T, expected, actual []byte) {
+	t.Helper()
 	normalizedExpected, err := normalizeJSON(expected)
 	assert.NilError(t, err)
 	normalizedActual, err := normalizeJSON(actual)

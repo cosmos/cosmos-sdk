@@ -129,8 +129,8 @@ type Config struct {
 
 	// Address codecs
 	AddressCodec          address.Codec                 // address codec
-	ValidatorAddressCodec runtime.ValidatorAddressCodec // validator address codec
-	ConsensusAddressCodec runtime.ConsensusAddressCodec // consensus address codec
+	ValidatorAddressCodec address.ValidatorAddressCodec // validator address codec
+	ConsensusAddressCodec address.ConsensusAddressCodec // consensus address codec
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -185,8 +185,8 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		cdc                   codec.Codec
 		interfaceRegistry     codectypes.InterfaceRegistry
 		addressCodec          address.Codec
-		validatorAddressCodec runtime.ValidatorAddressCodec
-		consensusAddressCodec runtime.ConsensusAddressCodec
+		validatorAddressCodec address.ValidatorAddressCodec
+		consensusAddressCodec address.ConsensusAddressCodec
 	)
 
 	if err := depinject.Inject(

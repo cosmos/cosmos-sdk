@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,10 +36,10 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // DenomMetadataV2 mocks base method.
-func (m *MockBankKeeper) DenomMetadataV2(c context.Context, req *bankv1beta1.QueryDenomMetadataRequest) (*bankv1beta1.QueryDenomMetadataResponse, error) {
+func (m *MockBankKeeper) DenomMetadataV2(c context.Context, req *v1beta1.QueryDenomMetadataRequest) (*v1beta1.QueryDenomMetadataResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DenomMetadataV2", c, req)
-	ret0, _ := ret[0].(*bankv1beta1.QueryDenomMetadataResponse)
+	ret0, _ := ret[0].(*v1beta1.QueryDenomMetadataResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

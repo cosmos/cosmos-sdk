@@ -1,7 +1,7 @@
 package cmtservice
 
 import (
-	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtprototypes "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -2,7 +2,7 @@ version: v1
 name: buf.build/mods/staking
 deps:
   - buf.build/cosmos/cosmos-sdk # pin the Cosmos SDK version
-  - buf.build/tendermint/tendermint:33ed361a90514289beabf3189e1d7665 # CometBFT v0.38
+  - buf.build/cometbft/cometbft:4a62c99d422068a5165429b62a7eb824df46cca9 # CometBFT v0.38
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis

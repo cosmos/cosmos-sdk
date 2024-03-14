@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/collections"

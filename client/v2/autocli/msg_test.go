@@ -105,6 +105,7 @@ func TestMsg(t *testing.T) {
 }
 
 func goldenLoad(t *testing.T, filename string) []byte {
+	t.Helper()
 	content, err := os.ReadFile(filepath.Join("testdata", filename))
 	assert.NilError(t, err)
 	return content

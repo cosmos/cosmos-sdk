@@ -2,14 +2,9 @@ package types
 
 import (
 	"context"
-	fmt "fmt"
-	"strconv"
-
-	"github.com/hashicorp/go-metrics"
+	"errors"
 
 	"cosmossdk.io/core/appmodule"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 type EpochHooks interface {
@@ -42,50 +37,18 @@ func NewMultiEpochHooks(hooks ...EpochHooks) MultiEpochHooks {
 
 // AfterEpochEnd is called when epoch is going to be ended, epochNumber is the number of epoch that is ending.
 func (h MultiEpochHooks) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error {
-	for _, hook := range h {
-		panicCatchingEpochHook(ctx, hook.AfterEpochEnd, epochIdentifier, epochNumber, h.GetModuleName(), !isBeforeEpoch, env)
+	var errs error
+	for i := range h {
+		errs = errors.Join(errs, h[i].AfterEpochEnd(ctx, epochIdentifier, epochNumber, env))
 	}
-	return nil
+	return errs
 }
 
 // BeforeEpochStart is called when epoch is going to be started, epochNumber is the number of epoch that is starting.
 func (h MultiEpochHooks) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error {
-	for _, hook := range h {
-		panicCatchingEpochHook(ctx, hook.BeforeEpochStart, epochIdentifier, epochNumber, hook.GetModuleName(), isBeforeEpoch, env)
+	var errs error
+	for i := range h {
+		errs = errors.Join(errs, h[i].BeforeEpochStart(ctx, epochIdentifier, epochNumber, env))
 	}
-	return nil
-}
-
-func panicCatchingEpochHook(
-	ctx context.Context,
-	hookFn func(ctx context.Context, epochIdentifier string, epochNumber int64, env appmodule.Environment) error,
-	epochIdentifier string,
-	epochNumber int64,
-	moduleName string,
-	isBeforeEpoch bool,
-	env appmodule.Environment,
-) {
-	wrappedHookFn := func(ctx context.Context) error {
-		return hookFn(ctx, epochIdentifier, epochNumber, env)
-	}
-	// TODO: Thread info for which hook this is, may be dependent on larger hook system refactoring
-	err := ApplyFuncIfNoError(ctx, env, wrappedHookFn)
-	if err != nil {
-		telemetry.IncrCounterWithLabels([]string{}, 1, []metrics.Label{
-			{
-				Name:  "module_name",
-				Value: moduleName,
-			},
-			{
-				Name:  "error",
-				Value: err.Error(),
-			},
-			{
-				Name:  "is_before_hook",
-				Value: strconv.FormatBool(isBeforeEpoch),
-			},
-		})
-
-		env.Logger.Error(fmt.Sprintf("error in epoch hook %v", err))
-	}
+	return errs
 }

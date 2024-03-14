@@ -44,7 +44,12 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 				return false
 			}
 
-			k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+			err = k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+			if err != nil {
+				logger.Error(fmt.Sprintf("Error after epoch end with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
+				return false
+			}
+
 			epochInfo.CurrentEpoch += 1
 			epochInfo.CurrentEpochStartTime = epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
 			logger.Info(fmt.Sprintf("Starting epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
@@ -63,8 +68,10 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 			logger.Error(fmt.Sprintf("Error set epoch infor with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 			return false
 		}
-		k.BeforeEpochStart(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
-
+		err = k.BeforeEpochStart(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Error before epoch start with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
+		}
 		return false
 	})
 	return err

@@ -13,8 +13,8 @@ import (
 func TestEpochsExportGenesis(t *testing.T) {
 	ctx, epochsKeeper, _ := Setup(t)
 
-	chainStartTime := ctx.BlockTime()
-	chainStartHeight := ctx.BlockHeight()
+	chainStartTime := ctx.HeaderInfo().Time
+	chainStartHeight := ctx.HeaderInfo().Height
 
 	genesis, err := epochsKeeper.ExportGenesis(ctx)
 	require.NoError(t, err)
@@ -23,7 +23,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 	expectedEpochs := types.DefaultGenesis().Epochs
 	for i := 0; i < len(expectedEpochs); i++ {
 		expectedEpochs[i].CurrentEpochStartHeight = chainStartHeight
-		expectedEpochs[i].CurrentEpochStartTime = chainStartTime
+		expectedEpochs[i].StartTime = chainStartTime
 	}
 	require.Equal(t, expectedEpochs, genesis.Epochs)
 }
@@ -40,7 +40,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	now := time.Now()
+	// now := time.Now()
 	ctx.WithHeaderInfo(header.Info{Height: 1, Time: time.Now().UTC()})
 
 	// test genesisState validation
@@ -87,7 +87,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 	epochInfo, err := epochsKeeper.EpochInfo.Get(ctx, "monthly")
 	require.NoError(t, err)
 	require.Equal(t, epochInfo.Identifier, "monthly")
-	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
+	require.Equal(t, epochInfo.StartTime.UTC().String(), ctx.HeaderInfo().Time.UTC().String())
 	require.Equal(t, epochInfo.Duration, time.Hour*24)
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())

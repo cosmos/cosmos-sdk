@@ -208,26 +208,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]mo
 		}
 	}
 
-	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
-	for i, v := range cometValidatorUpdates {
-		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     ed25519,
-				PubKeyType: "ed25519",
-				Power:      v.Power,
-			}
-		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     secp256k1,
-				PubKeyType: "secp256k1",
-				Power:      v.Power,
-			}
-		} else {
-			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
-		}
-	}
-
-	return validatorUpdates, nil
+	return module.Parse2ModuleValidatorUpdate(cometValidatorUpdates)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper. The

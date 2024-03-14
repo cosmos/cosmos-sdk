@@ -27,6 +27,8 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
+	tmsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -896,4 +898,27 @@ func DefaultMigrationsOrder(modules []string) []string {
 		out = append(out, authName)
 	}
 	return out
+}
+
+// Parse2ModuleValidatorUpdate parses a slice of comet ValidatorUpdate to a slice of Module ValidatorUpdate
+func Parse2ModuleValidatorUpdate(cometValidatorUpdates []abci.ValidatorUpdate) ([]ValidatorUpdate, error) {
+	validatorUpdates := make([]ValidatorUpdate, len(cometValidatorUpdates))
+	for i, v := range cometValidatorUpdates {
+		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
+			validatorUpdates[i] = ValidatorUpdate{
+				PubKey:     ed25519,
+				PubKeyType: tmed25519.KeyType,
+				Power:      v.Power,
+			}
+		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
+			validatorUpdates[i] = ValidatorUpdate{
+				PubKey:     secp256k1,
+				PubKeyType: tmsecp256k1.KeyType,
+				Power:      v.Power,
+			}
+		} else {
+			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
+		}
+	}
+	return validatorUpdates, nil
 }

@@ -18,7 +18,7 @@ type Service interface {
 type Manager interface {
 	// Emit emits events represented as a protobuf message (as described in ADR 032).
 	//
-	// Callers SHOULD assume that these events will not be included in consensus. These events
+	// Callers SHOULD assume that these events will not be included in consensus.
 	Emit(event protoiface.MessageV1) error
 
 	// EmitKV emits an event based on an event and kv-pair attributes.

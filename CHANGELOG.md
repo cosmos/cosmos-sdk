@@ -150,6 +150,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) and [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) All genesis interfaces now don't take `codec.JsonCodec`.
     * Every module has the codec already, passing it created an unneeded dependency.
     * Additionally, to reflect this change, the module manager does not take a codec either.
+* (runtime) [#19747](https://github.com/cosmos/cosmos-sdk/pull/19747) `runtime.ValidatorAddressCodec` and `runtime.ConsensusAddressCodec` have been moved to `core`.
 
 ### Client Breaking Changes
 

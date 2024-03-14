@@ -90,7 +90,6 @@ func ProvideAppBuilder(interfaceRegistry codectypes.InterfaceRegistry) (
 	appmodulev2.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
-	error,
 ) {
 	protoFiles := proto.HybridResolver
 	protoTypes := protoregistry.GlobalTypes
@@ -118,7 +117,7 @@ func ProvideAppBuilder(interfaceRegistry codectypes.InterfaceRegistry) (
 	}
 	appBuilder := &AppBuilder{app: app}
 
-	return cdc, amino, appBuilder, msgRouterBuilder, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, msgRouterBuilder, appModule{app}, protoFiles, protoTypes
 }
 
 type AppInputs struct {

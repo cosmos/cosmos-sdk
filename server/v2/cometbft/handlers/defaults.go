@@ -18,7 +18,7 @@ import (
 
 type AppManager[T transaction.Tx] interface {
 	ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error)
-	Query(ctx context.Context, version uint64, request appmanager.Type) (response appmanager.Type, err error)
+	Query(ctx context.Context, version uint64, request transaction.Type) (response transaction.Type, err error)
 }
 
 type DefaultProposalHandler[T transaction.Tx] struct {

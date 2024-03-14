@@ -44,7 +44,10 @@ require (
 	google.golang.org/protobuf v1.33.0
 )
 
-require cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
+require (
+	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
+)
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
@@ -282,8 +285,11 @@ replace (
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
+	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/server/v2/core => ../../server/v2/core
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
+	// TODO - release a storev1 with iavl/db iterator and iavl v1.1.0
+	cosmossdk.io/store => ../../../store-v1/store
 	cosmossdk.io/store/v2 => ../../store
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.1
+//github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.1
 )

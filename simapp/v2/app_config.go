@@ -6,7 +6,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
@@ -100,7 +100,7 @@ var (
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
 				Name: runtime.ModuleName,
-				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+				Config: appconfig.WrapAny(&runtimev2.Module{
 					AppName: "SimAppV2",
 					// NOTE: upgrade module is required to be prioritized
 					PreBlockers: []string{
@@ -125,7 +125,7 @@ var (
 						group.ModuleName,
 						pooltypes.ModuleName,
 					},
-					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
+					OverrideStoreKeys: []*runtimev2.StoreKeyConfig{
 						{
 							ModuleName: authtypes.ModuleName,
 							KvStoreKey: "acc",

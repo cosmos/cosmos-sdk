@@ -1,8 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/cometbft"
@@ -74,6 +78,23 @@ func startCommand() *cobra.Command {
 			sa := simapp.NewSimApp(serverCtx.Viper)
 			am := sa.App.AppManager
 			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), cometbft.Config{})
+			ctx := cmd.Context()
+			ctx, cancelFn := context.WithCancel(ctx)
+			go func() {
+				sigCh := make(chan os.Signal, 1)
+				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+				sig := <-sigCh
+				cancelFn()
+				cmd.Printf("caught %s signal\n", sig.String())
+
+				if err := cometServer.Stop(ctx); err != nil {
+					cmd.PrintErrln("failed to stop servers:", err)
+				}
+			}()
+
+			if err := cometServer.Start(ctx); err != nil {
+				return fmt.Errorf("failed to start servers: %w", err)
+			}
 			return nil
 		},
 	}

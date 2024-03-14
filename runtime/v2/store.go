@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/proof"
 )
 
 // NewKVStoreService creates a new KVStoreService.
@@ -45,4 +46,6 @@ type Store interface {
 	// LoadLatestVersion behaves identically to LoadVersion except it loads the
 	// latest version implicitly.
 	LoadLatestVersion() error
+
+	LastCommitID() (proof.CommitID, error)
 }

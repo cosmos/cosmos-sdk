@@ -52,6 +52,8 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 +app.ModuleManager.RegisterInterfaces(interfaceRegistry)
 ```
 
+Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
+
 ##### AnteHandlers
 
 The `GasConsumptionDecorator` and `IncreaseSequenceDecorator` have been merged with the SigVerificationDecorator, so you'll
@@ -182,15 +184,16 @@ Previous module migrations have been removed. It is required to migrate to v0.50
 
 ##### Genesis Interface
 
-All genesis interfaces have been migrated to take context.Context instead of sdk.Context. Secondly, the codec is no longer passed in by the framework. The codec is now passed in by the module.
+All genesis interfaces have been migrated to take `context.Context` instead of `sdk.Context`.
+Secondly, the codec is no longer passed in by the framework. The codec is now passed in by the module.
+Lastly, all InitGenesis and ExportGenesis functions now return an error.
 
 ```go
-// InitGenesis performs genesis initialization for the authz module.
+// InitGenesis performs genesis initialization for the module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the authz
-// module.
+// ExportGenesis returns the exported genesis state as raw bytes for the module.
 func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 }
 ```

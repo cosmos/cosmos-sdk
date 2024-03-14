@@ -153,7 +153,7 @@ func (a *App) Load(loadLatest bool) error {
 }
 
 // PreBlocker application updates every pre block
-func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) error {
 	return a.ModuleManager.PreBlock(ctx)
 }
 
@@ -187,9 +187,9 @@ func (a *App) PrepareCheckStater(ctx sdk.Context) {
 func (a *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return a.ModuleManager.InitGenesis(ctx, a.cdc, genesisState)
+	return a.ModuleManager.InitGenesis(ctx, genesisState)
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided

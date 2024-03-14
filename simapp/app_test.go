@@ -278,7 +278,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	vm, err := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	require.NoError(t, err)
 	for v, i := range app.ModuleManager.Modules {
-		if i, ok := i.(module.HasConsensusVersion); ok {
+		if i, ok := i.(appmodule.HasConsensusVersion); ok {
 			require.Equal(t, vm[v], i.ConsensusVersion())
 		}
 	}

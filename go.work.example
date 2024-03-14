@@ -38,4 +38,5 @@ use (
 	./x/staking
 	./x/tx
 	./x/upgrade
+	./x/accounts/defaults/lockup
 )

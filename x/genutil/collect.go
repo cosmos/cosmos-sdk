@@ -10,9 +10,9 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/core/address"
 	cfg "github.com/cometbft/cometbft/config"
 
+	"cosmossdk.io/core/address"
 	bankexported "cosmossdk.io/x/bank/exported"
 	stakingtypes "cosmossdk.io/x/staking/types"
 

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"

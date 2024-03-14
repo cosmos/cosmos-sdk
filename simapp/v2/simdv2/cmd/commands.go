@@ -42,7 +42,7 @@ func initRootCmd(
 	txConfig client.TxConfig,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	appCodec codec.Codec,
-	moduleManager *module.Manager,
+	moduleManager *runtimev2.MM,
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -75,7 +75,7 @@ func startCommand() *cobra.Command {
 		Short: "Start the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			sa := simapp.NewSimApp(serverCtx.Viper)
+			sa := simapp.NewSimApp(serverCtx.Logger, serverCtx.Viper)
 			am := sa.App.AppManager
 			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), cometbft.Config{})
 			ctx := cmd.Context()
@@ -185,13 +185,13 @@ func appExport(
 
 	var simApp *simapp.SimApp
 	if height != -1 {
-		simApp = simapp.NewSimApp(appOpts)
+		simApp = simapp.NewSimApp(logger, appOpts)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(appOpts)
+		simApp = simapp.NewSimApp(logger, appOpts)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

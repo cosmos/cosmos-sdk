@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"cosmossdk.io/log"
 	_ "embed"
 	"os"
 	"path/filepath"
@@ -82,6 +83,7 @@ func AppConfig() depinject.Config {
 
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
+	logger log.Logger,
 	appOpts servertypes.AppOptions,
 ) *SimApp {
 	var (
@@ -93,7 +95,7 @@ func NewSimApp(
 		appConfig = depinject.Configs(
 			AppConfig(),
 			depinject.Supply(
-				// supply the application options
+				logger,
 				appOpts,
 
 				// ADVANCED CONFIGURATION

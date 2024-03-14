@@ -130,3 +130,15 @@ func (a *App) GetStore() Store {
 func (a *App) GetLogger() log.Logger {
 	return a.logger
 }
+
+func (a *App) ExecuteGenesisTx(_ []byte) error {
+	panic("not implemented")
+}
+
+func (a *App) SetAppVersion(context.Context, uint64) error {
+	panic("not implemented")
+}
+
+func (a *App) AppVersion(context.Context) (uint64, error) {
+	panic("not implemented")
+}

@@ -1,7 +1,9 @@
 package runtime
 
 import (
+	"cosmossdk.io/core/genesis"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"os"
 
 	corestore "cosmossdk.io/server/v2/core/store"
@@ -77,6 +79,8 @@ func init() {
 			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
 			ProvideRootStoreV2,
+			ProvideGenesisTxHandler,
+			ProvideAppVersionModifier,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -148,7 +152,7 @@ func ProvideModuleManager(logger log.Logger, cdc codec.Codec, config *runtimev2.
 	return NewModuleManager(logger, cdc, config, modules)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec address.ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -231,28 +235,20 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	return env, kvService, memService
 }
 
-type (
-	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
-	ValidatorAddressCodec address.Codec
-
-	// ConsensusAddressCodec is an alias for address.Codec for validator consensus addresses.
-	ConsensusAddressCodec address.Codec
-)
-
 type AddressCodecInputs struct {
 	depinject.In
 
 	AuthConfig    *authmodulev1.Module    `optional:"true"`
 	StakingConfig *stakingmodulev1.Module `optional:"true"`
 
-	AddressCodecFactory          func() address.Codec         `optional:"true"`
-	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
-	ConsensusAddressCodecFactory func() ConsensusAddressCodec `optional:"true"`
+	AddressCodecFactory          func() address.Codec                 `optional:"true"`
+	ValidatorAddressCodecFactory func() address.ValidatorAddressCodec `optional:"true"`
+	ConsensusAddressCodecFactory func() address.ConsensusAddressCodec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddressCodec, ConsensusAddressCodec) {
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, address.ValidatorAddressCodec, address.ConsensusAddressCodec) {
 	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
 	}
@@ -276,6 +272,14 @@ func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddress
 	return addresscodec.NewBech32Codec(in.AuthConfig.Bech32Prefix),
 		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixValidator),
 		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixConsensus)
+}
+
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+	return appBuilder.app
+}
+
+func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+	return app.app
 }
 
 func ProvideRootStoreV2(logger log.Logger) Store {

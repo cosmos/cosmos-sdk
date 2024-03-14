@@ -16,11 +16,6 @@ type EpochHooks interface {
 	GetModuleName() string
 }
 
-const (
-	// flag indicating whether this is a before epoch hook
-	isBeforeEpoch = true
-)
-
 var _ EpochHooks = MultiEpochHooks{}
 
 // combine multiple gamm hooks, all hook functions are run in array sequence.

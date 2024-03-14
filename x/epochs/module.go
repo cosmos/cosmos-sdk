@@ -6,11 +6,9 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/simulation"
 	"cosmossdk.io/x/epochs/types"
@@ -22,12 +20,11 @@ import (
 )
 
 var (
-	_ module.HasName                  = AppModule{}
-	_ module.HasAminoCodec            = AppModule{}
-	_ module.HasGRPCGateway           = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-	_ module.AppModuleSimulation      = AppModule{}
-	_ module.HasGenesis               = AppModule{}
+	_ module.HasName             = AppModule{}
+	_ module.HasAminoCodec       = AppModule{}
+	_ module.HasGRPCGateway      = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
@@ -66,15 +63,6 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetTxCmd returns the epochs module's root tx command.
-func (am AppModule) GetTxCmd() *cobra.Command {
-	return nil
-}
-
-// RegisterInterfaces registers the epochs module's interface types
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
 }
 
 // RegisterServices registers module services.

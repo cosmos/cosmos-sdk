@@ -11,22 +11,28 @@ import (
 // InitGenesis initializes default parameters and the keeper's address to
 // pubkey map.
 func (keeper Keeper) InitGenesis(ctx context.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) error {
+	var fnErr error
 	err := stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator sdk.ValidatorI) bool {
 			consPk, err := validator.ConsPubKey()
 			if err != nil {
-				panic(err)
+				fnErr = err
+				return true
 			}
 
 			err = keeper.AddrPubkeyRelation.Set(ctx, consPk.Address(), consPk)
 			if err != nil {
-				panic(err)
+				fnErr = err
+				return true
 			}
 			return false
 		},
 	)
 	if err != nil {
 		return err
+	}
+	if fnErr != nil {
+		return fnErr
 	}
 
 	for _, info := range data.SigningInfos {
@@ -62,17 +68,17 @@ func (keeper Keeper) InitGenesis(ctx context.Context, stakingKeeper types.Stakin
 // ExportGenesis writes the current store values
 // to a genesis file, which can be imported again
 // with InitGenesis
-func (keeper Keeper) ExportGenesis(ctx context.Context) (data *types.GenesisState) {
+func (keeper Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
 	params, err := keeper.Params.Get(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
 	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool, err error) {
 		bechAddr, err := keeper.sk.ConsensusAddressCodec().BytesToString(address)
 		if err != nil {
-			panic(err)
+			return true, err
 		}
 		signingInfos = append(signingInfos, types.SigningInfo{
 			Address:              bechAddr,
@@ -81,7 +87,7 @@ func (keeper Keeper) ExportGenesis(ctx context.Context) (data *types.GenesisStat
 
 		localMissedBlocks, err := keeper.GetValidatorMissedBlocks(ctx, address)
 		if err != nil {
-			panic(err)
+			return true, err
 		}
 
 		missedBlocks = append(missedBlocks, types.ValidatorMissedBlocks{
@@ -92,7 +98,7 @@ func (keeper Keeper) ExportGenesis(ctx context.Context) (data *types.GenesisStat
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return types.NewGenesisState(params, signingInfos, missedBlocks)
+	return types.NewGenesisState(params, signingInfos, missedBlocks), nil
 }

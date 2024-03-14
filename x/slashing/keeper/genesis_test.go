@@ -30,7 +30,8 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 
 	s.Require().NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr1, info1))
 	s.Require().NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr2, info2))
-	genesisState := keeper.ExportGenesis(ctx)
+	genesisState, err := keeper.ExportGenesis(ctx)
+	require.NoError(err)
 
 	require.Equal(genesisState.Params, testutil.TestParams())
 	require.Len(genesisState.SigningInfos, 2)

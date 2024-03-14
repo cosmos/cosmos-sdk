@@ -55,7 +55,8 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 	err := s.keeper.ConstantFee.Set(s.sdkCtx, constantFee)
 	s.Require().NoError(err)
-	genesis := s.keeper.ExportGenesis(s.sdkCtx)
+	genesis, err := s.keeper.ExportGenesis(s.sdkCtx)
+	s.Require().NoError(err)
 
 	// set constant fee to zero
 	constantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(0))
@@ -63,7 +64,8 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	s.Require().NoError(err)
 
 	s.keeper.InitGenesis(s.sdkCtx, genesis)
-	newGenesis := s.keeper.ExportGenesis(s.sdkCtx)
+	newGenesis, err := s.keeper.ExportGenesis(s.sdkCtx)
+	s.Require().NoError(err)
 	s.Require().Equal(genesis, newGenesis)
 }
 

@@ -4849,14 +4849,14 @@ func (x *_MsgWithdrawResponse_2_list) IsValid() bool {
 
 var (
 	md_MsgWithdrawResponse                 protoreflect.MessageDescriptor
-	fd_MsgWithdrawResponse_reciever        protoreflect.FieldDescriptor
+	fd_MsgWithdrawResponse_receiver        protoreflect.FieldDescriptor
 	fd_MsgWithdrawResponse_amount_received protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_defaults_lockup_tx_proto_init()
 	md_MsgWithdrawResponse = File_cosmos_accounts_defaults_lockup_tx_proto.Messages().ByName("MsgWithdrawResponse")
-	fd_MsgWithdrawResponse_reciever = md_MsgWithdrawResponse.Fields().ByName("reciever")
+	fd_MsgWithdrawResponse_receiver = md_MsgWithdrawResponse.Fields().ByName("receiver")
 	fd_MsgWithdrawResponse_amount_received = md_MsgWithdrawResponse.Fields().ByName("amount_received")
 }
 
@@ -4925,9 +4925,9 @@ func (x *fastReflection_MsgWithdrawResponse) Interface() protoreflect.ProtoMessa
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgWithdrawResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Reciever != "" {
-		value := protoreflect.ValueOfString(x.Reciever)
-		if !f(fd_MsgWithdrawResponse_reciever, value) {
+	if x.Receiver != "" {
+		value := protoreflect.ValueOfString(x.Receiver)
+		if !f(fd_MsgWithdrawResponse_receiver, value) {
 			return
 		}
 	}
@@ -4952,8 +4952,8 @@ func (x *fastReflection_MsgWithdrawResponse) Range(f func(protoreflect.FieldDesc
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgWithdrawResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.reciever":
-		return x.Reciever != ""
+	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.receiver":
+		return x.Receiver != ""
 	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.amount_received":
 		return len(x.AmountReceived) != 0
 	default:
@@ -4972,8 +4972,8 @@ func (x *fastReflection_MsgWithdrawResponse) Has(fd protoreflect.FieldDescriptor
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgWithdrawResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.reciever":
-		x.Reciever = ""
+	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.receiver":
+		x.Receiver = ""
 	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.amount_received":
 		x.AmountReceived = nil
 	default:
@@ -4992,8 +4992,8 @@ func (x *fastReflection_MsgWithdrawResponse) Clear(fd protoreflect.FieldDescript
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgWithdrawResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.reciever":
-		value := x.Reciever
+	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.receiver":
+		value := x.Receiver
 		return protoreflect.ValueOfString(value)
 	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.amount_received":
 		if len(x.AmountReceived) == 0 {
@@ -5021,8 +5021,8 @@ func (x *fastReflection_MsgWithdrawResponse) Get(descriptor protoreflect.FieldDe
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgWithdrawResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.reciever":
-		x.Reciever = value.Interface().(string)
+	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.receiver":
+		x.Receiver = value.Interface().(string)
 	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.amount_received":
 		lv := value.List()
 		clv := lv.(*_MsgWithdrawResponse_2_list)
@@ -5053,8 +5053,8 @@ func (x *fastReflection_MsgWithdrawResponse) Mutable(fd protoreflect.FieldDescri
 		}
 		value := &_MsgWithdrawResponse_2_list{list: &x.AmountReceived}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.reciever":
-		panic(fmt.Errorf("field reciever of message cosmos.accounts.defaults.lockup.MsgWithdrawResponse is not mutable"))
+	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.receiver":
+		panic(fmt.Errorf("field receiver of message cosmos.accounts.defaults.lockup.MsgWithdrawResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.lockup.MsgWithdrawResponse"))
@@ -5068,7 +5068,7 @@ func (x *fastReflection_MsgWithdrawResponse) Mutable(fd protoreflect.FieldDescri
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgWithdrawResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.reciever":
+	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.receiver":
 		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.defaults.lockup.MsgWithdrawResponse.amount_received":
 		list := []*v1beta1.Coin{}
@@ -5142,7 +5142,7 @@ func (x *fastReflection_MsgWithdrawResponse) ProtoMethods() *protoiface.Methods 
 		var n int
 		var l int
 		_ = l
-		l = len(x.Reciever)
+		l = len(x.Receiver)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -5197,10 +5197,10 @@ func (x *fastReflection_MsgWithdrawResponse) ProtoMethods() *protoiface.Methods 
 				dAtA[i] = 0x12
 			}
 		}
-		if len(x.Reciever) > 0 {
-			i -= len(x.Reciever)
-			copy(dAtA[i:], x.Reciever)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reciever)))
+		if len(x.Receiver) > 0 {
+			i -= len(x.Receiver)
+			copy(dAtA[i:], x.Receiver)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Receiver)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -5255,7 +5255,7 @@ func (x *fastReflection_MsgWithdrawResponse) ProtoMethods() *protoiface.Methods 
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reciever", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Receiver", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -5283,7 +5283,7 @@ func (x *fastReflection_MsgWithdrawResponse) ProtoMethods() *protoiface.Methods 
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Reciever = string(dAtA[iNdEx:postIndex])
+				x.Receiver = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -5785,7 +5785,7 @@ type MsgWithdrawResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Reciever       string          `protobuf:"bytes,1,opt,name=reciever,proto3" json:"reciever,omitempty"`
+	Receiver       string          `protobuf:"bytes,1,opt,name=receiver,proto3" json:"receiver,omitempty"`
 	AmountReceived []*v1beta1.Coin `protobuf:"bytes,2,rep,name=amount_received,json=amountReceived,proto3" json:"amount_received,omitempty"`
 }
 
@@ -5809,9 +5809,9 @@ func (*MsgWithdrawResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_lockup_tx_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *MsgWithdrawResponse) GetReciever() string {
+func (x *MsgWithdrawResponse) GetReceiver() string {
 	if x != nil {
-		return x.Reciever
+		return x.Receiver
 	}
 	return ""
 }
@@ -5947,10 +5947,10 @@ var file_cosmos_accounts_defaults_lockup_tx_proto_rawDesc = []byte{
 	0x06, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x3a, 0x17, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f,
 	0x00, 0x82, 0xe7, 0xb0, 0x2a, 0x0a, 0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x65, 0x72,
 	0x22, 0xd8, 0x01, 0x0a, 0x13, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a, 0x08, 0x72, 0x65, 0x63, 0x69,
-	0x65, 0x76, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a, 0x08, 0x72, 0x65, 0x63, 0x65,
+	0x69, 0x76, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x72, 0x65, 0x63, 0x69, 0x65, 0x76, 0x65, 0x72, 0x12, 0x8a,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x72, 0x12, 0x8a,
 	0x01, 0x0a, 0x0f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76,
 	0x65, 0x64, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,

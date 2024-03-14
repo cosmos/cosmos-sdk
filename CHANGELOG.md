@@ -144,9 +144,9 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#18607](https://github.com/cosmos/cosmos-sdk/pull/18607) Removed address verifier from global config, moved verifier function to bech32 codec.
 * (server) [#18909](https://github.com/cosmos/cosmos-sdk/pull/18909) Remove configuration endpoint on grpc reflection endpoint in favour of auth module bech32prefix endpoint already exposed.
 * (crypto) [#19541](https://github.com/cosmos/cosmos-sdk/pull/19541) The deprecated `FromTmProtoPublicKey`, `ToTmProtoPublicKey`, `FromTmPubKeyInterface` and `ToTmPubKeyInterface` functions have been removed. Use their replacements (`Cmt` instead of `Tm`) instead.
-* (types) [#19652](https://github.com/cosmos/cosmos-sdk/pull/19652)
+* (types) [#19652](https://github.com/cosmos/cosmos-sdk/pull/19652) and [#19758](https://github.com/cosmos/cosmos-sdk/pull/19758)
     * Moved`types/module.HasRegisterInterfaces` to `cosmossdk.io/core`.
-    * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.LegacyRegistry` interface.
+    * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
 * (types) [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) and [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) All genesis interfaces now don't take `codec.JsonCodec`.
     * Every module has the codec already, passing it created an unneeded dependency.
     * Additionally, to reflect this change, the module manager does not take a codec either.

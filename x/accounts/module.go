@@ -50,8 +50,8 @@ func (m AppModule) IsAppModule() {}
 
 func (AppModule) Name() string { return ModuleName }
 
-func (m AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	msgservice.RegisterMsgServiceDesc(registry, v1.MsgServiceDesc())
+func (m AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	msgservice.RegisterMsgServiceDesc(registrar, v1.MsgServiceDesc())
 }
 
 // App module services

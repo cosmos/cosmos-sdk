@@ -4,7 +4,7 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 )
 
-type LegacyRegistry interface {
+type InterfaceRegistrar interface {
 	// RegisterInterface associates protoName as the public name for the
 	// interface passed in as iface. This is to be used primarily to create
 	// a public facing registry of interface implementations for clients.

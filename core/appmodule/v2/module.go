@@ -19,6 +19,14 @@ type AppModule interface {
 	IsOnePerModuleType()
 }
 
+// HasPreBlocker is the extension interface that modules should implement to run
+// custom logic before BeginBlock.
+type HasPreBlocker interface {
+	AppModule
+	// PreBlock is method that will be run before BeginBlock.
+	PreBlock(context.Context) error
+}
+
 // HasBeginBlocker is the extension interface that modules should implement to run
 // custom logic before transaction processing in a block.
 type HasBeginBlocker interface {
@@ -94,5 +102,5 @@ type ValidatorUpdate struct {
 
 // HasRegisterInterfaces is the interface for modules to register their msg types.
 type HasRegisterInterfaces interface {
-	RegisterInterfaces(registry.LegacyRegistry)
+	RegisterInterfaces(registry.InterfaceRegistrar)
 }

@@ -24,6 +24,7 @@ const (
 	VotingPeriod                  = "voting_period"
 	ExpeditedVotingPeriod         = "expedited_voting_period"
 	Quorum                        = "quorum"
+	ExpeditedQuorum               = "expedited_quorum"
 	YesQuorum                     = "yes_quorum"
 	Threshold                     = "threshold"
 	ExpeditedThreshold            = "expedited_threshold"
@@ -151,11 +152,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var yesQuorum sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(YesQuorum, &yesQuorum, simState.Rand, func(r *rand.Rand) { yesQuorum = GenQuorum(r) })
 
+	var expeditedQuorum sdkmath.LegacyDec
+	simState.AppParams.GetOrGenerate(ExpeditedQuorum, &expeditedQuorum, simState.Rand, func(r *rand.Rand) { expeditedQuorum = GenQuorum(r) })
+
 	var threshold sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(Threshold, &threshold, simState.Rand, func(r *rand.Rand) { threshold = GenThreshold(r) })
 
-	var expitedVotingThreshold sdkmath.LegacyDec
-	simState.AppParams.GetOrGenerate(ExpeditedThreshold, &expitedVotingThreshold, simState.Rand, func(r *rand.Rand) { expitedVotingThreshold = GenExpeditedThreshold(r) })
+	var expeditedVotingThreshold sdkmath.LegacyDec
+	simState.AppParams.GetOrGenerate(ExpeditedThreshold, &expeditedVotingThreshold, simState.Rand, func(r *rand.Rand) { expeditedVotingThreshold = GenExpeditedThreshold(r) })
 
 	var veto sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(Veto, &veto, simState.Rand, func(r *rand.Rand) { veto = GenVeto(r) })
@@ -168,7 +172,29 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,
-		v1.NewParams(minDeposit, expeditedMinDeposit, depositPeriod, votingPeriod, expeditedVotingPeriod, quorum.String(), yesQuorum.String(), threshold.String(), expitedVotingThreshold.String(), veto.String(), minInitialDepositRatio.String(), proposalCancelRate.String(), "", proposalMaxCancelVotingPeriod.String(), simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0, minDepositRatio.String(), optimisticRejectedThreshold.String(), []string{}),
+		v1.NewParams(
+			minDeposit,
+			expeditedMinDeposit,
+			depositPeriod,
+			votingPeriod,
+			expeditedVotingPeriod,
+			quorum.String(),
+			yesQuorum.String(),
+			expeditedQuorum.String(),
+			threshold.String(),
+			expeditedVotingThreshold.String(),
+			veto.String(),
+			minInitialDepositRatio.String(),
+			proposalCancelRate.String(),
+			"",
+			proposalMaxCancelVotingPeriod.String(),
+			simState.Rand.Intn(2) == 0,
+			simState.Rand.Intn(2) == 0,
+			simState.Rand.Intn(2) == 0,
+			minDepositRatio.String(),
+			optimisticRejectedThreshold.String(),
+			[]string{},
+		),
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")

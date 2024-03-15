@@ -1,3 +1,5 @@
+// module_test inconsistenctly import appmodulev2 & appmodulev1 due to limitation in mockgen
+// eventually, when we change mocking library, we should be consistent in our appmodule imports
 package module_test
 
 import (
@@ -12,9 +14,9 @@ import (
 type AppModuleWithAllExtensions interface {
 	module.AppModule
 	module.HasServices
-	appmodulev2.HasGenesis
 	module.HasInvariants
-	module.HasConsensusVersion
+	appmodulev2.HasConsensusVersion
+	appmodulev2.HasGenesis
 	module.HasABCIEndBlock
 	module.HasName
 }
@@ -25,7 +27,7 @@ type AppModuleWithAllExtensionsABCI interface {
 	module.HasServices
 	module.HasABCIGenesis
 	module.HasInvariants
-	module.HasConsensusVersion
+	appmodulev2.HasConsensusVersion
 	module.HasABCIEndBlock
 	module.HasName
 }
@@ -43,5 +45,5 @@ type CoreAppModule interface {
 
 type CoreAppModuleWithPreBlock interface {
 	CoreAppModule
-	appmodule.HasPreBlocker
+	appmodulev2.HasPreBlocker
 }

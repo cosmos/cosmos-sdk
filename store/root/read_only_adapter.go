@@ -25,8 +25,8 @@ func NewReadOnlyAdapter(v uint64, rs store.RootStore) *ReaderMap {
 	}
 }
 
-func (roa *ReaderMap) GetReader(actor []byte) (Reader, error) {
-	return *NewReader(roa.version, roa.rootStore, actor), nil
+func (roa *ReaderMap) GetReader(actor []byte) (corestorev2.Reader, error) {
+	return NewReader(roa.version, roa.rootStore, actor), nil
 }
 
 type Reader struct {

@@ -59,7 +59,6 @@ type BaseViewKeeper struct {
 	cdc         codec.BinaryCodec
 	environment appmodule.Environment
 	ak          types.AccountKeeper
-	logger      log.Logger
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -70,13 +69,12 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper, logger log.Logger) BaseViewKeeper {
+func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := BaseViewKeeper{
 		cdc:           cdc,
 		environment:   env,
 		ak:            ak,
-		logger:        logger,
 		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
 		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
 		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
@@ -99,7 +97,7 @@ func (k BaseViewKeeper) HasBalance(ctx context.Context, addr sdk.AccAddress, amt
 
 // Logger returns a module-specific logger.
 func (k BaseViewKeeper) Logger() log.Logger {
-	return k.logger
+	return k.environment.Logger
 }
 
 // GetAllBalances returns all the account balances for the given account address.

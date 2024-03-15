@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, crisis.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -54,7 +55,8 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 	err := s.keeper.ConstantFee.Set(s.sdkCtx, constantFee)
 	s.Require().NoError(err)
-	genesis := s.keeper.ExportGenesis(s.sdkCtx)
+	genesis, err := s.keeper.ExportGenesis(s.sdkCtx)
+	s.Require().NoError(err)
 
 	// set constant fee to zero
 	constantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(0))
@@ -62,7 +64,8 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	s.Require().NoError(err)
 
 	s.keeper.InitGenesis(s.sdkCtx, genesis)
-	newGenesis := s.keeper.ExportGenesis(s.sdkCtx)
+	newGenesis, err := s.keeper.ExportGenesis(s.sdkCtx)
+	s.Require().NoError(err)
 	s.Require().Equal(genesis, newGenesis)
 }
 

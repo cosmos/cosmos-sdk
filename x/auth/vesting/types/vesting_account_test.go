@@ -18,6 +18,7 @@ import (
 	vestingtestutil "cosmossdk.io/x/auth/vesting/testutil"
 	"cosmossdk.io/x/auth/vesting/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -40,7 +41,7 @@ type VestingAccountTestSuite struct {
 }
 
 func (s *VestingAccountTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, vesting.AppModule{})
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())

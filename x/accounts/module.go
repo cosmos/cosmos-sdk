@@ -4,17 +4,15 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -23,41 +21,38 @@ import (
 const (
 	ModuleName = "accounts"
 	StoreKey   = "_" + ModuleName // unfortunately accounts collides with auth store key
+
+	ConsensusVersion = 1
 )
 
 // ModuleAccountAddress defines the x/accounts module address.
 var ModuleAccountAddress = address.Module(ModuleName)
 
-const (
-	ConsensusVersion = 1
-)
-
 var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ module.HasName = AppModule{}
 
-	_ module.HasName             = AppModule{}
-	_ module.HasGenesis          = AppModule{}
-	_ module.HasConsensusVersion = AppModule{}
+	_ appmodule.AppModule           = AppModule{}
+	_ appmodule.HasServices         = AppModule{}
+	_ appmodule.HasGenesis          = AppModule{}
+	_ appmodule.HasConsensusVersion = AppModule{}
 )
 
-func NewAppModule(k Keeper) AppModule {
-	return AppModule{k: k}
+func NewAppModule(cdc codec.Codec, k Keeper) AppModule {
+	return AppModule{k: k, cdc: cdc}
 }
 
 type AppModule struct {
-	k Keeper
+	cdc codec.Codec
+	k   Keeper
 }
 
 func (m AppModule) IsAppModule() {}
 
-func (m AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+func (AppModule) Name() string { return ModuleName }
 
-func (m AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
-	msgservice.RegisterMsgServiceDesc(registry, v1.MsgServiceDesc())
+func (m AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	msgservice.RegisterMsgServiceDesc(registrar, v1.MsgServiceDesc())
 }
-
-func (m AppModule) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // App module services
 
@@ -70,37 +65,38 @@ func (m AppModule) RegisterServices(registar grpc.ServiceRegistrar) error {
 
 // App module genesis
 
-func (AppModule) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessage {
-	return jsonCodec.MustMarshalJSON(&v1.GenesisState{})
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(&v1.GenesisState{})
 }
 
-func (AppModule) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (am AppModule) ValidateGenesis(message json.RawMessage) error {
 	gs := &v1.GenesisState{}
-	if err := jsonCodec.UnmarshalJSON(message, gs); err != nil {
+	if err := am.cdc.UnmarshalJSON(message, gs); err != nil {
 		return err
 	}
 	// Add validation logic for gs here
 	return nil
 }
 
-func (m AppModule) InitGenesis(ctx context.Context, jsonCodec codec.JSONCodec, message json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, message json.RawMessage) error {
 	gs := &v1.GenesisState{}
-	jsonCodec.MustUnmarshalJSON(message, gs)
-	err := m.k.ImportState(ctx, gs)
-	if err != nil {
-		panic(err)
+	if err := am.cdc.UnmarshalJSON(message, gs); err != nil {
+		return err
 	}
+	err := am.k.ImportState(ctx, gs)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (m AppModule) ExportGenesis(ctx context.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-	gs, err := m.k.ExportState(ctx)
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	gs, err := am.k.ExportState(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return jsonCodec.MustMarshalJSON(gs)
+	return am.cdc.MarshalJSON(gs)
 }
-
-func (AppModule) Name() string { return ModuleName }
 
 func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.TxCmd(ModuleName)

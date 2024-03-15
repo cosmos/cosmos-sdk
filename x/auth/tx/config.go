@@ -1,9 +1,11 @@
 package tx
 
 import (
+	"errors"
 	"fmt"
 
-	authcodec "cosmossdk.io/x/auth/codec"
+	"cosmossdk.io/core/address"
+	txdecode "cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
@@ -24,6 +26,7 @@ type config struct {
 	jsonEncoder    sdk.TxEncoder
 	protoCodec     codec.Codec
 	signingContext *txsigning.Context
+	txDecoder      *txdecode.Decoder
 }
 
 // ConfigOptions define the configuration of a TxConfig when calling NewTxConfigWithOptions.
@@ -73,12 +76,15 @@ var DefaultSignModes = []signingtypes.SignMode{
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
-func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMode,
-	customSignModes ...txsigning.SignModeHandler,
+func NewTxConfig(protoCodec codec.Codec, addressCodec, validatorAddressCodec address.Codec, enabledSignModes []signingtypes.SignMode, customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
 		EnabledSignModes: enabledSignModes,
 		CustomSignModes:  customSignModes,
+		SigningOptions: &txsigning.Options{
+			AddressCodec:          addressCodec,
+			ValidatorAddressCodec: validatorAddressCodec,
+		},
 	})
 	if err != nil {
 		panic(err)
@@ -86,13 +92,12 @@ func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMod
 	return txConfig
 }
 
-// NewDefaultSigningOptions returns the sdk default signing options used by x/tx.  This includes account and
+// NewSigningOptions returns signing options used by x/tx. This includes account and
 // validator address prefix enabled codecs.
-func NewDefaultSigningOptions() (*txsigning.Options, error) {
-	sdkConfig := sdk.GetConfig()
+func NewSigningOptions(addressCodec, validatorAddressCodec address.Codec) (*txsigning.Options, error) {
 	return &txsigning.Options{
-		AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
-		ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
+		AddressCodec:          addressCodec,
+		ValidatorAddressCodec: validatorAddressCodec,
 	}, nil
 }
 
@@ -102,10 +107,7 @@ func NewDefaultSigningOptions() (*txsigning.Options, error) {
 func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
 	var err error
 	if configOpts.SigningOptions == nil {
-		configOpts.SigningOptions, err = NewDefaultSigningOptions()
-		if err != nil {
-			return nil, err
-		}
+		return nil, errors.New("signing options not provided")
 	}
 	if configOpts.SigningContext == nil {
 		configOpts.SigningContext, err = txsigning.NewContext(*configOpts.SigningOptions)
@@ -172,26 +174,11 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		jsonDecoder: configOptions.JSONDecoder,
 		jsonEncoder: configOptions.JSONEncoder,
 	}
-	if configOptions.ProtoDecoder == nil {
-		txConfig.decoder = DefaultTxDecoder(protoCodec)
-	}
-	if configOptions.ProtoEncoder == nil {
-		txConfig.encoder = DefaultTxEncoder()
-	}
-	if configOptions.JSONDecoder == nil {
-		txConfig.jsonDecoder = DefaultJSONTxDecoder(protoCodec)
-	}
-	if configOptions.JSONEncoder == nil {
-		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
-	}
 
 	var err error
 	if configOptions.SigningContext == nil {
 		if configOptions.SigningOptions == nil {
-			configOptions.SigningOptions, err = NewDefaultSigningOptions()
-			if err != nil {
-				return nil, err
-			}
+			return nil, errors.New("signing options not provided")
 		}
 		if configOptions.SigningOptions.FileResolver == nil {
 			configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
@@ -201,6 +188,25 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 			return nil, err
 		}
 	}
+
+	if configOptions.ProtoDecoder == nil {
+		dec, err := txdecode.NewDecoder(txdecode.Options{SigningContext: configOptions.SigningContext})
+		if err != nil {
+			return nil, err
+		}
+		txConfig.decoder = txV2toInterface(configOptions.SigningOptions.AddressCodec, protoCodec, dec)
+		txConfig.txDecoder = dec
+	}
+	if configOptions.ProtoEncoder == nil {
+		txConfig.encoder = DefaultTxEncoder()
+	}
+	if configOptions.JSONDecoder == nil {
+		txConfig.jsonDecoder = DefaultJSONTxDecoder(configOptions.SigningOptions.AddressCodec, protoCodec, txConfig.txDecoder)
+	}
+	if configOptions.JSONEncoder == nil {
+		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
+	}
+
 	txConfig.signingContext = configOptions.SigningContext
 
 	if configOptions.SigningHandler != nil {
@@ -217,17 +223,17 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {
-	return newBuilder(g.protoCodec)
+	return newBuilder(g.signingContext.AddressCodec(), g.txDecoder, g.protoCodec)
 }
 
 // WrapTxBuilder returns a builder from provided transaction
 func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
-	newBuilder, ok := newTx.(*wrapper)
+	gogoTx, ok := newTx.(*gogoTxWrapper)
 	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, newTx)
+		return nil, fmt.Errorf("expected %T, got %T", &gogoTxWrapper{}, newTx)
 	}
 
-	return newBuilder, nil
+	return newBuilderFromDecodedTx(g.signingContext.AddressCodec(), g.txDecoder, g.protoCodec, gogoTx)
 }
 
 func (g config) SignModeHandler() *txsigning.HandlerMap {
@@ -252,4 +258,14 @@ func (g config) TxJSONDecoder() sdk.TxDecoder {
 
 func (g config) SigningContext() *txsigning.Context {
 	return g.signingContext
+}
+
+func txV2toInterface(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *txdecode.Decoder) func([]byte) (sdk.Tx, error) {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		decodedTx, err := decoder.Decode(txBytes)
+		if err != nil {
+			return nil, err
+		}
+		return newWrapperFromDecodedTx(addrCodec, cdc, decodedTx)
+	}
 }

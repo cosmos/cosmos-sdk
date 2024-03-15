@@ -36,12 +36,3 @@ type Manager interface {
 	// not a state-machine breaking change.
 	EmitNonConsensus(event protoiface.MessageV1) error
 }
-
-// KVEventAttribute is a kv-pair event attribute.
-type Attribute struct {
-	Key, Value string
-}
-
-func NewAttribute(key, value string) Attribute {
-	return Attribute{Key: key, Value: value}
-}

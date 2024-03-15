@@ -102,8 +102,10 @@ func TestImportExportQueues(t *testing.T) {
 
 	authGenState, err := s1.AccountKeeper.ExportGenesis(ctx)
 	require.NoError(t, err)
-	bankGenState := s1.BankKeeper.ExportGenesis(ctx)
-	stakingGenState := s1.StakingKeeper.ExportGenesis(ctx)
+	bankGenState, err := s1.BankKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
+	stakingGenState, err := s1.StakingKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
 
 	// export the state and import it into a new app
 	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)
@@ -173,7 +175,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.DeepEqual(t, sdk.Coins(params.MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
-	err = gov.EndBlocker(ctx2, s2.GovKeeper)
+	err = s2.GovKeeper.EndBlocker(ctx2)
 	assert.NilError(t, err)
 
 	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)
@@ -204,23 +206,26 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.app
 	ctx := app.BaseApp.NewContext(false)
-	require.Panics(t, func() {
-		gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
-			Deposits: v1.Deposits{
-				{
-					ProposalId: 1234,
-					Depositor:  "me",
-					Amount: sdk.Coins{
-						sdk.NewCoin(
-							"stake",
-							sdkmath.NewInt(1234),
-						),
-					},
+
+	params := v1.DefaultParams()
+	err := gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
+		Deposits: v1.Deposits{
+			{
+				ProposalId: 1234,
+				Depositor:  "me",
+				Amount: sdk.Coins{
+					sdk.NewCoin(
+						"stake",
+						sdkmath.NewInt(1234),
+					),
 				},
 			},
-		})
+		},
+		Params: &params,
 	})
-	gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
+	require.Error(t, err)
+	err = gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
+	require.NoError(t, err)
 	genState, err := gov.ExportGenesis(ctx, suite.GovKeeper)
 	require.NoError(t, err)
 	require.Equal(t, genState, v1.DefaultGenesisState())

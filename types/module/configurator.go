@@ -1,7 +1,6 @@
 package module
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cosmos/gogoproto/grpc"
@@ -10,6 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -47,7 +47,7 @@ type Configurator interface {
 
 	// Register registers an in-place store migration for a module.
 	// It permits to register modules migrations that have migrated to serverv2 but still be compatible with baseapp.
-	Register(moduleName string, fromVersion uint64, handler func(context.Context) error) error
+	Register(moduleName string, fromVersion uint64, handler appmodule.MigrationHandler) error
 }
 
 type configurator struct {
@@ -124,7 +124,7 @@ func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, 
 
 // Register implements the Configurator.Register method
 // It allows to register modules migrations that have migrated to server/v2 but still be compatible with baseapp.
-func (c *configurator) Register(moduleName string, fromVersion uint64, handler func(context.Context) error) error {
+func (c *configurator) Register(moduleName string, fromVersion uint64, handler appmodule.MigrationHandler) error {
 	return c.RegisterMigration(moduleName, fromVersion, func(sdkCtx sdk.Context) error {
 		return handler(sdkCtx)
 	})

@@ -2,6 +2,7 @@ package textual
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -32,7 +33,7 @@ var _ RepeatedValueRenderer = coinsValueRenderer{}
 
 func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	if vr.coinMetadataQuerier == nil {
-		return nil, fmt.Errorf("expected non-nil coin metadata querier")
+		return nil, errors.New("expected non-nil coin metadata querier")
 	}
 
 	// Since this value renderer has a FormatRepeated method, the Format one
@@ -58,7 +59,7 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 
 func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	if vr.coinMetadataQuerier == nil {
-		return nil, fmt.Errorf("expected non-nil coin metadata querier")
+		return nil, errors.New("expected non-nil coin metadata querier")
 	}
 
 	protoCoins := v.List()

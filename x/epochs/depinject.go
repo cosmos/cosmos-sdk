@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"sort"
 
+	"golang.org/x/exp/maps"
+
 	modulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/epochs/keeper"
-
 	"cosmossdk.io/x/epochs/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"golang.org/x/exp/maps"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

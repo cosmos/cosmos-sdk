@@ -213,7 +213,7 @@ func TestRunMigrations(t *testing.T) {
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
 					"protocolpool": protocolpool.AppModule{}.ConsensusVersion(),
-					"epochs": epochs.AppModule{}.ConsensusVersion(),
+					"epochs":       epochs.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {

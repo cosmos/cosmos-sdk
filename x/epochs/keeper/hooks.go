@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+
 	"cosmossdk.io/x/epochs/types"
 )
 
@@ -23,6 +23,5 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, identifier string, epochNumbe
 
 // BeforeEpochStart new epoch is next block of epoch end block
 func (k Keeper) BeforeEpochStart(ctx context.Context, identifier string, epochNumber int64) error {
-	fmt.Println(k.hooks)
 	return k.Hooks().BeforeEpochStart(ctx, identifier, epochNumber, k.environment)
 }

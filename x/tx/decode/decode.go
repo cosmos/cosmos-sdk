@@ -152,14 +152,14 @@ func (dtx DecodedTx) GetGasLimit() (uint64, error) {
 }
 
 func (dtx DecodedTx) GetMessages() ([]proto.Message, error) {
-	if len(dtx.Messages) == 0 || dtx.Messages == nil {
+	if len(dtx.Messages) == 0 {
 		return nil, errors.New("messages not available or are nil")
 	}
 	return dtx.Messages, nil
 }
 
 func (dtx DecodedTx) GetSenders() ([][]byte, error) {
-	if dtx.Signers == nil {
+	if len(dtx.Signers) == 0 {
 		return nil, errors.New("senders not available or are nil")
 	}
 	return dtx.Signers, nil

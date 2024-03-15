@@ -20,6 +20,7 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -71,6 +72,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
+			ProvideSignerProvider,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -243,6 +245,10 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
+}
+
+func ProvideSignerProvider(app *AppBuilder) accounts.SignerProvider {
+	return app.app.cdc
 }
 
 type AddressCodecInputs struct {

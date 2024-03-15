@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -84,7 +85,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, evidence.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
@@ -115,7 +116,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	evidenceKeeper.SetRouter(router)
 
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModule{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, evidence.AppModule{})
 
 	suite.accountKeeper = accountKeeper
 

@@ -67,7 +67,6 @@ func init() {
 			ProvideMemoryStoreKey,
 			ProvideGenesisTxHandler,
 			ProvideEnvironment,
-			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideModuleManager,
 			ProvideAppVersionModifier,
@@ -82,6 +81,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	*codec.LegacyAmino,
 	*AppBuilder,
 	*baseapp.MsgServiceRouter,
+	*baseapp.GRPCQueryRouter,
 	appmodule.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
@@ -104,16 +104,18 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
+	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
 	app := &App{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
 		msgServiceRouter:  msgServiceRouter,
+		grpcQueryRouter:   grpcQueryRouter,
 	}
 	appBuilder := &AppBuilder{app}
 
-	return cdc, amino, appBuilder, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {
@@ -140,7 +142,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec address.ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -212,15 +214,26 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder, logger log.Logger) (store.KVStoreService, appmodule.Environment) {
+func ProvideEnvironment(
+	logger log.Logger,
+	config *runtimev1alpha1.Module,
+	key depinject.ModuleKey,
+	app *AppBuilder,
+	msgServiceRouter *baseapp.MsgServiceRouter,
+	queryServiceRouter *baseapp.GRPCQueryRouter,
+) (store.KVStoreService, store.MemoryStoreService, appmodule.Environment) {
 	storeKey := ProvideKVStoreKey(config, key, app)
 	kvService := kvStoreService{key: storeKey}
-	return kvService, NewEnvironment(kvService, logger)
-}
 
-func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {
-	storeKey := ProvideMemoryStoreKey(key, app)
-	return memStoreService{key: storeKey}
+	memStoreKey := ProvideMemoryStoreKey(key, app)
+	memStoreService := memStoreService{key: memStoreKey}
+
+	return kvService, memStoreService, NewEnvironment(
+		kvService,
+		logger,
+		EnvWithRouterService(queryServiceRouter, msgServiceRouter),
+		EnvWithMemStoreService(memStoreService),
+	)
 }
 
 func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
@@ -232,28 +245,20 @@ func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
 }
 
-type (
-	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
-	ValidatorAddressCodec address.Codec
-
-	// ConsensusAddressCodec is an alias for address.Codec for validator consensus addresses.
-	ConsensusAddressCodec address.Codec
-)
-
 type AddressCodecInputs struct {
 	depinject.In
 
 	AuthConfig    *authmodulev1.Module    `optional:"true"`
 	StakingConfig *stakingmodulev1.Module `optional:"true"`
 
-	AddressCodecFactory          func() address.Codec         `optional:"true"`
-	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
-	ConsensusAddressCodecFactory func() ConsensusAddressCodec `optional:"true"`
+	AddressCodecFactory          func() address.Codec                 `optional:"true"`
+	ValidatorAddressCodecFactory func() address.ValidatorAddressCodec `optional:"true"`
+	ConsensusAddressCodecFactory func() address.ConsensusAddressCodec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddressCodec, ConsensusAddressCodec) {
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, address.ValidatorAddressCodec, address.ConsensusAddressCodec) {
 	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
 	}

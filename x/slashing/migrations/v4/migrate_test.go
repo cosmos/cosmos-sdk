@@ -12,6 +12,7 @@ import (
 	v4 "cosmossdk.io/x/slashing/migrations/v4"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -20,7 +21,7 @@ import (
 var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 
 func TestMigrate(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(slashing.AppModule{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, slashing.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(slashingtypes.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)

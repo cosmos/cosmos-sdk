@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -20,6 +21,7 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,15 +31,16 @@ import (
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
+
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 
@@ -46,7 +49,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -88,9 +91,8 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 func TestAllocateTokensToManyValidators(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -103,9 +105,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -219,9 +223,8 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 func TestAllocateTokensTruncation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -234,9 +237,11 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,

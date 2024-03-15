@@ -18,7 +18,11 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 		return false, false, v1.TallyResult{}, err
 	}
 
-	totalVoterPower, results, err := k.calculateVoteResultsAndVotingPower(ctx, proposal.Id, validators)
+	if k.config.CalculateVoteResultsAndVotingPowerFn == nil {
+		k.config.CalculateVoteResultsAndVotingPowerFn = defaultCalculateVoteResultsAndVotingPower
+	}
+
+	totalVoterPower, results, err := k.config.CalculateVoteResultsAndVotingPowerFn(ctx, k, proposal.Id, validators)
 	if err != nil {
 		return false, false, v1.TallyResult{}, err
 	}
@@ -121,7 +125,7 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 }
 
 // tallyExpedited tallies the votes of an expedited proposal
-// If there is not enough quorum of votes, the proposal fails
+// If there is not enough expedited quorum of votes, the proposal fails
 // If no one votes (everyone abstains), proposal fails
 // If more than 1/3 of voters veto, proposal fails
 // If more than 2/3 of non-abstaining voters vote Yes, proposal passes
@@ -132,8 +136,8 @@ func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.
 
 	// If there is not enough quorum of votes, the proposal fails
 	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
-	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
-	if percentVoting.LT(quorum) {
+	expeditedQuorum, _ := math.LegacyNewDecFromStr(params.ExpeditedQuorum)
+	if percentVoting.LT(expeditedQuorum) {
 		return false, params.BurnVoteQuorum, tallyResults, nil
 	}
 
@@ -232,8 +236,9 @@ func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.Validat
 
 // calculateVoteResultsAndVotingPower iterate over all votes, tally up the voting power of each validator
 // and returns the votes results from voters
-func (k Keeper) calculateVoteResultsAndVotingPower(
+func defaultCalculateVoteResultsAndVotingPower(
 	ctx context.Context,
+	k Keeper,
 	proposalID uint64,
 	validators map[string]v1.ValidatorGovInfo,
 ) (math.LegacyDec, map[v1.VoteOption]math.LegacyDec, error) {

@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#19367](https://github.com/cosmos/cosmos-sdk/pull/19367) `appmodule.Environment` is received on the Keeper to get access to different application services
 
+### API Breaking Changes
+
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.
+
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/nft/v0.1.0) - 2023-11-07
 
 

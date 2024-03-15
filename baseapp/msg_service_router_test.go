@@ -136,9 +136,10 @@ func TestMsgService(t *testing.T) {
 		), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)
 	app := appBuilder.Build(dbm.NewMemDB(), nil)
+	signingCtx := interfaceRegistry.SigningContext()
 
 	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 

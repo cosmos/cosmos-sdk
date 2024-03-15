@@ -10,8 +10,12 @@ import (
 
 func TestRouterDoubleRegistration(t *testing.T) {
 	router := NewExecuteBuilder()
-	RegisterExecuteHandler(router, func(_ context.Context, req *types.StringValue) (*types.StringValue, error) { return nil, nil })
-	RegisterExecuteHandler(router, func(_ context.Context, req *types.StringValue) (*types.StringValue, error) { return nil, nil })
+	RegisterExecuteHandler(router, func(_ context.Context, req *types.StringValue) (*types.StringValue, error) {
+		return nil, nil
+	})
+	RegisterExecuteHandler(router, func(_ context.Context, req *types.StringValue) (*types.StringValue, error) {
+		return nil, nil
+	})
 
 	_, err := router.makeHandler()
 	require.ErrorContains(t, err, "already registered")

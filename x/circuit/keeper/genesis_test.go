@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,7 @@ func TestGenesisTestSuite(t *testing.T) {
 func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.ModuleName)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, circuit.AppModule{})
 
 	sdkCtx := testCtx.Ctx
 	s.ctx = sdkCtx
@@ -74,9 +75,11 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		DisabledTypeUrls:   []string{url},
 	}
 
-	s.keeper.InitGenesis(s.ctx, genesisState)
+	err = s.keeper.InitGenesis(s.ctx, genesisState)
+	s.Require().NoError(err)
 
-	exported := s.keeper.ExportGenesis(s.ctx)
+	exported, err := s.keeper.ExportGenesis(s.ctx)
+	s.Require().NoError(err)
 	bz, err := s.cdc.MarshalJSON(exported)
 	s.Require().NoError(err)
 

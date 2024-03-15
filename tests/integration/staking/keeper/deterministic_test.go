@@ -27,6 +27,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -68,7 +69,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModule{}, distribution.AppModule{}).Codec
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, distribution.AppModule{})
+	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -103,7 +105,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
-		log.NewNopLogger(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
@@ -112,11 +113,14 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
-		authtypes.ModuleName:    authModule,
-		banktypes.ModuleName:    bankModule,
-		stakingtypes.ModuleName: stakingModule,
-	})
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName:    authModule,
+			banktypes.ModuleName:    bankModule,
+			stakingtypes.ModuleName: stakingModule,
+		})
 
 	ctx := integrationApp.Context()
 
@@ -855,9 +859,10 @@ func TestGRPCRedelegations(t *testing.T) {
 func TestGRPCParams(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	coinDenomRegex := `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
 
 	rapid.Check(t, func(rt *rapid.T) {
-		bondDenom := rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(rt, "bond-denom")
+		bondDenom := rapid.StringMatching(coinDenomRegex).Draw(rt, "bond-denom")
 		params := stakingtypes.Params{
 			BondDenom:         bondDenom,
 			UnbondingTime:     durationGenerator().Draw(rt, "duration"),

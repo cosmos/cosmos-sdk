@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/module"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -16,7 +17,7 @@ import (
 // This test serves as a showcase that we need to be careful when unmarshalling
 // multiple times into the same reference.
 func TestGogoUnmarshalProposal(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 	cdc := encodingConfig.Codec
 
 	p1 := group.Proposal{Proposers: []string{"foo"}}

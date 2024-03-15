@@ -35,8 +35,8 @@ import (
 )
 
 var testMbm = module.NewManager(
-	staking.AppModule{},
-	genutil.AppModule{},
+	staking.NewAppModule(makeCodec(), nil, nil, nil),
+	genutil.NewAppModule(makeCodec(), nil, nil, nil, nil, nil),
 )
 
 func TestInitCmd(t *testing.T) {
@@ -71,7 +71,7 @@ func TestInitCmd(t *testing.T) {
 			marshaler := codec.NewProtoCodec(interfaceRegistry)
 			clientCtx := client.Context{}.
 				WithCodec(marshaler).
-				WithLegacyAmino(makeCodec()).
+				WithLegacyAmino(makeAminoCodec()).
 				WithHomeDir(home)
 
 			ctx := context.Background()
@@ -104,7 +104,7 @@ func TestInitRecover(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeCodec()).
+		WithLegacyAmino(makeAminoCodec()).
 		WithHomeDir(home)
 
 	ctx := context.Background()
@@ -135,7 +135,7 @@ func TestInitDefaultBondDenom(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeCodec()).
+		WithLegacyAmino(makeAminoCodec()).
 		WithHomeDir(home)
 
 	ctx := context.Background()
@@ -163,7 +163,7 @@ func TestEmptyState(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeCodec()).
+		WithLegacyAmino(makeAminoCodec()).
 		WithHomeDir(home)
 
 	ctx := context.Background()
@@ -256,7 +256,7 @@ func TestInitConfig(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeCodec()).
+		WithLegacyAmino(makeAminoCodec()).
 		WithChainID("foo"). // add chain-id to clientCtx
 		WithHomeDir(home)
 
@@ -302,7 +302,7 @@ func TestInitWithHeight(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeCodec()).
+		WithLegacyAmino(makeAminoCodec()).
 		WithChainID("foo"). // add chain-id to clientCtx
 		WithHomeDir(home)
 
@@ -334,7 +334,7 @@ func TestInitWithNegativeHeight(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeCodec()).
+		WithLegacyAmino(makeAminoCodec()).
 		WithChainID("foo"). // add chain-id to clientCtx
 		WithHomeDir(home)
 
@@ -356,9 +356,14 @@ func TestInitWithNegativeHeight(t *testing.T) {
 }
 
 // custom tx codec
-func makeCodec() *codec.LegacyAmino {
+func makeAminoCodec() *codec.LegacyAmino {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	return cdc
+}
+
+func makeCodec() codec.Codec {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	return codec.NewProtoCodec(interfaceRegistry)
 }

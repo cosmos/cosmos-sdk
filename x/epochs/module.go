@@ -68,7 +68,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 
 // RegisterInterfaces registers the authz module's interface types
 // Keep this func for suitable app legacy
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 }
 
 // RegisterServices registers module services.

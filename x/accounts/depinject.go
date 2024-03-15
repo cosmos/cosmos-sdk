@@ -43,6 +43,9 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
+	if in.SignerProvider == nil {
+		in.SignerProvider = in.Cdc
+	}
 	accountskeeper, err := NewKeeper(
 		in.Cdc, in.Environment, in.AddressCodec,
 		in.SignerProvider, in.ExecRouter, in.QueryRouter, in.Registry, nil,

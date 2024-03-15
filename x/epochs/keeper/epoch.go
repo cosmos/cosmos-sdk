@@ -31,8 +31,7 @@ func (k Keeper) AddEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
 	}
 	epoch.CurrentEpochStartHeight = k.environment.HeaderService.GetHeaderInfo(ctx).Height
 
-	err = k.EpochInfo.Set(ctx, epoch.Identifier, epoch)
-	return err
+	return k.EpochInfo.Set(ctx, epoch.Identifier, epoch)
 }
 
 // IterateEpochInfo iterate through epochs.

@@ -39,4 +39,5 @@ use (
 	./x/tx
 	./x/upgrade
 	./x/accounts/defaults/lockup
+	./server/v2/core
 )

@@ -11,6 +11,7 @@ import (
 
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+	corestore "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
@@ -84,7 +85,7 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
-func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
+func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	v, err := s.GetLatestVersion()
 	if err != nil {
 		return 0, nil, err
@@ -93,7 +94,7 @@ func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
 	return v, NewReadOnlyAdapter(v, s), nil
 }
 
-func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
+func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
 	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
 	// we should add a VersionExists() method to the VersionedDatabase interface.
 	//

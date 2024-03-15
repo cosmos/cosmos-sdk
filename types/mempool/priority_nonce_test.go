@@ -64,22 +64,21 @@ type signerExtractionAdapter struct {
 }
 
 func (a signerExtractionAdapter) GetSigners(tx sdk.Tx) ([]mempool.SignerData, error) {
-	if a.UseOld {
-		sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
-		if err != nil {
-			return nil, err
-		}
-		signerData := make([]mempool.SignerData, len(sigs))
-		for _, sig := range sigs {
-			signerData = append(signerData, mempool.SignerData{
-				Signer:   sig.PubKey.Address().Bytes(),
-				Sequence: sig.Sequence,
-			})
-		}
-		return signerData, nil
+	if !a.UseOld {
+		return mempool.NewDefaultSignerExtractionAdapter().GetSigners(tx)
 	}
-	signerData, err := mempool.NewDefaultSignerExtractionAdapter().GetSigners(tx)
-	return signerData, err
+	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	if err != nil {
+		return nil, err
+	}
+	signerData := make([]mempool.SignerData, len(sigs))
+	for _, sig := range sigs {
+		signerData = append(signerData, mempool.SignerData{
+			Signer:   sig.PubKey.Address().Bytes(),
+			Sequence: sig.Sequence,
+		})
+	}
+	return signerData, nil
 }
 
 func (s *MempoolTestSuite) TestPriorityNonceTxOrderWithAdapter() {

@@ -150,7 +150,7 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterInterfaces(arg0 registry.LegacyRegistry) {
+func (m *MockAppModuleWithAllExtensions) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -334,7 +334,7 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterInterfaces(arg0 registry.LegacyRegistry) {
+func (m *MockAppModuleWithAllExtensionsABCI) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }

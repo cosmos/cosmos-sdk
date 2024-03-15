@@ -311,7 +311,7 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 	}
 
 	return &lockuptypes.MsgWithdrawResponse{
-		Reciever:       msg.ToAddress,
+		Receiver:       msg.ToAddress,
 		AmountReceived: amount,
 	}, nil
 }

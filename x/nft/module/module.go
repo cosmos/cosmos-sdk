@@ -71,8 +71,8 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // RegisterInterfaces registers the nft module's interface types
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	nft.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	nft.RegisterInterfaces(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the nft module.

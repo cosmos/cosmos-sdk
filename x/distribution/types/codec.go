@@ -22,8 +22,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/distribution/Params", nil)
 }
 
-func RegisterInterfaces(registry registry.LegacyRegistry) {
-	registry.RegisterImplementations(
+func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	registrar.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgWithdrawDelegatorReward{},
 		&MsgWithdrawValidatorCommission{},
@@ -32,5 +32,5 @@ func RegisterInterfaces(registry registry.LegacyRegistry) {
 		&MsgDepositValidatorRewardsPool{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
 }

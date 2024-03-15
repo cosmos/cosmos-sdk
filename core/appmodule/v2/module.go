@@ -102,5 +102,5 @@ type ValidatorUpdate struct {
 
 // HasRegisterInterfaces is the interface for modules to register their msg types.
 type HasRegisterInterfaces interface {
-	RegisterInterfaces(registry.LegacyRegistry)
+	RegisterInterfaces(registry.InterfaceRegistrar)
 }

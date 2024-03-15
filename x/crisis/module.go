@@ -74,8 +74,8 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	types.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
 }
 
 // AddModuleInitFlags implements servertypes.ModuleInitFlags interface.

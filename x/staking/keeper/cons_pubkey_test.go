@@ -41,7 +41,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().Len(validators, 1)
 
 	validator := validators[0]
-	valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	valAddr, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.OperatorAddress)
 	s.Require().NoError(err)
 
 	historyObjects, err := stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, valAddr)
@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().NoError(err)
 
 	height := uint64(ctx.BlockHeight())
-	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), types.ConsPubKeyRotationHistory{
+	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr, height), types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr,
 		OldConsPubkey:   validator.ConsensusPubkey,
 		NewConsPubkey:   newConsPub,
@@ -75,7 +75,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().NoError(err)
 	s.Require().Len(historyObjects, 1)
 
-	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height+1), types.ConsPubKeyRotationHistory{
+	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr, height+1), types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr,
 		OldConsPubkey:   newConsPub,
 		NewConsPubkey:   newConsPub2,

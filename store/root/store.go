@@ -10,8 +10,8 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	corestore "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"

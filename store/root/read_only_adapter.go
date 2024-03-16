@@ -2,12 +2,12 @@ package root
 
 import (
 	corestore "cosmossdk.io/core/store"
-	corestorev2 "cosmossdk.io/server/v2/core/store"
+
 	"cosmossdk.io/store/v2"
 )
 
-var _ corestorev2.Reader = (*Reader)(nil)
-var _ corestorev2.ReaderMap = (*ReaderMap)(nil)
+var _ corestore.Reader = (*Reader)(nil)
+var _ corestore.ReaderMap = (*ReaderMap)(nil)
 
 // ReaderMap defines an adapter around a RootStore that only exposes read-only
 // operations. This is useful for exposing a read-only view of the RootStore at
@@ -25,7 +25,7 @@ func NewReadOnlyAdapter(v uint64, rs store.RootStore) *ReaderMap {
 	}
 }
 
-func (roa *ReaderMap) GetReader(actor []byte) (corestorev2.Reader, error) {
+func (roa *ReaderMap) GetReader(actor []byte) (corestore.Reader, error) {
 	return NewReader(roa.version, roa.rootStore, actor), nil
 }
 

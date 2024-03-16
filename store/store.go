@@ -4,7 +4,7 @@ import (
 	"io"
 
 	coreheader "cosmossdk.io/core/header"
-	corestore "cosmossdk.io/server/v2/core/store"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
 )

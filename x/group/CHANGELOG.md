@@ -35,3 +35,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19638](https://github.com/cosmos/cosmos-sdk/pull/19638) Migrate module to use `appmodule.Environment` router service so no `baseapp.MessageRouter` is required is `NewKeeper` anymore.
 * [#19489](https://github.com/cosmos/cosmos-sdk/pull/19489) `appmodule.Environment` is received on the Keeper to get access to different application services.
 * [#19410](https://github.com/cosmos/cosmos-sdk/pull/19410) Migrate to Store Service.
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.

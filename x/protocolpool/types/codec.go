@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-func RegisterInterfaces(registry registry.LegacyRegistry) {
-	registry.RegisterImplementations(
+func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	registrar.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgFundCommunityPool{},
 		&MsgCommunityPoolSpend{},
@@ -19,5 +19,5 @@ func RegisterInterfaces(registry registry.LegacyRegistry) {
 		&MsgWithdrawContinuousFund{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
 }

@@ -23,6 +23,7 @@ var (
 	DefaultMinExpeditedDepositTokens    = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
 	DefaultQuorum                       = sdkmath.LegacyNewDecWithPrec(334, 3)
 	DefaultYesQuorum                    = sdkmath.LegacyNewDecWithPrec(0, 1)
+	DefaultExpeditedQuorum              = sdkmath.LegacyNewDecWithPrec(500, 3)
 	DefaultThreshold                    = sdkmath.LegacyNewDecWithPrec(5, 1)
 	DefaultExpeditedThreshold           = sdkmath.LegacyNewDecWithPrec(667, 3)
 	DefaultVetoThreshold                = sdkmath.LegacyNewDecWithPrec(334, 3)
@@ -40,9 +41,12 @@ var (
 
 // NewParams creates a new Params instance with given values.
 func NewParams(
-	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
-	quorum, yesQuorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest, proposalMaxCancelVotingPeriod string,
-	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio, optimisticRejectedThreshold string, optimisticAuthorizedAddresses []string,
+	minDeposit, expeditedminDeposit sdk.Coins,
+	maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
+	quorum, yesQuorum, expeditedQuorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest, proposalMaxCancelVotingPeriod string,
+	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
+	minDepositRatio, optimisticRejectedThreshold string,
+	optimisticAuthorizedAddresses []string,
 ) Params {
 	return Params{
 		MinDeposit:                    minDeposit,
@@ -52,6 +56,7 @@ func NewParams(
 		ExpeditedVotingPeriod:         &expeditedVotingPeriod,
 		Quorum:                        quorum,
 		YesQuorum:                     yesQuorum,
+		ExpeditedQuorum:               expeditedQuorum,
 		Threshold:                     threshold,
 		ExpeditedThreshold:            expeditedThreshold,
 		VetoThreshold:                 vetoThreshold,
@@ -78,6 +83,7 @@ func DefaultParams() Params {
 		DefaultExpeditedPeriod,
 		DefaultQuorum.String(),
 		DefaultYesQuorum.String(),
+		DefaultExpeditedQuorum.String(),
 		DefaultThreshold.String(),
 		DefaultExpeditedThreshold.String(),
 		DefaultVetoThreshold.String(),
@@ -135,6 +141,17 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	}
 	if yesQuorum.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("yes_quorum too large: %s", p.YesQuorum)
+	}
+
+	expeditedQuorum, err := sdkmath.LegacyNewDecFromStr(p.ExpeditedQuorum)
+	if err != nil {
+		return fmt.Errorf("invalid expedited_quorum string: %w", err)
+	}
+	if expeditedQuorum.IsNegative() {
+		return fmt.Errorf("expedited_quorum cannot be negative: %s", expeditedQuorum)
+	}
+	if expeditedQuorum.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("expedited_quorum too large: %s", p.ExpeditedQuorum)
 	}
 
 	threshold, err := sdkmath.LegacyNewDecFromStr(p.Threshold)

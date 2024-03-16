@@ -1021,6 +1021,33 @@ func (s *coinTestSuite) TestParseCoins() {
 	}
 }
 
+func (s *coinTestSuite) TestValidateDenom() {
+	cases := []struct {
+		input string
+		valid bool
+	}{
+		{"", false},
+		{"stake", true},
+		{"stake,", false},
+		{"me coin", false},
+		{"me coin much", false},
+		{"not a coin", false},
+		{"foo:bar", true}, // special characters '/' | ':' | '.' | '_' | '-' are allowed
+		{"atom10", true},  // number in denom is allowed
+		{"transfer/channelToA/uatom", true},
+		{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true},
+	}
+
+	for _, tc := range cases {
+		err := sdk.ValidateDenom(tc.input)
+		if !tc.valid {
+			s.Require().Error(err)
+		} else {
+			s.Require().NoError(err)
+		}
+	}
+}
+
 func (s *coinTestSuite) TestSortCoins() {
 	good := sdk.Coins{
 		sdk.NewInt64Coin("gas", 1),

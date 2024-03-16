@@ -33,22 +33,22 @@ enum VoteOption {
 
   // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
   VOTE_OPTION_UNSPECIFIED = 0;
-  // VOTE_OPTION_ONE defines the first proposal vote option.
-  VOTE_OPTION_ONE = 1;
   // VOTE_OPTION_YES defines the yes proposal vote option.
   VOTE_OPTION_YES = 1;
-  // VOTE_OPTION_TWO defines the second proposal vote option.
-  VOTE_OPTION_TWO = 2;
+  // VOTE_OPTION_ONE defines the first proposal vote option.
+  VOTE_OPTION_ONE = 1;
   // VOTE_OPTION_ABSTAIN defines the abstain proposal vote option.
   VOTE_OPTION_ABSTAIN = 2;
-  // VOTE_OPTION_THREE defines the third proposal vote option.
-  VOTE_OPTION_THREE = 3;
+  // VOTE_OPTION_TWO defines the second proposal vote option.
+  VOTE_OPTION_TWO = 2;
   // VOTE_OPTION_NO defines the no proposal vote option.
   VOTE_OPTION_NO = 3;
-  // VOTE_OPTION_FOUR defines the fourth proposal vote option.
-  VOTE_OPTION_FOUR = 4;
+  // VOTE_OPTION_THREE defines the third proposal vote option.
+  VOTE_OPTION_THREE = 3;
   // VOTE_OPTION_NO_WITH_VETO defines the no with veto proposal vote option.
   VOTE_OPTION_NO_WITH_VETO = 4;
+  // VOTE_OPTION_FOUR defines the fourth proposal vote option.
+  VOTE_OPTION_FOUR = 4;
   // VOTE_OPTION_SPAM defines the spam proposal vote option.
   VOTE_OPTION_SPAM = 5;
 }
@@ -367,6 +367,12 @@ message Params {
   //
   // Since: x/gov v1.0.0
   string yes_quorum = 20 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // Minimum percentage of total stake needed to vote for a result to be
+  // considered valid for an expedited proposal.
+  //
+  // Since: x/gov v1.0.0
+  string expedited_quorum = 21 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }
 
 // MessageBasedParams defines the parameters of specific messages in a proposal.

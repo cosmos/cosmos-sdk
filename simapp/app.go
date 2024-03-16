@@ -17,12 +17,12 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
+	lockup "cosmossdk.io/x/accounts/lockup"
 	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
 	"cosmossdk.io/x/auth"
@@ -291,6 +291,11 @@ func NewSimApp(
 		// TESTING: do not add
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
+		// Lockup account
+		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
+		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
+		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
+		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
 		// PRODUCTION: add
 		baseaccount.NewAccount("base", txConfig.SignModeHandler()),
 	)
@@ -408,8 +413,8 @@ func NewSimApp(
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.ModuleManager = module.NewManager(
-		genutil.NewAppModule(app.AuthKeeper, app.StakingKeeper, app, txConfig, genutiltypes.DefaultMessageValidator),
-		accounts.NewAppModule(app.AccountsKeeper),
+		genutil.NewAppModule(appCodec, app.AuthKeeper, app.StakingKeeper, app, txConfig, genutiltypes.DefaultMessageValidator),
+		accounts.NewAppModule(appCodec, app.AccountsKeeper),
 		auth.NewAppModule(appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts),
 		vesting.NewAppModule(app.AuthKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AuthKeeper),
@@ -420,7 +425,7 @@ func NewSimApp(
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AuthKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
+		evidence.NewAppModule(appCodec, app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -615,7 +620,7 @@ func (app *SimApp) Close() error {
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
 // PreBlocker application updates every pre block
-func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) error {
 	return app.ModuleManager.PreBlock(ctx)
 }
 
@@ -644,7 +649,7 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*ab
 	if err != nil {
 		return nil, err
 	}
-	return app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
+	return app.ModuleManager.InitGenesis(ctx, genesisState)
 }
 
 // LoadHeight loads a particular height
@@ -680,25 +685,15 @@ func (app *SimApp) TxConfig() client.TxConfig {
 
 // AutoCliOpts returns the autocli options for the app.
 func (app *SimApp) AutoCliOpts() autocli.AppOptions {
-	modules := make(map[string]appmodule.AppModule, 0)
-	for _, m := range app.ModuleManager.Modules {
-		if moduleWithName, ok := m.(module.HasName); ok {
-			moduleName := moduleWithName.Name()
-			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
-				modules[moduleName] = appModule
-			}
-		}
-	}
-
 	return autocli.AppOptions{
-		Modules:       modules,
+		Modules:       app.ModuleManager.Modules,
 		ModuleOptions: runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
 	}
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModule's.
 func (a *SimApp) DefaultGenesis() map[string]json.RawMessage {
-	return a.ModuleManager.DefaultGenesis(a.appCodec)
+	return a.ModuleManager.DefaultGenesis()
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

@@ -22,7 +22,7 @@ import (
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described
 // in `sd` into the registry.
-func RegisterMsgServiceDesc(registry registry.LegacyRegistry, sd *grpc.ServiceDesc) {
+func RegisterMsgServiceDesc(registrar registry.InterfaceRegistrar, sd *grpc.ServiceDesc) {
 	fdBytesUnzipped := unzip(proto.FileDescriptor(sd.Metadata.(string)))
 	if fdBytesUnzipped == nil {
 		panic(fmt.Errorf("error unzipping file description for MsgService %s", sd.ServiceName))
@@ -51,8 +51,8 @@ func RegisterMsgServiceDesc(registry registry.LegacyRegistry, sd *grpc.ServiceDe
 		respTyp := proto.MessageType(string(responseDesc.FullName()))
 
 		// Register sdk.Msg and sdk.MsgResponse to the registry.
-		registry.RegisterImplementations((*sdk.Msg)(nil), reflect.New(reqTyp).Elem().Interface().(proto.Message))
-		registry.RegisterImplementations((*tx.MsgResponse)(nil), reflect.New(respTyp).Elem().Interface().(proto.Message))
+		registrar.RegisterImplementations((*sdk.Msg)(nil), reflect.New(reqTyp).Elem().Interface().(proto.Message))
+		registrar.RegisterImplementations((*tx.MsgResponse)(nil), reflect.New(respTyp).Elem().Interface().(proto.Message))
 	}
 }
 

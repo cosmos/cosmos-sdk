@@ -157,7 +157,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 	return lastCommitID.Version, nil
 }
 
-func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
+func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (store.QueryResult, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		defer s.telemetry.MeasureSince(now, "root_store", "query")

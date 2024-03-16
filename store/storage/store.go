@@ -42,12 +42,12 @@ func NewStorageStore(db Database, pruneOpts *store.PruneOptions, logger log.Logg
 }
 
 // Has returns true if the key exists in the store.
-func (ss *StorageStore) Has(storeKey string, version uint64, key []byte) (bool, error) {
+func (ss *StorageStore) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	return ss.db.Has(storeKey, version, key)
 }
 
 // Get returns the value associated with the given key.
-func (ss *StorageStore) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
+func (ss *StorageStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
 	return ss.db.Get(storeKey, version, key)
 }
 
@@ -61,11 +61,11 @@ func (ss *StorageStore) ApplyChangeset(version uint64, cs *store.Changeset) erro
 	for storeKey, pairs := range cs.Pairs {
 		for _, kvPair := range pairs {
 			if kvPair.Value == nil {
-				if err := b.Delete(storeKey, kvPair.Key); err != nil {
+				if err := b.Delete([]byte(storeKey), kvPair.Key); err != nil {
 					return err
 				}
 			} else {
-				if err := b.Set(storeKey, kvPair.Key, kvPair.Value); err != nil {
+				if err := b.Set([]byte(storeKey), kvPair.Key, kvPair.Value); err != nil {
 					return err
 				}
 			}
@@ -96,12 +96,12 @@ func (ss *StorageStore) SetLatestVersion(version uint64) error {
 }
 
 // Iterator returns an iterator over the specified domain and prefix.
-func (ss *StorageStore) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (ss *StorageStore) Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.Iterator(storeKey, version, start, end)
 }
 
 // ReverseIterator returns an iterator over the specified domain and prefix in reverse.
-func (ss *StorageStore) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (ss *StorageStore) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.ReverseIterator(storeKey, version, start, end)
 }
 
@@ -126,7 +126,7 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) 
 	}
 
 	for kvPair := range chStorage {
-		if err := b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value); err != nil {
+		if err := b.Set([]byte(kvPair.StoreKey), kvPair.Key, kvPair.Value); err != nil {
 			return err
 		}
 

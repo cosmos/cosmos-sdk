@@ -80,7 +80,7 @@ func (s *RootStoreTestSuite) TestSetCommitHeader() {
 }
 
 func (s *RootStoreTestSuite) TestQuery() {
-	_, err := s.rootStore.Query("", 1, []byte("foo"), true)
+	_, err := s.rootStore.Query([]byte{}, 1, []byte("foo"), true)
 	s.Require().Error(err)
 
 	// write and commit a changeset
@@ -97,7 +97,7 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().Equal(workingHash, commitHash)
 
 	// ensure the proof is non-nil for the corresponding version
-	result, err := s.rootStore.Query(testStoreKey, 1, []byte("foo"), true)
+	result, err := s.rootStore.Query([]byte(testStoreKey), 1, []byte("foo"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.ProofOps)
 	s.Require().Equal([]byte("foo"), result.ProofOps[0].Key)
@@ -118,12 +118,12 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 	s.Require().NoError(err)
 
 	// ensure we can query for the key, which should fallback to SC
-	qResult, err := s.rootStore.Query(testStoreKey, 1, []byte("foo"), false)
+	qResult, err := s.rootStore.Query([]byte(testStoreKey), 1, []byte("foo"), false)
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("bar"), qResult.Value)
 
 	// non-existent key
-	qResult, err = s.rootStore.Query(testStoreKey, 1, []byte("non_existent_key"), false)
+	qResult, err = s.rootStore.Query([]byte(testStoreKey), 1, []byte("non_existent_key"), false)
 	s.Require().NoError(err)
 	s.Require().Nil(qResult.Value)
 }
@@ -145,7 +145,7 @@ func (s *RootStoreTestSuite) TestQueryProof() {
 	s.Require().NoError(err)
 
 	// query proof for testStoreKey
-	result, err := s.rootStore.Query(testStoreKey, 1, []byte("key1"), true)
+	result, err := s.rootStore.Query([]byte(testStoreKey), 1, []byte("key1"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.ProofOps)
 	cInfo, err := s.rootStore.GetStateCommitment().GetCommitInfo(1)

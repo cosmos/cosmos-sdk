@@ -49,7 +49,7 @@ func (ci *CommitInfo) Hash() []byte {
 		return ci.CommitHash
 	}
 
-	rootHash, _, _ := ci.GetStoreProof("")
+	rootHash, _, _ := ci.GetStoreProof([]byte{})
 	return rootHash
 }
 
@@ -66,7 +66,7 @@ func (ci *CommitInfo) GetStoreCommitID(storeKey string) CommitID {
 // GetStoreProof takes in a storeKey and returns a proof of the store key in addition
 // to the root hash it should be proved against. If an empty string is provided, the first
 // store based on lexographical ordering will be proved.
-func (ci *CommitInfo) GetStoreProof(storeKey string) ([]byte, *CommitmentOp, error) {
+func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, error) {
 	sort.Slice(ci.StoreInfos, func(i, j int) bool {
 		return ci.StoreInfos[i].Name < ci.StoreInfos[j].Name
 	})
@@ -79,7 +79,7 @@ func (ci *CommitInfo) GetStoreProof(storeKey string) ([]byte, *CommitmentOp, err
 		if err != nil {
 			return nil, nil, err
 		}
-		if si.Name == storeKey {
+		if si.Name == string(storeKey) {
 			index = i
 		}
 	}

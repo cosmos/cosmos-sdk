@@ -244,8 +244,8 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 	return nil
 }
 
-func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	tree, ok := c.multiTrees[storeKey]
+func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
+	tree, ok := c.multiTrees[string(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -270,8 +270,8 @@ func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]p
 	return []proof.CommitmentOp{commitOp, *storeCommitmentOp}, nil
 }
 
-func (c *CommitStore) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	tree, ok := c.multiTrees[storeKey]
+func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
+	tree, ok := c.multiTrees[string(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}

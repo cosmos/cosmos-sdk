@@ -339,7 +339,7 @@ func (s *E2ETestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
-			"invalid decimal coin expression",
+			"invalid character in denomination",
 		},
 		{
 			"valid tx delegate authorization allowed validators",

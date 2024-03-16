@@ -37,11 +37,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [State Breaking]
+
 * (store) [#525](https://github.com/osmosis-labs/cosmos-sdk/pull/525) CacheKV speedups
 * (slashing) [#548](https://github.com/osmosis-labs/cosmos-sdk/pull/548) Implement v0.50 slashing bitmap logic
 * (slashing) [#543](https://github.com/osmosis-labs/cosmos-sdk/pull/543) Make slashing not write sign info every block
 * (authz) [#513](https://github.com/osmosis-labs/cosmos-sdk/pull/513) Limit expired authz grant pruning to 200 per block
 * (gov) [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
+
+## [State Compatible]
+
+* (coin) [#570](https://github.com/osmosis-labs/cosmos-sdk/pull/570) Removal of regex usage on denom validation
 
 ## IAVL v23 v1 Releases
 

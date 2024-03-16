@@ -14,7 +14,6 @@ var _ corestore.ReaderMap = (*ReaderMap)(nil)
 // a specific version in history, which could also be the latest state.
 type ReaderMap struct {
 	rootStore store.RootStore
-	actor     []byte
 	version   uint64
 }
 
@@ -29,10 +28,11 @@ func (roa *ReaderMap) GetReader(actor []byte) (corestore.Reader, error) {
 	return NewReader(roa.version, roa.rootStore, actor), nil
 }
 
+// Reader represents a read-only adapter for accessing data from the root store.
 type Reader struct {
-	version   uint64
-	rootStore store.RootStore
-	actor     []byte
+	version   uint64          // The version of the data.
+	rootStore store.RootStore // The root store to read data from.
+	actor     []byte          // The actor associated with the data.
 }
 
 func NewReader(v uint64, rs store.RootStore, actor []byte) *Reader {
@@ -44,7 +44,7 @@ func NewReader(v uint64, rs store.RootStore, actor []byte) *Reader {
 }
 
 func (roa *Reader) Has(key []byte) (bool, error) {
-	val, err := roa.Has(key)
+	val, err := roa.rootStore.GetStateStorage().Has(string(roa.actor), roa.version, key) // TODO: move storekeys to []byte
 	if err != nil {
 		return false, err
 	}
@@ -53,7 +53,7 @@ func (roa *Reader) Has(key []byte) (bool, error) {
 }
 
 func (roa *Reader) Get(key []byte) ([]byte, error) {
-	result, err := roa.Get(key)
+	result, err := roa.rootStore.GetStateStorage().Get(string(roa.actor), roa.version, key) // TODO: move storekeys to []byte
 	if err != nil {
 		return nil, err
 	}

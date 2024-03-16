@@ -185,6 +185,9 @@ type BaseApp struct {
 	// including the goroutine handling.This is experimental and must be enabled
 	// by developers.
 	optimisticExec *oe.OptimisticExecution
+
+	// Optional alternative tx executor, used for block-stm parallel transaction execution.
+	txExecutor TxExecutor
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -657,7 +660,7 @@ func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
+func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte, txIndex int) sdk.Context {
 	app.mu.Lock()
 	defer app.mu.Unlock()
 
@@ -666,7 +669,8 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 		panic(fmt.Sprintf("state is nil for mode %v", mode))
 	}
 	ctx := modeState.Context().
-		WithTxBytes(txBytes)
+		WithTxBytes(txBytes).
+		WithTxIndex(txIndex)
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
 	ctx = ctx.WithIsSigverifyTx(app.sigverifyTx)
@@ -746,7 +750,11 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	return resp, nil
 }
 
-func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
+func (app *BaseApp) deliverTx(tx []byte, txIndex int) *abci.ExecTxResult {
+	return app.deliverTxWithMultiStore(tx, txIndex, nil)
+}
+
+func (app *BaseApp) deliverTxWithMultiStore(tx []byte, txIndex int, txMultiStore storetypes.MultiStore) *abci.ExecTxResult {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -759,7 +767,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx)
+	gInfo, result, anteEvents, err := app.runTxWithMultiStore(execModeFinalize, tx, txIndex, txMultiStore)
 	if err != nil {
 		resultStr = "failed"
 		resp = sdkerrors.ResponseExecTxResultWithEvents(
@@ -817,12 +825,19 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
 func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+	return app.runTxWithMultiStore(mode, txBytes, -1, nil)
+}
+
+func (app *BaseApp) runTxWithMultiStore(mode execMode, txBytes []byte, txIndex int, txMultiStore storetypes.MultiStore) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
 	var gasWanted uint64
 
-	ctx := app.getContextForTx(mode, txBytes)
+	ctx := app.getContextForTx(mode, txBytes, txIndex)
+	if txMultiStore != nil {
+		ctx = ctx.WithMultiStore(txMultiStore)
+	}
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining
@@ -995,6 +1010,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		if mode != execModeFinalize && mode != execModeSimulate {
 			break
 		}
+
+		ctx = ctx.WithMsgIndex(i)
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {

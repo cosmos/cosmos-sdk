@@ -62,6 +62,9 @@ type Context struct {
 	streamingManager     storetypes.StreamingManager
 	cometInfo            comet.Info
 	headerInfo           header.Info
+
+	txIndex  int
+	msgIndex int
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -90,6 +93,8 @@ func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.trans
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
 func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
+func (c Context) TxIndex() int                                  { return c.txIndex }
+func (c Context) MsgIndex() int                                 { return c.msgIndex }
 
 // clone the header before returning
 func (c Context) BlockHeader() cmtproto.Header {
@@ -311,6 +316,16 @@ func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
 	// Set time to UTC
 	headerInfo.Time = headerInfo.Time.UTC()
 	c.headerInfo = headerInfo
+	return c
+}
+
+func (c Context) WithTxIndex(txIndex int) Context {
+	c.txIndex = txIndex
+	return c
+}
+
+func (c Context) WithMsgIndex(msgIndex int) Context {
+	c.msgIndex = msgIndex
 	return c
 }
 

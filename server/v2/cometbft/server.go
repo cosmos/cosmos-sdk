@@ -91,7 +91,7 @@ func NewCometBFTServer[T transaction.Tx](
 	//	panic("snapshots are not supported for this store")
 	//}
 
-	snapshotStore, err := GetSnapshotStore(nil)
+	snapshotStore, err := GetSnapshotStore(cfg.CmtConfig.RootDir)
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +104,6 @@ func NewCometBFTServer[T transaction.Tx](
 		App:    consensus,
 		config: cfg,
 	}
-
 }
 
 func (s *CometBFTServer[T]) Name() string {

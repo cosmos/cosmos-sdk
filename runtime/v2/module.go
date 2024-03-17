@@ -113,11 +113,12 @@ func ProvideAppBuilder(interfaceRegistry codectypes.InterfaceRegistry) (
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App{
-		storeKeys:         nil,
-		interfaceRegistry: interfaceRegistry,
-		cdc:               cdc,
-		amino:             amino,
-		msgRouterBuilder:  msgRouterBuilder,
+		storeKeys:          nil,
+		interfaceRegistry:  interfaceRegistry,
+		cdc:                cdc,
+		amino:              amino,
+		msgRouterBuilder:   msgRouterBuilder,
+		queryRouterBuilder: nil, // TODO
 	}
 	appBuilder := &AppBuilder{app: app}
 

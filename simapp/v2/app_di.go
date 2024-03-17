@@ -182,9 +182,10 @@ func NewSimApp(
 	// wire snapshot manager
 	// wire unordered tx manager
 
-	if err := app.LoadLatest(); err != nil {
-		panic(err)
-	}
+	// TODO re-enable once store is provided with config
+	//if err := app.LoadLatest(); err != nil {
+	//	panic(err)
+	//}
 
 	return app
 }

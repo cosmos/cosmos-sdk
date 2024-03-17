@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -77,7 +76,9 @@ func startCommand() *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			sa := simapp.NewSimApp(serverCtx.Logger, serverCtx.Viper)
 			am := sa.App.AppManager
-			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), cometbft.Config{})
+			serverCfg := cometbft.Config{CmtConfig: serverCtx.Config}
+
+			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), serverCfg)
 			ctx := cmd.Context()
 			ctx, cancelFn := context.WithCancel(ctx)
 			go func() {

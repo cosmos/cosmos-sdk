@@ -158,6 +158,8 @@ var (
 					// ExportGenesis: []string{},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
+					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
+					GasConfig: &runtimev2.GasConfig{},
 				}),
 			},
 			{

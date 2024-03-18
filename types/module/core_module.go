@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -43,8 +42,8 @@ type coreAppModuleAdaptor struct {
 }
 
 // DefaultGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	if mod, ok := c.module.(appmodule.HasGenesis); ok {
+func (c coreAppModuleAdaptor) DefaultGenesis() json.RawMessage {
+	if mod, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		target := genesis.RawJSONTarget{}
 		err := mod.DefaultGenesis(target.Target())
 		if err != nil {
@@ -60,15 +59,19 @@ func (c coreAppModuleAdaptor) DefaultGenesis(cdc codec.JSONCodec) json.RawMessag
 	}
 
 	if mod, ok := c.module.(HasGenesisBasics); ok {
-		return mod.DefaultGenesis(cdc)
+		return mod.DefaultGenesis()
+	}
+
+	if mod, ok := c.module.(HasGenesis); ok {
+		return mod.DefaultGenesis()
 	}
 
 	return nil
 }
 
 // ValidateGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) ValidateGenesis(cdc codec.JSONCodec, txConfig client.TxEncodingConfig, bz json.RawMessage) error {
-	if mod, ok := c.module.(appmodule.HasGenesis); ok {
+func (c coreAppModuleAdaptor) ValidateGenesis(bz json.RawMessage) error {
+	if mod, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		source, err := genesis.SourceFromRawJSON(bz)
 		if err != nil {
 			return err
@@ -80,60 +83,75 @@ func (c coreAppModuleAdaptor) ValidateGenesis(cdc codec.JSONCodec, txConfig clie
 	}
 
 	if mod, ok := c.module.(HasGenesisBasics); ok {
-		return mod.ValidateGenesis(cdc, txConfig, bz)
+		return mod.ValidateGenesis(bz)
+	}
+
+	if mod, ok := c.module.(HasGenesis); ok {
+		return mod.ValidateGenesis(bz)
 	}
 
 	return nil
 }
 
 // ExportGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	if module, ok := c.module.(appmodule.HasGenesis); ok {
+func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	if module, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		ctx := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 		target := genesis.RawJSONTarget{}
 		err := module.ExportGenesis(ctx, target.Target())
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		rawJSON, err := target.JSON()
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		return rawJSON
+		return rawJSON, nil
+	}
+
+	if mod, ok := c.module.(HasABCIGenesis); ok {
+		return mod.ExportGenesis(ctx)
 	}
 
 	if mod, ok := c.module.(HasGenesis); ok {
-		return mod.ExportGenesis(ctx, cdc)
+		eg, err := mod.ExportGenesis(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		return eg, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // InitGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
-	if module, ok := c.module.(appmodule.HasGenesis); ok {
+func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessage) ([]ValidatorUpdate, error) {
+	if module, ok := c.module.(appmodule.HasGenesisAuto); ok {
 		// core API genesis
 		source, err := genesis.SourceFromRawJSON(bz)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		err = module.InitGenesis(ctx, source)
-		if err != nil {
-			panic(err)
+		if err = module.InitGenesis(ctx, source); err != nil {
+			return nil, err
 		}
+	}
+
+	if mod, ok := c.module.(HasABCIGenesis); ok {
+		return mod.InitGenesis(ctx, bz)
 	}
 
 	if mod, ok := c.module.(HasGenesis); ok {
-		mod.InitGenesis(ctx, cdc, bz)
-		return nil
+		if err := mod.InitGenesis(ctx, bz); err != nil {
+			return nil, err
+		}
 	}
-	if mod, ok := c.module.(HasABCIGenesis); ok {
-		return mod.InitGenesis(ctx, cdc, bz)
-	}
-	return nil
+
+	return nil, nil
 }
 
 // Name implements HasName
@@ -171,9 +189,9 @@ func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux 
 }
 
 // RegisterInterfaces implements HasRegisterInterfaces
-func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.LegacyRegistry) {
+func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.InterfaceRegistrar) {
 	if mod, ok := c.module.(interface {
-		RegisterInterfaces(registry.LegacyRegistry)
+		RegisterInterfaces(registry.InterfaceRegistrar)
 	}); ok {
 		mod.RegisterInterfaces(reg)
 	}

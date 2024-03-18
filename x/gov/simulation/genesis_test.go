@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gotest.tools/v3/assert"
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/gov/simulation"
@@ -48,28 +47,30 @@ func TestRandomizedGenState(t *testing.T) {
 	const (
 		tallyQuorum             = "0.387000000000000000"
 		tallyYesQuorum          = "0.449000000000000000"
-		tallyThreshold          = "0.464000000000000000"
-		tallyExpeditedThreshold = "0.506000000000000000"
-		tallyVetoThreshold      = "0.309000000000000000"
+		tallyExpeditedQuorum    = "0.457000000000000000"
+		tallyThreshold          = "0.479000000000000000"
+		tallyExpeditedThreshold = "0.545000000000000000"
+		tallyVetoThreshold      = "0.280000000000000000"
 		minInitialDepositDec    = "0.880000000000000000"
 		proposalCancelMaxPeriod = "0.110000000000000000"
 	)
 
-	assert.Equal(t, "272stake", govGenesis.Params.MinDeposit[0].String())
-	assert.Equal(t, "800stake", govGenesis.Params.ExpeditedMinDeposit[0].String())
-	assert.Equal(t, "41h11m36s", govGenesis.Params.MaxDepositPeriod.String())
-	assert.Equal(t, float64(291928), govGenesis.Params.VotingPeriod.Seconds())
-	assert.Equal(t, float64(33502), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
-	assert.Equal(t, tallyQuorum, govGenesis.Params.Quorum)
-	assert.Equal(t, tallyYesQuorum, govGenesis.Params.YesQuorum)
-	assert.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
-	assert.Equal(t, tallyExpeditedThreshold, govGenesis.Params.ExpeditedThreshold)
-	assert.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)
-	assert.Equal(t, proposalCancelMaxPeriod, govGenesis.Params.ProposalCancelMaxPeriod)
-	assert.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
-	assert.DeepEqual(t, []*v1.Deposit{}, govGenesis.Deposits)
-	assert.DeepEqual(t, []*v1.Vote{}, govGenesis.Votes)
-	assert.DeepEqual(t, []*v1.Proposal{}, govGenesis.Proposals)
+	require.Equal(t, "272stake", govGenesis.Params.MinDeposit[0].String())
+	require.Equal(t, "800stake", govGenesis.Params.ExpeditedMinDeposit[0].String())
+	require.Equal(t, "41h11m36s", govGenesis.Params.MaxDepositPeriod.String())
+	require.Equal(t, float64(291928), govGenesis.Params.VotingPeriod.Seconds())
+	require.Equal(t, float64(33502), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
+	require.Equal(t, tallyQuorum, govGenesis.Params.Quorum)
+	require.Equal(t, tallyYesQuorum, govGenesis.Params.YesQuorum)
+	require.Equal(t, tallyExpeditedQuorum, govGenesis.Params.ExpeditedQuorum)
+	require.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
+	require.Equal(t, tallyExpeditedThreshold, govGenesis.Params.ExpeditedThreshold)
+	require.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)
+	require.Equal(t, proposalCancelMaxPeriod, govGenesis.Params.ProposalCancelMaxPeriod)
+	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
+	require.Equal(t, []*v1.Deposit{}, govGenesis.Deposits)
+	require.Equal(t, []*v1.Vote{}, govGenesis.Votes)
+	require.Equal(t, []*v1.Proposal{}, govGenesis.Proposals)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

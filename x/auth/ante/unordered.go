@@ -5,9 +5,11 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
+	authsigning "cosmossdk.io/x/auth/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
@@ -58,8 +60,29 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 
-	// TODO(bez): We need to hash the tx bytes WITHOUT AuthInfo.
-	txHash := sha256.Sum256(ctx.TxBytes())
+	sigTx, ok := tx.(authsigning.Tx)
+	if !ok {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+	}
+
+	infoTx := sigTx.(interface {
+		GetRawTx() *typestx.TxRaw
+		GetProtoTx() *typestx.Tx
+	})
+
+	// We need to hash the transaction WITHOUT the signature to prevent any malleability
+	// attacks.
+	//
+	// TODO(bez): Do we need to make a copy of RawTx in order to ensure the provided
+	// tx object isn't modified?
+	rawTx := infoTx.GetRawTx()
+	rawTx.Signatures = nil
+	rawTxBz, err := rawTx.Marshal()
+	if err != nil {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrLogic, err.Error())
+	}
+
+	txHash := sha256.Sum256(rawTxBz)
 
 	// check for duplicates
 	if d.txManager.Contains(txHash) {

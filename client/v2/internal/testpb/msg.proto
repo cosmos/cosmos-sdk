@@ -14,6 +14,7 @@ service Msg {
   rpc Send(MsgRequest) returns (MsgResponse);
 }
 
+// MsgRequest is a sample request message
 message MsgRequest {
   // u32 is an uint32
   uint32                                u32        = 1;

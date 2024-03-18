@@ -51,7 +51,7 @@ type App struct {
 	stf                *stf.STF[transaction.Tx]
 	msgRouterBuilder   *stf.MsgRouterBuilder
 	queryRouterBuilder *stf.MsgRouterBuilder
-	db                 Store // TODO: double check
+	db                 Store
 
 	// app configuration
 	logger    log.Logger

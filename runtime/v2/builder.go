@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	rootstore "cosmossdk.io/store/v2/root"
 	"encoding/json"
 	"fmt"
 
@@ -21,7 +22,8 @@ type branchFunc func(state store.ReaderMap) store.WriterMap
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.
 type AppBuilder struct {
-	app *App
+	app          *App
+	storeOptions *rootstore.FactoryOptions
 
 	// the following fields are used to overwrite the default
 	branch      branchFunc
@@ -58,7 +60,6 @@ func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 }
 
 // Build builds an *App instance.
-// TODO with db removed as an input parameter I think this can moved earlier in start up without an explicit build step
 func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
 		opt(a)
@@ -97,6 +98,13 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 		valUpdate,
 		a.branch,
 	)
+
+	rs, err := rootstore.CreateRootStore(a.storeOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create root store: %w", err)
+	}
+	a.app.db = &StoreV2Adapter{rs}
+
 	appManagerBuilder := appmanager.Builder[transaction.Tx]{
 		STF:                a.app.stf,
 		DB:                 a.app.db,

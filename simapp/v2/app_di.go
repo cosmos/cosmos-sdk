@@ -2,6 +2,10 @@ package simapp
 
 import (
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/root"
 	_ "embed"
 	"os"
 	"path/filepath"
@@ -86,17 +90,36 @@ func NewSimApp(
 	logger log.Logger,
 	appOpts servertypes.AppOptions,
 ) *SimApp {
+	homeDir := appOpts.Get("home").(string) // TODO
+	scRawDb, err := db.NewGoLevelDB("application", homeDir, nil)
+	if err != nil {
+		panic(err)
+	}
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
-		err        error
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
 			depinject.Supply(
 				logger,
-				appOpts,
+				&root.FactoryOptions{
+					Logger:  logger,
+					RootDir: homeDir,
+					SSType:  0,
+					SCType:  0,
+					PruneOptions: &store.PruneOptions{
+						KeepRecent: 0,
+						Interval:   0,
+					},
+					IavlConfig: &iavl.Config{
+						CacheSize:              100_000,
+						SkipFastStorageUpgrade: true,
+					},
+					SCRawDB: scRawDb,
+				},
+				//appOpts,
 
 				// ADVANCED CONFIGURATION
 
@@ -138,6 +161,7 @@ func NewSimApp(
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.
 			),
+			depinject.Invoke(runtime.SetupAppBuilder),
 		)
 	)
 
@@ -183,9 +207,9 @@ func NewSimApp(
 	// wire unordered tx manager
 
 	// TODO re-enable once store is provided with config
-	//if err := app.LoadLatest(); err != nil {
-	//	panic(err)
-	//}
+	if err := app.LoadLatest(); err != nil {
+		panic(err)
+	}
 
 	return app
 }

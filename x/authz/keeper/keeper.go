@@ -197,10 +197,19 @@ func (k Keeper) SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, 
 		return err
 	}
 
+	granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
 	return k.environment.EventService.EventManager(ctx).Emit(&authz.EventGrant{
 		MsgTypeUrl: authorization.MsgTypeURL(),
-		Granter:    granter.String(),
-		Grantee:    grantee.String(),
+		Granter:    granterAddr,
+		Grantee:    granteeAddr,
 	})
 }
 
@@ -226,10 +235,18 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 		return err
 	}
 
+	granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	if err != nil {
+		return err
+	}
 	return k.environment.EventService.EventManager(ctx).Emit(&authz.EventRevoke{
 		MsgTypeUrl: msgType,
-		Granter:    granter.String(),
-		Grantee:    grantee.String(),
+		Granter:    granterAddr,
+		Grantee:    granteeAddr,
 	})
 }
 

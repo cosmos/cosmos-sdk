@@ -58,6 +58,7 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 
+	// TODO(bez): We need to hash the tx bytes WITHOUT AuthInfo.
 	txHash := sha256.Sum256(ctx.TxBytes())
 
 	// check for duplicates

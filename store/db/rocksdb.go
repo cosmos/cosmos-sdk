@@ -29,10 +29,22 @@ type RocksDB struct {
 	storage *grocksdb.DB
 }
 
+type optionsWrapper struct {
+	*grocksdb.Options
+}
+
+func (o optionsWrapper) Get(str string) *grocksdb.Options {
+	opts, err := optionsWrapper.GetOptionsFromString(optionsWrapper, str)
+	if err != nil {
+		return nil
+	}
+	return opts
+}
+
 // defaultRocksdbOptions, good enough for most cases, including heavy workloads.
 // 1GB table cache, 512MB write buffer(may use 50% more on heavy workloads).
 // compression: snappy as default, need to -lsnappy to enable.
-func defaultRocksdbOptions() *grocksdb.Options {
+func defaultRocksdbOptions() *optionsWrapper {
 	bbto := grocksdb.NewDefaultBlockBasedTableOptions()
 	bbto.SetBlockCache(grocksdb.NewLRUCache(1 << 30))
 	bbto.SetFilterPolicy(grocksdb.NewBloomFilter(10))
@@ -45,7 +57,9 @@ func defaultRocksdbOptions() *grocksdb.Options {
 	rocksdbOpts.IncreaseParallelism(runtime.NumCPU())
 	// 1.5GB maximum memory use for writebuffer.
 	rocksdbOpts.OptimizeLevelStyleCompaction(512 * 1024 * 1024)
-	return rocksdbOpts
+	return &optionsWrapper{
+		rocksdbOpts
+	}
 }
 
 func NewRocksDB(name, dataDir string) (*RocksDB, error) {
@@ -55,7 +69,7 @@ func NewRocksDB(name, dataDir string) (*RocksDB, error) {
 	return NewRocksDBWithOpts(name, dataDir, opts)
 }
 
-func NewRocksDBWithOpts(name, dataDir string, opts store.DBOptions) (*RocksDB, error) {
+func NewRocksDBWithOpts(name, dataDir string, opts *grocksdb.Options) (*RocksDB, error) {
 	dbPath := filepath.Join(dataDir, name+DBFileSuffix)
 	storage, err := grocksdb.OpenDb(opts, dbPath)
 	if err != nil {

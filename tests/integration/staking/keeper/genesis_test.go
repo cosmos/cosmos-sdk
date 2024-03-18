@@ -131,20 +131,7 @@ func TestInitGenesis(t *testing.T) {
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	validatorUpdates := make([]module.ValidatorUpdate, len(abcivals))
 	for i, val := range validators {
-		abcivals[i] = val.ABCIValidatorUpdate((f.stakingKeeper.PowerReduction(f.sdkCtx)))
-		if ed25519 := abcivals[i].PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     ed25519,
-				PubKeyType: "ed25519",
-				Power:      abcivals[i].Power,
-			}
-		} else if secp256k1 := abcivals[i].PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     secp256k1,
-				PubKeyType: "secp256k1",
-				Power:      abcivals[i].Power,
-			}
-		}
+		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	}
 	assert.DeepEqual(t, validatorUpdates, vals)
 }
@@ -242,23 +229,9 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	vals, err := f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState)
 	assert.NilError(t, err)
 
-	abcivals := make([]abci.ValidatorUpdate, 100)
-	validatorUpdates := make([]module.ValidatorUpdate, len(abcivals))
+	validatorUpdates := make([]module.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {
-		abcivals[i] = val.ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
-		if ed25519 := abcivals[i].PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     ed25519,
-				PubKeyType: "ed25519",
-				Power:      abcivals[i].Power,
-			}
-		} else if secp256k1 := abcivals[i].PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     secp256k1,
-				PubKeyType: "secp256k1",
-				Power:      abcivals[i].Power,
-			}
-		}
+		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	}
 	// remove genesis validator
 	vals = vals[:100]

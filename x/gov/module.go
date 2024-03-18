@@ -110,9 +110,9 @@ func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Comma
 }
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	v1.RegisterInterfaces(registry)
-	v1beta1.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	v1.RegisterInterfaces(registrar)
+	v1beta1.RegisterInterfaces(registrar)
 }
 
 // RegisterInvariants registers module invariants

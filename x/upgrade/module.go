@@ -78,8 +78,8 @@ func (AppModule) GetTxCmd() *cobra.Command {
 }
 
 // RegisterInterfaces registers interfaces and implementations of the upgrade module.
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	types.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
 }
 
 // RegisterServices registers module services.

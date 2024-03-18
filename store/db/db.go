@@ -13,6 +13,8 @@ const (
 	DBTypeRocksDB             = "rocksdb"
 	DBTypePebbleDB            = "pebbledb"
 	DBTypePrefixDB            = "prefixdb"
+
+	DBFileSuffix string = ".db"
 )
 
 func NewRawDB(dbType RawDBType, name, dataDir string, opts store.DBOptions) (store.RawDB, error) {
@@ -21,10 +23,10 @@ func NewRawDB(dbType RawDBType, name, dataDir string, opts store.DBOptions) (sto
 		return NewGoLevelDB(name, dataDir, opts)
 
 	case DBTypeRocksDB:
-		return NewRocksDB(dataDir)
+		return NewRocksDB(name, dataDir)
 
 	case DBTypePebbleDB:
-		return NewPebbleDB(dataDir)
+		return NewPebbleDB(name, dataDir)
 	}
 
 	return nil, fmt.Errorf("unsupported db type: %s", dbType)

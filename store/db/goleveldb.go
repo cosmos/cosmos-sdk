@@ -44,7 +44,7 @@ func NewGoLevelDB(name, dir string, opts store.DBOptions) (*GoLevelDB, error) {
 }
 
 func NewGoLevelDBWithOpts(name, dir string, o *opt.Options) (*GoLevelDB, error) {
-	dbPath := filepath.Join(dir, name+".db")
+	dbPath := filepath.Join(dir, name+DBFileSuffix)
 	db, err := leveldb.OpenFile(dbPath, o)
 	if err != nil {
 		return nil, err

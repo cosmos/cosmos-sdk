@@ -6,6 +6,7 @@ package db
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"slices"
 
@@ -47,15 +48,16 @@ func defaultRocksdbOptions() *grocksdb.Options {
 	return rocksdbOpts
 }
 
-func NewRocksDB(dataDir string) (*RocksDB, error) {
+func NewRocksDB(name, dataDir string) (*RocksDB, error) {
 	opts := defaultRocksdbOptions()
 	opts.SetCreateIfMissing(true)
 
-	return NewRocksDBWithOpts(dataDir, opts)
+	return NewRocksDBWithOpts(name, dataDir, opts)
 }
 
-func NewRocksDBWithOpts(dataDir string, opts Options) (*RocksDB, error) {
-	storage, err := grocksdb.OpenDb(opts, dataDir)
+func NewRocksDBWithOpts(name, dataDir string, opts store.DBOptions) (*RocksDB, error) {
+	dbPath := filepath.Join(dir, name+DBFileSuffix)
+	storage, err := grocksdb.OpenDb(opts, dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open RocksDB: %w", err)
 	}

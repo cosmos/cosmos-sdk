@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"slices"
 
 	corestore "cosmossdk.io/core/store"
@@ -22,13 +23,13 @@ type PebbleDB struct {
 	storage *pebble.DB
 }
 
-func NewPebbleDB(dataDir string) (*PebbleDB, error) {
+func NewPebbleDB(name, dataDir string) (*PebbleDB, error) {
 
-	return NewPebbleDBWithOpts(dataDir, nil)
+	return NewPebbleDBWithOpts(name, dataDir, nil)
 
 }
 
-func NewPebbleDBWithOpts(dataDir string, opts store.DBOptions) (*PebbleDB, error) {
+func NewPebbleDBWithOpts(name, dataDir string, opts store.DBOptions) (*PebbleDB, error) {
 	do := &pebble.Options{
 		MaxConcurrentCompactions: func() int { return 3 }, // default 1
 	}
@@ -41,8 +42,8 @@ func NewPebbleDBWithOpts(dataDir string, opts store.DBOptions) (*PebbleDB, error
 			do.MaxOpenFiles = files
 		}
 	}
-
-	db, err := pebble.Open(dataDir, do)
+	dbPath := filepath.Join(dataDir, name+DBFileSuffix)
+	db, err := pebble.Open(dbPath, do)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open PebbleDB: %w", err)
 	}

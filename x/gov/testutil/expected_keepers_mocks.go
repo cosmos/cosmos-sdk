@@ -144,11 +144,33 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
-func (m *MockBankKeeper) AfterMultiSend(ctx context.Context, input []types0.Input, outputs []types0.Output) error
-func (m *MockBankKeeper) AfterSend(ctx context.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error
-func (m *MockBankKeeper) BeforeMultiSend(ctx context.Context, input []types0.Input, outputs []types0.Output) error
-func (m *MockBankKeeper) BeforeSend(ctx context.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error
-func (m *MockBankKeeper) SetHooks(sh types0.SendHooks) *keeper.BaseSendKeeper
+// AfterMultiSend mocks base method.
+func (m *MockBankKeeper) AfterMultiSend(ctx context.Context, inputs []types0.Input, outputs []types0.Output) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterMultiSend", ctx, inputs, outputs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterMultiSend indicates an expected call of AfterMultiSend.
+func (mr *MockBankKeeperMockRecorder) AfterMultiSend(ctx, inputs, outputs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterMultiSend", reflect.TypeOf((*MockBankKeeper)(nil).AfterMultiSend), ctx, inputs, outputs)
+}
+
+// AfterSend mocks base method.
+func (m *MockBankKeeper) AfterSend(ctx context.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterSend", ctx, fromAddr, toAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterSend indicates an expected call of AfterSend.
+func (mr *MockBankKeeperMockRecorder) AfterSend(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterSend", reflect.TypeOf((*MockBankKeeper)(nil).AfterSend), ctx, fromAddr, toAddr, amt)
+}
 
 // AllBalances mocks base method.
 func (m *MockBankKeeper) AllBalances(arg0 context.Context, arg1 *types0.QueryAllBalancesRequest) (*types0.QueryAllBalancesResponse, error) {
@@ -190,6 +212,34 @@ func (m *MockBankKeeper) Balance(arg0 context.Context, arg1 *types0.QueryBalance
 func (mr *MockBankKeeperMockRecorder) Balance(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Balance", reflect.TypeOf((*MockBankKeeper)(nil).Balance), arg0, arg1)
+}
+
+// BeforeMultiSend mocks base method.
+func (m *MockBankKeeper) BeforeMultiSend(ctx context.Context, inputs []types0.Input, outputs []types0.Output) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeMultiSend", ctx, inputs, outputs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeMultiSend indicates an expected call of BeforeMultiSend.
+func (mr *MockBankKeeperMockRecorder) BeforeMultiSend(ctx, inputs, outputs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeMultiSend", reflect.TypeOf((*MockBankKeeper)(nil).BeforeMultiSend), ctx, inputs, outputs)
+}
+
+// BeforeSend mocks base method.
+func (m *MockBankKeeper) BeforeSend(ctx context.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeSend", ctx, fromAddr, toAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeSend indicates an expected call of BeforeSend.
+func (mr *MockBankKeeperMockRecorder) BeforeSend(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeSend", reflect.TypeOf((*MockBankKeeper)(nil).BeforeSend), ctx, fromAddr, toAddr, amt)
 }
 
 // BlockedAddr mocks base method.
@@ -349,6 +399,20 @@ func (m *MockBankKeeper) ExportGenesis(arg0 context.Context) *types0.GenesisStat
 func (mr *MockBankKeeperMockRecorder) ExportGenesis(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockBankKeeper)(nil).ExportGenesis), arg0)
+}
+
+// GetAccountAddressCodec mocks base method.
+func (m *MockBankKeeper) GetAccountAddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAccountAddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// GetAccountAddressCodec indicates an expected call of GetAccountAddressCodec.
+func (mr *MockBankKeeperMockRecorder) GetAccountAddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountAddressCodec", reflect.TypeOf((*MockBankKeeper)(nil).GetAccountAddressCodec))
 }
 
 // GetAccountsBalances mocks base method.
@@ -578,9 +642,9 @@ func (mr *MockBankKeeperMockRecorder) InitGenesis(arg0, arg1 interface{}) *gomoc
 }
 
 // InputOutputCoins mocks base method.
-func (m *MockBankKeeper) InputOutputCoins(ctx context.Context, inputs []types0.Input, outputs []types0.Output) error {
+func (m *MockBankKeeper) InputOutputCoins(ctx context.Context, input []types0.Input, outputs []types0.Output) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InputOutputCoins", ctx, inputs, outputs)
+	ret := m.ctrl.Call(m, "InputOutputCoins", ctx, input, outputs)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -846,6 +910,20 @@ func (m *MockBankKeeper) SetDenomMetaData(ctx context.Context, denomMetaData typ
 func (mr *MockBankKeeperMockRecorder) SetDenomMetaData(ctx, denomMetaData interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDenomMetaData", reflect.TypeOf((*MockBankKeeper)(nil).SetDenomMetaData), ctx, denomMetaData)
+}
+
+// SetHooks mocks base method.
+func (m *MockBankKeeper) SetHooks(sh types0.SendHooks) *keeper.BaseSendKeeper {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetHooks", sh)
+	ret0, _ := ret[0].(*keeper.BaseSendKeeper)
+	return ret0
+}
+
+// SetHooks indicates an expected call of SetHooks.
+func (mr *MockBankKeeperMockRecorder) SetHooks(sh interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHooks", reflect.TypeOf((*MockBankKeeper)(nil).SetHooks), sh)
 }
 
 // SetParams mocks base method.

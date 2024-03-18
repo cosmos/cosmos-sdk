@@ -11,6 +11,7 @@ import (
 	address "cosmossdk.io/core/address"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
+	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -59,22 +60,6 @@ func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddres
 	return ret0
 }
 
-// GetMappedAddress mocks base method.
-func (m *MockAccountKeeper) GetMappedAddress(ctx context.Context, addr types.AccAddress) types.AccAddress {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMappedAddress", ctx, addr)
-	ret0, _ := ret[0].(types.AccAddress)
-	return ret0
-}
-
-// GetMergedAccountAddressIfExists mocks base method.
-func (m *MockAccountKeeper) GetMergedAccountAddressIfExists(ctx context.Context, addr types.AccAddress) types.AccAddress {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMergedAccountAddressIfExists", ctx, addr)
-	ret0, _ := ret[0].(types.AccAddress)
-	return ret0
-}
-
 // GetAccount indicates an expected call of GetAccount.
 func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
@@ -93,6 +78,34 @@ func (m *MockAccountKeeper) GetAllAccounts(ctx context.Context) []types.AccountI
 func (mr *MockAccountKeeperMockRecorder) GetAllAccounts(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAccounts", reflect.TypeOf((*MockAccountKeeper)(nil).GetAllAccounts), ctx)
+}
+
+// GetMappedAddress mocks base method.
+func (m *MockAccountKeeper) GetMappedAddress(ctx context.Context, addr types.AccAddress) types.AccAddress {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMappedAddress", ctx, addr)
+	ret0, _ := ret[0].(types.AccAddress)
+	return ret0
+}
+
+// GetMappedAddress indicates an expected call of GetMappedAddress.
+func (mr *MockAccountKeeperMockRecorder) GetMappedAddress(ctx, addr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMappedAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetMappedAddress), ctx, addr)
+}
+
+// GetMergedAccountAddressIfExists mocks base method.
+func (m *MockAccountKeeper) GetMergedAccountAddressIfExists(ctx context.Context, addr types.AccAddress) types.AccAddress {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMergedAccountAddressIfExists", ctx, addr)
+	ret0, _ := ret[0].(types.AccAddress)
+	return ret0
+}
+
+// GetMergedAccountAddressIfExists indicates an expected call of GetMergedAccountAddressIfExists.
+func (mr *MockAccountKeeperMockRecorder) GetMergedAccountAddressIfExists(ctx, addr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMergedAccountAddressIfExists", reflect.TypeOf((*MockAccountKeeper)(nil).GetMergedAccountAddressIfExists), ctx, addr)
 }
 
 // GetModuleAccount mocks base method.
@@ -257,4 +270,83 @@ func (m *MockAccountKeeper) ValidatePermissions(macc types.ModuleAccountI) error
 func (mr *MockAccountKeeperMockRecorder) ValidatePermissions(macc interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissions", reflect.TypeOf((*MockAccountKeeper)(nil).ValidatePermissions), macc)
+}
+
+// MockSendHooks is a mock of SendHooks interface.
+type MockSendHooks struct {
+	ctrl     *gomock.Controller
+	recorder *MockSendHooksMockRecorder
+}
+
+// MockSendHooksMockRecorder is the mock recorder for MockSendHooks.
+type MockSendHooksMockRecorder struct {
+	mock *MockSendHooks
+}
+
+// NewMockSendHooks creates a new mock instance.
+func NewMockSendHooks(ctrl *gomock.Controller) *MockSendHooks {
+	mock := &MockSendHooks{ctrl: ctrl}
+	mock.recorder = &MockSendHooksMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSendHooks) EXPECT() *MockSendHooksMockRecorder {
+	return m.recorder
+}
+
+// AfterMultiSend mocks base method.
+func (m *MockSendHooks) AfterMultiSend(ctx context.Context, inputs []types1.Input, outputs []types1.Output) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterMultiSend", ctx, inputs, outputs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterMultiSend indicates an expected call of AfterMultiSend.
+func (mr *MockSendHooksMockRecorder) AfterMultiSend(ctx, inputs, outputs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterMultiSend", reflect.TypeOf((*MockSendHooks)(nil).AfterMultiSend), ctx, inputs, outputs)
+}
+
+// AfterSend mocks base method.
+func (m *MockSendHooks) AfterSend(ctx context.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterSend", ctx, fromAddr, toAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterSend indicates an expected call of AfterSend.
+func (mr *MockSendHooksMockRecorder) AfterSend(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterSend", reflect.TypeOf((*MockSendHooks)(nil).AfterSend), ctx, fromAddr, toAddr, amt)
+}
+
+// BeforeMultiSend mocks base method.
+func (m *MockSendHooks) BeforeMultiSend(ctx context.Context, inputs []types1.Input, outputs []types1.Output) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeMultiSend", ctx, inputs, outputs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeMultiSend indicates an expected call of BeforeMultiSend.
+func (mr *MockSendHooksMockRecorder) BeforeMultiSend(ctx, inputs, outputs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeMultiSend", reflect.TypeOf((*MockSendHooks)(nil).BeforeMultiSend), ctx, inputs, outputs)
+}
+
+// BeforeSend mocks base method.
+func (m *MockSendHooks) BeforeSend(ctx context.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeSend", ctx, fromAddr, toAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeSend indicates an expected call of BeforeSend.
+func (mr *MockSendHooksMockRecorder) BeforeSend(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeSend", reflect.TypeOf((*MockSendHooks)(nil).BeforeSend), ctx, fromAddr, toAddr, amt)
 }

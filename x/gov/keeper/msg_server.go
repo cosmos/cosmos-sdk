@@ -72,7 +72,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	for _, msg := range proposalMsgs {
 		msgName := sdk.MsgTypeURL(msg)
 		if isWhitelisted := k.isMessageWhitelisted(msgName); !isWhitelisted {
-			return nil, govtypes.ErrPropMsgNotWhitelisted.Wrapf("msg: %s", msg)
+			return nil, govtypes.ErrPropMsgNotWhitelisted.Wrapf("msg: %s", msgName)
 		}
 	}
 

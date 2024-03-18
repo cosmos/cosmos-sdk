@@ -2,6 +2,7 @@ package decode
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
@@ -132,12 +133,13 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	}, nil
 }
 
-// rejectAminoUnorderedTx checks if the given transaction should be rejected based on the provided
-// authentication information and transaction body. It iterates over the signer infos in the authentication
-// information and checks if the transaction mode is set to SIGN_MODE_LEGACY_AMINO_JSON
-// and if the transaction body is unordered. If both conditions are met, it returns an error indicating that
-// signing unordered transactions with amino is prohibited. Otherwise, it returns nil indicating that the
-// transaction is valid.
+// rejectAminoUnorderedTx checks if the given transaction should be rejected
+// based on the provided authentication information and transaction body. It
+// iterates over the signer infos in the authentication information and checks
+// if the transaction mode is set to SIGN_MODE_LEGACY_AMINO_JSON and if the
+// transaction body is unordered. If both conditions are met, it returns an error
+// indicating that signing unordered transactions with amino is prohibited. Otherwise,
+// it returns nil indicating that the transaction is valid.
 func rejectAminoUnorderedTx(authInfo *v1beta1.AuthInfo, body *v1beta1.TxBody) error {
 	if !body.Unordered {
 		return nil
@@ -146,10 +148,10 @@ func rejectAminoUnorderedTx(authInfo *v1beta1.AuthInfo, body *v1beta1.TxBody) er
 	for _, info := range authInfo.SignerInfos {
 		single, ok := info.ModeInfo.Sum.(*v1beta1.ModeInfo_Single_)
 		if !ok {
-			continue
+			return fmt.Errorf("unexpected mode info: %T; must be %T", info.ModeInfo.Sum, &v1beta1.ModeInfo_Single_{})
 		}
 
-		if single.Single.Mode == signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON && body.Unordered {
+		if single.Single.Mode == signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 			return errors.New("signing unordered txs with amino is prohibited")
 		}
 	}

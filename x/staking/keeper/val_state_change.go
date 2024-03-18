@@ -216,7 +216,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]module
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
-
+			moduleValidatorUpdates = append(moduleValidatorUpdates, validator.ModuleValidatorUpdate(powerReduction))
 			if err = k.SetLastValidatorPower(ctx, valAddr, newPower); err != nil {
 				return nil, err
 			}

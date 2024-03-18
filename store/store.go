@@ -89,7 +89,7 @@ type UpgradeableRootStore interface {
 	//
 	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
 	// implementation.
-	LoadVersionAndUpgrade(version uint64, upgrades *StoreUpgrades) error
+	LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error
 }
 
 // QueryResult defines the response type to performing a query on a RootStore.

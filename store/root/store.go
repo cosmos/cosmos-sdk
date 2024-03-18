@@ -91,7 +91,7 @@ func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 		return 0, nil, err
 	}
 
-	return v, NewReadOnlyAdapter(v, s), nil
+	return v, NewReaderMap(v, s), nil
 }
 
 func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
@@ -103,7 +103,7 @@ func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
 		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
 	}
 
-	return NewReadOnlyAdapter(v, s), nil
+	return NewReaderMap(v, s), nil
 }
 
 func (s *Store) GetStateStorage() store.VersionedDatabase {

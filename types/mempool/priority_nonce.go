@@ -9,7 +9,6 @@ import (
 	"github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
@@ -432,7 +431,7 @@ func (mp *PriorityNonceMempool[C]) CountTx() int {
 func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
-	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
 		return err
 	}
@@ -441,7 +440,7 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	}
 
 	sig := sigs[0]
-	sender := sdk.AccAddress(sig.PubKey.Address()).String()
+	sender := sig.Signer.String()
 	nonce := sig.Sequence
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}

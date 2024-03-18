@@ -47,6 +47,9 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
+	// whitelist of msgs that can be passed into gov prop
+	proposalMsgWhitelist map[string]struct{}
+
 	Schema                 collections.Schema
 	Constitution           collections.Item[string]
 	Params                 collections.Item[v1.Params]
@@ -74,7 +77,7 @@ func (k Keeper) GetAuthority() string {
 func NewKeeper(
 	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrKeeper types.DistributionKeeper,
-	router baseapp.MessageRouter, config types.Config, authority string,
+	router baseapp.MessageRouter, config types.Config, authority string, proposalMsgWhitelist []string,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -90,6 +93,11 @@ func NewKeeper(
 		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
 	}
 
+	proposalMsgWhitelistMap := make(map[string]struct{})
+	for _, msg := range proposalMsgWhitelist {
+		proposalMsgWhitelistMap[msg] = struct{}{}
+	}
+
 	sb := collections.NewSchemaBuilder(storeService)
 	k := &Keeper{
 		storeService:           storeService,
@@ -101,6 +109,7 @@ func NewKeeper(
 		router:                 router,
 		config:                 config,
 		authority:              authority,
+		proposalMsgWhitelist:   proposalMsgWhitelistMap,
 		Constitution:           collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                 collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
 		Deposits:               collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
@@ -191,4 +200,9 @@ func (k Keeper) assertSummaryLength(summary string) error {
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}
 	return nil
+}
+
+func (keeper Keeper) isMessageWhitelisted(msg string) bool {
+	_, exists := keeper.proposalMsgWhitelist[msg]
+	return exists
 }

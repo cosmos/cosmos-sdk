@@ -25,4 +25,5 @@ var (
 	ErrInvalidProposal         = errors.Register(ModuleName, 21, "invalid proposal")
 	ErrSummaryTooLong          = errors.Register(ModuleName, 22, "summary too long")
 	ErrInvalidDepositDenom     = errors.Register(ModuleName, 23, "invalid deposit denom")
+	ErrPropMsgNotWhitelisted   = errors.Register(ModuleName, 24, "proposal message not whitelisted")
 )

@@ -6,10 +6,12 @@ package db
 import (
 	"bytes"
 	"fmt"
+	"runtime"
 	"slices"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	storeerrors "cosmossdk.io/store/v2/errors"
 	"github.com/linxGnu/grocksdb"
 )
 
@@ -26,21 +28,33 @@ type RocksDB struct {
 	storage *grocksdb.DB
 }
 
-func NewRocksDB(dataDir string) (*RocksDB, error) {
-	opts := grocksdb.NewDefaultOptions()
-	opts.SetCreateIfMissing(true)
+// defaultRocksdbOptions, good enough for most cases, including heavy workloads.
+// 1GB table cache, 512MB write buffer(may use 50% more on heavy workloads).
+// compression: snappy as default, need to -lsnappy to enable.
+func defaultRocksdbOptions() *grocksdb.Options {
+	bbto := grocksdb.NewDefaultBlockBasedTableOptions()
+	bbto.SetBlockCache(grocksdb.NewLRUCache(1 << 30))
+	bbto.SetFilterPolicy(grocksdb.NewBloomFilter(10))
 
-	storage, err := grocksdb.OpenDb(opts, dataDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open RocksDB: %w", err)
-	}
-
-	return &RocksDB{
-		storage: storage,
-	}, nil
+	rocksdbOpts := grocksdb.NewDefaultOptions()
+	rocksdbOpts.SetBlockBasedTableFactory(bbto)
+	// SetMaxOpenFiles to 4096 seems to provide a reliable performance boost
+	rocksdbOpts.SetMaxOpenFiles(4096)
+	rocksdbOpts.SetCreateIfMissing(true)
+	rocksdbOpts.IncreaseParallelism(runtime.NumCPU())
+	// 1.5GB maximum memory use for writebuffer.
+	rocksdbOpts.OptimizeLevelStyleCompaction(512 * 1024 * 1024)
+	return rocksdbOpts
 }
 
-func NewRocksDBWithOpts(dataDir string, opts *grocksdb.Options) (*RocksDB, error) {
+func NewRocksDB(dataDir string) (*RocksDB, error) {
+	opts := defaultRocksdbOptions()
+	opts.SetCreateIfMissing(true)
+
+	return NewRocksDBWithOpts(dataDir, opts)
+}
+
+func NewRocksDBWithOpts(dataDir string, opts Options) (*RocksDB, error) {
 	storage, err := grocksdb.OpenDb(opts, dataDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open RocksDB: %w", err)
@@ -77,7 +91,7 @@ func (db *RocksDB) Has(key []byte) (bool, error) {
 
 func (db *RocksDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	itr := db.storage.NewIterator(defaultReadOpts)
@@ -86,7 +100,7 @@ func (db *RocksDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 
 func (db *RocksDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	itr := db.storage.NewIterator(defaultReadOpts)
@@ -229,8 +243,6 @@ func (itr *rocksDBIterator) assertIsValid() {
 	}
 }
 
-var _ store.RawBatch = (*rocksDBBatch)(nil)
-
 type rocksDBBatch struct {
 	db    *RocksDB
 	batch *grocksdb.WriteBatch
@@ -238,13 +250,13 @@ type rocksDBBatch struct {
 
 func (b *rocksDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
 	if value == nil {
-		return store.ErrValueNil
+		return storeerrors.ErrValueNil
 	}
 	if b.batch == nil {
-		return store.ErrBatchClosed
+		return storeerrors.ErrBatchClosed
 	}
 
 	b.batch.Put(key, value)
@@ -253,10 +265,10 @@ func (b *rocksDBBatch) Set(key, value []byte) error {
 
 func (b *rocksDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
 	if b.batch == nil {
-		return store.ErrBatchClosed
+		return storeerrors.ErrBatchClosed
 	}
 
 	b.batch.Delete(key)

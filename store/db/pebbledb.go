@@ -8,7 +8,9 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	storeerrors "cosmossdk.io/store/v2/errors"
 	"github.com/cockroachdb/pebble"
+	"github.com/spf13/cast"
 )
 
 var _ store.RawDB = (*PebbleDB)(nil)
@@ -21,19 +23,26 @@ type PebbleDB struct {
 }
 
 func NewPebbleDB(dataDir string) (*PebbleDB, error) {
-	opts := &pebble.Options{}
-	opts = opts.EnsureDefaults()
 
-	db, err := pebble.Open(dataDir, opts)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open PebbleDB: %w", err)
-	}
+	return NewPebbleDBWithOpts(dataDir, nil)
 
-	return &PebbleDB{storage: db}, nil
 }
 
-func NewPebbleDBWithOpts(dataDir string, sync bool, opts *pebble.Options) (*PebbleDB, error) {
-	db, err := pebble.Open(dataDir, opts)
+func NewPebbleDBWithOpts(dataDir string, opts store.DBOptions) (*PebbleDB, error) {
+	do := &pebble.Options{
+		MaxConcurrentCompactions: func() int { return 3 }, // default 1
+	}
+
+	do.EnsureDefaults()
+
+	if opts != nil {
+		files := cast.ToInt(opts.Get("maxopenfiles"))
+		if files > 0 {
+			do.MaxOpenFiles = files
+		}
+	}
+
+	db, err := pebble.Open(dataDir, do)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open PebbleDB: %w", err)
 	}
@@ -49,7 +58,7 @@ func (db *PebbleDB) Close() error {
 
 func (db *PebbleDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	bz, closer, err := db.storage.Get(key)
@@ -80,7 +89,7 @@ func (db *PebbleDB) Has(key []byte) (bool, error) {
 
 func (db *PebbleDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
@@ -93,7 +102,7 @@ func (db *PebbleDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 
 func (db *PebbleDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
@@ -225,13 +234,13 @@ type pebbleDBBatch struct {
 
 func (b *pebbleDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
 	if value == nil {
-		return store.ErrValueNil
+		return storeerrors.ErrValueNil
 	}
 	if b.batch == nil {
-		return store.ErrBatchClosed
+		return storeerrors.ErrBatchClosed
 	}
 
 	return b.batch.Set(key, value, nil)
@@ -239,10 +248,10 @@ func (b *pebbleDBBatch) Set(key, value []byte) error {
 
 func (b *pebbleDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
 	if b.batch == nil {
-		return store.ErrBatchClosed
+		return storeerrors.ErrBatchClosed
 	}
 
 	return b.batch.Delete(key, nil)

@@ -1,5 +1,5 @@
-//go:build rocksdb
-// +build rocksdb
+//go:build !rocksdb
+// +build !rocksdb
 
 package db
 
@@ -34,7 +34,7 @@ type optionsWrapper struct {
 }
 
 func (o optionsWrapper) Get(str string) *grocksdb.Options {
-	opts, err := optionsWrapper.GetOptionsFromString(optionsWrapper, str)
+	opts, err := grocksdb.GetOptionsFromString(o.Options, str)
 	if err != nil {
 		return nil
 	}
@@ -58,7 +58,7 @@ func defaultRocksdbOptions() *optionsWrapper {
 	// 1.5GB maximum memory use for writebuffer.
 	rocksdbOpts.OptimizeLevelStyleCompaction(512 * 1024 * 1024)
 	return &optionsWrapper{
-		rocksdbOpts
+		rocksdbOpts,
 	}
 }
 
@@ -66,7 +66,7 @@ func NewRocksDB(name, dataDir string) (*RocksDB, error) {
 	opts := defaultRocksdbOptions()
 	opts.SetCreateIfMissing(true)
 
-	return NewRocksDBWithOpts(name, dataDir, opts)
+	return NewRocksDBWithOpts(name, dataDir, opts.Options)
 }
 
 func NewRocksDBWithOpts(name, dataDir string, opts *grocksdb.Options) (*RocksDB, error) {

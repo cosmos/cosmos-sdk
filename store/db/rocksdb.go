@@ -56,7 +56,7 @@ func NewRocksDB(name, dataDir string) (*RocksDB, error) {
 }
 
 func NewRocksDBWithOpts(name, dataDir string, opts store.DBOptions) (*RocksDB, error) {
-	dbPath := filepath.Join(dir, name+DBFileSuffix)
+	dbPath := filepath.Join(dataDir, name+DBFileSuffix)
 	storage, err := grocksdb.OpenDb(opts, dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open RocksDB: %w", err)

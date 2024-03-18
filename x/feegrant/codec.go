@@ -22,13 +22,13 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry
-func RegisterInterfaces(registry registry.LegacyRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	registrar.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgGrantAllowance{},
 		&MsgRevokeAllowance{},
 	)
 
-	registry.RegisterInterface(
+	registrar.RegisterInterface(
 		"cosmos.feegrant.v1beta1.FeeAllowanceI",
 		(*FeeAllowanceI)(nil),
 		&BasicAllowance{},
@@ -36,5 +36,5 @@ func RegisterInterfaces(registry registry.LegacyRegistry) {
 		&AllowedMsgAllowance{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
 }

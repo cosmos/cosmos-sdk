@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -47,8 +46,8 @@ func makeMinimalConfig() depinject.Config {
 	var (
 		mempoolOpt            = baseapp.SetMempool(mempool.NewSenderNonceMempool())
 		addressCodec          = func() address.Codec { return addresscodec.NewBech32Codec("cosmos") }
-		validatorAddressCodec = func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") }
-		consensusAddressCodec = func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") }
+		validatorAddressCodec = func() address.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") }
+		consensusAddressCodec = func() address.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") }
 	)
 
 	return depinject.Configs(

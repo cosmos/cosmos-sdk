@@ -132,7 +132,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 	// check if the module account exists
 	moduleAcc := k.GetDistributionAccount(ctx)
 	if moduleAcc == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+		return fmt.Errorf("%s module account has not been set", types.ModuleName)
 	}
 
 	balances := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
@@ -140,7 +140,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
 	if !balances.Equal(moduleHoldingsInt) {
-		panic(fmt.Sprintf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt))
+		return fmt.Errorf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt)
 	}
 	return nil
 }

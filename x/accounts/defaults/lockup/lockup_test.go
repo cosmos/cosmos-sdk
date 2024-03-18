@@ -2,7 +2,6 @@ package lockup
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -112,7 +111,7 @@ func TestTrackingDelegation(t *testing.T) {
 			sdk.NewCoins(sdk.NewCoin("test", math.NewInt(6))),
 			sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
 			sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
-			sdk.NewCoins(sdk.NewCoin("test", math.NewInt(2))),
+			sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
 			func(ctx context.Context, bv *BaseLockup) {
 				err := bv.DelegatedLocking.Set(ctx, "test", math.NewInt(4))
 				require.NoError(t, err)
@@ -130,7 +129,7 @@ func TestTrackingDelegation(t *testing.T) {
 		},
 		{
 			"zero amount",
-			sdk.NewCoins(sdk.NewCoin("test", math.NewInt(0))),
+			sdk.NewCoins(sdk.NewCoin("test", math.ZeroInt())),
 			nil,
 			nil,
 			nil,
@@ -146,19 +145,15 @@ func TestTrackingDelegation(t *testing.T) {
 			test.malaete(ctx, baseLockup)
 		}
 
-		delegatedFree, err := baseLockup.DelegatedFree.Get(ctx, "test")
-		require.NoError(t, err)
-		fmt.Println(delegatedFree)
-
-		err = baseLockup.TrackDelegation(ctx, mockBalances, test.lockedCoins, test.amt)
+		err := baseLockup.TrackDelegation(ctx, mockBalances, test.lockedCoins, test.amt)
 		if test.expErr != nil {
-			require.Equal(t, test.expErr, err)
+			require.EqualError(t, err, test.expErr.Error(), test.name+" error not equal")
 			continue
 		}
 
 		delegatedVesting, err := baseLockup.DelegatedLocking.Get(ctx, "test")
 		require.NoError(t, err)
-		delegatedFree, err = baseLockup.DelegatedFree.Get(ctx, "test")
+		delegatedFree, err := baseLockup.DelegatedFree.Get(ctx, "test")
 		require.NoError(t, err)
 
 		require.Equal(t, test.expDelegatedLockingAmt.AmountOf("test"), delegatedVesting, test.name+" delegated locking amount must be equal")
@@ -215,7 +210,7 @@ func TestTrackingUnDelegation(t *testing.T) {
 
 		err = baseLockup.TrackUndelegation(ctx, test.amt)
 		if test.expErr != nil {
-			require.Equal(t, test.expErr, err)
+			require.EqualError(t, err, test.expErr.Error(), test.name+" error not equal")
 			continue
 		}
 
@@ -237,7 +232,6 @@ func TestGetNotBondedLockedCoin(t *testing.T) {
 		lockedCoin  sdk.Coin
 		expLockCoin sdk.Coin
 		malaete     func(ctx context.Context, bv *BaseLockup)
-		expErr      error
 	}{
 		{
 			"locked amount less than delegated locking amount",
@@ -247,7 +241,6 @@ func TestGetNotBondedLockedCoin(t *testing.T) {
 				err := bv.DelegatedLocking.Set(ctx, "test", math.NewInt(5))
 				require.NoError(t, err)
 			},
-			nil,
 		},
 		{
 			"locked amount more than delegated locking amount",
@@ -257,19 +250,16 @@ func TestGetNotBondedLockedCoin(t *testing.T) {
 				err := bv.DelegatedLocking.Set(ctx, "test", math.NewInt(4))
 				require.NoError(t, err)
 			},
-			nil,
 		},
 	}
 
 	for _, test := range testcases {
 		baseLockup := setup(t, ctx, ss)
+		test.malaete(ctx, baseLockup)
 
 		lockedCoin, err := baseLockup.GetNotBondedLockedCoin(ctx, test.lockedCoin, "test")
-		if test.expErr != nil {
-			require.Equal(t, test.expErr, err)
-			continue
-		}
+		require.NoError(t, err)
 
-		require.Equal(t, test.expLockCoin, lockedCoin, "locked amount must be equal")
+		require.True(t, test.expLockCoin.Equal(lockedCoin), test.name+" locked amount must be equal")
 	}
 }

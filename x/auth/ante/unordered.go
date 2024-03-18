@@ -71,13 +71,13 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 
 	// We need to hash the transaction WITHOUT the signature to prevent any malleability
 	// attacks.
-	//
-	// TODO(bez): Do we need to make a copy of RawTx in order to ensure the provided
-	// tx object isn't modified?
 	rawTx := infoTx.GetRawTx()
-	rawTx.Signatures = nil
+	rawTxCpy := &typestx.TxRaw{
+		BodyBytes:     rawTx.BodyBytes,
+		AuthInfoBytes: rawTx.AuthInfoBytes,
+	}
 
-	rawTxBz, err := rawTx.Marshal()
+	rawTxBz, err := rawTxCpy.Marshal()
 	if err != nil {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrLogic, err.Error())
 	}

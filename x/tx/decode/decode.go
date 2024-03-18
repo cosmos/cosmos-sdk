@@ -135,11 +135,13 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 
 // rejectAminoUnorderedTx checks if the given transaction should be rejected
 // based on the provided authentication information and transaction body. It
-// iterates over the signer infos in the authentication information and checks
-// if the transaction mode is set to SIGN_MODE_LEGACY_AMINO_JSON and if the
-// transaction body is unordered. If both conditions are met, it returns an error
-// indicating that signing unordered transactions with amino is prohibited. Otherwise,
-// it returns nil indicating that the transaction is valid.
+// ensures the following:
+//
+// - The transaction must be unordered
+// - Each SignerInfo in the transaction must be of type ModeInfo_Single (i.e. multisigs are not allowed)
+// - The mode of each SignerInfo must NOT be SIGN_MODE_LEGACY_AMINO_JSON
+//
+// We return <nil> if the transaction is valid, otherwise an error is returned.
 func rejectAminoUnorderedTx(authInfo *v1beta1.AuthInfo, body *v1beta1.TxBody) error {
 	if !body.Unordered {
 		return nil

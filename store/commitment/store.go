@@ -44,13 +44,8 @@ type CommitStore struct {
 	pruneOptions *store.PruneOptions
 }
 
-type TreeStore struct {
-	storeKey []byte
-	tree     Tree
-}
-
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees []TreeStore, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
 	if pruneOpts == nil {
 		pruneOpts = store.DefaultPruneOptions()
 	}
@@ -58,10 +53,10 @@ func NewCommitStore(trees []TreeStore, db store.RawDB, pruneOpts *store.PruneOpt
 	storeKeys := make(map[[32]byte][]byte)
 	multiTrees := make(map[[32]byte]Tree)
 
-	for _, treeStore := range trees {
-		key := sha256.Sum256(treeStore.storeKey)
-		storeKeys[key] = treeStore.storeKey
-		multiTrees[key] = treeStore.tree
+	for key, treeStore := range trees {
+		key := sha256.Sum256([]byte(key))
+		storeKeys[key] = key[:]
+		multiTrees[key] = treeStore
 	}
 
 	return &CommitStore{

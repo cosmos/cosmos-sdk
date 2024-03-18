@@ -54,7 +54,7 @@ type VersionedDatabase interface {
 	Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
 	ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
 
-	ApplyChangeset(version uint64, cs *Changeset) error
+	ApplyChangeset(version uint64, cs corestore.Changeset) error
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be

@@ -323,7 +323,7 @@ func TestStore_Save(t *testing.T) {
 		_, err := store.Save(7, 1, ch)
 		require.NoError(t, err)
 	}()
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	_, err = store.Save(7, 2, makeChunks(nil))
 	require.Error(t, err)
 	_, err = store.Save(8, 1, makeChunks(nil))

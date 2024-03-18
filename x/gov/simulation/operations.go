@@ -125,10 +125,10 @@ func WeightedOperations(
 			weightMsgDeposit,
 			SimulateMsgDeposit(txGen, ak, bk, k),
 		),
-		// simulation.NewWeightedOperation(
-		// 	weightMsgVote,
-		// 	SimulateMsgVote(txGen, ak, bk, k),
-		// ),
+		simulation.NewWeightedOperation(
+			weightMsgVote,
+			SimulateMsgVote(txGen, ak, bk, k),
+		),
 		simulation.NewWeightedOperation(
 			weightMsgVoteWeighted,
 			SimulateMsgVoteWeighted(txGen, ak, bk, k),
@@ -376,15 +376,15 @@ func SimulateMsgDeposit(
 	}
 }
 
-// // SimulateMsgVote generates a MsgVote with random values.
-// func SimulateMsgVote(
-// 	txGen client.TxConfig,
-// 	ak types.AccountKeeper,
-// 	bk types.BankKeeper,
-// 	k *keeper.Keeper,
-// ) simtypes.Operation {
-// 	return operationSimulateMsgVote(txGen, ak, bk, k, simtypes.Account{}, -1)
-// }
+// SimulateMsgVote generates a MsgVote with random values.
+func SimulateMsgVote(
+	txGen client.TxConfig,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	k *keeper.Keeper,
+) simtypes.Operation {
+	return operationSimulateMsgVote(txGen, ak, bk, k, simtypes.Account{}, -1)
+}
 
 func operationSimulateMsgVote(
 	txGen client.TxConfig,

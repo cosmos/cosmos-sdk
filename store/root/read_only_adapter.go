@@ -17,7 +17,7 @@ type ReaderMap struct {
 	version   uint64
 }
 
-func NewReadOnlyAdapter(v uint64, rs store.RootStore) *ReaderMap {
+func NewReaderMap(v uint64, rs store.RootStore) *ReaderMap {
 	return &ReaderMap{
 		rootStore: rs,
 		version:   v,

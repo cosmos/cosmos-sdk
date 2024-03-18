@@ -69,7 +69,7 @@ type VersionedDatabase interface {
 // Committer defines an API for committing state.
 type Committer interface {
 	// WriteBatch writes a batch of key-value pairs to the tree.
-	WriteBatch(cs *Changeset) error
+	WriteBatch(cs corestore.Changeset) error
 
 	// WorkingCommitInfo returns the CommitInfo for the working tree.
 	WorkingCommitInfo(version uint64) *proof.CommitInfo

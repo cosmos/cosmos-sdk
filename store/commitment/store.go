@@ -2,6 +2,7 @@ package commitment
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 
 	protoio "github.com/cosmos/gogoproto/io"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal/encoding"
@@ -35,33 +37,49 @@ var (
 type CommitStore struct {
 	logger     log.Logger
 	db         store.RawDB
-	multiTrees map[string]Tree
+	multiTrees map[[32]byte]Tree
+	storeKeys  map[[32]byte][]byte
 
 	// pruneOptions is the pruning configuration.
 	pruneOptions *store.PruneOptions
 }
 
+type TreeStore struct {
+	storeKey []byte
+	tree     Tree
+}
+
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees []TreeStore, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
 	if pruneOpts == nil {
 		pruneOpts = store.DefaultPruneOptions()
+	}
+
+	storeKeys := make(map[[32]byte][]byte)
+	multiTrees := make(map[[32]byte]Tree)
+
+	for _, treeStore := range trees {
+		key := sha256.Sum256(treeStore.storeKey)
+		storeKeys[key] = treeStore.storeKey
+		multiTrees[key] = treeStore.tree
 	}
 
 	return &CommitStore{
 		logger:       logger,
 		db:           db,
 		multiTrees:   multiTrees,
+		storeKeys:    storeKeys,
 		pruneOptions: pruneOpts,
 	}, nil
 }
 
-func (c *CommitStore) WriteBatch(cs *store.Changeset) error {
-	for storeKey, pairs := range cs.Pairs {
-		tree, ok := c.multiTrees[storeKey]
+func (c *CommitStore) WriteBatch(cs corestore.Changeset) error {
+	for storeKey, pairs := range cs {
+		tree, ok := c.multiTrees[[32]byte(pairs.Actor)]
 		if !ok {
 			return fmt.Errorf("store key %s not found in multiTrees", storeKey)
 		}
-		for _, kv := range pairs {
+		for _, kv := range pairs.StateChanges {
 			if kv.Value == nil {
 				if err := tree.Remove(kv.Key); err != nil {
 					return err
@@ -79,7 +97,7 @@ func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
 		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name: storeKey,
+			Name: c.storeKeys[storeKey],
 			CommitID: proof.CommitID{
 				Version: version,
 				Hash:    tree.WorkingHash(),
@@ -210,7 +228,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 			}
 		}
 		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name:     storeKey,
+			Name:     c.storeKeys[storeKey],
 			CommitID: commitID,
 		})
 	}
@@ -245,7 +263,8 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 }
 
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	tree, ok := c.multiTrees[string(storeKey)]
+	bz := sha256.Sum256(storeKey)
+	tree, ok := c.multiTrees[bz]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -271,7 +290,8 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 }
 
 func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
-	tree, ok := c.multiTrees[string(storeKey)]
+	bzKey := sha256.Sum256(storeKey)
+	tree, ok := c.multiTrees[bzKey]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -335,7 +355,7 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 			err = protoWriter.WriteMsg(&snapshotstypes.SnapshotItem{
 				Item: &snapshotstypes.SnapshotItem_Store{
 					Store: &snapshotstypes.SnapshotStoreItem{
-						Name: storeKey,
+						Name: string(c.storeKeys[storeKey]),
 					},
 				},
 			})
@@ -395,8 +415,8 @@ loop:
 				}
 				importer.Close()
 			}
-			storeKey = item.Store.Name
-			tree := c.multiTrees[storeKey]
+			bzKey := sha256.Sum256([]byte(item.Store.Name))
+			tree := c.multiTrees[bzKey]
 			if tree == nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", storeKey)
 			}
@@ -428,7 +448,7 @@ loop:
 				chStorage <- &store.KVPair{
 					Key:      node.Key,
 					Value:    node.Value,
-					StoreKey: storeKey,
+					StoreKey: storeKey, // TODO check if this is valid
 				}
 			}
 			err := importer.Add(node)

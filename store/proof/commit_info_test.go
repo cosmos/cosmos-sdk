@@ -48,7 +48,7 @@ func TestGetStoreProof(t *testing.T) {
 		require.Equal(t, ci.StoreInfos[0].Name, "key1")
 		for _, si := range tc.storeInfos {
 			// get the proof
-			_, proof, err := ci.GetStoreProof(si.Name)
+			_, proof, err := ci.GetStoreProof([]byte(si.Name))
 			require.NoError(t, err, "test case %d", i)
 			// verify the proof
 			expRoots, err := proof.Run([][]byte{si.CommitID.Hash})

@@ -20,6 +20,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 const (
@@ -270,6 +271,21 @@ func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
 	}
 }
 
+// ModuleValidatorUpdate returns a module.ValidatorUpdate from a staking validator type
+// with the full validator power
+func (v Validator) ModuleValidatorUpdate(r math.Int) module.ValidatorUpdate {
+	consPk, err := v.ConsPubKey()
+	if err != nil {
+		panic(err)
+	}
+
+	return module.ValidatorUpdate{
+		PubKey:     consPk.Bytes(),
+		PubKeyType: consPk.Type(),
+		Power:      v.ConsensusPower(r),
+	}
+}
+
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
@@ -281,6 +297,21 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmProtoPk,
 		Power:  0,
+	}
+}
+
+// ModuleValidatorUpdateZero returns a module.ValidatorUpdate from a staking validator type
+// with zero power used for validator updates.
+func (v Validator) ModuleValidatorUpdateZero() module.ValidatorUpdate {
+	consPk, err := v.ConsPubKey()
+	if err != nil {
+		panic(err)
+	}
+
+	return module.ValidatorUpdate{
+		PubKey:     consPk.Bytes(),
+		PubKeyType: consPk.Type(),
+		Power:      0,
 	}
 }
 

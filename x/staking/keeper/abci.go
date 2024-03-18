@@ -20,9 +20,5 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 // EndBlocker called at every block, update validator set
 func (k *Keeper) EndBlocker(ctx context.Context) ([]module.ValidatorUpdate, error) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
-	cometValidatorUpdates, err := k.BlockValidatorUpdates(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return module.Parse2ModuleValidatorUpdate(cometValidatorUpdates)
+	return k.BlockValidatorUpdates(ctx)
 }

@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
@@ -15,9 +14,10 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-func (s *KeeperTestSuite) applyValidatorSetUpdates(ctx sdk.Context, keeper *stakingkeeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
+func (s *KeeperTestSuite) applyValidatorSetUpdates(ctx sdk.Context, keeper *stakingkeeper.Keeper, expectedUpdatesLen int) []module.ValidatorUpdate {
 	updates, err := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	s.Require().NoError(err)
 	if expectedUpdatesLen >= 0 {

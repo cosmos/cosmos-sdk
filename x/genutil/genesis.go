@@ -17,11 +17,11 @@ func InitGenesis(
 	txEncodingConfig client.TxEncodingConfig,
 ) (validatorUpdates []module.ValidatorUpdate, err error) {
 	if len(genesisState.GenTxs) > 0 {
-		cometValidatorUpdates, err := DeliverGenTxs(ctx, genesisState.GenTxs, stakingKeeper, deliverTx, txEncodingConfig)
+		moduleValidatorUpdates, err := DeliverGenTxs(ctx, genesisState.GenTxs, stakingKeeper, deliverTx, txEncodingConfig)
 		if err != nil {
 			return nil, err
 		}
-		return module.Parse2ModuleValidatorUpdate(cometValidatorUpdates)
+		return moduleValidatorUpdates, nil
 	}
-	return nil, nil
+	return
 }

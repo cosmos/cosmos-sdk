@@ -76,6 +76,7 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	// tx object isn't modified?
 	rawTx := infoTx.GetRawTx()
 	rawTx.Signatures = nil
+
 	rawTxBz, err := rawTx.Marshal()
 	if err != nil {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrLogic, err.Error())

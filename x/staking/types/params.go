@@ -129,7 +129,7 @@ func validateUnbondingTime(i interface{}) error {
 	}
 
 	if v < 0 {
-		return fmt.Errorf("unbonding time must be positive: %d", v)
+		return fmt.Errorf("unbonding time must not be negative: %d", v)
 	}
 
 	return nil

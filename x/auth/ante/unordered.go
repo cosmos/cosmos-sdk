@@ -67,7 +67,6 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 
 	infoTx := sigTx.(interface {
 		GetRawTx() *typestx.TxRaw
-		GetProtoTx() *typestx.Tx
 	})
 
 	// We need to hash the transaction WITHOUT the signature to prevent any malleability

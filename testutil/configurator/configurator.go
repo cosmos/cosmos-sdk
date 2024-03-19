@@ -23,6 +23,7 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
+	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
@@ -64,6 +65,7 @@ func defaultConfig() *Config {
 			testutil.ParamsModuleName,
 			"vesting",
 			testutil.CircuitModuleName,
+			testutil.EpochsModuleName,
 		},
 		EndBlockersOrder: []string{
 			"crisis",
@@ -106,6 +108,7 @@ func defaultConfig() *Config {
 			"vesting",
 			testutil.CircuitModuleName,
 			testutil.ProtocolPoolModuleName,
+			testutil.EpochsModuleName,
 		},
 		setInitGenesis: true,
 	}
@@ -332,6 +335,15 @@ func CounterModule() ModuleOption {
 		config.ModuleConfigs["counter"] = &appv1alpha1.ModuleConfig{
 			Name:   "counter",
 			Config: appconfig.WrapAny(&countermodulev1.Module{}),
+		}
+	}
+}
+
+func EpochsModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs["epochs"] = &appv1alpha1.ModuleConfig{
+			Name:   "epochs",
+			Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 		}
 	}
 }

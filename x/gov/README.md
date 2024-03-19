@@ -188,6 +188,18 @@ For a weighted vote to be valid, the `options` field must not contain duplicate 
 Quorum is defined as the minimum percentage of voting power that needs to be
 cast on a proposal for the result to be valid.
 
+### Expedited Quorum
+
+Expedited Quorum is defined as the minimum percentage of voting power that needs to be
+cast on an **expedited** proposal for the result to be valid.
+
+### Yes Quorum
+
+Yes quorum is a more restrictive quorum that is used to determine if a proposal passes.
+It is defined as the minimum percentage of voting power that needs to have voted `Yes` for the proposal to pass.
+It differs from `Threshold` as it takes the whole voting power into account, not only `Yes` and `No` votes.
+By default, `YesQuorum` is set to 0, which means no minimum.
+
 ### Proposal Types
 
 Proposal types have been introduced in ADR-069.
@@ -234,13 +246,6 @@ This means that proposals are accepted iff:
   the voting period is superior to 1/2.
 
 For expedited proposals, by default, the threshold is higher than with a *normal proposal*, namely, 66.7%.
-
-### Yes Quorum
-
-Yes quorum is a more restrictive quorum that is used to determine if a proposal passes.
-It is defined as the minimum percentage of voting power that needs to have voted `Yes` for the proposal to pass.
-It differs from `Threshold` as it takes the whole voting power into account, not only `Yes` and `No` votes.
-By default, `YesQuorum` is set to 0, which means no minimum.
 
 #### Inheritance
 
@@ -616,6 +621,7 @@ The governance module contains the following parameters:
 | expedited_threshold             | string (time ns)  | "0.667000000000000000"                  |
 | expedited_voting_period         | string (time ns)  | "86400000000000" (8600s)                |
 | expedited_min_deposit           | array (coins)     | [{"denom":"uatom","amount":"50000000"}] |
+| expedited_quorum                | string (dec)      | "0.5"                                   |
 | burn_proposal_deposit_prevote   | bool              | false                                   |
 | burn_vote_quorum                | bool              | false                                   |
 | burn_vote_veto                  | bool              | true                                    |

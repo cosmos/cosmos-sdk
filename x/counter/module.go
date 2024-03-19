@@ -47,6 +47,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	types.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
 }

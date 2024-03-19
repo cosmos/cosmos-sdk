@@ -236,7 +236,7 @@ func TestManager_Restore(t *testing.T) {
 
 func TestManager_TakeError(t *testing.T) {
 	snapshotter := &mockErrorCommitSnapshotter{}
-	store, err := snapshots.NewStore(GetTempDir(t))
+	store, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 	manager := snapshots.NewManager(store, opts, snapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
 

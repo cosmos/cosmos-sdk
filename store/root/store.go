@@ -10,6 +10,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
@@ -84,16 +85,16 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
-func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
+func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	v, err := s.GetLatestVersion()
 	if err != nil {
 		return 0, nil, err
 	}
 
-	return v, NewReadOnlyAdapter(v, s), nil
+	return v, NewReaderMap(v, s), nil
 }
 
-func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
+func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
 	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
 	// we should add a VersionExists() method to the VersionedDatabase interface.
 	//
@@ -102,7 +103,7 @@ func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
 		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
 	}
 
-	return NewReadOnlyAdapter(v, s), nil
+	return NewReaderMap(v, s), nil
 }
 
 func (s *Store) GetStateStorage() store.VersionedDatabase {

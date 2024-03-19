@@ -119,4 +119,4 @@ func (am AppModule) GenTxValidator() types.MessageValidator {
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // RegisterInterfaces implements module.AppModule.
-func (AppModule) RegisterInterfaces(registry.LegacyRegistry) {}
+func (AppModule) RegisterInterfaces(registry.InterfaceRegistrar) {}

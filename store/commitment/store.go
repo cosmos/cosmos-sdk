@@ -61,12 +61,13 @@ func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 	for storeKey, pairs := range cs.Changes {
 
 		key := internal.UnsafeBytesToStr(pairs.Actor)
-		tree, ok := c.multiTrees[key] //todo: see if we can avoid this hashing each time
+
+		tree, ok := c.multiTrees[key]
 		if !ok {
 			return fmt.Errorf("store key %s not found in multiTrees", storeKey)
 		}
 		for _, kv := range pairs.StateChanges {
-			if kv.Value == nil {
+			if kv.Remove {
 				if err := tree.Remove(kv.Key); err != nil {
 					return err
 				}
@@ -82,7 +83,7 @@ func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
-		bz := internal.UnsafeStrToBytes(storeKey)
+		bz := []byte(storeKey)
 		storeInfos = append(storeInfos, proof.StoreInfo{
 			Name: bz,
 			CommitID: proof.CommitID{
@@ -215,7 +216,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 			}
 		}
 		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name:     internal.UnsafeStrToBytes(storeKey),
+			Name:     []byte(storeKey),
 			CommitID: commitID,
 		})
 	}
@@ -430,7 +431,8 @@ loop:
 				if node.Value == nil {
 					node.Value = []byte{}
 				}
-				key := internal.UnsafeStrToBytes(storeKey)
+
+				key := []byte(storeKey)
 				// If the node is a leaf node, it will be written to the storage.
 				chStorage <- &corestore.StateChanges{
 					Actor: key,

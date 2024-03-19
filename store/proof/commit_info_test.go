@@ -45,10 +45,10 @@ func TestGetStoreProof(t *testing.T) {
 		}
 		commitHash := ci.Hash()
 		// make sure the store infos are sorted
-		require.Equal(t, ci.StoreInfos[0].Name, "key1")
+		require.Equal(t, ci.StoreInfos[0].Name, []byte("key1"))
 		for _, si := range tc.storeInfos {
 			// get the proof
-			_, proof, err := ci.GetStoreProof([]byte(si.Name))
+			_, proof, err := ci.GetStoreProof(si.Name)
 			require.NoError(t, err, "test case %d", i)
 			// verify the proof
 			expRoots, err := proof.Run([][]byte{si.CommitID.Hash})

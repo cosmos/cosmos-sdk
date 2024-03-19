@@ -203,7 +203,7 @@ Due to [challenges with how Cosmos SDK gas estimation works](https://github.com/
 
 If the chain increases gas usage in ways that are not included in simulation logic, this could break many clients at chain upgrade time until they increase their gas multipliers.
 
-The specific area to pay attention to on this front is the `simulate` parameter in the `AnteHandle` API. An example that could cause issues might look like the following:
+The specific area to pay attention to on this front is the `simulate` parameter in the `AnteHandler` API. An example that could cause issues might look like the following:
 
 ```go
 func (mfd MyMemPoolDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {

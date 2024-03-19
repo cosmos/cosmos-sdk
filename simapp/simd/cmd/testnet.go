@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/simapp"
@@ -26,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -209,7 +209,7 @@ func initTestnetFiles(
 	nodeConfig *cmtconfig.Config,
 	mm *module.Manager,
 	genBalIterator banktypes.GenesisBalancesIterator,
-	valAddrCodec runtime.ValidatorAddressCodec,
+	valAddrCodec address.ValidatorAddressCodec,
 	args initArgs,
 ) error {
 	if args.chainID == "" {
@@ -417,7 +417,7 @@ func initGenFiles(
 func collectGenFiles(
 	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
-	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator, valAddrCodec runtime.ValidatorAddressCodec,
+	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator, valAddrCodec address.ValidatorAddressCodec,
 ) error {
 	var appState json.RawMessage
 	genTime := cmttime.Now()

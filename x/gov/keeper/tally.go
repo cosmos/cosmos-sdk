@@ -125,7 +125,7 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 }
 
 // tallyExpedited tallies the votes of an expedited proposal
-// If there is not enough quorum of votes, the proposal fails
+// If there is not enough expedited quorum of votes, the proposal fails
 // If no one votes (everyone abstains), proposal fails
 // If more than 1/3 of voters veto, proposal fails
 // If more than 2/3 of non-abstaining voters vote Yes, proposal passes
@@ -136,8 +136,8 @@ func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.
 
 	// If there is not enough quorum of votes, the proposal fails
 	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
-	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
-	if percentVoting.LT(quorum) {
+	expeditedQuorum, _ := math.LegacyNewDecFromStr(params.ExpeditedQuorum)
+	if percentVoting.LT(expeditedQuorum) {
 		return false, params.BurnVoteQuorum, tallyResults, nil
 	}
 

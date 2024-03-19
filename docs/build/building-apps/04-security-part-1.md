@@ -75,7 +75,7 @@ While these halts are generally not difficult to recover when isolated, they sti
 
 Thus, **we should be cognizant of when we use panics and ensure that we avoid them with behavior that could be handled well with an error.** Of course, it is still okay to guardrail unexpected flows with panics when needed, especially if the behavior is such that a chain halt *would* be appropriate.
 
-Cosmos SDK takes care of catching and recovering from panics in all of `PrepareProposal` , `ProcessProposal`, `DeliverTx` , leaving only `Begin/EndBlock` for this class of vulnerabilities.
+Cosmos SDK takes care of catching and recovering from panics in all of `PrepareProposal`, `ProcessProposal`, `DeliverTx`, leaving only `Begin/EndBlock` for this class of vulnerabilities.
 
 For reference, the Osmosis codebase catches and silently logs most panics stemming from `Begin/EndBlock` with [this](https://github.com/osmosis-labs/osmosis/blob/b0aee0006ce55d0851773084bd7880db7e32ad70/osmoutils/cache_ctx.go#L13-L44) helper. In almost all cases, it is most productive to understand the reason behind panic and reconcile it without halting the chain entirely.
 

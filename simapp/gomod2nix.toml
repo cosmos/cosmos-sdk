@@ -144,8 +144,8 @@ schema = 3
     version = "v0.3.3"
     hash = "sha256-sm0lJGGjpm27HQlOc8C3QgWHjlyjJZ/tKIO5qpSNH7E="
   [mod."github.com/creachadair/tomledit"]
-    version = "v0.0.25"
-    hash = "sha256-EW3K2z4sfCdgKTQsjTpHxV96xdnTbnggu1EF34BlTzk="
+    version = "v0.0.26"
+    hash = "sha256-kpn/KpzYdlYMV9vq+AYEJq80S2tbT3xdU1gp6H4WoA8="
   [mod."github.com/danieljoos/wincred"]
     version = "v1.2.1"
     hash = "sha256-hmJediHYMONMEvrRnMs88OXEp4SDt1Pmi8t8eOEk83o="

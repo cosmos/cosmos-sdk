@@ -73,6 +73,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 		},
 		aminoFieldEncoders: map[string]FieldEncoder{
 			"legacy_coins": nullSliceAsEmptyEncoder,
+			"inline_json":  cosmosInlineJson,
 		},
 		protoTypeEncoders: map[string]MessageEncoder{
 			"google.protobuf.Timestamp": marshalTimestamp,

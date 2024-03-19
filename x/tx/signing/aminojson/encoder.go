@@ -81,6 +81,17 @@ func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) er
 	}
 }
 
+// cosmosInlineJson replicates the behavior at:
+// https://github.com/CosmWasm/wasmd/blob/08567ff20e372e4f4204a91ca64a371538742bed/x/wasm/types/tx.go#L20-L22
+func cosmosInlineJson(_ *Encoder, v protoreflect.Value, w io.Writer) error {
+	blob, err := json.RawMessage(v.Bytes()).MarshalJSON()
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(blob)
+	return err
+}
+
 // keyFieldEncoder replicates the behavior at described at:
 // https://github.com/cosmos/cosmos-sdk/blob/b49f948b36bc991db5be431607b475633aed697e/proto/cosmos/crypto/secp256k1/keys.proto#L16
 // The message is treated if it were bytes directly without the key field specified.

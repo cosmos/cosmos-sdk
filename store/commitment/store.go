@@ -2,7 +2,6 @@ package commitment
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +12,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	internal "cosmossdk.io/store/v2/internal/conv"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
@@ -37,8 +37,7 @@ var (
 type CommitStore struct {
 	logger     log.Logger
 	db         store.RawDB
-	multiTrees map[[32]byte]Tree
-	storeKeys  map[[32]byte][]byte
+	multiTrees map[string]Tree
 
 	// pruneOptions is the pruning configuration.
 	pruneOptions *store.PruneOptions
@@ -50,28 +49,19 @@ func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.Prun
 		pruneOpts = store.DefaultPruneOptions()
 	}
 
-	storeKeys := make(map[[32]byte][]byte)
-	multiTrees := make(map[[32]byte]Tree)
-
-	for key, treeStore := range trees {
-		keyBytes := []byte(key)
-		keybz := sha256.Sum256(keyBytes)
-		storeKeys[keybz] = keyBytes
-		multiTrees[keybz] = treeStore
-	}
-
 	return &CommitStore{
 		logger:       logger,
 		db:           db,
-		multiTrees:   multiTrees,
-		storeKeys:    storeKeys,
+		multiTrees:   trees,
 		pruneOptions: pruneOpts,
 	}, nil
 }
 
 func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 	for storeKey, pairs := range cs.Changes {
-		tree, ok := c.multiTrees[sha256.Sum256(pairs.Actor)] //todo: see if we can avoid this hashing each time
+
+		key := internal.UnsafeBytesToStr(pairs.Actor)
+		tree, ok := c.multiTrees[key] //todo: see if we can avoid this hashing each time
 		if !ok {
 			return fmt.Errorf("store key %s not found in multiTrees", storeKey)
 		}
@@ -92,8 +82,9 @@ func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
+		bz := internal.UnsafeStrToBytes(storeKey)
 		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name: c.storeKeys[storeKey],
+			Name: bz,
 			CommitID: proof.CommitID{
 				Version: version,
 				Hash:    tree.WorkingHash(),
@@ -224,7 +215,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 			}
 		}
 		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name:     c.storeKeys[storeKey],
+			Name:     internal.UnsafeStrToBytes(storeKey),
 			CommitID: commitID,
 		})
 	}
@@ -259,8 +250,7 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 }
 
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	bz := sha256.Sum256(storeKey)
-	tree, ok := c.multiTrees[bz]
+	tree, ok := c.multiTrees[internal.UnsafeBytesToStr(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -286,8 +276,7 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 }
 
 func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
-	bzKey := sha256.Sum256(storeKey)
-	tree, ok := c.multiTrees[bzKey]
+	tree, ok := c.multiTrees[internal.UnsafeBytesToStr(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -351,7 +340,7 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 			err = protoWriter.WriteMsg(&snapshotstypes.SnapshotItem{
 				Item: &snapshotstypes.SnapshotItem_Store{
 					Store: &snapshotstypes.SnapshotStoreItem{
-						Name: string(c.storeKeys[storeKey]),
+						Name: storeKey,
 					},
 				},
 			})
@@ -390,7 +379,7 @@ func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
-		storeKey     []byte
+		storeKey     string
 	)
 
 loop:
@@ -411,9 +400,9 @@ loop:
 				}
 				importer.Close()
 			}
-			bzKey := sha256.Sum256([]byte(item.Store.Name))
-			storeKey = []byte(item.Store.Name)
-			tree := c.multiTrees[bzKey]
+
+			storeKey = item.Store.Name
+			tree := c.multiTrees[item.Store.Name]
 			if tree == nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", storeKey)
 			}
@@ -441,9 +430,10 @@ loop:
 				if node.Value == nil {
 					node.Value = []byte{}
 				}
+				key := internal.UnsafeStrToBytes(storeKey)
 				// If the node is a leaf node, it will be written to the storage.
 				chStorage <- &corestore.StateChanges{
-					Actor: storeKey,
+					Actor: key,
 					StateChanges: []corestore.KVPair{
 						{
 							Key:    node.Key,

@@ -1170,7 +1170,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					BondDenom:         "denom",
 				},
 			},
-			expErrMsg: "unbonding time must be positive",
+			expErrMsg: "unbonding time must not be negative",
 		},
 	}
 

@@ -249,7 +249,7 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 // If working hash is nil, then we need to compute and set it on the root store
 // by constructing a CommitInfo object, which in turn creates and writes a batch
 // of the current changeset to the SC tree.
-func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
+func (s *Store) WorkingHash(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		defer s.telemetry.MeasureSince(now, "root_store", "working_hash")
@@ -271,7 +271,7 @@ func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 // with the same Changeset, which internally sets the working hash, retrieved by
 // writing a batch of the changeset to the SC tree, and CommitInfo on the root
 // store.
-func (s *Store) Commit(cs corestore.Changeset) ([]byte, error) {
+func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		defer s.telemetry.MeasureSince(now, "root_store", "commit")
@@ -342,7 +342,7 @@ func (s *Store) Prune(version uint64) error {
 // tree, which allows us to retrieve the working hash of the SC tree. Finally,
 // we construct a *CommitInfo and set that as lastCommitInfo. Note, this should
 // only be called once per block!
-func (s *Store) writeSC(cs corestore.Changeset) error {
+func (s *Store) writeSC(cs *corestore.Changeset) error {
 	if err := s.stateCommitment.WriteBatch(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
@@ -372,7 +372,7 @@ func (s *Store) writeSC(cs corestore.Changeset) error {
 // should have already been written to the SC via WorkingHash(). This method
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
-func (s *Store) commitSC(cs coorestore.Changeset) error {
+func (s *Store) commitSC(cs *corestore.Changeset) error {
 	cInfo, err := s.stateCommitment.Commit(s.lastCommitInfo.Version)
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)

@@ -55,7 +55,7 @@ type RootStore interface {
 	// is responsible for writing the Changeset to the SC backend and returning the
 	// resulting root hash. Then, Commit() would return this hash and flush writes
 	// to disk.
-	WorkingHash(cs corestore.Changeset) ([]byte, error)
+	WorkingHash(cs *corestore.Changeset) ([]byte, error)
 
 	// Commit should be responsible for taking the provided changeset and flushing
 	// it to disk. Note, depending on the implementation, the changeset, at this
@@ -63,7 +63,7 @@ type RootStore interface {
 	// the changeset is committed to all SC and SC backends and flushed to disk.
 	// It must return a hash of the merkle-ized committed state. This hash should
 	// be the same as the hash returned by WorkingHash() prior to calling Commit().
-	Commit(cs corestore.Changeset) ([]byte, error)
+	Commit(cs *corestore.Changeset) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (proof.CommitID, error)

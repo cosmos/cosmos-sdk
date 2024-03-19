@@ -52,13 +52,13 @@ func (ss *StorageStore) Get(storeKey []byte, version uint64, key []byte) ([]byte
 }
 
 // ApplyChangeset applies the given changeset to the storage.
-func (ss *StorageStore) ApplyChangeset(version uint64, cs corestore.Changeset) error {
+func (ss *StorageStore) ApplyChangeset(version uint64, cs *corestore.Changeset) error {
 	b, err := ss.db.NewBatch(version)
 	if err != nil {
 		return err
 	}
 
-	for _, pairs := range cs {
+	for _, pairs := range cs.Changes {
 		for _, kvPair := range pairs.StateChanges {
 			if kvPair.Value == nil {
 				if err := b.Delete(pairs.Actor, kvPair.Key); err != nil {

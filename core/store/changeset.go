@@ -1,12 +1,18 @@
 package store
 
-type Changeset = []StateChanges
+import "bytes"
+
+type Changeset struct {
+	Changes []StateChanges
+}
 
 // StateChanges represents a set of changes to the state of an actor in storage.
 type StateChanges struct {
 	Actor        []byte   // actor represents the space in storage where state is stored, previously this was called a "storekey"
 	StateChanges []KVPair // StateChanges is a list of key-value pairs representing the changes to the state.
 }
+
+type KVPairs = []KVPair
 
 // KVPair represents a change in a key and value of state.
 // Remove being true signals the key must be removed from state.
@@ -17,4 +23,44 @@ type KVPair struct {
 	Value []byte
 	// Remove is true when the key must be removed from state.
 	Remove bool
+}
+
+func NewChangeset() *Changeset {
+	return &Changeset{}
+}
+
+func NewChangesetWithPairs(pairs map[string]KVPairs) *Changeset {
+	return &Changeset{}
+}
+
+// Size returns the number of key-value pairs in the batch.
+func (cs *Changeset) Size() int {
+	cnt := 0
+	for _, pairs := range cs.Changes {
+		cnt += len(pairs.StateChanges)
+	}
+
+	return cnt
+}
+
+// Add adds a key-value pair to the ChangeSet.
+func (cs *Changeset) Add(storeKey, key, value []byte, remove bool) {
+	for _, pairs := range cs.Changes {
+		if bytes.Equal(storeKey, pairs.Actor) {
+			pairs.StateChanges = append(pairs.StateChanges, KVPair{
+				Key:    key,
+				Value:  value,
+				Remove: remove,
+			})
+		}
+	}
+}
+
+// AddKVPair adds a KVPair to the ChangeSet.
+func (cs *Changeset) AddKVPair(storeKey []byte, pair KVPair) {
+	for _, pairs := range cs.Changes {
+		if bytes.Equal(storeKey, pairs.Actor) {
+			pairs.StateChanges = append(pairs.StateChanges, pair)
+		}
+	}
 }

@@ -68,7 +68,7 @@ func (ci *CommitInfo) GetStoreCommitID(storeKey []byte) CommitID {
 // store based on lexographical ordering will be proved.
 func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, error) {
 	sort.Slice(ci.StoreInfos, func(i, j int) bool {
-		return ci.StoreInfos[i].Name < ci.StoreInfos[j].Name
+		return bytes.Compare(ci.StoreInfos[i].Name, ci.StoreInfos[j].Name) < 0
 	})
 
 	index := 0

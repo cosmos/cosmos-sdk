@@ -54,9 +54,10 @@ func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.Prun
 	multiTrees := make(map[[32]byte]Tree)
 
 	for key, treeStore := range trees {
-		key := sha256.Sum256([]byte(key))
-		storeKeys[key] = key[:]
-		multiTrees[key] = treeStore
+		keyBytes := []byte(key)
+		keybz := sha256.Sum256(keyBytes)
+		storeKeys[keybz] = keyBytes
+		multiTrees[keybz] = treeStore
 	}
 
 	return &CommitStore{
@@ -68,9 +69,9 @@ func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.Prun
 	}, nil
 }
 
-func (c *CommitStore) WriteBatch(cs corestore.Changeset) error {
-	for storeKey, pairs := range cs {
-		tree, ok := c.multiTrees[[32]byte(pairs.Actor)]
+func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
+	for storeKey, pairs := range cs.Changes {
+		tree, ok := c.multiTrees[sha256.Sum256(pairs.Actor)] //todo: see if we can avoid this hashing each time
 		if !ok {
 			return fmt.Errorf("store key %s not found in multiTrees", storeKey)
 		}

@@ -131,8 +131,8 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), nil
 }
 
-func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	slice, err := db.getSlice(storeKey, version, key)
+func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
+	slice, err := db.getSlice(string(storeKey), version, key)
 	if err != nil {
 		return false, err
 	}
@@ -140,8 +140,8 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 	return slice.Exists(), nil
 }
 
-func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	slice, err := db.getSlice(storeKey, version, key)
+func (db *Database) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
+	slice, err := db.getSlice(string(storeKey), version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)
 	}
@@ -165,7 +165,7 @@ func (db *Database) Prune(version uint64) error {
 	return nil
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (db *Database) Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errors.ErrKeyEmpty
 	}
@@ -174,14 +174,14 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 		return nil, errors.ErrStartAfterEnd
 	}
 
-	prefix := storePrefix(storeKey)
+	prefix := storePrefix(string(storeKey))
 	start, end = util.IterateWithPrefix(prefix, start, end)
 
 	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)
 	return newRocksDBIterator(itr, prefix, start, end, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errors.ErrKeyEmpty
 	}
@@ -190,7 +190,7 @@ func (db *Database) ReverseIterator(storeKey string, version uint64, start, end 
 		return nil, errors.ErrStartAfterEnd
 	}
 
-	prefix := storePrefix(storeKey)
+	prefix := storePrefix(string(storeKey))
 	start, end = util.IterateWithPrefix(prefix, start, end)
 
 	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)

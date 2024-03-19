@@ -71,7 +71,7 @@ func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // NewMsgRevoke creates a new MsgRevoke
-func NewMsgRevoke(granter, grantee string, msgTypeURL string) MsgRevoke {
+func NewMsgRevoke(granter, grantee, msgTypeURL string) MsgRevoke {
 	return MsgRevoke{
 		Granter:    granter,
 		Grantee:    grantee,

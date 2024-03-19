@@ -414,9 +414,9 @@ func (suite *TestSuite) TestPruneExpiredGrants() {
 	suite.Require().NoError(err)
 
 	totalGrants := 0
-	suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) bool {
+	_ = suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) (bool, error) {
 		totalGrants++
-		return false
+		return false, nil
 	})
 	suite.Require().Equal(len(addrs), totalGrants)
 
@@ -429,9 +429,9 @@ func (suite *TestSuite) TestPruneExpiredGrants() {
 	suite.Require().NoError(err)
 
 	totalGrants = 0
-	suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) bool {
+	_ = suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) (bool, error) {
 		totalGrants++
-		return false
+		return false, nil
 	})
 	suite.Require().Equal(0, totalGrants)
 }

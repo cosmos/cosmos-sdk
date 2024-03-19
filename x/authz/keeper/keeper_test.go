@@ -155,10 +155,10 @@ func (s *TestSuite) TestKeeperIter() {
 	err = s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
 	s.Require().NoError(err)
 
-	s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
+	_ = s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
 		s.Require().Equal(granteeAddr, grantee)
 		s.Require().Contains([]sdk.AccAddress{granterAddr, granter2Addr}, granter)
-		return true
+		return true, nil
 	})
 }
 

@@ -299,8 +299,8 @@ func (k Keeper) GetAuthorization(ctx context.Context, grantee, granter sdk.AccAd
 // It should not be used in query or msg services without charging additional gas.
 // The iteration stops when the handler function returns true or the iterator exhaust.
 func (k Keeper) IterateGrants(ctx context.Context,
-	handler func(granterAddr, granteeAddr sdk.AccAddress, grant authz.Grant) bool,
-) {
+	handler func(granterAddr, granteeAddr sdk.AccAddress, grant authz.Grant) (bool, error),
+) error {
 	store := runtime.KVStoreAdapter(k.environment.KVStoreService.OpenKVStore(ctx))
 	iter := storetypes.KVStorePrefixIterator(store, GrantKey)
 	defer iter.Close()
@@ -308,10 +308,15 @@ func (k Keeper) IterateGrants(ctx context.Context,
 		var grant authz.Grant
 		granterAddr, granteeAddr, _ := parseGrantStoreKey(iter.Key())
 		k.cdc.MustUnmarshal(iter.Value(), &grant)
-		if handler(granterAddr, granteeAddr, grant) {
+		ok, err := handler(granterAddr, granteeAddr, grant)
+		if err != nil {
+			return err
+		}
+		if ok {
 			break
 		}
 	}
+	return nil
 }
 
 func (k Keeper) getGrantQueueItem(ctx context.Context, expiration time.Time, granter, grantee sdk.AccAddress) (*authz.GrantQueueItem, error) {

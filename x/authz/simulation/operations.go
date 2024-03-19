@@ -182,13 +182,16 @@ func SimulateMsgRevoke(
 		var grant authz.Grant
 		hasGrant := false
 
-		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, g authz.Grant) bool {
+		err := k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, g authz.Grant) (bool, error) {
 			grant = g
 			granterAddr = granter
 			granteeAddr = grantee
 			hasGrant = true
-			return true
+			return true, nil
 		})
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, err.Error()), nil, err
+		}
 
 		if !hasGrant {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "no grants"), nil, nil
@@ -260,19 +263,18 @@ func SimulateMsgExec(
 		var granteeAddr sdk.AccAddress
 		var sendAuth *banktype.SendAuthorization
 		var err error
-		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
+		err = k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
 			granterAddr = granter
 			granteeAddr = grantee
 			var a authz.Authorization
 			a, err = grant.GetAuthorization()
 			if err != nil {
-				return true
+				return true, err
 			}
 			var ok bool
 			sendAuth, ok = a.(*banktype.SendAuthorization)
-			return ok
+			return ok, nil
 		})
-
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}

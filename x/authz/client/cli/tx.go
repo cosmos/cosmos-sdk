@@ -110,11 +110,16 @@ Examples:
 			}
 
 			grantee := args[0]
+			if _, err := clientCtx.AddressCodec.StringToBytes(grantee); err != nil {
+				return err
+			}
+
 			granter, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
-			if strings.EqualFold(args[0], granter) {
+
+			if strings.EqualFold(grantee, granter) {
 				return errors.New("grantee and granter should be different")
 			}
 

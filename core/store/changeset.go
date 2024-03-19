@@ -4,7 +4,7 @@ import (
 	"bytes"
 )
 
-// ChangeSet is a list of changes to be written to disk
+// Changeset is a list of changes to be written to disk
 type Changeset struct {
 	Changes []StateChanges
 }

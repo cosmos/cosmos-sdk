@@ -34,12 +34,14 @@ func NewChangeset() *Changeset {
 }
 
 func NewChangesetWithPairs(pairs map[string]KVPairs) *Changeset {
-	changes := make([]StateChanges, 0, len(pairs))
+	changes := make([]StateChanges, len(pairs))
+	i := 0
 	for storeKey, kvPairs := range pairs {
-		changes = append(changes, StateChanges{
+		changes[i] = StateChanges{
 			Actor:        []byte(storeKey),
 			StateChanges: kvPairs,
-		})
+		}
+		i++
 	}
 	return &Changeset{
 		Changes: changes,
@@ -59,6 +61,7 @@ func (cs *Changeset) Size() int {
 // Add adds a key-value pair to the ChangeSet.
 func (cs *Changeset) Add(storeKey, key, value []byte, remove bool) {
 	stateChanges := []StateChanges{}
+	found := false
 	for _, pairs := range cs.Changes {
 		if bytes.Equal(storeKey, pairs.Actor) {
 			pairs.StateChanges = append(pairs.StateChanges, KVPair{
@@ -66,9 +69,16 @@ func (cs *Changeset) Add(storeKey, key, value []byte, remove bool) {
 				Value:  value,
 				Remove: remove,
 			})
-
+			found = true
+			break
 		}
-		stateChanges = append(stateChanges, pairs)
+	}
+
+	if !found {
+		cs.Changes = append(cs.Changes, StateChanges{
+			Actor:        storeKey,
+			StateChanges: []KVPair{{Key: key, Value: value, Remove: remove}},
+		})
 	}
 
 	cs.Changes = stateChanges

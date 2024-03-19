@@ -137,7 +137,7 @@ service Query {
 Query the currently running epochInfos
 
 ```sh
-appd query epochs epoch-infos
+<appd> query epochs epoch-infos
 ```
 
 ::: details Example
@@ -169,7 +169,7 @@ epochs:
 Query the current epoch by the specified identifier
 
 ```sh
-appd query epochs current-epoch [identifier]
+<appd> query epochs current-epoch [identifier]
 ```
 
 ::: details Example
@@ -177,7 +177,7 @@ appd query epochs current-epoch [identifier]
 Query the current `day` epoch:
 
 ```sh
-appd query epochs current-epoch day
+<appd> query epochs current-epoch day
 ```
 
 Which in this example outputs:

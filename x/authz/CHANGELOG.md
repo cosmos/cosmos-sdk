@@ -31,7 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* []() Removes the use of Accouts String() method
+* [#19783](https://github.com/cosmos/cosmos-sdk/pull/19783) Removes the use of Accouts String() method
     * `NewMsgExec`, `NewMsgGrant` and `NewMsgRevoke` now takes strings as arguments instead of `sdk.AccAddress`.
     * `ExportGenesis` also returns an error.
     * `IterateGrants` returns an error, its handler function also returns an error.

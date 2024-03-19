@@ -16,7 +16,7 @@ import (
 
 type KeeperTestSuite struct {
 	suite.Suite
-	Ctx         sdk.Context
+	Ctx sdk.Context
 }
 
 func TestKeeperTestSuite(t *testing.T) {

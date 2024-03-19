@@ -346,11 +346,12 @@ func (mr *MockBankKeeperMockRecorder) DenomsMetadata(arg0, arg1 interface{}) *go
 }
 
 // ExportGenesis mocks base method.
-func (m *MockBankKeeper) ExportGenesis(arg0 context.Context) *types.GenesisState {
+func (m *MockBankKeeper) ExportGenesis(arg0 context.Context) (*types.GenesisState, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0)
 	ret0, _ := ret[0].(*types.GenesisState)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ExportGenesis indicates an expected call of ExportGenesis.

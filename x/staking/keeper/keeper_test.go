@@ -29,6 +29,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 var (
@@ -41,6 +42,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx           sdk.Context
+	baseApp       *baseapp.BaseApp
 	stakingKeeper *stakingkeeper.Keeper
 	bankKeeper    *stakingtestutil.MockBankKeeper
 	accountKeeper *stakingtestutil.MockAccountKeeper
@@ -55,12 +57,22 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	s.key = key
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.key = key
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	s.cdc = encCfg.Codec
+
+	s.baseApp = baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	s.baseApp.SetCMS(testCtx.CMS)
+	s.baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+
+	// consensusKeeper :=
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
@@ -70,6 +82,12 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
+	// create consensus keeper
+	ck := stakingtestutil.NewMockConsensusKeeper(ctrl)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
+	consensustypes.RegisterQueryServer(queryHelper, ck)
+
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(s.baseApp.GRPCQueryRouter(), nil))
 	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
 		env,
@@ -87,8 +105,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.accountKeeper = accountKeeper
 
 	stakingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
+	queryHelper2 := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
+	stakingtypes.RegisterQueryServer(queryHelper2, stakingkeeper.Querier{Keeper: keeper})
 	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
 	s.msgServer = stakingkeeper.NewMsgServerImpl(keeper)
 }

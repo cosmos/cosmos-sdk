@@ -2,19 +2,12 @@ package appmodule
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
-type (
-	// Handler handles the state transition of the provided message.
-	Handler = func(ctx context.Context, msg Message) (msgResp Message, err error)
-	// PreMsgHandler is a handler that is executed before Handler.
-	// If it errors the execution reverts.
-	PreMsgHandler = func(ctx context.Context, msg Message) error
-	// PostMsgHandler runs after Handler, only if Handler does not error.
-	// If PostMsgHandler errors then the execution is reverted.
-	PostMsgHandler = func(ctx context.Context, msg, msgResp Message) error
-)
+// ErrNoHandler must be returned when there's no handler for the provided message.
+var ErrNoHandler = errors.New("no handler for the provided message")
 
 // RegisterHandler is a helper function that modules can use to not lose type safety when registering handlers to the
 // QueryRouter or MsgRouter. Example usage:
@@ -29,7 +22,7 @@ type (
 //	}
 //
 // ```
-func RegisterHandler[R interface{ Register(string, Handler) }, Req, Resp Message](
+func RegisterHandler[R MsgRouter, Req, Resp Message](
 	router R,
 	handler func(ctx context.Context, msg Req) (msgResp Resp, err error),
 ) {
@@ -106,10 +99,10 @@ func RegisterPostHandler[Req, Resp Message](
 type PreMsgRouter interface {
 	// Register will register a specific message handler hooking into the message with
 	// the provided name.
-	Register(msgName string, handler PreMsgHandler)
+	Register(msgName string, handler any)
 	// RegisterGlobal will register a global message handler hooking into any message
 	// being executed.
-	RegisterGlobal(handler PreMsgHandler)
+	RegisterGlobal(handler any)
 }
 
 type HasPreMsgHandlers interface {
@@ -117,7 +110,7 @@ type HasPreMsgHandlers interface {
 }
 
 type MsgRouter interface {
-	Register(msgName string, handler Handler)
+	Register(msgName string, handler any)
 }
 
 // HasMsgHandler is implemented by modules that instead of exposing msg server expose a set of handlers.
@@ -126,18 +119,22 @@ type HasMsgHandlers interface {
 	RegisterMsgHandlers(router MsgRouter)
 }
 
+type HasPostMsgHandlers interface {
+	RegisterPostMsgHandlers(router PostMsgRouter)
+}
+
 type PostMsgRouter interface {
 	// Register will register a specific message handler hooking after the execution of message with
 	// the provided name.
-	Register(msgName string, handler PostMsgHandler)
+	Register(msgName string, handler any)
 	// RegisterGlobal will register a global message handler hooking after the execution of any message.
-	RegisterGlobal(handler PreMsgHandler)
+	RegisterGlobal(handler any)
 }
 
 // query handler
 
 type QueryRouter interface {
-	Register(queryName string, handler Handler)
+	Register(queryName string, handler any)
 }
 
 type HasQueryHandlers interface {

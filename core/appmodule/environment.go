@@ -1,7 +1,7 @@
 package appmodule
 
 import (
-	appmodule "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/appmodule/v2"
 )
 
 // Environment is used to get all services to their respective module

@@ -145,7 +145,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		group.ModuleName: genesisBytes,
 	}
 
-	s.keeper.InitGenesis(sdkCtx, cdc, genesisData[group.ModuleName])
+	err = s.keeper.InitGenesis(sdkCtx, cdc, genesisData[group.ModuleName])
+	s.Require().NoError(err)
 
 	for i, g := range genesisState.Groups {
 		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{
@@ -185,7 +186,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		s.Require().Equal(votesRes.Votes[0], genesisState.Votes[0])
 	}
 
-	exported := s.keeper.ExportGenesis(sdkCtx, cdc)
+	exported, err := s.keeper.ExportGenesis(sdkCtx, cdc)
+	s.Require().NoError(err)
 	bz, err := cdc.MarshalJSON(exported)
 	s.Require().NoError(err)
 

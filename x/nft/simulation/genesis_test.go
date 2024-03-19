@@ -20,19 +20,22 @@ import (
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, nftmodule.AppModule{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, nftmodule.AppModule{})
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
-		AppParams:    make(simtypes.AppParams),
-		Cdc:          encCfg.Codec,
-		Rand:         r,
-		NumBonded:    3,
-		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: sdkmath.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		AppParams:      make(simtypes.AppParams),
+		Cdc:            encCfg.Codec,
+		AddressCodec:   cdcOpts.GetAddressCodec(),
+		ValidatorCodec: cdcOpts.GetValidatorCodec(),
+		Rand:           r,
+		NumBonded:      3,
+		Accounts:       simtypes.RandomAccounts(r, 3),
+		InitialStake:   sdkmath.NewInt(1000),
+		GenState:       make(map[string]json.RawMessage),
 	}
 
 	simulation.RandomizedGenState(&simState, addresscodec.NewBech32Codec("cosmos"))

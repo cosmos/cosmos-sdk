@@ -32,7 +32,16 @@ func NewChangeset() *Changeset {
 }
 
 func NewChangesetWithPairs(pairs map[string]KVPairs) *Changeset {
-	return &Changeset{}
+	changes := make([]StateChanges, 0, len(pairs))
+	for storeKey, kvPairs := range pairs {
+		changes = append(changes, StateChanges{
+			Actor:        []byte(storeKey),
+			StateChanges: kvPairs,
+		})
+	}
+	return &Changeset{
+		Changes: changes,
+	}
 }
 
 // Size returns the number of key-value pairs in the batch.

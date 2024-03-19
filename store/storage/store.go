@@ -59,8 +59,9 @@ func (ss *StorageStore) ApplyChangeset(version uint64, cs *corestore.Changeset) 
 	}
 
 	for _, pairs := range cs.Changes {
+		fmt.Println(len(pairs.StateChanges), "len")
 		for _, kvPair := range pairs.StateChanges {
-			if kvPair.Value == nil {
+			if kvPair.Remove {
 				if err := b.Delete(pairs.Actor, kvPair.Key); err != nil {
 					return err
 				}

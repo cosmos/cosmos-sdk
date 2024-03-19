@@ -246,7 +246,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
+		cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val), Remove: false})
 	}
 
 	s.Require().NoError(db.ApplyChangeset(1, cs))
@@ -309,21 +309,21 @@ func (s *StorageTestSuite) TestDatabase_Iterator_RangedDeletes() {
 	s.Require().NoError(db.ApplyChangeset(1, corestore.NewChangesetWithPairs(
 		map[string]corestore.KVPairs{
 			storeKey1: {
-				{Key: []byte("key001"), Value: []byte("value001")},
-				{Key: []byte("key002"), Value: []byte("value001")},
+				{Key: []byte("key001"), Value: []byte("value001"), Remove: false},
+				{Key: []byte("key002"), Value: []byte("value001"), Remove: false},
 			},
 		},
 	)))
 
 	s.Require().NoError(db.ApplyChangeset(5, corestore.NewChangesetWithPairs(
 		map[string]corestore.KVPairs{
-			storeKey1: {{Key: []byte("key002"), Value: []byte("value002")}},
+			storeKey1: {{Key: []byte("key002"), Value: []byte("value002"), Remove: false}},
 		},
 	)))
 
 	s.Require().NoError(db.ApplyChangeset(10, corestore.NewChangesetWithPairs(
 		map[string]corestore.KVPairs{
-			storeKey1: {{Key: []byte("key002")}},
+			storeKey1: {{Key: []byte("key002"), Remove: true}},
 		},
 	)))
 
@@ -368,7 +368,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 				key := fmt.Sprintf("key%03d", i)
 				val := fmt.Sprintf("val%03d-%03d", i, v)
 
-				cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
+				cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val), Remove: false})
 			}
 		}
 
@@ -491,7 +491,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
 
-			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
+			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val), Remove: false})
 		}
 
 		s.Require().NoError(db.ApplyChangeset(v, cs))
@@ -593,13 +593,13 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 
 	// write a key at three different versions
 	s.Require().NoError(db.ApplyChangeset(1, corestore.NewChangesetWithPairs(
-		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val001")}}},
+		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val001"), Remove: false}}},
 	)))
 	s.Require().NoError(db.ApplyChangeset(100, corestore.NewChangesetWithPairs(
-		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val100")}}},
+		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val100"), Remove: false}}},
 	)))
 	s.Require().NoError(db.ApplyChangeset(200, corestore.NewChangesetWithPairs(
-		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val200")}}},
+		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val200"), Remove: false}}},
 	)))
 
 	// prune version 50
@@ -648,7 +648,11 @@ func DBApplyChangeset(
 
 	cs := corestore.NewChangeset()
 	for i := 0; i < len(keys); i++ {
-		cs.AddKVPair([]byte(storeKey), corestore.KVPair{Key: keys[i], Value: vals[i]})
+		remove := false
+		if vals[i] == nil {
+			remove = true
+		}
+		cs.AddKVPair([]byte(storeKey), corestore.KVPair{Key: keys[i], Value: vals[i], Remove: remove})
 	}
 
 	require.NoError(t, db.ApplyChangeset(version, cs))

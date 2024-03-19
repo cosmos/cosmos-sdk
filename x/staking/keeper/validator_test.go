@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
@@ -15,9 +14,10 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-func (s *KeeperTestSuite) applyValidatorSetUpdates(ctx sdk.Context, keeper *stakingkeeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
+func (s *KeeperTestSuite) applyValidatorSetUpdates(ctx sdk.Context, keeper *stakingkeeper.Keeper, expectedUpdatesLen int) []module.ValidatorUpdate {
 	updates, err := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	s.Require().NoError(err)
 	if expectedUpdatesLen >= 0 {
@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestValidator() {
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
 	validator, err := keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
-	require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
+	require.Equal(validator.ModuleValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
 
 	// after the save the validator should be bonded
 	require.Equal(stakingtypes.Bonded, validator.Status)
@@ -321,8 +321,8 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 
 	// CometBFT updates should reflect power change
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 2)
-	require.Equal(validators[0].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
-	require.Equal(validators[1].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[1])
+	require.Equal(validators[0].ModuleValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
+	require.Equal(validators[1].ModuleValidatorUpdate(keeper.PowerReduction(ctx)), updates[1])
 }
 
 func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
@@ -514,7 +514,7 @@ func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
 		updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
 		validator, err := keeper.GetValidator(ctx, valAddr)
 		require.NoError(err)
-		require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
+		require.Equal(validator.ModuleValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
 	}
 
 	params, err := keeper.Params.Get(ctx)
@@ -542,17 +542,17 @@ func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
 
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 2)
 
-	originalPubKey, err := validators[0].CmtConsPublicKey()
+	originalPubKey, err := validators[0].ConsPubKey()
 	require.NoError(err)
 
 	validator, err := keeper.GetValidator(ctx, valAddr1)
 	require.NoError(err)
 
-	newPubKey, err := validator.CmtConsPublicKey()
+	newPubKey, err := validator.ConsPubKey()
 	require.NoError(err)
 
 	require.Equal(int64(0), updates[0].Power)
-	require.Equal(originalPubKey, updates[0].PubKey)
+	require.Equal(originalPubKey.Bytes(), updates[0].PubKey)
 	require.Equal(int64(10), updates[1].Power)
-	require.Equal(newPubKey, updates[1].PubKey)
+	require.Equal(newPubKey.Bytes(), updates[1].PubKey)
 }

@@ -92,6 +92,9 @@ func (s *RootStoreTestSuite) TestQuery() {
 
 	// write and commit a changeset
 	cs := corestore.NewChangeset()
+	cs.Changes = append(cs.Changes, corestore.StateChanges{
+		Actor: testStoreKeyBytes,
+	})
 	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
 
 	workingHash, err := s.rootStore.WorkingHash(cs)
@@ -115,6 +118,9 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 
 	// create a changeset and commit it to SC ONLY
 	cs := corestore.NewChangeset()
+	cs.Changes = append(cs.Changes, corestore.StateChanges{
+		Actor: testStoreKeyBytes,
+	})
 	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
 
 	err := sc.WriteBatch(cs)
@@ -137,6 +143,9 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 
 func (s *RootStoreTestSuite) TestQueryProof() {
 	cs := corestore.NewChangeset()
+	cs.Changes = append(cs.Changes, corestore.StateChanges{
+		Actor: testStoreKeyBytes,
+	})
 	// testStoreKey
 	cs.Add(testStoreKeyBytes, []byte("key1"), []byte("value1"), false)
 	cs.Add(testStoreKeyBytes, []byte("key2"), []byte("value2"), false)
@@ -172,6 +181,9 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
 
 		cs := corestore.NewChangeset()
+		cs.Changes = append(cs.Changes, corestore.StateChanges{
+			Actor: testStoreKeyBytes,
+		})
 		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
 		workingHash, err := s.rootStore.WorkingHash(cs)
@@ -217,6 +229,9 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
 
 		cs := corestore.NewChangeset()
+		cs.Changes = append(cs.Changes, corestore.StateChanges{
+			Actor: testStoreKeyBytes,
+		})
 		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
 		workingHash, err := s.rootStore.WorkingHash(cs)
@@ -252,6 +267,9 @@ func (s *RootStoreTestSuite) TestCommit() {
 
 	// perform changes
 	cs := corestore.NewChangeset()
+	cs.Changes = append(cs.Changes, corestore.StateChanges{
+		Actor: testStoreKeyBytes,
+	})
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
@@ -298,6 +316,9 @@ func (s *RootStoreTestSuite) TestStateAt() {
 	for v := uint64(1); v <= 5; v++ {
 		// perform changes
 		cs := corestore.NewChangeset()
+		cs.Changes = append(cs.Changes, corestore.StateChanges{
+			Actor: testStoreKeyBytes,
+		})
 		for i := 0; i < 100; i++ {
 			key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
 			val := fmt.Sprintf("val%03d_%03d", i, v) // val000_1, val001_1, ..., val099_1

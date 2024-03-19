@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
+	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
 var runtimeIdentity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
@@ -64,6 +65,7 @@ func NewSTF[T transaction.Tx](
 	doEndBlock func(ctx context.Context) error,
 	doTxValidation func(ctx context.Context, tx T) error,
 	doValidatorUpdate func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error),
+	postTxExec func(ctx context.Context, tx T, success bool) error,
 	branch func(store store.ReaderMap) store.WriterMap,
 ) *STF[T] {
 	return &STF[T]{
@@ -74,8 +76,10 @@ func NewSTF[T transaction.Tx](
 		doEndBlock:        doEndBlock,
 		doTxValidation:    doTxValidation,
 		doValidatorUpdate: doValidatorUpdate,
-		postTxExec:        nil, // TODO
+		postTxExec:        postTxExec, // TODO
 		branch:            branch,
+		getGasMeter:       stfgas.DefaultGetMeter,
+		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter,
 	}
 }
 
@@ -379,11 +383,11 @@ func (s STF[T]) clone() STF[T] {
 	}
 }
 
-// executionContext is a struct that holds the context for the execution of a tx.
-type executionContext struct {
+// ExecutionContext is a struct that holds the context for the execution of a tx.
+type ExecutionContext struct {
 	context.Context
 
-	state  store.WriterMap
+	State  store.WriterMap
 	meter  gas.Meter
 	events []event.Event
 	sender []transaction.Identity
@@ -397,12 +401,12 @@ func (s STF[T]) makeContext(
 	store store.WriterMap,
 	gasLimit uint64,
 	execMode corecontext.ExecMode, // TODO this isn't used
-) *executionContext {
+) *ExecutionContext {
 	meter := s.getGasMeter(gasLimit)
 	store = s.wrapWithGasMeter(meter, store)
-	return &executionContext{
+	return &ExecutionContext{
 		Context: ctx,
-		state:   store,
+		State:   store,
 		meter:   meter,
 		events:  make([]event.Event, 0),
 		sender:  sender,

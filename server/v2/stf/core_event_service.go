@@ -19,13 +19,13 @@ type eventService struct{}
 
 // EventManager implements event.Service.
 func (eventService) EventManager(ctx context.Context) event.Manager {
-	return &eventManager{ctx.(*executionContext)}
+	return &eventManager{ctx.(*ExecutionContext)}
 }
 
 var _ event.Manager = (*eventManager)(nil)
 
 type eventManager struct {
-	executionContext *executionContext
+	ExecutionContext *ExecutionContext
 }
 
 // Emit emits an typed event that is defined in the protobuf file.
@@ -36,13 +36,13 @@ func (em *eventManager) Emit(tev protoiface.MessageV1) error {
 		return err
 	}
 
-	em.executionContext.events = append(em.executionContext.events, res)
+	em.ExecutionContext.events = append(em.ExecutionContext.events, res)
 	return nil
 }
 
 // EmitKV emits a key value pair event.
 func (em *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error {
-	em.executionContext.events = append(em.executionContext.events, event.NewEvent(eventType, attrs...))
+	em.ExecutionContext.events = append(em.ExecutionContext.events, event.NewEvent(eventType, attrs...))
 	return nil
 }
 

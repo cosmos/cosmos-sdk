@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"strings"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	proto "github.com/cosmos/gogoproto/proto"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func UnpackAnyRaw(m *codectypes.Any) (proto.Message, error) {

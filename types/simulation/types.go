@@ -41,7 +41,7 @@ type WeightedProposalMsg interface {
 	MsgSimulatorFn() MsgSimulatorFn // msg simulator function
 }
 
-type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account, cdc address.Codec) (sdk.Msg, error)
+type MsgSimulatorFn func(r *rand.Rand, cdc address.Codec) (sdk.Msg, error)
 
 type SimValFn func(r *rand.Rand) string
 

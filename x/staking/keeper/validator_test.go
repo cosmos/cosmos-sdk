@@ -436,12 +436,12 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	// set unbonding validator
 	endTime := time.Now()
 	endHeight := ctx.HeaderInfo().Height + 10
-	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()}))
+	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{s.valAddressToString(valAddr)}))
 
 	resVals, err := keeper.GetUnbondingValidators(ctx, endTime, endHeight)
 	require.NoError(err)
 	require.Equal(1, len(resVals))
-	require.Equal(valAddr.String(), resVals[0])
+	require.Equal(s.valAddressToString(valAddr), resVals[0])
 
 	// add another unbonding validator
 	valAddr1 := sdk.ValAddress(PKs[1].Address().Bytes())
@@ -459,7 +459,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	resVals, err = keeper.GetUnbondingValidators(ctx, endTime, endHeight)
 	require.NoError(err)
 	require.Equal(1, len(resVals))
-	require.Equal(valAddr.String(), resVals[0])
+	require.Equal(s.valAddressToString(valAddr), resVals[0])
 
 	// check unbonding mature validators
 	ctx = ctx.WithHeaderInfo(header.Info{Height: endHeight, Time: endTime})
@@ -478,7 +478,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 
-	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()}))
+	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{s.valAddressToString(valAddr)}))
 	validator = testutil.NewValidator(s.T(), valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(addTokens)
 	validator.Status = stakingtypes.Unbonding

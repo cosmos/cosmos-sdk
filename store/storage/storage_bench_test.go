@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	storecore "cosmossdk.io/core/store"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
@@ -71,9 +71,9 @@ func BenchmarkGet(b *testing.B) {
 			_ = db.Close()
 		}()
 
-		cs := storecore.NewChangesetWithPairs(map[string]storecore.KVPairs{string(storeKey1): {}})
+		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{string(storeKey1): {}})
 		for i := 0; i < numKeyVals; i++ {
-			cs.AddKVPair(storeKey1, storecore.KVPair{Key: keys[i], Value: vals[i]})
+			cs.AddKVPair(storeKey1, corestore.KVPair{Key: keys[i], Value: vals[i]})
 		}
 
 		require.NoError(b, db.ApplyChangeset(1, cs))
@@ -107,7 +107,7 @@ func BenchmarkApplyChangeset(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
 
-				cs := storecore.NewChangesetWithPairs(map[string]storecore.KVPairs{string(storeKey1): {}})
+				cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{string(storeKey1): {}})
 				for j := 0; j < 1000; j++ {
 					key := make([]byte, 128)
 					val := make([]byte, 128)
@@ -117,7 +117,7 @@ func BenchmarkApplyChangeset(b *testing.B) {
 					_, err = rng.Read(val)
 					require.NoError(b, err)
 
-					cs.AddKVPair(storeKey1, storecore.KVPair{Key: key, Value: val})
+					cs.AddKVPair(storeKey1, corestore.KVPair{Key: key, Value: val})
 				}
 
 				b.StartTimer()
@@ -154,9 +154,9 @@ func BenchmarkIterate(b *testing.B) {
 
 		b.StopTimer()
 
-		cs := storecore.NewChangesetWithPairs(map[string]storecore.KVPairs{string(storeKey1): {}})
+		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{string(storeKey1): {}})
 		for i := 0; i < numKeyVals; i++ {
-			cs.AddKVPair(storeKey1, storecore.KVPair{Key: keys[i], Value: vals[i]})
+			cs.AddKVPair(storeKey1, corestore.KVPair{Key: keys[i], Value: vals[i]})
 		}
 
 		require.NoError(b, db.ApplyChangeset(1, cs))

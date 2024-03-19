@@ -12,7 +12,7 @@ type Changeset struct {
 // StateChanges represents a set of changes to the state of an actor in storage.
 type StateChanges struct {
 	Actor        []byte   // actor represents the space in storage where state is stored, previously this was called a "storekey"
-	StateChanges []KVPair // StateChanges is a list of key-value pairs representing the changes to the state.
+	StateChanges KVPairs // StateChanges is a list of key-value pairs representing the changes to the state.
 }
 
 // KVPairs represents a set of key-value pairs.

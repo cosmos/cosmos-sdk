@@ -2,7 +2,7 @@ package gas
 
 import (
 	coregas "cosmossdk.io/core/gas"
-	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/core/store"
 )
 
 // DefaultWrapWithGasMeter defines the default wrap with gas meter function in stf. In case

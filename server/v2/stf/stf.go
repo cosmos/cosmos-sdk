@@ -9,9 +9,10 @@ import (
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/store"
+	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
 var runtimeIdentity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
@@ -64,6 +65,7 @@ func NewSTF[T transaction.Tx](
 	doEndBlock func(ctx context.Context) error,
 	doTxValidation func(ctx context.Context, tx T) error,
 	doValidatorUpdate func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error),
+	getGasMeter func(gasLimit uint64) gas.Meter,
 	branch func(store store.ReaderMap) store.WriterMap,
 ) *STF[T] {
 	return &STF[T]{
@@ -75,6 +77,8 @@ func NewSTF[T transaction.Tx](
 		doTxValidation:    doTxValidation,
 		doValidatorUpdate: doValidatorUpdate,
 		postTxExec:        nil, // TODO
+		getGasMeter:       getGasMeter,
+		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter, // TODO
 		branch:            branch,
 	}
 }

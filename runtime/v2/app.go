@@ -8,11 +8,11 @@ import (
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	coreappmanager "cosmossdk.io/server/v2/core/appmanager"
-	corestore "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 
@@ -24,11 +24,11 @@ var _ AppI[transaction.Tx] = (*App)(nil)
 
 // AppI is an interface that defines the methods required by the App.
 type AppI[T transaction.Tx] interface {
-	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, corestore.WriterMap, error)
+	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, store.WriterMap, error)
 	ValidateTx(ctx context.Context, tx T) (coreappmanager.TxResult, error)
-	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, corestore.WriterMap, error)
+	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, store.WriterMap, error)
 	Query(ctx context.Context, version uint64, request transaction.Type) (transaction.Type, error)
-	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Type) (transaction.Type, error)
+	QueryWithState(ctx context.Context, state store.ReaderMap, request transaction.Type) (transaction.Type, error)
 
 	Logger() log.Logger
 	ModuleManager() *MM

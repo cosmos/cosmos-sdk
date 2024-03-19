@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"cosmossdk.io/core/store"
-	corestore "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 	storev2 "cosmossdk.io/store/v2"
@@ -21,15 +20,13 @@ type Store interface {
 	// StateLatest returns a readonly view over the latest
 	// committed state of the store. Alongside the version
 	// associated with it.
-	StateLatest() (uint64, corestore.ReaderMap, error)
+	StateLatest() (uint64, store.ReaderMap, error)
 
 	// StateAt returns a readonly view over the provided
 	// state. Must error when the version does not exist.
-	StateAt(version uint64) (corestore.ReaderMap, error)
+	StateAt(version uint64) (store.ReaderMap, error)
 
-	// StateCommit commits the provided changeset and returns
-	// the new state root of the state.
-	StateCommit(changes []corestore.StateChanges) (corestore.Hash, error)
+	Commit(changeset *storev2.Changeset) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
 	Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error)

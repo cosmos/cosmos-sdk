@@ -1,7 +1,7 @@
 package types
 
 import (
-	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/core/store"
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/proof"
 	ics23 "github.com/cosmos/ics23/go"
@@ -9,7 +9,7 @@ import (
 
 type Store interface {
 	// LatestVersion returns the latest version that consensus has been made on
-	LatestVersion() (uint64, error)
+	GetLatestVersion() (uint64, error)
 	// StateLatest returns a readonly view over the latest
 	// committed state of the store. Alongside the version
 	// associated with it.
@@ -17,7 +17,7 @@ type Store interface {
 
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
-	StateCommit(changes []store.StateChanges) (store.Hash, error)
+	Commit(changes *storev2.Changeset) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
 	Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error)

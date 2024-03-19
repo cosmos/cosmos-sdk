@@ -1,12 +1,12 @@
 package runtime
 
 import (
-	"cosmossdk.io/core/genesis"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"os"
 
-	corestore "cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/core/genesis"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -78,7 +78,6 @@ func init() {
 			ProvideModuleManager,
 			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
-			ProvideRootStoreV2,
 			ProvideGenesisTxHandler,
 			ProvideAppVersionModifier,
 		),
@@ -288,16 +287,6 @@ func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
 }
 
-func ProvideRootStoreV2(logger log.Logger) Store {
-	rs, err := rootstorev2.New(logger, nil, nil, nil)
-	if err != nil {
-		panic(err)
-	}
-	return &StoreV2Adapter{rs}
-}
-
-var _ Store = (*StoreV2Adapter)(nil)
-
 // StoreV2Adapter is a PoC adapter for core store -> store v2 interface.
 // TODO: I think it'd be better if store v2 was just used directly, but as it stands the interfaces are incompatible.
 type StoreV2Adapter struct {
@@ -309,16 +298,16 @@ func (s StoreV2Adapter) LatestVersion() (uint64, error) {
 	return v, err
 }
 
-func (s StoreV2Adapter) StateLatest() (uint64, corestore.ReaderMap, error) {
+func (s StoreV2Adapter) StateLatest() (uint64, store.ReaderMap, error) {
 	return s.StateLatest()
 }
 
-func (s StoreV2Adapter) StateAt(version uint64) (corestore.ReaderMap, error) {
+func (s StoreV2Adapter) StateAt(version uint64) (store.ReaderMap, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s StoreV2Adapter) StateCommit(changes []corestore.StateChanges) (corestore.Hash, error) {
+func (s StoreV2Adapter) StateCommit(changes []store.StateChanges) (store.Hash, error) {
 	//TODO implement me
 	panic("implement me")
 }

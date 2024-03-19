@@ -1,8 +1,7 @@
 package mock
 
 import (
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/core/store"
 )
 
 func DB() store.ReaderMap {
@@ -32,8 +31,8 @@ func (m memState) Get(bytes []byte) ([]byte, error) {
 	return m.kv[string(key)], nil
 }
 
-func (m memState) Iterator(start, end []byte) (corestore.Iterator, error) { panic("implement me") }
+func (m memState) Iterator(start, end []byte) (store.Iterator, error) { panic("implement me") }
 
-func (m memState) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
+func (m memState) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	panic("implement me")
 }

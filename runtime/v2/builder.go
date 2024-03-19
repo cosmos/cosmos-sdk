@@ -2,16 +2,17 @@ package runtime
 
 import (
 	"context"
-	rootstore "cosmossdk.io/store/v2/root"
 	"encoding/json"
 	"fmt"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	stfgas "cosmossdk.io/server/v2/stf/gas"
+	rootstore "cosmossdk.io/store/v2/root"
 
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -88,6 +89,9 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 
 	_ = stfMsgHandler
 
+	// TODO: what about gas service? do we just inject STF with a factory fn now?
+	gasMeter := stfgas.NewMeter
+
 	a.app.stf = stf.NewSTF[transaction.Tx](
 		nil, // stfMsgHandler, // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
 		nil, // stfMsgHandler  // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
@@ -96,6 +100,7 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 		endBlocker,
 		a.txValidator,
 		valUpdate,
+		gasMeter,
 		a.branch,
 	)
 

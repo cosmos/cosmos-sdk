@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/store"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/streaming"
 )
 

@@ -201,7 +201,7 @@ It is possible to use `AutoCLI` for non module commands. The trick is still to i
 For example, here is how the SDK does it for `cometbft` gRPC commands:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/julien/autocli-comet/client/grpc/cmtservice/autocli.go#L52-L71
+https://github.com/cosmos/cosmos-sdk/blob/client/v2.0.0-beta.1/client/grpc/cmtservice/autocli.go#L52-L71
 ```
 
 ## Summary

@@ -25,6 +25,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.1) - 2023-12-11
+
+### Improvements
+
+* [#18470](https://github.com/cosmos/cosmos-sdk/pull/18470) Improve go-getter settings.
+
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.0) - 2023-11-07
 
 ### Features

@@ -1,4 +1,4 @@
-package tx_test
+package tx
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -80,7 +79,7 @@ func TestCalculateGas(t *testing.T) {
 		defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
 		require.NoError(t, err)
 
-		txf := tx.Factory{}.
+		txf := Factory{}.
 			WithChainID("test-chain").
 			WithTxConfig(txCfg).WithSignMode(defaultSignMode)
 
@@ -89,7 +88,7 @@ func TestCalculateGas(t *testing.T) {
 				gasUsed: tc.args.mockGasUsed,
 				wantErr: tc.args.mockWantErr,
 			}
-			simRes, gotAdjusted, err := tx.CalculateGas(mockClientCtx, txf.WithGasAdjustment(stc.args.adjustment))
+			simRes, gotAdjusted, err := CalculateGas(mockClientCtx, txf.WithGasAdjustment(stc.args.adjustment))
 			if stc.expPass {
 				require.NoError(t, err)
 				require.Equal(t, simRes.GasInfo.GasUsed, stc.wantEstimate)
@@ -103,8 +102,8 @@ func TestCalculateGas(t *testing.T) {
 	}
 }
 
-func mockTxFactory(txCfg client.TxConfig) tx.Factory {
-	return tx.Factory{}.
+func mockTxFactory(txCfg client.TxConfig) Factory {
+	return Factory{}.
 		WithTxConfig(txCfg).
 		WithAccountNumber(50).
 		WithSequence(23).
@@ -195,7 +194,7 @@ func TestMnemonicInMemo(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			txf := tx.Factory{}.
+			txf := Factory{}.
 				WithTxConfig(txConfig).
 				WithAccountNumber(50).
 				WithSequence(23).
@@ -266,7 +265,7 @@ func TestSign(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		txf          tx.Factory
+		txf          Factory
 		txb          client.TxBuilder
 		from         string
 		overwrite    bool
@@ -353,7 +352,7 @@ func TestSign(t *testing.T) {
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = tx.Sign(context.TODO(), tc.txf, tc.from, tc.txb, tc.overwrite)
+			err = Sign(context.TODO(), tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
@@ -369,6 +368,8 @@ func TestSign(t *testing.T) {
 }
 
 func TestPreprocessHook(t *testing.T) {
+	_, _, addr2 := testdata.KeyTestPubAddr()
+
 	txConfig, cdc := newTestTxConfig()
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
@@ -408,7 +409,7 @@ func TestPreprocessHook(t *testing.T) {
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 
-	err = tx.Sign(context.TODO(), txfDirect, from, txb, false)
+	err = Sign(context.TODO(), txfDirect, from, txb, false)
 	requireT.NoError(err)
 
 	// Run preprocessing

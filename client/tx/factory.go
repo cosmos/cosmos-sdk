@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,6 +34,7 @@ type Factory struct {
 	timeoutHeight      uint64
 	gasAdjustment      float64
 	chainID            string
+	fromName           string
 	offline            bool
 	generateOnly       bool
 	memo               string
@@ -84,6 +86,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
+		fromName:           clientCtx.FromName,
 		offline:            clientCtx.Offline,
 		generateOnly:       clientCtx.GenerateOnly,
 		gas:                gasSetting.Gas,
@@ -120,6 +123,7 @@ func (f Factory) Fees() sdk.Coins                           { return f.fees }
 func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
+func (f Factory) FromName() string                          { return f.fromName }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
@@ -174,6 +178,13 @@ func (f Factory) WithGasPrices(gasPrices string) Factory {
 // WithKeybase returns a copy of the Factory with updated Keybase.
 func (f Factory) WithKeybase(keybase keyring.Keyring) Factory {
 	f.keybase = keybase
+	return f
+}
+
+// WithFromName returns a copy of the Factory with updated fromName
+// fromName will be use for building a simulation tx.
+func (f Factory) WithFromName(fromName string) Factory {
+	f.fromName = fromName
 	return f
 }
 
@@ -398,10 +409,8 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
-		PubKey: pk,
-		Data: &signing.SingleSignatureData{
-			SignMode: f.signMode,
-		},
+		PubKey:   pk,
+		Data:     f.getSimSignatureData(pk),
 		Sequence: f.Sequence(),
 	}
 	if err := txb.SetSignatures(sig); err != nil {
@@ -427,22 +436,39 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 		pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
 	)
 
-	// Use the first element from the list of keys in order to generate a valid
-	// pubkey that supports multiple algorithms.
 	if f.simulateAndExecute && f.keybase != nil {
-		records, _ := f.keybase.List()
-		if len(records) == 0 {
-			return nil, errors.New("cannot build signature for simulation, key records slice is empty")
+		record, err := f.keybase.Key(f.fromName)
+		if err != nil {
+			return nil, err
 		}
 
-		// take the first record just for simulation purposes
-		pk, ok = records[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
+		pk, ok = record.PubKey.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
 			return nil, errors.New("cannot build signature for simulation, failed to convert proto Any to public key")
 		}
 	}
 
 	return pk, nil
+}
+
+// getSimSignatureData based on the pubKey type gets the correct SignatureData type
+// to use for building a simulation tx.
+func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureData {
+	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey)
+	if !ok {
+		return &signing.SingleSignatureData{SignMode: f.signMode}
+	}
+
+	multiSignatureData := make([]signing.SignatureData, 0, multisigPubKey.Threshold)
+	for i := uint32(0); i < multisigPubKey.Threshold; i++ {
+		multiSignatureData = append(multiSignatureData, &signing.SingleSignatureData{
+			SignMode: f.SignMode(),
+		})
+	}
+
+	return &signing.MultiSignatureData{
+		Signatures: multiSignatureData,
+	}
 }
 
 // Prepare ensures the account defined by ctx.GetFromAddress() exists and

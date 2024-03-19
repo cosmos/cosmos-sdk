@@ -22,7 +22,7 @@ These commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
-Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
+Additionally, the SDK is starting its abstraction from CometBFT Go types through the codebase:
 
 * The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
@@ -64,7 +64,7 @@ is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
 ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
 methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
 allows an application to define handlers for these methods via `ExtendVoteHandler`
-and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/building-apps/vote-extensions)
 for more info.
 
 #### Set PreBlocker
@@ -218,7 +218,7 @@ User manually wiring their chain need to add the logger argument when creating t
 
 #### Module Basics
 
-Previously, the `ModuleBasics` was a global variable that was used to register all modules's `AppModuleBasic` implementation.
+Previously, the `ModuleBasics` was a global variable that was used to register all modules' `AppModuleBasic` implementation.
 The global variable has been removed and the basic module manager can be now created from the module manager.
 
 This is automatically done for `depinject` / app v2 users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
@@ -237,7 +237,7 @@ depinject.Supply(
 		)
 ```
 
-Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overridding some module's `AppModuleBasic`.
+Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overriding some module's `AppModuleBasic`.
 
 #### AutoCLI
 
@@ -365,7 +365,7 @@ To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/tra
 
 * Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.
 
-* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
+* The `AppModuleBasic` interface has been simplified. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
 * The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
 

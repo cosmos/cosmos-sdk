@@ -1,7 +1,9 @@
 package baseapp_test
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -44,9 +46,10 @@ var (
 
 type (
 	BaseAppSuite struct {
-		baseApp  *baseapp.BaseApp
-		cdc      *codec.ProtoCodec
-		txConfig client.TxConfig
+		baseApp   *baseapp.BaseApp
+		cdc       *codec.ProtoCodec
+		txConfig  client.TxConfig
+		logBuffer *bytes.Buffer
 	}
 
 	SnapshotsConfig struct {
@@ -64,8 +67,10 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
+	logBuffer := new(bytes.Buffer)
+	logger := log.NewLogger(logBuffer, log.ColorOption(false))
 
-	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, txConfig.TxDecoder(), opts...)
+	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder(), opts...)
 	require.Equal(t, t.Name(), app.Name())
 
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
@@ -79,9 +84,10 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	require.Nil(t, app.LoadLatestVersion())
 
 	return &BaseAppSuite{
-		baseApp:  app,
-		cdc:      cdc,
-		txConfig: txConfig,
+		baseApp:   app,
+		cdc:       cdc,
+		txConfig:  txConfig,
+		logBuffer: logBuffer,
 	}
 }
 
@@ -188,6 +194,40 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 	return suite
 }
 
+func TestAnteHandlerGasMeter(t *testing.T) {
+	// run BeginBlock and assert that the gas meter passed into the first Txn is zeroed out
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			gasMeter := ctx.BlockGasMeter()
+			require.NotNil(t, gasMeter)
+			require.Equal(t, storetypes.Gas(0), gasMeter.GasConsumed())
+			return ctx, nil
+		})
+	}
+	// set the beginBlocker to use some gas
+	beginBlockerOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
+			ctx.BlockGasMeter().ConsumeGas(1, "beginBlocker gas consumption")
+			return sdk.BeginBlock{}, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt, beginBlockerOpt)
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	deliverKey := []byte("deliver-key")
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+}
+
 func TestLoadVersion(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -199,7 +239,9 @@ func TestLoadVersion(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := storetypes.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
+	emptyCommitID := storetypes.CommitID{Hash: appHash}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()
@@ -592,6 +634,60 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	suite.baseApp.Commit()
 }
 
+func TestBaseAppPostHandler(t *testing.T) {
+	postHandlerRun := false
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPostHandler(func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (newCtx sdk.Context, err error) {
+			postHandlerRun = true
+			return ctx, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, []byte("foo")})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	// execute a tx that will fail ante handler execution
+	//
+	// NOTE: State should not be mutated here. This will be implicitly checked by
+	// the next txs ante handler execution (anteHandlerTxTest).
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+
+	// PostHandler runs on successful message execution
+	require.True(t, postHandlerRun)
+
+	// It should also run on failed message execution
+	postHandlerRun = false
+	tx = setFailOnHandler(suite.txConfig, tx, true)
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	res, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+
+	require.True(t, postHandlerRun)
+
+	// regression test, should not panic when runMsgs fails
+	tx = wonkyMsg(t, suite.txConfig, tx)
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.NotContains(t, suite.logBuffer.String(), "panic recovered in runTx")
+}
+
 // Test and ensure that invalid block heights always cause errors.
 // See issues:
 // - https://github.com/cosmos/cosmos-sdk/issues/11220
@@ -719,6 +815,17 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
 }
 
+func TestGetEmptyConsensusParams(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+	ctx := suite.baseApp.NewContext(true)
+
+	cp := suite.baseApp.GetConsensusParams(ctx)
+	require.Equal(t, cmtproto.ConsensusParams{}, cp)
+	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
+}
+
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
@@ -734,7 +841,10 @@ func TestLoadVersionPruning(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := storetypes.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	emptyCommitID := storetypes.CommitID{
+		Hash: emptyHash[:],
+	}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()

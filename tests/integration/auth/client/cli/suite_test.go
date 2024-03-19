@@ -168,6 +168,65 @@ func (s *CLITestSuite) TestCLISignBatch() {
 	s.Require().EqualError(err, "required flag(s) \"sequence\" not set")
 }
 
+func (s *CLITestSuite) TestCLISignBatchTotalFees() {
+	txCfg := s.clientCtx.TxConfig
+	s.clientCtx.HomeDir = strings.Replace(s.clientCtx.HomeDir, "simd", "simcli", 1)
+
+	testCases := []struct {
+		name            string
+		args            []string
+		numTransactions int
+		denom           string
+	}{
+		{
+			"Offline batch-sign one transaction",
+			[]string{"--offline", "--account-number", "1", "--sequence", "1", "--append"},
+			1,
+			"stake",
+		},
+		{
+			"Offline batch-sign two transactions",
+			[]string{"--offline", "--account-number", "1", "--sequence", "1", "--append"},
+			2,
+			"stake",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Create multiple transactions and write them to separate files
+			sendTokens := sdk.NewCoin(tc.denom, sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction))
+			expectedBatchedTotalFee := int64(0)
+			txFiles := make([]string, tc.numTransactions)
+			for i := 0; i < tc.numTransactions; i++ {
+				tx, err := s.createBankMsg(s.clientCtx, s.val,
+					sdk.NewCoins(sendTokens), fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
+				s.Require().NoError(err)
+				txFile := testutil.WriteToNewTempFile(s.T(), tx.String())
+				defer txFile.Close()
+				txFiles[i] = txFile.Name()
+
+				unsignedTx, err := txCfg.TxJSONDecoder()(tx.Bytes())
+				s.Require().NoError(err)
+				txBuilder, err := txCfg.WrapTxBuilder(unsignedTx)
+				s.Require().NoError(err)
+				expectedBatchedTotalFee += txBuilder.GetTx().GetFee().AmountOf(tc.denom).Int64()
+			}
+
+			// Test batch sign
+			batchSignArgs := append([]string{fmt.Sprintf("--from=%s", s.val.String())}, append(txFiles, tc.args...)...)
+			signedTx, err := clitestutil.ExecTestCLICmd(s.clientCtx, authcli.GetSignBatchCommand(), batchSignArgs)
+			s.Require().NoError(err)
+			signedFinalTx, err := txCfg.TxJSONDecoder()(signedTx.Bytes())
+			s.Require().NoError(err)
+			txBuilder, err := txCfg.WrapTxBuilder(signedFinalTx)
+			s.Require().NoError(err)
+			finalTotalFee := txBuilder.GetTx().GetFee()
+			s.Require().Equal(expectedBatchedTotalFee, finalTotalFee.AmountOf(tc.denom).Int64())
+		})
+	}
+}
+
 func (s *CLITestSuite) TestCLIQueryTxCmdByHash() {
 	sendTokens := sdk.NewInt64Coin("stake", 10)
 

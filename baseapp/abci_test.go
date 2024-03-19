@@ -3,6 +3,7 @@ package baseapp_test
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -49,10 +50,12 @@ func TestABCI_Info(t *testing.T) {
 	res, err := suite.baseApp.Info(&reqInfo)
 	require.NoError(t, err)
 
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
 	require.Equal(t, "", res.Version)
 	require.Equal(t, t.Name(), res.GetData())
 	require.Equal(t, int64(0), res.LastBlockHeight)
-	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
+	require.Equal(t, appHash, res.LastBlockAppHash)
 	require.Equal(t, suite.baseApp.AppVersion(), res.AppVersion)
 }
 
@@ -121,14 +124,11 @@ func TestABCI_InitChain(t *testing.T) {
 	// The AppHash returned by a new chain is the sha256 hash of "".
 	// $ echo -n '' | sha256sum
 	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-	apphash, err := hex.DecodeString("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
 	require.NoError(t, err)
 
-	require.Equal(
-		t,
-		apphash,
-		initChainRes.AppHash,
-	)
+	require.Equal(t, appHash, initChainRes.AppHash)
 
 	// assert that chainID is set correctly in InitChain
 	chainID := getFinalizeBlockStateCtx(app).ChainID()
@@ -1790,7 +1790,10 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-			err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit)
+			ctx = ctx.WithBlockHeight(req.Height).WithChainID(bapp.ChainID())
+			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
+			ctx = ctx.WithCometInfo(info)
+			err := baseapp.ValidateVoteExtensions(ctx, valStore, 0, "", req.LocalLastCommit)
 			if err != nil {
 				return nil, err
 			}
@@ -2055,15 +2058,25 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	valStore := mock.NewMockValidatorStore(ctrl)
 
-	// for brevity and simplicity, all validators have the same key
-	privKey := secp256k1.GenPrivKey()
-	pubKey := privKey.PubKey()
-	tmPk := cmtprotocrypto.PublicKey{
-		Sum: &cmtprotocrypto.PublicKey_Secp256K1{
-			Secp256K1: pubKey.Bytes(),
-		},
+	// 10 good vote extensions, 2 bad ones from 12 total validators
+	numVals := 12
+	privKeys := make([]secp256k1.PrivKey, numVals)
+	vals := make([]sdk.ConsAddress, numVals)
+	for i := 0; i < numVals; i++ {
+		privKey := secp256k1.GenPrivKey()
+		privKeys[i] = privKey
+
+		pubKey := privKey.PubKey()
+		val := sdk.ConsAddress(pubKey.Bytes())
+		vals[i] = val
+
+		tmPk := cmtprotocrypto.PublicKey{
+			Sum: &cmtprotocrypto.PublicKey_Secp256K1{
+				Secp256K1: pubKey.Bytes(),
+			},
+		}
+		valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), val).Return(tmPk, nil)
 	}
-	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), gomock.Any()).Return(tmPk, nil).AnyTimes()
 
 	baseappOpts := func(app *baseapp.BaseApp) {
 		app.SetExtendVoteHandler(func(sdk.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
@@ -2087,7 +2100,10 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			txs := [][]byte{}
-			if err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, app.ChainID(), req.LocalLastCommit); err != nil {
+			ctx = ctx.WithBlockHeight(req.Height).WithChainID(app.ChainID())
+			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
+			ctx = ctx.WithCometInfo(info)
+			if err := baseapp.ValidateVoteExtensions(ctx, valStore, 0, "", req.LocalLastCommit); err != nil {
 				return nil, err
 			}
 			// add all VE as txs (in a real scenario we would need to check signatures too)
@@ -2187,11 +2203,25 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	}
 	require.Equal(t, 10, successful)
 
+	extVotes := []abci.ExtendedVoteInfo{}
+	for _, val := range vals {
+		extVotes = append(extVotes, abci.ExtendedVoteInfo{
+			VoteExtension:      allVEs[0],
+			BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+			ExtensionSignature: []byte{},
+			Validator: abci.Validator{
+				Address: val.Bytes(),
+				Power:   666,
+			},
+		},
+		)
+	}
+
 	prepPropReq := &abci.RequestPrepareProposal{
 		Height: 1,
 		LocalLastCommit: abci.ExtendedCommitInfo{
 			Round: 0,
-			Votes: []abci.ExtendedVoteInfo{},
+			Votes: extVotes,
 		},
 	}
 
@@ -2229,7 +2259,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	// Now onto the second block, this time we process vote extensions from the
 	// previous block (which we sign now)
-	for _, ve := range allVEs {
+	for i, ve := range allVEs {
 		cve := cmtproto.CanonicalVoteExtension{
 			Extension: ve,
 			Height:    1,
@@ -2240,6 +2270,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 		bz, err := marshalDelimitedFn(&cve)
 		require.NoError(t, err)
 
+		privKey := privKeys[i]
 		extSig, err := privKey.Sign(bz)
 		require.NoError(t, err)
 
@@ -2247,6 +2278,10 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			VoteExtension:      ve,
 			BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			ExtensionSignature: extSig,
+			Validator: abci.Validator{
+				Address: vals[i].Bytes(),
+				Power:   666,
+			},
 		})
 	}
 

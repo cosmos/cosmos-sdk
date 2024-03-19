@@ -2,6 +2,7 @@ package flag
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -71,6 +72,37 @@ func (b *Builder) init() {
 		b.scalarFlagTypes[ValidatorAddressStringScalarType] = validatorAddressStringType{}
 		b.scalarFlagTypes[ConsensusAddressStringScalarType] = consensusAddressStringType{}
 	}
+}
+
+// ValidateAndComplete the flag builder fields.
+// It returns an error if any of the required fields are missing.
+// If the keyring is nil, it will be set to a no keyring.
+func (b *Builder) ValidateAndComplete() error {
+	if b.AddressCodec == nil {
+		return errors.New("address codec is required in flag builder")
+	}
+
+	if b.ValidatorAddressCodec == nil {
+		return errors.New("validator address codec is required in flag builder")
+	}
+
+	if b.ConsensusAddressCodec == nil {
+		return errors.New("consensus address codec is required in flag builder")
+	}
+
+	if b.Keyring == nil {
+		b.Keyring = keyring.NoKeyring{}
+	}
+
+	if b.TypeResolver == nil {
+		return errors.New("type resolver is required in flag builder")
+	}
+
+	if b.FileResolver == nil {
+		return errors.New("file resolver is required in flag builder")
+	}
+
+	return nil
 }
 
 // DefineMessageFlagType allows to extend custom protobuf message type handling for flags (and positional arguments).

@@ -1,6 +1,8 @@
 package store
 
-import "bytes"
+import (
+	"bytes"
+)
 
 // ChangeSet is a list of changes to be written to disk
 type Changeset struct {

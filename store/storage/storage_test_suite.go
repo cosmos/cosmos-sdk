@@ -266,8 +266,8 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 			i++
 			count++
 		}
-		s.Require().Equal(100, count)
 		s.Require().NoError(itr.Error())
+		s.Require().Equal(100, count)
 
 		// seek past domain, which should make the iterator invalid and produce an error
 		s.Require().False(itr.Valid())
@@ -397,8 +397,8 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 		count++
 	}
 
-	s.Require().Equal(10, count)
 	s.Require().NoError(itr.Error())
+	s.Require().Equal(10, count)
 }
 
 func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
@@ -422,6 +422,7 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 		count[string(itr.Key())] = struct{}{}
 	}
 
+	s.Require().NoError(itr.Error())
 	s.Require().Equal(3, len(count))
 }
 
@@ -449,6 +450,7 @@ func (s *StorageTestSuite) TestDatabaseIterator_ForwardIteration() {
 		count++
 	}
 
+	s.Require().NoError(itr.Error())
 	s.Require().Equal(4, count)
 }
 
@@ -511,8 +513,8 @@ func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 		i++
 		count++
 	}
-	s.Require().Equal(10, count)
 	s.Require().NoError(itr.Error())
+	s.Require().Equal(10, count)
 }
 
 func (s *StorageTestSuite) TestDatabase_Prune() {
@@ -652,6 +654,7 @@ func DBApplyChangeset(
 		if vals[i] == nil {
 			remove = true
 		}
+
 		cs.AddKVPair([]byte(storeKey), corestore.KVPair{Key: keys[i], Value: vals[i], Remove: remove})
 	}
 

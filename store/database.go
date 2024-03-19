@@ -12,7 +12,7 @@ type Reader interface {
 	// Has retrieves if a key is present in the key-value data store.
 	//
 	// Note: <key> is safe to modify and read after calling Has.
-	Has(storeKey []byte, key []byte) (bool, error)
+	Has(storeKey, key []byte) (bool, error)
 
 	// Get retrieves the given key if it's present in the key-value data store.
 	//

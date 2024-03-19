@@ -199,7 +199,9 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	_, ro, err := s.rootStore.StateLatest()
 	s.Require().NoError(err)
 
-	val, err := ro.Get(testStoreKey, []byte("key"))
+	reader, err := ro.GetReader([]byte(testStoreKey))
+	s.Require().NoError(err)
+	val, err := reader.Get([]byte("key"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("val003"), val)
 
@@ -229,7 +231,9 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	_, ro, err = s.rootStore.StateLatest()
 	s.Require().NoError(err)
 
-	val, err = ro.Get(testStoreKey, []byte("key"))
+	reader, err = ro.GetReader([]byte(testStoreKey))
+	s.Require().NoError(err)
+	val, err = reader.Get([]byte("key"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("overwritten_val005"), val)
 }
@@ -273,7 +277,9 @@ func (s *RootStoreTestSuite) TestCommit() {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		result, err := ro.Get(testStoreKey, []byte(key))
+		reader, err := ro.GetReader([]byte(testStoreKey))
+		s.Require().NoError(err)
+		result, err := reader.Get([]byte(key))
 		s.Require().NoError(err)
 
 		s.Require().Equal([]byte(val), result)
@@ -314,7 +320,9 @@ func (s *RootStoreTestSuite) TestStateAt() {
 			key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
 			val := fmt.Sprintf("val%03d_%03d", i, v) // val000_1, val001_1, ..., val099_1
 
-			result, err := ro.Get(testStoreKey, []byte(key))
+			reader, err := ro.GetReader([]byte(testStoreKey))
+			s.Require().NoError(err)
+			result, err := reader.Get([]byte(key))
 			s.Require().NoError(err)
 			s.Require().Equal([]byte(val), result)
 		}

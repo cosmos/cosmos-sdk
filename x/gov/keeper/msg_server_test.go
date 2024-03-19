@@ -726,7 +726,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"0.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"0.000000000000000000" : invalid vote option`,
 		},
 		"negative weight": {
 			preRun: func() uint64 {
@@ -738,7 +738,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"-1.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"-1.000000000000000000" : invalid vote option`,
 		},
 		"individual weight > 1 but weights sum == 1": {
 			preRun: func() uint64 {
@@ -751,7 +751,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"2.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"2.000000000000000000" : invalid vote option`,
 		},
 		"empty options": {
 			preRun: func() uint64 {
@@ -1368,7 +1368,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"0.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"0.000000000000000000" : invalid vote option`,
 		},
 		"negative weight": {
 			preRun: func() uint64 {
@@ -1383,7 +1383,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_ONE weight:"-1.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_YES weight:"-1.000000000000000000" : invalid vote option`,
 		},
 		"empty options": {
 			preRun: func() uint64 {
@@ -1726,6 +1726,90 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			},
 			expErr:    true,
 			expErrMsg: "quorum too large",
+		},
+		{
+			name: "invalid yes quorum",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.YesQuorum = abc
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "invalid yes_quorum string",
+		},
+		{
+			name: "negative yes quorum",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.YesQuorum = o1
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "yes_quorum cannot be negative",
+		},
+		{
+			name: "yes quorum > 1",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.YesQuorum = "2"
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "yes_quorum too large",
+		},
+		{
+			name: "invalid expedited quorum",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.ExpeditedQuorum = abc
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "invalid expedited_quorum string",
+		},
+		{
+			name: "negative expedited quorum",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.ExpeditedQuorum = o1
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "expedited_quorum cannot be negative",
+		},
+		{
+			name: "expedited quorum > 1",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.ExpeditedQuorum = "2"
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "expedited_quorum too large",
 		},
 		{
 			name: "invalid threshold",

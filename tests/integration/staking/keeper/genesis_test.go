@@ -98,9 +98,11 @@ func TestInitGenesis(t *testing.T) {
 	delegations = append(delegations, genesisDelegations...)
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
-	vals := (f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState))
+	vals, err := (f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState))
+	assert.NilError(t, err)
 
-	actualGenesis := (f.stakingKeeper.ExportGenesis(f.sdkCtx))
+	actualGenesis, err := (f.stakingKeeper.ExportGenesis(f.sdkCtx))
+	assert.NilError(t, err)
 	assert.DeepEqual(t, genesisState.Params, actualGenesis.Params)
 	assert.DeepEqual(t, genesisState.Delegations, actualGenesis.Delegations)
 
@@ -157,27 +159,23 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 		BondDenom:     "stake",
 	}
 
-	require.Panics(t, func() {
-		// setting validator status to bonded so the balance counts towards bonded pool
-		validator.Status = types.Bonded
-		f.stakingKeeper.InitGenesis(f.sdkCtx, &types.GenesisState{
-			Params:     params,
-			Validators: []types.Validator{validator},
-		})
-	},
-	// "should panic because bonded pool balance is different from bonded pool coins",
-	)
+	// setting validator status to bonded so the balance counts towards bonded pool
+	validator.Status = types.Bonded
+	_, err = f.stakingKeeper.InitGenesis(f.sdkCtx, &types.GenesisState{
+		Params:     params,
+		Validators: []types.Validator{validator},
+	})
+	// "should error because bonded pool balance is different from bonded pool coins",
+	require.NotNil(t, err)
 
-	require.Panics(t, func() {
-		// setting validator status to unbonded so the balance counts towards not bonded pool
-		validator.Status = types.Unbonded
-		f.stakingKeeper.InitGenesis(f.sdkCtx, &types.GenesisState{
-			Params:     params,
-			Validators: []types.Validator{validator},
-		})
-	},
+	// setting validator status to unbonded so the balance counts towards not bonded pool
+	validator.Status = types.Unbonded
+	_, err = f.stakingKeeper.InitGenesis(f.sdkCtx, &types.GenesisState{
+		Params:     params,
+		Validators: []types.Validator{validator},
+	})
 	// "should panic because not bonded pool balance is different from not bonded pool coins",
-	)
+	require.NotNil(t, err)
 }
 
 func TestInitGenesisLargeValidatorSet(t *testing.T) {
@@ -228,7 +226,8 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		),
 	)
 
-	vals := f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState)
+	vals, err := f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState)
+	assert.NilError(t, err)
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {

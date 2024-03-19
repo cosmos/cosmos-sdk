@@ -98,7 +98,7 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db, version), nil
 }
 
-func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
+func (db *Database) getSlice(storeKey []byte, version uint64, key []byte) (*grocksdb.Slice, error) {
 	if version < db.tsLow {
 		return nil, errors.ErrVersionPruned{EarliestVersion: db.tsLow}
 	}
@@ -132,7 +132,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
-	slice, err := db.getSlice(string(storeKey), version, key)
+	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return false, err
 	}
@@ -141,7 +141,7 @@ func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
-	slice, err := db.getSlice(string(storeKey), version, key)
+	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)
 	}
@@ -174,7 +174,7 @@ func (db *Database) Iterator(storeKey []byte, version uint64, start, end []byte)
 		return nil, errors.ErrStartAfterEnd
 	}
 
-	prefix := storePrefix(string(storeKey))
+	prefix := storePrefix(storeKey)
 	start, end = util.IterateWithPrefix(prefix, start, end)
 
 	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)
@@ -190,7 +190,7 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 		return nil, errors.ErrStartAfterEnd
 	}
 
-	prefix := storePrefix(string(storeKey))
+	prefix := storePrefix(storeKey)
 	start, end = util.IterateWithPrefix(prefix, start, end)
 
 	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)
@@ -208,11 +208,11 @@ func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 	return readOpts
 }
 
-func storePrefix(storeKey string) []byte {
+func storePrefix(storeKey []byte) []byte {
 	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
 }
 
-func prependStoreKey(storeKey string, key []byte) []byte {
+func prependStoreKey(storeKey []byte, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 

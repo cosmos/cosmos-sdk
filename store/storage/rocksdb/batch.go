@@ -49,13 +49,13 @@ func (b Batch) Reset() {
 }
 
 func (b Batch) Set(storeKey []byte, key, value []byte) error {
-	prefixedKey := prependStoreKey(string(storeKey), key)
+	prefixedKey := prependStoreKey(storeKey, key)
 	b.batch.PutCFWithTS(b.cfHandle, prefixedKey, b.ts[:], value)
 	return nil
 }
 
 func (b Batch) Delete(storeKey []byte, key []byte) error {
-	prefixedKey := prependStoreKey(string(storeKey), key)
+	prefixedKey := prependStoreKey(storeKey, key)
 	b.batch.DeleteCFWithTS(b.cfHandle, prefixedKey, b.ts[:])
 	return nil
 }

@@ -316,7 +316,7 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 }
 
 func storePrefix(storeKey []byte) []byte {
-	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
+	return append([]byte(StorePrefixTpl), storeKey...)
 }
 
 func prependStoreKey(storeKey []byte, key []byte) []byte {

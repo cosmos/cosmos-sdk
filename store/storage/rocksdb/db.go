@@ -209,7 +209,7 @@ func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 }
 
 func storePrefix(storeKey []byte) []byte {
-	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
+	return append([]byte(StorePrefixTpl), storeKey...)
 }
 
 func prependStoreKey(storeKey []byte, key []byte) []byte {

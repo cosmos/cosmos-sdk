@@ -58,13 +58,13 @@ func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.Prun
 }
 
 func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
-	for storeKey, pairs := range cs.Changes {
+	for _, pairs := range cs.Changes {
 
 		key := internal.UnsafeBytesToStr(pairs.Actor)
 
 		tree, ok := c.multiTrees[key]
 		if !ok {
-			return fmt.Errorf("store key %s not found in multiTrees", storeKey)
+			return fmt.Errorf("store key %s not found in multiTrees", key)
 		}
 		for _, kv := range pairs.StateChanges {
 			if kv.Remove {

@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.cdc = encCfg.Codec
 
 	s.baseApp = baseapp.NewBaseApp(
-		"authz",
+		"staking",
 		log.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
@@ -72,20 +72,18 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.baseApp.SetCMS(testCtx.CMS)
 	s.baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
-	// consensusKeeper :=
-
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.BondedPoolName).Return(bondedAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
-
 	// create consensus keeper
 	ck := stakingtestutil.NewMockConsensusKeeper(ctrl)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	consensustypes.RegisterQueryServer(queryHelper, ck)
+
+	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(s.baseApp.GRPCQueryRouter(), nil))
 	keeper := stakingkeeper.NewKeeper(

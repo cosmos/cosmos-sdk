@@ -2,6 +2,7 @@ package store
 
 import "bytes"
 
+// ChangeSet is a list of changes to be written to disk
 type Changeset struct {
 	Changes []StateChanges
 }
@@ -12,6 +13,7 @@ type StateChanges struct {
 	StateChanges []KVPair // StateChanges is a list of key-value pairs representing the changes to the state.
 }
 
+// KVPairs represents a set of key-value pairs.
 type KVPairs = []KVPair
 
 // KVPair represents a change in a key and value of state.

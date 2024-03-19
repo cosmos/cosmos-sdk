@@ -386,7 +386,7 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 }
 
 // Restore implements snapshotstypes.CommitSnapshotter.
-func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (snapshotstypes.SnapshotItem, error) {
+func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges) (snapshotstypes.SnapshotItem, error) {
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
@@ -441,10 +441,15 @@ loop:
 					node.Value = []byte{}
 				}
 				// If the node is a leaf node, it will be written to the storage.
-				chStorage <- &store.KVPair{
-					Key:      node.Key,
-					Value:    node.Value,
-					StoreKey: storeKey, // TODO check if this is valid
+				chStorage <- &corestore.StateChanges{
+					Actor: []byte(storeKey), // TODO: this is empty. seems like a bug?
+					StateChanges: []corestore.KVPair{
+						{
+							Key:    node.Key,
+							Value:  node.Value,
+							Remove: false,
+						},
+					},
 				}
 			}
 			err := importer.Add(node)

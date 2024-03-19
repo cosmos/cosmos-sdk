@@ -111,7 +111,7 @@ func (ss *StorageStore) Prune(version uint64) error {
 }
 
 // Restore restores the store from the given channel.
-func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) error {
+func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.StateChanges) error {
 	latestVersion, err := ss.db.GetLatestVersion()
 	if err != nil {
 		return fmt.Errorf("failed to get latest version: %w", err)
@@ -126,13 +126,15 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) 
 	}
 
 	for kvPair := range chStorage {
-		if err := b.Set([]byte(kvPair.StoreKey), kvPair.Key, kvPair.Value); err != nil {
-			return err
-		}
-
-		if b.Size() > defaultBatchBufferSize {
-			if err := b.Write(); err != nil {
+		for _, kv := range kvPair.StateChanges {
+			if err := b.Set(kvPair.Actor, kv.Key, kv.Value); err != nil {
 				return err
+			}
+
+			if b.Size() > defaultBatchBufferSize {
+				if err := b.Write(); err != nil {
+					return err
+				}
 			}
 		}
 	}

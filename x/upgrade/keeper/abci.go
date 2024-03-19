@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/types"
 
@@ -48,9 +49,12 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
 				var appVersion uint64
 
-				cp := sdkCtx.ConsensusParams()
-				if cp.Version != nil {
-					appVersion = cp.Version.App
+				var res consensusv1.QueryParamsResponse
+				if err := k.environment.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+					return errors.New("failed to query consensus params")
+				}
+				if res.Params.Version != nil {
+					appVersion = res.Params.Version.App
 				}
 
 				return fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)

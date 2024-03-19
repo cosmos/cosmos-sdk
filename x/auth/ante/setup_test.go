@@ -6,10 +6,12 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -34,7 +36,7 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator()
+	sud := ante.NewSetUpContextDecorator(runtime.NewEnvironment(nil, log.NewNopLogger()))
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	suite.ctx = suite.ctx.
@@ -69,7 +71,7 @@ func TestSetup(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator()
+	sud := ante.NewSetUpContextDecorator(runtime.NewEnvironment(nil, log.NewNopLogger()))
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
@@ -104,7 +106,7 @@ func TestRecoverPanic(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator()
+	sud := ante.NewSetUpContextDecorator(runtime.NewEnvironment(nil, log.NewNopLogger()))
 	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})
 
 	// Set height to non-zero value for GasMeter to be set

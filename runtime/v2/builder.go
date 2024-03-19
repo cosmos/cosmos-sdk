@@ -103,7 +103,7 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create root store: %w", err)
 	}
-	a.app.db = &StoreV2Adapter{rs}
+	a.app.db = rs
 
 	appManagerBuilder := appmanager.Builder[transaction.Tx]{
 		STF:                a.app.stf,

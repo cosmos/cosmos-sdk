@@ -310,8 +310,7 @@ func (s StoreV2Adapter) LatestVersion() (uint64, error) {
 }
 
 func (s StoreV2Adapter) StateLatest() (uint64, corestore.ReaderMap, error) {
-	//TODO implement me
-	panic("implement me")
+	return s.StateLatest()
 }
 
 func (s StoreV2Adapter) StateAt(version uint64) (corestore.ReaderMap, error) {

@@ -16,8 +16,8 @@ func NewKVStoreService(storeKey *storetypes.KVStoreKey) store.KVStoreService {
 }
 
 type Store interface {
-	// LatestVersion returns the latest version that consensus has been made on
-	LatestVersion() (uint64, error)
+	// GetLatestVersion returns the latest version that consensus has been made on
+	GetLatestVersion() (uint64, error)
 	// StateLatest returns a readonly view over the latest
 	// committed state of the store. Alongside the version
 	// associated with it.

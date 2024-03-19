@@ -81,13 +81,15 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 
 	streamReader, err := snapshots.NewStreamReader(chunks)
 	s.Require().NoError(err)
-	chStorage := make(chan *store.KVPair, 100)
+	chStorage := make(chan *corestore.StateChanges, 100)
 	leaves := make(map[string]string)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		for kv := range chStorage {
-			leaves[fmt.Sprintf("%s_%s", kv.StoreKey, kv.Key)] = string(kv.Value)
+			for _, actor := range kv.StateChanges {
+				leaves[fmt.Sprintf("%s_%s", kv.Actor, actor.Key)] = string(actor.Value)
+			}
 		}
 		wg.Done()
 	}()

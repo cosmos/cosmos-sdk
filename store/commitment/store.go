@@ -390,7 +390,7 @@ func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
-		storeKey     string
+		storeKey     []byte
 	)
 
 loop:
@@ -412,6 +412,7 @@ loop:
 				importer.Close()
 			}
 			bzKey := sha256.Sum256([]byte(item.Store.Name))
+			storeKey = []byte(item.Store.Name)
 			tree := c.multiTrees[bzKey]
 			if tree == nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", storeKey)
@@ -442,7 +443,7 @@ loop:
 				}
 				// If the node is a leaf node, it will be written to the storage.
 				chStorage <- &corestore.StateChanges{
-					Actor: []byte(storeKey), // TODO: this is empty. seems like a bug?
+					Actor: storeKey,
 					StateChanges: []corestore.KVPair{
 						{
 							Key:    node.Key,

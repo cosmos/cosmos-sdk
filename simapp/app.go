@@ -284,7 +284,6 @@ func NewSimApp(
 		appCodec,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), logger),
 		signingCtx.AddressCodec(),
-		appCodec,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		appCodec.InterfaceRegistry(),

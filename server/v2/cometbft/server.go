@@ -65,6 +65,7 @@ func NewCometBFTServer[T transaction.Tx](
 	store types.Store,
 	logger log.Logger,
 	cfg Config,
+	txCodec transaction.Codec[T],
 ) *CometBFTServer[T] {
 	logger = logger.With("module", "cometbft-server")
 
@@ -72,7 +73,7 @@ func NewCometBFTServer[T transaction.Tx](
 	mempool := mempool.NoOpMempool[T]{}
 
 	// create consensus
-	consensus := NewConsensus[T](app, mempool, store, cfg)
+	consensus := NewConsensus[T](app, mempool, store, cfg, txCodec)
 
 	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
 	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
@@ -212,20 +213,3 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 		},
 	}
 }
-
-/*
-
-// Set on abci.go
-func SetCodec? <- I think we can get this from app manager too. Is codec.Codec fine?
-func SetSnapshotManager (?)
-
-API routes
-SetServer grpc
-grpc gateway
-streaming
-telemetry
-cli commands
-
-
-
-*/

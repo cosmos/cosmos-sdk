@@ -134,7 +134,10 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 
 // ExportGenesis returns the exported genesis state as raw bytes for the authz module.
 func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	gs := am.keeper.ExportGenesis(ctx)
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		return nil, err
+	}
 	return am.cdc.MarshalJSON(gs)
 }
 

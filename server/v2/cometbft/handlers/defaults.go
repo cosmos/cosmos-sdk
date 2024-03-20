@@ -11,9 +11,9 @@ import (
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/core/appmanager"
 
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/core/appmanager"
 )
 
 type AppManager[T transaction.Tx] interface {

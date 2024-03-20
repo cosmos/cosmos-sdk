@@ -3,6 +3,7 @@ package simulation
 import (
 	"math/rand"
 
+	coreaddress "cosmossdk.io/core/address"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +28,7 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	}
 }
 
-func SimulateMsgCommunityPoolSpend(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
+func SimulateMsgCommunityPoolSpend(r *rand.Rand, _ []simtypes.Account, _ coreaddress.Codec) (sdk.Msg, error) {
 	// use the default gov module account address as authority
 	var authority sdk.AccAddress = address.Module("gov")
 
@@ -43,5 +44,5 @@ func SimulateMsgCommunityPoolSpend(r *rand.Rand, _ sdk.Context, _ []simtypes.Acc
 		Authority: authority.String(),
 		Recipient: acc.Address.String(),
 		Amount:    coins,
-	}
+	}, nil
 }

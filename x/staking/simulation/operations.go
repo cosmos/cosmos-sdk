@@ -188,7 +188,11 @@ func SimulateMsgCreateValidator(
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg, err := types.NewMsgCreateValidator(address.String(), simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
+		addr, err := k.ValidatorAddressCodec().BytesToString(address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate validator address"), nil, err
+		}
+		msg, err := types.NewMsgCreateValidator(addr, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to create CreateValidator message"), nil, err
 		}
@@ -344,7 +348,11 @@ func SimulateMsgDelegate(
 			}
 		}
 
-		msg := types.NewMsgDelegate(simAccount.Address.String(), val.GetOperator(), bondAmt)
+		accAddr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting account string address"), nil, err
+		}
+		msg := types.NewMsgDelegate(accAddr, val.GetOperator(), bondAmt)
 
 		txCtx := simulation.OperationInput{
 			R:             r,
@@ -553,8 +561,12 @@ func SimulateMsgCancelUnbondingDelegate(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "bond denom not found"), nil, err
 		}
 
+		accAddr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting account string address"), nil, err
+		}
 		msg := types.NewMsgCancelUnbondingDelegation(
-			simAccount.Address.String(), val.GetOperator(), unbondingDelegationEntry.CreationHeight, sdk.NewCoin(bondDenom, cancelBondAmt),
+			accAddr, val.GetOperator(), unbondingDelegationEntry.CreationHeight, sdk.NewCoin(bondDenom, cancelBondAmt),
 		)
 
 		spendable := bk.SpendableCoins(ctx, simAccount.Address)
@@ -762,9 +774,17 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get conskey"), nil, err
 		}
+		consAddress, err := k.ConsensusAddressCodec().BytesToString(cons)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting consensus address"), nil, err
+		}
 
 		acc, _ := simtypes.RandomAcc(r, accs)
-		if sdk.ConsAddress(cons).String() == sdk.ConsAddress(acc.ConsKey.PubKey().Address()).String() {
+		accAddress, err := k.ConsensusAddressCodec().BytesToString(acc.ConsKey.PubKey().Address())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting consensus address"), nil, err
+		}
+		if consAddress == accAddress {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "new pubkey and current pubkey should be different"), nil, nil
 		}
 

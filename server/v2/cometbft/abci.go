@@ -59,12 +59,14 @@ func NewConsensus[T transaction.Tx](
 	mp mempool.Mempool[T],
 	store types.Store,
 	cfg Config,
+	txcodec transaction.Codec[T],
 ) *Consensus[T] {
 	return &Consensus[T]{
 		mempool: mp,
 		store:   store,
 		app:     app,
 		cfg:     cfg,
+		txCodec: txcodec,
 	}
 }
 

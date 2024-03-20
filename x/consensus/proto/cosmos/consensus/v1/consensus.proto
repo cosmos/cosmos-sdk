@@ -83,10 +83,10 @@ message Validator {
 
 // Evidence represents evidence of misbehavior.
 message Evidence {
-  MisbehaviorType           type      = 1;                              // Type of misbehavior
-  Validator                 validator = 2;                              // Validator involved in the misbehavior
-  int64                     height    = 3;                              // Height at which the misbehavior occurred
-  google.protobuf.Timestamp time      = 4 [(gogoproto.stdtime) = true]; // Time at which the misbehavior occurred
+  MisbehaviorType           evidence_type = 1;                              // Type of misbehavior
+  Validator                 validator     = 2;                              // Validator involved in the misbehavior
+  int64                     height        = 3;                              // Height at which the misbehavior occurred
+  google.protobuf.Timestamp time          = 4 [(gogoproto.stdtime) = true]; // Time at which the misbehavior occurred
   int64                     total_voting_power = 5; // Total voting power at the time of the misbehavior
 }
 

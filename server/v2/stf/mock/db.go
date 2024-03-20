@@ -1,8 +1,8 @@
 package mock
 
 import (
+	"cosmossdk.io/core/store"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/server/v2/core/store"
 )
 
 func DB() store.ReaderMap {

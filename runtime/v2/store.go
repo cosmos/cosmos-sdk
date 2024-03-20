@@ -2,7 +2,7 @@ package runtime
 
 import (
 	"cosmossdk.io/core/store"
-	corestore "cosmossdk.io/server/v2/core/store"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
 	storev2 "cosmossdk.io/store/v2"

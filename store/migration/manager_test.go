@@ -62,9 +62,6 @@ func TestMigrateState(t *testing.T) {
 	for version := uint64(1); version <= toVersion; version++ {
 		cs := corestore.NewChangeset()
 		for _, storeKey := range storeKeys {
-			cs.Changes = append(cs.Changes, corestore.StateChanges{
-				Actor: []byte(storeKey),
-			})
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}

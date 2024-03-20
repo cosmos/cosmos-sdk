@@ -78,9 +78,9 @@ func (t *Tx) Decode(b []byte) {
 	t.GasLimit = rawTx.GasLimit
 }
 
-type txCodec struct{}
+type TxCodec struct{}
 
-func (txCodec) Decode(bytes []byte) (Tx, error) {
+func (TxCodec) Decode(bytes []byte) (Tx, error) {
 	t := new(Tx)
 	t.Decode(bytes)
 	return *t, nil

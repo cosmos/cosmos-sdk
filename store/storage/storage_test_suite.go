@@ -649,6 +649,9 @@ func DBApplyChangeset(
 	require.Equal(t, len(keys), len(vals))
 
 	cs := corestore.NewChangeset()
+	cs.Changes = append(cs.Changes, corestore.StateChanges{
+		Actor: []byte(storeKey),
+	})
 	for i := 0; i < len(keys); i++ {
 		remove := false
 		if vals[i] == nil {

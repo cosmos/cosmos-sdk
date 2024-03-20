@@ -1,8 +1,8 @@
 package branch
 
 import (
+	"cosmossdk.io/core/store"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/server/v2/core/store"
 )
 
 var _ store.Writer = (*Store[store.Reader])(nil)

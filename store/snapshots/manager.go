@@ -11,9 +11,9 @@ import (
 	"sort"
 	"sync"
 
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -392,7 +392,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	}
 
 	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
-	chStorage := make(chan *store.KVPair, defaultStorageChannelBufferSize)
+	chStorage := make(chan *corestore.StateChanges, defaultStorageChannelBufferSize)
 	defer close(chStorage)
 
 	storageErrs := make(chan error, 1)

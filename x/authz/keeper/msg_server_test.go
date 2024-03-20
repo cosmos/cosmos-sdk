@@ -36,6 +36,10 @@ func (suite *TestSuite) TestGrant() {
 	coins := sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10)))
 
 	grantee, granter := addrs[0], addrs[1]
+	granterStrAddr, err := suite.accountKeeper.AddressCodec().BytesToString(granter)
+	suite.Require().NoError(err)
+	granteeStrAddr, err := suite.accountKeeper.AddressCodec().BytesToString(grantee)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name     string
@@ -49,8 +53,8 @@ func (suite *TestSuite) TestGrant() {
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
-					Granter: grantee.String(),
-					Grantee: grantee.String(),
+					Granter: granteeStrAddr,
+					Grantee: granteeStrAddr,
 					Grant:   grant,
 				}
 			},
@@ -64,7 +68,7 @@ func (suite *TestSuite) TestGrant() {
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: "invalid",
-					Grantee: grantee.String(),
+					Grantee: granteeStrAddr,
 					Grant:   grant,
 				}
 			},
@@ -77,7 +81,7 @@ func (suite *TestSuite) TestGrant() {
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
-					Granter: granter.String(),
+					Granter: granterStrAddr,
 					Grantee: "invalid",
 					Grant:   grant,
 				}
@@ -89,8 +93,8 @@ func (suite *TestSuite) TestGrant() {
 			name: "invalid grant",
 			malleate: func() *authz.MsgGrant {
 				return &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
 					Grant: authz.Grant{
 						Expiration: &oneYear,
 					},
@@ -106,8 +110,8 @@ func (suite *TestSuite) TestGrant() {
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneHour) // we only need the authorization
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
 					Grant: authz.Grant{
 						Authorization: grant.Authorization,
 						Expiration:    &pTime,
@@ -127,9 +131,13 @@ func (suite *TestSuite) TestGrant() {
 
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
 				suite.Require().NoError(err)
+
+				addr, err := suite.accountKeeper.AddressCodec().BytesToString(newAcc)
+				suite.Require().NoError(err)
+
 				return &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: newAcc.String(),
+					Granter: granterStrAddr,
+					Grantee: addr,
 					Grant:   grant,
 				}
 			},
@@ -140,8 +148,8 @@ func (suite *TestSuite) TestGrant() {
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
 					Grant:   grant,
 				}
 			},
@@ -152,8 +160,8 @@ func (suite *TestSuite) TestGrant() {
 				g, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneHour)
 				suite.Require().NoError(err)
 				_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
 					Grant:   g,
 				})
 				suite.Require().NoError(err)
@@ -161,8 +169,8 @@ func (suite *TestSuite) TestGrant() {
 				grant, err := authz.NewGrant(curBlockTime, authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgUpdateParams"), &oneHour)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
 					Grant:   grant,
 				}
 			},
@@ -173,8 +181,8 @@ func (suite *TestSuite) TestGrant() {
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, []sdk.AccAddress{granter}), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
 					Grant:   grant,
 				}
 			},
@@ -185,8 +193,8 @@ func (suite *TestSuite) TestGrant() {
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), nil)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
 					Grant:   grant,
 				}
 			},
@@ -210,6 +218,10 @@ func (suite *TestSuite) TestRevoke() {
 	addrs := suite.createAccounts()
 
 	grantee, granter := addrs[0], addrs[1]
+	granterStrAddr, err := suite.accountKeeper.AddressCodec().BytesToString(granter)
+	suite.Require().NoError(err)
+	granteeStrAddr, err := suite.accountKeeper.AddressCodec().BytesToString(grantee)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name     string
@@ -221,8 +233,8 @@ func (suite *TestSuite) TestRevoke() {
 			name: "identical grantee and granter",
 			malleate: func() *authz.MsgRevoke {
 				return &authz.MsgRevoke{
-					Granter:    grantee.String(),
-					Grantee:    grantee.String(),
+					Granter:    granteeStrAddr,
+					Grantee:    granteeStrAddr,
 					MsgTypeUrl: bankSendAuthMsgType,
 				}
 			},
@@ -234,7 +246,7 @@ func (suite *TestSuite) TestRevoke() {
 			malleate: func() *authz.MsgRevoke {
 				return &authz.MsgRevoke{
 					Granter:    "invalid",
-					Grantee:    grantee.String(),
+					Grantee:    granteeStrAddr,
 					MsgTypeUrl: bankSendAuthMsgType,
 				}
 			},
@@ -245,7 +257,7 @@ func (suite *TestSuite) TestRevoke() {
 			name: "invalid grantee",
 			malleate: func() *authz.MsgRevoke {
 				return &authz.MsgRevoke{
-					Granter:    granter.String(),
+					Granter:    granterStrAddr,
 					Grantee:    "invalid",
 					MsgTypeUrl: bankSendAuthMsgType,
 				}
@@ -257,8 +269,8 @@ func (suite *TestSuite) TestRevoke() {
 			name: "no msg given",
 			malleate: func() *authz.MsgRevoke {
 				return &authz.MsgRevoke{
-					Granter:    granter.String(),
-					Grantee:    grantee.String(),
+					Granter:    granterStrAddr,
+					Grantee:    granteeStrAddr,
 					MsgTypeUrl: "",
 				}
 			},
@@ -271,8 +283,8 @@ func (suite *TestSuite) TestRevoke() {
 				suite.createSendAuthorization(grantee, granter)
 
 				return &authz.MsgRevoke{
-					Granter:    granter.String(),
-					Grantee:    grantee.String(),
+					Granter:    granterStrAddr,
+					Grantee:    granteeStrAddr,
 					MsgTypeUrl: bankSendAuthMsgType,
 				}
 			},
@@ -281,8 +293,8 @@ func (suite *TestSuite) TestRevoke() {
 			name: "no existing grant to revoke",
 			malleate: func() *authz.MsgRevoke {
 				return &authz.MsgRevoke{
-					Granter:    granter.String(),
-					Grantee:    grantee.String(),
+					Granter:    granterStrAddr,
+					Grantee:    granteeStrAddr,
 					MsgTypeUrl: bankSendAuthMsgType,
 				}
 			},
@@ -308,11 +320,15 @@ func (suite *TestSuite) TestExec() {
 	addrs := suite.createAccounts()
 
 	grantee, granter := addrs[0], addrs[1]
+	granterStrAddr, err := suite.accountKeeper.AddressCodec().BytesToString(granter)
+	suite.Require().NoError(err)
+	granteeStrAddr, err := suite.accountKeeper.AddressCodec().BytesToString(grantee)
+	suite.Require().NoError(err)
 	coins := sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10)))
 
 	msg := &banktypes.MsgSend{
-		FromAddress: granter.String(),
-		ToAddress:   grantee.String(),
+		FromAddress: granterStrAddr,
+		ToAddress:   granteeStrAddr,
 		Amount:      coins,
 	}
 
@@ -325,7 +341,7 @@ func (suite *TestSuite) TestExec() {
 		{
 			name: "invalid grantee (empty)",
 			malleate: func() authz.MsgExec {
-				return authz.NewMsgExec(sdk.AccAddress{}, []sdk.Msg{msg})
+				return authz.NewMsgExec("", []sdk.Msg{msg})
 			},
 			expErr: true,
 			errMsg: "empty address string is not allowed",
@@ -333,7 +349,7 @@ func (suite *TestSuite) TestExec() {
 		{
 			name: "non existing grant",
 			malleate: func() authz.MsgExec {
-				return authz.NewMsgExec(grantee, []sdk.Msg{msg})
+				return authz.NewMsgExec(granteeStrAddr, []sdk.Msg{msg})
 			},
 			expErr: true,
 			errMsg: "authorization not found",
@@ -341,7 +357,7 @@ func (suite *TestSuite) TestExec() {
 		{
 			name: "no message case",
 			malleate: func() authz.MsgExec {
-				return authz.NewMsgExec(grantee, []sdk.Msg{})
+				return authz.NewMsgExec(granteeStrAddr, []sdk.Msg{})
 			},
 			expErr: true,
 			errMsg: "messages cannot be empty",
@@ -350,7 +366,7 @@ func (suite *TestSuite) TestExec() {
 			name: "valid case",
 			malleate: func() authz.MsgExec {
 				suite.createSendAuthorization(grantee, granter)
-				return authz.NewMsgExec(grantee, []sdk.Msg{msg})
+				return authz.NewMsgExec(granteeStrAddr, []sdk.Msg{msg})
 			},
 		},
 	}
@@ -372,6 +388,11 @@ func (suite *TestSuite) TestExec() {
 func (suite *TestSuite) TestPruneExpiredGrants() {
 	addrs := suite.createAccounts()
 
+	addr0, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
+	addr1, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[1])
+	suite.Require().NoError(err)
+
 	timeNow := suite.ctx.BlockTime()
 	expiration := timeNow.Add(time.Hour)
 	coins := sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10)))
@@ -379,23 +400,23 @@ func (suite *TestSuite) TestPruneExpiredGrants() {
 	suite.Require().NoError(err)
 
 	_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
-		Granter: addrs[0].String(),
-		Grantee: addrs[1].String(),
+		Granter: addr0,
+		Grantee: addr1,
 		Grant:   grant,
 	})
 	suite.Require().NoError(err)
 
 	_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
-		Granter: addrs[1].String(),
-		Grantee: addrs[0].String(),
+		Granter: addr1,
+		Grantee: addr0,
 		Grant:   grant,
 	})
 	suite.Require().NoError(err)
 
 	totalGrants := 0
-	suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) bool {
+	_ = suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) (bool, error) {
 		totalGrants++
-		return false
+		return false, nil
 	})
 	suite.Require().Equal(len(addrs), totalGrants)
 
@@ -404,13 +425,13 @@ func (suite *TestSuite) TestPruneExpiredGrants() {
 	headerInfo.Time = headerInfo.Time.Add(2 * time.Hour)
 	suite.ctx = suite.ctx.WithHeaderInfo(headerInfo)
 
-	_, err = suite.authzKeeper.PruneExpiredGrants(suite.ctx, &authz.MsgPruneExpiredGrants{Pruner: addrs[0].String()})
+	_, err = suite.authzKeeper.PruneExpiredGrants(suite.ctx, &authz.MsgPruneExpiredGrants{Pruner: addr0})
 	suite.Require().NoError(err)
 
 	totalGrants = 0
-	suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) bool {
+	_ = suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) (bool, error) {
 		totalGrants++
-		return false
+		return false, nil
 	})
 	suite.Require().Equal(0, totalGrants)
 }

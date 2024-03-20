@@ -54,10 +54,12 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 func SimulationOperations(app runtime.AppSimI, cdc codec.Codec, config simtypes.Config) []simtypes.WeightedOperation {
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{
-		AppParams: make(simtypes.AppParams),
-		Cdc:       cdc,
-		TxConfig:  authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), // TODO(tip): we should extract this from app
-		BondDenom: sdk.DefaultBondDenom,
+		AppParams:      make(simtypes.AppParams),
+		Cdc:            cdc,
+		AddressCodec:   signingCtx.AddressCodec(),
+		ValidatorCodec: signingCtx.ValidatorAddressCodec(),
+		TxConfig:       authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), // TODO(tip): we should extract this from app
+		BondDenom:      sdk.DefaultBondDenom,
 	}
 
 	if config.ParamsFile != "" {

@@ -195,7 +195,11 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	// unbond below minimum self-delegation
 	assert.Equal(t, p.BondDenom, tstaking.Denom)
-	tstaking.Undelegate(sdk.AccAddress(addr), addr, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 1), true)
+	accAddr, err := f.accountKeeper.AddressCodec().BytesToString(addr)
+	assert.NilError(t, err)
+	valAddr, err := f.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+	require.NoError(t, err)
+	tstaking.Undelegate(accAddr, valAddr, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 1), true)
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	assert.NilError(t, err)
@@ -220,8 +224,12 @@ func TestUnJailNotBonded(t *testing.T) {
 	assert.NilError(t, err)
 	newHeight = f.ctx.BlockHeight() + 1
 	f.ctx = f.ctx.WithBlockHeight(newHeight).WithHeaderInfo(coreheader.Info{Height: newHeight})
-	// bond to meet minimum self-delegation
-	tstaking.DelegateWithPower(sdk.AccAddress(addr), addr, 1)
+	// bond to meet minimum self-delegationa
+	accAddr, err = f.accountKeeper.AddressCodec().BytesToString(addr)
+	assert.NilError(t, err)
+	valAddr, err = f.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+	assert.NilError(t, err)
+	tstaking.DelegateWithPower(accAddr, valAddr, 1)
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	assert.NilError(t, err)
@@ -430,7 +438,11 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
 
 	// validator added back in
-	tstaking.DelegateWithPower(sdk.AccAddress(pks[2].Address()), valAddr, 50)
+	accAddr, err := f.accountKeeper.AddressCodec().BytesToString(sdk.AccAddress(pks[2].Address()))
+	assert.NilError(t, err)
+	vAddr, err := f.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
+	assert.NilError(t, err)
+	tstaking.DelegateWithPower(accAddr, vAddr, 50)
 
 	validatorUpdates, err = f.stakingKeeper.EndBlocker(f.ctx)
 	require.NoError(t, err)

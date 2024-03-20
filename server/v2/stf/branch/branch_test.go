@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/btree"
 
+	"cosmossdk.io/core/store"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/server/v2/core/store"
 )
 
 func TestBranch(t *testing.T) {

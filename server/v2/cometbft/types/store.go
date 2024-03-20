@@ -1,7 +1,7 @@
 package types
 
 import (
-	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/proof"
 	ics23 "github.com/cosmos/ics23/go"
 )

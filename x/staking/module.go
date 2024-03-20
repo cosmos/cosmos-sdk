@@ -147,33 +147,8 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 // InitGenesis performs genesis initialization for the staking module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
-
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
-
-	cometValidatorUpdates, err := am.keeper.InitGenesis(ctx, &genesisState) // TODO: refactor to return ValidatorUpdate higher up the stack
-	if err != nil {
-		return nil, err
-	}
-	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
-	for i, v := range cometValidatorUpdates {
-		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     ed25519,
-				PubKeyType: "ed25519",
-				Power:      v.Power,
-			}
-		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     secp256k1,
-				PubKeyType: "secp256k1",
-				Power:      v.Power,
-			}
-		} else {
-			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
-		}
-	}
-
-	return validatorUpdates, nil
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking module.
@@ -199,29 +174,5 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 
 // EndBlock returns the end blocker for the staking module.
 func (am AppModule) EndBlock(ctx context.Context) ([]module.ValidatorUpdate, error) {
-	cometValidatorUpdates, err := am.keeper.EndBlocker(ctx) // TODO: refactor to return appmodule.ValidatorUpdate higher up the stack
-	if err != nil {
-		return nil, err
-	}
-
-	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
-	for i, v := range cometValidatorUpdates {
-		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     ed25519,
-				PubKeyType: "ed25519",
-				Power:      v.Power,
-			}
-		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     secp256k1,
-				PubKeyType: "secp256k1",
-				Power:      v.Power,
-			}
-		} else {
-			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
-		}
-	}
-
-	return validatorUpdates, nil
+	return am.keeper.EndBlocker(ctx)
 }

@@ -3,8 +3,8 @@ package store
 import (
 	"sync/atomic"
 
+	"cosmossdk.io/core/store"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/server/v2/core/store"
 )
 
 var _ Store = (*Storage[Database])(nil)

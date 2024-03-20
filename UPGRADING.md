@@ -145,6 +145,16 @@ If you were depending on `cosmossdk.io/api/tendermint`, please use the buf gener
 
 #### `**all**`
 
+##### Simulation
+
+`MsgSimulatorFn` has been updated to return an error. Its context argument has been removed, and an address.Codec has
+been added to avoid the use of the Accounts.String() method.
+
+```diff
+-type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
++type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+```
+
 ##### Core API
 
 Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
@@ -166,11 +176,11 @@ If your module requires a message server or query server, it should be passed in
 +govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 ```
 
-The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.LegacyRegistry` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.LegacyRegistry` interface.
+The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
 
 ```diff
 -func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
++func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 ```
 
 ##### Dependency Injection

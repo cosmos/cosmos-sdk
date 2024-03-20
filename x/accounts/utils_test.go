@@ -33,10 +33,6 @@ func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
 	return nil
 }
 
-func (e eventService) EmitNonConsensus(event protoiface.MessageV1) error {
-	return nil
-}
-
 func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
 
 var _ InterfaceRegistry = (*interfaceRegistry)(nil)

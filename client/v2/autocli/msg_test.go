@@ -1,8 +1,12 @@
 package autocli
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -53,7 +57,7 @@ func TestMsg(t *testing.T) {
 		"--output", "json",
 	)
 	assert.NilError(t, err)
-	golden.Assert(t, out.String(), "msg-output.golden")
+	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
@@ -74,7 +78,7 @@ func TestMsg(t *testing.T) {
 		"--output", "json",
 	)
 	assert.NilError(t, err)
-	golden.Assert(t, out.String(), "msg-output.golden")
+	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
@@ -97,7 +101,33 @@ func TestMsg(t *testing.T) {
 		"--output", "json",
 	)
 	assert.NilError(t, err)
-	golden.Assert(t, out.String(), "msg-output.golden")
+	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
+}
+
+func goldenLoad(t *testing.T, filename string) []byte {
+	t.Helper()
+	content, err := os.ReadFile(filepath.Join("testdata", filename))
+	assert.NilError(t, err)
+	return content
+}
+
+func assertNormalizedJSONEqual(t *testing.T, expected, actual []byte) {
+	t.Helper()
+	normalizedExpected, err := normalizeJSON(expected)
+	assert.NilError(t, err)
+	normalizedActual, err := normalizeJSON(actual)
+	assert.NilError(t, err)
+	assert.Equal(t, string(normalizedExpected), string(normalizedActual))
+}
+
+// normalizeJSON normalizes the JSON content by removing unnecessary white spaces and newlines.
+func normalizeJSON(content []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	err := json.Compact(&buf, content)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 func TestMsgOptionsError(t *testing.T) {

@@ -42,7 +42,7 @@ type ModuleInputs struct {
 
 	Config                *txconfigv1.Config
 	AddressCodec          address.Codec
-	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ValidatorAddressCodec address.ValidatorAddressCodec
 	Codec                 codec.Codec
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers

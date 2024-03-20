@@ -1728,6 +1728,90 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "quorum too large",
 		},
 		{
+			name: "invalid yes quorum",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.YesQuorum = abc
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "invalid yes_quorum string",
+		},
+		{
+			name: "negative yes quorum",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.YesQuorum = o1
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "yes_quorum cannot be negative",
+		},
+		{
+			name: "yes quorum > 1",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.YesQuorum = "2"
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "yes_quorum too large",
+		},
+		{
+			name: "invalid expedited quorum",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.ExpeditedQuorum = abc
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "invalid expedited_quorum string",
+		},
+		{
+			name: "negative expedited quorum",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.ExpeditedQuorum = o1
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "expedited_quorum cannot be negative",
+		},
+		{
+			name: "expedited quorum > 1",
+			input: func() *v1.MsgUpdateParams {
+				params1 := params
+				params1.ExpeditedQuorum = "2"
+
+				return &v1.MsgUpdateParams{
+					Authority: authority,
+					Params:    params1,
+				}
+			},
+			expErr:    true,
+			expErrMsg: "expedited_quorum too large",
+		},
+		{
 			name: "invalid threshold",
 			input: func() *v1.MsgUpdateParams {
 				params1 := params

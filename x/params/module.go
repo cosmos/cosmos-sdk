@@ -64,8 +64,8 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 }
 
 // RegisterInterfaces registers the module's interface types
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	proposal.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	proposal.RegisterInterfaces(registrar)
 }
 
 // GenerateGenesisState performs a no-op.

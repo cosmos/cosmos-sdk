@@ -206,7 +206,7 @@ func (m *Manager) Sync() error {
 	}
 }
 
-// Close closes the Manager and its dependencies. It should be called after the migration is done.
+// Close closes the manager. It should be called after the migration is done.
 // It will close the db and notify the snapshotsManager that the migration is done.
 func (m *Manager) Close() error {
 	if err := m.db.Close(); err != nil {

@@ -404,6 +404,7 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 			s.chChangeset <- &migration.VersionedChangeset{Version: s.lastCommitInfo.Version + 1, Changeset: cs}
 		}
 	}
+
 	if err := s.stateCommitment.WriteBatch(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}

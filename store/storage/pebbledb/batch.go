@@ -45,7 +45,7 @@ func (b *Batch) Reset() {
 	b.batch.Reset()
 }
 
-func (b *Batch) set(storeKey string, tombstone uint64, key, value []byte) error {
+func (b *Batch) set(storeKey []byte, tombstone uint64, key, value []byte) error {
 	prefixedKey := MVCCEncode(prependStoreKey(storeKey, key), b.version)
 	prefixedVal := MVCCEncode(value, tombstone)
 
@@ -56,11 +56,11 @@ func (b *Batch) set(storeKey string, tombstone uint64, key, value []byte) error 
 	return nil
 }
 
-func (b *Batch) Set(storeKey string, key, value []byte) error {
+func (b *Batch) Set(storeKey []byte, key, value []byte) error {
 	return b.set(storeKey, 0, key, value)
 }
 
-func (b *Batch) Delete(storeKey string, key []byte) error {
+func (b *Batch) Delete(storeKey []byte, key []byte) error {
 	return b.set(storeKey, b.version, key, []byte(tombstoneVal))
 }
 

@@ -2,12 +2,13 @@ package root
 
 import (
 	corestore "cosmossdk.io/core/store"
-
 	"cosmossdk.io/store/v2"
 )
 
-var _ corestore.Reader = (*Reader)(nil)
-var _ corestore.ReaderMap = (*ReaderMap)(nil)
+var (
+	_ corestore.Reader    = (*Reader)(nil)
+	_ corestore.ReaderMap = (*ReaderMap)(nil)
+)
 
 // ReaderMap defines an adapter around a RootStore that only exposes read-only
 // operations. This is useful for exposing a read-only view of the RootStore at
@@ -44,7 +45,7 @@ func NewReader(v uint64, rs store.RootStore, actor []byte) *Reader {
 }
 
 func (roa *Reader) Has(key []byte) (bool, error) {
-	val, err := roa.rootStore.GetStateStorage().Has(string(roa.actor), roa.version, key) // TODO: move storekeys to []byte
+	val, err := roa.rootStore.GetStateStorage().Has(roa.actor, roa.version, key)
 	if err != nil {
 		return false, err
 	}
@@ -53,7 +54,7 @@ func (roa *Reader) Has(key []byte) (bool, error) {
 }
 
 func (roa *Reader) Get(key []byte) ([]byte, error) {
-	result, err := roa.rootStore.GetStateStorage().Get(string(roa.actor), roa.version, key) // TODO: move storekeys to []byte
+	result, err := roa.rootStore.GetStateStorage().Get(roa.actor, roa.version, key)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +63,9 @@ func (roa *Reader) Get(key []byte) ([]byte, error) {
 }
 
 func (roa *Reader) Iterator(start, end []byte) (corestore.Iterator, error) {
-	return roa.rootStore.GetStateStorage().Iterator(string(roa.actor), roa.version, start, end)
+	return roa.rootStore.GetStateStorage().Iterator(roa.actor, roa.version, start, end)
 }
 
 func (roa *Reader) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
-	return roa.rootStore.GetStateStorage().ReverseIterator(string(roa.actor), roa.version, start, end)
+	return roa.rootStore.GetStateStorage().ReverseIterator(roa.actor, roa.version, start, end)
 }

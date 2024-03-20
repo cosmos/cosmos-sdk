@@ -69,13 +69,14 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
-
+	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(stakingtypes.GovModuleName))
+	s.Require().NoError(err)
 	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
 		env,
 		accountKeeper,
 		bankKeeper,
-		authtypes.NewModuleAddress(stakingtypes.GovModuleName).String(),
+		authority,
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
 	)
@@ -91,6 +92,18 @@ func (s *KeeperTestSuite) SetupTest() {
 	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
 	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
 	s.msgServer = stakingkeeper.NewMsgServerImpl(keeper)
+}
+
+func (s *KeeperTestSuite) addressToString(addr []byte) string {
+	r, err := s.accountKeeper.AddressCodec().BytesToString(addr)
+	s.Require().NoError(err)
+	return r
+}
+
+func (s *KeeperTestSuite) valAddressToString(addr []byte) string {
+	r, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+	s.Require().NoError(err)
+	return r
 }
 
 func (s *KeeperTestSuite) TestParams() {
@@ -348,8 +361,8 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 		100,
 		func(i int64) {
 			ubd := stakingtypes.UnbondingDelegation{
-				DelegatorAddress: delAddrs[i].String(),
-				ValidatorAddress: valAddrs[i].String(),
+				DelegatorAddress: s.addressToString(delAddrs[i]),
+				ValidatorAddress: s.valAddressToString(valAddrs[i]),
 				Entries: []stakingtypes.UnbondingDelegationEntry{
 					{
 						CreationHeight: i,
@@ -373,8 +386,8 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 		100,
 		func(i int64) {
 			ubd := stakingtypes.UnbondingDelegation{
-				DelegatorAddress: delAddrs[i].String(),
-				ValidatorAddress: valAddrs[i].String(),
+				DelegatorAddress: s.addressToString(delAddrs[i]),
+				ValidatorAddress: s.valAddressToString(valAddrs[i]),
 				Entries: []stakingtypes.UnbondingDelegationEntry{
 					{
 						CreationHeight: i,
@@ -435,7 +448,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 		100,
 		func(i int64) {
 			val := stakingtypes.Validator{
-				OperatorAddress:   valAddrs[i].String(),
+				OperatorAddress:   s.valAddressToString(valAddrs[i]),
 				ConsensusPubkey:   pkAny,
 				Jailed:            false,
 				Status:            stakingtypes.Bonded,
@@ -461,7 +474,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 		100,
 		func(i int64) {
 			val := stakingtypes.Validator{
-				OperatorAddress:   valAddrs[i].String(),
+				OperatorAddress:   s.valAddressToString(valAddrs[i]),
 				ConsensusPubkey:   pkAny,
 				Jailed:            false,
 				Status:            stakingtypes.Bonded,
@@ -493,7 +506,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 		100,
 		func(i int64) {
 			var addrs []string
-			addrs = append(addrs, valAddrs[i].String())
+			addrs = append(addrs, s.valAddressToString(valAddrs[i]))
 			bz, err := s.cdc.Marshal(&stakingtypes.ValAddresses{Addresses: addrs})
 			s.Require().NoError(err)
 
@@ -510,7 +523,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 		100,
 		func(i int64) {
 			var addrs []string
-			addrs = append(addrs, valAddrs[i].String())
+			addrs = append(addrs, s.valAddressToString(valAddrs[i]))
 
 			err := s.stakingKeeper.SetUnbondingValidatorsQueue(s.ctx, endTime, endHeight, addrs)
 			s.Require().NoError(err)
@@ -533,9 +546,9 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 			dvvTriplets := stakingtypes.DVVTriplets{
 				Triplets: []stakingtypes.DVVTriplet{
 					{
-						DelegatorAddress:    addrs[i].String(),
-						ValidatorSrcAddress: valAddrs[i].String(),
-						ValidatorDstAddress: valAddrs[i+1].String(),
+						DelegatorAddress:    s.addressToString(addrs[i]),
+						ValidatorSrcAddress: s.valAddressToString(valAddrs[i]),
+						ValidatorDstAddress: s.valAddressToString(valAddrs[i+1]),
 					},
 				},
 			}
@@ -556,9 +569,9 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 			dvvTriplets := stakingtypes.DVVTriplets{
 				Triplets: []stakingtypes.DVVTriplet{
 					{
-						DelegatorAddress:    addrs[i].String(),
-						ValidatorSrcAddress: valAddrs[i].String(),
-						ValidatorDstAddress: valAddrs[i+1].String(),
+						DelegatorAddress:    s.addressToString(addrs[i]),
+						ValidatorSrcAddress: s.valAddressToString(valAddrs[i]),
+						ValidatorDstAddress: s.valAddressToString(valAddrs[i+1]),
 					},
 				},
 			}

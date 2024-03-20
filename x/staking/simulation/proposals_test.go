@@ -21,7 +21,7 @@ func TestProposalMsgs(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	_ = simtypes.RandomAccounts(r, 3)
+	accounts := simtypes.RandomAccounts(r, 3)
 	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
 	// execute ProposalMsgs function
 	weightedProposalMsgs := simulation.ProposalMsgs()
@@ -33,7 +33,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgUpdateParams, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgUpdateParams, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(r, addressCodec)
+	msg, err := w0.MsgSimulatorFn()(r, accounts, addressCodec)
 	assert.NilError(t, err)
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)

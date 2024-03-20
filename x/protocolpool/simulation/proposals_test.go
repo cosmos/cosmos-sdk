@@ -20,7 +20,7 @@ func TestProposalMsgs(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	_ = simtypes.RandomAccounts(r, 3)
+	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalMsgs function
 	weightedProposalMsgs := simulation.ProposalMsgs()
@@ -32,7 +32,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgCommunityPoolSpend, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgCommunityPoolSpend, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(r, codectestutil.CodecOptions{}.GetAddressCodec())
+	msg, err := w0.MsgSimulatorFn()(r, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
 	assert.NilError(t, err)
 	msgCommunityPoolSpend, ok := msg.(*pooltypes.MsgCommunityPoolSpend)
 	assert.Assert(t, ok)

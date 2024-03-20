@@ -1,8 +1,8 @@
 package store
 
 import (
+	"cosmossdk.io/core/store"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/server/v2/core/store"
 )
 
 // Store defines the underlying storage engine of an app.

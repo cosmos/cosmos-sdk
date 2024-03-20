@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 

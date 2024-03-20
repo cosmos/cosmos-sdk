@@ -4,7 +4,7 @@ import (
 	"unsafe"
 
 	"cosmossdk.io/core/gas"
-	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/core/store"
 )
 
 func NewMeteredWriterMap(conf StoreConfig, meter gas.Meter, state store.WriterMap) MeteredWriterMap {

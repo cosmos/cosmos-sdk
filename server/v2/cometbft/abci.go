@@ -11,6 +11,7 @@ import (
 
 	corecomet "cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -20,7 +21,6 @@ import (
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 )

@@ -3,9 +3,8 @@ package keeper
 import (
 	"context"
 
+	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/x/staking/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TrackHistoricalInfo saves the latest historical-info and deletes the oldest
@@ -43,9 +42,14 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return nil
 	}
 
+	res := consensusv1.MsgCometInfoResponse{}
+	if err := k.environment.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
+		return err
+	}
+
 	historicalEntry := types.HistoricalRecord{
 		Time:           &headerInfo.Time,
-		ValidatorsHash: sdk.UnwrapSDKContext(ctx).CometInfo().ValidatorsHash,
+		ValidatorsHash: res.CometInfo.ValidatorsHash,
 		Apphash:        headerInfo.AppHash,
 	}
 

@@ -109,6 +109,8 @@ func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*
 	return &types.ConsensusMsgParamsResponse{}, nil
 }
 
+// GetCometInfo returns info related to comet. If the application is using v1 then the information will be present on context,
+// if the application is using v2 then the information will be present in the cometInfo store.
 func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
 	ci, err := k.cometInfo.Get(ctx)
 	// if the value is not found we may be using baseapp and not have consensus messages
@@ -132,7 +134,7 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest
 
 		for _, evi := range ci.Evidence {
 			res.CometInfo.Evidence = append(res.CometInfo.Evidence, &types.Evidence{
-				Type: types.MisbehaviorType(evi.Type),
+				EvidenceType: types.MisbehaviorType(evi.Type),
 				Validator: &types.Validator{
 					Address: evi.Validator.Address,
 					Power:   evi.Validator.Power,
@@ -149,6 +151,7 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest
 	return &types.MsgCometInfoResponse{CometInfo: &ci}, err
 }
 
+// SetCometInfo is called by the framework to set the value at genesis.
 func (k *Keeper) SetCometInfo(ctx context.Context, req *types.ConsensusMsgCometInfoRequest) (*types.ConsensusMsgCometInfoResponse, error) {
 	err := k.cometInfo.Set(ctx, *req.CometInfo)
 

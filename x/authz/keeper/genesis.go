@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"cosmossdk.io/x/authz"
 
@@ -28,7 +29,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) error
 
 		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
 		if !ok {
-			panic("expected authorization")
+			return errors.New("expected authorization")
 		}
 
 		err = k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)

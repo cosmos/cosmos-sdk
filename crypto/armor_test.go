@@ -25,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -84,8 +84,8 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 		configurator.NewAppConfig(),
 		depinject.Supply(log.NewNopLogger(),
 			func() address.Codec { return addresscodec.NewBech32Codec("cosmos") },
-			func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
-			func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
+			func() address.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
+			func() address.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
 		),
 	), &cdc)
 	require.NoError(t, err)

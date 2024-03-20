@@ -60,35 +60,36 @@ func (cs *Changeset) Size() int {
 
 // Add adds a key-value pair to the ChangeSet.
 func (cs *Changeset) Add(storeKey, key, value []byte, remove bool) {
-	stateChanges := []StateChanges{}
 	found := false
 	for _, pairs := range cs.Changes {
 		if bytes.Equal(storeKey, pairs.Actor) {
-			pairs.StateChanges = append(pairs.StateChanges, KVPair{
-				Key:    key,
-				Value:  value,
-				Remove: remove,
-			})
 			found = true
 			break
 		}
 	}
 
-	if !found {
+	if found {
 		cs.Changes = append(cs.Changes, StateChanges{
 			Actor:        storeKey,
 			StateChanges: []KVPair{{Key: key, Value: value, Remove: remove}},
 		})
 	}
-
-	cs.Changes = stateChanges
 }
 
 // AddKVPair adds a KVPair to the ChangeSet.
 func (cs *Changeset) AddKVPair(storeKey []byte, pair KVPair) {
+	found := false
 	for _, pairs := range cs.Changes {
 		if bytes.Equal(storeKey, pairs.Actor) {
-			pairs.StateChanges = append(pairs.StateChanges, pair)
+			found = true
+			break
 		}
+	}
+
+	if found {
+		cs.Changes = append(cs.Changes, StateChanges{
+			Actor:        storeKey,
+			StateChanges: []KVPair{pair},
+		})
 	}
 }

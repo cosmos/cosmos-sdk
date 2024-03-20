@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -374,13 +375,20 @@ func (s *Store) StartMigration() error {
 
 	s.isMigrating = true
 
+	mtx := sync.Mutex{}
+	mtx.Lock()
 	go func() {
 		version := s.lastCommitInfo.Version
 		s.logger.Info("starting migration", "version", version)
+		mtx.Unlock()
 		if err := s.migrationManager.Start(version, s.chChangeset, s.chDone); err != nil {
 			s.logger.Error("failed to start migration", "err", err)
 		}
 	}()
+
+	// wait for the migration manager to start
+	mtx.Lock()
+	defer mtx.Unlock()
 
 	return nil
 }

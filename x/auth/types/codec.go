@@ -28,35 +28,35 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces associates protoName with AccountI interface
 // and creates a registry of it's concrete implementations
-func RegisterInterfaces(registry registry.LegacyRegistry) {
-	registry.RegisterInterface(
+func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	registrar.RegisterInterface(
 		"cosmos.auth.v1beta1.AccountI",
 		(*AccountI)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},
 	)
 
-	registry.RegisterInterface(
+	registrar.RegisterInterface(
 		"cosmos.auth.v1beta1.AccountI",
 		(*sdk.AccountI)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},
 	)
 
-	registry.RegisterInterface(
+	registrar.RegisterInterface(
 		"cosmos.auth.v1beta1.GenesisAccount",
 		(*GenesisAccount)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},
 	)
 
-	registry.RegisterInterface(
+	registrar.RegisterInterface(
 		"cosmos.auth.v1.ModuleCredential",
 		(*cryptotypes.PubKey)(nil),
 		&ModuleCredential{},
 	)
 
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+	registrar.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},
 	)
 }

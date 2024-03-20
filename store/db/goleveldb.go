@@ -2,6 +2,7 @@ package db
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -15,21 +16,23 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/errors"
+	storeerrors "cosmossdk.io/store/v2/errors"
 )
 
+var _ store.RawDB = (*GoLevelDB)(nil)
+
 // GoLevelDB implements RawDB using github.com/syndtr/goleveldb/leveldb.
-// It is used for only store v2 migration, since some clients use goleveldb as the iavl v0/v1 backend.
+// It is used for only store v2 migration, since some clients use goleveldb as
+// the IAVL v0/v1 backend.
 type GoLevelDB struct {
 	db *leveldb.DB
 }
-
-var _ store.RawDB = (*GoLevelDB)(nil)
 
 func NewGoLevelDB(name, dir string, opts store.DBOptions) (*GoLevelDB, error) {
 	defaultOpts := &opt.Options{
 		Filter: filter.NewBloomFilter(10), // by default, goleveldb doesn't use a bloom filter.
 	}
+
 	if opts != nil {
 		files := cast.ToInt(opts.Get("maxopenfiles"))
 		if files > 0 {
@@ -41,25 +44,22 @@ func NewGoLevelDB(name, dir string, opts store.DBOptions) (*GoLevelDB, error) {
 }
 
 func NewGoLevelDBWithOpts(name, dir string, o *opt.Options) (*GoLevelDB, error) {
-	dbPath := filepath.Join(dir, name+".db")
+	dbPath := filepath.Join(dir, name+DBFileSuffix)
 	db, err := leveldb.OpenFile(dbPath, o)
 	if err != nil {
 		return nil, err
 	}
-	database := &GoLevelDB{
-		db: db,
-	}
-	return database, nil
+	return &GoLevelDB{db: db}, nil
 }
 
 // Get implements RawDB.
 func (db *GoLevelDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, errors.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 	res, err := db.db.Get(key, nil)
 	if err != nil {
-		if err == dberrors.ErrNotFound {
+		if errors.Is(err, dberrors.ErrNotFound) {
 			return nil, nil
 		}
 		return nil, err
@@ -69,62 +69,45 @@ func (db *GoLevelDB) Get(key []byte) ([]byte, error) {
 
 // Has implements RawDB.
 func (db *GoLevelDB) Has(key []byte) (bool, error) {
-	bytes, err := db.Get(key)
-	if err != nil {
-		return false, err
-	}
-	return bytes != nil, nil
+	return db.db.Has(key, nil)
 }
 
 // Set implements RawDB.
 func (db *GoLevelDB) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return errors.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
 	if value == nil {
-		return errors.ErrValueNil
+		return storeerrors.ErrValueNil
 	}
-	if err := db.db.Put(key, value, nil); err != nil {
-		return err
-	}
-	return nil
+	return db.db.Put(key, value, nil)
 }
 
 // SetSync implements RawDB.
 func (db *GoLevelDB) SetSync(key, value []byte) error {
 	if len(key) == 0 {
-		return errors.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
 	if value == nil {
-		return errors.ErrValueNil
+		return storeerrors.ErrValueNil
 	}
-	if err := db.db.Put(key, value, &opt.WriteOptions{Sync: true}); err != nil {
-		return err
-	}
-	return nil
+	return db.db.Put(key, value, &opt.WriteOptions{Sync: true})
 }
 
 // Delete implements RawDB.
 func (db *GoLevelDB) Delete(key []byte) error {
 	if len(key) == 0 {
-		return errors.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
-	if err := db.db.Delete(key, nil); err != nil {
-		return err
-	}
-	return nil
+	return db.db.Delete(key, nil)
 }
 
 // DeleteSync implements RawDB.
 func (db *GoLevelDB) DeleteSync(key []byte) error {
 	if len(key) == 0 {
-		return errors.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
-	err := db.db.Delete(key, &opt.WriteOptions{Sync: true})
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.db.Delete(key, &opt.WriteOptions{Sync: true})
 }
 
 func (db *GoLevelDB) RawDB() *leveldb.DB {
@@ -133,10 +116,7 @@ func (db *GoLevelDB) RawDB() *leveldb.DB {
 
 // Close implements RawDB.
 func (db *GoLevelDB) Close() error {
-	if err := db.db.Close(); err != nil {
-		return err
-	}
-	return nil
+	return db.db.Close()
 }
 
 // Print implements RawDB.
@@ -171,8 +151,7 @@ func (db *GoLevelDB) Stats() map[string]string {
 
 	stats := make(map[string]string)
 	for _, key := range keys {
-		str, err := db.db.GetProperty(key)
-		if err == nil {
+		if str, err := db.db.GetProperty(key); err == nil {
 			stats[key] = str
 		}
 	}
@@ -196,7 +175,7 @@ func (db *GoLevelDB) NewBatchWithSize(size int) store.RawBatch {
 // Iterator implements RawDB.
 func (db *GoLevelDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, errors.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 	itr := db.db.NewIterator(&util.Range{Start: start, Limit: end}, nil)
 	return newGoLevelDBIterator(itr, start, end, false), nil
@@ -205,7 +184,7 @@ func (db *GoLevelDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 // ReverseIterator implements RawDB.
 func (db *GoLevelDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, errors.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 	itr := db.db.NewIterator(&util.Range{Start: start, Limit: end}, nil)
 	return newGoLevelDBIterator(itr, start, end, true), nil
@@ -226,8 +205,7 @@ func newGoLevelDBIterator(source iterator.Iterator, start, end []byte, isReverse
 		if end == nil {
 			source.Last()
 		} else {
-			valid := source.Seek(end)
-			if valid {
+			if source.Seek(end) {
 				eoakey := source.Key() // end or after key
 				if bytes.Compare(end, eoakey) <= 0 {
 					source.Prev()
@@ -364,13 +342,13 @@ func newGoLevelDBBatchWithSize(db *GoLevelDB, size int) *goLevelDBBatch {
 // Set implements RawBatch.
 func (b *goLevelDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return errors.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
 	if value == nil {
-		return errors.ErrValueNil
+		return storeerrors.ErrValueNil
 	}
 	if b.batch == nil {
-		return errors.ErrBatchClosed
+		return storeerrors.ErrBatchClosed
 	}
 	b.batch.Put(key, value)
 	return nil
@@ -379,10 +357,10 @@ func (b *goLevelDBBatch) Set(key, value []byte) error {
 // Delete implements RawBatch.
 func (b *goLevelDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return errors.ErrKeyEmpty
+		return storeerrors.ErrKeyEmpty
 	}
 	if b.batch == nil {
-		return errors.ErrBatchClosed
+		return storeerrors.ErrBatchClosed
 	}
 	b.batch.Delete(key)
 	return nil
@@ -400,10 +378,9 @@ func (b *goLevelDBBatch) WriteSync() error {
 
 func (b *goLevelDBBatch) write(sync bool) error {
 	if b.batch == nil {
-		return errors.ErrBatchClosed
+		return storeerrors.ErrBatchClosed
 	}
-	err := b.db.db.Write(b.batch, &opt.WriteOptions{Sync: sync})
-	if err != nil {
+	if err := b.db.db.Write(b.batch, &opt.WriteOptions{Sync: sync}); err != nil {
 		return err
 	}
 	// Make sure batch cannot be used afterwards. Callers should still call Close(), for errors.
@@ -422,7 +399,7 @@ func (b *goLevelDBBatch) Close() error {
 // GetByteSize implements RawBatch
 func (b *goLevelDBBatch) GetByteSize() (int, error) {
 	if b.batch == nil {
-		return 0, errors.ErrBatchClosed
+		return 0, storeerrors.ErrBatchClosed
 	}
 	return len(b.batch.Dump()), nil
 }

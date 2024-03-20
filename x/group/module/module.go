@@ -83,8 +83,8 @@ func (am AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *
 }
 
 // RegisterInterfaces registers the group module's interface types
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	group.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	group.RegisterInterfaces(registrar)
 }
 
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.

@@ -19,11 +19,12 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // BlockValidatorUpdates calculates the ValidatorUpdates for the current block
 // Called in each EndBlock
-func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]module.ValidatorUpdate, error) {
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
@@ -137,7 +138,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
 // are returned to CometBFT.
-func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates []abci.ValidatorUpdate, err error) {
+func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]module.ValidatorUpdate, error) {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -162,6 +163,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	}
 	defer iterator.Close()
 
+	var updates []abci.ValidatorUpdate
+	var moduleValidatorUpdates []module.ValidatorUpdate
 	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 		// everything that is iterated in this loop is becoming or already a
 		// part of the bonded validator set
@@ -213,7 +216,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
-
+			moduleValidatorUpdates = append(moduleValidatorUpdates, validator.ModuleValidatorUpdate(powerReduction))
 			if err = k.SetLastValidatorPower(ctx, valAddr, newPower); err != nil {
 				return nil, err
 			}
@@ -249,6 +252,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		}
 
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
+		moduleValidatorUpdates = append(moduleValidatorUpdates, validator.ModuleValidatorUpdateZero())
 	}
 
 	// ApplyAndReturnValidatorSetUpdates checks if there is ConsPubKeyRotationHistory
@@ -281,7 +285,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 		newPk, ok := history.NewConsPubkey.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPk)
 		}
 		newCmtPk, err := cryptocodec.ToCmtProtoPublicKey(newPk)
 		if err != nil {
@@ -297,9 +301,21 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 				Power:  0,
 			})
 
+			moduleValidatorUpdates = append(moduleValidatorUpdates, module.ValidatorUpdate{
+				PubKey:     oldPk.Bytes(),
+				PubKeyType: oldPk.Type(),
+				Power:      0,
+			})
+
 			updates = append(updates, abci.ValidatorUpdate{
 				PubKey: newCmtPk,
 				Power:  validator.ConsensusPower(powerReduction),
+			})
+
+			moduleValidatorUpdates = append(moduleValidatorUpdates, module.ValidatorUpdate{
+				PubKey:     newPk.Bytes(),
+				PubKeyType: newPk.Type(),
+				Power:      validator.ConsensusPower(powerReduction),
 			})
 
 			if err := k.updateToNewPubkey(ctx, validator, history.OldConsPubkey, history.NewConsPubkey, history.Fee); err != nil {
@@ -340,7 +356,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		return nil, err
 	}
 
-	return updates, err
+	return moduleValidatorUpdates, err
 }
 
 // Validator state transitions

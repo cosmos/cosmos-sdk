@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
@@ -50,22 +48,15 @@ type MsgRouter interface {
 	ResponseNameByMsgName(name string) string
 }
 
-// SignerProvider defines an interface used to get the expected sender from a message.
-type SignerProvider interface {
-	// GetMsgV1Signers returns the signers of the message.
-	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error)
-}
-
 type InterfaceRegistry interface {
 	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
 	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
 }
 
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	env appmodule.Environment,
 	addressCodec address.Codec,
-	signerProvider SignerProvider,
 	execRouter MsgRouter,
 	queryRouter QueryRouter,
 	ir InterfaceRegistry,
@@ -76,7 +67,7 @@ func NewKeeper(
 		environment:      env,
 		addressCodec:     addressCodec,
 		msgRouter:        execRouter,
-		signerProvider:   signerProvider,
+		codec:            cdc,
 		queryRouter:      queryRouter,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
 		Schema:           collections.Schema{},
@@ -103,8 +94,8 @@ type Keeper struct {
 	// deps coming from the runtime
 	environment      appmodule.Environment
 	addressCodec     address.Codec
-	msgRouter        MsgRouter // todo use env
-	signerProvider   SignerProvider
+	codec            codec.Codec
+	msgRouter        MsgRouter   // todo use env
 	queryRouter      QueryRouter // todo use env
 	makeSendCoinsMsg coinsTransferMsgFunc
 
@@ -363,7 +354,7 @@ func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.signerProvider.GetMsgV1Signers(msg)
+	wantSenders, _, err := k.codec.GetMsgV1Signers(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}

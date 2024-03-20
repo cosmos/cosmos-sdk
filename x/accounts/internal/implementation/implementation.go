@@ -30,13 +30,16 @@ type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
 func MakeAccountsMap(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	addressCodec address.Codec,
 	env appmodule.Environment,
 	accounts []AccountCreatorFunc,
 ) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
 	for _, makeAccount := range accounts {
+		if makeAccount == nil {
+			continue
+		}
 		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(openKVStore)
 		deps := Dependencies{
 			SchemaBuilder:    stateSchemaBuilder,

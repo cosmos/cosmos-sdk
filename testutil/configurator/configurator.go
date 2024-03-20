@@ -88,6 +88,7 @@ func defaultConfig() *Config {
 			testutil.ProtocolPoolModuleName,
 		},
 		InitGenesisOrder: []string{
+			testutil.AccountsModuleName,
 			testutil.AuthModuleName,
 			testutil.BankModuleName,
 			testutil.DistributionModuleName,
@@ -162,6 +163,7 @@ func AuthModule() ModuleOption {
 					{Account: testutil.GovModuleName, Permissions: []string{"burner"}},
 					{Account: testutil.NFTModuleName},
 					{Account: testutil.ProtocolPoolModuleName},
+					// {Account: testutil.AccountsModuleName},
 					{Account: "stream_acc"},
 				},
 			}),

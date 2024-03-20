@@ -26,13 +26,12 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Cdc            codec.Codec
-	Environment    appmodule.Environment
-	SignerProvider SignerProvider
-	AddressCodec   address.Codec
-	ExecRouter     MsgRouter
-	QueryRouter    QueryRouter
-	Registry       cdctypes.InterfaceRegistry
+	Cdc          codec.Codec
+	Environment  appmodule.Environment
+	AddressCodec address.Codec
+	ExecRouter   MsgRouter
+	QueryRouter  QueryRouter
+	Registry     cdctypes.InterfaceRegistry
 }
 
 type ModuleOutputs struct {
@@ -43,12 +42,9 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	if in.SignerProvider == nil {
-		in.SignerProvider = in.Cdc
-	}
 	accountskeeper, err := NewKeeper(
 		in.Cdc, in.Environment, in.AddressCodec,
-		in.SignerProvider, in.ExecRouter, in.QueryRouter, in.Registry, nil,
+		in.ExecRouter, in.QueryRouter, in.Registry, nil,
 	)
 	if err != nil {
 		panic(err)

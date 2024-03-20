@@ -94,7 +94,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
-* (server) [#19616](https://github.com/cosmos/cosmos-sdk/pull/19616) Fix shared gas meter at the beginning of tx execution.
+* (baseapp) [#19616](https://github.com/cosmos/cosmos-sdk/pull/19616) Fix shared gas meter at the beginning of tx execution.
 
 ### API Breaking Changes
 

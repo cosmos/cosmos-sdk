@@ -72,8 +72,8 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"threshold_string": thresholdStringEncoder,
 		},
 		aminoFieldEncoders: map[string]FieldEncoder{
-			"legacy_coins": nullSliceAsEmptyEncoder,
-			"inline_json":  cosmosInlineJson,
+			"legacy_coins":    nullSliceAsEmptyEncoder,
+			"bytes_as_string": cosmosBytesAsString,
 		},
 		protoTypeEncoders: map[string]MessageEncoder{
 			"google.protobuf.Timestamp": marshalTimestamp,

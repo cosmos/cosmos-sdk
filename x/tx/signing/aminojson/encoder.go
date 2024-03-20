@@ -81,15 +81,20 @@ func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) er
 	}
 }
 
-// cosmosInlineJson replicates the behavior at:
+// cosmosBytesAsString replicates the behavior at:
 // https://github.com/CosmWasm/wasmd/blob/08567ff20e372e4f4204a91ca64a371538742bed/x/wasm/types/tx.go#L20-L22
-func cosmosInlineJson(_ *Encoder, v protoreflect.Value, w io.Writer) error {
-	blob, err := json.RawMessage(v.Bytes()).MarshalJSON()
-	if err != nil {
+func cosmosBytesAsString(_ *Encoder, v protoreflect.Value, w io.Writer) error {
+	switch bz := v.Interface().(type) {
+	case []byte:
+		blob, err := json.RawMessage(bz).MarshalJSON()
+		if err != nil {
+			return err
+		}
+		_, err = w.Write(blob)
 		return err
+	default:
+		return fmt.Errorf("unsupported type %T", bz)
 	}
-	_, err = w.Write(blob)
-	return err
 }
 
 // keyFieldEncoder replicates the behavior at described at:

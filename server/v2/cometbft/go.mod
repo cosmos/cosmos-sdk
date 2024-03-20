@@ -19,7 +19,6 @@ replace (
 	cosmossdk.io/x/tx => ../../../x/tx
 	github.com/cometbft/cometbft/api => github.com/cometbft/cometbft/api v1.0.0-alpha.1
 	github.com/cosmos/cosmos-sdk => ../../../
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240125174944-11ba4961dae9
 )
 
 require (
@@ -55,7 +54,7 @@ require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/store v1.0.2 // indirect
+	cosmossdk.io/store v1.1.0 // indirect
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect

@@ -41,7 +41,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store v1.0.2
+	cosmossdk.io/store v1.1.0
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.1
 	github.com/cosmos/cosmos-sdk v0.51.0

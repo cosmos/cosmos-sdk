@@ -31,6 +31,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#19779](https://github.com/cosmos/cosmos-sdk/pull/19779) Allows for setting `unbonding_time` to zero.
+
 * [#19277](https://github.com/cosmos/cosmos-sdk/pull/19277) Hooks calls on `SetUnbondingDelegationEntry`, `SetRedelegationEntry`, `Slash` and `RemoveValidator` returns errors instead of logging just like other hooks calls.
 * [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `IterateBondedValidatorsByPower`, `GetDelegatorBonded`, `Delegate`, `Unbond`, `Slash`, `Jail`, `SlashRedelegation`, `ApplyAndReturnValidatorSetUpdates` methods no longer panics on any kind of errors but instead returns appropriate errors.
 * [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
@@ -41,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19742](https://github.com/cosmos/cosmos-sdk/pull/19742) `NewStakeAuthorization` now takes `address.Codec` as argument.
 * [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) Update genesis api to match new `appmodule.HasGenesis` interface.
 * [#18198](https://github.com/cosmos/cosmos-sdk/pull/18198) `Validator` and `Delegator` interfaces were moved to `github.com/cosmos/cosmos-sdk/types` to avoid interface dependency on staking in other modules.
 * [#17778](https://github.com/cosmos/cosmos-sdk/pull/17778) Use collections for `Params`
@@ -89,6 +92,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"cosmossdk.io/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
 * [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `QueryHistoricalInfo` was adjusted to return `HistoricalRecord` and marked `Hist` as deprecated.
 * [#19414](https://github.com/cosmos/cosmos-sdk/pull/19414) Staking module takes an environment variable in `NewStakingKeeper` instead of individual services.
+* [#19754](https://github.com/cosmos/cosmos-sdk/pull/19754) update to use `[]module.ValidatorUpdate` as return for `ApplyAndReturnValidatorSetUpdates`.
 
 ### State Breaking changes
 

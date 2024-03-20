@@ -8,12 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 )
 
 const (
 	storeKey1 = "store1"
 )
+
+var storeKey1Bytes = []byte(storeKey1)
 
 // StorageTestSuite defines a reusable test suite for all storage backends.
 type StorageTestSuite struct {
@@ -58,15 +61,15 @@ func (s *StorageTestSuite) TestDatabase_VersionedKeys() {
 	defer db.Close()
 
 	for i := uint64(1); i <= 100; i++ {
-		s.Require().NoError(db.ApplyChangeset(i, store.NewChangesetWithPairs(
-			map[string]store.KVPairs{
+		s.Require().NoError(db.ApplyChangeset(i, corestore.NewChangesetWithPairs(
+			map[string]corestore.KVPairs{
 				storeKey1: {{Key: []byte("key"), Value: []byte(fmt.Sprintf("value%03d", i))}},
 			},
 		)))
 	}
 
 	for i := uint64(1); i <= 100; i++ {
-		bz, err := db.Get(storeKey1, i, []byte("key"))
+		bz, err := db.Get(storeKey1Bytes, i, []byte("key"))
 		s.Require().NoError(err)
 		s.Require().Equal(fmt.Sprintf("value%03d", i), string(bz))
 	}
@@ -78,69 +81,69 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	defer db.Close()
 
 	// store a key at version 1
-	s.Require().NoError(db.ApplyChangeset(1, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{
+	s.Require().NoError(db.ApplyChangeset(1, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{
 			storeKey1: {{Key: []byte("key"), Value: []byte("value001")}},
 		},
 	)))
 
 	// assume chain progresses to version 10 w/o any changes to key
-	bz, err := db.Get(storeKey1, 10, []byte("key"))
+	bz, err := db.Get(storeKey1Bytes, 10, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("value001"), bz)
 
-	ok, err := db.Has(storeKey1, 10, []byte("key"))
+	ok, err := db.Has(storeKey1Bytes, 10, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().True(ok)
 
 	// chain progresses to version 11 with an update to key
-	s.Require().NoError(db.ApplyChangeset(11, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{
+	s.Require().NoError(db.ApplyChangeset(11, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{
 			storeKey1: {{Key: []byte("key"), Value: []byte("value011")}},
 		},
 	)))
 
-	bz, err = db.Get(storeKey1, 10, []byte("key"))
+	bz, err = db.Get(storeKey1Bytes, 10, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("value001"), bz)
 
-	ok, err = db.Has(storeKey1, 10, []byte("key"))
+	ok, err = db.Has(storeKey1Bytes, 10, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().True(ok)
 
 	for i := uint64(11); i <= 14; i++ {
-		bz, err = db.Get(storeKey1, i, []byte("key"))
+		bz, err = db.Get(storeKey1Bytes, i, []byte("key"))
 		s.Require().NoError(err)
 		s.Require().Equal([]byte("value011"), bz)
 
-		ok, err = db.Has(storeKey1, i, []byte("key"))
+		ok, err = db.Has(storeKey1Bytes, i, []byte("key"))
 		s.Require().NoError(err)
 		s.Require().True(ok)
 	}
 
 	// chain progresses to version 15 with a delete to key
-	s.Require().NoError(db.ApplyChangeset(15, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{storeKey1: {{Key: []byte("key")}}},
+	s.Require().NoError(db.ApplyChangeset(15, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{storeKey1: {{Key: []byte("key"), Remove: true}}},
 	)))
 
 	// all queries up to version 14 should return the latest value
 	for i := uint64(1); i <= 14; i++ {
-		bz, err = db.Get(storeKey1, i, []byte("key"))
+		bz, err = db.Get(storeKey1Bytes, i, []byte("key"))
 		s.Require().NoError(err)
 		s.Require().NotNil(bz)
 
-		ok, err = db.Has(storeKey1, i, []byte("key"))
+		ok, err = db.Has(storeKey1Bytes, i, []byte("key"))
 		s.Require().NoError(err)
 		s.Require().True(ok)
 	}
 
 	// all queries after version 15 should return nil
 	for i := uint64(15); i <= 17; i++ {
-		bz, err = db.Get(storeKey1, i, []byte("key"))
+		bz, err = db.Get(storeKey1Bytes, i, []byte("key"))
 		s.Require().NoError(err)
 		s.Require().Nil(bz)
 
-		ok, err = db.Has(storeKey1, i, []byte("key"))
+		ok, err = db.Has(storeKey1Bytes, i, []byte("key"))
 		s.Require().NoError(err)
 		s.Require().False(ok)
 	}
@@ -151,14 +154,14 @@ func (s *StorageTestSuite) TestDatabase_ApplyChangeset() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
+	cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
 	for i := 0; i < 100; i++ {
-		cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(fmt.Sprintf("key%03d", i)), Value: []byte("value")})
+		cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(fmt.Sprintf("key%03d", i)), Value: []byte("value")})
 	}
 
 	for i := 0; i < 100; i++ {
 		if i%10 == 0 {
-			cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(fmt.Sprintf("key%03d", i))})
+			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(fmt.Sprintf("key%03d", i)), Remove: true})
 		}
 	}
 
@@ -169,7 +172,7 @@ func (s *StorageTestSuite) TestDatabase_ApplyChangeset() {
 	s.Require().Equal(uint64(1), lv)
 
 	for i := 0; i < 1; i++ {
-		ok, err := db.Has(storeKey1, 1, []byte(fmt.Sprintf("key%03d", i)))
+		ok, err := db.Has(storeKey1Bytes, 1, []byte(fmt.Sprintf("key%03d", i)))
 		s.Require().NoError(err)
 
 		if i%10 == 0 {
@@ -185,7 +188,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorEmptyDomain() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	iter, err := db.Iterator(storeKey1, 1, []byte{}, []byte{})
+	iter, err := db.Iterator(storeKey1Bytes, 1, []byte{}, []byte{})
 	s.Require().Error(err)
 	s.Require().Nil(iter)
 }
@@ -195,7 +198,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorClose() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	iter, err := db.Iterator(storeKey1, 1, []byte("key000"), nil)
+	iter, err := db.Iterator(storeKey1Bytes, 1, []byte("key000"), nil)
 	s.Require().NoError(err)
 	iter.Close()
 
@@ -221,7 +224,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorDomain() {
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-			iter, err := db.Iterator(storeKey1, 1, tc.start, tc.end)
+			iter, err := db.Iterator(storeKey1Bytes, 1, tc.start, tc.end)
 			s.Require().NoError(err)
 
 			defer iter.Close()
@@ -238,19 +241,19 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
+	cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+		cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val), Remove: false})
 	}
 
 	s.Require().NoError(db.ApplyChangeset(1, cs))
 
 	// iterator without an end key over multiple versions
 	for v := uint64(1); v < 5; v++ {
-		itr, err := db.Iterator(storeKey1, v, []byte("key000"), nil)
+		itr, err := db.Iterator(storeKey1Bytes, v, []byte("key000"), nil)
 		s.Require().NoError(err)
 
 		defer itr.Close()
@@ -263,8 +266,8 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 			i++
 			count++
 		}
-		s.Require().Equal(100, count)
 		s.Require().NoError(itr.Error())
+		s.Require().Equal(100, count)
 
 		// seek past domain, which should make the iterator invalid and produce an error
 		s.Require().False(itr.Valid())
@@ -272,7 +275,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 
 	// iterator with with a start and end domain over multiple versions
 	for v := uint64(1); v < 5; v++ {
-		itr2, err := db.Iterator(storeKey1, v, []byte("key010"), []byte("key019"))
+		itr2, err := db.Iterator(storeKey1Bytes, v, []byte("key010"), []byte("key019"))
 		s.Require().NoError(err)
 
 		defer itr2.Close()
@@ -293,7 +296,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 	}
 
 	// start must be <= end
-	iter3, err := db.Iterator(storeKey1, 1, []byte("key020"), []byte("key019"))
+	iter3, err := db.Iterator(storeKey1Bytes, 1, []byte("key020"), []byte("key019"))
 	s.Require().Error(err)
 	s.Require().Nil(iter3)
 }
@@ -303,28 +306,28 @@ func (s *StorageTestSuite) TestDatabase_Iterator_RangedDeletes() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	s.Require().NoError(db.ApplyChangeset(1, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{
+	s.Require().NoError(db.ApplyChangeset(1, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{
 			storeKey1: {
-				{Key: []byte("key001"), Value: []byte("value001")},
-				{Key: []byte("key002"), Value: []byte("value001")},
+				{Key: []byte("key001"), Value: []byte("value001"), Remove: false},
+				{Key: []byte("key002"), Value: []byte("value001"), Remove: false},
 			},
 		},
 	)))
 
-	s.Require().NoError(db.ApplyChangeset(5, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{
-			storeKey1: {{Key: []byte("key002"), Value: []byte("value002")}},
+	s.Require().NoError(db.ApplyChangeset(5, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{
+			storeKey1: {{Key: []byte("key002"), Value: []byte("value002"), Remove: false}},
 		},
 	)))
 
-	s.Require().NoError(db.ApplyChangeset(10, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{
-			storeKey1: {{Key: []byte("key002")}},
+	s.Require().NoError(db.ApplyChangeset(10, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{
+			storeKey1: {{Key: []byte("key002"), Remove: true}},
 		},
 	)))
 
-	itr, err := db.Iterator(storeKey1, 11, []byte("key001"), nil)
+	itr, err := db.Iterator(storeKey1Bytes, 11, []byte("key001"), nil)
 	s.Require().NoError(err)
 
 	defer itr.Close()
@@ -346,12 +349,12 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 
 	// for versions 1-49, set all 10 keys
 	for v := uint64(1); v < 50; v++ {
-		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
 
-			cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
 		}
 
 		s.Require().NoError(db.ApplyChangeset(v, cs))
@@ -359,20 +362,20 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 
 	// for versions 50-100, only update even keys
 	for v := uint64(50); v <= 100; v++ {
-		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < 10; i++ {
 			if i%2 == 0 {
 				key := fmt.Sprintf("key%03d", i)
 				val := fmt.Sprintf("val%03d-%03d", i, v)
 
-				cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+				cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val), Remove: false})
 			}
 		}
 
 		s.Require().NoError(db.ApplyChangeset(v, cs))
 	}
 
-	itr, err := db.Iterator(storeKey1, 69, []byte("key000"), nil)
+	itr, err := db.Iterator(storeKey1Bytes, 69, []byte("key000"), nil)
 	s.Require().NoError(err)
 
 	defer itr.Close()
@@ -394,8 +397,8 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 		count++
 	}
 
-	s.Require().Equal(10, count)
 	s.Require().NoError(itr.Error())
+	s.Require().Equal(10, count)
 }
 
 func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
@@ -410,7 +413,7 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 	DBApplyChangeset(s.T(), db, 58833605, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value004")})
 	DBApplyChangeset(s.T(), db, 58833606, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value006")})
 
-	itr, err := db.Iterator(storeKey1, 58831525, []byte("key"), nil)
+	itr, err := db.Iterator(storeKey1Bytes, 58831525, []byte("key"), nil)
 	s.Require().NoError(err)
 	defer itr.Close()
 
@@ -419,6 +422,7 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 		count[string(itr.Key())] = struct{}{}
 	}
 
+	s.Require().NoError(itr.Error())
 	s.Require().Equal(3, len(count))
 }
 
@@ -437,7 +441,7 @@ func (s *StorageTestSuite) TestDatabaseIterator_ForwardIteration() {
 	DBApplyChangeset(s.T(), db, 4, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value009")})
 	DBApplyChangeset(s.T(), db, 5, storeKey1, [][]byte{[]byte("keyH")}, [][]byte{[]byte("value010")})
 
-	itr, err := db.Iterator(storeKey1, 6, nil, []byte("keyZ"))
+	itr, err := db.Iterator(storeKey1Bytes, 6, nil, []byte("keyZ"))
 	s.Require().NoError(err)
 
 	defer itr.Close()
@@ -446,6 +450,7 @@ func (s *StorageTestSuite) TestDatabaseIterator_ForwardIteration() {
 		count++
 	}
 
+	s.Require().NoError(itr.Error())
 	s.Require().Equal(4, count)
 }
 
@@ -463,7 +468,7 @@ func (s *StorageTestSuite) TestDatabaseIterator_ForwardIterationHigher() {
 	DBApplyChangeset(s.T(), db, 14, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value009")})
 	DBApplyChangeset(s.T(), db, 15, storeKey1, [][]byte{[]byte("keyH")}, [][]byte{[]byte("value010")})
 
-	itr, err := db.Iterator(storeKey1, 6, nil, []byte("keyZ"))
+	itr, err := db.Iterator(storeKey1Bytes, 6, nil, []byte("keyZ"))
 	s.Require().NoError(err)
 
 	defer itr.Close()
@@ -483,19 +488,19 @@ func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 
 	// for versions 1-50, set all 10 keys
 	for v := uint64(1); v <= 50; v++ {
-		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
 
-			cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val), Remove: false})
 		}
 
 		s.Require().NoError(db.ApplyChangeset(v, cs))
 	}
 
 	// create an iterator over the entire domain
-	itr, err := db.Iterator(storeKey1, 50, nil, nil)
+	itr, err := db.Iterator(storeKey1Bytes, 50, nil, nil)
 	s.Require().NoError(err)
 
 	defer itr.Close()
@@ -508,8 +513,8 @@ func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 		i++
 		count++
 	}
-	s.Require().Equal(10, count)
 	s.Require().NoError(itr.Error())
+	s.Require().Equal(10, count)
 }
 
 func (s *StorageTestSuite) TestDatabase_Prune() {
@@ -523,12 +528,12 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 
 	// for versions 1-50, set 10 keys
 	for v := uint64(1); v <= 50; v++ {
-		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
 
-			cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
 		}
 
 		s.Require().NoError(db.ApplyChangeset(v, cs))
@@ -548,7 +553,7 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
 
-			bz, err := db.Get(storeKey1, v, []byte(key))
+			bz, err := db.Get(storeKey1Bytes, v, []byte(key))
 			if v <= 25 {
 				s.Require().Error(err)
 				s.Require().Nil(bz)
@@ -559,7 +564,7 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 		}
 	}
 
-	itr, err := db.Iterator(storeKey1, 25, []byte("key000"), nil)
+	itr, err := db.Iterator(storeKey1Bytes, 25, []byte("key000"), nil)
 	s.Require().NoError(err)
 	s.Require().False(itr.Valid())
 
@@ -570,7 +575,7 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key%03d", i)
 
-			bz, err := db.Get(storeKey1, v, []byte(key))
+			bz, err := db.Get(storeKey1Bytes, v, []byte(key))
 			s.Require().Error(err)
 			s.Require().Nil(bz)
 		}
@@ -589,44 +594,44 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	key := []byte("key")
 
 	// write a key at three different versions
-	s.Require().NoError(db.ApplyChangeset(1, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{storeKey1: {{Key: key, Value: []byte("val001")}}},
+	s.Require().NoError(db.ApplyChangeset(1, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val001"), Remove: false}}},
 	)))
-	s.Require().NoError(db.ApplyChangeset(100, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{storeKey1: {{Key: key, Value: []byte("val100")}}},
+	s.Require().NoError(db.ApplyChangeset(100, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val100"), Remove: false}}},
 	)))
-	s.Require().NoError(db.ApplyChangeset(200, store.NewChangesetWithPairs(
-		map[string]store.KVPairs{storeKey1: {{Key: key, Value: []byte("val200")}}},
+	s.Require().NoError(db.ApplyChangeset(200, corestore.NewChangesetWithPairs(
+		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val200"), Remove: false}}},
 	)))
 
 	// prune version 50
 	s.Require().NoError(db.Prune(50))
 
 	// ensure queries for versions 50 and older return nil
-	bz, err := db.Get(storeKey1, 49, key)
+	bz, err := db.Get(storeKey1Bytes, 49, key)
 	s.Require().Error(err)
 	s.Require().Nil(bz)
 
-	itr, err := db.Iterator(storeKey1, 49, nil, nil)
+	itr, err := db.Iterator(storeKey1Bytes, 49, nil, nil)
 	s.Require().NoError(err)
 	s.Require().False(itr.Valid())
 
 	defer itr.Close()
 
 	// ensure the value previously at version 1 is still there for queries greater than 50
-	bz, err = db.Get(storeKey1, 51, key)
+	bz, err = db.Get(storeKey1Bytes, 51, key)
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("val001"), bz)
 
 	// ensure the correct value at a greater height
-	bz, err = db.Get(storeKey1, 200, key)
+	bz, err = db.Get(storeKey1Bytes, 200, key)
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("val200"), bz)
 
 	// prune latest height and ensure we have the previous version when querying above it
 	s.Require().NoError(db.Prune(200))
 
-	bz, err = db.Get(storeKey1, 201, key)
+	bz, err = db.Get(storeKey1Bytes, 201, key)
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("val200"), bz)
 }
@@ -643,9 +648,14 @@ func DBApplyChangeset(
 	require.Greater(t, version, uint64(0))
 	require.Equal(t, len(keys), len(vals))
 
-	cs := store.NewChangeset()
+	cs := corestore.NewChangeset()
 	for i := 0; i < len(keys); i++ {
-		cs.AddKVPair(storeKey, store.KVPair{Key: keys[i], Value: vals[i]})
+		remove := false
+		if vals[i] == nil {
+			remove = true
+		}
+
+		cs.AddKVPair([]byte(storeKey), corestore.KVPair{Key: keys[i], Value: vals[i], Remove: remove})
 	}
 
 	require.NoError(t, db.ApplyChangeset(version, cs))

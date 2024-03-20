@@ -3,8 +3,8 @@ package migration
 import (
 	"golang.org/x/sync/errgroup"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots"
 )
 
@@ -45,7 +45,7 @@ func (m *Manager) Migrate(height uint64) error {
 	}
 
 	// restore the snapshot
-	chStorage := make(chan *store.KVPair, defaultStorageBufferSize)
+	chStorage := make(chan *corestore.StateChanges, defaultStorageBufferSize)
 
 	eg := new(errgroup.Group)
 	eg.Go(func() error {

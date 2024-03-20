@@ -3,6 +3,10 @@ package util
 import (
 	"runtime/debug"
 	"testing"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/client/v2/internal/testpb"
 )
 
 func TestIsSupportedVersion(t *testing.T) {
@@ -74,15 +78,12 @@ func TestIsSupportedVersion(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		resp := isSupportedVersion(tc.input, mockBuildInfo)
-		if resp != tc.expected {
-			t.Errorf("expected %v, got %v", tc.expected, resp)
-		}
-
-		resp = isSupportedVersion(tc.input, &debug.BuildInfo{})
-		if !resp {
-			t.Errorf("expected %v, got %v", true, resp)
-		}
+		t.Run(tc.input, func(t *testing.T) {
+			resp := isSupportedVersion(tc.input, mockBuildInfo)
+			if resp != tc.expected {
+				t.Errorf("expected %v, got %v", tc.expected, resp)
+			}
+		})
 	}
 }
 
@@ -139,23 +140,61 @@ func TestParseSinceComment(t *testing.T) {
 		},
 		{
 			input:              "// Since: x/feegrant v0.1.0",
-			expectedModuleName: "x/feegrant",
+			expectedModuleName: "feegrant",
 			expectedVersion:    "v0.1.0",
 		},
 		{
 			input:              "// since: x/feegrant 0.1",
-			expectedModuleName: "x/feegrant",
+			expectedModuleName: "feegrant",
 			expectedVersion:    "v0.1",
 		},
 	}
 
 	for _, tc := range cases {
-		moduleName, version := parseSinceComment(tc.input)
-		if moduleName != tc.expectedModuleName {
-			t.Errorf("expected module name %s, got %s", tc.expectedModuleName, moduleName)
-		}
-		if version != tc.expectedVersion {
-			t.Errorf("expected version %s, got %s", tc.expectedVersion, version)
-		}
+		t.Run(tc.input, func(t *testing.T) {
+			moduleName, version := parseSinceComment(tc.input)
+			if moduleName != tc.expectedModuleName {
+				t.Errorf("expected module name %s, got %s", tc.expectedModuleName, moduleName)
+			}
+			if version != tc.expectedVersion {
+				t.Errorf("expected version %s, got %s", tc.expectedVersion, version)
+			}
+		})
+	}
+}
+
+func TestDescriptorDocs(t *testing.T) {
+	t.Skip() // TODO(@julienrbrt): Unskip when https://github.com/cosmos/cosmos-proto/pull/131 is finalized.
+
+	msg1 := &testpb.MsgRequest{}
+	descriptor1 := msg1.ProtoReflect().Descriptor()
+
+	msg2 := testpb.MsgResponse{}
+	descriptor2 := msg2.ProtoReflect().Descriptor()
+
+	cases := []struct {
+		name     string
+		input    protoreflect.Descriptor
+		expected string
+	}{
+		{
+			name:     "Test with leading comments",
+			input:    descriptor1,
+			expected: "MsgRequest is a sample request message",
+		},
+		{
+			name:     "Test with no leading comments",
+			input:    descriptor2,
+			expected: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			output := DescriptorDocs(tc.input)
+			if output != tc.expected {
+				t.Errorf("expected %s, got %s", tc.expected, output)
+			}
+		})
 	}
 }

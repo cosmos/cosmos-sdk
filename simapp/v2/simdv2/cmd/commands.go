@@ -78,7 +78,9 @@ func startCommand() *cobra.Command {
 			am := sa.App.AppManager
 			serverCfg := cometbft.Config{CmtConfig: serverCtx.Config}
 
-			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), serverCfg)
+			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), serverCfg,
+				nil, //TODO
+			)
 			ctx := cmd.Context()
 			ctx, cancelFn := context.WithCancel(ctx)
 			go func() {

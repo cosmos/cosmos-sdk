@@ -29,7 +29,7 @@ type Store interface {
 	Commit(changeset *store.Changeset) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
-	Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
+	Query(storeKey []byte, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
 
 	// GetStateStorage returns the SS backend.
 	GetStateStorage() storev2.VersionedDatabase

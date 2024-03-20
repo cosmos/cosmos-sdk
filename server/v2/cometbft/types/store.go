@@ -20,7 +20,7 @@ type Store interface {
 	Commit(changes *store.Changeset) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
-	Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
+	Query(storeKey []byte, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (proof.CommitID, error)

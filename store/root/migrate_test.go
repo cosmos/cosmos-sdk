@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
@@ -49,10 +50,10 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	toVersion := uint64(200)
 	keyCount := 10
 	for version := uint64(1); version <= toVersion; version++ {
-		cs := store.NewChangeset()
+		cs := corestore.NewChangeset()
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				cs.Add(storeKey, []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)))
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}
 		}
 		s.Require().NoError(orgSC.WriteBatch(cs))
@@ -72,7 +73,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	sc, err := commitment.NewCommitStore(multiTrees1, dbm.NewMemDB(), nil, testLog)
 	s.Require().NoError(err)
 
-	snapshotsStore, err := snapshots.NewStore(dbm.NewMemDB(), s.T().TempDir())
+	snapshotsStore, err := snapshots.NewStore(s.T().TempDir())
 	s.Require().NoError(err)
 	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, nil, testLog)
 	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, ss, sc, testLog)
@@ -95,10 +96,10 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	latestVersion := originalLatestVersion + 1
 	keyCount := 10
 	for ; latestVersion < 2*originalLatestVersion; latestVersion++ {
-		cs := store.NewChangeset()
+		cs := corestore.NewChangeset()
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				cs.Add(storeKey, []byte(fmt.Sprintf("key-%d-%d", latestVersion, i)), []byte(fmt.Sprintf("value-%d-%d", latestVersion, i)))
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", latestVersion, i)), []byte(fmt.Sprintf("value-%d-%d", latestVersion, i)), false)
 			}
 		}
 		_, err := s.rootStore.WorkingHash(cs)
@@ -130,7 +131,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 				if version < originalLatestVersion {
 					targetVersion = originalLatestVersion
 				}
-				res, err := s.rootStore.Query(storeKey, targetVersion, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				res, err := s.rootStore.Query([]byte(storeKey), targetVersion, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
 				s.Require().NoError(err)
 				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
 			}
@@ -143,10 +144,10 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 
 	// apply changeset against the migrated store
 	for version := latestVersion + 1; version <= latestVersion+10; version++ {
-		cs := store.NewChangeset()
+		cs := corestore.NewChangeset()
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				cs.Add(storeKey, []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)))
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}
 		}
 		_, err := s.rootStore.WorkingHash(cs)

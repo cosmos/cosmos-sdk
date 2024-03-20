@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
 	"cosmossdk.io/store/v2/storage"
 )
@@ -28,7 +29,7 @@ const (
 // VersionedChangeset is a pair of version and Changeset.
 type VersionedChangeset struct {
 	Version   uint64
-	Changeset *store.Changeset
+	Changeset *corestore.Changeset
 }
 
 // Manager manages the migration of the whole state from store/v1 to store/v2.
@@ -127,7 +128,7 @@ func (m *Manager) writeChangeset() error {
 		buf := make([]byte, 8)
 		binary.BigEndian.PutUint64(buf, vc.Version)
 		csKey := []byte(fmt.Sprintf(migrateChangesetKeyFmt, buf))
-		csBytes, err := cs.Marshal()
+		csBytes, err := encoding.MarshalChangeset(cs)
 		if err != nil {
 			return fmt.Errorf("failed to marshal changeset: %w", err)
 		}
@@ -181,8 +182,8 @@ func (m *Manager) Sync() error {
 				continue
 			}
 
-			cs := store.NewChangeset()
-			if err := cs.Unmarshal(csBytes); err != nil {
+			cs := corestore.NewChangeset()
+			if err := encoding.UnmarshalChangeset(cs, csBytes); err != nil {
 				return fmt.Errorf("failed to unmarshal changeset: %w", err)
 			}
 

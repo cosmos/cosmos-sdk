@@ -130,9 +130,11 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.Stat
 			if err := b.Set(kvPair.Actor, kv.Key, kv.Value); err != nil {
 				return err
 			}
-
 			if b.Size() > defaultBatchBufferSize {
 				if err := b.Write(); err != nil {
+					return err
+				}
+				if err := b.Reset(); err != nil {
 					return err
 				}
 			}

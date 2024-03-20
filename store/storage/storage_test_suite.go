@@ -123,7 +123,7 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 
 	// chain progresses to version 15 with a delete to key
 	s.Require().NoError(db.ApplyChangeset(15, corestore.NewChangesetWithPairs(
-		map[string]corestore.KVPairs{storeKey1: {{Key: []byte("key")}}},
+		map[string]corestore.KVPairs{storeKey1: {{Key: []byte("key"), Remove: true}}},
 	)))
 
 	// all queries up to version 14 should return the latest value
@@ -161,7 +161,7 @@ func (s *StorageTestSuite) TestDatabase_ApplyChangeset() {
 
 	for i := 0; i < 100; i++ {
 		if i%10 == 0 {
-			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(fmt.Sprintf("key%03d", i))})
+			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(fmt.Sprintf("key%03d", i)), Remove: true})
 		}
 	}
 

@@ -3,7 +3,7 @@ package cometbft
 import (
 	"cosmossdk.io/log"
 	ammstore "cosmossdk.io/server/v2/appmanager/store"
-	corestore "cosmossdk.io/server/v2/core/store"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/storage/pebbledb"

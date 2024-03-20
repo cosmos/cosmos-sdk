@@ -10,7 +10,7 @@ import (
 	am "cosmossdk.io/server/v2/appmanager"
 	ammstore "cosmossdk.io/server/v2/appmanager/store"
 	"cosmossdk.io/server/v2/cometbft/mempool"
-	"cosmossdk.io/server/v2/core/store"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
@@ -70,9 +70,8 @@ func TestConsensus(t *testing.T) {
 
 	mockStore := NewMockStore()
 
-	c := NewConsensus[mock.Tx](am, mempool.NoOpMempool[mock.Tx]{}, mockStore, Config{})
+	c := NewConsensus[mock.Tx](am, mempool.NoOpMempool[mock.Tx]{}, mockStore, Config{}, mock.TxCodec{})
 
-	c.txCodec = mock.TxCodec{}
 	t.Run("Check tx", func(t *testing.T) {
 		res, err := c.CheckTx(context.Background(), &abci.RequestCheckTx{
 			Tx: mockTx.Bytes(),
@@ -95,7 +94,7 @@ func kvSet(t *testing.T, ctx context.Context, v string) error {
 	return state.Set([]byte(v), []byte(v))
 }
 
-func stateHas(t *testing.T, accountState store.ReaderMap, key string) {
+func stateHas(t *testing.T, accountState corestore.ReaderMap, key string) {
 	t.Helper()
 	state, err := accountState.GetReader(actorName)
 	require.NoError(t, err)
@@ -104,7 +103,7 @@ func stateHas(t *testing.T, accountState store.ReaderMap, key string) {
 	require.Truef(t, has, "state did not have key: %s", key)
 }
 
-func stateNotHas(t *testing.T, accountState store.ReaderMap, key string) {
+func stateNotHas(t *testing.T, accountState corestore.ReaderMap, key string) {
 	t.Helper()
 	state, err := accountState.GetReader(actorName)
 	require.NoError(t, err)

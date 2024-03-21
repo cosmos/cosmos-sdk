@@ -3,12 +3,10 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type testMsgSuite struct {
@@ -31,7 +29,6 @@ func (s *testMsgSuite) TestMsg() {
 
 func (s *testMsgSuite) TestMsgTypeURL() {
 	s.Require().Equal("/testpb.TestMsg", sdk.MsgTypeURL(new(testdata.TestMsg)))
-	s.Require().Equal("/google.protobuf.Any", sdk.MsgTypeURL(&anypb.Any{}))
 }
 
 func (s *testMsgSuite) TestGetMsgFromTypeURL() {

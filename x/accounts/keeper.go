@@ -8,9 +8,8 @@ import (
 	"errors"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
+	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -53,12 +52,12 @@ type MsgRouter interface {
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
 	// GetMsgV1Signers returns the signers of the message.
-	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error)
+	GetMsgV1Signers(msg proto.Message) ([][]byte, protov2.Message, error) // TODO: modify once codec is done
 }
 
 type InterfaceRegistry interface {
-	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
-	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
+	RegisterInterface(name string, iface any, impls ...proto.Message)
+	RegisterImplementations(iface any, impls ...proto.Message)
 }
 
 func NewKeeper(

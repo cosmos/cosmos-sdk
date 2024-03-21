@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/gogoproto/proto"
 	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"

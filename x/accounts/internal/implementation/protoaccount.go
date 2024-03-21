@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.

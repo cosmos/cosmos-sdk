@@ -13,9 +13,7 @@ import (
 	"cosmossdk.io/store/v2/storage"
 )
 
-var (
-	storeKey1 = []byte("store1")
-)
+var storeKey1 = []byte("store1")
 
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{

@@ -8,15 +8,13 @@ import (
 	"errors"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,24 +39,24 @@ var (
 // It returns the handler given the message name, if multiple handlers are returned, then
 // it is up to the caller to choose which one to call.
 type QueryRouter interface {
-	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error
+	HandlerByRequestName(name string) []func(ctx context.Context, req, resp transaction.Type) error
 }
 
 // MsgRouter represents a router which can be used to route messages to the correct module.
 type MsgRouter interface {
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
+	HandlerByMsgName(msgName string) func(ctx context.Context, req, resp transaction.Type) error
 	ResponseNameByMsgName(name string) string
 }
 
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
 	// GetMsgV1Signers returns the signers of the message.
-	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error)
+	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, error)
 }
 
 type InterfaceRegistry interface {
-	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
-	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
+	RegisterInterface(name string, iface any, impls ...transaction.Type)
+	RegisterImplementations(iface any, impls ...transaction.Type)
 }
 
 func NewKeeper(
@@ -363,7 +361,7 @@ func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.signerProvider.GetMsgV1Signers(msg)
+	wantSenders, err := k.signerProvider.GetMsgV1Signers(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}
@@ -374,7 +372,7 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
 	messageName := implementation.MessageName(msg)
-	handler := k.msgRouter.HybridHandlerByMsgName(messageName)
+	handler := k.msgRouter.HandlerByMsgName(messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
 	}
@@ -386,7 +384,7 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 // If multiple query handlers are found, it will return an error.
 func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementation.ProtoMsg) error {
 	queryName := implementation.MessageName(queryReq)
-	handlers := k.queryRouter.HybridHandlerByRequestName(queryName)
+	handlers := k.queryRouter.HandlerByRequestName(queryName)
 	if len(handlers) == 0 {
 		return fmt.Errorf("unknown query: %s", queryName)
 	}

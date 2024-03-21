@@ -322,7 +322,7 @@ func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sd
 	}
 
 	// get claimable funds from distribution info
-	amount, err = k.getClaimableFunds(ctx, recipient, recipientAddr)
+	amount, err = k.getClaimableFunds(ctx, recipientAddr)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error getting claimable funds: %w", err)
 	}
@@ -336,7 +336,12 @@ func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sd
 	return amount, nil
 }
 
-func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress, recipientAddr string) (amount sdk.Coin, err error) {
+func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
+	if err != nil {
+		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
 	budget, err := k.BudgetProposal.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {

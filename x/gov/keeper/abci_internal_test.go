@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/transaction"
-	"github.com/stretchr/testify/require"
 )
 
 type mockRouter struct {

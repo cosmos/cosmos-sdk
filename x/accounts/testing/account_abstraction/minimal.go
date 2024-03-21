@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	rotationv1 "cosmossdk.io/x/accounts/testing/rotation/v1"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 

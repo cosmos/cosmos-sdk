@@ -1,10 +1,12 @@
 package lockup
 
 import (
+	"github.com/cosmos/gogoproto/proto"
+
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 // TODO: this file will become into "utils" or something like that, or maybe we remove it

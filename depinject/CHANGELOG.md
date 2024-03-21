@@ -22,7 +22,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-* []() Drops protov2 support in favor of protov1.
+* [#19826](https://github.com/cosmos/cosmos-sdk/pull/19826) Drop protov2 support in favor of protov1.
 
 ## 1.0.0-alpha.x
 

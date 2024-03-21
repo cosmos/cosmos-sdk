@@ -55,7 +55,6 @@ require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/store v1.1.0 // indirect
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect

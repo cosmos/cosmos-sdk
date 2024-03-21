@@ -61,7 +61,7 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
 
-	handler := m.router.HybridHandlerByMsgName(typeURL)
+	handler := m.router.HandlerByMsgName(typeURL)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", typeURL)
 	}
@@ -74,7 +74,7 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // Use InvokeUntyped if the response type is not known.
 func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp proto.Message) error {
 	messageName := msgTypeURL(msg)
-	handler := m.router.HybridHandlerByMsgName(messageName)
+	handler := m.router.HandlerByMsgName(messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
 	}
@@ -118,7 +118,7 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
 
-	handlers := m.router.HybridHandlerByRequestName(typeURL)
+	handlers := m.router.HandlerByRequestName(typeURL)
 	if len(handlers) == 0 {
 		return fmt.Errorf("unknown request: %s", typeURL)
 	} else if len(handlers) > 1 {
@@ -133,7 +133,7 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 // Use InvokeUntyped if the response type is not known.
 func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp proto.Message) error {
 	reqName := msgTypeURL(req)
-	handlers := m.router.HybridHandlerByRequestName(reqName)
+	handlers := m.router.HandlerByRequestName(reqName)
 	if len(handlers) == 0 {
 		return fmt.Errorf("unknown request: %s", reqName)
 	} else if len(handlers) > 1 {

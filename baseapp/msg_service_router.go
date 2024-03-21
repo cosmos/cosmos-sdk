@@ -4,16 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/transaction"
+	errorsmod "cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/runtime/protoiface"
-
-	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/internal/protocompat"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,14 +24,14 @@ type MessageRouter interface {
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 
 	ResponseNameByMsgName(msgName string) string
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error // todo remove
+	HandlerByMsgName(msgName string) func(ctx context.Context, req, resp transaction.Type) error // todo remove
 }
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
-	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
+	handlers          map[string]func(ctx context.Context, req, resp transaction.Type) error
 	responseByMsgName map[string]string
 	circuitBreaker    CircuitBreaker
 }
@@ -44,7 +42,7 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes:            map[string]MsgServiceHandler{},
-		hybridHandlers:    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		handlers:          map[string]func(ctx context.Context, req, resp transaction.Type) error{},
 		responseByMsgName: map[string]string{},
 		circuitBreaker:    nil,
 	}
@@ -82,22 +80,22 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		if err != nil {
 			panic(err)
 		}
-		err = msr.registerHybridHandler(sd, method, handler)
+		err = msr.registerHandler(sd, method, handler)
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
-	return msr.hybridHandlers[msgName]
+func (msr *MsgServiceRouter) HandlerByMsgName(msgName string) func(ctx context.Context, req, resp transaction.Type) error {
+	return msr.handlers[msgName]
 }
 
 func (msr *MsgServiceRouter) ResponseNameByMsgName(msgName string) string {
 	return msr.responseByMsgName[msgName]
 }
 
-func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
+func (msr *MsgServiceRouter) registerHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
 	inputName, err := protocompat.RequestFullNameFromMethodDesc(sd, method)
 	if err != nil {
 		return err
@@ -106,20 +104,19 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 	if err != nil {
 		return err
 	}
-	cdc := codec.NewProtoCodec(msr.interfaceRegistry)
-	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, method, handler)
+	handlerFn, err := protocompat.MakeHandler(method, handler)
 	if err != nil {
 		return err
 	}
 	// map input name to output name
 	msr.responseByMsgName[string(inputName)] = string(outputName)
-	// if circuit breaker is not nil, then we decorate the hybrid handler with the circuit breaker
+	// if circuit breaker is not nil, then we decorate the handler with the circuit breaker
 	if msr.circuitBreaker == nil {
-		msr.hybridHandlers[string(inputName)] = hybridHandler
+		msr.handlers[string(inputName)] = handlerFn // TODO: add validate basic
 		return nil
 	}
-	// decorate the hybrid handler with the circuit breaker
-	circuitBreakerHybridHandler := func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	// decorate the handler with the circuit breaker
+	handlerWithCircuitBreaker := func(ctx context.Context, req, resp transaction.Type) error {
 		messageName := codectypes.MsgTypeURL(req)
 		allowed, err := msr.circuitBreaker.IsAllowed(ctx, messageName)
 		if err != nil {
@@ -128,9 +125,9 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 		if !allowed {
 			return fmt.Errorf("circuit breaker disallows execution of message %s", messageName)
 		}
-		return hybridHandler(ctx, req, resp)
+		return handlerFn(ctx, req, resp)
 	}
-	msr.hybridHandlers[string(inputName)] = circuitBreakerHybridHandler
+	msr.handlers[string(inputName)] = handlerWithCircuitBreaker
 	return nil
 }
 

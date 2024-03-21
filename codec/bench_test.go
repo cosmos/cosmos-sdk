@@ -71,7 +71,7 @@ func BenchmarkProtoreflectGetSignersWithUnmarshal(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _, err := cdc.GetMsgAnySigners(a)
+		_, err := cdc.GetMsgAnySigners(a)
 		if err != nil {
 			panic(err)
 		}

@@ -315,7 +315,12 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 	return k.ToDistribute.Set(ctx, math.ZeroInt())
 }
 
-func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress, recipientAddr string) (amount sdk.Coin, err error) {
+func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
 	// get claimable funds from distribution info
 	amount, err = k.getClaimableFunds(ctx, recipient, recipientAddr)
 	if err != nil {

@@ -26,12 +26,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (*types.MsgClaimBudgetResponse, error) {
-	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
-	}
-
-	amount, err := k.claimFunds(ctx, recipient, msg.RecipientAddress)
+	amount, err := k.claimFunds(ctx, msg.RecipientAddress)
 	if err != nil {
 		return nil, err
 	}

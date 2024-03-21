@@ -55,7 +55,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
 	if err != nil {
-		panic(err) // TODO
+		panic(err)
 	}
 
 	k := keeper.NewKeeper(in.Codec, in.Environment, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authorityAddr)

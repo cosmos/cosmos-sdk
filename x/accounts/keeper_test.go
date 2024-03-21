@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
@@ -14,6 +13,7 @@ import (
 	"cosmossdk.io/x/accounts/internal/implementation"
 	banktypes "cosmossdk.io/x/bank/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently.
 )
 
 func TestKeeper_Init(t *testing.T) {

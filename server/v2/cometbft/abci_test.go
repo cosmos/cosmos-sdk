@@ -2,7 +2,6 @@ package cometbft
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -72,13 +71,29 @@ func TestConsensus(t *testing.T) {
 
 	c := NewConsensus[mock.Tx](am, mempool.NoOpMempool[mock.Tx]{}, mockStore, Config{}, mock.TxCodec{})
 
-	t.Run("Check tx", func(t *testing.T) {
+	t.Run("Check tx basic", func(t *testing.T) {
 		res, err := c.CheckTx(context.Background(), &abci.RequestCheckTx{
 			Tx: mockTx.Bytes(),
 			Type: 0,
 		})
-		fmt.Println("res", res)
+		require.NotNil(t, res.GasUsed)
+		require.NoError(t, err)
+	})
+
+	t.Run("Check get consensus info", func(t *testing.T) {
+		_, err := c.Info(context.Background(), &abci.RequestInfo{
+		})
 		require.Error(t, err)
+	})
+
+	t.Run("Prepare proposal", func(t *testing.T) {
+		_, err := c.PrepareProposal(context.Background(), &abci.RequestPrepareProposal{
+			Txs: [][]byte{
+				mockTx.Bytes(),
+			},
+			Height: 1,
+		})
+		require.NoError(t, err)
 	})
 
 }

@@ -289,8 +289,5 @@ replace (
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/server/v2/core => ../../server/v2/core
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
-	// TODO - release a storev1 with iavl/db iterator and iavl v1.1.0
-	cosmossdk.io/store => cosmossdk.io/store v1.1.0
 	cosmossdk.io/store/v2 => ../../store
-//github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.1
 )

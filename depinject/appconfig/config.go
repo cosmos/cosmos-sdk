@@ -1,14 +1,16 @@
 package appconfig
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/jsonpb"
+	"github.com/jhump/protoreflect/desc"
+	protov2 "google.golang.org/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
 
@@ -20,7 +22,7 @@ import (
 // LoadJSON loads an app config in JSON format.
 func LoadJSON(bz []byte) depinject.Config {
 	config := &appv1alpha1.Config{}
-	err := protojson.Unmarshal(bz, config)
+	err := jsonpb.Unmarshal(bytes.NewReader(bz), config)
 	if err != nil {
 		return depinject.Error(err)
 	}
@@ -64,7 +66,7 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 			return depinject.Error(fmt.Errorf("module %q is missing a config object", module.Name))
 		}
 
-		msgType, err := protoregistry.GlobalTypes.FindMessageByURL(module.Config.TypeUrl)
+		msgTypeDesc, err := proto.HybridResolver.FindDescriptorByName(protoreflect.FullName(module.Config.TypeUrl))
 		if err != nil {
 			return depinject.Error(err)
 		}
@@ -74,20 +76,30 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 			return depinject.Error(err)
 		}
 
-		init, ok := modules[msgType.Descriptor().FullName()]
+		init, ok := modules[string(msgTypeDesc.FullName())]
 		if !ok {
-			modDesc := proto.GetExtension(msgType.Descriptor().Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
-			if modDesc == nil {
-				return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
-					module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
+			modDescI, err := proto.GetExtension(msgTypeDesc.Options(), appv1alpha1.E_Module) // TODO: msgTypeDesc.Options() isn't correct type
+			if err != nil {
+				return depinject.Error(fmt.Errorf("error getting module descriptor for %s: %w", msgTypeDesc.FullName(), err))
+			}
+
+			modDesc, ok := modDescI.(*appv1alpha1.ModuleDescriptor)
+			if !ok || modDesc == nil {
+				return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option cosmos.app.v1alpha1.module\n\n%s",
+					module.Config.TypeUrl, dumpRegisteredModules(modules)))
 			}
 
 			return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to make a module ready for app wiring: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",
 				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
 		}
 
-		config := init.ConfigProtoMessage.ProtoReflect().Type().New().Interface()
-		err = anypb.UnmarshalTo(module.Config, config, proto.UnmarshalOptions{})
+		configDesc, err := desc.LoadMessageDescriptorForMessage(init.ConfigProtoMessage)
+		if err != nil {
+			return depinject.Error(fmt.Errorf("error loading descriptor for %s: %w", init.ConfigProtoMessage, err))
+		}
+
+		config := configDesc.AsDescriptorProto().ProtoReflect().New().Interface()
+		err = anypb.UnmarshalTo(module.Config, config, protov2.UnmarshalOptions{})
 		if err != nil {
 			return depinject.Error(err)
 		}
@@ -114,10 +126,10 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 	return depinject.Configs(opts...)
 }
 
-func dumpRegisteredModules(modules map[protoreflect.FullName]*internal.ModuleInitializer) string {
+func dumpRegisteredModules(modules map[string]*internal.ModuleInitializer) string {
 	var mods []string
 	for name := range modules {
-		mods = append(mods, "  "+string(name))
+		mods = append(mods, "  "+name)
 	}
 	return fmt.Sprintf("registered modules are:\n%s", strings.Join(mods, "\n"))
 }

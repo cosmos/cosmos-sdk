@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/jhump/protoreflect/desc"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 )
@@ -26,22 +26,28 @@ type ModuleInitializer struct {
 // ModulesByProtoMessageName should be used to retrieve modules by their protobuf name.
 // This is done lazily after module registration to deal with non-deterministic issues
 // that can occur with respect to protobuf descriptor initialization.
-func ModulesByProtoMessageName() (map[protoreflect.FullName]*ModuleInitializer, error) {
-	res := map[protoreflect.FullName]*ModuleInitializer{}
+func ModulesByProtoMessageName() (map[string]*ModuleInitializer, error) {
+	res := map[string]*ModuleInitializer{}
 
 	for _, initializer := range ModuleRegistry {
-		descriptor := initializer.ConfigProtoMessage.ProtoReflect().Descriptor()
-		fullName := descriptor.FullName()
+		descriptor, err := desc.LoadMessageDescriptorForMessage(initializer.ConfigProtoMessage)
+		if err != nil {
+			return nil, fmt.Errorf("error loading descriptor for %s: %w", initializer.ConfigProtoMessage, err)
+		}
+
+		fullName := descriptor.GetName()
 		if _, ok := res[fullName]; ok {
 			return nil, fmt.Errorf("duplicate module registration for %s", fullName)
 		}
 
-		modDesc := proto.GetExtension(descriptor.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
-		if modDesc == nil {
-			return nil, fmt.Errorf(
-				"protobuf type %s registered as a module should have the option %s",
-				fullName,
-				appv1alpha1.E_Module.TypeDescriptor().FullName())
+		modDescI, err := proto.GetExtension(descriptor.GetOptions(), appv1alpha1.E_Module)
+		if err != nil {
+			return nil, fmt.Errorf("error getting module descriptor for %s: %w", fullName, err)
+		}
+
+		modDesc, ok := modDescI.(*appv1alpha1.ModuleDescriptor)
+		if !ok || modDesc == nil {
+			return nil, fmt.Errorf("protobuf type %s registered as a module should have the option cosmos.app.v1alpha1.module", fullName)
 		}
 
 		if modDesc.GoImport == "" {

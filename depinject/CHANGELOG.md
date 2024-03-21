@@ -22,6 +22,8 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+* []() Drops protov2 support in favor of protov1.
+
 ## 1.0.0-alpha.x
 
 Depinject is still in alpha stage even though its API is already quite stable.

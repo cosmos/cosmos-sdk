@@ -3,7 +3,7 @@ package appconfig
 import (
 	"reflect"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )

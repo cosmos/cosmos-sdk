@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
-	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestQueryServer(t *testing.T) {

@@ -4,14 +4,15 @@ import (
 	"context"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 )

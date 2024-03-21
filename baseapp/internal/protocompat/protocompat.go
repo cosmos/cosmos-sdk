@@ -34,7 +34,7 @@ func makeGogoHybridHandler(method grpc.MethodDesc, handler any) (Handler, error)
 		// merge resp, ref: https://github.com/cosmos/cosmos-sdk/issues/18003
 		// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
 		// using proto.Merge with gogo messages seems to work fine.
-		proto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
+		proto.Merge(outResp, resp.(gogoproto.Message))
 		return nil
 	}, nil
 }

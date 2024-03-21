@@ -4,13 +4,14 @@ import (
 	"context"
 	"testing"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
-	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 )
 
 func TestMsgServer(t *testing.T) {

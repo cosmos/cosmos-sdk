@@ -3,10 +3,11 @@ package types_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type testMsgSuite struct {

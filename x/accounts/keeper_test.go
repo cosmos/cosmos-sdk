@@ -5,22 +5,24 @@ import (
 	"testing"
 
 	"github.com/cosmos/gogoproto/types"
+	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently.
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	banktypes "cosmossdk.io/x/bank/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestKeeper_Init(t *testing.T) {
 	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
 	m.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
-		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
+		_, ok := req.(*banktypes.QueryBalanceRequest)
 		require.True(t, ok)
-		_, ok = resp.(*bankv1beta1.QueryBalanceResponse)
+		_, ok = resp.(*banktypes.QueryBalanceResponse)
 		require.True(t, ok)
 		return nil
 	})
@@ -72,16 +74,16 @@ func TestKeeper_Execute(t *testing.T) {
 
 	t.Run("exec module", func(t *testing.T) {
 		m.msgRouter = mockExec(func(ctx context.Context, msg, msgResp implementation.ProtoMsg) error {
-			concrete, ok := msg.(*bankv1beta1.MsgSend)
+			concrete, ok := msg.(*banktypes.MsgSend)
 			require.True(t, ok)
 			require.Equal(t, concrete.ToAddress, "recipient")
-			_, ok = msgResp.(*bankv1beta1.MsgSendResponse)
+			_, ok = msgResp.(*banktypes.MsgSendResponse)
 			require.True(t, ok)
 			return nil
 		})
 
 		m.signerProvider = mockSigner(func(msg implementation.ProtoMsg) ([]byte, error) {
-			require.Equal(t, msg.(*bankv1beta1.MsgSend).FromAddress, string(accAddr))
+			require.Equal(t, msg.(*banktypes.MsgSend).FromAddress, string(accAddr))
 			return accAddr, nil
 		})
 
@@ -117,15 +119,15 @@ func TestKeeper_Query(t *testing.T) {
 		// we inject the module query function, which accepts only a specific type of message
 		// we force the response
 		m.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
-			concrete, ok := req.(*bankv1beta1.QueryBalanceRequest)
+			concrete, ok := req.(*banktypes.QueryBalanceRequest)
 			require.True(t, ok)
 			require.Equal(t, string(accAddr), concrete.Address)
 			require.Equal(t, concrete.Denom, "atom")
-			copyResp := &bankv1beta1.QueryBalanceResponse{Balance: &basev1beta1.Coin{
+			copyResp := &banktypes.QueryBalanceResponse{Balance: &sdk.Coin{
 				Denom:  "atom",
-				Amount: "1000",
+				Amount: math.NewInt(1000),
 			}}
-			proto.Merge(resp.(proto.Message), copyResp)
+			proto.Merge(resp, copyResp)
 			return nil
 		})
 

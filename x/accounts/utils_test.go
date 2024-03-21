@@ -6,12 +6,11 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
@@ -27,7 +26,7 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 
 type eventService struct{}
 
-func (e eventService) Emit(event protoiface.MessageV1) error { return nil }
+func (e eventService) Emit(event transaction.Type) error { return nil }
 
 func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
 	return nil
@@ -39,9 +38,9 @@ var _ InterfaceRegistry = (*interfaceRegistry)(nil)
 
 type interfaceRegistry struct{}
 
-func (i interfaceRegistry) RegisterInterface(string, any, ...protoiface.MessageV1) {}
+func (i interfaceRegistry) RegisterInterface(string, any, ...transaction.Type) {}
 
-func (i interfaceRegistry) RegisterImplementations(any, ...protoiface.MessageV1) {}
+func (i interfaceRegistry) RegisterImplementations(any, ...transaction.Type) {}
 
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
@@ -57,8 +56,8 @@ var _ QueryRouter = (*mockQuery)(nil)
 
 type mockQuery func(ctx context.Context, req, resp implementation.ProtoMsg) error
 
-func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error {
-	return []func(ctx context.Context, req, resp protoiface.MessageV1) error{func(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (m mockQuery) HandlerByRequestName(_ string) []func(ctx context.Context, req, resp transaction.Type) error {
+	return []func(ctx context.Context, req, resp transaction.Type) error{func(ctx context.Context, req, resp transaction.Type) error {
 		return m(ctx, req, resp)
 	}}
 }
@@ -67,20 +66,20 @@ var _ SignerProvider = (*mockSigner)(nil)
 
 type mockSigner func(msg implementation.ProtoMsg) ([]byte, error)
 
-func (m mockSigner) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
+func (m mockSigner) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, error) {
 	s, err := m(msg)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return [][]byte{s}, nil, nil
+	return [][]byte{s}, nil
 }
 
 var _ MsgRouter = (*mockExec)(nil)
 
 type mockExec func(ctx context.Context, msg, msgResp implementation.ProtoMsg) error
 
-func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
-	return func(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (m mockExec) HandlerByMsgName(_ string) func(ctx context.Context, req, resp transaction.Type) error {
+	return func(ctx context.Context, req, resp transaction.Type) error {
 		return m(ctx, req, resp)
 	}
 }

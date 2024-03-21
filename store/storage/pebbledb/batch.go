@@ -57,11 +57,11 @@ func (b *Batch) set(storeKey []byte, tombstone uint64, key, value []byte) error 
 	return nil
 }
 
-func (b *Batch) Set(storeKey []byte, key, value []byte) error {
+func (b *Batch) Set(storeKey, key, value []byte) error {
 	return b.set(storeKey, 0, key, value)
 }
 
-func (b *Batch) Delete(storeKey []byte, key []byte) error {
+func (b *Batch) Delete(storeKey, key []byte) error {
 	return b.set(storeKey, b.version, key, []byte(tombstoneVal))
 }
 

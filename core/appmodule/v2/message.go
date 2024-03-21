@@ -1,8 +1,9 @@
 package appmodule
 
 import (
-	"cosmossdk.io/core/transaction"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/core/transaction"
 )
 
 // Message aliases protoiface.MessageV1 for convenience.

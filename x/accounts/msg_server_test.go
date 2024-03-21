@@ -4,10 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
+	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -27,7 +26,7 @@ func TestMsgServer(t *testing.T) {
 	s := NewMsgServer(k)
 
 	// create
-	initMsg, err := implementation.PackAny(&emptypb.Empty{})
+	initMsg, err := implementation.PackAny(&gogotypes.Empty{})
 	require.NoError(t, err)
 
 	initResp, err := s.Init(ctx, &v1.MsgInit{
@@ -39,7 +38,7 @@ func TestMsgServer(t *testing.T) {
 	require.NotNil(t, initResp)
 
 	// execute
-	executeMsg := &wrapperspb.StringValue{
+	executeMsg := &gogotypes.StringValue{
 		Value: "10",
 	}
 	executeMsgAny, err := implementation.PackAny(executeMsg)

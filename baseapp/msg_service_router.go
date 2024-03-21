@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/core/transaction"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/internal/protocompat"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

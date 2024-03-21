@@ -22,6 +22,10 @@ schema = 3
   [mod."cloud.google.com/go/storage"]
     version = "v1.36.0"
     hash = "sha256-dRKH1NEyAfEpVo5Mma677L7z0JO9Mfd1bv1lr1uFngI="
+  [mod."cosmossdk.io/api"]
+    version = "v0.7.3-0.20240321151906-632c3f19e5b4"
+    hash = "sha256-BqSVlhRUAfkhABWoWeiyr4pehQR2XM4z9FEaA6wqEQo="
+    replaced = "cosmossdk.io/api"
   [mod."cosmossdk.io/errors"]
     version = "v1.0.1"
     hash = "sha256-MgTocXkBzri9FKkNtkARJXPmxRrRO/diQJS5ZzvYrJY="

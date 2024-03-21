@@ -14,7 +14,7 @@ replace (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => ../../../api
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240321151906-632c3f19e5b4 // pulsar api -- change to latest gogo api
 	cosmossdk.io/client/v2 => ../../../client/v2
 	cosmossdk.io/core => ../../../core
 	cosmossdk.io/depinject => ../../../depinject

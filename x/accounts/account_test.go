@@ -6,11 +6,11 @@ import (
 
 	"github.com/cosmos/gogoproto/types"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	banktypes "cosmossdk.io/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -30,7 +30,7 @@ type TestAccount struct {
 func (t TestAccount) RegisterInitHandler(builder *implementation.InitBuilder) {
 	implementation.RegisterInitHandler(builder, func(ctx context.Context, _ *types.Empty) (*types.Empty, error) {
 		// we also force a module call here to test things work as expected.
-		_, err := implementation.QueryModule[banktypes.QueryBalanceResponse](ctx, &banktypes.QueryBalanceRequest{
+		_, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
 			Address: string(implementation.Whoami(ctx)),
 			Denom:   "atom",
 		})
@@ -54,7 +54,7 @@ func (t TestAccount) RegisterExecuteHandlers(builder *implementation.ExecuteBuil
 
 	// this is for intermodule comms testing, we simulate a bank send
 	implementation.RegisterExecuteHandler(builder, func(ctx context.Context, req *types.Int64Value) (*types.Empty, error) {
-		resp, err := implementation.ExecModule[banktypes.MsgSendResponse](ctx, &banktypes.MsgSend{
+		resp, err := implementation.ExecModule[bankv1beta1.MsgSendResponse](ctx, &bankv1beta1.MsgSend{
 			FromAddress: string(implementation.Whoami(ctx)),
 			ToAddress:   "recipient",
 			Amount: []sdk.Coin{
@@ -92,7 +92,7 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 	// test intermodule comms, we simulate someone is sending the account a request for the accounts balance
 	// of a given denom.
 	implementation.RegisterQueryHandler(builder, func(ctx context.Context, req *types.StringValue) (*types.Int64Value, error) {
-		resp, err := implementation.QueryModule[banktypes.QueryBalanceResponse](ctx, &banktypes.QueryBalanceRequest{
+		resp, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
 			Address: string(implementation.Whoami(ctx)),
 			Denom:   req.Value,
 		})

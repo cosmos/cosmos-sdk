@@ -8,21 +8,20 @@ import (
 	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently.
 	"github.com/stretchr/testify/require"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	banktypes "cosmossdk.io/x/bank/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestKeeper_Init(t *testing.T) {
 	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
 	m.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
-		_, ok := req.(*banktypes.QueryBalanceRequest)
+		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
 		require.True(t, ok)
-		_, ok = resp.(*banktypes.QueryBalanceResponse)
+		_, ok = resp.(*bankv1beta1.QueryBalanceResponse)
 		require.True(t, ok)
 		return nil
 	})
@@ -74,16 +73,16 @@ func TestKeeper_Execute(t *testing.T) {
 
 	t.Run("exec module", func(t *testing.T) {
 		m.msgRouter = mockExec(func(ctx context.Context, msg, msgResp implementation.ProtoMsg) error {
-			concrete, ok := msg.(*banktypes.MsgSend)
+			concrete, ok := msg.(*bankv1beta1.MsgSend)
 			require.True(t, ok)
 			require.Equal(t, concrete.ToAddress, "recipient")
-			_, ok = msgResp.(*banktypes.MsgSendResponse)
+			_, ok = msgResp.(*bankv1beta1.MsgSendResponse)
 			require.True(t, ok)
 			return nil
 		})
 
 		m.signerProvider = mockSigner(func(msg implementation.ProtoMsg) ([]byte, error) {
-			require.Equal(t, msg.(*banktypes.MsgSend).FromAddress, string(accAddr))
+			require.Equal(t, msg.(*bankv1beta1.MsgSend).FromAddress, string(accAddr))
 			return accAddr, nil
 		})
 
@@ -119,11 +118,11 @@ func TestKeeper_Query(t *testing.T) {
 		// we inject the module query function, which accepts only a specific type of message
 		// we force the response
 		m.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
-			concrete, ok := req.(*banktypes.QueryBalanceRequest)
+			concrete, ok := req.(*bankv1beta1.QueryBalanceRequest)
 			require.True(t, ok)
 			require.Equal(t, string(accAddr), concrete.Address)
 			require.Equal(t, concrete.Denom, "atom")
-			copyResp := &banktypes.QueryBalanceResponse{Balance: &sdk.Coin{
+			copyResp := &bankv1beta1.QueryBalanceResponse{Balance: &basev1beta1.Coin{
 				Denom:  "atom",
 				Amount: math.NewInt(1000),
 			}}

@@ -1,9 +1,9 @@
 package accounts
 
 import (
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	banktypes "cosmossdk.io/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,10 +24,10 @@ func defaultCoinsTransferMsgFunc(addrCdc address.Codec) coinsTransferMsgFunc {
 			return nil, nil, err
 		}
 
-		return &banktypes.MsgSend{
+		return &bankv1beta1.MsgSend{
 			FromAddress: fromAddr,
 			ToAddress:   toAddr,
 			Amount:      coins,
-		}, new(banktypes.MsgSendResponse), nil
+		}, new(bankv1beta1.MsgSendResponse), nil
 	}
 }

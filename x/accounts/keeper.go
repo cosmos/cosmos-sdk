@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
-	protov2 "google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -52,7 +51,7 @@ type MsgRouter interface {
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
 	// GetMsgV1Signers returns the signers of the message.
-	GetMsgV1Signers(msg proto.Message) ([][]byte, protov2.Message, error) // TODO: modify once codec is done
+	GetMsgV1Signers(msg proto.Message) ([][]byte, error)
 }
 
 type InterfaceRegistry interface {
@@ -362,7 +361,7 @@ func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.signerProvider.GetMsgV1Signers(msg)
+	wantSenders, err := k.signerProvider.GetMsgV1Signers(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}

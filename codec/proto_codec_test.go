@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -188,13 +187,8 @@ func TestGetSigners(t *testing.T) {
 	testAddrStr := testAddr.String()
 
 	msgSendV1 := &countertypes.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
-	msgSendV2 := &counterv1.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
 
 	signers, err := cdc.GetMsgV1Signers(msgSendV1)
-	require.NoError(t, err)
-	require.Equal(t, [][]byte{testAddr}, signers)
-
-	signers, err = cdc.GetMsgV2Signers(msgSendV2)
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{testAddr}, signers)
 

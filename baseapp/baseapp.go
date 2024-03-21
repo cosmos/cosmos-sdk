@@ -8,15 +8,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/tmhash"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
-	protov2 "google.golang.org/protobuf/proto"
-
 	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -24,6 +15,13 @@ import (
 	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cockroachdb/errors"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -936,10 +934,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
-	msgsV2, err := tx.GetMsgsV2()
-	if err == nil {
-		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
-	}
+	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 
 	// Run optional postHandlers (should run regardless of the execution result).
 	//
@@ -984,7 +979,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 // and DeliverTx. An error is returned if any single message fails or if a
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Message, mode execMode) (*sdk.Result, error) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode execMode) (*sdk.Result, error) {
 	events := sdk.EmptyEvents()
 	msgResponses := make([]*codectypes.Any, 0, len(msgs))
 
@@ -1006,7 +1001,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		}
 
 		// create message events
-		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg)
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to create message events; message index: %d", i)
 		}
@@ -1052,12 +1047,12 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) (sdk.Events, error) {
+func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg) (sdk.Events, error) {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
 	// we set the signer attribute as the sender
-	signers, err := cdc.GetMsgV2Signers(msgV2)
+	signers, err := cdc.GetMsgV1Signers(msg) // TODO: this is inefficient, we're getting this info again
 	if err != nil {
 		return nil, err
 	}

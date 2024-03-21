@@ -4,10 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/runtime/protoiface"
-
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/transaction"
+	"github.com/stretchr/testify/require"
 )
 
 type mockRouter struct {
@@ -16,7 +15,7 @@ type mockRouter struct {
 	panic bool
 }
 
-func (m *mockRouter) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (res protoiface.MessageV1, err error) {
+func (m *mockRouter) InvokeUntyped(ctx context.Context, req transaction.Type) (res transaction.Type, err error) {
 	if m.panic {
 		panic("test-fail")
 	}

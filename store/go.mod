@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	github.com/cometbft/cometbft v0.38.6
 	github.com/cosmos/cosmos-db v1.0.2
-	github.com/cosmos/gogoproto v1.4.11
+	github.com/cosmos/gogoproto v1.4.12
 	github.com/cosmos/iavl v1.1.1
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/golang/mock v1.6.0
@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/btree v1.7.0
 	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f
-	google.golang.org/grpc v1.60.0
+	google.golang.org/grpc v1.61.1
 	google.golang.org/protobuf v1.33.0
 	gotest.tools/v3 v3.5.1
 )
@@ -73,6 +73,6 @@ require (
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

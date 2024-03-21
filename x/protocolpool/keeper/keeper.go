@@ -318,7 +318,7 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
 	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
 
 	// get claimable funds from distribution info

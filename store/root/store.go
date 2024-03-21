@@ -256,21 +256,6 @@ func (s *Store) WorkingHash(cs *corestore.Changeset) ([]byte, error) {
 	}
 
 	if s.workingHash == nil {
-		// if migration is in progress, send the changeset to the migration manager
-		if s.isMigrating {
-			// if the migration manager has already migrated to the version, close the
-			// channels and replace the state commitment
-			if s.migrationManager.GetMigratedVersion() == s.lastCommitInfo.Version {
-				close(s.chDone)
-				close(s.chChangeset)
-				s.isMigrating = false
-				s.stateCommitment = s.migrationManager.GetStateCommitment()
-				s.logger.Info("migration completed", "version", s.lastCommitInfo.Version)
-			} else {
-				s.chChangeset <- &migration.VersionedChangeset{Version: s.lastCommitInfo.Version + 1, Changeset: cs}
-			}
-		}
-
 		if err := s.writeSC(cs); err != nil {
 			return nil, err
 		}
@@ -397,7 +382,29 @@ func (s *Store) StartMigration() error {
 // tree, which allows us to retrieve the working hash of the SC tree. Finally,
 // we construct a *CommitInfo and set that as lastCommitInfo. Note, this should
 // only be called once per block!
+// If migration is in progress, the changeset is sent to the migration manager.
 func (s *Store) writeSC(cs *corestore.Changeset) error {
+	if s.isMigrating {
+		// if the migration manager has already migrated to the version, close the
+		// channels and replace the state commitment
+		if s.migrationManager.GetMigratedVersion() == s.lastCommitInfo.Version {
+			close(s.chDone)
+			close(s.chChangeset)
+			s.isMigrating = false
+			// close the old state commitment and replace it with the new one
+			if err := s.stateCommitment.Close(); err != nil {
+				return fmt.Errorf("failed to close the old SC store: %w", err)
+			}
+			s.stateCommitment = s.migrationManager.GetStateCommitment()
+			if err := s.migrationManager.Close(); err != nil {
+				return fmt.Errorf("failed to close migration manager: %w", err)
+			}
+			s.logger.Info("migration completed", "version", s.lastCommitInfo.Version)
+		} else {
+			s.chChangeset <- &migration.VersionedChangeset{Version: s.lastCommitInfo.Version + 1, Changeset: cs}
+		}
+	}
+
 	if err := s.stateCommitment.WriteBatch(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}

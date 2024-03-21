@@ -5,10 +5,11 @@ import (
 	fmt "fmt"
 	strings "strings"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 type (

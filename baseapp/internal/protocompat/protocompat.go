@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/transaction"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/core/transaction"
 )
 
 type Handler = func(ctx context.Context, request, response transaction.Type) error
@@ -16,7 +17,6 @@ type Handler = func(ctx context.Context, request, response transaction.Type) err
 // MakeHandler returns a handler given a message.
 func MakeHandler(method grpc.MethodDesc, handler interface{}) (Handler, error) {
 	return makeGogoHybridHandler(method, handler)
-
 }
 
 func makeGogoHybridHandler(method grpc.MethodDesc, handler any) (Handler, error) {

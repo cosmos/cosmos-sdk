@@ -1,10 +1,9 @@
 package accounts
 
 import (
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	banktypes "cosmossdk.io/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,17 +23,11 @@ func defaultCoinsTransferMsgFunc(addrCdc address.Codec) coinsTransferMsgFunc {
 		if err != nil {
 			return nil, nil, err
 		}
-		v2Coins := make([]*v1beta1.Coin, len(coins))
-		for i, coin := range coins {
-			v2Coins[i] = &v1beta1.Coin{
-				Denom:  coin.Denom,
-				Amount: coin.Amount.String(),
-			}
-		}
-		return &bankv1beta1.MsgSend{
+
+		return &banktypes.MsgSend{
 			FromAddress: fromAddr,
 			ToAddress:   toAddr,
-			Amount:      v2Coins,
-		}, new(bankv1beta1.MsgSendResponse), nil
+			Amount:      coins,
+		}, new(banktypes.MsgSendResponse), nil
 	}
 }

@@ -44,7 +44,7 @@ type QueryRouter interface {
 
 // MsgRouter represents a router which can be used to route messages to the correct module.
 type MsgRouter interface {
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
+	HandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
 	ResponseNameByMsgName(name string) string
 }
 
@@ -372,7 +372,7 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
 	messageName := implementation.MessageName(msg)
-	handler := k.msgRouter.HybridHandlerByMsgName(messageName)
+	handler := k.msgRouter.HandlerByMsgName(messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
 	}

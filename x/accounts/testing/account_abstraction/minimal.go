@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/accountstd"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	rotationv1 "cosmossdk.io/x/accounts/testing/rotation/v1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 var (

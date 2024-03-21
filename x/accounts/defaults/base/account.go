@@ -9,7 +9,7 @@ import (
 	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1" // TODO: remove these once we update x/tx
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"

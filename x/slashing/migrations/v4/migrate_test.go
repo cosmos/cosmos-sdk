@@ -3,7 +3,6 @@ package v4_test
 import (
 	"testing"
 
-	"github.com/bits-and-blooms/bitset"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
@@ -35,7 +34,7 @@ func TestMigrate(t *testing.T) {
 		// all even blocks are missed
 		missed := &gogotypes.BoolValue{Value: i%2 == 0}
 		bz := cdc.MustMarshal(missed)
-		store.Set(v4.ValidatorMissedBlockBitArrayKey(consAddr, i), bz)
+		store.Set(v4.DeprecatedValidatorMissedBlockBitArrayKey(consAddr, i), bz)
 	}
 
 	err := v4.Migrate(ctx, cdc, store, params)
@@ -44,15 +43,18 @@ func TestMigrate(t *testing.T) {
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		chunkIndex := i / v4.MissedBlockBitmapChunkSize
 		chunk := store.Get(v4.ValidatorMissedBlockBitmapKey(consAddr, chunkIndex))
-		require.NotNil(t, chunk)
 
-		bs := bitset.New(uint(v4.MissedBlockBitmapChunkSize))
-		require.NoError(t, bs.UnmarshalBinary(chunk))
+		// We reset all validators missed blocks to improve upgrade performance,
+		// so we expect all chunks to be empty
+		require.Nil(t, chunk)
 
-		// ensure all even blocks are missed
-		bitIndex := uint(i % v4.MissedBlockBitmapChunkSize)
-		require.Equal(t, i%2 == 0, bs.Test(bitIndex))
-		require.Equal(t, i%2 == 1, !bs.Test(bitIndex))
+		// bs := bitset.New(uint(v4.MissedBlockBitmapChunkSize))
+		// require.NoError(t, bs.UnmarshalBinary(chunk))
+
+		// // ensure all even blocks are missed
+		// bitIndex := uint(i % v4.MissedBlockBitmapChunkSize)
+		// require.Equal(t, i%2 == 0, bs.Test(bitIndex))
+		// require.Equal(t, i%2 == 1, !bs.Test(bitIndex))
 	}
 
 	// ensure there's only one chunk for a window of size 100

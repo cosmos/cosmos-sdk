@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v4 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -114,4 +115,45 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.AddrPubkeyRelationKey(addr))
+}
+
+func (k Keeper) DeleteDeprecatedValidatorMissedBlockBitArray(ctx sdk.Context, iterationLimit int) {
+	store := ctx.KVStore(k.storeKey)
+	if store.Get(types.IsPruningKey) == nil {
+		return
+	}
+
+	// Iterate over all the validator signing infos and delete the deprecated missed block bit arrays
+	valSignInfoIter := sdk.KVStorePrefixIterator(store, types.ValidatorSigningInfoKeyPrefix)
+	defer valSignInfoIter.Close()
+
+	iterationCounter := 0
+	for ; valSignInfoIter.Valid(); valSignInfoIter.Next() {
+		address := types.ValidatorSigningInfoAddress(valSignInfoIter.Key())
+
+		// Creat anonymous function to scope defer statement
+		func() {
+			iter := storetypes.KVStorePrefixIterator(store, v4.DeprecatedValidatorMissedBlockBitArrayPrefixKey(address))
+			defer iter.Close()
+
+			for ; iter.Valid(); iter.Next() {
+				store.Delete(iter.Key())
+				iterationCounter++
+				if iterationCounter >= iterationLimit {
+					break
+				}
+			}
+		}()
+
+		if iterationCounter >= iterationLimit {
+			break
+		}
+	}
+
+	ctx.Logger().Info("Deleted deprecated missed block bit arrays", "count", iterationCounter)
+
+	// If we have deleted all the deprecated missed block bit arrays, we can delete the pruning key (set to nil)
+	if iterationCounter == 0 {
+		store.Delete(types.IsPruningKey)
+	}
 }

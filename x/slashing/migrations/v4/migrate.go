@@ -21,11 +21,13 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 	var missedBlocks []types.ValidatorMissedBlocks
 	iterateValidatorSigningInfos(ctx, cdc, store, func(addr sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
 		bechAddr := addr.String()
-		localMissedBlocks := GetValidatorMissedBlocks(ctx, cdc, store, addr, params)
+
+		// We opt to reset all validators missed blocks to improve upgrade performance
+		// localMissedBlocks := GetValidatorMissedBlocks(ctx, cdc, store, addr, params)
 
 		missedBlocks = append(missedBlocks, types.ValidatorMissedBlocks{
 			Address:      bechAddr,
-			MissedBlocks: localMissedBlocks,
+			MissedBlocks: []types.MissedBlock{},
 		})
 
 		return false
@@ -39,7 +41,10 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 			return err
 		}
 
-		deleteValidatorMissedBlockBitArray(ctx, store, addr)
+		// We skip the deletion here in favor of spreading out across multiple block for performance reasons
+		// We set the isPruning key to true to indicate that we are in the process of pruning
+		store.Set(types.IsPruningKey, []byte{1})
+		// deleteDeprecatedValidatorMissedBlockBitArray(ctx, store, addr)
 
 		for _, b := range mb.MissedBlocks {
 			// Note: It is not necessary to store entries with missed=false, i.e. where
@@ -86,7 +91,7 @@ func iterateValidatorMissedBlockBitArray(
 ) {
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		var missed gogotypes.BoolValue
-		bz := store.Get(ValidatorMissedBlockBitArrayKey(addr, i))
+		bz := store.Get(DeprecatedValidatorMissedBlockBitArrayKey(addr, i))
 		if bz == nil {
 			continue
 		}
@@ -114,14 +119,15 @@ func GetValidatorMissedBlocks(
 	return missedBlocks
 }
 
-func deleteValidatorMissedBlockBitArray(ctx sdk.Context, store storetypes.KVStore, addr sdk.ConsAddress) {
-	iter := storetypes.KVStorePrefixIterator(store, validatorMissedBlockBitArrayPrefixKey(addr))
-	defer iter.Close()
+// No longer use this
+// func deleteDeprecatedValidatorMissedBlockBitArray(ctx sdk.Context, store storetypes.KVStore, addr sdk.ConsAddress) {
+// 	iter := storetypes.KVStorePrefixIterator(store, DeprecatedValidatorMissedBlockBitArrayPrefixKey(addr))
+// 	defer iter.Close()
 
-	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
-	}
-}
+// 	for ; iter.Valid(); iter.Next() {
+// 		store.Delete(iter.Key())
+// 	}
+// }
 
 func setMissedBlockBitmapValue(ctx sdk.Context, store storetypes.KVStore, addr sdk.ConsAddress, index int64, missed bool) error {
 	// get the chunk or "word" in the logical bitmap

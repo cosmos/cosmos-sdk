@@ -1,9 +1,10 @@
-//go:build app_v1
+//go:build !app_v1
 
 package accounts
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/simapp"
@@ -99,5 +100,6 @@ var mockSignature = &codectypes.Any{TypeUrl: "signature", Value: []byte("signatu
 func setupApp(t *testing.T) *simapp.SimApp {
 	t.Helper()
 	app := simapp.Setup(t, false)
+	fmt.Println(app)
 	return app
 }

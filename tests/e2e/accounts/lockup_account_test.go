@@ -1,3 +1,5 @@
+//go:build app_v1
+
 package accounts
 
 import (

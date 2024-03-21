@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
-### Features
+### Featureso0-
 
 * (runtime) [#19571](https://github.com/cosmos/cosmos-sdk/pull/19571) Implement `core/router.Service` it in runtime. This service is present in all modules (when using depinject).
 * (types) [#19164](https://github.com/cosmos/cosmos-sdk/pull/19164) Add a ValueCodec for the math.Uint type that can be used in collections maps.

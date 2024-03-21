@@ -3,9 +3,10 @@ package codec_test
 import (
 	"testing"
 
-	"cosmossdk.io/collections/colltest"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections/colltest"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

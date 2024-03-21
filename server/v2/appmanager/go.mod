@@ -7,7 +7,6 @@ replace (
 	cosmossdk.io/server/v2/core => ../core
 	cosmossdk.io/server/v2/stf => ../stf
 	cosmossdk.io/store/v2 => ../../../store
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240125174944-11ba4961dae9
 )
 
 require (

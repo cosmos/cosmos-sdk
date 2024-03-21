@@ -4,14 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
-
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestQueryServer(t *testing.T) {
@@ -24,7 +21,7 @@ func TestQueryServer(t *testing.T) {
 	qs := NewQueryServer(k)
 
 	// create account
-	initMsg, err := implementation.PackAny(&emptypb.Empty{})
+	initMsg, err := implementation.PackAny(&gogotypes.Empty{})
 	require.NoError(t, err)
 
 	initResp, err := ms.Init(ctx, &v1.MsgInit{
@@ -36,7 +33,7 @@ func TestQueryServer(t *testing.T) {
 
 	t.Run("account query", func(t *testing.T) {
 		// query
-		req := &wrapperspb.UInt64Value{Value: 10}
+		req := &gogotypes.UInt64Value{Value: 10}
 		anypbReq, err := implementation.PackAny(req)
 		require.NoError(t, err)
 
@@ -48,7 +45,7 @@ func TestQueryServer(t *testing.T) {
 
 		resp, err := implementation.UnpackAnyRaw(queryResp.Response)
 		require.NoError(t, err)
-		require.Equal(t, "10", resp.(*types.StringValue).Value)
+		require.Equal(t, "10", resp.(*gogotypes.StringValue).Value)
 	})
 
 	t.Run("account number", func(t *testing.T) {

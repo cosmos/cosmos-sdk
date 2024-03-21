@@ -1,6 +1,8 @@
 package wrapper
 
 import (
+	"encoding/binary"
+
 	tdbm "github.com/cometbft/cometbft-db"
 	iavldb "github.com/cosmos/iavl/db"
 )
@@ -39,12 +41,12 @@ func (db *DBWrapper) DeleteSync(key []byte) error {
 
 func (db *DBWrapper) Iterator(start, end []byte) (iavldb.Iterator, error) {
 	it, err := db.db.Iterator(start, end)
-	return it.(iavldb.Iterator), err
+	return it, err
 }
 
 func (db *DBWrapper) ReverseIterator(start, end []byte) (iavldb.Iterator, error) {
 	it, err := db.db.ReverseIterator(start, end)
-	return it.(iavldb.Iterator), err
+	return it, err
 }
 
 func (db *DBWrapper) NewBatch() iavldb.Batch {
@@ -69,6 +71,7 @@ func (db *DBWrapper) Close() error {
 
 type BatchWrapper struct {
 	batch tdbm.Batch
+	size  int
 }
 
 func NewCosmosBatch(batch tdbm.Batch) iavldb.Batch {
@@ -76,18 +79,22 @@ func NewCosmosBatch(batch tdbm.Batch) iavldb.Batch {
 }
 
 func (b *BatchWrapper) Set(key, value []byte) error {
+	b.size += 1 + binary.MaxVarintLen32 + len(key) + binary.MaxVarintLen32 + len(value)
 	return b.batch.Set(key, value)
 }
 
 func (b *BatchWrapper) Delete(key []byte) error {
+	b.size += 1 + binary.MaxVarintLen32 + len(key)
 	return b.batch.Delete(key)
 }
 
 func (b *BatchWrapper) Write() error {
+	b.size = 0
 	return b.batch.Write()
 }
 
 func (b *BatchWrapper) WriteSync() error {
+	b.size = 0
 	return b.batch.WriteSync()
 }
 
@@ -96,5 +103,5 @@ func (b *BatchWrapper) Close() error {
 }
 
 func (b *BatchWrapper) GetByteSize() (int, error) {
-	return 0, nil
+	return b.size, nil
 }

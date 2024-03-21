@@ -31,7 +31,7 @@ func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
 
-	amount, err := k.claimFunds(ctx, recipient)
+	amount, err := k.claimFunds(ctx, recipient, msg.RecipientAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -164,12 +164,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 }
 
 func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWithdrawContinuousFund) (*types.MsgWithdrawContinuousFundResponse, error) {
-	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
-	}
-
-	amount, err := k.withdrawContinuousFund(ctx, recipient)
+	amount, err := k.withdrawContinuousFund(ctx, msg.RecipientAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +197,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	}
 
 	// withdraw funds if any are allocated
-	withdrawnFunds, err := k.withdrawRecipientFunds(ctx, recipient)
+	withdrawnFunds, err := k.withdrawRecipientFunds(ctx, recipient, msg.RecipientAddress)
 	if err != nil && !errorspkg.Is(err, types.ErrNoRecipientFund) {
 		return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %v", msg.RecipientAddress, err)
 	}

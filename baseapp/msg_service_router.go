@@ -26,7 +26,7 @@ type MessageRouter interface {
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 
 	ResponseNameByMsgName(msgName string) string
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
+	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error // todo remove
 }
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.

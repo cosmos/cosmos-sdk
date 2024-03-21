@@ -9,8 +9,7 @@ import (
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/store/v2/proof"
-	cmt "cosmossdk.io/server/v2/cometbft/types"
-	ics23 "github.com/cosmos/ics23/go"
+	storev2 "cosmossdk.io/store/v2"
 )
 
 type MockStore struct {
@@ -21,6 +20,7 @@ type MockStore struct {
 func NewMockStore() *MockStore {
 	storageDB, _ := pebbledb.New("dir")
 	noopLog := log.NewNopLogger()
+	// ss := storage.NewStorageStore(storageDB, nil, log.NewNopLogger()) // for store/v2
 	ss, _ := ammstore.New(storageDB)
 	sc, _ := commitment.NewCommitStore(map[string]commitment.Tree{}, dbm.NewMemDB(), nil, noopLog)
 	return &MockStore{Storage: ss, Commiter: *sc}
@@ -34,11 +34,21 @@ func (s *MockStore) LatestVersion() (uint64, error) {
 func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
 	return s.Storage.StateLatest()
 }
+
 func (s *MockStore) StateCommit(changes []corestore.StateChanges) (corestore.Hash, error) {
 	_, state, _ := s.Storage.StateLatest()
 	writer := branch.DefaultNewWriterMap(state)
 	err := writer.ApplyStateChanges(changes)
 	return []byte{}, err
+}
+
+func (s *MockStore) GetStateStorage() storev2.VersionedDatabase { 
+	// TODO
+	return nil
+}
+
+func (s *MockStore) GetStateCommitment() storev2.Committer {
+	return &s.Commiter
 }
 
 type Result struct{
@@ -48,36 +58,14 @@ type Result struct{
 	proofOps []proof.CommitmentOp
 }
 
-var _ cmt.QueryResult = (*Result)(nil)
-
-func (s Result) Key() []byte {
-	return s.key
-}
-
-func (s Result) Value() []byte {
-	return s.value
-}
-
-func (s Result) Version() uint64 {
-	return s.version
-}
-
-func (s Result) Proof() *ics23.CommitmentProof {
-	return nil
-}
-
-func (s Result) ProofType() string {
-	return ""
-}
-
-func (s *MockStore) Query(storeKey string, version uint64, key []byte, prove bool) (cmt.QueryResult, error) {
+func (s *MockStore) Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error) {
 	state, err := s.Storage.StateAt(version)
 	reader, err := state.GetReader([]byte(storeKey))
 	value, err := reader.Get(key)
-	res := Result{
-		key: key,
-		value: value,
-		version: version,
+	res := storev2.QueryResult{
+		Key: key,
+		Value: value,
+		Version: version,
 	}
 	return res, err
 }

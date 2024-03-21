@@ -1,30 +1,31 @@
 package proto
 
 import (
-	v1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/math"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/protobuf/protoadapt"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"testing"
 )
 
 func Test_ProtoStuff(t *testing.T) {
-	m := &v1.MsgSubmitProposal{
-		Messages:       nil,
-		InitialDeposit: nil,
-		Proposer:       "",
-		Metadata:       "",
-		Title:          "title",
-		Summary:        "",
-		Expedited:      false,
-		ProposalType:   0,
+	m := &types.Coin{
+		Denom:  "denom",
+		Amount: math.NewInt(100),
 	}
-	fmt.Println(m.String())
 
 	mv2 := protoadapt.MessageV2Of(m)
-	fmt.Println(mv2)
 	desc := mv2.ProtoReflect().Descriptor()
+	dm := dynamicpb.NewMessage(desc)
 	for i := 0; i < desc.Fields().Len(); i++ {
 		field := desc.Fields().Get(i)
-		fmt.Println(field.Name())
+		v := dm.ProtoReflect().Get(field)
+		if field.Name() == "amount" {
+			dm.Set(field, protoreflect.ValueOf("100"))
+		}
+		fmt.Println(field.Name(), v)
 	}
+	fmt.Println(dm)
 }

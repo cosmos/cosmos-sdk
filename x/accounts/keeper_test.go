@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -123,9 +124,9 @@ func TestKeeper_Query(t *testing.T) {
 			require.Equal(t, concrete.Denom, "atom")
 			copyResp := &banktypes.QueryBalanceResponse{Balance: &sdk.Coin{
 				Denom:  "atom",
-				Amount: "1000",
+				Amount: math.NewInt(1000),
 			}}
-			proto.Merge(resp.(proto.Message), copyResp)
+			proto.Merge(resp, copyResp)
 			return nil
 		})
 

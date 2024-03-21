@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -19,7 +19,7 @@ func TestMsgServer(t *testing.T) {
 	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 		_, ok := req.(*banktypes.QueryBalanceRequest)
 		require.True(t, ok)
-		proto.Merge(resp.(proto.Message), &banktypes.QueryBalanceResponse{})
+		proto.Merge(resp, &banktypes.QueryBalanceResponse{})
 		return nil
 	})
 

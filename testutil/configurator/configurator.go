@@ -163,7 +163,6 @@ func AuthModule() ModuleOption {
 					{Account: testutil.GovModuleName, Permissions: []string{"burner"}},
 					{Account: testutil.NFTModuleName},
 					{Account: testutil.ProtocolPoolModuleName},
-					// {Account: testutil.AccountsModuleName},
 					{Account: "stream_acc"},
 				},
 			}),

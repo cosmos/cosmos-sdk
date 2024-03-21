@@ -83,7 +83,7 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 type AccountKeeper struct {
 	addressCodec address.Codec
 
-	Environment       appmodule.Environment
+	environment       appmodule.Environment
 	cdc               codec.BinaryCodec
 	permAddrs         map[string]types.PermissionsForAddress
 	bech32Prefix      string
@@ -126,7 +126,7 @@ func NewAccountKeeper(
 	ak := AccountKeeper{
 		addressCodec:      ac,
 		bech32Prefix:      bech32Prefix,
-		Environment:       env,
+		environment:       env,
 		proto:             proto,
 		cdc:               cdc,
 		AccountsModKeeper: accountsModKeeper,
@@ -157,7 +157,7 @@ func (ak AccountKeeper) AddressCodec() address.Codec {
 
 // Logger returns a module-specific logger.
 func (ak AccountKeeper) Logger(ctx context.Context) log.Logger {
-	return ak.Environment.Logger.With("module", "x/"+types.ModuleName)
+	return ak.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // GetPubKey Returns the PubKey of the account at address

@@ -10,9 +10,9 @@ managed:
     override:
       buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
 plugins:
-  - name: go-pulsar
+  - name: gocosmos
     out: ..
     opt: paths=source_relative
   - name: go-grpc
     out: ..
-    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1
+    opt: paths=source_relative

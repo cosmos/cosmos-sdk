@@ -41,7 +41,7 @@ Next is the `proto/` directory where all of our protobuf files live. In here the
 ```bash
 ├── README.md
 ├── buf.gen.gogo.yaml
-├── buf.gen.pulsar.yaml
+├── buf.gen.api.yaml
 ├── buf.gen.swagger.yaml
 ├── buf.lock
 ├── buf.md
@@ -52,7 +52,7 @@ Next is the `proto/` directory where all of our protobuf files live. In here the
 
 The above diagram all the files and directories within the Cosmos SDK `proto/` directory. 
 
-#### `buf.gen.gogo.yaml`
+#### `buf.gen.gogo.yaml` & `buf.gen.api.yaml`
 
 `buf.gen.gogo.yaml` defines how the protobuf files should be generated for use with in the module. This file uses [gogoproto](https://github.com/gogo/protobuf), a separate generator from the google go-proto generator that makes working with various objects more ergonomic, and it has more performant encode and decode steps
 
@@ -64,17 +64,7 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.gogo.yaml#L1-L9
 Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
 :::
 
-#### `buf.gen.pulsar.yaml`
-
-`buf.gen.pulsar.yaml` defines how protobuf files should be generated using the [new golang apiv2 of protobuf](https://go.dev/blog/protobuf-apiv2). This generator is used instead of the google go-proto generator because it has some extra helpers for Cosmos SDK applications and will have more performant encode and decode than the google go-proto generator. You can follow the development of this generator [here](https://github.com/cosmos/cosmos-proto). 
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.pulsar.yaml#L1-L18
-```
-
-:::tip
-Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
-:::
+`buf.gen.api.yaml` does the same thing as `buf.gen.gogo.yaml` but generates its types in an `api/` module.
 
 #### `buf.gen.swagger.yaml`
 

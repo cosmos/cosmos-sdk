@@ -17,9 +17,9 @@ for dir in $proto_dirs; do
   echo "Generating proto code for $dir"
 
   cd $dir
-  # check if buf.gen.pulsar.yaml exists in the proto directory
-  if [ -f "buf.gen.pulsar.yaml" ]; then
-    buf generate --template buf.gen.pulsar.yaml
+  # check if buf.gen.api.yaml exists in the proto directory
+  if [ -f "buf.gen.api.yaml" ]; then
+    buf generate --template buf.gen.api.yaml
     # move generated files to the right places
     if [ -d "../cosmos" -a "$dir" != "./proto" ]; then
       cp -r ../cosmos $home/api

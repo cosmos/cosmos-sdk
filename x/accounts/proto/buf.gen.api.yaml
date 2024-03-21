@@ -8,14 +8,11 @@ managed:
       - buf.build/cosmos/gogo-proto
       - buf.build/cosmos/cosmos-proto
     override:
-      buf.build/tendermint/tendermint: buf.build/gen/go/tendermint/tendermint/protocolbuffers/go
+      buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
 plugins:
-  - name: go-pulsar
-    out: ../api
+  - name: gocosmos
+    out: ..
     opt: paths=source_relative
   - name: go-grpc
-    out: ../api
-    opt: paths=source_relative
-  - name: go-cosmos-orm
-    out: ../api
-    opt: paths=source_relative
+    out: ..
+    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1

@@ -35,6 +35,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unreleased
+
+This is a special cosmos-sdk release with support for both ICS and LSM.
+
+### Features
+
+* (x/staking) [#19614](https://github.com/cosmos/cosmos-sdk/pull/19614) Facilitate the tokenization of vested delegation in the LSM module.
+
+### State Machine Breaking
+
+* (x/staking) [#19614](https://github.com/cosmos/cosmos-sdk/pull/19614) Facilitate the tokenization of vested delegation in the LSM module.
+
 ## v0.47.10-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.
@@ -376,7 +388,6 @@ during the [Oak Security audit of SDK 0.47](https://github.com/oak-security/audi
 
 ### State Machine Breaking
 
-* (x/staking) [#19614](https://github.com/cosmos/cosmos-sdk/pull/19614) Facilitate the tokenization of vested delegation in the LSM module.
 * (baseapp, x/auth/posthandler) [#13940](https://github.com/cosmos/cosmos-sdk/pull/13940) Update `PostHandler` to receive the `runTx` success boolean.
 * (store) [#14378](https://github.com/cosmos/cosmos-sdk/pull/14378) The `CacheKV` store is thread-safe again, which includes improved iteration and deletion logic. Iteration is on a strictly isolated view now, which is breaking from previous behavior.
 * (x/bank) [#14538](https://github.com/cosmos/cosmos-sdk/pull/14538) Validate denom in bank balances GRPC queries.

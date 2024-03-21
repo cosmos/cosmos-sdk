@@ -124,7 +124,7 @@ func TestKeeper_Query(t *testing.T) {
 			require.Equal(t, concrete.Denom, "atom")
 			copyResp := &bankv1beta1.QueryBalanceResponse{Balance: &basev1beta1.Coin{
 				Denom:  "atom",
-				Amount: math.NewInt(1000).String(),
+				Amount: math.NewInt(1000),
 			}}
 			proto.Merge(resp, copyResp)
 			return nil

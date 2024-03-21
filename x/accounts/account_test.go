@@ -7,11 +7,12 @@ import (
 	"github.com/cosmos/gogoproto/types"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ implementation.Account = (*TestAccount)(nil)
@@ -56,7 +57,7 @@ func (t TestAccount) RegisterExecuteHandlers(builder *implementation.ExecuteBuil
 		resp, err := implementation.ExecModule[bankv1beta1.MsgSendResponse](ctx, &bankv1beta1.MsgSend{
 			FromAddress: string(implementation.Whoami(ctx)),
 			ToAddress:   "recipient",
-			Amount: []*v1beta1.Coin{
+			Amount: []sdk.Coin{
 				{
 					Denom:  "test",
 					Amount: math.NewInt(req.Value),
@@ -99,7 +100,7 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 			return nil, err
 		}
 
-		return &types.Int64Value{Value: strconv.ParseInt(resp.Balance.Amount, 10, 64)}, nil
+		return &types.Int64Value{Value: resp.Balance.Amount.Int64()}, nil
 	})
 
 	// genesis testing; DoubleValue does not make sense as a request type for this query, but empty is already taken

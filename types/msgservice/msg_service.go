@@ -1,11 +1,8 @@
 package msgservice
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -27,21 +24,4 @@ func RegisterMsgServiceDesc(registrar registry.InterfaceRegistrar, sd *grpc.Serv
 			return nil
 		}, nil)
 	}
-}
-
-func unzip(b []byte) []byte {
-	if b == nil {
-		return nil
-	}
-	r, err := gzip.NewReader(bytes.NewReader(b))
-	if err != nil {
-		panic(err)
-	}
-
-	unzipped, err := io.ReadAll(r)
-	if err != nil {
-		panic(err)
-	}
-
-	return unzipped
 }

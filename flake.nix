@@ -11,8 +11,9 @@
 
   outputs = { self, nixpkgs, flake-utils, ... }@inputs:
     {
-      overlays.default = self: super: {
+      overlays.default = self: super: rec {
         simd = self.callPackage ./simapp { rev = self.shortRev or "dev"; };
+        go = simd.go; # to build the tools (e.g. gomod2nix) using the same go version
         rocksdb = super.rocksdb.overrideAttrs (_: rec {
           version = "8.11.3";
           src = self.fetchFromGitHub {

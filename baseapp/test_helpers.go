@@ -77,9 +77,9 @@ func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) s
 }
 
 func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {
-	return app.getContextForTx(execModeFinalize, txBytes)
+	return app.getContextForTx(execModeFinalize, txBytes, -1)
 }
 
 func (app *BaseApp) GetContextForCheckTx(txBytes []byte) sdk.Context {
-	return app.getContextForTx(execModeCheck, txBytes)
+	return app.getContextForTx(execModeCheck, txBytes, -1)
 }

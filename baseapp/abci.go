@@ -791,19 +791,69 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	// Reset the gas meter so that the AnteHandlers aren't required to
 	gasMeter = app.getBlockGasMeter(app.finalizeBlockState.Context())
-	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
+	app.finalizeBlockState.SetContext(
+		app.finalizeBlockState.Context().
+			WithBlockGasMeter(gasMeter).
+			WithTxCount(len(req.Txs)),
+	)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
-	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
-	for _, rawTx := range req.Txs {
+	txResults, err := app.executeTxs(ctx, req.Txs)
+	if err != nil {
+		// usually due to canceled
+		return nil, err
+	}
+
+	if app.finalizeBlockState.ms.TracingEnabled() {
+		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
+	}
+
+	var blockGasUsed uint64
+	for _, res := range txResults {
+		blockGasUsed += uint64(res.GasUsed)
+	}
+	sdkCtx := app.finalizeBlockState.Context().WithBlockGasUsed(blockGasUsed)
+	endBlock, err := app.endBlock(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	// check after endBlock if we should abort, to avoid propagating the result
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
+	}
+
+	events = append(events, endBlock.Events...)
+	cp := app.GetConsensusParams(app.finalizeBlockState.Context())
+
+	return &abci.ResponseFinalizeBlock{
+		Events:                events,
+		TxResults:             txResults,
+		ValidatorUpdates:      endBlock.ValidatorUpdates,
+		ConsensusParamUpdates: &cp,
+	}, nil
+}
+
+func (app *BaseApp) executeTxs(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
+	if app.txExecutor != nil {
+		return app.txExecutor(ctx, len(txs), app.finalizeBlockState.ms, func(i int, ms storetypes.MultiStore) *abci.ExecTxResult {
+			return app.deliverTxWithMultiStore(txs[i], i, ms)
+		})
+	}
+
+	txResults := make([]*abci.ExecTxResult, 0, len(txs))
+	for i, rawTx := range txs {
 		var response *abci.ExecTxResult
 
 		if _, err := app.txDecoder(rawTx); err == nil {
-			response = app.deliverTx(rawTx)
+			response = app.deliverTx(rawTx, i)
 		} else {
 			// In the case where a transaction included in a block proposal is malformed,
 			// we still want to return a default response to comet. This is because comet
@@ -827,33 +877,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 		txResults = append(txResults, response)
 	}
-
-	if app.finalizeBlockState.ms.TracingEnabled() {
-		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
-	}
-
-	endBlock, err := app.endBlock(app.finalizeBlockState.Context())
-	if err != nil {
-		return nil, err
-	}
-
-	// check after endBlock if we should abort, to avoid propagating the result
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-		// continue
-	}
-
-	events = append(events, endBlock.Events...)
-	cp := app.GetConsensusParams(app.finalizeBlockState.Context())
-
-	return &abci.ResponseFinalizeBlock{
-		Events:                events,
-		TxResults:             txResults,
-		ValidatorUpdates:      endBlock.ValidatorUpdates,
-		ConsensusParamUpdates: &cp,
-	}, nil
+	return txResults, nil
 }
 
 // FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.

@@ -64,6 +64,15 @@ type Context struct {
 	streamingManager     storetypes.StreamingManager
 	cometInfo            comet.BlockInfo
 	headerInfo           header.Info
+
+	// the index of the current tx in the block, -1 means not in finalize block context
+	txIndex int
+	// the index of the current msg in the tx, -1 means not in finalize block context
+	msgIndex int
+	// the total number of transactions in current block
+	txCount int
+	// sum the gas used by all the transactions in the current block, only accessible by end blocker
+	blockGasUsed uint64
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -92,6 +101,10 @@ func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.trans
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
 func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
+func (c Context) TxIndex() int                                  { return c.txIndex }
+func (c Context) MsgIndex() int                                 { return c.msgIndex }
+func (c Context) TxCount() int                                  { return c.txCount }
+func (c Context) BlockGasUsed() uint64                          { return c.blockGasUsed }
 
 // BlockHeader returns the header by value.
 func (c Context) BlockHeader() cmtproto.Header {
@@ -138,6 +151,8 @@ func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
+		txIndex:              -1,
+		msgIndex:             -1,
 	}
 }
 
@@ -314,6 +329,26 @@ func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
 	// Settime to UTC
 	headerInfo.Time = headerInfo.Time.UTC()
 	c.headerInfo = headerInfo
+	return c
+}
+
+func (c Context) WithTxIndex(txIndex int) Context {
+	c.txIndex = txIndex
+	return c
+}
+
+func (c Context) WithTxCount(txCount int) Context {
+	c.txCount = txCount
+	return c
+}
+
+func (c Context) WithMsgIndex(msgIndex int) Context {
+	c.msgIndex = msgIndex
+	return c
+}
+
+func (c Context) WithBlockGasUsed(gasUsed uint64) Context {
+	c.blockGasUsed = gasUsed
 	return c
 }
 

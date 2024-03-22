@@ -23,6 +23,9 @@ func RegisterMsgServiceDesc(registrar registry.InterfaceRegistrar, sd *grpc.Serv
 			}
 			registrar.RegisterImplementations((*sdk.Msg)(nil), msg)
 			return nil
-		}, nil)
+		}, func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+			// this is needed to avoid the nil handler from being called
+			return nil, nil
+		})
 	}
 }

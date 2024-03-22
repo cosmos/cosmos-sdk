@@ -798,48 +798,33 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	// Reset the gas meter so that the AnteHandlers aren't required to
 	gasMeter = app.getBlockGasMeter(finalizeState.Context())
-	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(gasMeter))
+	finalizeState.SetContext(
+		finalizeState.Context().
+			WithBlockGasMeter(gasMeter).
+			WithTxCount(len(req.Txs)),
+	)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
-	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
-	for _, rawTx := range req.Txs {
-		var response *abci.ExecTxResult
-
-		if _, err := app.txDecoder(rawTx); err == nil {
-			response = app.deliverTx(rawTx)
-		} else {
-			// In the case where a transaction included in a block proposal is malformed,
-			// we still want to return a default response to comet. This is because comet
-			// expects a response for each transaction included in a block proposal.
-			response = sdkerrors.ResponseExecTxResultWithEvents(
-				sdkerrors.ErrTxDecode,
-				0,
-				0,
-				nil,
-				false,
-			)
-		}
-
-		// check after every tx if we should abort
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			// continue
-		}
-
-		txResults = append(txResults, response)
+	txResults, err := app.executeTxs(ctx, req.Txs)
+	if err != nil {
+		// usually due to canceled
+		return nil, err
 	}
 
 	if finalizeState.MultiStore.TracingEnabled() {
 		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
-	endBlock, err := app.endBlock(finalizeState.Context())
+	var blockGasUsed uint64
+	for _, res := range txResults {
+		blockGasUsed += uint64(res.GasUsed)
+	}
+	sdkCtx := finalizeState.Context().WithBlockGasUsed(blockGasUsed)
+	endBlock, err := app.endBlock(sdkCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -861,6 +846,45 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
 	}, nil
+}
+
+func (app *BaseApp) executeTxs(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
+	if app.txExecutor != nil {
+		finalizeState := app.stateManager.GetState(execModeFinalize)
+		return app.txExecutor(ctx, len(txs), finalizeState.MultiStore, func(i int, ms storetypes.MultiStore) *abci.ExecTxResult {
+			return app.deliverTxWithMultiStore(txs[i], i, ms)
+		})
+	}
+
+	txResults := make([]*abci.ExecTxResult, 0, len(txs))
+	for i, rawTx := range txs {
+		var response *abci.ExecTxResult
+
+		if _, err := app.txDecoder(rawTx); err == nil {
+			response = app.deliverTx(rawTx, i)
+		} else {
+			// In the case where a transaction included in a block proposal is malformed,
+			// we still want to return a default response to comet. This is because comet
+			// expects a response for each transaction included in a block proposal.
+			response = sdkerrors.ResponseExecTxResultWithEvents(
+				sdkerrors.ErrTxDecode,
+				0,
+				0,
+				nil,
+				false,
+			)
+		}
+		// check after every tx if we should abort
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// continue
+		}
+
+		txResults = append(txResults, response)
+	}
+	return txResults, nil
 }
 
 // FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.

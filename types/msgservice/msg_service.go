@@ -3,56 +3,29 @@ package msgservice
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
-	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	proto2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/descriptorpb"
 
 	"cosmossdk.io/core/registry"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described
 // in `sd` into the registry.
 func RegisterMsgServiceDesc(registrar registry.InterfaceRegistrar, sd *grpc.ServiceDesc) {
-	fdBytesUnzipped := unzip(proto.FileDescriptor(sd.Metadata.(string)))
-	if fdBytesUnzipped == nil {
-		panic(fmt.Errorf("error unzipping file description for MsgService %s", sd.ServiceName))
-	}
-
-	fdRaw := &descriptorpb.FileDescriptorProto{}
-	err := proto2.Unmarshal(fdBytesUnzipped, fdRaw)
-	if err != nil {
-		panic(err)
-	}
-
-	fd, err := protodesc.FileOptions{
-		AllowUnresolvable: true,
-	}.New(fdRaw, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	prefSd := fd.Services().ByName(protoreflect.FullName(sd.ServiceName).Name())
-	for i := 0; i < prefSd.Methods().Len(); i++ {
-		md := prefSd.Methods().Get(i)
-		requestDesc := md.Input()
-		responseDesc := md.Output()
-
-		reqTyp := proto.MessageType(string(requestDesc.FullName()))
-		respTyp := proto.MessageType(string(responseDesc.FullName()))
-
-		// Register sdk.Msg and sdk.MsgResponse to the registry.
-		registrar.RegisterImplementations((*sdk.Msg)(nil), reflect.New(reqTyp).Elem().Interface().(proto.Message))
-		registrar.RegisterImplementations((*tx.MsgResponse)(nil), reflect.New(respTyp).Elem().Interface().(proto.Message))
+	for _, method := range sd.Methods {
+		_, _ = method.Handler(nil, context.Background(), func(req any) error {
+			msg, ok := req.(proto.Message)
+			if !ok {
+				panic(fmt.Errorf("expected proto.Message, got %T", req))
+			}
+			registrar.RegisterImplementations((*sdk.Msg)(nil), msg)
+			return nil
+		}, nil)
 	}
 }
 

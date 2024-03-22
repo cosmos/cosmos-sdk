@@ -11,6 +11,7 @@ const (
 	msgResponseInterfaceProtoName = "cosmos.tx.v1beta1.MsgResponse"
 )
 
+// Deprecated: this isn't used anywhere.
 // MsgResponse is the interface all Msg server handlers' response types need to
 // implement. It's the interface that's representing all Msg responses packed
 // in Anys.

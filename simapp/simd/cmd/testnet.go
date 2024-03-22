@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 
 	cmtconfig "github.com/cometbft/cometbft/config"
 	cmttime "github.com/cometbft/cometbft/types/time"
@@ -49,6 +50,8 @@ var (
 	flagRPCAddress        = "rpc.address"
 	flagAPIAddress        = "api.address"
 	flagPrintMnemonic     = "print-mnemonic"
+	flagCommitTimeout     = "commit-timeout"
+	flagSingleHost        = "single-host"
 )
 
 type initArgs struct {
@@ -62,6 +65,7 @@ type initArgs struct {
 	outputDir         string
 	startingIPAddress string
 	listenIPAddress   string
+	singleMachine     bool
 }
 
 type startArgs struct {
@@ -75,6 +79,7 @@ type startArgs struct {
 	outputDir     string
 	printMnemonic bool
 	rpcAddress    string
+	timeoutCommit time.Duration
 }
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
@@ -147,6 +152,11 @@ Example:
 			args.listenIPAddress, _ = cmd.Flags().GetString(flagListenIPAddress)
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
+			args.singleMachine, _ = cmd.Flags().GetBool(flagSingleHost)
+			config.Consensus.TimeoutCommit, err = cmd.Flags().GetDuration(flagCommitTimeout)
+			if err != nil {
+				return err
+			}
 
 			return initTestnetFiles(clientCtx, cmd, config, mm, genBalIterator, clientCtx.TxConfig.SigningContext().ValidatorAddressCodec(), args)
 		},
@@ -158,6 +168,8 @@ Example:
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flagListenIPAddress, "127.0.0.1", "TCP or UNIX socket IP address for the RPC server to listen on")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+	cmd.Flags().Duration(flagCommitTimeout, 5*time.Second, "Time to wait after a block commit before starting on the new height")
+	cmd.Flags().Bool(flagSingleHost, false, "Cluster runs on a single host machine with different ports")
 
 	return cmd
 }
@@ -231,10 +243,25 @@ func initTestnetFiles(
 		genBalances []banktypes.Balance
 		genFiles    []string
 	)
+	const (
+		rpcPort  = 26657
+		apiPort  = 1317
+		grpcPort = 9090
+	)
+	p2pPortStart := 26656
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < args.numValidators; i++ {
+		var portOffset int
+		if args.singleMachine {
+			portOffset = i
+			p2pPortStart = 16656 // use different start point to not conflict with rpc port
+			nodeConfig.P2P.AddrBookStrict = false
+			nodeConfig.P2P.PexReactor = false
+			nodeConfig.P2P.AllowDuplicateIP = true
+		}
+
 		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)
 		nodeDir := filepath.Join(args.outputDir, nodeDirName, args.nodeDaemonHome)
 		gentxsDir := filepath.Join(args.outputDir, "gentxs")
@@ -242,15 +269,27 @@ func initTestnetFiles(
 		nodeConfig.SetRoot(nodeDir)
 		nodeConfig.Moniker = nodeDirName
 		nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://%s:26657", args.listenIPAddress)
+
+		simappConfig.API.Address = fmt.Sprintf("tcp://127.0.0.1:%d", apiPort+portOffset)
+		simappConfig.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset)
+		simappConfig.GRPCWeb.Enable = true
+
 		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
 			_ = os.RemoveAll(args.outputDir)
 			return err
 		}
-
-		ip, err := getIP(i, args.startingIPAddress)
-		if err != nil {
-			_ = os.RemoveAll(args.outputDir)
-			return err
+		var (
+			err error
+			ip  string
+		)
+		if args.singleMachine {
+			ip = "127.0.0.1"
+		} else {
+			ip, err = getIP(i, args.startingIPAddress)
+			if err != nil {
+				_ = os.RemoveAll(args.outputDir)
+				return err
+			}
 		}
 
 		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFiles(nodeConfig)
@@ -259,7 +298,7 @@ func initTestnetFiles(
 			return err
 		}
 
-		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
+		memo := fmt.Sprintf("%s@%s:%d", nodeIDs[i], ip, p2pPortStart+portOffset)
 		genFiles = append(genFiles, nodeConfig.GenesisFile())
 
 		kb, err := keyring.New(sdk.KeyringServiceName(), args.keyringBackend, nodeDir, inBuf, clientCtx.Codec)
@@ -361,6 +400,7 @@ func initTestnetFiles(
 	err := collectGenFiles(
 		clientCtx, nodeConfig, args.chainID, nodeIDs, valPubKeys, args.numValidators,
 		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome, genBalIterator, valAddrCodec,
+		rpcPort, p2pPortStart, args.singleMachine,
 	)
 	if err != nil {
 		return err
@@ -418,15 +458,24 @@ func collectGenFiles(
 	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator, valAddrCodec address.ValidatorAddressCodec,
+	rpcPortStart, p2pPortStart int,
+	singleMachine bool,
 ) error {
 	var appState json.RawMessage
 	genTime := cmttime.Now()
 
 	for i := 0; i < numValidators; i++ {
+		var portOffset int
+		if singleMachine {
+			portOffset = i
+		}
+
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
 		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
 		gentxsDir := filepath.Join(outputDir, "gentxs")
 		nodeConfig.Moniker = nodeDirName
+		nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%d", rpcPortStart+portOffset)
+		nodeConfig.P2P.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%d", p2pPortStart+portOffset)
 
 		nodeConfig.SetRoot(nodeDir)
 
@@ -515,6 +564,7 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	networkConfig.APIAddress = args.apiAddress
 	networkConfig.GRPCAddress = args.grpcAddress
 	networkConfig.PrintMnemonic = args.printMnemonic
+	networkConfig.TimeoutCommit = args.timeoutCommit
 	networkLogger := network.NewCLILogger(cmd)
 
 	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)

@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -187,7 +188,17 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 
 	msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
-		interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		interceptor := func(goCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+			if reflect.TypeOf(req) != reflect.TypeOf(msg) {
+				bz, err := proto.Marshal(msg)
+				if err != nil {
+					return nil, err
+				}
+				err = proto.Unmarshal(bz, req.(proto.Message))
+				if err != nil {
+					return nil, err
+				}
+			}
 			goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 			return handler(goCtx, msg)
 		}

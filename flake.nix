@@ -1,15 +1,15 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/master";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     gomod2nix = {
       url = "github:nix-community/gomod2nix";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.utils.follows = "flake-utils";
+      inputs.flake-utils.follows = "flake-utils";
     };
   };
 
-  outputs = { self, nixpkgs, gomod2nix, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, ... }@inputs:
     {
       overlays.default = self: super: {
         simd = self.callPackage ./simapp { rev = self.shortRev or "dev"; };
@@ -35,7 +35,7 @@
             inherit system;
             config = { };
             overlays = [
-              gomod2nix.overlays.default
+              inputs.gomod2nix.overlays.default
               self.overlays.default
             ];
           };
@@ -50,11 +50,11 @@
             simd = mkApp pkgs.simd;
           };
           devShells = rec {
-            default = simd;
-            simd = with pkgs; mkShell {
+            default = with pkgs; mkShell {
               buildInputs = [
-                go_1_22 # Use Go 1.22 version
+                simd.go
                 rocksdb
+                gomod2nix
               ];
             };
           };

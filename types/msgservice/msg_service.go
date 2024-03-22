@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/registry"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

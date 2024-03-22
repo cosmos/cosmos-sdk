@@ -55,9 +55,9 @@ type (
 		// GetReflectMessages gets a reflected version of the transaction's messages
 		// that can be used by dynamic APIs. These messages should not be used for actual
 		// processing as they cannot be guaranteed to be what handlers are expecting, but
-		// they can be used for dynamically pulling specific fields from the message such
-		// as signers or validation data. Message process should ALWAYS use the messages
-		// returned by GetMsgs for actual processing.
+		// they can be used for dynamically reading specific fields from the message such
+		// as signers or validation data. Message processors should ALWAYS use the messages
+		// returned by GetMsgs.
 		GetReflectMessages() ([]protoreflect.Message, error)
 	}
 

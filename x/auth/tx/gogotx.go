@@ -6,16 +6,18 @@ import (
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth/ante"
-	authsigning "cosmossdk.io/x/auth/signing"
+
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
+
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/x/auth/ante"
+	authsigning "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -115,7 +117,7 @@ func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
 	return w.msgsV1
 }
 
-func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
+func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
 	return w.decodedTx.Messages, nil
 }
 

@@ -187,6 +187,7 @@ replace (
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking
+	cosmossdk.io/x/tx => ./x/tx
 )
 
 replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.1 // TODO remove

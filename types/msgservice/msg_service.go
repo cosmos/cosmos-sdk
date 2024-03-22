@@ -16,6 +16,8 @@ import (
 // in `sd` into the registry.
 func RegisterMsgServiceDesc(registrar registry.InterfaceRegistrar, sd *grpc.ServiceDesc) {
 	for _, method := range sd.Methods {
+		// we call each handler with methods that introspect the request type and
+		// register it as a concrete implementation of sdk.Msg
 		_, _ = method.Handler(nil, context.Background(), func(req any) error {
 			msg, ok := req.(proto.Message)
 			if !ok {

@@ -39,6 +39,9 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 		defaultParams.BurnProposalDepositPrevote,
 		defaultParams.BurnVoteQuorum,
 		defaultParams.BurnVoteVeto,
+
+		// NOTE: backport from v50
+		defaultParams.MinDepositRatio,
 	)
 
 	bz, err := cdc.Marshal(&params)

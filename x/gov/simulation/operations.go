@@ -462,6 +462,13 @@ func randomDeposit(
 
 	minDepositAmount := minDeposit[denomIndex].Amount
 
+	minDepositRatio, err := sdk.NewDecFromStr(params.GetMinDepositRatio())
+	if err != nil {
+		return nil, false, err
+	}
+
+	threshold := minDepositAmount.ToLegacyDec().Mul(minDepositRatio).TruncateInt()
+
 	minAmount := sdk.ZeroInt()
 	if useMinAmount {
 		minDepositPercent, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
@@ -478,7 +485,10 @@ func randomDeposit(
 	}
 	amount = amount.Add(minAmount)
 
-	if amount.GT(spendableBalance) {
+	// NOTE: backport from v50
+	amount = amount.MulRaw(3) // 3x what's required // TODO: this is a hack, we need to be able to calculate the correct amount using params
+
+	if amount.GT(spendableBalance) || amount.LT(threshold) {
 		return nil, true, nil
 	}
 

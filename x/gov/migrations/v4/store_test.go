@@ -104,6 +104,7 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, legacySubspace.tp.Threshold, params.Threshold)
 	require.Equal(t, legacySubspace.tp.VetoThreshold, params.VetoThreshold)
 	require.Equal(t, sdk.ZeroDec().String(), params.MinInitialDepositRatio)
+	require.Equal(t, sdk.MustNewDecFromStr("0.01").String(), params.MinDepositRatio)
 
 	// Check proposals' status
 	var migratedProp1 v1.Proposal

@@ -1,50 +1,52 @@
 package simapp
 
 import (
-	"context"
+	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/accounts"
-	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
+	"cosmossdk.io/simapp/upgrades"
+	"cosmossdk.io/simapp/upgrades/noop"
+	v051 "cosmossdk.io/simapp/upgrades/v051"
+
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
-// UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
-// from v0.50.x to v0.51.x
-//
-// NOTE: This upgrade defines a reference implementation of what an upgrade
-// could look like when an application is migrating from Cosmos SDK version
-// v0.50.x to v0.51.x.
-const UpgradeName = "v050-to-v051"
+// Upgrades list of chain upgrades
+var Upgrades = []upgrades.Upgrade[upgrades.AppKeepers]{v051.Upgrade}
 
+// RegisterUpgradeHandlers registers the chain upgrade handlers
 func (app SimApp) RegisterUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(
-		UpgradeName,
-		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
-		},
-	)
-
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(err)
+	if len(Upgrades) == 0 {
+		// always have a unique upgrade registered for the current version to test in system tests or manual
+		Upgrades = append(Upgrades, noop.NewUpgrade[upgrades.AppKeepers](app.Version()))
 	}
 
-	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{
-				accounts.ModuleName,
-				protocolpooltypes.ModuleName,
-			},
-			Deleted: []string{
-				crisistypes.ModuleName, // The SDK discontinued the crisis module in v0.51.0
-			},
-		}
+	var keepers upgrades.AppKeepers
+	app.GetStoreKeys()
+	// register all upgrade handlers
+	for _, upgrade := range Upgrades {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.ModuleManager,
+				app.Configurator(),
+				&keepers,
+			),
+		)
+	}
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
 
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		return
+	}
+
+	// register store loader for current upgrade
+	for _, upgrade := range Upgrades {
+		if upgradeInfo.Name == upgrade.UpgradeName {
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades)) // nolint:gosec
+			break
+		}
 	}
 }

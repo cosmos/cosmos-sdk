@@ -189,12 +189,15 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 	msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		interceptor := func(goCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-			if reflect.TypeOf(req) != reflect.TypeOf(msg) {
+			// if the type of msg isn't compatible with the type the msg server expects,
+			// then marshal to bytes and unmarshal to the correct type
+			if !reflect.TypeOf(msg).AssignableTo(reflect.TypeOf(req)) {
 				bz, err := proto.Marshal(msg)
 				if err != nil {
 					return nil, err
 				}
-				err = proto.Unmarshal(bz, req.(proto.Message))
+				msg = req.(proto.Message)
+				err = proto.Unmarshal(bz, msg)
 				if err != nil {
 					return nil, err
 				}

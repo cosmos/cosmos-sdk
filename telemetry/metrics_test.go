@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-metrics"
-	"github.com/prometheus/common/expfmt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,7 +57,7 @@ func TestMetrics_Prom(t *testing.T) {
 
 	gr, err := m.Gather(FormatPrometheus)
 	require.NoError(t, err)
-	require.Equal(t, gr.ContentType, string(expfmt.FmtText))
+	require.Equal(t, gr.ContentType, ContentTypeText)
 
 	require.True(t, strings.Contains(string(gr.Metrics), "test_dummy_counter 30"))
 }

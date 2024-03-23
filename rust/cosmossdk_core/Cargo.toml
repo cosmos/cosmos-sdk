@@ -1,0 +1,23 @@
+[package]
+name = "cosmossdk_core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+num_enum = { version = "0.7.1", default-features = false }
+mockall = {version = "0.12.1", optional = true}
+cosmossdk_macros = { path = "../cosmossdk_macros" }
+#lol_alloc = "0.4.0"
+
+[dev-dependencies]
+mockall = "0.12.1"
+
+[features]
+default = []
+test-util = ["dep:mockall"]
+
+[build-dependencies]
+cbindgen = "0.26.0"

@@ -1,0 +1,15 @@
+[package]
+name = "cosmos_prost_build"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+prost-build = "0.12.3"
+prost-types = "0.12.3"
+syn = "2.0.52"
+quote = "1.0.35"
+proc-macro2 = "1.0.78"
+heck = "0.5.0-rc.1"
+prettyplease = "0.2.16"

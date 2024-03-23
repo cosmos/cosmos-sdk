@@ -1,0 +1,21 @@
+syntax = "proto3";
+package cosmos.bank.v1beta1;
+
+import "cosmos/base/v1beta1/coin.proto";
+
+
+// Msg defines the bank Msg service.
+service Msg {
+  // Send defines a method for sending coins from one account to another account.
+  rpc Send(MsgSend) returns (MsgSendResponse);
+}
+
+// MsgSend represents a message to send coins from one account to another.
+message MsgSend {
+  string   from_address                    = 1;
+  string   to_address                      = 2;
+  repeated cosmos.base.v1beta1.Coin amount = 3;
+}
+
+// MsgSendResponse defines the Msg/Send response type.
+message MsgSendResponse {}

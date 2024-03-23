@@ -8,7 +8,7 @@
     * [Pull Request Templates](#pull-request-templates)
     * [Requesting Reviews](#requesting-reviews)
     * [Updating Documentation](#updating-documentation)
-    * [RFC & ADR](#rfc--adr)
+    * [RFC \& ADR](#rfc--adr)
 * [Dependencies](#dependencies)
     * [`go.work`](#gowork)
     * [`go.mod`](#gomod)
@@ -16,14 +16,14 @@
 * [Branching Model and Release](#branching-model-and-release)
     * [PR Targeting](#pr-targeting)
 * [Code Owner Membership](#code-owner-membership)
-* [Concept & Feature Approval Process](#concept--feature-approval-process)
+* [Concept \& Feature Approval Process](#concept--feature-approval-process)
     * [Strategy Discovery](#strategy-discovery)
     * [Concept Approval](#concept-approval)
         * [Time Bound Period](#time-bound-period)
-        * [Approval Committee & Decision Making](#approval-committee--decision-making)
+        * [Approval Committee \& Decision Making](#approval-committee--decision-making)
         * [Committee Members](#committee-members)
         * [Committee Criteria](#committee-criteria)
-    * [Implementation & Release Approval](#implementation--release-approval)
+    * [Implementation \& Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -201,6 +201,7 @@ When extracting a package to its own go modules, some extra steps are required, 
 * Add a CHANGELOG.md / README.md under the new package folder
 * Add the package in [`labeler.yml`](./.github/pr_labeler.yml)
 * Add the package in [`go.work.example`](./go.work.example)
+* (if applicable) Add the proto directory in [`buf.work.yaml`](./buf.work.yaml)
 * Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
 * Add tests to github workflow [test.yml](.github/workflows/test.yml) (under submodules)
 * Configure SonarCloud

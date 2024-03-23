@@ -34,39 +34,17 @@ func (k Keeper) AddEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
 	return k.EpochInfo.Set(ctx, epoch.Identifier, epoch)
 }
 
-// IterateEpochInfo iterate through epochs.
-func (k Keeper) IterateEpochInfo(ctx context.Context, fn func(index int64, epochInfo types.EpochInfo) (stop bool)) error {
-	iter, err := k.EpochInfo.Iterate(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer iter.Close()
-
-	i := int64(0)
-
-	for ; iter.Valid(); iter.Next() {
-		kv, err := iter.KeyValue()
-		if err != nil {
-			return err
-		}
-
-		stop := fn(i, kv.Value)
-
-		if stop {
-			break
-		}
-		i++
-	}
-	return nil
-}
-
 // AllEpochInfos iterate through epochs to return all epochs info.
 func (k Keeper) AllEpochInfos(ctx context.Context) ([]types.EpochInfo, error) {
 	epochs := []types.EpochInfo{}
-	err := k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
-		epochs = append(epochs, epochInfo)
-		return false
-	})
+	err := k.EpochInfo.Walk(
+		ctx,
+		nil,
+		func(key string, value types.EpochInfo) (stop bool, err error) {
+			epochs = append(epochs, value)
+			return false, nil
+		},
+	)
 	return epochs, err
 }
 

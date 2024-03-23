@@ -26,7 +26,7 @@ func (k Keeper) AddEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
 	}
 
 	// Initialize empty and default epoch values
-	if epoch.StartTime.Equal(time.Time{}) {
+	if epoch.StartTime.IsZero() {
 		epoch.StartTime = k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	}
 	epoch.CurrentEpochStartHeight = k.environment.HeaderService.GetHeaderInfo(ctx).Height

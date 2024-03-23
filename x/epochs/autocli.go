@@ -14,12 +14,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "EpochInfos",
 					Use:       "epoch-infos",
-					Short:     "Query running epoch infos.",
+					Short:     "Query running epoch infos",
 				},
 				{
 					RpcMethod: "CurrentEpoch",
 					Use:       "current-epoch",
-					Short:     "Query current epoch by specified identifier.",
+					Short:     "Query current epoch by specified identifier",
 				},
 			},
 		},

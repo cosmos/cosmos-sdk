@@ -20,7 +20,7 @@ they can easily be signaled upon such events.
 
 ## Concepts
 
-The epochs module defines on-chain timers, that execute at fixed time intervals.
+The epochs module defines on-chain timers that execute at fixed time intervals.
 Other SDK modules can then register logic to be executed at the timer ticks.
 We refer to the period in between two timer ticks as an "epoch".
 
@@ -64,7 +64,7 @@ The `epochs` module emits the following events:
 
 Epochs keeper module provides utility functions to manage epochs.
 
-```go
+``` go
 // Keeper is the interface for epochs module keeper
 type Keeper interface {
   // GetEpochInfo returns epoch info by identifier
@@ -121,7 +121,7 @@ checks you consider for a new epoch hook.
 
 ## Queries
 
-Epochs module is providing below queries to check the module's state.
+The Epochs module provides the following queries to check the module's state.
 
 ```protobuf
 service Query {

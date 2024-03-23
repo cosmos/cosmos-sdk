@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"cosmossdk.io/x/epochs/types"
 )

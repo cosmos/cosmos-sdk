@@ -10,9 +10,10 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
@@ -70,7 +71,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			}
 		}
 
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
 			return v1.Proposal{}, err
 		}

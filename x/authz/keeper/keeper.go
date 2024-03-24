@@ -8,10 +8,11 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/authz"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -92,7 +93,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 	now := sdkCtx.HeaderInfo().Time
 
 	for i, msg := range msgs {
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
 			return nil, err
 		}

@@ -5,17 +5,15 @@ import (
 
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	errorsmod "cosmossdk.io/errors"
-
 	"cosmossdk.io/x/tx/signing"
 )
 
 // DecodedTx contains the decoded transaction, its signers, and other flags.
 type DecodedTx struct {
-	Messages                     []protoreflect.Message
+	Messages                     []proto.Message
 	Tx                           *v1beta1.Tx
 	TxRaw                        *v1beta1.TxRaw
 	Signers                      [][]byte
@@ -98,14 +96,14 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	}
 
 	var signers [][]byte
-	var msgs []protoreflect.Message
+	var msgs []proto.Message
 	seenSigners := map[string]struct{}{}
 	for _, anyMsg := range body.Messages {
 		msg, signerErr := anyutil.Unpack(anyMsg, fileResolver, d.signingCtx.TypeResolver())
 		if signerErr != nil {
 			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error())
 		}
-		msgs = append(msgs, msg.ProtoReflect())
+		msgs = append(msgs, msg)
 		ss, signerErr := d.signingCtx.GetSigners(msg)
 		if signerErr != nil {
 			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error())

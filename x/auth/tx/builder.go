@@ -56,7 +56,7 @@ func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, c
 		addressCodec:                addrCodec,
 		decoder:                     decoder,
 		codec:                       codec,
-		msgs:                        decoded.msgsV1,
+		msgs:                        decoded.msgs,
 		timeoutHeight:               decoded.GetTimeoutHeight(),
 		granter:                     decoded.FeeGranter(),
 		payer:                       payer,

@@ -174,5 +174,4 @@ replace (
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking
-	cosmossdk.io/x/tx => ../tx
 )

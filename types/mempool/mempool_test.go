@@ -78,7 +78,7 @@ var (
 
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
-func (tx testTx) GetReflectMsgs() ([]protoreflect.Message, error) { return nil, nil }
+func (tx testTx) GetReflectMessages() ([]protoreflect.Message, error) { return nil, nil }
 
 func (tx testTx) ValidateBasic() error { return nil }
 

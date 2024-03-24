@@ -155,6 +155,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
     * Every module has the codec already, passing it created an unneeded dependency.
     * Additionally, to reflect this change, the module manager does not take a codec either.
 * (runtime) [#19747](https://github.com/cosmos/cosmos-sdk/pull/19747) `runtime.ValidatorAddressCodec` and `runtime.ConsensusAddressCodec` have been moved to `core`.
+* [#19839](https://github.com/cosmos/cosmos-sdk/pull/19839) `Tx.GetMsgsV2` has been replaced with `Tx.GetReflectMessages`, and `Codec.GetMsgV1Signers` and `Codec.GetMsgV2Signers` have been replaced with `GetMsgSigners` and `GetReflectMsgSigners` respectively. These API changes clear up confusin as to the use and purpose of these methods.
 
 ### Client Breaking Changes
 

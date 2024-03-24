@@ -37,7 +37,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [State Breaking]
+### [State Breaking]
+
+### [State Compatible]
+
+## v24
+
+## [v0.47.5-v24-osmo-1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-1)
 
 * (store) [#525](https://github.com/osmosis-labs/cosmos-sdk/pull/525) CacheKV speedups
 * (slashing) [#548](https://github.com/osmosis-labs/cosmos-sdk/pull/548) Implement v0.50 slashing bitmap logic
@@ -46,12 +52,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (gov) [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
 * (gov) [#510](https://github.com/osmosis-labs/cosmos-sdk/pull/510) Implement a minimum amount per deposit
 * (slashing) [#580](https://github.com/osmosis-labs/cosmos-sdk/pull/580) Less time intensive slashing migration
-
-## [State Compatible]
-
-## v24
-
-## [v0.47.5-v24-osmo-1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-1)
 
 ## IAVL v23 v1 Releases
 

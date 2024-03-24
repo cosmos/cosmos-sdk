@@ -6,9 +6,8 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	errorsmod "cosmossdk.io/errors"
-
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

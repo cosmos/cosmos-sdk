@@ -17,14 +17,13 @@ import (
 	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
-
-	"cosmossdk.io/core/header"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"

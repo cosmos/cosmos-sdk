@@ -302,6 +302,7 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
 	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
 	count := 0
 
+	keysToRemove := []collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress]{}
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {
 		grantee, granter := key.K2(), key.K3()
 
@@ -309,9 +310,7 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
 			return true, err
 		}
 
-		if err := k.FeeAllowanceQueue.Remove(ctx, key); err != nil {
-			return true, err
-		}
+		keysToRemove = append(keysToRemove, key)
 
 		// limit the amount of iterations to avoid taking too much time
 		count++
@@ -323,6 +322,12 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	for _, key := range keysToRemove {
+		if err := k.FeeAllowanceQueue.Remove(ctx, key); err != nil {
+			return err
+		}
 	}
 
 	return nil

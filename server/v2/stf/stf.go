@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/branch"
 	corecontext "cosmossdk.io/core/context"
@@ -13,7 +14,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/core/appmanager"
 )
 
 var runtimeIdentity = []byte("runtime")

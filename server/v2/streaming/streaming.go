@@ -10,16 +10,19 @@ import (
 	"github.com/hashicorp/go-plugin"
 )
 
-const pluginEnvKeyPrefix = "COSMOS_SDK"
+const (
+	pluginEnvKeyPrefix = "COSMOS_SDK"
+	defaultPlugin      = "grpc"
+)
 
 // HandshakeMap contains a map of each supported streaming's handshake config
 var HandshakeMap = map[string]plugin.HandshakeConfig{
-	"abci": Handshake, // TODO: rename from abci
+	defaultPlugin: Handshake,
 }
 
 // PluginMap contains a map of supported gRPC plugins
 var PluginMap = map[string]plugin.Plugin{
-	"abci": &ListenerGRPCPlugin{},
+	defaultPlugin: &ListenerGRPCPlugin{},
 }
 
 func GetPluginEnvKey(name string) string {

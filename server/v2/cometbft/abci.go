@@ -120,7 +120,6 @@ type BlockData struct {
 // CheckTx implements types.Application.
 // It is called by cometbft to verify transaction validity
 func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
-	// TODO: evaluate here if to return error, or CheckTxResponse.error.
 	decodedTx, err := c.txCodec.Decode(req.Tx)
 	if err != nil {
 		return nil, err
@@ -132,10 +131,14 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 	}
 
 	cometResp := &abci.ResponseCheckTx{
-		// Code:      resp.Code, //TODO: extract error code from resp.Error
+		Code:      resp.Code,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events, c.cfg.IndexEvents),
+		Info:      resp.Info,
+		Data:      resp.Data,
+		Log:       resp.Log,
+		Codespace: resp.Codespace,
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -219,7 +222,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
-	// TODO: won't work for now
+	// TODO: populate
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
 		Validators:      req.Validators,
@@ -250,7 +253,6 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, err
 	}
 
-	// TODO add bytes method in x/tx or cachetx
 	encodedTxs := make([][]byte, len(txs))
 	for i, tx := range txs {
 		encodedTxs[i] = tx.Bytes()
@@ -358,7 +360,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	// remove txs from the mempool
 	err = c.mempool.Remove(decodedTxs)
 	if err != nil {
-		return nil, fmt.Errorf("unable to remove txs: %w", err) // TODO: evaluate what erroring means here, and if we should even error.
+		return nil, fmt.Errorf("unable to remove txs: %w", err)
 	}
 
 	c.lastCommittedBlock.Store(&BlockData{

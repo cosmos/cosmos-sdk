@@ -249,8 +249,9 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 
 	if path := SplitABCIQueryPath(req.Path); len(path) > 0 {
 		switch path[0] {
-		case "app", "store", "p2p", "custom": // TODO: check if we can use the ones from abci.go without having circular deps.
+		case "app", "store", "p2p", "custom":
 			// valid path
+			// TODO complete this
 
 		default:
 			// Otherwise, error as to prevent either valid gRPC service requests or

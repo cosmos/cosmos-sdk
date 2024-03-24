@@ -23,6 +23,8 @@ type BlockRequest[T any] struct {
 	Height            uint64
 	Time              time.Time
 	Hash              []byte
+	ChainId           string
+	AppHash           []byte
 	Txs               []T
 	ConsensusMessages []transaction.Type
 }

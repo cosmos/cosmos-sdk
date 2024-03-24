@@ -51,6 +51,8 @@ type Consensus[T transaction.Tx] struct {
 	processProposalHandler handlers.ProcessHandler[T]
 	verifyVoteExt          handlers.VerifyVoteExtensionhandler
 	extendVote             handlers.ExtendVoteHandler
+
+	chainID string
 }
 
 func NewConsensus[T transaction.Tx](
@@ -221,6 +223,8 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
+	c.chainID = req.ChainId
+
 	// TODO: populate
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
@@ -318,10 +322,17 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 		return nil, err
 	}
 
+	cid, err := c.store.LastCommitID()
+	if err != nil {
+		return nil, err
+	}
+
 	blockReq := &coreappmgr.BlockRequest[T]{
 		Height:            uint64(req.Height),
 		Time:              req.Time,
 		Hash:              req.Hash,
+		AppHash:           cid.Hash,
+		ChainId:           c.chainID,
 		Txs:               decodedTxs,
 		ConsensusMessages: []transaction.Type{cometInfo},
 	}

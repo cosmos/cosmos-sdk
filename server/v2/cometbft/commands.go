@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/crypto/encoding"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -21,8 +22,6 @@ import (
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	"cosmossdk.io/server/v2/cometbft/flags"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/version"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -34,7 +33,7 @@ const (
 
 func (s *CometBFTServer[T]) rpcClient() (rpc.CometRPC, error) {
 	if s.config.Standalone {
-		client, err := rpchttp.New(s.config.CmtConfig.RPC.ListenAddress, "/websocket")
+		client, err := rpchttp.New(s.Node.Config().RPC.ListenAddress, "/websocket")
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +83,7 @@ func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			nodeKey, err := p2p.LoadNodeKey(s.config.CmtConfig.NodeKeyFile())
+			nodeKey, err := p2p.LoadNodeKey(s.Node.Config().NodeKeyFile())
 			if err != nil {
 				return err
 			}
@@ -101,27 +100,24 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := s.config.CmtConfig
+			cfg := s.Node.Config()
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
 			if err != nil {
 				return err
 			}
 
-			sdkPK, err := cryptocodec.FromCmtPubKeyInterface(pk)
+			cmtPk, err := encoding.PubKeyToProto(pk)
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(sdkPK) // TODO: figure out if we need the codec here or not, see below
+			bz, err := json.Marshal(cmtPk)
+			if err != nil {
+				return err
+			}
 
-			// clientCtx := client.GetClientContextFromCmd(cmd)
-			// bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
-			// if err != nil {
-			// 	return err
-			// }
-
-			// cmd.Println(string(bz))
+			cmd.Println(string(bz))
 			return nil
 		},
 	}
@@ -135,7 +131,7 @@ func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := s.config.CmtConfig
+			cfg := s.Node.Config()
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr, err := s.consAddrCodec.BytesToString(privValidator.GetAddress().Bytes())
 			if err != nil {
@@ -191,7 +187,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 `,
 		Example: fmt.Sprintf(
 			"$ %s query blocks --query \"message.sender='cosmos1...' AND block.height > 7\" --page 1 --limit 30 --order-by ASC",
-			version.AppName,
+			s.App.cfg.Name,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rpcclient, err := s.rpcClient()
@@ -241,8 +237,8 @@ func (s *CometBFTServer[T]) QueryBlockCmd() *cobra.Command {
 $ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>
 `,
-			version.AppName, auth.FlagType, auth.TypeHeight,
-			version.AppName, auth.FlagType, auth.TypeHash)),
+			s.App.cfg.Name, auth.FlagType, auth.TypeHeight,
+			s.App.cfg.Name, auth.FlagType, auth.TypeHash)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			typ, _ := cmd.Flags().GetString(auth.FlagType)
@@ -409,7 +405,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 				}
 			}
 
-			return node.BootstrapState(cmd.Context(), s.config.CmtConfig, cmtcfg.DefaultDBProvider, height, nil)
+			return node.BootstrapState(cmd.Context(), s.Node.Config(), cmtcfg.DefaultDBProvider, height, nil)
 		},
 	}
 

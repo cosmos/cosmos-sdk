@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/encoding"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -14,9 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -118,7 +117,7 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 
 // GetLatestValidatorSet implements ServiceServer.GetLatestValidatorSet
 func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestValidatorSetRequest) (*GetLatestValidatorSetResponse, error) {
-	page, limit, err := qtypes.ParsePagination(req.Pagination)
+	page, limit, err := ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +139,7 @@ func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.Any
 
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error) {
-	page, limit, err := qtypes.ParsePagination(req.Pagination)
+	page, limit, err := ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -177,17 +176,18 @@ func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc
 	resp := GetLatestValidatorSetResponse{
 		BlockHeight: vs.BlockHeight,
 		Validators:  make([]*Validator, len(vs.Validators)),
-		Pagination: &qtypes.PageResponse{
+		Pagination: &PageResponse{
 			Total: uint64(vs.Total),
 		},
 	}
 
 	for i, v := range vs.Validators {
-		pk, err := cryptocodec.FromCmtPubKeyInterface(v.PubKey)
+		pk, err := encoding.PubKeyToProto(v.PubKey)
 		if err != nil {
 			return nil, err
 		}
-		anyPub, err := codectypes.NewAnyWithValue(pk)
+
+		anyPub, err := codectypes.NewAnyWithValue(&pk)
 		if err != nil {
 			return nil, err
 		}

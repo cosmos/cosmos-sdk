@@ -6,22 +6,95 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cometbft/cometbft/proto/tendermint/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
+// BlockIDFlag represents the flag indicating the type of block ID.
+type BlockIDFlag int32
+
+const (
+	// BLOCK_ID_FLAG_UNKNOWN represents an unknown block ID flag.
+	BlockIDFlag_BLOCK_ID_FLAG_UNSPECIFIED BlockIDFlag = 0
+	// BLOCK_ID_FLAG_ABSENT is a block ID flag indicating that the block ID is absent.
+	BlockIDFlag_BLOCK_ID_FLAG_ABSENT BlockIDFlag = 1
+	// BLOCK_ID_FLAG_COMMIT is a block ID flag indicating a commit block ID.
+	BlockIDFlag_BLOCK_ID_FLAG_COMMIT BlockIDFlag = 2
+	// BLOCK_ID_FLAG_NIL is a block ID flag indicating a nil block ID.
+	BlockIDFlag_BLOCK_ID_FLAG_NIL BlockIDFlag = 3
+)
+
+var BlockIDFlag_name = map[int32]string{
+	0: "BLOCK_ID_FLAG_UNSPECIFIED",
+	1: "BLOCK_ID_FLAG_ABSENT",
+	2: "BLOCK_ID_FLAG_COMMIT",
+	3: "BLOCK_ID_FLAG_NIL",
+}
+
+var BlockIDFlag_value = map[string]int32{
+	"BLOCK_ID_FLAG_UNSPECIFIED": 0,
+	"BLOCK_ID_FLAG_ABSENT":      1,
+	"BLOCK_ID_FLAG_COMMIT":      2,
+	"BLOCK_ID_FLAG_NIL":         3,
+}
+
+func (x BlockIDFlag) String() string {
+	return proto.EnumName(BlockIDFlag_name, int32(x))
+}
+
+func (BlockIDFlag) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{0}
+}
+
+// Enum representing different types of misbehavior.
+type MisbehaviorType int32
+
+const (
+	// Unspecified misbehavior type.
+	MisbehaviorType_MISBEHAVIOR_TYPE_UNSPECIFIED MisbehaviorType = 0
+	// Duplicate vote misbehavior.
+	MisbehaviorType_MISBEHAVIOR_TYPE_DUPLICATE_VOTE MisbehaviorType = 1
+	// Light client attack misbehavior.
+	MisbehaviorType_MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK MisbehaviorType = 2
+)
+
+var MisbehaviorType_name = map[int32]string{
+	0: "MISBEHAVIOR_TYPE_UNSPECIFIED",
+	1: "MISBEHAVIOR_TYPE_DUPLICATE_VOTE",
+	2: "MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK",
+}
+
+var MisbehaviorType_value = map[string]int32{
+	"MISBEHAVIOR_TYPE_UNSPECIFIED":         0,
+	"MISBEHAVIOR_TYPE_DUPLICATE_VOTE":      1,
+	"MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK": 2,
+}
+
+func (x MisbehaviorType) String() string {
+	return proto.EnumName(MisbehaviorType_name, int32(x))
+}
+
+func (MisbehaviorType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{1}
+}
 
 // ConsensusMsgParams is the Msg/Params request type. This is a consensus message that is sent from cometbft.
 type ConsensusMsgParams struct {
@@ -141,9 +214,492 @@ func (m *ConsensusMsgParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ConsensusMsgParamsResponse proto.InternalMessageInfo
 
+// MsgCometInfoRequest is the Msg/CometInfo request type. This is a consensus message that is sent from cometbft.
+type ConsensusMsgCometInfoRequest struct {
+	CometInfo *CometInfo `protobuf:"bytes,1,opt,name=comet_info,json=cometInfo,proto3" json:"comet_info,omitempty"`
+}
+
+func (m *ConsensusMsgCometInfoRequest) Reset()         { *m = ConsensusMsgCometInfoRequest{} }
+func (m *ConsensusMsgCometInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*ConsensusMsgCometInfoRequest) ProtoMessage()    {}
+func (*ConsensusMsgCometInfoRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{2}
+}
+func (m *ConsensusMsgCometInfoRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ConsensusMsgCometInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ConsensusMsgCometInfoRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ConsensusMsgCometInfoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConsensusMsgCometInfoRequest.Merge(m, src)
+}
+func (m *ConsensusMsgCometInfoRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ConsensusMsgCometInfoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConsensusMsgCometInfoRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConsensusMsgCometInfoRequest proto.InternalMessageInfo
+
+func (m *ConsensusMsgCometInfoRequest) GetCometInfo() *CometInfo {
+	if m != nil {
+		return m.CometInfo
+	}
+	return nil
+}
+
+// MsgCometInfoResponse is the Msg/CometInfo response type. This is a consensus message that is sent from cometbft.
+type ConsensusMsgCometInfoResponse struct {
+}
+
+func (m *ConsensusMsgCometInfoResponse) Reset()         { *m = ConsensusMsgCometInfoResponse{} }
+func (m *ConsensusMsgCometInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*ConsensusMsgCometInfoResponse) ProtoMessage()    {}
+func (*ConsensusMsgCometInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{3}
+}
+func (m *ConsensusMsgCometInfoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ConsensusMsgCometInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ConsensusMsgCometInfoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ConsensusMsgCometInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConsensusMsgCometInfoResponse.Merge(m, src)
+}
+func (m *ConsensusMsgCometInfoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ConsensusMsgCometInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConsensusMsgCometInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConsensusMsgCometInfoResponse proto.InternalMessageInfo
+
+// ConsensusMsgCometInfoResponse represents the consensus message containing information about the validators, proposer,
+// and last commit.
+type MsgCometInfoRequest struct {
+}
+
+func (m *MsgCometInfoRequest) Reset()         { *m = MsgCometInfoRequest{} }
+func (m *MsgCometInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgCometInfoRequest) ProtoMessage()    {}
+func (*MsgCometInfoRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{4}
+}
+func (m *MsgCometInfoRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCometInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCometInfoRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCometInfoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCometInfoRequest.Merge(m, src)
+}
+func (m *MsgCometInfoRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCometInfoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCometInfoRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCometInfoRequest proto.InternalMessageInfo
+
+// MsgCometInfoResponse represents the consensus message containing information about the validators, proposer,
+// and last commit.
+type MsgCometInfoResponse struct {
+	CometInfo *CometInfo `protobuf:"bytes,1,opt,name=comet_info,json=cometInfo,proto3" json:"comet_info,omitempty"`
+}
+
+func (m *MsgCometInfoResponse) Reset()         { *m = MsgCometInfoResponse{} }
+func (m *MsgCometInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCometInfoResponse) ProtoMessage()    {}
+func (*MsgCometInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{5}
+}
+func (m *MsgCometInfoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCometInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCometInfoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCometInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCometInfoResponse.Merge(m, src)
+}
+func (m *MsgCometInfoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCometInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCometInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCometInfoResponse proto.InternalMessageInfo
+
+func (m *MsgCometInfoResponse) GetCometInfo() *CometInfo {
+	if m != nil {
+		return m.CometInfo
+	}
+	return nil
+}
+
+// ConsensusMsgCometInfoResponse represents the consensus message containing information about the validators, proposer,
+// and last commit.
+type CometInfo struct {
+	ValidatorsHash  []byte      `protobuf:"bytes,1,opt,name=validators_hash,json=validatorsHash,proto3" json:"validators_hash,omitempty"`
+	ProposerAddress []byte      `protobuf:"bytes,2,opt,name=proposer_address,json=proposerAddress,proto3" json:"proposer_address,omitempty"`
+	LastCommit      *CommitInfo `protobuf:"bytes,3,opt,name=last_commit,json=lastCommit,proto3" json:"last_commit,omitempty"`
+	Evidence        []*Evidence `protobuf:"bytes,4,rep,name=evidence,proto3" json:"evidence,omitempty"`
+}
+
+func (m *CometInfo) Reset()         { *m = CometInfo{} }
+func (m *CometInfo) String() string { return proto.CompactTextString(m) }
+func (*CometInfo) ProtoMessage()    {}
+func (*CometInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{6}
+}
+func (m *CometInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CometInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CometInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CometInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CometInfo.Merge(m, src)
+}
+func (m *CometInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *CometInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_CometInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CometInfo proto.InternalMessageInfo
+
+func (m *CometInfo) GetValidatorsHash() []byte {
+	if m != nil {
+		return m.ValidatorsHash
+	}
+	return nil
+}
+
+func (m *CometInfo) GetProposerAddress() []byte {
+	if m != nil {
+		return m.ProposerAddress
+	}
+	return nil
+}
+
+func (m *CometInfo) GetLastCommit() *CommitInfo {
+	if m != nil {
+		return m.LastCommit
+	}
+	return nil
+}
+
+func (m *CometInfo) GetEvidence() []*Evidence {
+	if m != nil {
+		return m.Evidence
+	}
+	return nil
+}
+
+// CommitInfo represents information about a commit.
+type CommitInfo struct {
+	Round int32       `protobuf:"varint,1,opt,name=round,proto3" json:"round,omitempty"`
+	Votes []*VoteInfo `protobuf:"bytes,2,rep,name=votes,proto3" json:"votes,omitempty"`
+}
+
+func (m *CommitInfo) Reset()         { *m = CommitInfo{} }
+func (m *CommitInfo) String() string { return proto.CompactTextString(m) }
+func (*CommitInfo) ProtoMessage()    {}
+func (*CommitInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{7}
+}
+func (m *CommitInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CommitInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CommitInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CommitInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CommitInfo.Merge(m, src)
+}
+func (m *CommitInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *CommitInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_CommitInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CommitInfo proto.InternalMessageInfo
+
+func (m *CommitInfo) GetRound() int32 {
+	if m != nil {
+		return m.Round
+	}
+	return 0
+}
+
+func (m *CommitInfo) GetVotes() []*VoteInfo {
+	if m != nil {
+		return m.Votes
+	}
+	return nil
+}
+
+// VoteInfo represents information about a vote.
+type VoteInfo struct {
+	Validator   *Validator  `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator,omitempty"`
+	BlockIdFlag BlockIDFlag `protobuf:"varint,2,opt,name=block_id_flag,json=blockIdFlag,proto3,enum=cosmos.consensus.v1.BlockIDFlag" json:"block_id_flag,omitempty"`
+}
+
+func (m *VoteInfo) Reset()         { *m = VoteInfo{} }
+func (m *VoteInfo) String() string { return proto.CompactTextString(m) }
+func (*VoteInfo) ProtoMessage()    {}
+func (*VoteInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{8}
+}
+func (m *VoteInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VoteInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VoteInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VoteInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VoteInfo.Merge(m, src)
+}
+func (m *VoteInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *VoteInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_VoteInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VoteInfo proto.InternalMessageInfo
+
+func (m *VoteInfo) GetValidator() *Validator {
+	if m != nil {
+		return m.Validator
+	}
+	return nil
+}
+
+func (m *VoteInfo) GetBlockIdFlag() BlockIDFlag {
+	if m != nil {
+		return m.BlockIdFlag
+	}
+	return BlockIDFlag_BLOCK_ID_FLAG_UNSPECIFIED
+}
+
+// Validator represents a validator.
+type Validator struct {
+	Address []byte `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Power   int64  `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
+}
+
+func (m *Validator) Reset()         { *m = Validator{} }
+func (m *Validator) String() string { return proto.CompactTextString(m) }
+func (*Validator) ProtoMessage()    {}
+func (*Validator) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{9}
+}
+func (m *Validator) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Validator) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Validator.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Validator) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Validator.Merge(m, src)
+}
+func (m *Validator) XXX_Size() int {
+	return m.Size()
+}
+func (m *Validator) XXX_DiscardUnknown() {
+	xxx_messageInfo_Validator.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Validator proto.InternalMessageInfo
+
+func (m *Validator) GetAddress() []byte {
+	if m != nil {
+		return m.Address
+	}
+	return nil
+}
+
+func (m *Validator) GetPower() int64 {
+	if m != nil {
+		return m.Power
+	}
+	return 0
+}
+
+// Evidence represents evidence of misbehavior.
+type Evidence struct {
+	EvidenceType     MisbehaviorType `protobuf:"varint,1,opt,name=evidence_type,json=evidenceType,proto3,enum=cosmos.consensus.v1.MisbehaviorType" json:"evidence_type,omitempty"`
+	Validator        *Validator      `protobuf:"bytes,2,opt,name=validator,proto3" json:"validator,omitempty"`
+	Height           int64           `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
+	Time             *time.Time      `protobuf:"bytes,4,opt,name=time,proto3,stdtime" json:"time,omitempty"`
+	TotalVotingPower int64           `protobuf:"varint,5,opt,name=total_voting_power,json=totalVotingPower,proto3" json:"total_voting_power,omitempty"`
+}
+
+func (m *Evidence) Reset()         { *m = Evidence{} }
+func (m *Evidence) String() string { return proto.CompactTextString(m) }
+func (*Evidence) ProtoMessage()    {}
+func (*Evidence) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ed86dd7d42fb61b, []int{10}
+}
+func (m *Evidence) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Evidence) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Evidence.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Evidence) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Evidence.Merge(m, src)
+}
+func (m *Evidence) XXX_Size() int {
+	return m.Size()
+}
+func (m *Evidence) XXX_DiscardUnknown() {
+	xxx_messageInfo_Evidence.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Evidence proto.InternalMessageInfo
+
+func (m *Evidence) GetEvidenceType() MisbehaviorType {
+	if m != nil {
+		return m.EvidenceType
+	}
+	return MisbehaviorType_MISBEHAVIOR_TYPE_UNSPECIFIED
+}
+
+func (m *Evidence) GetValidator() *Validator {
+	if m != nil {
+		return m.Validator
+	}
+	return nil
+}
+
+func (m *Evidence) GetHeight() int64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+func (m *Evidence) GetTime() *time.Time {
+	if m != nil {
+		return m.Time
+	}
+	return nil
+}
+
+func (m *Evidence) GetTotalVotingPower() int64 {
+	if m != nil {
+		return m.TotalVotingPower
+	}
+	return 0
+}
+
 func init() {
+	proto.RegisterEnum("cosmos.consensus.v1.BlockIDFlag", BlockIDFlag_name, BlockIDFlag_value)
+	proto.RegisterEnum("cosmos.consensus.v1.MisbehaviorType", MisbehaviorType_name, MisbehaviorType_value)
 	proto.RegisterType((*ConsensusMsgParams)(nil), "cosmos.consensus.v1.ConsensusMsgParams")
 	proto.RegisterType((*ConsensusMsgParamsResponse)(nil), "cosmos.consensus.v1.ConsensusMsgParamsResponse")
+	proto.RegisterType((*ConsensusMsgCometInfoRequest)(nil), "cosmos.consensus.v1.ConsensusMsgCometInfoRequest")
+	proto.RegisterType((*ConsensusMsgCometInfoResponse)(nil), "cosmos.consensus.v1.ConsensusMsgCometInfoResponse")
+	proto.RegisterType((*MsgCometInfoRequest)(nil), "cosmos.consensus.v1.MsgCometInfoRequest")
+	proto.RegisterType((*MsgCometInfoResponse)(nil), "cosmos.consensus.v1.MsgCometInfoResponse")
+	proto.RegisterType((*CometInfo)(nil), "cosmos.consensus.v1.CometInfo")
+	proto.RegisterType((*CommitInfo)(nil), "cosmos.consensus.v1.CommitInfo")
+	proto.RegisterType((*VoteInfo)(nil), "cosmos.consensus.v1.VoteInfo")
+	proto.RegisterType((*Validator)(nil), "cosmos.consensus.v1.Validator")
+	proto.RegisterType((*Evidence)(nil), "cosmos.consensus.v1.Evidence")
 }
 
 func init() {
@@ -151,27 +707,62 @@ func init() {
 }
 
 var fileDescriptor_7ed86dd7d42fb61b = []byte{
-	// 306 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0xd1, 0xcf, 0x4a, 0xc3, 0x30,
-	0x1c, 0xc0, 0xf1, 0x76, 0x6e, 0xfe, 0x89, 0xb7, 0x78, 0x29, 0x63, 0x8b, 0x73, 0x5e, 0xbc, 0x98,
-	0x38, 0x77, 0x12, 0x04, 0xb1, 0x43, 0xd0, 0x83, 0x20, 0x3b, 0x78, 0xf0, 0xd6, 0xa6, 0x61, 0x86,
-	0xad, 0x49, 0x69, 0xb2, 0xa2, 0x6f, 0xe1, 0xcb, 0xf8, 0x0e, 0x1e, 0x77, 0xf4, 0x28, 0xed, 0x8b,
-	0x48, 0xd3, 0x74, 0x15, 0xea, 0xa9, 0x34, 0xf9, 0x7e, 0xd2, 0x92, 0x1f, 0x38, 0xa5, 0x52, 0xc5,
-	0x52, 0x11, 0x2a, 0x85, 0x62, 0x42, 0xad, 0x15, 0xc9, 0x26, 0xcd, 0x0b, 0x4e, 0x52, 0xa9, 0x25,
-	0x3c, 0xaa, 0x22, 0xdc, 0xac, 0x67, 0x93, 0xfe, 0x50, 0x33, 0x11, 0xb1, 0x34, 0xe6, 0x42, 0x13,
-	0xfd, 0x9e, 0x30, 0x45, 0x92, 0x20, 0x0d, 0x62, 0x6b, 0xc6, 0x9f, 0x1d, 0x00, 0x67, 0x75, 0xff,
-	0xa8, 0x16, 0x4f, 0x66, 0x13, 0x5e, 0x81, 0xbd, 0x8c, 0xa5, 0x8a, 0x4b, 0xe1, 0xb9, 0x23, 0xf7,
-	0xec, 0xf0, 0xf2, 0x18, 0x37, 0xe7, 0x60, 0x73, 0x0e, 0x7e, 0xae, 0x82, 0x4a, 0xcc, 0xeb, 0x1e,
-	0x4e, 0x41, 0x2f, 0x5c, 0x49, 0xba, 0xf4, 0x3a, 0x06, 0x0e, 0xdb, 0xd0, 0x2f, 0xb7, 0x2d, 0xab,
-	0x5a, 0x78, 0x0d, 0xf6, 0x59, 0xc6, 0x23, 0x26, 0x28, 0xf3, 0x76, 0x8c, 0x1b, 0xb5, 0xdd, 0x9d,
-	0x2d, 0x2c, 0xdd, 0x0a, 0x78, 0x03, 0x0e, 0xb2, 0x60, 0xc5, 0xa3, 0x40, 0xcb, 0xd4, 0xeb, 0x1a,
-	0x7e, 0xf2, 0xcf, 0xff, 0xd6, 0x89, 0xf5, 0x8d, 0x81, 0x17, 0xa0, 0x1b, 0x84, 0x94, 0x7b, 0x3d,
-	0x63, 0x07, 0x6d, 0x7b, 0xeb, 0xcf, 0x1e, 0x2c, 0x33, 0xe5, 0x78, 0x00, 0xfa, 0xed, 0x6b, 0x9b,
-	0x33, 0x95, 0x94, 0x8b, 0xfe, 0xfd, 0x57, 0x8e, 0xdc, 0x4d, 0x8e, 0xdc, 0x9f, 0x1c, 0xb9, 0x1f,
-	0x05, 0x72, 0x36, 0x05, 0x72, 0xbe, 0x0b, 0xe4, 0xbc, 0xe0, 0x05, 0xd7, 0xaf, 0xeb, 0x10, 0x53,
-	0x19, 0x93, 0xed, 0x4c, 0xcb, 0xc7, 0xb9, 0x8a, 0x96, 0xe4, 0xed, 0xcf, 0x80, 0xcd, 0x87, 0xc3,
-	0x5d, 0x33, 0xa6, 0xe9, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x66, 0x95, 0x46, 0x47, 0x01, 0x02,
-	0x00, 0x00,
+	// 865 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xcd, 0x6e, 0xdb, 0x46,
+	0x10, 0x36, 0xf5, 0x93, 0xd8, 0x63, 0xc7, 0x56, 0x37, 0x4e, 0xa1, 0x1a, 0xb6, 0xa4, 0x32, 0x01,
+	0x9a, 0x06, 0x2d, 0xd9, 0x38, 0xbd, 0x04, 0x4d, 0xd1, 0x4a, 0x14, 0x1d, 0x13, 0x91, 0x6c, 0x81,
+	0xa6, 0x55, 0xb4, 0x40, 0xb1, 0xa0, 0xc8, 0x35, 0x45, 0x44, 0xe4, 0xb2, 0xdc, 0x95, 0xd2, 0x5c,
+	0xfb, 0x00, 0x6d, 0x5e, 0xa6, 0xef, 0xd0, 0x63, 0x8e, 0x3d, 0x14, 0x68, 0x61, 0xbf, 0x48, 0xc1,
+	0x25, 0x29, 0xca, 0x91, 0x5c, 0xa0, 0xc8, 0x49, 0x3b, 0x33, 0xdf, 0x37, 0x33, 0xfa, 0x76, 0x76,
+	0x08, 0xf7, 0x1d, 0xca, 0x02, 0xca, 0x54, 0x87, 0x86, 0x8c, 0x84, 0x6c, 0xca, 0xd4, 0xd9, 0xe3,
+	0xc2, 0x50, 0xa2, 0x98, 0x72, 0x8a, 0xee, 0xa6, 0x20, 0xa5, 0xf0, 0xcf, 0x1e, 0xef, 0x1d, 0x70,
+	0x12, 0xba, 0x24, 0x0e, 0xfc, 0x90, 0xab, 0xfc, 0x75, 0x44, 0x98, 0x1a, 0xd9, 0xb1, 0x1d, 0x64,
+	0x9c, 0xbd, 0x5d, 0x8f, 0x7a, 0x54, 0x1c, 0xd5, 0xe4, 0x94, 0x79, 0x9b, 0x1e, 0xa5, 0xde, 0x84,
+	0xa8, 0xc2, 0x1a, 0x4d, 0x2f, 0x54, 0xee, 0x07, 0x84, 0x71, 0x3b, 0x88, 0x52, 0x80, 0xfc, 0x7b,
+	0x09, 0x90, 0x96, 0x97, 0xe9, 0x33, 0x6f, 0x20, 0x72, 0xa2, 0xa7, 0x70, 0x7b, 0x46, 0x62, 0xe6,
+	0xd3, 0xb0, 0x2e, 0xb5, 0xa4, 0x87, 0x9b, 0x87, 0x4d, 0xa5, 0x28, 0xaf, 0x88, 0xf2, 0xca, 0x30,
+	0x05, 0xa4, 0x0c, 0x33, 0xc7, 0xa3, 0x27, 0x50, 0x1d, 0x4d, 0xa8, 0xf3, 0xb2, 0x5e, 0x12, 0xc4,
+	0x83, 0x65, 0x62, 0x27, 0x09, 0x67, 0xb4, 0x14, 0x8b, 0x9e, 0xc1, 0x3a, 0x99, 0xf9, 0x2e, 0x09,
+	0x1d, 0x52, 0x2f, 0x0b, 0x5e, 0x6b, 0x99, 0xa7, 0x67, 0x88, 0x8c, 0x3a, 0x67, 0xa0, 0x6f, 0x60,
+	0x63, 0x66, 0x4f, 0x7c, 0xd7, 0xe6, 0x34, 0xae, 0x57, 0x04, 0xfd, 0xe3, 0x15, 0xfd, 0xe6, 0x90,
+	0x8c, 0x5f, 0x70, 0xd0, 0x17, 0x50, 0xb1, 0x47, 0x8e, 0x5f, 0xaf, 0x0a, 0xee, 0xfe, 0x32, 0xb7,
+	0xdd, 0xd1, 0x8c, 0x8c, 0x26, 0x90, 0xf2, 0x3e, 0xec, 0x2d, 0xcb, 0x66, 0x12, 0x16, 0x25, 0x4e,
+	0xf9, 0x47, 0xd8, 0x5f, 0x8c, 0x6a, 0x34, 0x20, 0xdc, 0x08, 0x2f, 0xa8, 0x49, 0x7e, 0x9a, 0x12,
+	0xc6, 0xd1, 0xd7, 0x00, 0x4e, 0xe2, 0xc3, 0x7e, 0x78, 0x41, 0x33, 0x85, 0x1b, 0xca, 0x8a, 0x5b,
+	0x57, 0x0a, 0xea, 0x86, 0x93, 0x1f, 0xe5, 0x26, 0x1c, 0xdc, 0x90, 0x3e, 0xab, 0x7f, 0x0f, 0xee,
+	0xae, 0x28, 0x2b, 0x9f, 0xc3, 0xee, 0x2a, 0xf8, 0xfb, 0xb6, 0xf3, 0x97, 0x04, 0x1b, 0xf3, 0x00,
+	0xfa, 0x04, 0x76, 0xe6, 0xc2, 0x32, 0x3c, 0xb6, 0xd9, 0x58, 0x64, 0xdc, 0x32, 0xb7, 0x0b, 0xf7,
+	0xb1, 0xcd, 0xc6, 0xe8, 0x53, 0xa8, 0x45, 0x31, 0x8d, 0x28, 0x23, 0x31, 0xb6, 0x5d, 0x37, 0x26,
+	0x8c, 0x89, 0x99, 0xd9, 0x32, 0x77, 0x72, 0x7f, 0x3b, 0x75, 0xa3, 0x6f, 0x61, 0x73, 0x62, 0x33,
+	0x8e, 0x1d, 0x1a, 0x04, 0x3e, 0xcf, 0x26, 0xa4, 0x79, 0x53, 0x87, 0x81, 0x9f, 0xb6, 0x08, 0x09,
+	0x27, 0xb5, 0xd1, 0xd3, 0x85, 0x01, 0xab, 0xb4, 0xca, 0x62, 0x30, 0x57, 0xd1, 0xf3, 0x19, 0x2b,
+	0xa6, 0x4b, 0xfe, 0x0e, 0xa0, 0x48, 0x8a, 0x76, 0xa1, 0x1a, 0xd3, 0x69, 0xe8, 0x8a, 0x3f, 0x55,
+	0x35, 0x53, 0x23, 0x19, 0xfa, 0x19, 0xe5, 0x24, 0xf9, 0x03, 0x37, 0xe7, 0x1e, 0x52, 0x4e, 0x44,
+	0x63, 0x29, 0x56, 0xfe, 0x55, 0x82, 0xf5, 0xdc, 0x87, 0x9e, 0x2d, 0xce, 0xf0, 0x7f, 0x5d, 0xc1,
+	0x7c, 0x8c, 0x17, 0x07, 0xb8, 0x0b, 0x77, 0xc4, 0x43, 0xc2, 0xbe, 0x8b, 0x2f, 0x26, 0xb6, 0x27,
+	0x84, 0xdc, 0x3e, 0x6c, 0xad, 0xcc, 0x20, 0xde, 0x9f, 0xd1, 0x3d, 0x9a, 0xd8, 0x9e, 0xb9, 0x29,
+	0x68, 0x86, 0x9b, 0x18, 0xf2, 0x57, 0xb0, 0x31, 0xcf, 0x8e, 0xea, 0x70, 0x3b, 0xbf, 0x95, 0xf4,
+	0xfe, 0x72, 0x33, 0x91, 0x20, 0xa2, 0xaf, 0x48, 0x2c, 0x8a, 0x94, 0xcd, 0xd4, 0x90, 0x7f, 0x2b,
+	0xc1, 0x7a, 0xae, 0x1e, 0x32, 0xe0, 0x4e, 0xae, 0x1f, 0x4e, 0x5e, 0x90, 0x48, 0xb1, 0x7d, 0xf8,
+	0x60, 0x65, 0x3f, 0x7d, 0x9f, 0x8d, 0xc8, 0xd8, 0x9e, 0xf9, 0x34, 0xb6, 0x5e, 0x47, 0xc4, 0xdc,
+	0xca, 0xa9, 0x89, 0x75, 0x5d, 0x98, 0xd2, 0xff, 0x15, 0xe6, 0x43, 0xb8, 0x35, 0x26, 0xbe, 0x37,
+	0x4e, 0x87, 0xa6, 0x6c, 0x66, 0x16, 0xfa, 0x12, 0x2a, 0xc9, 0x2a, 0xcc, 0xb6, 0xc5, 0x9e, 0x92,
+	0xee, 0x49, 0x25, 0xdf, 0x93, 0x8a, 0x95, 0xef, 0xc9, 0x4e, 0xe5, 0xcd, 0xdf, 0x4d, 0xc9, 0x14,
+	0x68, 0xf4, 0x19, 0x20, 0x4e, 0xb9, 0x3d, 0xc1, 0x33, 0xca, 0xfd, 0xd0, 0xc3, 0xa9, 0x0c, 0x55,
+	0x91, 0xb9, 0x26, 0x22, 0x43, 0x11, 0x18, 0x24, 0xfe, 0x47, 0xaf, 0x60, 0x73, 0x41, 0x6a, 0x74,
+	0x00, 0x1f, 0x75, 0x7a, 0xa7, 0xda, 0x0b, 0x6c, 0x74, 0xf1, 0x51, 0xaf, 0xfd, 0x1c, 0x9f, 0x9f,
+	0x9c, 0x0d, 0x74, 0xcd, 0x38, 0x32, 0xf4, 0x6e, 0x6d, 0x0d, 0xd5, 0x61, 0xf7, 0x7a, 0xb8, 0xdd,
+	0x39, 0xd3, 0x4f, 0xac, 0x9a, 0xb4, 0x1c, 0xd1, 0x4e, 0xfb, 0x7d, 0xc3, 0xaa, 0x95, 0xd0, 0x3d,
+	0xf8, 0xe0, 0x7a, 0xe4, 0xc4, 0xe8, 0xd5, 0xca, 0x8f, 0x7e, 0x91, 0x60, 0xe7, 0x1d, 0x51, 0x51,
+	0x0b, 0xf6, 0xfb, 0xc6, 0x59, 0x47, 0x3f, 0x6e, 0x0f, 0x8d, 0x53, 0x13, 0x5b, 0xdf, 0x0f, 0xf4,
+	0x77, 0x1a, 0xb8, 0x0f, 0xcd, 0x25, 0x44, 0xf7, 0x7c, 0xd0, 0x33, 0xb4, 0xb6, 0xa5, 0xe3, 0xe1,
+	0xa9, 0xa5, 0xd7, 0x24, 0xf4, 0x10, 0x1e, 0x2c, 0x81, 0x7a, 0xc6, 0xf3, 0x63, 0x0b, 0x6b, 0x3d,
+	0x43, 0x3f, 0xb1, 0x70, 0xdb, 0xb2, 0xda, 0xda, 0x8b, 0x5a, 0xa9, 0x73, 0xfc, 0xc7, 0x65, 0x43,
+	0x7a, 0x7b, 0xd9, 0x90, 0xfe, 0xb9, 0x6c, 0x48, 0x6f, 0xae, 0x1a, 0x6b, 0x6f, 0xaf, 0x1a, 0x6b,
+	0x7f, 0x5e, 0x35, 0xd6, 0x7e, 0x50, 0x3c, 0x9f, 0x8f, 0xa7, 0x23, 0xc5, 0xa1, 0x81, 0x3a, 0xff,
+	0x1c, 0x26, 0x3f, 0x9f, 0x33, 0xf7, 0xa5, 0xfa, 0xf3, 0xc2, 0xb7, 0x51, 0x2c, 0xdf, 0xd1, 0x2d,
+	0x71, 0x2b, 0x4f, 0xfe, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x67, 0x19, 0x90, 0xfe, 0x3c, 0x07, 0x00,
+	0x00,
 }
 
 func (m *ConsensusMsgParams) Marshal() (dAtA []byte, err error) {
@@ -280,6 +871,362 @@ func (m *ConsensusMsgParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
+func (m *ConsensusMsgCometInfoRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ConsensusMsgCometInfoRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ConsensusMsgCometInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CometInfo != nil {
+		{
+			size, err := m.CometInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintConsensus(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ConsensusMsgCometInfoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ConsensusMsgCometInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ConsensusMsgCometInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCometInfoRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCometInfoRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCometInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCometInfoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCometInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCometInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CometInfo != nil {
+		{
+			size, err := m.CometInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintConsensus(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CometInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CometInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CometInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Evidence) > 0 {
+		for iNdEx := len(m.Evidence) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Evidence[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintConsensus(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if m.LastCommit != nil {
+		{
+			size, err := m.LastCommit.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintConsensus(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ProposerAddress) > 0 {
+		i -= len(m.ProposerAddress)
+		copy(dAtA[i:], m.ProposerAddress)
+		i = encodeVarintConsensus(dAtA, i, uint64(len(m.ProposerAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ValidatorsHash) > 0 {
+		i -= len(m.ValidatorsHash)
+		copy(dAtA[i:], m.ValidatorsHash)
+		i = encodeVarintConsensus(dAtA, i, uint64(len(m.ValidatorsHash)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CommitInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CommitInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CommitInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Votes) > 0 {
+		for iNdEx := len(m.Votes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Votes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintConsensus(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.Round != 0 {
+		i = encodeVarintConsensus(dAtA, i, uint64(m.Round))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *VoteInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VoteInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VoteInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BlockIdFlag != 0 {
+		i = encodeVarintConsensus(dAtA, i, uint64(m.BlockIdFlag))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Validator != nil {
+		{
+			size, err := m.Validator.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintConsensus(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Validator) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Validator) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Validator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Power != 0 {
+		i = encodeVarintConsensus(dAtA, i, uint64(m.Power))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintConsensus(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Evidence) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Evidence) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Evidence) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TotalVotingPower != 0 {
+		i = encodeVarintConsensus(dAtA, i, uint64(m.TotalVotingPower))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.Time != nil {
+		n10, err10 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Time):])
+		if err10 != nil {
+			return 0, err10
+		}
+		i -= n10
+		i = encodeVarintConsensus(dAtA, i, uint64(n10))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Height != 0 {
+		i = encodeVarintConsensus(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Validator != nil {
+		{
+			size, err := m.Validator.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintConsensus(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.EvidenceType != 0 {
+		i = encodeVarintConsensus(dAtA, i, uint64(m.EvidenceType))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintConsensus(dAtA []byte, offset int, v uint64) int {
 	offset -= sovConsensus(v)
 	base := offset
@@ -326,6 +1273,153 @@ func (m *ConsensusMsgParamsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *ConsensusMsgCometInfoRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CometInfo != nil {
+		l = m.CometInfo.Size()
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	return n
+}
+
+func (m *ConsensusMsgCometInfoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCometInfoRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCometInfoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CometInfo != nil {
+		l = m.CometInfo.Size()
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	return n
+}
+
+func (m *CometInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorsHash)
+	if l > 0 {
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	l = len(m.ProposerAddress)
+	if l > 0 {
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	if m.LastCommit != nil {
+		l = m.LastCommit.Size()
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	if len(m.Evidence) > 0 {
+		for _, e := range m.Evidence {
+			l = e.Size()
+			n += 1 + l + sovConsensus(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CommitInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Round != 0 {
+		n += 1 + sovConsensus(uint64(m.Round))
+	}
+	if len(m.Votes) > 0 {
+		for _, e := range m.Votes {
+			l = e.Size()
+			n += 1 + l + sovConsensus(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *VoteInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Validator != nil {
+		l = m.Validator.Size()
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	if m.BlockIdFlag != 0 {
+		n += 1 + sovConsensus(uint64(m.BlockIdFlag))
+	}
+	return n
+}
+
+func (m *Validator) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	if m.Power != 0 {
+		n += 1 + sovConsensus(uint64(m.Power))
+	}
+	return n
+}
+
+func (m *Evidence) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.EvidenceType != 0 {
+		n += 1 + sovConsensus(uint64(m.EvidenceType))
+	}
+	if m.Validator != nil {
+		l = m.Validator.Size()
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	if m.Height != 0 {
+		n += 1 + sovConsensus(uint64(m.Height))
+	}
+	if m.Time != nil {
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Time)
+		n += 1 + l + sovConsensus(uint64(l))
+	}
+	if m.TotalVotingPower != 0 {
+		n += 1 + sovConsensus(uint64(m.TotalVotingPower))
+	}
 	return n
 }
 
@@ -594,6 +1688,956 @@ func (m *ConsensusMsgParamsResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: ConsensusMsgParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ConsensusMsgCometInfoRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConsensusMsgCometInfoRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConsensusMsgCometInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CometInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.CometInfo == nil {
+				m.CometInfo = &CometInfo{}
+			}
+			if err := m.CometInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ConsensusMsgCometInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConsensusMsgCometInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConsensusMsgCometInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCometInfoRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCometInfoRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCometInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCometInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCometInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCometInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CometInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.CometInfo == nil {
+				m.CometInfo = &CometInfo{}
+			}
+			if err := m.CometInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CometInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CometInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CometInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorsHash", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorsHash = append(m.ValidatorsHash[:0], dAtA[iNdEx:postIndex]...)
+			if m.ValidatorsHash == nil {
+				m.ValidatorsHash = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposerAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProposerAddress = append(m.ProposerAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.ProposerAddress == nil {
+				m.ProposerAddress = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastCommit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.LastCommit == nil {
+				m.LastCommit = &CommitInfo{}
+			}
+			if err := m.LastCommit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Evidence", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Evidence = append(m.Evidence, &Evidence{})
+			if err := m.Evidence[len(m.Evidence)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CommitInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CommitInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CommitInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Round", wireType)
+			}
+			m.Round = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Round |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Votes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Votes = append(m.Votes, &VoteInfo{})
+			if err := m.Votes[len(m.Votes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *VoteInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VoteInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VoteInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Validator", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Validator == nil {
+				m.Validator = &Validator{}
+			}
+			if err := m.Validator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockIdFlag", wireType)
+			}
+			m.BlockIdFlag = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BlockIdFlag |= BlockIDFlag(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Validator) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Validator: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Validator: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = append(m.Address[:0], dAtA[iNdEx:postIndex]...)
+			if m.Address == nil {
+				m.Address = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Power", wireType)
+			}
+			m.Power = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Power |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipConsensus(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Evidence) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowConsensus
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Evidence: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Evidence: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EvidenceType", wireType)
+			}
+			m.EvidenceType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EvidenceType |= MisbehaviorType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Validator", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Validator == nil {
+				m.Validator = &Validator{}
+			}
+			if err := m.Validator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConsensus
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Time == nil {
+				m.Time = new(time.Time)
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.Time, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalVotingPower", wireType)
+			}
+			m.TotalVotingPower = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConsensus
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TotalVotingPower |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipConsensus(dAtA[iNdEx:])

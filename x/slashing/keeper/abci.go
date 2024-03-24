@@ -1,19 +1,18 @@
-package slashing
+package keeper
 
 import (
 	"context"
 	"time"
 
-	"cosmossdk.io/x/slashing/keeper"
+	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker check for infraction evidence or downtime of validators
 // on every begin block
-func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
+func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// Iterate over all the validators which *should* have signed this block
@@ -23,9 +22,13 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	if err != nil {
 		return err
 	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO remove by passing the comet service
-	for _, vote := range sdkCtx.CometInfo().LastCommit.Votes {
-		err := k.HandleValidatorSignatureWithParams(ctx, params, vote.Validator.Address, vote.Validator.Power, vote.BlockIDFlag)
+
+	res := consensusv1.MsgCometInfoResponse{}
+	if err := k.environment.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
+		return err
+	}
+	for _, vote := range res.CometInfo.LastCommit.Votes {
+		err := k.HandleValidatorSignatureWithParams(ctx, params, vote.Validator.Address, vote.Validator.Power, vote.BlockIdFlag)
 		if err != nil {
 			return err
 		}

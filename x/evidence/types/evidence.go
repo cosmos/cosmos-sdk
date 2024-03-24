@@ -7,7 +7,6 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/exported"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -76,15 +75,15 @@ func (e Equivocation) GetTotalPower() int64 { return 0 }
 
 // FromABCIEvidence converts a CometBFT concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
-func FromABCIEvidence(e comet.Evidence, conAc address.Codec) *Equivocation {
-	consAddr, err := conAc.BytesToString(e.Validator.Address)
+func FromABCIEvidence(e Misbehavior, conAc address.Codec) *Equivocation {
+	consAddr, err := conAc.BytesToString(e.ConsensusAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	return &Equivocation{
 		Height:           e.Height,
-		Power:            e.Validator.Power,
+		Power:            e.TotalVotingPower,
 		ConsensusAddress: consAddr,
 		Time:             e.Time,
 	}

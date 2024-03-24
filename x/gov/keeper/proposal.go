@@ -123,7 +123,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		sdk.NewEvent(
 			types.EventTypeSubmitProposal,
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-			event.NewAttribute(types.AttributeKeyProposalProposer, proposer.String()),
+			sdk.NewAttribute(types.AttributeKeyProposalProposer, proposer.String()),
 			sdk.NewAttribute(types.AttributeKeyProposalMessages, msgsStr),
 		),
 	)

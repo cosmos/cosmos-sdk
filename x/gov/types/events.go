@@ -22,6 +22,7 @@ const (
 	AttributeValueExpeditedProposalRejected = "expedited_proposal_rejected" // didn't meet expedited vote quorum
 	AttributeValueProposalFailed            = "proposal_failed"             // error on proposal handler
 	AttributeValueProposalCanceled          = "proposal_canceled"           // error on proposal handler
+	AttributeKeyProposalProposer            = "proposal_proposer"           // account address of the proposer
 
 	AttributeKeyProposalType   = "proposal_type"
 	AttributeSignalTitle       = "signal_title"

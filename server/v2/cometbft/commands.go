@@ -16,13 +16,13 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
 	auth "cosmossdk.io/x/auth/client/cli"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	"cosmossdk.io/server/v2/cometbft/flags"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // Defaults for flags
@@ -112,7 +112,7 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			bz, err := json.Marshal(cmtPk)
+			bz, err := cmtjson.Marshal(cmtPk)
 			if err != nil {
 				return err
 			}

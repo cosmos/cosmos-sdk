@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -18,6 +19,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
@@ -71,7 +73,7 @@ func NewSignModeHandler(o SignModeOptions) (*SignModeHandler, error) {
 		return nil, errors.New("coinMetadataQuerier must be non-empty")
 	}
 	if o.FileResolver == nil {
-		o.FileResolver = protoregistry.GlobalFiles
+		o.FileResolver = gogoproto.HybridResolver
 	}
 	if o.TypeResolver == nil {
 		o.TypeResolver = protoregistry.GlobalTypes

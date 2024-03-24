@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson/internal/aminojsonpb"
@@ -31,7 +33,7 @@ type SignModeHandlerOptions struct {
 func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 	h := &SignModeHandler{}
 	if options.FileResolver == nil {
-		h.fileResolver = protoregistry.GlobalFiles
+		h.fileResolver = gogoproto.HybridResolver
 	} else {
 		h.fileResolver = options.FileResolver
 	}

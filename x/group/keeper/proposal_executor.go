@@ -5,7 +5,6 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
-
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
 

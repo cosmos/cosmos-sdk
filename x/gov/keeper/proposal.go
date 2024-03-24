@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 

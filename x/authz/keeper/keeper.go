@@ -8,11 +8,10 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/authz"
 
 	"github.com/cosmos/cosmos-sdk/codec"

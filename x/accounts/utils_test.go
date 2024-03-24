@@ -6,13 +6,14 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/log"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -67,7 +68,7 @@ var _ SignerProvider = (*mockSigner)(nil)
 
 type mockSigner func(msg implementation.ProtoMsg) ([]byte, error)
 
-func (m mockSigner) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
+func (m mockSigner) GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error) {
 	s, err := m(msg)
 	if err != nil {
 		return nil, nil, err

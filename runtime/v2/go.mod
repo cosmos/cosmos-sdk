@@ -9,7 +9,6 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/server/v2 => ../../server/v2
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
-	cosmossdk.io/server/v2/core => ../../server/v2/core
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store
 	cosmossdk.io/x/accounts => ../../x/accounts
@@ -39,7 +38,6 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store v1.1.0
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000

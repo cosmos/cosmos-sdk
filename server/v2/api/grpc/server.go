@@ -14,9 +14,9 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
+	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
-	"cosmossdk.io/server/v2/core/appmanager"
 )
 
 const serverName = "grpc-server"

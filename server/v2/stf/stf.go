@@ -34,7 +34,7 @@ type STFI[T transaction.Tx] interface {
 	// Query runs the provided query over the provided readonly state.
 	Query(ctx context.Context, state store.ReaderMap, gasLimit uint64, queryRequest transaction.Type) (queryResponse transaction.Type, err error)
 	// ValidateTx validates the TX.
-	ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) appmanager.TxResult
+	ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T, hs header.Service) appmanager.TxResult
 }
 
 // STF is a struct that manages the state transition component of the app.
@@ -149,7 +149,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 }
 
 // deliverTx executes a TX and returns the result.
-func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, execMode corecontext.ExecMode, hs HeaderService) appmanager.TxResult {
+func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, execMode corecontext.ExecMode, hs header.Service) appmanager.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
 	defer func() {
@@ -190,7 +190,7 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, exec
 
 // validateTx validates a transaction given the provided WritableState and gas limit.
 // If the validation is successful, state is committed
-func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, hs HeaderService) (gasUsed uint64, events []event.Event, err error) {
+func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, hs header.Service) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branch(state)
 	txSenders, err := tx.GetSenders()
 	if err != nil {
@@ -206,7 +206,7 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit 
 }
 
 // execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
-func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode, hs HeaderService) ([]transaction.Type, uint64, []event.Event, error) {
+func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode, hs header.Service) ([]transaction.Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 	txSenders, err := tx.GetSenders()
 	if err != nil {
@@ -259,7 +259,7 @@ func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint
 }
 
 // runTxMsgs will execute the messages contained in the TX with the provided state.
-func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode, hs HeaderService) ([]transaction.Type, error) {
+func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode, hs header.Service) ([]transaction.Type, error) {
 	txSenders, err := tx.GetSenders()
 	if err != nil {
 		return nil, err
@@ -314,7 +314,7 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlo
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap, hs HeaderService) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
+func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap, hs header.Service) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{appmanager.RuntimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize, hs)
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
@@ -339,7 +339,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap, hs HeaderSe
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap, hs HeaderService) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
+func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap, hs header.Service) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []transaction.Identity{appmanager.RuntimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize, hs)
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {
@@ -349,16 +349,16 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap, hs 
 }
 
 // Simulate simulates the execution of a tx on the provided state.
-func (s STF[T]) Simulate(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T, hs HeaderService) (appmanager.TxResult, store.WriterMap) {
+func (s STF[T]) Simulate(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) (appmanager.TxResult, store.WriterMap) {
 	simulationState := s.branch(state)
-	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate, hs)
+	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate, nil)
 
 	return txr, simulationState
 }
 
 // ValidateTx will run only the validation steps required for a transaction.
 // Validations are run over the provided state, with the provided gas limit.
-func (s STF[T]) ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T, hs HeaderService) appmanager.TxResult {
+func (s STF[T]) ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T, hs header.Service) appmanager.TxResult {
 	validationState := s.branch(state)
 	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, hs)
 	return appmanager.TxResult{

@@ -10,7 +10,6 @@ replace (
 
 require (
 	cosmossdk.io/core v0.12.0
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 )
 

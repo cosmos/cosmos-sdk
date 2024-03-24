@@ -89,7 +89,12 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	// that can be written to.
 	newState = s.branch(state)
 
-	// TODO: handle consensus messages
+	for _, msg := range block.ConsensusMessages {
+		_, err := s.handleMsg(ctx, msg)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 
 	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(ctx, newState, block.Txs)

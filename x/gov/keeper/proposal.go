@@ -119,6 +119,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		return v1.Proposal{}, err
 	}
 
+<<<<<<< HEAD
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSubmitProposal,
@@ -126,6 +127,16 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 			sdk.NewAttribute(types.AttributeKeyProposalMessages, msgsStr),
 		),
 	)
+=======
+	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeSubmitProposal,
+		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+		event.NewAttribute(types.AttributeKeyProposalProposer, proposer.String()),
+		event.NewAttribute(types.AttributeKeyProposalMessages, strings.Join(msgs, ",")),
+	); err != nil {
+		return v1.Proposal{}, fmt.Errorf("failed to emit event: %w", err)
+	}
+>>>>>>> 45994391a (feat(x/gov): emit proposer address in submit proposal event (#19842))
 
 	return proposal, nil
 }

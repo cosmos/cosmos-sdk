@@ -19,7 +19,7 @@ var (
 type RocksDB struct {
 }
 
-func NewRocksDB(dataDir string) (*RocksDB, error) {
+func NewRocksDB(name, dataDir string) (*RocksDB, error) {
 	panic("rocksdb must be built with -tags rocksdb")
 
 }

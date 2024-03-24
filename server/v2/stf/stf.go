@@ -6,15 +6,17 @@ import (
 	"fmt"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/branch"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
 )
 
-var runtimeIdentity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
+var runtimeIdentity = []byte("runtime")
 
 var _ STF[transaction.Tx] = STF[transaction.Tx]{} // Ensure STF implements STFI.
 
@@ -383,12 +385,13 @@ func (s STF[T]) clone() STF[T] {
 type executionContext struct {
 	context.Context
 
-	state  store.WriterMap
-	meter  gas.Meter
-	events []event.Event
-	sender []transaction.Identity
-	// TODO: add headerservice
-	// branchdb?
+	state         store.WriterMap
+	meter         gas.Meter
+	events        []event.Event
+	sender        []transaction.Identity
+	branchdb      branch.Service
+	headerService header.Service
+	execMode      corecontext.ExecMode
 }
 
 func (s STF[T]) makeContext(
@@ -396,16 +399,21 @@ func (s STF[T]) makeContext(
 	sender []transaction.Identity,
 	store store.WriterMap,
 	gasLimit uint64,
-	execMode corecontext.ExecMode, // TODO this isn't used
+	execMode corecontext.ExecMode,
+	headerservice header.Service,
 ) *executionContext {
 	meter := s.getGasMeter(gasLimit)
 	store = s.wrapWithGasMeter(meter, store)
 	return &executionContext{
-		Context: ctx,
-		state:   store,
-		meter:   meter,
-		events:  make([]event.Event, 0),
-		sender:  sender,
+		Context:       ctx,
+		state:         store,
+		meter:         meter,
+		events:        make([]event.Event, 0),
+		sender:        sender,
+		execMode:      execMode,
+		branchdb:      s.branch,      // todo need a wrapper
+		headerService: headerservice, // todo need a wrapper
+
 	}
 }
 

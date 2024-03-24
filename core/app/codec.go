@@ -1,4 +1,4 @@
-package appmanager
+package app
 
 import (
 	"github.com/cosmos/gogoproto/jsonpb"

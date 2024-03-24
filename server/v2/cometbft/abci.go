@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"google.golang.org/protobuf/proto"
 
-	corecomet "cosmossdk.io/core/comet"
+	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
+	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -20,7 +20,6 @@ import (
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
-	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 )
@@ -302,8 +301,8 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	}
 
 	// for passing consensus info as a consensus message
-	cometInfo := &types.ConsensusInfo{
-		Info: corecomet.Info{
+	cometInfo := &consensusv1.ConsensusMsgCometInfoRequest{
+		Info: &consensusv1.CometInfo{
 			Evidence:        ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
@@ -324,7 +323,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 		Time:              req.Time,
 		Hash:              req.Hash,
 		Txs:               decodedTxs,
-		ConsensusMessages: []proto.Message{cometInfo},
+		ConsensusMessages: []transaction.Type{cometInfo},
 	}
 
 	resp, newState, err := c.app.DeliverBlock(ctx, blockReq)

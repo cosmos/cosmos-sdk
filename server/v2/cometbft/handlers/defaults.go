@@ -12,8 +12,8 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 
+	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/server/v2/cometbft/mempool"
-	"cosmossdk.io/server/v2/core/appmanager"
 )
 
 type AppManager[T transaction.Tx] interface {

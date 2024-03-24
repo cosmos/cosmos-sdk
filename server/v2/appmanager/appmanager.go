@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 
+	appmanager "cosmossdk.io/core/app"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
-	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
 

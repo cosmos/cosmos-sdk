@@ -49,11 +49,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [State Compatible]
 
-* (coin) [#570](https://github.com/osmosis-labs/cosmos-sdk/pull/570) Removal of regex usage on denom validation
+## v24
+
+## [v0.47.5-v24-osmo-1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-1)
 
 ## IAVL v23 v1 Releases
 
 ## [Unreleased IAVL v1]
+
+## [v0.47.5-v23-osmo-7-iavl-v1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-7-iavl-v1)
+
+* (coin) [#570](https://github.com/osmosis-labs/cosmos-sdk/pull/570) Removal of regex usage on denom validation
+* (iavl) [#586](https://github.com/osmosis-labs/cosmos-sdk/pull/586) Increment IAVL version
 
 ## [v0.47.5-v23-osmo-6-iavl-v1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-6-iavl-v1)
 

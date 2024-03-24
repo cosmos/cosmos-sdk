@@ -39,3 +39,11 @@ pull_request_rules:
         branches:
           - osmo-v23/v0.47.5
           - osmo-v23/v0.47.5-iavl-v1
+  - name: backport patches to v24 branch
+    conditions:
+      - base=osmo/v0.47.5
+      - label=A:backport/v24
+    actions:
+      backport:
+        branches:
+          - osmo-v24/v0.47.5

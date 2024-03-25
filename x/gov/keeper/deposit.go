@@ -179,6 +179,7 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 
 	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeProposalDeposit,
+		event.NewAttribute(types.AttributeKeyDepositor, depositorAddr.String()),
 		event.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 	); err != nil {

@@ -64,6 +64,11 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 				return err
 			}
 
+			output, err = formatOutput(cmd, output)
+			if err != nil {
+				return err
+			}
+
 			cmd.Println(string(output))
 
 			// TODO: figure out yaml and json output
@@ -113,6 +118,11 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 			}
 
 			bz, err := cmtjson.Marshal(cmtPk)
+			if err != nil {
+				return err
+			}
+
+			bz, err = formatOutput(cmd, bz)
 			if err != nil {
 				return err
 			}
@@ -205,9 +215,12 @@ for. Each module documents its respective events under 'xx_events.md'.
 				return err
 			}
 
-			// return clientCtx.PrintProto(blocks) // TODO: previously we had this, but I think it can be replaced with a simple json marshal.
-			// We are missing YAML output tho.
 			bz, err := protojson.Marshal(blocks)
+			if err != nil {
+				return err
+			}
+
+			bz, err = formatOutput(cmd, bz)
 			if err != nil {
 				return err
 			}
@@ -272,9 +285,7 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with height %s", args[0])
 				}
 
-				// return clientCtx.PrintProto(output)
-
-				bz, err := json.Marshal(output)
+				bz, err := protojson.Marshal(output)
 				if err != nil {
 					return err
 				}
@@ -361,9 +372,13 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 				return err
 			}
 
+			blockResStr, err = formatOutput(cmd, blockResStr)
+			if err != nil {
+				return err
+			}
+
 			cmd.Println(string(blockResStr))
 
-			// TODO: figure out yaml and json output
 			return nil
 		},
 	}
@@ -371,21 +386,6 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func parseOptionalHeight(heightStr string) (*int64, error) {
-	h, err := strconv.Atoi(heightStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if h == 0 {
-		return nil, nil
-	}
-
-	tmp := int64(h)
-
-	return &tmp, nil
 }
 
 func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
@@ -412,4 +412,38 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided it uses the latest block height in app state")
 
 	return cmd
+}
+
+func parseOptionalHeight(heightStr string) (*int64, error) {
+	h, err := strconv.Atoi(heightStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if h == 0 {
+		return nil, nil
+	}
+
+	tmp := int64(h)
+
+	return &tmp, nil
+}
+
+// formatOutput checks if we need to return the output in YAML format.
+func formatOutput(cmd *cobra.Command, bz []byte) ([]byte, error) {
+	output, err := cmd.Flags().GetString(flags.FlagOutput)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == flags.OutputFormatText {
+		return yaml.JSONToYAML(bz)
+	}
+
+	if output != flags.OutputFormatText {
+		// append new-line for formats besides YAML
+		bz = append(bz, '\n')
+	}
+
+	return bz, nil
 }

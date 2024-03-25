@@ -89,7 +89,7 @@ func TestSTF(t *testing.T) {
 		// this handler will propagate the storage error back, we expect
 		// out of gas immediately at tx validation level.
 		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error {
-			w, err := ctx.(*ExecutionContext).State.GetWriter(actorName)
+			w, err := ctx.(*executionContext).State.GetWriter(actorName)
 			require.NoError(t, err)
 			err = w.Set([]byte("gas_failure"), []byte{})
 			require.Error(t, err)
@@ -178,7 +178,7 @@ var actorName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) {
 	t.Helper()
-	state, err := ctx.(*ExecutionContext).State.GetWriter(actorName)
+	state, err := ctx.(*executionContext).State.GetWriter(actorName)
 	require.NoError(t, err)
 	require.NoError(t, state.Set([]byte(v), []byte(v)))
 }
@@ -186,7 +186,6 @@ func kvSet(t *testing.T, ctx context.Context, v string) {
 func stateHas(t *testing.T, accountState store.ReaderMap, key string) {
 	t.Helper()
 	state, err := accountState.GetReader(actorName)
-	fmt.Println(state)
 	require.NoError(t, err)
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)

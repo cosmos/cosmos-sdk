@@ -18,7 +18,7 @@ func (g gasService) GetGasConfig(ctx context.Context) gas.GasConfig {
 }
 
 func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
-	return ctx.(*ExecutionContext).meter
+	return ctx.(*executionContext).meter
 }
 
 func (g gasService) GetBlockGasMeter(ctx context.Context) gas.Meter {

@@ -383,8 +383,8 @@ func (s STF[T]) clone() STF[T] {
 	}
 }
 
-// ExecutionContext is a struct that holds the context for the execution of a tx.
-type ExecutionContext struct {
+// executionContext is a struct that holds the context for the execution of a tx.
+type executionContext struct {
 	context.Context
 
 	State  store.WriterMap
@@ -401,10 +401,10 @@ func (s STF[T]) makeContext(
 	store store.WriterMap,
 	gasLimit uint64,
 	execMode corecontext.ExecMode, // TODO this isn't used
-) *ExecutionContext {
+) *executionContext {
 	meter := s.getGasMeter(gasLimit)
 	store = s.wrapWithGasMeter(meter, store)
-	return &ExecutionContext{
+	return &executionContext{
 		Context: ctx,
 		State:   store,
 		meter:   meter,

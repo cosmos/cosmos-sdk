@@ -687,10 +687,9 @@ func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
 }
 
 func (suite *DeterministicTestSuite) TestGRPCParams() {
-	coinDenomRegex := `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		params := stakingtypes.Params{
-			BondDenom:         rapid.StringMatching(coinDenomRegex).Draw(t, "bond-denom"),
+			BondDenom:         rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "bond-denom"),
 			UnbondingTime:     durationGenerator().Draw(t, "duration"),
 			MaxValidators:     rapid.Uint32Min(1).Draw(t, "max-validators"),
 			MaxEntries:        rapid.Uint32Min(1).Draw(t, "max-entries"),

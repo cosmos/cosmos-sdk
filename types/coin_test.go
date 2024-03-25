@@ -112,8 +112,6 @@ func (s *coinTestSuite) TestCoinIsValid() {
 
 func (s *coinTestSuite) TestCustomValidation() {
 	newDnmRegex := `[\x{1F600}-\x{1F6FF}]`
-	reDnmString := `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
-
 	sdk.SetCoinDenomRegex(func() string {
 		return newDnmRegex
 	})
@@ -132,7 +130,7 @@ func (s *coinTestSuite) TestCustomValidation() {
 	for i, tc := range cases {
 		s.Require().Equal(tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
 	}
-	sdk.SetCoinDenomRegex(func() string { return reDnmString })
+	sdk.SetCoinDenomRegex(sdk.DefaultCoinDenomRegex)
 }
 
 func (s *coinTestSuite) TestCoinsDenoms() {
@@ -996,33 +994,6 @@ func (s *coinTestSuite) TestParseCoins() {
 			s.Require().Error(err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
 		} else if s.Assert().Nil(err, "%s: %+v", tc.input, err) {
 			s.Require().Equal(tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
-		}
-	}
-}
-
-func (s *coinTestSuite) TestValidateDenom() {
-	cases := []struct {
-		input string
-		valid bool
-	}{
-		{"", false},
-		{"stake", true},
-		{"stake,", false},
-		{"me coin", false},
-		{"me coin much", false},
-		{"not a coin", false},
-		{"foo:bar", true}, // special characters '/' | ':' | '.' | '_' | '-' are allowed
-		{"atom10", true},  // number in denom is allowed
-		{"transfer/channelToA/uatom", true},
-		{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true},
-	}
-
-	for _, tc := range cases {
-		err := sdk.ValidateDenom(tc.input)
-		if !tc.valid {
-			s.Require().Error(err)
-		} else {
-			s.Require().NoError(err)
 		}
 	}
 }

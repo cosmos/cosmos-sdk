@@ -29,8 +29,8 @@ type Context struct {
 	typeResolver          protoregistry.MessageTypeResolver
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
-	getSignersFuncs       map[protoreflect.FullName]GetSignersFunc
-	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
+	getSignersFuncs       map[protoreflect.MessageDescriptor]GetSignersFunc
+	customGetSignerFuncs  map[protoreflect.MessageDescriptor]GetSignersFunc
 	maxRecursionDepth     int
 }
 
@@ -50,7 +50,7 @@ type Options struct {
 	ValidatorAddressCodec address.Codec
 
 	// CustomGetSigners is a map of message types to custom GetSignersFuncs.
-	CustomGetSigners map[protoreflect.FullName]GetSignersFunc
+	CustomGetSigners map[protoreflect.MessageDescriptor]GetSignersFunc
 
 	// MaxRecursionDepth is the maximum depth of nested messages that will be traversed
 	MaxRecursionDepth int
@@ -62,11 +62,11 @@ type Options struct {
 // NOTE: if a custom signers function is defined, the message type used to
 // define this function MUST be the concrete type passed to GetSigners,
 // otherwise a runtime type error will occur.
-func (o *Options) DefineCustomGetSigners(typeName protoreflect.FullName, f GetSignersFunc) {
+func (o *Options) DefineCustomGetSigners(typeDesc protoreflect.MessageDescriptor, f GetSignersFunc) {
 	if o.CustomGetSigners == nil {
-		o.CustomGetSigners = map[protoreflect.FullName]GetSignersFunc{}
+		o.CustomGetSigners = map[protoreflect.MessageDescriptor]GetSignersFunc{}
 	}
-	o.CustomGetSigners[typeName] = f
+	o.CustomGetSigners[typeDesc] = f
 }
 
 // ProtoFileResolver is a protodesc.Resolver that also allows iterating over all
@@ -100,7 +100,7 @@ func NewContext(options Options) (*Context, error) {
 		options.MaxRecursionDepth = 32
 	}
 
-	customGetSignerFuncs := map[protoreflect.FullName]GetSignersFunc{}
+	customGetSignerFuncs := map[protoreflect.MessageDescriptor]GetSignersFunc{}
 	for k := range options.CustomGetSigners {
 		customGetSignerFuncs[k] = options.CustomGetSigners[k]
 	}
@@ -110,7 +110,7 @@ func NewContext(options Options) (*Context, error) {
 		typeResolver:          protoTypes,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
-		getSignersFuncs:       map[protoreflect.FullName]GetSignersFunc{},
+		getSignersFuncs:       map[protoreflect.MessageDescriptor]GetSignersFunc{},
 		customGetSignerFuncs:  customGetSignerFuncs,
 		maxRecursionDepth:     options.MaxRecursionDepth,
 	}
@@ -156,7 +156,7 @@ func (c *Context) Validate() error {
 
 			for j := 0; j < sd.Methods().Len(); j++ {
 				md := sd.Methods().Get(j).Input()
-				_, hasCustomSigner := c.customGetSignerFuncs[md.FullName()]
+				_, hasCustomSigner := c.customGetSignerFuncs[md]
 				if _, err := getSignersFieldNames(md); err == nil && hasCustomSigner {
 					errs = append(errs, fmt.Errorf("a custom signer function as been defined for message %s which already has a signer field defined with (cosmos.msg.v1.signer)", md.FullName()))
 					continue
@@ -330,18 +330,18 @@ func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Co
 }
 
 func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (GetSignersFunc, error) {
-	f, ok := c.customGetSignerFuncs[messageDescriptor.FullName()]
+	f, ok := c.customGetSignerFuncs[messageDescriptor]
 	if ok {
 		return f, nil
 	}
-	f, ok = c.getSignersFuncs[messageDescriptor.FullName()]
+	f, ok = c.getSignersFuncs[messageDescriptor]
 	if !ok {
 		var err error
 		f, err = c.makeGetSignersFunc(messageDescriptor)
 		if err != nil {
 			return nil, err
 		}
-		c.getSignersFuncs[messageDescriptor.FullName()] = f
+		c.getSignersFuncs[messageDescriptor] = f
 	}
 
 	return f, nil

@@ -75,7 +75,7 @@ func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, err
 	leaves := make([][]byte, len(ci.StoreInfos))
 	for i, si := range ci.StoreInfos {
 		var err error
-		leaves[i], err = LeafHash([]byte(si.Name), si.GetHash())
+		leaves[i], err = LeafHash(si.Name, si.GetHash())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -85,7 +85,7 @@ func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, err
 	}
 
 	rootHash, inners := ProofFromByteSlices(leaves, index)
-	commitmentOp := ConvertCommitmentOp(inners, []byte(storeKey), ci.StoreInfos[index].GetHash())
+	commitmentOp := ConvertCommitmentOp(inners, storeKey, ci.StoreInfos[index].GetHash())
 
 	return rootHash, &commitmentOp, nil
 }
@@ -96,7 +96,7 @@ func (ci *CommitInfo) encodedSize() int {
 	size += encoding.EncodeVarintSize(ci.Timestamp.UnixNano())
 	size += encoding.EncodeUvarintSize(uint64(len(ci.StoreInfos)))
 	for _, storeInfo := range ci.StoreInfos {
-		size += encoding.EncodeBytesSize([]byte(storeInfo.Name))
+		size += encoding.EncodeBytesSize(storeInfo.Name)
 		size += encoding.EncodeBytesSize(storeInfo.CommitID.Hash)
 	}
 	return size
@@ -124,7 +124,7 @@ func (ci *CommitInfo) Marshal() ([]byte, error) {
 		return nil, err
 	}
 	for _, si := range ci.StoreInfos {
-		if err := encoding.EncodeBytes(&buf, []byte(si.Name)); err != nil {
+		if err := encoding.EncodeBytes(&buf, si.Name); err != nil {
 			return nil, err
 		}
 		if err := encoding.EncodeBytes(&buf, si.CommitID.Hash); err != nil {

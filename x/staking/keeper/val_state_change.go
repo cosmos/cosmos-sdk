@@ -260,10 +260,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmod
 
 	for _, history := range historyObjects {
 		valAddr := history.OperatorAddress
-		if err != nil {
-			return nil, err
-		}
-
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
 			return nil, err
@@ -325,11 +321,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmod
 		if err = k.LastTotalPower.Set(ctx, totalPower); err != nil {
 			return nil, err
 		}
-	}
-
-	// set the list of validator updates
-	if err = k.ValidatorUpdates.Set(ctx, updates); err != nil {
-		return nil, err
 	}
 
 	return updates, err

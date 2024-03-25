@@ -256,10 +256,6 @@ func (d Description) EnsureLength() (Description, error) {
 	return d, nil
 }
 
-// ModuleValidatorUpdates is a slice of appmodule.ValidatorUpdate
-// It is the equivalent of ValidatorUpdates but using appmodule.ValidatorUpdate
-type ModuleValidatorUpdates []appmodule.ValidatorUpdate
-
 // ModuleValidatorUpdate returns a appmodule.ValidatorUpdate from a staking validator type
 // with the full validator power.
 // It replaces the previous ABCIValidatorUpdate function.

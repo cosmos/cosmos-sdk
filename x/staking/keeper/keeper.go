@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -40,49 +39,6 @@ func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.Histo
 			ValidatorsHash: historicalinfo.Header.NextValidatorsHash,
 		}, nil
 	})
-}
-
-type moduleValidatorUpdatesCodec struct {
-	cdc codec.BinaryCodec
-}
-
-// Decode implements codec.ValueCodec.
-func (m moduleValidatorUpdatesCodec) Decode(b []byte) (types.ModuleValidatorUpdates, error) {
-	var mvu types.ModuleValidatorUpdates
-	if err := json.Unmarshal(b, &mvu); err != nil {
-		return types.ModuleValidatorUpdates{}, err
-	}
-
-	return mvu, nil
-}
-
-// DecodeJSON implements codec.ValueCodec.
-func (m moduleValidatorUpdatesCodec) DecodeJSON(b []byte) (types.ModuleValidatorUpdates, error) {
-	return m.Decode(b)
-}
-
-// Encode implements codec.ValueCodec.
-func (m moduleValidatorUpdatesCodec) Encode(value types.ModuleValidatorUpdates) ([]byte, error) {
-	return json.Marshal(value)
-}
-
-// EncodeJSON implements codec.ValueCodec.
-func (m moduleValidatorUpdatesCodec) EncodeJSON(value types.ModuleValidatorUpdates) ([]byte, error) {
-	return m.Encode(value)
-}
-
-// Stringify implements codec.ValueCodec.
-func (m moduleValidatorUpdatesCodec) Stringify(value types.ModuleValidatorUpdates) string {
-	return fmt.Sprintf("%v", value)
-}
-
-// ValueType implements codec.ValueCodec.
-func (m moduleValidatorUpdatesCodec) ValueType() string {
-	return "types.ModuleValidatorUpdates"
-}
-
-func ValidatorUpdateCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.ModuleValidatorUpdates] {
-	return moduleValidatorUpdatesCodec{cdc}
 }
 
 type rotationHistoryIndexes struct {
@@ -127,8 +83,6 @@ type Keeper struct {
 	HistoricalInfo collections.Map[uint64, types.HistoricalRecord]
 	// LastTotalPower value: LastTotalPower
 	LastTotalPower collections.Item[math.Int]
-	// ValidatorUpdates value: ValidatorUpdates
-	ValidatorUpdates collections.Item[types.ModuleValidatorUpdates]
 	// DelegationsByValidator key: valAddr+delAddr | value: none used (index key for delegations by validator index)
 	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
 	UnbondingID            collections.Sequence
@@ -215,7 +169,6 @@ func NewKeeper(
 		consensusAddressCodec: consensusAddressCodec,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, HistoricalInfoCodec(cdc)),
-		ValidatorUpdates:      collections.NewItem(sb, types.ValidatorUpdatesKey, "validator_updates", ValidatorUpdateCodec(cdc)),
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",
 			collections.PairKeyCodec(

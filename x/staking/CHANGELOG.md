@@ -88,8 +88,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove from `types`: `GetUnbondingTypeKey`.
 * [#17063](https://github.com/cosmos/cosmos-sdk/pull/17063) Use collections for `HistoricalInfo`:
     * remove `Keeper`: `GetHistoricalInfo`, `SetHistoricalInfo`
-* [#17062](https://github.com/cosmos/cosmos-sdk/pull/17062) Use collections for `ValidatorUpdates`:
-    * remove `Keeper`: `SetValidatorUpdates`, `GetValidatorUpdates`
+* [#17062](https://github.com/cosmos/cosmos-sdk/pull/17062), [#19788](https://github.com/cosmos/cosmos-sdk/pull/19788) Remove `GetValidatorUpdates` and `ValidatorUpdates` storage.
 * [#17026](https://github.com/cosmos/cosmos-sdk/pull/17026) Use collections for `LastTotalPower`:
     * remove `Keeper`: `SetLastTotalPower`, `GetLastTotalPower`
 * [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"cosmossdk.io/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking

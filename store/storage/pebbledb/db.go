@@ -319,7 +319,7 @@ func storePrefix(storeKey []byte) []byte {
 	return append([]byte(StorePrefixTpl), storeKey...)
 }
 
-func prependStoreKey(storeKey []byte, key []byte) []byte {
+func prependStoreKey(storeKey, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 
@@ -362,7 +362,7 @@ func valTombstoned(value []byte) bool {
 	return true
 }
 
-func getMVCCSlice(db *pebble.DB, storeKey []byte, key []byte, version uint64) ([]byte, error) {
+func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, error) {
 	// end domain is exclusive, so we need to increment the version by 1
 	if version < math.MaxUint64 {
 		version++

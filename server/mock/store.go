@@ -34,10 +34,6 @@ func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ storetypes.TraceContext) 
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.MemoryListener) storetypes.CacheWrap {
-	panic("not implemented")
-}
-
 func (ms multiStore) TracingEnabled() bool {
 	panic("not implemented")
 }
@@ -114,6 +110,10 @@ func (ms multiStore) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
 	return ms.kv[key]
 }
 
+func (ms multiStore) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVStore {
+	panic("not implemented")
+}
+
 func (ms multiStore) GetStore(key storetypes.StoreKey) storetypes.Store {
 	panic("not implemented")
 }
@@ -183,10 +183,6 @@ func (kv kvStore) CacheWrap() storetypes.CacheWrap {
 }
 
 func (kv kvStore) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	panic("not implemented")
-}
-
-func (kv kvStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.MemoryListener) storetypes.CacheWrap {
 	panic("not implemented")
 }
 

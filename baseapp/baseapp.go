@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
 	"math"
-	"slices"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -14,6 +13,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/gogoproto/proto"
+	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/core/header"
@@ -336,10 +336,22 @@ func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientSt
 // MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
 // commit multi-store.
 func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
-	skeys := slices.Sorted(maps.Keys(keys))
+	skeys := maps.Keys(keys)
+	sort.Strings(skeys)
 	for _, key := range skeys {
 		memKey := keys[key]
 		app.MountStore(memKey, storetypes.StoreTypeMemory)
+	}
+}
+
+// MountObjectStores mounts all transient object stores with the BaseApp's internal
+// commit multi-store.
+func (app *BaseApp) MountObjectStores(keys map[string]*storetypes.ObjectStoreKey) {
+	skeys := maps.Keys(keys)
+	sort.Strings(skeys)
+	for _, key := range skeys {
+		memKey := keys[key]
+		app.MountStore(memKey, storetypes.StoreTypeObject)
 	}
 }
 

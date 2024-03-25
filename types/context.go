@@ -350,6 +350,11 @@ func (c Context) TransientStore(key storetypes.StoreKey) storetypes.KVStore {
 	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.transientKVGasConfig)
 }
 
+// ObjectStore fetches an object store from the MultiStore,
+func (c Context) OjectStore(key storetypes.StoreKey) storetypes.ObjKVStore {
+	return gaskv.NewObjStore(c.ms.GetObjKVStore(key), c.gasMeter, c.transientKVGasConfig)
+}
+
 // CacheContext returns a new Context with the multi-store cached and a new
 // EventManager. The cached context is written to the context when writeCache
 // is called. Note, events are automatically emitted on the parent context's

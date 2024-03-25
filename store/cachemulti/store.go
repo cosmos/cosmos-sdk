@@ -5,7 +5,7 @@ import (
 	"io"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/cachekv"
+
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
@@ -23,7 +23,7 @@ const storeNameCtxKey = "store_name"
 // NOTE: a Store (and MultiStores in general) should never expose the
 // keys for the substores.
 type Store struct {
-	db     types.CacheKVStore
+	db     types.CacheWrap
 	stores map[types.StoreKey]types.CacheWrap
 	keys   map[string]types.StoreKey
 
@@ -37,11 +37,11 @@ var _ types.CacheMultiStore = Store{}
 // CacheWrapper objects and a KVStore as the database. Each CacheWrapper store
 // is a branched store.
 func NewFromKVStore(
-	store types.KVStore, stores map[types.StoreKey]types.CacheWrapper,
+	store types.CacheWrapper, stores map[types.StoreKey]types.CacheWrapper,
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	cms := Store{
-		db:           cachekv.NewStore(store),
+		db:           store.CacheWrap(),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
 		keys:         keys,
 		traceWriter:  traceWriter,
@@ -50,13 +50,16 @@ func NewFromKVStore(
 
 	for key, store := range stores {
 		if cms.TracingEnabled() {
-			tctx := cms.traceContext.Clone().Merge(types.TraceContext{
-				storeNameCtxKey: key.Name(),
-			})
+			// only support tracing on KVStore.
+			if kvstore, ok := store.(types.KVStore); ok {
+				tctx := cms.traceContext.Clone().Merge(types.TraceContext{
+					storeNameCtxKey: key.Name(),
+				})
 
-			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, tctx)
+				store = tracekv.NewStore(kvstore, cms.traceWriter, tctx)
+			}
 		}
-		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
+		cms.stores[key] = store.CacheWrap()
 	}
 
 	return cms
@@ -159,11 +162,28 @@ func (cms Store) GetStore(key types.StoreKey) types.Store {
 	return s.(types.Store)
 }
 
-// GetKVStore returns an underlying KVStore by key.
-func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
+func (cms Store) getCacheWrap(key types.StoreKey) types.CacheWrap {
 	store := cms.stores[key]
 	if key == nil || store == nil {
 		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
 	}
-	return store.(types.KVStore)
+	return store
+}
+
+// GetKVStore returns an underlying KVStore by key.
+func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
+	store, ok := cms.getCacheWrap(key).(types.KVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not KVStore", key))
+	}
+	return store
+}
+
+// GetObjKVStore returns an underlying KVStore by key.
+func (cms Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
+	store, ok := cms.getCacheWrap(key).(types.ObjKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not ObjKVStore", key))
+	}
+	return store
 }

@@ -164,25 +164,15 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 		return false, err
 	}
 
-<<<<<<< HEAD
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeProposalDeposit,
+			sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddr.String()),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 		),
 	)
-=======
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeProposalDeposit,
-		event.NewAttribute(types.AttributeKeyDepositor, depositorAddr.String()),
-		event.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
-		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-	); err != nil {
-		return false, err
-	}
->>>>>>> d1c3547d8 (feat(x/gov): emit depositor in `proposal_deposit` event (#19853))
 
 	err = keeper.SetDeposit(ctx, deposit)
 	if err != nil {

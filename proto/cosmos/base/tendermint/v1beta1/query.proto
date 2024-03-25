@@ -6,13 +6,13 @@ import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "tendermint/p2p/types.proto";
 import "tendermint/types/types.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/tendermint/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
 import "tendermint/types/block.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
+option go_package = "github.com/cosmos/cosmos-sdk/server/v2/cometbft/client/grpc/cmtservice";
 
 // Service defines the gRPC querier service for tendermint queries.
 service Service {
@@ -60,7 +60,7 @@ service Service {
 message GetValidatorSetByHeightRequest {
   int64 height = 1;
   // pagination defines an pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  PageRequest pagination = 2;
 }
 
 // GetValidatorSetByHeightResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
@@ -68,13 +68,13 @@ message GetValidatorSetByHeightResponse {
   int64              block_height = 1;
   repeated Validator validators   = 2;
   // pagination defines an pagination for the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+  PageResponse pagination = 3;
 }
 
 // GetLatestValidatorSetRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
 message GetLatestValidatorSetRequest {
   // pagination defines an pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  PageRequest pagination = 1;
 }
 
 // GetLatestValidatorSetResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
@@ -82,7 +82,7 @@ message GetLatestValidatorSetResponse {
   int64              block_height = 1;
   repeated Validator validators   = 2;
   // pagination defines an pagination for the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+  PageResponse pagination = 3;
 }
 
 // Validator is the type for the validator-set.

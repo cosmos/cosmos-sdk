@@ -185,11 +185,9 @@ func SimulateMsgSubmitLegacyProposal(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "content is nil"), nil, nil
 		}
 
-		//govacc := k.GetGovernanceAccount(ctx)
 		govacc, err := ak.AddressCodec().BytesToString(k.GetGovernanceAccount(ctx).GetAddress())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error getting governance account address"), nil, err
-
 		}
 		contentMsg, err := v1.NewLegacyContent(content, govacc)
 		if err != nil {

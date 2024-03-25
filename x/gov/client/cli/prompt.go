@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/core/address"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/address"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/gov/types"
 

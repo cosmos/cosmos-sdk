@@ -61,9 +61,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* []() Removes the use of Accouts String method: 
-    * `NewDeposit`, `NewMsgDeposit`, `NewMsgVote`, `NewMsgVoteWeighted`, `NewVote`, `NewProposal`, `NewDeposit`, `NewMsgDeposit`, `NewMsgSubmitProposal`, `NewMsgVote`, `NewMsgVoteWeighted` now takes a string as argument instead of an `sdk.AccAddress`.
-    * `Prompt` and `PromptMetadata` takes an address.Codec as argument.
+* [#19850](https://github.com/cosmos/cosmos-sdk/pull/19850) Removes the use of Accounts String method: 
+    * `NewDeposit`, `NewMsgDeposit`, `NewMsgVote`, `NewMsgVoteWeighted`, `NewVote`, `NewProposal`, `NewMsgDeposit`, `NewMsgSubmitProposal`, `NewMsgVote`, `NewMsgVoteWeighted` now takes a string as argument instead of an `sdk.AccAddress`.
+    * `Prompt` and `PromptMetadata` take as an address.Codec as argument.
     * `SetProposer` takes a String as argument instead of a `fmt.Stringer`.
 * [#19481](https://github.com/cosmos/cosmos-sdk/pull/19481) Migrate module to use `appmodule.Environment`; `NewKeeper` now takes `appmodule.Environment` instead of a store service and no `baseapp.MessageRouter` anymore.
 * [#19481](https://github.com/cosmos/cosmos-sdk/pull/19481) v1beta1 proposal handlers now take a `context.Context` instead of an `sdk.Context`.

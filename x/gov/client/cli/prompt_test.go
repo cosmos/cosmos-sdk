@@ -9,7 +9,6 @@ package cli_test
 
 import (
 	"fmt"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"math"
 	"os"
 	"testing"
@@ -19,6 +18,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/gov/client/cli"
+
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 )
 
 type st struct {

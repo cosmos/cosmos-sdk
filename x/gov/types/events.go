@@ -13,6 +13,7 @@ const (
 	AttributeKeyVoter                       = "voter"
 	AttributeKeyOption                      = "option"
 	AttributeKeyProposalID                  = "proposal_id"
+	AttributeKeyDepositor                   = "depositor"
 	AttributeKeyProposalMessages            = "proposal_messages" // Msg type_urls in the proposal
 	AttributeKeyVotingPeriodStart           = "voting_period_start"
 	AttributeKeyProposalLog                 = "proposal_log"                // log of proposal execution

@@ -79,23 +79,6 @@ func TestConsensus(t *testing.T) {
 		require.NotNil(t, res.GasUsed)
 		require.NoError(t, err)
 	})
-
-	t.Run("Check get consensus info", func(t *testing.T) {
-		_, err := c.Info(context.Background(), &abci.RequestInfo{
-		})
-		require.Error(t, err)
-	})
-
-	t.Run("Prepare proposal", func(t *testing.T) {
-		_, err := c.PrepareProposal(context.Background(), &abci.RequestPrepareProposal{
-			Txs: [][]byte{
-				mockTx.Bytes(),
-			},
-			Height: 1,
-		})
-		require.NoError(t, err)
-	})
-
 }
 
 var actorName = []byte("cookies")

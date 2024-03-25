@@ -50,7 +50,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (slashing) [#543](https://github.com/osmosis-labs/cosmos-sdk/pull/543) Make slashing not write sign info every block
 * (authz) [#513](https://github.com/osmosis-labs/cosmos-sdk/pull/513) Limit expired authz grant pruning to 200 per block
 * (gov) [#514](https://github.com/osmosis-labs/cosmos-sdk/pull/514) Let gov hooks return an error
-* (gov) [#510](https://github.com/osmosis-labs/cosmos-sdk/pull/510) Implement a minimum amount per deposit
 * (slashing) [#580](https://github.com/osmosis-labs/cosmos-sdk/pull/580) Less time intensive slashing migration
 
 ## IAVL v23 v1 Releases

@@ -30,7 +30,7 @@ type Context struct {
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
 	getSignersFuncs       map[protoreflect.MessageDescriptor]GetSignersFunc
-	customGetSignerFuncs  map[protoreflect.MessageDescriptor]GetSignersFunc
+	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
 	maxRecursionDepth     int
 }
 
@@ -50,7 +50,7 @@ type Options struct {
 	ValidatorAddressCodec address.Codec
 
 	// CustomGetSigners is a map of message types to custom GetSignersFuncs.
-	CustomGetSigners map[protoreflect.MessageDescriptor]GetSignersFunc
+	CustomGetSigners map[protoreflect.FullName]GetSignersFunc
 
 	// MaxRecursionDepth is the maximum depth of nested messages that will be traversed
 	MaxRecursionDepth int
@@ -62,11 +62,11 @@ type Options struct {
 // NOTE: if a custom signers function is defined, the message type used to
 // define this function MUST be the concrete type passed to GetSigners,
 // otherwise a runtime type error will occur.
-func (o *Options) DefineCustomGetSigners(typeDesc protoreflect.MessageDescriptor, f GetSignersFunc) {
+func (o *Options) DefineCustomGetSigners(typeName protoreflect.FullName, f GetSignersFunc) {
 	if o.CustomGetSigners == nil {
-		o.CustomGetSigners = map[protoreflect.MessageDescriptor]GetSignersFunc{}
+		o.CustomGetSigners = map[protoreflect.FullName]GetSignersFunc{}
 	}
-	o.CustomGetSigners[typeDesc] = f
+	o.CustomGetSigners[typeName] = f
 }
 
 // ProtoFileResolver is a protodesc.Resolver that also allows iterating over all
@@ -100,7 +100,7 @@ func NewContext(options Options) (*Context, error) {
 		options.MaxRecursionDepth = 32
 	}
 
-	customGetSignerFuncs := map[protoreflect.MessageDescriptor]GetSignersFunc{}
+	customGetSignerFuncs := map[protoreflect.FullName]GetSignersFunc{}
 	for k := range options.CustomGetSigners {
 		customGetSignerFuncs[k] = options.CustomGetSigners[k]
 	}

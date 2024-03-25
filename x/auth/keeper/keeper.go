@@ -302,18 +302,23 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 
 	}
 
-	results, err := ak.AccountsModKeeper.SendAnyMessages(ctx, signer, msgsAny)
-	if err != nil {
-		// If an error occurs during message execution, append error response
-		value := &types.NonAtomicExecResult{Error: err.Error()}
-		msgResponses = append(msgResponses, value)
-	}
-
-	for _, res := range results {
-		response := &types.NonAtomicExecResult{
-			Resp: res,
+	if err := ak.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+		results, err := ak.AccountsModKeeper.SendAnyMessages(ctx, signer, msgsAny)
+		if err != nil {
+			// If an error occurs during message execution, append error response
+			value := &types.NonAtomicExecResult{Error: err.Error()}
+			msgResponses = append(msgResponses, value)
 		}
-		msgResponses = append(msgResponses, response)
+
+		for _, res := range results {
+			response := &types.NonAtomicExecResult{
+				Resp: res,
+			}
+			msgResponses = append(msgResponses, response)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	return msgResponses, nil

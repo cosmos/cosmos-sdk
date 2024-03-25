@@ -37,9 +37,6 @@ func MakeAccountsMap(
 ) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
 	for _, makeAccount := range accounts {
-		if makeAccount == nil {
-			continue
-		}
 		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(openKVStore)
 		deps := Dependencies{
 			SchemaBuilder:    stateSchemaBuilder,

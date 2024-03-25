@@ -16,13 +16,29 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
 
-	msg := &banktypes.MsgSend{
+	msg := banktypes.MsgSend{
 		FromAddress: addrs[0].String(),
 		ToAddress:   addrs[1].String(),
 		Amount:      coins,
 	}
+	msg2 := banktypes.MsgSend{
+		FromAddress: addrs[1].String(),
+		ToAddress:   addrs[0].String(),
+		Amount:      coins,
+	}
+	failingMsg := banktypes.MsgSend{
+		FromAddress: "",  // Invalid sender address
+		ToAddress:   "",  // Invalid recipient address
+		Amount:      nil, // No amount specified
+	}
 
-	msgAny, err := codectypes.NewAnyWithValue(msg)
+	msgAny, err := codectypes.NewAnyWithValue(&msg)
+	s.Require().NoError(err)
+
+	msgAny2, err := codectypes.NewAnyWithValue(&msg2)
+	s.Require().NoError(err)
+
+	failingMsgAny, err := codectypes.NewAnyWithValue(&failingMsg)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -66,12 +82,36 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 			},
 			expectErr: false,
 		},
+		{
+			name: "multiple messages being executed",
+			req: &types.MsgNonAtomicExec{
+				Signer: addrs[0].String(),
+				Msgs:   []*codectypes.Any{msgAny, msgAny},
+			},
+			expectErr: false,
+		},
+		{
+			name: "multi msg with one failing being executed",
+			req: &types.MsgNonAtomicExec{
+				Signer: addrs[0].String(),
+				Msgs:   []*codectypes.Any{msgAny, failingMsgAny},
+			},
+			expectErr: true,
+		},
+		{
+			name: "multiple messages with different signers",
+			req: &types.MsgNonAtomicExec{
+				Signer: addrs[0].String(),
+				Msgs:   []*codectypes.Any{msgAny, msgAny2},
+			},
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			s.acctsModKeeper.EXPECT().SendAnyMessages(s.ctx, gomock.Any(), gomock.Any()).AnyTimes()
+			s.acctsModKeeper.EXPECT().SendAnyMessages(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 			_, err := s.msgServer.NonAtomicExec(s.ctx, tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)

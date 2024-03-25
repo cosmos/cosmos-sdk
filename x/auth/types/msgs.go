@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// GetMessages returns the cache values from the MsgExecAuthorized.Msgs if present.
+// GetMessages returns the cache values from the MsgNonAtomicExec.Msgs if present.
 func (msg MsgNonAtomicExec) GetMessages() ([]sdk.Msg, error) {
 	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {

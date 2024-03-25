@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 )
 
 //-----------------------------------------------------------------------------
@@ -835,30 +836,15 @@ func (coins Coins) Sort() Coins {
 	return coins
 }
 
-//-----------------------------------------------------------------------------
-// Parsing
-
 var (
-	// Denominations can be 3 ~ 128 characters long and support letters, followed by either
-	// a letter, a number or a separator ('/', ':', '.', '_' or '-').
-	reDnmString = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
-	reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
-	reSpc       = `[[:space:]]*`
-	reDnm       *regexp.Regexp
-	reDecCoin   *regexp.Regexp
+	reDecAmt = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
+	reSpc    = `[[:space:]]*`
+
+	coinDenomRegex func() string
+
+	reDnm     *regexp.Regexp
+	reDecCoin *regexp.Regexp
 )
-
-func init() {
-	SetCoinDenomRegex(DefaultCoinDenomRegex)
-}
-
-// DefaultCoinDenomRegex returns the default regex string
-func DefaultCoinDenomRegex() string {
-	return reDnmString
-}
-
-// coinDenomRegex returns the current regex string and can be overwritten for custom validation
-var coinDenomRegex = DefaultCoinDenomRegex
 
 // SetCoinDenomRegex allows for coin's custom validation by overriding the regular
 // expression string used for denom validation.
@@ -871,10 +857,47 @@ func SetCoinDenomRegex(reFn func() string) {
 
 // ValidateDenom is the default validation function for Coin.Denom.
 func ValidateDenom(denom string) error {
-	if !reDnm.MatchString(denom) {
+	if reDnm == nil || reDecCoin == nil { //nolint:gocritic
+		// Convert the string to a byte slice as required by the Ragel-generated function.
+
+		// Call the Ragel-generated function.
+		if !MatchDenom(denom) { //nolint:gocritic
+			return fmt.Errorf("invalid denom: %s", denom)
+		}
+	} else if !reDnm.MatchString(denom) { // If reDnm has been initialized, use it for matching.
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
+
 	return nil
+}
+
+// isValidRune checks if a given rune is a valid character for a rune.
+// It returns true if the rune is a letter, digit, '/', ':', '.', '_', or '-'.
+func isValidRune(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '/' || r == ':' || r == '.' || r == '_' || r == '-'
+}
+
+// MatchDenom checks if the given string is a valid denomination.
+// A valid denomination must have a length between 3 and 128 characters,
+// start with a letter, and only contain valid runes.
+func MatchDenom(s string) bool {
+	length := len(s)
+	if length < 3 || length > 128 {
+		return false
+	}
+
+	firstRune := rune(s[0])
+	if !unicode.IsLetter(firstRune) {
+		return false
+	}
+
+	for _, r := range s[1:] {
+		if !isValidRune(r) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func mustValidateDenom(denom string) {

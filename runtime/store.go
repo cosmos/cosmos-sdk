@@ -4,8 +4,6 @@ import (
 	"context"
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
@@ -150,7 +148,7 @@ func (s kvStoreAdapter) Set(key, value []byte) {
 	}
 }
 
-func (s kvStoreAdapter) Iterator(start, end []byte) dbm.Iterator {
+func (s kvStoreAdapter) Iterator(start, end []byte) storetypes.Iterator {
 	it, err := s.store.Iterator(start, end)
 	if err != nil {
 		panic(err)
@@ -158,7 +156,7 @@ func (s kvStoreAdapter) Iterator(start, end []byte) dbm.Iterator {
 	return it
 }
 
-func (s kvStoreAdapter) ReverseIterator(start, end []byte) dbm.Iterator {
+func (s kvStoreAdapter) ReverseIterator(start, end []byte) storetypes.Iterator {
 	it, err := s.store.ReverseIterator(start, end)
 	if err != nil {
 		panic(err)

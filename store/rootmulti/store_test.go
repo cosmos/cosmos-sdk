@@ -786,6 +786,7 @@ var (
 	testStoreKey1 = types.NewKVStoreKey("store1")
 	testStoreKey2 = types.NewKVStoreKey("store2")
 	testStoreKey3 = types.NewKVStoreKey("store3")
+	testStoreKey4 = types.NewKVStoreKey("store4")
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
@@ -858,7 +859,7 @@ func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 	}
 }
 
-func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
+func hashStores(stores map[types.StoreKey]types.CommitStore) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
 		name := key.Name()
@@ -913,35 +914,39 @@ func TestStateListeners(t *testing.T) {
 	require.Empty(t, ms.PopStateCache())
 }
 
-type commitKVStoreStub struct {
-	types.CommitKVStore
+type commitStoreStub struct {
+	types.CommitStore
 	Committed int
 }
 
-func (stub *commitKVStoreStub) Commit() types.CommitID {
-	commitID := stub.CommitKVStore.Commit()
+func (stub *commitStoreStub) Commit() types.CommitID {
+	commitID := stub.CommitStore.Commit()
 	stub.Committed++
 	return commitID
 }
 
-func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
+func prepareStoreMap() (map[types.StoreKey]types.CommitStore, error) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
+	store.MountStoreWithDB(types.NewObjectStoreKey("obj1"), types.StoreTypeObject, nil)
 	if err := store.LoadLatestVersion(); err != nil {
 		return nil, err
 	}
-	return map[types.StoreKey]types.CommitKVStore{
-		testStoreKey1: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("iavl1").(types.CommitKVStore),
+	return map[types.StoreKey]types.CommitStore{
+		testStoreKey1: &commitStoreStub{
+			CommitStore: store.GetStoreByName("iavl1").(types.CommitStore),
 		},
-		testStoreKey2: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("iavl2").(types.CommitKVStore),
+		testStoreKey2: &commitStoreStub{
+			CommitStore: store.GetStoreByName("iavl2").(types.CommitStore),
 		},
-		testStoreKey3: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("trans1").(types.CommitKVStore),
+		testStoreKey3: &commitStoreStub{
+			CommitStore: store.GetStoreByName("trans1").(types.CommitStore),
+		},
+		testStoreKey4: &commitStoreStub{
+			CommitStore: store.GetStoreByName("obj1").(types.CommitStore),
 		},
 	}, nil
 }
@@ -972,7 +977,7 @@ func TestCommitStores(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			storeMap, err := prepareStoreMap()
 			require.NoError(t, err)
-			store := storeMap[testStoreKey1].(*commitKVStoreStub)
+			store := storeMap[testStoreKey1].(*commitStoreStub)
 			for i := tc.committed; i > 0; i-- {
 				store.Commit()
 			}

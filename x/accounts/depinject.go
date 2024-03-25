@@ -1,11 +1,16 @@
 package accounts
 
 import (
+	"context"
+
 	modulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	baseaccount "cosmossdk.io/x/accounts/defaults/base"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -41,10 +46,24 @@ type ModuleOutputs struct {
 	Module         appmodule.AppModule
 }
 
+var _ signing.SignModeHandler = directHandler{}
+
+type directHandler struct{}
+
+func (s directHandler) Mode() signingv1beta1.SignMode {
+	return signingv1beta1.SignMode_SIGN_MODE_DIRECT
+}
+
+func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ signing.TxData) ([]byte, error) {
+	panic("not implemented")
+}
+
 func ProvideModule(in ModuleInputs) ModuleOutputs {
+	handler := directHandler{}
+	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountskeeper, err := NewKeeper(
 		in.Cdc, in.Environment, in.AddressCodec,
-		in.ExecRouter, in.QueryRouter, in.Registry, nil,
+		in.ExecRouter, in.QueryRouter, in.Registry, account,
 	)
 	if err != nil {
 		panic(err)

@@ -22,7 +22,4 @@ var (
 	ErrInvalidSignalMsg        = sdkerrors.Register(ModuleName, 14, "signal message is invalid")
 	ErrMetadataTooLong         = sdkerrors.Register(ModuleName, 15, "metadata too long")
 	ErrMinDepositTooSmall      = sdkerrors.Register(ModuleName, 16, "minimum deposit is too small")
-
-	// Error 23 is added through backport of #18189 PR
-	ErrInvalidDepositDenom = sdkerrors.Register(ModuleName, 23, "invalid deposit denom")
 )

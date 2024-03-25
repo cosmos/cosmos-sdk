@@ -72,6 +72,33 @@ func (s *DepositTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
+func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	// submit proposal without initial deposit
+	id := s.submitProposal(val, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)), "TestQueryDepositsWithoutInitialDeposit")
+	proposalID := strconv.FormatUint(id, 10)
+
+	// deposit amount
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
+	_, err := govclitestutil.MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// query deposit
+	deposit := s.queryDeposit(val, proposalID, false, "")
+	s.Require().NotNil(deposit)
+	s.Require().Equal(sdk.Coins(deposit.Amount).String(), depositAmount)
+
+	// query deposits
+	deposits := s.queryDeposits(val, proposalID, false, "")
+	s.Require().NotNil(deposits)
+	s.Require().Len(deposits.Deposits, 1)
+	// verify initial deposit
+	s.Require().Equal(sdk.Coins(deposits.Deposits[0].Amount).String(), depositAmount)
+}
+
 func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 	val := s.network.Validators[0]
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
@@ -122,7 +149,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	s.Require().Contains(err.Error(), fmt.Sprintf("proposal %s doesn't exist", proposalID))
 
 	// query deposits
-	deposits := s.queryDeposits(val, proposalID, true, fmt.Sprintf("proposal %s doesn't exist", proposalID))
+	deposits := s.queryDeposits(val, proposalID, true, "proposal 3 doesn't exist")
 	s.Require().Nil(deposits)
 }
 

@@ -54,11 +54,9 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	// create a proposal with a small deposit
-	minimumAcceptedDep := v1.DefaultMinDepositTokens.ToLegacyDec().Mul(v1.DefaultMinDepositRatio).Ceil().TruncateInt()
+	// create a proposal without deposit
 	_, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 2", "Where is the title!?", v1beta1.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, minimumAcceptedDep).String()))
+		"Text Proposal 2", "Where is the title!?", v1beta1.ProposalTypeText)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -113,7 +111,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 	"summary": "My awesome description",
 	"metadata": "%s",
 	"deposit": "%s"
-	}`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000)))
+}`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	defer validPropFile.Close()
 
@@ -181,7 +179,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 		"description": "Hello, World!",
 		"type": "Text",
 	  "deposit": "%s"
-	}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(154310)))
+	}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	defer validPropFile.Close()
 
@@ -207,7 +205,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 			[]string{
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000)).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -232,7 +230,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),                     //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000)).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -306,22 +304,10 @@ func (s *E2ETestSuite) TestNewCmdDeposit() {
 			false, 2,
 		},
 		{
-			"fail deposit on existing proposal",
-			[]string{
-				"1",
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake -> insufficient min deposit amount
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 16,
-		},
-		{
 			"deposit on existing proposal",
 			[]string{
 				"1",
-				sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50))).String(), // slighty less than min initial deposit
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

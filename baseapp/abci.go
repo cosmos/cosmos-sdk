@@ -160,7 +160,7 @@ func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
-func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
+func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
 	// add panic recovery for all queries
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/8039
@@ -177,8 +177,7 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	defer telemetry.MeasureSince(sdkCtx, telemetry.Now(sdkCtx), req.Path)
+	defer telemetry.MeasureSince(sdk.Context{}, time.Now(), req.Path)
 
 	if req.Path == QueryPathBroadcastTx {
 		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil

@@ -9,6 +9,7 @@ package cli_test
 
 import (
 	"fmt"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"math"
 	"os"
 	"testing"
@@ -50,7 +51,7 @@ func TestPromptIntegerOverflow(t *testing.T) {
 			_, err := fw.Write([]byte(overflowStr + "\n"))
 			assert.NoError(t, err)
 
-			v, err := cli.Prompt(st{}, "")
+			v, err := cli.Prompt(st{}, "", codectestutil.CodecOptions{}.GetAddressCodec())
 			assert.Equal(t, st{}, v, "expected a value of zero")
 			require.NotNil(t, err, "expected a report of an overflow")
 			require.Contains(t, err.Error(), "range")
@@ -81,7 +82,7 @@ func TestPromptParseInteger(t *testing.T) {
 			readline.Stdin = fin
 			_, err := fw.Write([]byte(tc.in + "\n"))
 			assert.NoError(t, err)
-			v, err := cli.Prompt(st{}, "")
+			v, err := cli.Prompt(st{}, "", codectestutil.CodecOptions{}.GetAddressCodec())
 			assert.Nil(t, err, "expected a nil error")
 			assert.Equal(t, tc.want, v.I, "expected %d = %d", tc.want, v.I)
 		})

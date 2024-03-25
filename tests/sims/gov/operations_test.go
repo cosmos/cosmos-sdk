@@ -207,7 +207,8 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 	// setup a proposal
-	proposer := accounts[0].Address
+	proposer, err := suite.AccountKeeper.AddressCodec().BytesToString(accounts[0].Address)
+	require.NoError(t, err)
 	content := v1beta1.NewTextProposal("Test", "description")
 	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
@@ -233,7 +234,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
-	require.Equal(t, proposer.String(), msg.Proposer)
+	require.Equal(t, proposer, msg.Proposer)
 	require.Equal(t, simulation.TypeMsgCancelProposal, sdk.MsgTypeURL(&msg))
 }
 
@@ -259,7 +260,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.Proposals.Set(ctx, proposal.Id, proposal)
@@ -303,7 +304,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -345,7 +346,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "test", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "test", "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)

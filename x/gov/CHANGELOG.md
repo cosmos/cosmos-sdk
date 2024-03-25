@@ -34,7 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals.
 * [#18620](https://github.com/cosmos/cosmos-sdk/pull/18620) Add optimistic proposals.
 * [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
-
+* [#19853](https://github.com/cosmos/cosmos-sdk/pull/19853) Emit depositor in `proposal_deposit` event.
 ### Improvements
 
 * [#19741](https://github.com/cosmos/cosmos-sdk/pull/19741) Add `ExpeditedQuorum` parameter specifying a minimum quorum for expedited proposals, that can differ from the regular quorum.

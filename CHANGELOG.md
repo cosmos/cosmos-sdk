@@ -46,7 +46,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
 * (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
 * (x/auth/ante) [#23283](https://github.com/cosmos/cosmos-sdk/pull/23283) Allow ed25519 transaction signatures.
-
+* (baseapp) [#22893](https://github.com/cosmos/cosmos-sdk/pull/22893) Support mount object store in baseapp, add `ObjectStore` api in context.
 
 ### Improvements
 

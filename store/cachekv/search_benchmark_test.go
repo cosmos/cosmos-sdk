@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"cosmossdk.io/store/cachekv/internal"
+	"cosmossdk.io/store/internal/btree"
 )
 
 func BenchmarkLargeUnsortedMisses(b *testing.B) {
@@ -22,23 +22,23 @@ func BenchmarkLargeUnsortedMisses(b *testing.B) {
 }
 
 func generateStore() *Store {
-	cache := map[string]*cValue{}
+	cache := map[string]*cValue[[]byte]{}
 	unsorted := map[string]struct{}{}
 	for i := 0; i < 5000; i++ {
 		key := "A" + strconv.Itoa(i)
 		unsorted[key] = struct{}{}
-		cache[key] = &cValue{}
+		cache[key] = &cValue[[]byte]{}
 	}
 
 	for i := 0; i < 5000; i++ {
 		key := "Z" + strconv.Itoa(i)
 		unsorted[key] = struct{}{}
-		cache[key] = &cValue{}
+		cache[key] = &cValue[[]byte]{}
 	}
 
-	return &Store{
+	return &GStore[[]byte]{
 		cache:         cache,
 		unsortedCache: unsorted,
-		sortedCache:   internal.NewBTree(),
+		sortedCache:   btree.NewBTree[[]byte](),
 	}
 }

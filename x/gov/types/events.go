@@ -17,6 +17,7 @@ const (
 	AttributeKeyVotingPeriodStart    = "voting_period_start"
 	AttributeKeyProposalLog          = "proposal_log"           // log of proposal execution
 	AttributeKeyProposalDepositError = "proposal_deposit_error" // error on proposal deposit refund/burn
+	AttributeKeyProposalProposer     = "proposal_proposer"      // account address of the proposer
 
 	AttributeValueProposalDropped            = "proposal_dropped"             // didn't meet min deposit
 	AttributeValueProposalPassed             = "proposal_passed"              // met vote quorum

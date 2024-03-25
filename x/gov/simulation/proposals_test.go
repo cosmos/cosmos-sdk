@@ -18,7 +18,6 @@ func TestProposalMsgs(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	ctx := sdk.NewContext(nil, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalMsgs function
@@ -31,7 +30,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightSubmitTextProposal, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightTextProposal, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(r, ctx, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
+	msg, err := w0.MsgSimulatorFn()(r, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
 	assert.NilError(t, err)
 	assert.Assert(t, msg == nil)
 }

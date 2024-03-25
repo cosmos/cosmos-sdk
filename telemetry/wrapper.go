@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
@@ -23,7 +24,10 @@ func NewLabel(name, value string) metrics.Label {
 // ModuleMeasureSince provides a short hand method for emitting a time measure
 // metric for a module with a given set of keys. If any global labels are defined,
 // they will be added to the module label.
-func ModuleMeasureSince(module string, start time.Time, keys ...string) {
+func ModuleMeasureSince(ctx sdk.Context, module string, start time.Time, keys ...string) {
+	if !ctx.TelemetryEnabled() {
+		return
+	}
 	metrics.MeasureSinceWithLabels(
 		keys,
 		start.UTC(),
@@ -68,6 +72,17 @@ func SetGaugeWithLabels(keys []string, val float32, labels []metrics.Label) {
 
 // MeasureSince provides a wrapper functionality for emitting a a time measure
 // metric with global labels (if any).
-func MeasureSince(start time.Time, keys ...string) {
+func MeasureSince(ctx sdk.Context, start time.Time, keys ...string) {
+	if !ctx.TelemetryEnabled() {
+		return
+	}
 	metrics.MeasureSinceWithLabels(keys, start.UTC(), globalLabels)
+}
+
+// Now return the current time if telemetry is enabled or a zero time if it's not
+func Now(ctx sdk.Context) time.Time {
+	if ctx.TelemetryEnabled() {
+		return time.Now()
+	}
+	return time.Time{}
 }

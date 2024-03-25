@@ -52,6 +52,7 @@ type Context struct {
 	checkTx              bool // Deprecated: use execMode instead, will be removed after 0.51
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true // Deprecated: use execMode instead, will be removed after 0.51
 	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
+	telemetryEnabled     bool // field to keep the telemetry state
 	execMode             ExecMode
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
@@ -360,6 +361,17 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	}
 
 	return cc, writeCache
+}
+
+// TelemetryEnabled returns whether telemetry is enabled in the context.
+func (c Context) TelemetryEnabled() bool {
+	return c.telemetryEnabled
+}
+
+// WithTelemetryEnabled returns a new context with the updated telemetry enabled state.
+func (c Context) WithTelemetryEnabled(enabled bool) Context {
+	c.telemetryEnabled = enabled
+	return c
 }
 
 var (

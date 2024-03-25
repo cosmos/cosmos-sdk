@@ -2,11 +2,9 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-	"time"
-
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/types"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,9 +13,10 @@ import (
 // BeginBlocker iterates through and handles any newly discovered evidence of
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
 func (k Keeper) BeginBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	defer telemetry.ModuleMeasureSince(sdkCtx, types.ModuleName, telemetry.Now(sdkCtx), telemetry.MetricKeyBeginBlocker)
 
-	bi := sdk.UnwrapSDKContext(ctx).CometInfo()
+	bi := sdkCtx.CometInfo()
 
 	evidences := bi.Evidence
 	for _, evidence := range evidences {

@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
-
+	types2 "github.com/cosmos/cosmos-sdk/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
@@ -93,12 +92,13 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 
 // InitGenesis performs genesis initialization for the circuit module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	start := time.Now()
+	sdkCtx := types2.UnwrapSDKContext(ctx)
+	start := telemetry.Now(sdkCtx)
 	var genesisState types.GenesisState
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
+	telemetry.MeasureSince(sdkCtx, start, "InitGenesis", "crisis", "unmarshal")
 
 	return am.keeper.InitGenesis(ctx, &genesisState)
 }

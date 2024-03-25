@@ -326,7 +326,7 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 			},
 			true,
-			"invalid decimal coin expression",
+			"nvalid character in denomination: ",
 		},
 		{
 			"Valid tx send authorization",

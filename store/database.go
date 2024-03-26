@@ -18,7 +18,7 @@ type Reader interface {
 	//
 	// Note: <key> is safe to modify and read after calling Get.
 	// The returned byte slice is safe to read, but cannot be modified.
-	Get(storeKey []byte, key []byte) ([]byte, error)
+	Get(storeKey, key []byte) ([]byte, error)
 }
 
 // Writer wraps the Set method of a backing data store.
@@ -26,12 +26,12 @@ type Writer interface {
 	// Set inserts the given value into the key-value data store.
 	//
 	// Note: <key, value> are safe to modify and read after calling Set.
-	Set(storeKey []byte, key, value []byte) error
+	Set(storeKey, key, value []byte) error
 
 	// Delete removes the key from the backing key-value data store.
 	//
 	// Note: <key> is safe to modify and read after calling Delete.
-	Delete(storeKey []byte, key []byte) error
+	Delete(storeKey, key []byte) error
 }
 
 // Database contains all the methods required to allow handling different

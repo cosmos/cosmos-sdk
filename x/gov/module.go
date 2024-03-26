@@ -123,7 +123,11 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	msgServer := keeper.NewMsgServerImpl(am.keeper)
-	v1beta1.RegisterMsgServer(registrar, keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
+	addr, err := am.accountKeeper.AddressCodec().BytesToString(am.accountKeeper.GetModuleAddress(govtypes.ModuleName))
+	if err != nil {
+		return err
+	}
+	v1beta1.RegisterMsgServer(registrar, keeper.NewLegacyMsgServerImpl(addr, msgServer))
 	v1.RegisterMsgServer(registrar, msgServer)
 
 	v1beta1.RegisterQueryServer(registrar, keeper.NewLegacyQueryServer(am.keeper))

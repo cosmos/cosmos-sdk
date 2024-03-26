@@ -2,12 +2,12 @@ package types_test
 
 import (
 	"errors"
+	gogoproto "github.com/cosmos/gogoproto/types/any"
 	"runtime"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
@@ -39,7 +39,7 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 
 	var ms1, ms2 runtime.MemStats
 	runtime.ReadMemStats(&ms1)
-	any, err := types.NewAnyWithValue(eom)
+	any, err := gogoproto.NewAnyWithCacheWithValue(eom)
 	runtime.ReadMemStats(&ms2)
 	// Ensure that no fresh allocation was made.
 	if diff := ms2.HeapAlloc - ms1.HeapAlloc; diff > 0 {
@@ -59,7 +59,7 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		any, err := types.NewAnyWithValue(eom)
+		any, err := gogoproto.NewAnyWithCacheWithValue(eom)
 		if err == nil {
 			b.Fatal("err wasn't returned")
 		}

@@ -1,6 +1,7 @@
 package codec_test
 
 import (
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,7 +11,6 @@ import (
 	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
@@ -66,7 +66,7 @@ func BenchmarkProtoreflectGetSignersWithUnmarshal(b *testing.B) {
 		Count:  1,
 	}
 	// marshal to an any first because this is what we get from the wire
-	a, err := codectypes.NewAnyWithValue(msg)
+	a, err := gogoprototypes.NewAnyWithCacheWithValue(msg)
 	require.NoError(b, err)
 
 	b.ResetTimer()

@@ -1,6 +1,7 @@
 package types
 
 import (
+	types "github.com/cosmos/gogoproto/types/any"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -40,7 +41,7 @@ func TestAnyPackUnpack(t *testing.T) {
 	var animal Animal
 
 	// with cache
-	any, err := NewAnyWithValue(spot)
+	any, err := types.NewAnyWithCacheWithValue(spot)
 	require.NoError(t, err)
 	require.Equal(t, spot, any.GetCachedValue())
 	err = registry.UnpackAny(any, &animal)
@@ -48,7 +49,7 @@ func TestAnyPackUnpack(t *testing.T) {
 	require.Equal(t, spot, animal)
 
 	// without cache
-	any.cachedValue = nil
+	any.ResetCachedValue()
 	err = registry.UnpackAny(any, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
@@ -57,7 +58,7 @@ func TestAnyPackUnpack(t *testing.T) {
 func TestString(t *testing.T) {
 	require := require.New(t)
 	spot := &Dog{Name: "Spot"}
-	any, err := NewAnyWithValue(spot)
+	any, err := types.NewAnyWithCacheWithValue(spot)
 	require.NoError(err)
 
 	require.Equal("&Any{TypeUrl:/tests/dog,Value:[10 4 83 112 111 116],XXX_unrecognized:[]}", any.String())

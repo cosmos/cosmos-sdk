@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
-
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -118,7 +116,7 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 
 // InitGenesis performs genesis initialization for the crisis module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	start := time.Now()
+	start := telemetry.Now()
 	var genesisState types.GenesisState
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err

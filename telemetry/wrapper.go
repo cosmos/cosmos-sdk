@@ -99,3 +99,12 @@ func MeasureSince(start time.Time, keys ...string) {
 
 	metrics.MeasureSinceWithLabels(keys, start.UTC(), globalLabels)
 }
+
+// Now return the current time if telemetry is enabled or a zero time if it's not
+func Now() time.Time {
+	if !isTelemetryEnabled() {
+		return time.Time{}
+	}
+
+	return time.Now()
+}

@@ -99,6 +99,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
 * (crypto) [#19691](https://github.com/cosmos/cosmos-sdk/pull/19691) Fix tx sign doesn't throw an error when incorrect Ledger is used.
 * [#19833](https://github.com/cosmos/cosmos-sdk/pull/19833) Fix some places in which we call Remove inside a Walk.
+* [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
 
 ### API Breaking Changes
 

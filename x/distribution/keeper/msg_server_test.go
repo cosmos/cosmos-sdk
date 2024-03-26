@@ -134,7 +134,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 
 	valAddr1Str, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(addrs[1])
 	require.NoError(t, err)
-	
+
 	cases := []struct {
 		name   string
 		preRun func()

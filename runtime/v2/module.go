@@ -219,6 +219,7 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		EventService:    stf.NewEventService(),
 		GasService:      stf.NewGasMeterService(),
 		HeaderService:   nil, // TODO
+		RouterService:   stf.NewRouterService(kvService, nil, nil),
 		KVStoreService:  kvService,
 		MemStoreService: memService,
 	}

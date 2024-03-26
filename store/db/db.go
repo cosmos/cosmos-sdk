@@ -23,7 +23,7 @@ func NewRawDB(dbType RawDBType, name, dataDir string, opts store.DBOptions) (sto
 		return NewGoLevelDB(name, dataDir, opts)
 
 	case DBTypeRocksDB:
-		return NewRocksDB(dataDir)
+		return NewRocksDB(name, dataDir)
 
 	case DBTypePebbleDB:
 		return NewPebbleDB(name, dataDir)

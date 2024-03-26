@@ -31,7 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* []() Removes Accounts String method
+* [#19868](https://github.com/cosmos/cosmos-sdk/pull/19868) Removes Accounts String method
     * `NewMsgSetWithdrawAddress` now takes strings as argument instead of `sdk.AccAddress`.
     * `NewGenesisState` now takes a string as argument instead of `sdk.ConsAddress`.
 * [#19445](https://github.com/cosmos/cosmos-sdk/pull/19445) `appmodule.Environment` is received on the Keeper to get access to different application services

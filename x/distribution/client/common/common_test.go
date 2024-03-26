@@ -1,6 +1,7 @@
 package common
 
 import (
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,7 +11,11 @@ import (
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
-	clientCtx := client.Context{}.WithLegacyAmino(legacy.Cdc)
+	cdcOpts := codectestutil.CodecOptions{}
+	clientCtx := client.Context{}.
+		WithLegacyAmino(legacy.Cdc).
+		WithAddressCodec(cdcOpts.GetAddressCodec()).
+		WithValidatorAddressCodec(cdcOpts.GetValidatorCodec())
 
 	type args struct {
 		delAddr string

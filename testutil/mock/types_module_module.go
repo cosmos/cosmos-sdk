@@ -68,7 +68,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 i
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleBasic) RegisterInterfaces(arg0 registry.LegacyRegistry) {
+func (m *MockAppModuleBasic) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -153,7 +153,7 @@ func (mr *MockAppModuleMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModule) RegisterInterfaces(arg0 registry.LegacyRegistry) {
+func (m *MockAppModule) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -578,7 +578,7 @@ func (mr *MockHasABCIEndBlockMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockHasABCIEndBlock) RegisterInterfaces(arg0 registry.LegacyRegistry) {
+func (m *MockHasABCIEndBlock) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }

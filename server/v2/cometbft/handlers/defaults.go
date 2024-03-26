@@ -9,16 +9,16 @@ import (
 	"github.com/cosmos/gogoproto/proto" // TODO: use protov2
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/core/appmanager"
 
 	"cosmossdk.io/server/v2/cometbft/mempool"
-	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/server/v2/core/appmanager"
 )
 
 type AppManager[T transaction.Tx] interface {
 	ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error)
-	Query(ctx context.Context, version uint64, request appmanager.Type) (response appmanager.Type, err error)
+	Query(ctx context.Context, version uint64, request transaction.Type) (response transaction.Type, err error)
 }
 
 type DefaultProposalHandler[T transaction.Tx] struct {

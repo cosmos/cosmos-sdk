@@ -98,7 +98,7 @@ func (m *MM) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (m *MM) RegisterInterfaces(registry registry.LegacyRegistry) {
+func (m *MM) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 	for _, b := range m.modules {
 		if mod, ok := b.(appmodulev2.HasRegisterInterfaces); ok {
 			mod.RegisterInterfaces(registry)

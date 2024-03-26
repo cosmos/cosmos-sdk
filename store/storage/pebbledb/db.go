@@ -138,7 +138,7 @@ func (db *Database) setPruneHeight(pruneVersion uint64) error {
 	return db.storage.Set([]byte(pruneHeightKey), ts[:], &pebble.WriteOptions{Sync: db.sync})
 }
 
-func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
+func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	val, err := db.Get(storeKey, version, key)
 	if err != nil {
 		return false, err
@@ -147,7 +147,7 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 	return val != nil, nil
 }
 
-func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
+func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]byte, error) {
 	if targetVersion < db.earliestVersion {
 		return nil, storeerrors.ErrVersionPruned{EarliestVersion: db.earliestVersion}
 	}
@@ -267,7 +267,7 @@ func (db *Database) Prune(version uint64) error {
 	return db.setPruneHeight(version)
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (db *Database) Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, storeerrors.ErrKeyEmpty
 	}
@@ -291,7 +291,7 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, storeerrors.ErrKeyEmpty
 	}
@@ -315,11 +315,11 @@ func (db *Database) ReverseIterator(storeKey string, version uint64, start, end 
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, true), nil
 }
 
-func storePrefix(storeKey string) []byte {
-	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
+func storePrefix(storeKey []byte) []byte {
+	return append([]byte(StorePrefixTpl), storeKey...)
 }
 
-func prependStoreKey(storeKey string, key []byte) []byte {
+func prependStoreKey(storeKey []byte, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 
@@ -362,7 +362,7 @@ func valTombstoned(value []byte) bool {
 	return true
 }
 
-func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) ([]byte, error) {
+func getMVCCSlice(db *pebble.DB, storeKey []byte, key []byte, version uint64) ([]byte, error) {
 	// end domain is exclusive, so we need to increment the version by 1
 	if version < math.MaxUint64 {
 		version++

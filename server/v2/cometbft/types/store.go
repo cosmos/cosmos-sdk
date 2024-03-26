@@ -1,9 +1,10 @@
 package types
 
 import (
-	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/proof"
 	ics23 "github.com/cosmos/ics23/go"
+	storev2 "cosmossdk.io/store/v2"
 )
 
 type Store interface {
@@ -19,10 +20,16 @@ type Store interface {
 	StateCommit(changes []store.StateChanges) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
-	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
+	Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (proof.CommitID, error)
+
+	// GetStateStorage returns the SS backend.
+	GetStateStorage() storev2.VersionedDatabase
+
+	// GetStateCommitment returns the SC backend.
+	GetStateCommitment() storev2.Committer
 }
 
 type QueryResult interface {

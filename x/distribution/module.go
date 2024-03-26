@@ -92,8 +92,8 @@ func (AppModule) GetTxCmd() *cobra.Command {
 }
 
 // RegisterInterfaces implements InterfaceModule
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	types.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
 }
 
 // RegisterInvariants registers the distribution module invariants.

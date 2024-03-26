@@ -10,6 +10,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
@@ -84,16 +85,16 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
-func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
+func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	v, err := s.GetLatestVersion()
 	if err != nil {
 		return 0, nil, err
 	}
 
-	return v, NewReadOnlyAdapter(v, s), nil
+	return v, NewReaderMap(v, s), nil
 }
 
-func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
+func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
 	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
 	// we should add a VersionExists() method to the VersionedDatabase interface.
 	//
@@ -102,7 +103,7 @@ func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
 		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
 	}
 
-	return NewReadOnlyAdapter(v, s), nil
+	return NewReaderMap(v, s), nil
 }
 
 func (s *Store) GetStateStorage() store.VersionedDatabase {
@@ -156,7 +157,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 	return lastCommitID.Version, nil
 }
 
-func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
+func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (store.QueryResult, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		defer s.telemetry.MeasureSince(now, "root_store", "query")
@@ -248,7 +249,7 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 // If working hash is nil, then we need to compute and set it on the root store
 // by constructing a CommitInfo object, which in turn creates and writes a batch
 // of the current changeset to the SC tree.
-func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
+func (s *Store) WorkingHash(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		defer s.telemetry.MeasureSince(now, "root_store", "working_hash")
@@ -270,7 +271,7 @@ func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 // with the same Changeset, which internally sets the working hash, retrieved by
 // writing a batch of the changeset to the SC tree, and CommitInfo on the root
 // store.
-func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
+func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		defer s.telemetry.MeasureSince(now, "root_store", "commit")
@@ -341,7 +342,7 @@ func (s *Store) Prune(version uint64) error {
 // tree, which allows us to retrieve the working hash of the SC tree. Finally,
 // we construct a *CommitInfo and set that as lastCommitInfo. Note, this should
 // only be called once per block!
-func (s *Store) writeSC(cs *store.Changeset) error {
+func (s *Store) writeSC(cs *corestore.Changeset) error {
 	if err := s.stateCommitment.WriteBatch(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
@@ -371,7 +372,7 @@ func (s *Store) writeSC(cs *store.Changeset) error {
 // should have already been written to the SC via WorkingHash(). This method
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
-func (s *Store) commitSC(cs *store.Changeset) error {
+func (s *Store) commitSC(cs *corestore.Changeset) error {
 	cInfo, err := s.stateCommitment.Commit(s.lastCommitInfo.Version)
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)

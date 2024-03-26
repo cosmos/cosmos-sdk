@@ -35,7 +35,7 @@ type AnyUnpacker interface {
 type InterfaceRegistry interface {
 	AnyUnpacker
 	jsonpb.AnyResolver
-	registry.LegacyRegistry
+	registry.InterfaceRegistrar
 
 	// ListAllInterfaces list the type URLs of all registered interfaces.
 	ListAllInterfaces() []string

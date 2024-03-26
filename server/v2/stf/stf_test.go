@@ -10,9 +10,9 @@ import (
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	coregas "cosmossdk.io/core/gas"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
@@ -89,7 +89,7 @@ func TestSTF(t *testing.T) {
 		// this handler will propagate the storage error back, we expect
 		// out of gas immediately at tx validation level.
 		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error {
-			w, err := ctx.(*executionContext).state.GetWriter(actorName)
+			w, err := ctx.(*executionContext).State.GetWriter(actorName)
 			require.NoError(t, err)
 			err = w.Set([]byte("gas_failure"), []byte{})
 			require.Error(t, err)
@@ -178,7 +178,7 @@ var actorName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) {
 	t.Helper()
-	state, err := ctx.(*executionContext).state.GetWriter(actorName)
+	state, err := ctx.(*executionContext).State.GetWriter(actorName)
 	require.NoError(t, err)
 	require.NoError(t, state.Set([]byte(v), []byte(v)))
 }

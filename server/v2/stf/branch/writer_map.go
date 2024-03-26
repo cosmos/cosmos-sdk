@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/core/store"
 )
 
 func NewWriterMap(

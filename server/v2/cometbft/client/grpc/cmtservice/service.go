@@ -4,33 +4,30 @@ import (
 	"context"
 	"strings"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/encoding"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var (
-	_ ServiceServer                      = queryServer{}
-	_ codectypes.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
+	_ ServiceServer = queryServer{}
 )
 
 type (
 	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
 
 	queryServer struct {
-		client  rpc.CometRPC
-		queryFn abciQueryFn
+		client      rpc.CometRPC
+		queryFn     abciQueryFn
+		consAddrCdc address.Codec
 	}
 )
 
@@ -38,10 +35,12 @@ type (
 func NewQueryServer(
 	client rpc.CometRPC,
 	queryFn abciQueryFn,
+	consAddrCdc address.Codec,
 ) ServiceServer {
 	return queryServer{
-		queryFn: queryFn,
-		client:  client,
+		queryFn:     queryFn,
+		client:      client,
+		consAddrCdc: consAddrCdc,
 	}
 }
 
@@ -78,7 +77,7 @@ func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockReques
 	return &GetLatestBlockResponse{
 		BlockId:  &protoBlockID,
 		Block:    protoBlock,
-		SdkBlock: convertBlock(protoBlock),
+		SdkBlock: convertBlock(protoBlock, s.consAddrCdc),
 	}, nil
 }
 
@@ -109,35 +108,23 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 	return &GetBlockByHeightResponse{
 		BlockId:  &protoBlockID,
 		Block:    protoBlock,
-		SdkBlock: convertBlock(protoBlock),
+		SdkBlock: convertBlock(protoBlock, s.consAddrCdc),
 	}, nil
 }
 
 // GetLatestValidatorSet implements ServiceServer.GetLatestValidatorSet
 func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestValidatorSetRequest) (*GetLatestValidatorSetResponse, error) {
-	page, limit, err := qtypes.ParsePagination(req.Pagination)
+	page, limit, err := ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
 	}
 
-	return ValidatorsOutput(ctx, s.client, nil, page, limit)
-}
-
-func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey cryptotypes.PubKey
-	for _, val := range m.Validators {
-		err := unpacker.UnpackAny(val.PubKey, &pubKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return ValidatorsOutput(ctx, s.consAddrCdc, s.client, nil, page, limit)
 }
 
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error) {
-	page, limit, err := qtypes.ParsePagination(req.Pagination)
+	page, limit, err := ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +140,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
-	r, err := ValidatorsOutput(ctx, s.client, &req.Height, page, limit)
+	r, err := ValidatorsOutput(ctx, s.consAddrCdc, s.client, &req.Height, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +152,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 	}, nil
 }
 
-func ValidatorsOutput(ctx context.Context, client rpc.CometRPC, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
+func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc.CometRPC, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
 	vs, err := client.Validators(ctx, height, &page, &limit)
 	if err != nil {
 		return nil, err
@@ -174,25 +161,26 @@ func ValidatorsOutput(ctx context.Context, client rpc.CometRPC, height *int64, p
 	resp := GetLatestValidatorSetResponse{
 		BlockHeight: vs.BlockHeight,
 		Validators:  make([]*Validator, len(vs.Validators)),
-		Pagination: &qtypes.PageResponse{
+		Pagination: &PageResponse{
 			Total: uint64(vs.Total),
 		},
 	}
 
 	for i, v := range vs.Validators {
-		pk, err := cryptocodec.FromCmtPubKeyInterface(v.PubKey)
+		pk, err := encoding.PubKeyToProto(v.PubKey)
 		if err != nil {
 			return nil, err
 		}
-		anyPub, err := codectypes.NewAnyWithValue(pk)
+
+		addr, err := consAddrCdc.BytesToString(v.Address.Bytes())
 		if err != nil {
 			return nil, err
 		}
 
 		resp.Validators[i] = &Validator{
-			Address:          sdk.ConsAddress(v.Address).String(),
+			Address:          addr,
 			ProposerPriority: v.ProposerPriority,
-			PubKey:           anyPub,
+			PubKey:           pk,
 			VotingPower:      v.VotingPower,
 		}
 	}
@@ -271,8 +259,9 @@ func RegisterTendermintService(
 	client rpc.CometRPC,
 	server gogogrpc.Server,
 	queryFn abciQueryFn,
+	consAddrCodec address.Codec,
 ) {
-	RegisterServiceServer(server, NewQueryServer(client, queryFn))
+	RegisterServiceServer(server, NewQueryServer(client, queryFn, consAddrCodec))
 }
 
 // RegisterGRPCGatewayRoutes mounts the CometBFT service's GRPC-gateway routes on the

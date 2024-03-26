@@ -1,13 +1,18 @@
 package cmtservice
 
 import (
+	"cosmossdk.io/core/address"
 	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // convertHeader converts CometBFT header to sdk header
-func convertHeader(h cmtprototypes.Header) Header {
+func convertHeader(h cmtprototypes.Header, consAddrCdc address.Codec) Header {
+
+	propAddress, err := consAddrCdc.BytesToString(h.ProposerAddress)
+	if err != nil {
+		panic(err)
+	}
+
 	return Header{
 		Version:            h.Version,
 		ChainID:            h.ChainID,
@@ -22,15 +27,15 @@ func convertHeader(h cmtprototypes.Header) Header {
 		EvidenceHash:       h.EvidenceHash,
 		LastResultsHash:    h.LastResultsHash,
 		LastCommitHash:     h.LastCommitHash,
-		ProposerAddress:    sdk.ConsAddress(h.ProposerAddress).String(),
+		ProposerAddress:    propAddress,
 	}
 }
 
 // convertBlock converts CometBFT block to sdk block
-func convertBlock(cmtblock *cmtprototypes.Block) *Block {
+func convertBlock(cmtblock *cmtprototypes.Block, consAddrCdc address.Codec) *Block {
 	b := new(Block)
 
-	b.Header = convertHeader(cmtblock.Header)
+	b.Header = convertHeader(cmtblock.Header, consAddrCdc)
 	b.LastCommit = cmtblock.LastCommit
 	b.Data = cmtblock.Data
 	b.Evidence = cmtblock.Evidence

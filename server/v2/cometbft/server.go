@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -41,9 +42,11 @@ const (
 )
 
 type CometBFTServer[T transaction.Tx] struct {
-	Node   *node.Node
-	App    *Consensus[T]
-	logger log.Logger
+	Node          *node.Node
+	App           *Consensus[T]
+	logger        log.Logger
+	valAddrCodec  address.Codec
+	consAddrCodec address.Codec
 
 	config    Config
 	cleanupFn func()

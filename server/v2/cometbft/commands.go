@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/crypto/encoding"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -15,22 +16,24 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
 	auth "cosmossdk.io/x/auth/client/cli"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	"cosmossdk.io/server/v2/cometbft/flags"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/version"
-	"google.golang.org/protobuf/encoding/protojson"
+)
+
+// Defaults for flags
+const (
+	DefaultPage  = 1
+	DefaultLimit = 30
 )
 
 func (s *CometBFTServer[T]) rpcClient() (rpc.CometRPC, error) {
 	if s.config.Standalone {
-		client, err := rpchttp.New(s.config.CmtConfig.RPC.ListenAddress, "/websocket")
+		client, err := rpchttp.New(s.Node.Config().RPC.ListenAddress, "/websocket")
 		if err != nil {
 			return nil, err
 		}
@@ -61,6 +64,11 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 				return err
 			}
 
+			output, err = formatOutput(cmd, output)
+			if err != nil {
+				return err
+			}
+
 			cmd.Println(string(output))
 
 			// TODO: figure out yaml and json output
@@ -80,7 +88,7 @@ func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			nodeKey, err := p2p.LoadNodeKey(s.config.CmtConfig.NodeKeyFile())
+			nodeKey, err := p2p.LoadNodeKey(s.Node.Config().NodeKeyFile())
 			if err != nil {
 				return err
 			}
@@ -97,27 +105,29 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := s.config.CmtConfig
+			cfg := s.Node.Config()
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
 			if err != nil {
 				return err
 			}
 
-			sdkPK, err := cryptocodec.FromCmtPubKeyInterface(pk)
+			cmtPk, err := encoding.PubKeyToProto(pk)
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(sdkPK) // TODO: figure out if we need the codec here or not, see below
+			bz, err := cmtjson.Marshal(cmtPk)
+			if err != nil {
+				return err
+			}
 
-			// clientCtx := client.GetClientContextFromCmd(cmd)
-			// bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
-			// if err != nil {
-			// 	return err
-			// }
+			bz, err = formatOutput(cmd, bz)
+			if err != nil {
+				return err
+			}
 
-			// cmd.Println(string(bz))
+			cmd.Println(string(bz))
 			return nil
 		},
 	}
@@ -131,12 +141,14 @@ func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := s.config.CmtConfig
+			cfg := s.Node.Config()
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
-			// TODO: use address codec?
-			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
+			valConsAddr, err := s.consAddrCodec.BytesToString(privValidator.GetAddress().Bytes())
+			if err != nil {
+				return err
+			}
 
-			cmd.Println(valConsAddr.String())
+			cmd.Println(valConsAddr)
 			return nil
 		},
 	}
@@ -185,7 +197,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 `,
 		Example: fmt.Sprintf(
 			"$ %s query blocks --query \"message.sender='cosmos1...' AND block.height > 7\" --page 1 --limit 30 --order-by ASC",
-			version.AppName,
+			s.App.cfg.Name,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rpcclient, err := s.rpcClient()
@@ -203,9 +215,12 @@ for. Each module documents its respective events under 'xx_events.md'.
 				return err
 			}
 
-			// return clientCtx.PrintProto(blocks) // TODO: previously we had this, but I think it can be replaced with a simple json marshal.
-			// We are missing YAML output tho.
 			bz, err := protojson.Marshal(blocks)
+			if err != nil {
+				return err
+			}
+
+			bz, err = formatOutput(cmd, bz)
 			if err != nil {
 				return err
 			}
@@ -216,8 +231,8 @@ for. Each module documents its respective events under 'xx_events.md'.
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().Int(flags.FlagPage, DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int(flags.FlagLimit, DefaultLimit, "Query number of transactions results per page returned")
 	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per CometBFT's query semantics")
 	cmd.Flags().String(auth.FlagOrderBy, "", "The ordering semantics (asc|dsc)")
 	_ = cmd.MarkFlagRequired(auth.FlagQuery)
@@ -235,8 +250,8 @@ func (s *CometBFTServer[T]) QueryBlockCmd() *cobra.Command {
 $ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>
 `,
-			version.AppName, auth.FlagType, auth.TypeHeight,
-			version.AppName, auth.FlagType, auth.TypeHash)),
+			s.App.cfg.Name, auth.FlagType, auth.TypeHeight,
+			s.App.cfg.Name, auth.FlagType, auth.TypeHash)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			typ, _ := cmd.Flags().GetString(auth.FlagType)
@@ -270,9 +285,7 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with height %s", args[0])
 				}
 
-				// return clientCtx.PrintProto(output)
-
-				bz, err := json.Marshal(output)
+				bz, err := protojson.Marshal(output)
 				if err != nil {
 					return err
 				}
@@ -359,9 +372,13 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 				return err
 			}
 
+			blockResStr, err = formatOutput(cmd, blockResStr)
+			if err != nil {
+				return err
+			}
+
 			cmd.Println(string(blockResStr))
 
-			// TODO: figure out yaml and json output
 			return nil
 		},
 	}
@@ -369,21 +386,6 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func parseOptionalHeight(heightStr string) (*int64, error) {
-	h, err := strconv.Atoi(heightStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if h == 0 {
-		return nil, nil
-	}
-
-	tmp := int64(h)
-
-	return &tmp, nil
 }
 
 func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
@@ -403,11 +405,45 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 				}
 			}
 
-			return node.BootstrapState(cmd.Context(), s.config.CmtConfig, cmtcfg.DefaultDBProvider, height, nil)
+			return node.BootstrapState(cmd.Context(), s.Node.Config(), cmtcfg.DefaultDBProvider, height, nil)
 		},
 	}
 
 	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided it uses the latest block height in app state")
 
 	return cmd
+}
+
+func parseOptionalHeight(heightStr string) (*int64, error) {
+	h, err := strconv.Atoi(heightStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if h == 0 {
+		return nil, nil
+	}
+
+	tmp := int64(h)
+
+	return &tmp, nil
+}
+
+// formatOutput checks if we need to return the output in YAML format.
+func formatOutput(cmd *cobra.Command, bz []byte) ([]byte, error) {
+	output, err := cmd.Flags().GetString(flags.FlagOutput)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == flags.OutputFormatText {
+		return yaml.JSONToYAML(bz)
+	}
+
+	if output != flags.OutputFormatText {
+		// append new-line for formats besides YAML
+		bz = append(bz, '\n')
+	}
+
+	return bz, nil
 }

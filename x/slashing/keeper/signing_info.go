@@ -182,13 +182,7 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 	}
 
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())
-	return k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
-		err := k.ValidatorMissedBlockBitmap.Remove(ctx, key)
-		if err != nil {
-			return true, err
-		}
-		return false, nil
-	})
+	return k.ValidatorMissedBlockBitmap.Clear(ctx, rng)
 }
 
 // IterateMissedBlockBitmap iterates over a validator's signed blocks window

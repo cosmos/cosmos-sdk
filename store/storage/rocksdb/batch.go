@@ -44,8 +44,9 @@ func (b Batch) Size() int {
 	return len(b.batch.Data())
 }
 
-func (b Batch) Reset() {
+func (b Batch) Reset() error {
 	b.batch.Clear()
+	return nil
 }
 
 func (b Batch) Set(storeKey []byte, key, value []byte) error {

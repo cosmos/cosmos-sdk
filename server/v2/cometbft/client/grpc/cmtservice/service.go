@@ -14,14 +14,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var (
-	_ ServiceServer                      = queryServer{}
-	_ codectypes.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
+	_ ServiceServer = queryServer{}
 )
 
 type (
@@ -125,18 +122,6 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 	return ValidatorsOutput(ctx, s.consAddrCdc, s.client, nil, page, limit)
 }
 
-func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey cryptotypes.PubKey
-	for _, val := range m.Validators {
-		err := unpacker.UnpackAny(val.PubKey, &pubKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error) {
 	page, limit, err := ParsePagination(req.Pagination)
@@ -187,11 +172,6 @@ func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc
 			return nil, err
 		}
 
-		anyPub, err := codectypes.NewAnyWithValue(&pk)
-		if err != nil {
-			return nil, err
-		}
-
 		addr, err := consAddrCdc.BytesToString(v.Address.Bytes())
 		if err != nil {
 			return nil, err
@@ -200,7 +180,7 @@ func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc
 		resp.Validators[i] = &Validator{
 			Address:          addr,
 			ProposerPriority: v.ProposerPriority,
-			PubKey:           anyPub,
+			PubKey:           pk,
 			VotingPower:      v.VotingPower,
 		}
 	}

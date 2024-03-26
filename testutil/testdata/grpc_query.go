@@ -3,6 +3,8 @@ package testdata
 import (
 	"context"
 	"fmt"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
+	"github.com/cosmos/gogoproto/types/any/test"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -22,12 +24,12 @@ type QueryImpl struct{}
 var _ QueryServer = QueryImpl{}
 
 func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
-	animal, ok := request.AnyAnimal.GetCachedValue().(Animal)
+	animal, ok := request.AnyAnimal.GetCachedValue().(test.Animal)
 	if !ok {
 		return nil, fmt.Errorf("expected Animal")
 	}
 
-	any, err := types.NewAnyWithValue(animal.(proto.Message))
+	any, err := gogoprototypes.NewAnyWithCacheWithValue(animal.(proto.Message))
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +52,7 @@ func (e QueryImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHe
 var _ types.UnpackInterfacesMessage = &TestAnyRequest{}
 
 func (m *TestAnyRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var animal Animal
+	var animal test.Animal
 	return unpacker.UnpackAny(m.AnyAnimal, &animal)
 }
 

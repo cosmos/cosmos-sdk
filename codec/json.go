@@ -2,6 +2,7 @@ package codec
 
 import (
 	"bytes"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
@@ -20,7 +21,7 @@ func ProtoMarshalJSON(msg proto.Message, resolver jsonpb.AnyResolver) ([]byte, e
 	if resolver != nil {
 		jm = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: resolver}
 	}
-	err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm})
+	err := types.UnpackInterfaces(msg, gogoprototypes.ProtoJSONPacker{JSONPBMarshaler: jm})
 	if err != nil {
 		return nil, err
 	}

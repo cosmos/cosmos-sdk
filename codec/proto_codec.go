@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"strings"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
@@ -227,7 +228,7 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}
-	any, err := types.NewAnyWithValue(i)
+	any, err := gogoprototypes.NewAnyWithCacheWithValue(i)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +263,7 @@ func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 // packs the provided value in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) {
-	any, err := types.NewAnyWithValue(x)
+	any, err := gogoprototypes.NewAnyWithCacheWithValue(x)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +322,7 @@ func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Me
 		signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgV2)
 		return signers, msgV2, err
 	}
-	a, err := types.NewAnyWithValue(msg)
+	a, err := gogoprototypes.NewAnyWithCacheWithValue(msg)
 	if err != nil {
 		return nil, nil, err
 	}

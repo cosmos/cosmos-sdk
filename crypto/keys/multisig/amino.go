@@ -2,6 +2,7 @@ package multisig
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -53,7 +54,7 @@ func tmToProto(tmPk tmMultisig) (*LegacyAminoPubKey, error) {
 	var err error
 	pks := make([]*types.Any, len(tmPk.PubKeys))
 	for i, pk := range tmPk.PubKeys {
-		pks[i], err = types.NewAnyWithValue(pk)
+		pks[i], err = gogoprototypes.NewAnyWithCacheWithValue(pk)
 		if err != nil {
 			return nil, err
 		}

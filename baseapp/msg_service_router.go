@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -222,7 +223,7 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
 		}
 
-		anyResp, err := codectypes.NewAnyWithValue(resMsg)
+		anyResp, err := gogoprototypes.NewAnyWithCacheWithValue(resMsg)
 		if err != nil {
 			return nil, err
 		}

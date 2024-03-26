@@ -5,12 +5,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"time"
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -145,7 +145,7 @@ func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *c
 	if err != nil {
 		return nil, err
 	}
-	anyTx, err := codectypes.NewAnyWithValue(tx)
+	anyTx, err := gogoprototypes.NewAnyWithCacheWithValue(tx)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package multisig
 
 import (
 	fmt "fmt"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 
@@ -164,7 +165,7 @@ func packPubKeys(pubKeys []cryptotypes.PubKey) ([]*types.Any, error) {
 	anyPubKeys := make([]*types.Any, len(pubKeys))
 
 	for i := 0; i < len(pubKeys); i++ {
-		any, err := types.NewAnyWithValue(pubKeys[i])
+		any, err := gogoprototypes.NewAnyWithCacheWithValue(pubKeys[i])
 		if err != nil {
 			return nil, err
 		}

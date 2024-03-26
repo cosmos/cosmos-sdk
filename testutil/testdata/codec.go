@@ -1,6 +1,7 @@
 package testdata
 
 import (
+	"github.com/cosmos/gogoproto/types/any/test"
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -42,15 +43,15 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 func NewTestAmino() *amino.Codec {
 	cdc := amino.NewCodec()
-	cdc.RegisterInterface((*Animal)(nil), nil)
-	cdc.RegisterConcrete(&Dog{}, "testpb/Dog", nil)
-	cdc.RegisterConcrete(&Cat{}, "testpb/Cat", nil)
+	cdc.RegisterInterface((*test.Animal)(nil), nil)
+	cdc.RegisterConcrete(&test.Dog{}, "testpb/Dog", nil)
+	cdc.RegisterConcrete(&test.Cat{}, "testpb/Cat", nil)
 
-	cdc.RegisterInterface((*HasAnimalI)(nil), nil)
-	cdc.RegisterConcrete(&HasAnimal{}, "testpb/HasAnimal", nil)
+	cdc.RegisterInterface((*test.HasAnimalI)(nil), nil)
+	cdc.RegisterConcrete(&test.HasAnimal{}, "testpb/HasAnimal", nil)
 
-	cdc.RegisterInterface((*HasHasAnimalI)(nil), nil)
-	cdc.RegisterConcrete(&HasHasAnimal{}, "testpb/HasHasAnimal", nil)
+	cdc.RegisterInterface((*test.HasHasAnimalI)(nil), nil)
+	cdc.RegisterConcrete(&test.HasHasAnimal{}, "testpb/HasHasAnimal", nil)
 
 	return cdc
 }

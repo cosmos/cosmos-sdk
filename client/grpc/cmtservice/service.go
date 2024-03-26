@@ -2,6 +2,7 @@ package cmtservice
 
 import (
 	"context"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -171,7 +172,7 @@ func ValidatorsOutput(ctx context.Context, clientCtx client.Context, height *int
 		if err != nil {
 			return nil, err
 		}
-		anyPub, err := codectypes.NewAnyWithValue(pk)
+		anyPub, err := gogoprototypes.NewAnyWithCacheWithValue(pk)
 		if err != nil {
 			return nil, err
 		}

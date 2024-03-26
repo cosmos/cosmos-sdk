@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"strings"
 
 	"github.com/cometbft/cometbft/crypto"
@@ -86,7 +87,7 @@ func (acc *BaseAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 		acc.PubKey = nil
 		return nil
 	}
-	any, err := codectypes.NewAnyWithValue(pubKey)
+	any, err := gogoprototypes.NewAnyWithCacheWithValue(pubKey)
 	if err == nil {
 		acc.PubKey = any
 	}

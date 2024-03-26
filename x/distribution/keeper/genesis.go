@@ -272,5 +272,9 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		return nil, err
 	}
 
-	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes), nil
+	ppAddr, err := k.stakingKeeper.ConsensusAddressCodec().BytesToString(pp)
+	if err != nil {
+		return nil, err
+	}
+	return types.NewGenesisState(params, feePool, dwi, ppAddr, outstanding, acc, his, cur, dels, slashes), nil
 }

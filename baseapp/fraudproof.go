@@ -28,7 +28,7 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 
 	app.deliverState = nil
 
-	// Run the set of all nonFradulent and fraudulent state transitions
+	// Run the set of all non fraudelent and fraudulent state transitions
 	beginBlockRequest := req.BeginBlockRequest
 	isBeginBlockFraudulent := req.DeliverTxRequests == nil
 	isDeliverTxFraudulent := req.EndBlockRequest == nil

@@ -15,7 +15,7 @@ import (
 
 var ErrMoreThanOneBlockTypeUsed = errors.New("fraudProof has more than one type of fradulent state transitions marked nil")
 
-// Represents a single-round fraudProof
+// FraudProof represents a single-round fraudProof
 type FraudProof struct {
 	// The block height to load state of
 	BlockHeight int64
@@ -32,7 +32,7 @@ type FraudProof struct {
 	FraudulentEndBlock   *abci.RequestEndBlock
 }
 
-// State witness with a list of all witness data
+// StateWitness with a list of all witness data
 type StateWitness struct {
 	// store level proof
 	Proof    tmcrypto.ProofOp
@@ -41,7 +41,7 @@ type StateWitness struct {
 	WitnessData []*WitnessData
 }
 
-// Witness data represents a trace operation along with inclusion proofs required for said operation
+// WitnessData represents a trace operation along with inclusion proofs required for said operation
 type WitnessData struct {
 	Operation iavl.Operation
 	Key       []byte
@@ -100,7 +100,7 @@ func (fraudProof *FraudProof) GetModules() []string {
 	return keys
 }
 
-// Returns a map from storeKey to IAVL Deep Subtrees which have witness data and
+// GetDeepIAVLTrees returns a map from storeKey to IAVL Deep Subtrees which have witness data and
 // initial root hash initialized from fraud proof
 func (fraudProof *FraudProof) GetDeepIAVLTrees() (map[string]*iavl.DeepSubTree, error) {
 	storeKeyToIAVLTree := make(map[string]*iavl.DeepSubTree)
@@ -140,7 +140,7 @@ func (fraudProof *FraudProof) checkFraudulentStateTransition() bool {
 	return fraudProof.FraudulentEndBlock != nil
 }
 
-// Performs fraud proof verification on a store and substore level
+// ValidateBasic performs fraud proof verification on a store and substore level
 func (fraudProof *FraudProof) ValidateBasic() (bool, error) {
 	if !fraudProof.checkFraudulentStateTransition() {
 		return false, ErrMoreThanOneBlockTypeUsed

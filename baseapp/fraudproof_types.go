@@ -13,11 +13,11 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
-var ErrMoreThanOneBlockTypeUsed = errors.New("fraudProof has more than one type of fradulent state transitions marked nil")
+var ErrMoreThanOneBlockTypeUsed = errors.New("fraud proof has not exactly one type of fraudulent state transitions marked nil")
 
 // FraudProof represents a single-round fraudProof
 type FraudProof struct {
-	// The block height to load state of
+	// The block height to load state of, aka the last committed block. Note: this diverges from the ADR
 	BlockHeight int64
 
 	PreStateAppHash      []byte
@@ -92,9 +92,15 @@ func getExistenceProof(proofOp tmcrypto.ProofOp) (types.CommitmentOp, *ics23.Exi
 	return commitmentOp, commitmentProof.GetExist(), nil
 }
 
-func (fraudProof *FraudProof) GetModules() []string {
-	keys := make([]string, 0, len(fraudProof.stateWitness))
-	for k := range fraudProof.stateWitness {
+// GetFraudulentBlockHeight returns the height of the block in which the fraud occurred
+func (f *FraudProof) GetFraudulentBlockHeight() int64 {
+	// Since the block height is the last committed block, the next block height is the fraudulent block height
+	return f.BlockHeight + 1
+}
+
+func (f *FraudProof) GetModules() []string {
+	keys := make([]string, 0, len(f.stateWitness))
+	for k := range f.stateWitness {
 		keys = append(keys, k)
 	}
 	return keys
@@ -102,10 +108,10 @@ func (fraudProof *FraudProof) GetModules() []string {
 
 // GetDeepIAVLTrees returns a map from storeKey to IAVL Deep Subtrees which have witness data and
 // initial root hash initialized from fraud proof
-func (fraudProof *FraudProof) GetDeepIAVLTrees() (map[string]*iavl.DeepSubTree, error) {
+func (f *FraudProof) GetDeepIAVLTrees() (map[string]*iavl.DeepSubTree, error) {
 	storeKeyToIAVLTree := make(map[string]*iavl.DeepSubTree)
-	for storeKey, stateWitness := range fraudProof.stateWitness {
-		dst := iavl.NewDeepSubTree(db.NewMemDB(), 100, false, fraudProof.BlockHeight)
+	for storeKey, stateWitness := range f.stateWitness {
+		dst := iavl.NewDeepSubTree(db.NewMemDB(), 100, false, f.BlockHeight)
 		iavlWitnessData := make([]iavl.WitnessData, 0)
 		for _, witnessData := range stateWitness.WitnessData {
 			existenceProofs, err := convertToExistenceProofs(witnessData.Proofs)
@@ -130,22 +136,22 @@ func (fraudProof *FraudProof) GetDeepIAVLTrees() (map[string]*iavl.DeepSubTree, 
 }
 
 // Returns true only if only one of the three pointers is nil
-func (fraudProof *FraudProof) checkFraudulentStateTransition() bool {
-	if fraudProof.FraudulentBeginBlock != nil {
-		return fraudProof.FraudulentDeliverTx == nil && fraudProof.FraudulentEndBlock == nil
+func (f *FraudProof) checkFraudulentStateTransition() bool {
+	if f.FraudulentBeginBlock != nil {
+		return f.FraudulentDeliverTx == nil && f.FraudulentEndBlock == nil
 	}
-	if fraudProof.FraudulentDeliverTx != nil {
-		return fraudProof.FraudulentEndBlock == nil
+	if f.FraudulentDeliverTx != nil {
+		return f.FraudulentEndBlock == nil
 	}
-	return fraudProof.FraudulentEndBlock != nil
+	return f.FraudulentEndBlock != nil
 }
 
 // ValidateBasic performs fraud proof verification on a store and substore level
-func (fraudProof *FraudProof) ValidateBasic() (bool, error) {
-	if !fraudProof.checkFraudulentStateTransition() {
+func (f *FraudProof) ValidateBasic() (bool, error) {
+	if !f.checkFraudulentStateTransition() {
 		return false, ErrMoreThanOneBlockTypeUsed
 	}
-	for storeKey, stateWitness := range fraudProof.stateWitness {
+	for storeKey, stateWitness := range f.stateWitness {
 		// Fraudproof verification on a store level
 		proofOp := stateWitness.Proof
 		proof, err := types.CommitmentOpDecoder(proofOp)
@@ -159,8 +165,8 @@ func (fraudProof *FraudProof) ValidateBasic() (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		if !bytes.Equal(appHash[0], fraudProof.PreStateAppHash) {
-			return false, fmt.Errorf("got appHash: %s, expected: %s", string(fraudProof.PreStateAppHash), string(fraudProof.PreStateAppHash))
+		if !bytes.Equal(appHash[0], f.PreStateAppHash) {
+			return false, fmt.Errorf("got appHash: %s, expected: %s", string(f.PreStateAppHash), string(f.PreStateAppHash))
 		}
 
 		// Fraudproof verification on a substore level
@@ -209,9 +215,9 @@ func fromABCI(operation abci.Operation) (iavl.Operation, error) {
 	}
 }
 
-func (fraudProof *FraudProof) toABCI() (*abci.FraudProof, error) {
+func (f *FraudProof) toABCI() (*abci.FraudProof, error) {
 	abciStateWitness := make(map[string]*abci.StateWitness)
-	for storeKey, stateWitness := range fraudProof.stateWitness {
+	for storeKey, stateWitness := range f.stateWitness {
 		abciWitnessData := make([]*abci.WitnessData, 0, len(stateWitness.WitnessData))
 		for _, witnessData := range stateWitness.WitnessData {
 			abciOperation, err := toABCI(witnessData.Operation)
@@ -234,17 +240,17 @@ func (fraudProof *FraudProof) toABCI() (*abci.FraudProof, error) {
 		}
 	}
 	return &abci.FraudProof{
-		BlockHeight:          fraudProof.BlockHeight,
-		PreStateAppHash:      fraudProof.PreStateAppHash,
-		ExpectedValidAppHash: fraudProof.ExpectedValidAppHash,
+		BlockHeight:          f.BlockHeight,
+		PreStateAppHash:      f.PreStateAppHash,
+		ExpectedValidAppHash: f.ExpectedValidAppHash,
 		StateWitness:         abciStateWitness,
-		FraudulentBeginBlock: fraudProof.FraudulentBeginBlock,
-		FraudulentDeliverTx:  fraudProof.FraudulentDeliverTx,
-		FraudulentEndBlock:   fraudProof.FraudulentEndBlock,
+		FraudulentBeginBlock: f.FraudulentBeginBlock,
+		FraudulentDeliverTx:  f.FraudulentDeliverTx,
+		FraudulentEndBlock:   f.FraudulentEndBlock,
 	}, nil
 }
 
-func (fraudProof *FraudProof) FromABCI(abciFraudProof abci.FraudProof) error {
+func (f *FraudProof) FromABCI(abciFraudProof abci.FraudProof) error {
 	stateWitness := make(map[string]StateWitness)
 	for storeKey, abciStateWitness := range abciFraudProof.StateWitness {
 		witnessData := make([]*WitnessData, 0, len(abciStateWitness.WitnessData))
@@ -267,12 +273,12 @@ func (fraudProof *FraudProof) FromABCI(abciFraudProof abci.FraudProof) error {
 			WitnessData: witnessData,
 		}
 	}
-	fraudProof.BlockHeight = abciFraudProof.BlockHeight
-	fraudProof.PreStateAppHash = abciFraudProof.PreStateAppHash
-	fraudProof.ExpectedValidAppHash = abciFraudProof.ExpectedValidAppHash
-	fraudProof.stateWitness = stateWitness
-	fraudProof.FraudulentBeginBlock = abciFraudProof.FraudulentBeginBlock
-	fraudProof.FraudulentDeliverTx = abciFraudProof.FraudulentDeliverTx
-	fraudProof.FraudulentEndBlock = abciFraudProof.FraudulentEndBlock
+	f.BlockHeight = abciFraudProof.BlockHeight
+	f.PreStateAppHash = abciFraudProof.PreStateAppHash
+	f.ExpectedValidAppHash = abciFraudProof.ExpectedValidAppHash
+	f.stateWitness = stateWitness
+	f.FraudulentBeginBlock = abciFraudProof.FraudulentBeginBlock
+	f.FraudulentDeliverTx = abciFraudProof.FraudulentDeliverTx
+	f.FraudulentEndBlock = abciFraudProof.FraudulentEndBlock
 	return nil
 }

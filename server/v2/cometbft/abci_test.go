@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	am "cosmossdk.io/server/v2/appmanager"
 	ammstore "cosmossdk.io/server/v2/appmanager/store"
 	"cosmossdk.io/server/v2/cometbft/mempool"
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
@@ -73,7 +73,7 @@ func TestConsensus(t *testing.T) {
 
 	t.Run("Check tx basic", func(t *testing.T) {
 		res, err := c.CheckTx(context.Background(), &abci.RequestCheckTx{
-			Tx: mockTx.Bytes(),
+			Tx:   mockTx.Bytes(),
 			Type: 0,
 		})
 		require.NotNil(t, res.GasUsed)
@@ -85,8 +85,8 @@ var actorName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) error {
 	t.Helper()
-	executionCtx, ok := ctx.(*stf.ExecutionContext)
-	require.True(t, ok)
+	executionCtx := stf.GetExecutionContext(ctx)
+	require.NotNil(t, executionCtx)
 	state, err := executionCtx.State.GetWriter(actorName)
 	require.NoError(t, err)
 	return state.Set([]byte(v), []byte(v))

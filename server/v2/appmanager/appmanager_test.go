@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	ammstore "cosmossdk.io/server/v2/appmanager/store"
 	"cosmossdk.io/server/v2/core/appmanager"
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
@@ -82,7 +82,7 @@ func TestAppManager(t *testing.T) {
 	t.Run("basic tx", func(t *testing.T) {
 		result, newState, err := am.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height: 1,
-			Txs: []mock.Tx{mockTx},
+			Txs:    []mock.Tx{mockTx},
 		})
 		require.NoError(t, err)
 		stateHas(t, newState, "validate")
@@ -119,7 +119,7 @@ func TestAppManager(t *testing.T) {
 		_, newState, err := am.Simulate(context.Background(), mockTx)
 		require.NoError(t, err)
 		stateHas(t, newState, "validate") // should not has
-		stateHas(t, newState, "exec") // should not has
+		stateHas(t, newState, "exec")     // should not has
 	})
 
 	t.Run("query basic", func(t *testing.T) {
@@ -139,8 +139,8 @@ var actorName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) error {
 	t.Helper()
-	executionCtx, ok := ctx.(*stf.ExecutionContext)
-	require.True(t, ok)
+	executionCtx := stf.GetExecutionContext(ctx)
+	require.NotNil(t, executionCtx)
 	state, err := executionCtx.State.GetWriter(actorName)
 	require.NoError(t, err)
 	return state.Set([]byte(v), []byte(v))

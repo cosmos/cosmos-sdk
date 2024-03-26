@@ -120,8 +120,13 @@ type QueryVoteParams struct {
 
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
 func QueryVoteByTxQuery(clientCtx client.Context, params QueryVoteParams) ([]byte, error) {
+	voterAddr, err := clientCtx.AddressCodec.BytesToString(params.Voter)
+	if err != nil {
+		return nil, err
+	}
+
 	q1 := fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID)
-	q2 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter.String())
+	q2 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, voterAddr)
 	q3 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter)
 	searchResult, err := authtx.QueryTxsByEvents(clientCtx, defaultPage, defaultLimit, fmt.Sprintf("%s AND (%s OR %s)", q1, q2, q3), "")
 	if err != nil {

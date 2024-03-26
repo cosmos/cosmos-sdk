@@ -6,11 +6,15 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/server/v2/stf"
 )
 
 // Item is a type declaration based on Map
 // with a non-existent key.
-type Item[V any] Map[noKey, V]
+type Item[V any] struct {
+	m            Map[noKey, V]
+	getContainer func(ctx context.Context) stf.Container
+}
 
 // NewItem instantiates a new Item instance, given the value encoder of the item V.
 // Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
@@ -21,30 +25,56 @@ func NewItem[V any](
 	name string,
 	valueCodec codec.ValueCodec[V],
 ) Item[V] {
-	item := (Item[V])(NewMap[noKey](schema, prefix, name, noKey{}, valueCodec))
+	m := NewMap[noKey](schema, prefix, name, noKey{}, valueCodec)
+	item := Item[V]{
+		m: m,
+	}
+	if schema.schema.container != nil {
+		item.getContainer = schema.schema.container
+	}
 	return item
 }
 
 // Get gets the item, if it is not set it returns an ErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.
 func (i Item[V]) Get(ctx context.Context) (V, error) {
-	return (Map[noKey, V])(i).Get(ctx, noKey{})
+	if i.getContainer != nil {
+		cached, found := i.getContainer(ctx).Get(i.m.prefix)
+		if found {
+			return cached.(V), nil
+		}
+	}
+	return i.m.Get(ctx, noKey{})
 }
 
 // Set sets the item in the store. If Value encoding fails then an ErrEncoding is returned.
 func (i Item[V]) Set(ctx context.Context, value V) error {
-	return (Map[noKey, V])(i).Set(ctx, noKey{}, value)
+	err := i.m.Set(ctx, noKey{}, value)
+	if err != nil {
+		return err
+	}
+	if i.getContainer != nil {
+		i.getContainer(ctx).Set(i.m.prefix, value)
+	}
+	return nil
 }
 
 // Has reports whether the item exists in the store or not.
 // Returns an error in case encoding fails.
 func (i Item[V]) Has(ctx context.Context) (bool, error) {
-	return (Map[noKey, V])(i).Has(ctx, noKey{})
+	return i.m.Has(ctx, noKey{})
 }
 
 // Remove removes the item in the store.
 func (i Item[V]) Remove(ctx context.Context) error {
-	return (Map[noKey, V])(i).Remove(ctx, noKey{})
+	err := i.m.Remove(ctx, noKey{})
+	if err != nil {
+		return err
+	}
+	if i.getContainer != nil {
+		i.getContainer(ctx).Remove(i.m.prefix)
+	}
+	return nil
 }
 
 // noKey defines a KeyCodec which decodes nothing.

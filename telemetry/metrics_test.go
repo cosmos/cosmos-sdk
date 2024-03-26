@@ -61,7 +61,7 @@ func TestMetrics_Prom(t *testing.T) {
 	require.Equal(t, gr.ContentType, string(expfmt.NewFormat(expfmt.TypeProtoText)))
 
 	require.True(t, strings.Contains(string(gr.Metrics), "test_dummy_counter"))
-	require.True(t, strings.Contains(string(gr.Metrics), "value: 30"))
+	require.True(t, strings.Contains(string(gr.Metrics), "value:  30"))
 }
 
 func emitMetrics() {

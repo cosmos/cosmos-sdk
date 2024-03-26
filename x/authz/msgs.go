@@ -20,10 +20,10 @@ var (
 )
 
 // NewMsgGrant creates a new MsgGrant
-func NewMsgGrant(granter, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
+func NewMsgGrant(granter, grantee string, a Authorization, expiration *time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
-		Granter: granter.String(),
-		Grantee: grantee.String(),
+		Granter: granter,
+		Grantee: grantee,
 		Grant:   Grant{Expiration: expiration},
 	}
 	err := m.SetAuthorization(a)
@@ -71,16 +71,16 @@ func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // NewMsgRevoke creates a new MsgRevoke
-func NewMsgRevoke(granter, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
+func NewMsgRevoke(granter, grantee, msgTypeURL string) MsgRevoke {
 	return MsgRevoke{
-		Granter:    granter.String(),
-		Grantee:    grantee.String(),
+		Granter:    granter,
+		Grantee:    grantee,
 		MsgTypeUrl: msgTypeURL,
 	}
 }
 
 // NewMsgExec creates a new MsgExecAuthorized
-func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
+func NewMsgExec(grantee string, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
 		any, err := cdctypes.NewAnyWithValue(msg)
@@ -92,7 +92,7 @@ func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	}
 
 	return MsgExec{
-		Grantee: grantee.String(),
+		Grantee: grantee,
 		Msgs:    msgsAny,
 	}
 }

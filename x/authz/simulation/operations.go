@@ -123,7 +123,15 @@ func SimulateMsgGrant(
 		}
 		randomAuthz := generateRandomAuthorization(r, spendLimit)
 
-		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, randomAuthz, expiration)
+		granterAddr, err := ak.AddressCodec().BytesToString(granter.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "could not get granter address"), nil, nil
+		}
+		granteeAddr, err := ak.AddressCodec().BytesToString(grantee.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "could not get grantee address"), nil, nil
+		}
+		msg, err := authz.NewMsgGrant(granterAddr, granteeAddr, randomAuthz, expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
@@ -174,13 +182,16 @@ func SimulateMsgRevoke(
 		var grant authz.Grant
 		hasGrant := false
 
-		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, g authz.Grant) bool {
+		err := k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, g authz.Grant) (bool, error) {
 			grant = g
 			granterAddr = granter
 			granteeAddr = grantee
 			hasGrant = true
-			return true
+			return true, nil
 		})
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, err.Error()), nil, err
+		}
 
 		if !hasGrant {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "no grants"), nil, nil
@@ -202,7 +213,15 @@ func SimulateMsgRevoke(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "authorization error"), nil, err
 		}
 
-		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, a.MsgTypeURL())
+		granterStrAddr, err := ak.AddressCodec().BytesToString(granterAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "could not get granter address"), nil, nil
+		}
+		granteeStrAddr, err := ak.AddressCodec().BytesToString(granteeAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "could not get grantee address"), nil, nil
+		}
+		msg := authz.NewMsgRevoke(granterStrAddr, granteeStrAddr, a.MsgTypeURL())
 		account := ak.GetAccount(ctx, granterAddr)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
@@ -244,19 +263,18 @@ func SimulateMsgExec(
 		var granteeAddr sdk.AccAddress
 		var sendAuth *banktype.SendAuthorization
 		var err error
-		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
+		err = k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
 			granterAddr = granter
 			granteeAddr = grantee
 			var a authz.Authorization
 			a, err = grant.GetAuthorization()
 			if err != nil {
-				return true
+				return true, err
 			}
 			var ok bool
 			sendAuth, ok = a.(*banktype.SendAuthorization)
-			return ok
+			return ok, nil
 		})
-
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
@@ -305,7 +323,7 @@ func SimulateMsgExec(
 
 		}
 
-		msgExec := authz.NewMsgExec(granteeAddr, msg)
+		msgExec := authz.NewMsgExec(greStr, msg)
 		granteeSpendableCoins := bk.SpendableCoins(ctx, granteeAddr)
 		fees, err := simtypes.RandomFees(r, granteeSpendableCoins)
 		if err != nil {

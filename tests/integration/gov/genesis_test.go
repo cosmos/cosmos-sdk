@@ -102,8 +102,10 @@ func TestImportExportQueues(t *testing.T) {
 
 	authGenState, err := s1.AccountKeeper.ExportGenesis(ctx)
 	require.NoError(t, err)
-	bankGenState := s1.BankKeeper.ExportGenesis(ctx)
-	stakingGenState := s1.StakingKeeper.ExportGenesis(ctx)
+	bankGenState, err := s1.BankKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
+	stakingGenState, err := s1.StakingKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
 
 	// export the state and import it into a new app
 	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)

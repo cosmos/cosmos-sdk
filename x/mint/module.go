@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/simulation"
@@ -25,17 +24,17 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.HasName                  = AppModule{}
-	_ module.HasAminoCodec            = AppModule{}
-	_ module.HasGRPCGateway           = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-	_ module.AppModuleSimulation      = AppModule{}
-	_ appmodulev2.HasGenesis          = AppModule{}
+	_ module.HasName             = AppModule{}
+	_ module.HasAminoCodec       = AppModule{}
+	_ module.HasGRPCGateway      = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
 
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasMigrations   = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasBeginBlocker       = AppModule{}
+	_ appmodule.HasServices           = AppModule{}
+	_ appmodule.HasMigrations         = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.HasGenesis            = AppModule{}
 )
 
 // AppModule implements an application module for the mint module.
@@ -83,8 +82,8 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the module's interface types
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	types.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.

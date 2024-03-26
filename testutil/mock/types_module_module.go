@@ -10,10 +10,9 @@ import (
 	reflect "reflect"
 
 	registry "cosmossdk.io/core/registry"
-	types "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -69,7 +68,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 i
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModuleBasic) RegisterInterfaces(arg0 registry.LegacyRegistry) {
+func (m *MockAppModuleBasic) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -154,7 +153,7 @@ func (mr *MockAppModuleMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockAppModule) RegisterInterfaces(arg0 registry.LegacyRegistry) {
+func (m *MockAppModule) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
@@ -375,11 +374,12 @@ func (mr *MockHasABCIGenesisMockRecorder) DefaultGenesis() *gomock.Call {
 }
 
 // ExportGenesis mocks base method.
-func (m *MockHasABCIGenesis) ExportGenesis(arg0 context.Context) json.RawMessage {
+func (m *MockHasABCIGenesis) ExportGenesis(arg0 context.Context) (json.RawMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0)
 	ret0, _ := ret[0].(json.RawMessage)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ExportGenesis indicates an expected call of ExportGenesis.
@@ -389,11 +389,12 @@ func (mr *MockHasABCIGenesisMockRecorder) ExportGenesis(arg0 interface{}) *gomoc
 }
 
 // InitGenesis mocks base method.
-func (m *MockHasABCIGenesis) InitGenesis(arg0 context.Context, arg1 json.RawMessage) []types.ValidatorUpdate {
+func (m *MockHasABCIGenesis) InitGenesis(arg0 context.Context, arg1 json.RawMessage) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
-	return ret0
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // InitGenesis indicates an expected call of InitGenesis.
@@ -454,7 +455,7 @@ func (m *MockHasInvariants) EXPECT() *MockHasInvariantsMockRecorder {
 }
 
 // RegisterInvariants mocks base method.
-func (m *MockHasInvariants) RegisterInvariants(arg0 types0.InvariantRegistry) {
+func (m *MockHasInvariants) RegisterInvariants(arg0 types.InvariantRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInvariants", arg0)
 }
@@ -500,43 +501,6 @@ func (mr *MockHasServicesMockRecorder) RegisterServices(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockHasServices)(nil).RegisterServices), arg0)
 }
 
-// MockHasConsensusVersion is a mock of HasConsensusVersion interface.
-type MockHasConsensusVersion struct {
-	ctrl     *gomock.Controller
-	recorder *MockHasConsensusVersionMockRecorder
-}
-
-// MockHasConsensusVersionMockRecorder is the mock recorder for MockHasConsensusVersion.
-type MockHasConsensusVersionMockRecorder struct {
-	mock *MockHasConsensusVersion
-}
-
-// NewMockHasConsensusVersion creates a new mock instance.
-func NewMockHasConsensusVersion(ctrl *gomock.Controller) *MockHasConsensusVersion {
-	mock := &MockHasConsensusVersion{ctrl: ctrl}
-	mock.recorder = &MockHasConsensusVersionMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockHasConsensusVersion) EXPECT() *MockHasConsensusVersionMockRecorder {
-	return m.recorder
-}
-
-// ConsensusVersion mocks base method.
-func (m *MockHasConsensusVersion) ConsensusVersion() uint64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConsensusVersion")
-	ret0, _ := ret[0].(uint64)
-	return ret0
-}
-
-// ConsensusVersion indicates an expected call of ConsensusVersion.
-func (mr *MockHasConsensusVersionMockRecorder) ConsensusVersion() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusVersion", reflect.TypeOf((*MockHasConsensusVersion)(nil).ConsensusVersion))
-}
-
 // MockHasABCIEndBlock is a mock of HasABCIEndBlock interface.
 type MockHasABCIEndBlock struct {
 	ctrl     *gomock.Controller
@@ -561,10 +525,10 @@ func (m *MockHasABCIEndBlock) EXPECT() *MockHasABCIEndBlockMockRecorder {
 }
 
 // EndBlock mocks base method.
-func (m *MockHasABCIEndBlock) EndBlock(arg0 context.Context) ([]types.ValidatorUpdate, error) {
+func (m *MockHasABCIEndBlock) EndBlock(arg0 context.Context) ([]module.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndBlock", arg0)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
+	ret0, _ := ret[0].([]module.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -614,7 +578,7 @@ func (mr *MockHasABCIEndBlockMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterInterfaces mocks base method.
-func (m *MockHasABCIEndBlock) RegisterInterfaces(arg0 registry.LegacyRegistry) {
+func (m *MockHasABCIEndBlock) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }

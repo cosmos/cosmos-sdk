@@ -52,6 +52,8 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 +app.ModuleManager.RegisterInterfaces(interfaceRegistry)
 ```
 
+Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
+
 ##### AnteHandlers
 
 The `GasConsumptionDecorator` and `IncreaseSequenceDecorator` have been merged with the SigVerificationDecorator, so you'll
@@ -143,6 +145,16 @@ If you were depending on `cosmossdk.io/api/tendermint`, please use the buf gener
 
 #### `**all**`
 
+##### Simulation
+
+`MsgSimulatorFn` has been updated to return an error. Its context argument has been removed, and an address.Codec has
+been added to avoid the use of the Accounts.String() method.
+
+```diff
+-type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
++type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+```
+
 ##### Core API
 
 Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
@@ -164,11 +176,11 @@ If your module requires a message server or query server, it should be passed in
 +govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 ```
 
-The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.LegacyRegistry` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.LegacyRegistry` interface.
+The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
 
 ```diff
 -func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-+func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
++func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 ```
 
 ##### Dependency Injection
@@ -182,15 +194,16 @@ Previous module migrations have been removed. It is required to migrate to v0.50
 
 ##### Genesis Interface
 
-All genesis interfaces have been migrated to take context.Context instead of sdk.Context. Secondly, the codec is no longer passed in by the framework. The codec is now passed in by the module.
+All genesis interfaces have been migrated to take `context.Context` instead of `sdk.Context`.
+Secondly, the codec is no longer passed in by the framework. The codec is now passed in by the module.
+Lastly, all InitGenesis and ExportGenesis functions now return an error.
 
 ```go
-// InitGenesis performs genesis initialization for the authz module.
+// InitGenesis performs genesis initialization for the module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the authz
-// module.
+// ExportGenesis returns the exported genesis state as raw bytes for the module.
 func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
 }
 ```

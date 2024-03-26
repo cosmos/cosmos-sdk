@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -55,8 +56,8 @@ func (m MockWeightedProposals) DefaultWeight() int {
 }
 
 func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
-	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
-		return nil
+	return func(r *rand.Rand, _ []simtypes.Account, _ address.Codec) (sdk.Msg, error) {
+		return nil, nil
 	}
 }
 

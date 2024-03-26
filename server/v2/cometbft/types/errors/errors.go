@@ -13,5 +13,5 @@ var (
 
 	// ErrInvalidRequest defines an ABCI typed error where the request contains
 	// invalid data.
-	ErrInvalidRequest = errorsmod.Register(RootCodespace, 1, "invalid request")
+	ErrInvalidRequest = errorsmod.Register(RootCodespace, 2, "invalid request")
 )

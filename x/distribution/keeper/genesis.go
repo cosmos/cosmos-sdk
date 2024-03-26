@@ -159,9 +159,17 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	var dwi []types.DelegatorWithdrawInfo
 	err = k.DelegatorsWithdrawAddress.Walk(ctx, nil, func(key, value sdk.AccAddress) (stop bool, err error) {
+		keyAddr, err := k.authKeeper.AddressCodec().BytesToString(key)
+		if err != nil {
+			return true, err
+		}
+		valueAddr, err := k.authKeeper.AddressCodec().BytesToString(value)
+		if err != nil {
+			return true, err
+		}
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
-			DelegatorAddress: key.String(),
-			WithdrawAddress:  value.String(),
+			DelegatorAddress: keyAddr,
+			WithdrawAddress:  valueAddr,
 		})
 		return false, nil
 	})
@@ -231,8 +239,12 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
 	err = k.DelegatorStartingInfo.Walk(ctx, nil, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value types.DelegatorStartingInfo) (stop bool, err error) {
+		delAddr, err := k.authKeeper.AddressCodec().BytesToString(key.K2())
+		if err != nil {
+			return true, err
+		}
 		dels = append(dels, types.DelegatorStartingInfoRecord{
-			DelegatorAddress: key.K2().String(),
+			DelegatorAddress: delAddr,
 			ValidatorAddress: key.K1().String(),
 			StartingInfo:     value,
 		})

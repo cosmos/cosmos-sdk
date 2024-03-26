@@ -3,6 +3,7 @@ package testutil
 import (
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -112,6 +113,7 @@ func Delegate(
 	amount math.Int,
 	delegation *stakingtypes.Delegation,
 	sk *MockStakingKeeper,
+	addressCodec address.Codec,
 ) (
 	newShares math.LegacyDec,
 	updatedDel stakingtypes.Delegation,
@@ -125,7 +127,14 @@ func Delegate(
 		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, valBz)
 	} else {
 		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, valBz)
-		del := stakingtypes.NewDelegation(delegator.String(), validator.GetOperator(), math.LegacyZeroDec())
+		if err != nil {
+			return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
+		}
+		delAddr, err := addressCodec.BytesToString(delegator)
+		if err != nil {
+			return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
+		}
+		del := stakingtypes.NewDelegation(delAddr, validator.GetOperator(), math.LegacyZeroDec())
 		delegation = &del
 	}
 

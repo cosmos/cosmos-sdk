@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -58,7 +59,10 @@ func TestQueryValidatorDistributionInfo(t *testing.T) {
 	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
 	require.NoError(t, err)
 
-	del := stakingtypes.NewDelegation(addrs[0].String(), val.OperatorAddress, val.DelegatorShares)
+	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+
+	del := stakingtypes.NewDelegation(addr0Str, val.OperatorAddress, val.DelegatorShares)
 
 	dep.stakingKeeper.EXPECT().Validator(gomock.Any(), gomock.Any()).Return(val, nil).AnyTimes()
 	dep.stakingKeeper.EXPECT().Delegation(gomock.Any(), gomock.Any(), gomock.Any()).Return(del, nil).AnyTimes()
@@ -80,7 +84,7 @@ func TestQueryValidatorDistributionInfo(t *testing.T) {
 		{
 			name: "not a validator",
 			req: &types.QueryValidatorDistributionInfoRequest{
-				ValidatorAddress: addrs[0].String(),
+				ValidatorAddress: addr0Str,
 			},
 			resp:   &types.QueryValidatorDistributionInfoResponse{},
 			errMsg: `expected 'cosmosvaloper' got 'cosmos'`,

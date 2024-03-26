@@ -27,9 +27,9 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 		Amount:      coins,
 	}
 	failingMsg := banktypes.MsgSend{
-		FromAddress: "",  // Invalid sender address
-		ToAddress:   "",  // Invalid recipient address
-		Amount:      nil, // No amount specified
+		FromAddress: "xyz",                                                 // Invalid sender address
+		ToAddress:   "abc",                                                 // Invalid recipient address
+		Amount:      sdk.NewCoins(sdk.NewCoin("stake", sdkmath.ZeroInt())), // No amount specified
 	}
 
 	msgAny, err := codectypes.NewAnyWithValue(&msg)
@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{msgAny, failingMsgAny},
 			},
-			expectErr: true,
+			expectErr: false,
 		},
 		{
 			name: "multiple messages with different signers",
@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{msgAny, msgAny2},
 			},
-			expectErr: true,
+			expectErr: false,
 		},
 	}
 

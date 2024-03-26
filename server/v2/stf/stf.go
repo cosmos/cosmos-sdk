@@ -391,6 +391,7 @@ type executionContext struct {
 	meter  gas.Meter
 	events []event.Event
 	sender []transaction.Identity
+	Cache  ModuleContainer
 	// TODO: add headerservice
 	// branchdb?
 }
@@ -410,6 +411,7 @@ func (s STF[T]) makeContext(
 		meter:   meter,
 		events:  make([]event.Event, 0),
 		sender:  sender,
+		Cache:   NewModuleContainer(),
 	}
 }
 

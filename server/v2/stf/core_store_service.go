@@ -31,3 +31,7 @@ func (s storeService) OpenKVStore(ctx context.Context) store.KVStore {
 func (s storeService) OpenMemoryStore(ctx context.Context) store.KVStore {
 	return s.OpenKVStore(ctx)
 }
+
+func (s storeService) OpenContainer(ctx context.Context) Container {
+	return ctx.(*executionContext).Cache.GetContainer(s.actor)
+}

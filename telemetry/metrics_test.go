@@ -58,9 +58,12 @@ func TestMetrics_Prom(t *testing.T) {
 
 	gr, err := m.Gather(FormatPrometheus)
 	require.NoError(t, err)
-	require.Equal(t, gr.ContentType, string(expfmt.FmtText))
 
-	require.True(t, strings.Contains(string(gr.Metrics), "test_dummy_counter 30"))
+	f := expfmt.NewFormat(expfmt.TypeProtoText)
+	require.Equal(t, gr.ContentType, string(f))
+
+	require.True(t, strings.Contains(string(gr.Metrics), "test_dummy_counter"))
+	require.True(t, strings.Contains(string(gr.Metrics), "value: 30"))
 }
 
 func emitMetrics() {

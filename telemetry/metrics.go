@@ -192,7 +192,8 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 	buf := &bytes.Buffer{}
 	defer buf.Reset()
 
-	e := expfmt.NewEncoder(buf, expfmt.FmtText)
+	f := expfmt.NewFormat(expfmt.TypeProtoText)
+	e := expfmt.NewEncoder(buf, f)
 
 	for _, mf := range metricsFamilies {
 		if err := e.Encode(mf); err != nil {
@@ -200,7 +201,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 		}
 	}
 
-	return GatherResponse{ContentType: string(expfmt.FmtText), Metrics: buf.Bytes()}, nil
+	return GatherResponse{ContentType: string(f), Metrics: buf.Bytes()}, nil
 }
 
 // gatherGeneric collects generic metrics and returns a GatherResponse.

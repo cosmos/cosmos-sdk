@@ -12,9 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func CreateValidator(pk cryptotypes.PubKey, stake math.Int) (stakingtypes.Validator, error) {
-	valConsAddr := sdk.GetConsAddress(pk)
-	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr).String(), pk, stakingtypes.Description{Moniker: "TestValidator"})
+func CreateValidator(pk cryptotypes.PubKey, operator string, stake math.Int) (stakingtypes.Validator, error) {
+	val, err := stakingtypes.NewValidator(operator, pk, stakingtypes.Description{Moniker: "TestValidator"})
 	val.Tokens = stake
 	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	return val, err

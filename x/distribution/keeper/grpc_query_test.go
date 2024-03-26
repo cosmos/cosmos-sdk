@@ -55,8 +55,9 @@ func TestQueryParams(t *testing.T) {
 func TestQueryValidatorDistributionInfo(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
 	queryServer := keeper.NewQuerier(distrKeeper)
-
-	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	operatorAddr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valConsPk0.Address())
+	require.NoError(t, err)
+	val, err := distrtestutil.CreateValidator(valConsPk0, operatorAddr, math.NewInt(100))
 	require.NoError(t, err)
 
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])

@@ -76,6 +76,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
+	valAddr1Str, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(addrs[1])
+	require.NoError(t, err)
 
 	cases := []struct {
 		name   string
@@ -87,7 +89,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			name: "invalid delegator address",
 			msg: &types.MsgWithdrawDelegatorReward{
 				DelegatorAddress: "invalid",
-				ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
+				ValidatorAddress: valAddr1Str,
 			},
 			errMsg: "invalid delegator address",
 		},
@@ -103,7 +105,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			name: "no validator",
 			msg: &types.MsgWithdrawDelegatorReward{
 				DelegatorAddress: addr0Str,
-				ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
+				ValidatorAddress: valAddr1Str,
 			},
 			errMsg: "no validator distribution info",
 		},
@@ -130,6 +132,9 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	ctx, addrs, distrKeeper, _ := initFixture(t)
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
+	valAddr1Str, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(addrs[1])
+	require.NoError(t, err)
+	
 	cases := []struct {
 		name   string
 		preRun func()
@@ -146,7 +151,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		{
 			name: "no validator commission to withdraw",
 			msg: &types.MsgWithdrawValidatorCommission{
-				ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
+				ValidatorAddress: valAddr1Str,
 			},
 			errMsg: "no validator commission to withdraw",
 		},

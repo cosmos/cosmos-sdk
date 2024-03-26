@@ -6,14 +6,14 @@ package tx
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
-	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
+	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types2 "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -255,7 +255,7 @@ type SignDocDirectAux struct {
 	// representation in TxRaw.
 	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
 	// public_key is the public key of the signing account.
-	PublicKey *types.Any `protobuf:"bytes,2,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
+	PublicKey *any.Any `protobuf:"bytes,2,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	// chain_id is the identifier of the chain this transaction targets.
 	// It prevents signed transactions from being used on another chain by an
 	// attacker.
@@ -308,7 +308,7 @@ func (m *SignDocDirectAux) GetBodyBytes() []byte {
 	return nil
 }
 
-func (m *SignDocDirectAux) GetPublicKey() *types.Any {
+func (m *SignDocDirectAux) GetPublicKey() *any.Any {
 	if m != nil {
 		return m.PublicKey
 	}
@@ -353,7 +353,7 @@ type TxBody struct {
 	// By convention, the first required signer (usually from the first message)
 	// is referred to as the primary signer and pays the fee for the whole
 	// transaction.
-	Messages []*types.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	Messages []*any.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	// memo is any arbitrary note/comment to be added to the transaction.
 	// WARNING: in clients, any publicly exposed text should not be called memo,
 	// but should be called `note` instead (see
@@ -379,11 +379,11 @@ type TxBody struct {
 	// extension_options are arbitrary options that can be added by chains
 	// when the default options are not sufficient. If any of these are present
 	// and can't be handled, the transaction will be rejected
-	ExtensionOptions []*types.Any `protobuf:"bytes,1023,rep,name=extension_options,json=extensionOptions,proto3" json:"extension_options,omitempty"`
+	ExtensionOptions []*any.Any `protobuf:"bytes,1023,rep,name=extension_options,json=extensionOptions,proto3" json:"extension_options,omitempty"`
 	// extension_options are arbitrary options that can be added by chains
 	// when the default options are not sufficient. If any of these are present
 	// and can't be handled, they will be ignored
-	NonCriticalExtensionOptions []*types.Any `protobuf:"bytes,2047,rep,name=non_critical_extension_options,json=nonCriticalExtensionOptions,proto3" json:"non_critical_extension_options,omitempty"`
+	NonCriticalExtensionOptions []*any.Any `protobuf:"bytes,2047,rep,name=non_critical_extension_options,json=nonCriticalExtensionOptions,proto3" json:"non_critical_extension_options,omitempty"`
 }
 
 func (m *TxBody) Reset()         { *m = TxBody{} }
@@ -419,7 +419,7 @@ func (m *TxBody) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TxBody proto.InternalMessageInfo
 
-func (m *TxBody) GetMessages() []*types.Any {
+func (m *TxBody) GetMessages() []*any.Any {
 	if m != nil {
 		return m.Messages
 	}
@@ -447,14 +447,14 @@ func (m *TxBody) GetUnordered() bool {
 	return false
 }
 
-func (m *TxBody) GetExtensionOptions() []*types.Any {
+func (m *TxBody) GetExtensionOptions() []*any.Any {
 	if m != nil {
 		return m.ExtensionOptions
 	}
 	return nil
 }
 
-func (m *TxBody) GetNonCriticalExtensionOptions() []*types.Any {
+func (m *TxBody) GetNonCriticalExtensionOptions() []*any.Any {
 	if m != nil {
 		return m.NonCriticalExtensionOptions
 	}
@@ -544,7 +544,7 @@ type SignerInfo struct {
 	// public_key is the public key of the signer. It is optional for accounts
 	// that already exist in state. If unset, the verifier can use the required \
 	// signer address for this position and lookup the public key.
-	PublicKey *types.Any `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
+	PublicKey *any.Any `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	// mode_info describes the signing mode of the signer and is a nested
 	// structure to support nested multisig pubkey's
 	ModeInfo *ModeInfo `protobuf:"bytes,2,opt,name=mode_info,json=modeInfo,proto3" json:"mode_info,omitempty"`
@@ -587,7 +587,7 @@ func (m *SignerInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SignerInfo proto.InternalMessageInfo
 
-func (m *SignerInfo) GetPublicKey() *types.Any {
+func (m *SignerInfo) GetPublicKey() *any.Any {
 	if m != nil {
 		return m.PublicKey
 	}
@@ -749,7 +749,7 @@ func (m *ModeInfo_Single) GetMode() signing.SignMode {
 // Multi is the mode info for a multisig public key
 type ModeInfo_Multi struct {
 	// bitarray specifies which keys within the multisig are signing
-	Bitarray *types1.CompactBitArray `protobuf:"bytes,1,opt,name=bitarray,proto3" json:"bitarray,omitempty"`
+	Bitarray *types.CompactBitArray `protobuf:"bytes,1,opt,name=bitarray,proto3" json:"bitarray,omitempty"`
 	// mode_infos is the corresponding modes of the signers of the multisig
 	// which could include nested multisig public keys
 	ModeInfos []*ModeInfo `protobuf:"bytes,2,rep,name=mode_infos,json=modeInfos,proto3" json:"mode_infos,omitempty"`
@@ -788,7 +788,7 @@ func (m *ModeInfo_Multi) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ModeInfo_Multi proto.InternalMessageInfo
 
-func (m *ModeInfo_Multi) GetBitarray() *types1.CompactBitArray {
+func (m *ModeInfo_Multi) GetBitarray() *types.CompactBitArray {
 	if m != nil {
 		return m.Bitarray
 	}
@@ -2746,7 +2746,7 @@ func (m *SignDocDirectAux) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.PublicKey == nil {
-				m.PublicKey = &types.Any{}
+				m.PublicKey = &any.Any{}
 			}
 			if err := m.PublicKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2937,7 +2937,7 @@ func (m *TxBody) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Messages = append(m.Messages, &types.Any{})
+			m.Messages = append(m.Messages, &any.Any{})
 			if err := m.Messages[len(m.Messages)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3042,7 +3042,7 @@ func (m *TxBody) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ExtensionOptions = append(m.ExtensionOptions, &types.Any{})
+			m.ExtensionOptions = append(m.ExtensionOptions, &any.Any{})
 			if err := m.ExtensionOptions[len(m.ExtensionOptions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3076,7 +3076,7 @@ func (m *TxBody) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.NonCriticalExtensionOptions = append(m.NonCriticalExtensionOptions, &types.Any{})
+			m.NonCriticalExtensionOptions = append(m.NonCriticalExtensionOptions, &any.Any{})
 			if err := m.NonCriticalExtensionOptions[len(m.NonCriticalExtensionOptions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3317,7 +3317,7 @@ func (m *SignerInfo) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.PublicKey == nil {
-				m.PublicKey = &types.Any{}
+				m.PublicKey = &any.Any{}
 			}
 			if err := m.PublicKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3647,7 +3647,7 @@ func (m *ModeInfo_Multi) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Bitarray == nil {
-				m.Bitarray = &types1.CompactBitArray{}
+				m.Bitarray = &types.CompactBitArray{}
 			}
 			if err := m.Bitarray.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3766,7 +3766,7 @@ func (m *Fee) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Amount = append(m.Amount, types2.Coin{})
+			m.Amount = append(m.Amount, types1.Coin{})
 			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3933,7 +3933,7 @@ func (m *Tip) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Amount = append(m.Amount, types2.Coin{})
+			m.Amount = append(m.Amount, types1.Coin{})
 			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

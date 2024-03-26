@@ -6,10 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -92,7 +92,7 @@ func (m *QueryEvidenceRequest) GetHash() string {
 // QueryEvidenceResponse is the response type for the Query/Evidence RPC method.
 type QueryEvidenceResponse struct {
 	// evidence returns the requested evidence.
-	Evidence *types.Any `protobuf:"bytes,1,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	Evidence *any.Any `protobuf:"bytes,1,opt,name=evidence,proto3" json:"evidence,omitempty"`
 }
 
 func (m *QueryEvidenceResponse) Reset()         { *m = QueryEvidenceResponse{} }
@@ -128,7 +128,7 @@ func (m *QueryEvidenceResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryEvidenceResponse proto.InternalMessageInfo
 
-func (m *QueryEvidenceResponse) GetEvidence() *types.Any {
+func (m *QueryEvidenceResponse) GetEvidence() *any.Any {
 	if m != nil {
 		return m.Evidence
 	}
@@ -186,7 +186,7 @@ func (m *QueryAllEvidenceRequest) GetPagination() *query.PageRequest {
 // method.
 type QueryAllEvidenceResponse struct {
 	// evidence returns all evidences.
-	Evidence []*types.Any `protobuf:"bytes,1,rep,name=evidence,proto3" json:"evidence,omitempty"`
+	Evidence []*any.Any `protobuf:"bytes,1,rep,name=evidence,proto3" json:"evidence,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -224,7 +224,7 @@ func (m *QueryAllEvidenceResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAllEvidenceResponse proto.InternalMessageInfo
 
-func (m *QueryAllEvidenceResponse) GetEvidence() []*types.Any {
+func (m *QueryAllEvidenceResponse) GetEvidence() []*any.Any {
 	if m != nil {
 		return m.Evidence
 	}
@@ -810,7 +810,7 @@ func (m *QueryEvidenceResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Evidence == nil {
-				m.Evidence = &types.Any{}
+				m.Evidence = &any.Any{}
 			}
 			if err := m.Evidence.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -981,7 +981,7 @@ func (m *QueryAllEvidenceResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Evidence = append(m.Evidence, &types.Any{})
+			m.Evidence = append(m.Evidence, &any.Any{})
 			if err := m.Evidence[len(m.Evidence)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

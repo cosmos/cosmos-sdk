@@ -3,9 +3,9 @@ package cometbft
 import (
 	"context"
 
+	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
-	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/streaming"
 )
 
@@ -21,16 +21,15 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	// convert txresults to streaming txresults
 	streamingTxResults := make([]*streaming.ExecTxResult, len(txResults))
 	for i, txResult := range txResults {
-		// TODO populate this info
 		streamingTxResults[i] = &streaming.ExecTxResult{
-			// Code:
-			// Data:
-			// Log:
-			// Info:
+			Code:      txResult.Code,
+			Data:      txResult.Data,
+			Log:       txResult.Log,
+			Info:      txResult.Info,
 			GasWanted: uint64ToInt64(txResult.GasWanted),
 			GasUsed:   uint64ToInt64(txResult.GasUsed),
 			Events:    streaming.IntoStreamingEvents(txResult.Events),
-			// Codespace:
+			Codespace: txResult.Codespace,
 		}
 	}
 

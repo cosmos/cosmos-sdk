@@ -18,7 +18,7 @@ type Config struct {
 	HaltTime        uint64              `mapstructure:"halt_time" toml:"halt_time"`
 	// end of app.toml config options
 
-	AddrPeerFilter types.PeerFilter // filter peers by address and port // TODO:
+	AddrPeerFilter types.PeerFilter // filter peers by address and port
 	IdPeerFilter   types.PeerFilter // filter peers by node ID
 
 	Transport  string `mapstructure:"transport" toml:"transport"`

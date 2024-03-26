@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 
+	appmanager "cosmossdk.io/core/app"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
-	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -50,7 +50,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
-	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx), nil
+	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx, nil), nil
 }
 
 // Simulate runs validation and execution flow of a Tx.

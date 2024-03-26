@@ -5,17 +5,17 @@ import (
 	"errors"
 	"fmt"
 
+	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/branch"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/core/appmanager"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
-
-var runtimeIdentity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
 
 var _ STF[transaction.Tx] = STF[transaction.Tx]{} // Ensure STF implements STFI.
 
@@ -35,7 +35,7 @@ type STFI[T transaction.Tx] interface {
 	// Query runs the provided query over the provided readonly state.
 	Query(ctx context.Context, state store.ReaderMap, gasLimit uint64, queryRequest transaction.Type) (queryResponse transaction.Type, err error)
 	// ValidateTx validates the TX.
-	ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) appmanager.TxResult
+	ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T, hs header.Service) appmanager.TxResult
 }
 
 // STF is a struct that manages the state transition component of the app.
@@ -51,7 +51,7 @@ type STF[T transaction.Tx] struct {
 	doTxValidation func(ctx context.Context, tx T) error
 	postTxExec     func(ctx context.Context, tx T, success bool) error
 
-	branch           func(state store.ReaderMap) store.WriterMap // branch is a function that given a readonly state it returns a writable version of it.
+	branch           branchdb // branch is a function that given a readonly state it returns a writable version of it.
 	getGasMeter      func(gasLimit uint64) gas.Meter
 	wrapWithGasMeter func(meter gas.Meter, store store.WriterMap) store.WriterMap
 }
@@ -91,7 +91,12 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	// that can be written to.
 	newState = s.branch(state)
 
-	// TODO: handle consensus messages
+	for _, msg := range block.ConsensusMessages {
+		_, err := s.handleMsg(ctx, msg)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 
 	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(ctx, newState, block.Txs)
@@ -114,6 +119,14 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 		return nil, nil, err
 	}
 
+	hs := HeaderService{Info: header.Info{
+		Hash:    block.Hash,
+		AppHash: block.AppHash,
+		ChainID: block.ChainId,
+		Time:    block.Time,
+		Height:  int64(block.Height),
+	}}
+
 	// execute txs
 	txResults := make([]appmanager.TxResult, len(block.Txs))
 	// TODO: skip first tx if vote extensions are enabled (marko)
@@ -122,10 +135,10 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize)
+		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize, hs)
 	}
 	// end block
-	endBlockEvents, valset, err := s.endBlock(ctx, newState)
+	endBlockEvents, valset, err := s.endBlock(ctx, newState, hs)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -140,7 +153,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 }
 
 // deliverTx executes a TX and returns the result.
-func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, execMode corecontext.ExecMode) appmanager.TxResult {
+func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, execMode corecontext.ExecMode, hs header.Service) appmanager.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
 	defer func() {
@@ -162,14 +175,14 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, exec
 		}
 	}
 
-	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx)
+	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, hs)
 	if err != nil {
 		return appmanager.TxResult{
 			Error: err,
 		}
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hs)
 	return appmanager.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
@@ -181,13 +194,13 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WriterMap, tx T, exec
 
 // validateTx validates a transaction given the provided WritableState and gas limit.
 // If the validation is successful, state is committed
-func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
+func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, hs header.Service) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branch(state)
 	txSenders, err := tx.GetSenders()
 	if err != nil {
 		return 0, nil, err
 	}
-	validateCtx := s.makeContext(ctx, txSenders, validateState, gasLimit, corecontext.ExecModeCheck)
+	validateCtx := s.makeContext(ctx, txSenders, validateState, gasLimit, corecontext.ExecModeCheck, hs)
 	err = s.doTxValidation(validateCtx, tx)
 	if err != nil {
 		return 0, nil, err
@@ -197,21 +210,21 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit 
 }
 
 // execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
-func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode) ([]transaction.Type, uint64, []event.Event, error) {
+func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode, hs header.Service) ([]transaction.Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 	txSenders, err := tx.GetSenders()
 	if err != nil {
 		return nil, 0, nil, err
 	}
-	execCtx := s.makeContext(ctx, txSenders, execState, gasLimit, execMode)
+	execCtx := s.makeContext(ctx, txSenders, execState, gasLimit, execMode, nil)
 
 	// atomic execution of the all messages in a transaction,
-	msgsResp, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode)
+	msgsResp, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hs)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branch from the initial state.
 		postTxState := s.branch(state)
-		postTxCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, postTxState, gas.NoGasLimit, execMode)
+		postTxCtx := s.makeContext(ctx, []transaction.Identity{appmanager.RuntimeIdentity}, postTxState, gas.NoGasLimit, execMode, hs)
 
 		// TODO: runtime sets a noop posttxexec if the app doesnt set anything (julien)
 
@@ -232,7 +245,7 @@ func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
-	postTxCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, execState, gas.NoGasLimit, execMode) // NO gas limit.
+	postTxCtx := s.makeContext(ctx, []transaction.Identity{appmanager.RuntimeIdentity}, execState, gas.NoGasLimit, execMode, hs) // NO gas limit.
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
 		// if post tx fails, then we do not apply any state change, we return the post tx error,
@@ -250,12 +263,12 @@ func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint
 }
 
 // runTxMsgs will execute the messages contained in the TX with the provided state.
-func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode) ([]transaction.Type, error) {
+func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit uint64, tx T, execMode corecontext.ExecMode, hs header.Service) ([]transaction.Type, error) {
 	txSenders, err := tx.GetSenders()
 	if err != nil {
 		return nil, err
 	}
-	execCtx := s.makeContext(ctx, txSenders, state, gasLimit, execMode)
+	execCtx := s.makeContext(ctx, txSenders, state, gasLimit, execMode, hs)
 	msgs, err := tx.GetMessages()
 	if err != nil {
 		return nil, err
@@ -272,7 +285,7 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit u
 }
 
 func (s STF[T]) preBlock(ctx context.Context, state store.WriterMap, txs []T) ([]event.Event, error) {
-	pbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
+	pbCtx := s.makeContext(ctx, []transaction.Identity{appmanager.RuntimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize, nil)
 	err := s.doPreBlock(pbCtx, txs)
 	if err != nil {
 		return nil, err
@@ -289,7 +302,7 @@ func (s STF[T]) preBlock(ctx context.Context, state store.WriterMap, txs []T) ([
 }
 
 func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlockEvents []event.Event, err error) {
-	bbCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
+	bbCtx := s.makeContext(ctx, []transaction.Identity{appmanager.RuntimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize, nil)
 	err = s.doBeginBlock(bbCtx)
 	if err != nil {
 		return nil, err
@@ -305,14 +318,14 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlo
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
+func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap, hs header.Service) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
+	ebCtx := s.makeContext(ctx, []transaction.Identity{appmanager.RuntimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize, hs)
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	events, valsetUpdates, err := s.validatorUpdates(ctx, state)
+	events, valsetUpdates, err := s.validatorUpdates(ctx, state, hs)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -330,8 +343,8 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap) ([]event.Ev
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, []transaction.Identity{runtimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
+func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap, hs header.Service) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
+	ebCtx := s.makeContext(ctx, []transaction.Identity{appmanager.RuntimeIdentity}, state, gas.NoGasLimit, corecontext.ExecModeFinalize, hs)
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {
 		return nil, nil, err
@@ -342,16 +355,16 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap) ([]
 // Simulate simulates the execution of a tx on the provided state.
 func (s STF[T]) Simulate(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) (appmanager.TxResult, store.WriterMap) {
 	simulationState := s.branch(state)
-	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate)
+	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate, nil)
 
 	return txr, simulationState
 }
 
 // ValidateTx will run only the validation steps required for a transaction.
 // Validations are run over the provided state, with the provided gas limit.
-func (s STF[T]) ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) appmanager.TxResult {
+func (s STF[T]) ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T, hs header.Service) appmanager.TxResult {
 	validationState := s.branch(state)
-	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
+	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, hs)
 	return appmanager.TxResult{
 		Events:  events,
 		GasUsed: gasUsed,
@@ -362,7 +375,7 @@ func (s STF[T]) ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit 
 // Query executes the query on the provided state with the provided gas limits.
 func (s STF[T]) Query(ctx context.Context, state store.ReaderMap, gasLimit uint64, req transaction.Type) (transaction.Type, error) {
 	queryState := s.branch(state)
-	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit, corecontext.ExecModeSimulate)
+	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit, corecontext.ExecModeSimulate, nil)
 	return s.handleQuery(queryCtx, req)
 }
 
@@ -387,12 +400,14 @@ func (s STF[T]) clone() STF[T] {
 type executionContext struct {
 	context.Context
 
-	State  store.WriterMap
-	meter  gas.Meter
-	events []event.Event
-	sender []transaction.Identity
-	// TODO: add headerservice
-	// branchdb?
+	state         store.WriterMap
+	meter         gas.Meter
+	events        []event.Event
+	sender        []transaction.Identity
+	branchdb      branch.Service
+	headerService header.Service
+	execMode      corecontext.ExecMode
+	State         store.WriterMap
 }
 
 func (s STF[T]) makeContext(
@@ -400,16 +415,21 @@ func (s STF[T]) makeContext(
 	sender []transaction.Identity,
 	store store.WriterMap,
 	gasLimit uint64,
-	execMode corecontext.ExecMode, // TODO this isn't used
+	execMode corecontext.ExecMode,
+	headerservice header.Service,
 ) *executionContext {
 	meter := s.getGasMeter(gasLimit)
 	store = s.wrapWithGasMeter(meter, store)
 	return &executionContext{
-		Context: ctx,
-		State:   store,
-		meter:   meter,
-		events:  make([]event.Event, 0),
-		sender:  sender,
+		Context:       ctx,
+		state:         store,
+		meter:         meter,
+		events:        make([]event.Event, 0),
+		sender:        sender,
+		execMode:      execMode,
+		branchdb:      BrachService{s.branch},
+		headerService: headerservice, // todo need a wrapper
+		State:         store,
 	}
 }
 

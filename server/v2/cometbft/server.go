@@ -192,7 +192,7 @@ func (s *CometBFTServer[T]) StartCmdFlags() pflag.FlagSet {
 
 func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
-		Command: []*cobra.Command{
+		Commands: []*cobra.Command{
 			s.StatusCommand(),
 			s.ShowNodeIDCmd(),
 			s.ShowValidatorCmd(),

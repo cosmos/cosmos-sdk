@@ -3,6 +3,7 @@ package cometbft
 import (
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft/types"
+	cmtcfg "github.com/cometbft/cometbft/config"
 )
 
 // Config is the configuration for the CometBFT application
@@ -26,4 +27,7 @@ type Config struct {
 	Trace      bool   `mapstructure:"trace" toml:"trace"`
 
 	GrpcConfig grpc.Config
+
+	// MempoolConfig
+	CmtConfig *cmtcfg.Config
 }

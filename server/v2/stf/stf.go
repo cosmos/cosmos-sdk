@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
 var _ STF[transaction.Tx] = STF[transaction.Tx]{} // Ensure STF implements STFI.
@@ -64,6 +65,7 @@ func NewSTF[T transaction.Tx](
 	doEndBlock func(ctx context.Context) error,
 	doTxValidation func(ctx context.Context, tx T) error,
 	doValidatorUpdate func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error),
+	postTxExec func(ctx context.Context, tx T, success bool) error,
 	branch func(store store.ReaderMap) store.WriterMap,
 ) *STF[T] {
 	return &STF[T]{
@@ -74,8 +76,10 @@ func NewSTF[T transaction.Tx](
 		doEndBlock:        doEndBlock,
 		doTxValidation:    doTxValidation,
 		doValidatorUpdate: doValidatorUpdate,
-		postTxExec:        nil, // TODO
+		postTxExec:        postTxExec, // TODO
 		branch:            branch,
+		getGasMeter:       stfgas.DefaultGetMeter,
+		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter,
 	}
 }
 
@@ -403,6 +407,7 @@ type executionContext struct {
 	branchdb      branch.Service
 	headerService header.Service
 	execMode      corecontext.ExecMode
+	State         store.WriterMap
 }
 
 func (s STF[T]) makeContext(
@@ -424,7 +429,7 @@ func (s STF[T]) makeContext(
 		execMode:      execMode,
 		branchdb:      BrachService{s.branch},
 		headerService: headerservice, // todo need a wrapper
-
+		State:         store,
 	}
 }
 

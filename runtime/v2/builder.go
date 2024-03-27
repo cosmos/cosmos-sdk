@@ -87,14 +87,12 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	_ = stfMsgHandler
-
 	// TODO: what about gas service? do we just inject STF with a factory fn now?
 	gasMeter := stfgas.NewMeter
 
 	a.app.stf = stf.NewSTF[transaction.Tx](
-		nil, // stfMsgHandler, // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
-		nil, // stfMsgHandler  // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
+		stfMsgHandler,
+		stfMsgHandler,
 		a.app.moduleManager.PreBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,

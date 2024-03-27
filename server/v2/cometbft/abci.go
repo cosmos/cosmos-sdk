@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"sync/atomic"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -23,6 +21,7 @@ import (
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 const (
@@ -173,16 +172,22 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 // Query implements types.Application.
 // It is called by cometbft to query application state.
 func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
-	appreq, err := parseQueryRequest(req)
+	// follow the query path from here
+	decodedMsg, err := c.txCodec.Decode(req.Data)
+	protoMsg, ok := any(decodedMsg).(transaction.Type)
+	if !ok {
+		return nil, fmt.Errorf("decoded type T %T must implement core/transaction.Type", decodedMsg)
+	}
+
 	// if no error is returned then we can handle the query with the appmanager
 	// otherwise it is a KV store query
 	if err == nil {
-		res, err := c.app.Query(ctx, uint64(req.Height), appreq)
+		res, err := c.app.Query(ctx, uint64(req.Height), protoMsg)
 		if err != nil {
 			return nil, err
 		}
 
-		return queryResponse(req, res)
+		return queryResponse(res)
 	}
 
 	// this error most probably means that we can't handle it with a proto message, so
@@ -229,7 +234,10 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 
 // PrepareProposal implements types.Application.
 // It is called by cometbft to prepare a proposal block.
-func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
+func (c *Consensus[T]) PrepareProposal(
+	ctx context.Context,
+	req *abci.RequestPrepareProposal,
+) (resp *abci.ResponsePrepareProposal, err error) {
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
@@ -263,7 +271,10 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 
 // ProcessProposal implements types.Application.
 // It is called by cometbft to process/verify a proposal block.
-func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+func (c *Consensus[T]) ProcessProposal(
+	ctx context.Context,
+	req *abci.RequestProcessProposal,
+) (*abci.ResponseProcessProposal, error) {
 	decodedTxs := make([]T, len(req.Txs))
 	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
@@ -290,7 +301,10 @@ func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestPro
 
 // FinalizeBlock implements types.Application.
 // It is called by cometbft to finalize a block.
-func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (c *Consensus[T]) FinalizeBlock(
+	ctx context.Context,
+	req *abci.RequestFinalizeBlock,
+) (*abci.ResponseFinalizeBlock, error) {
 	if err := c.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
 	}
@@ -322,7 +336,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 		Time:              req.Time,
 		Hash:              req.Hash,
 		Txs:               decodedTxs,
-		ConsensusMessages: []proto.Message{cometInfo},
+		ConsensusMessages: []gogoproto.Message{cometInfo},
 	}
 
 	resp, newState, err := c.app.DeliverBlock(ctx, blockReq)
@@ -395,7 +409,10 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci
 
 // Vote extensions
 // VerifyVoteExtension implements types.Application.
-func (c *Consensus[T]) VerifyVoteExtension(ctx context.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+func (c *Consensus[T]) VerifyVoteExtension(
+	ctx context.Context,
+	req *abci.RequestVerifyVoteExtension,
+) (*abci.ResponseVerifyVoteExtension, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp, err := c.GetConsensusParams(ctx)

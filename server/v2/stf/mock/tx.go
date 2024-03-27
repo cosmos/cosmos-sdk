@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/transaction"
@@ -15,7 +14,7 @@ var _ transaction.Tx = Tx{}
 
 type Tx struct {
 	Sender   []byte
-	Msg      proto.Message
+	Msg      transaction.Type
 	GasLimit uint64
 }
 

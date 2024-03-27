@@ -6,14 +6,14 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/gogoproto/proto" // TODO: use protov2
+	"github.com/cosmos/gogoproto/proto"
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 
+	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/server/v2/cometbft/mempool"
-	"cosmossdk.io/server/v2/core/appmanager"
 )
 
 type AppManager[T transaction.Tx] interface {
@@ -58,7 +58,6 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 
 		defer h.txSelector.Clear()
 
-		// TODO: can we assume nil mempool is NoOp?
 		// If the mempool is nil or NoOp we simply return the transactions
 		// requested from CometBFT, which, by default, should be in FIFO order.
 		//
@@ -112,7 +111,6 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 			return nil
 		}
 
-		// TODO: not using this request for now
 		_, ok := req.(*abci.RequestProcessProposal)
 		if !ok {
 			return fmt.Errorf("invalid request type: %T", req)

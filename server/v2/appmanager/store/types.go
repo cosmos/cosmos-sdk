@@ -19,10 +19,10 @@ type Store interface {
 // Database represents an interface for interacting with a database.
 type Database interface {
 	// Has checks if a key exists in the database for a given store key and version.
-	Has(storeKey string, version uint64, key []byte) (bool, error)
+	Has(storeKey []byte, version uint64, key []byte) (bool, error)
 
 	// Get retrieves the value associated with a key from the database for a given store key and version.
-	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)
 
 	// GetLatestVersion returns the latest version of the database.
 	GetLatestVersion() (uint64, error)

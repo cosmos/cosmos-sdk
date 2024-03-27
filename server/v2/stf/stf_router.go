@@ -85,7 +85,6 @@ func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
 		// build the handler
 		handlers[msgType] = buildHandler(handler, preHandlers, globalPreHandler, postHandlers, globalPostHandler)
 	}
-	// TODO: add checks for when a pre handler/post handler is registered but there is no matching handler.
 
 	// return handler as function
 	return func(ctx context.Context, msg appmodulev2.Message) (appmodulev2.Message, error) {

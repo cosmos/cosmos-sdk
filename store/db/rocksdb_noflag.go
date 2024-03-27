@@ -6,7 +6,6 @@ package db
 import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
-	"github.com/linxGnu/grocksdb"
 )
 
 var (
@@ -19,7 +18,7 @@ var (
 type RocksDB struct {
 }
 
-func NewRocksDB(dataDir string) (*RocksDB, error) {
+func NewRocksDB(name, dataDir string) (*RocksDB, error) {
 	panic("rocksdb must be built with -tags rocksdb")
 
 }
@@ -59,10 +58,6 @@ func (db *RocksDB) NewBatchWithSize(_ int) store.RawBatch {
 var _ corestore.Iterator = (*rocksDBIterator)(nil)
 
 type rocksDBIterator struct {
-}
-
-func newRocksDBIterator(src *grocksdb.Iterator, start, end []byte, reverse bool) *rocksDBIterator {
-	panic("rocksdb must be built with -tags rocksdb")
 }
 
 func (itr *rocksDBIterator) Domain() (start, end []byte) {
@@ -121,15 +116,5 @@ func (b *rocksDBBatch) Close() error {
 }
 
 func (b *rocksDBBatch) GetByteSize() (int, error) {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func readOnlySlice(s *grocksdb.Slice) []byte {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-// copyAndFreeSlice will copy a given RocksDB slice and free it. If the slice
-// does not exist, <nil> will be returned.
-func copyAndFreeSlice(s *grocksdb.Slice) []byte {
 	panic("rocksdb must be built with -tags rocksdb")
 }

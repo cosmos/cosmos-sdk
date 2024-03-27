@@ -49,14 +49,14 @@ type actorsState[DB Database] struct {
 func (a actorsState[DB]) GetReader(address []byte) (store.Reader, error) {
 	return state[DB]{
 		version:  a.version,
-		storeKey: string(address),
+		storeKey: address,
 		db:       a.db,
 	}, nil
 }
 
 type state[DB Database] struct {
 	version  uint64
-	storeKey string
+	storeKey []byte
 	db       DB
 }
 

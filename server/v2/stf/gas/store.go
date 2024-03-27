@@ -144,7 +144,6 @@ func (itr *iterator) Value() []byte {
 func (itr *iterator) Next() {
 	if err := itr.consumeGasSeek(); err != nil {
 		// closing the iterator prematurely to prevent further execution
-		// TODO: see if this causes any issues
 		itr.parent.Close()
 		return
 	}

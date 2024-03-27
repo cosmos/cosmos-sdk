@@ -125,3 +125,9 @@ Encoding instructs the amino json marshaler how to encode certain fields that ma
 ```proto reference
 https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9d6/proto/cosmos/bank/v1beta1/genesis.proto#L23
 ```
+
+Another example is how `bytes` is encoded when using the amino json encoding format. The `bytes_as_string` option tells the json marshaler [how to encode bytes as string](https://github.com/pinosu/cosmos-sdk/blob/9879ece09c58068402782fa2096199dc89a23d13/x/tx/signing/aminojson/json_marshal.go#L75).
+
+```proto
+(amino.encoding)         = "bytes_as_string",
+```

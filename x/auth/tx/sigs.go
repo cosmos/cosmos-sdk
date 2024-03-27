@@ -3,9 +3,9 @@ package tx
 import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -114,7 +114,7 @@ func (g config) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error)
 
 	for i, sig := range sigs {
 		descData := signing.SignatureDataToProto(sig.Data)
-		any, err := types.NewAnyWithValue(sig.PubKey)
+		any, err := codectypes.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return nil, err
 		}

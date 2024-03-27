@@ -1,7 +1,6 @@
 package codec_test
 
 import (
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,6 +10,7 @@ import (
 	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"

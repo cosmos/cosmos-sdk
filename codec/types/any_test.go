@@ -2,12 +2,12 @@ package types_test
 
 import (
 	"errors"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"runtime"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 

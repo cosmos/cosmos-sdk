@@ -3,7 +3,6 @@ package cli
 import (
 	"bytes"
 	"fmt"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	"fmt"
-	gogoproto "github.com/cosmos/gogoproto/types/any"
 	"reflect"
 
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -322,7 +321,7 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 
 	rv.Elem().Set(reflect.ValueOf(msg))
 
-	newAnyWithCache, err := gogoproto.NewAnyWithCacheWithValue(msg)
+	newAnyWithCache, err := NewAnyWithValue(msg)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,7 @@
 package codec_test
 
 import (
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -66,7 +66,7 @@ func BenchmarkProtoreflectGetSignersWithUnmarshal(b *testing.B) {
 		Count:  1,
 	}
 	// marshal to an any first because this is what we get from the wire
-	a, err := gogoprototypes.NewAnyWithCacheWithValue(msg)
+	a, err := codectypes.NewAnyWithValue(msg)
 	require.NoError(b, err)
 
 	b.ResetTimer()

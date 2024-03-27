@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"sort"
 	"strings"
 
@@ -59,7 +58,7 @@ func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsReque
 		s.k.Accounts,
 		req.Pagination,
 		func(_ sdk.AccAddress, value sdk.AccountI) (*codectypes.Any, error) {
-			return gogoprototypes.NewAnyWithCacheWithValue(value)
+			return codectypes.NewAnyWithValue(value)
 		},
 	)
 
@@ -85,7 +84,7 @@ func (s queryServer) Account(ctx context.Context, req *types.QueryAccountRequest
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
-	any, err := gogoprototypes.NewAnyWithCacheWithValue(account)
+	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -123,7 +122,7 @@ func (s queryServer) ModuleAccounts(ctx context.Context, req *types.QueryModuleA
 		if account == nil {
 			return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
 		}
-		any, err := gogoprototypes.NewAnyWithCacheWithValue(account)
+		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
@@ -149,7 +148,7 @@ func (s queryServer) ModuleAccountByName(ctx context.Context, req *types.QueryMo
 	if account == nil {
 		return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
 	}
-	any, err := gogoprototypes.NewAnyWithCacheWithValue(account)
+	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -233,7 +232,7 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 	pubKey := account.GetPubKey()
 	var pkAny *codectypes.Any
 	if pubKey != nil {
-		pkAny, err = gogoprototypes.NewAnyWithCacheWithValue(account.GetPubKey())
+		pkAny, err = codectypes.NewAnyWithValue(account.GetPubKey())
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}

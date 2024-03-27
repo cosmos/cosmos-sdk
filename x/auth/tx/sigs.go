@@ -1,10 +1,9 @@
 package tx
 
 import (
-	"fmt"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
-
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -115,7 +114,7 @@ func (g config) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error)
 
 	for i, sig := range sigs {
 		descData := signing.SignatureDataToProto(sig.Data)
-		any, err := gogoprototypes.NewAnyWithCacheWithValue(sig.PubKey)
+		any, err := types.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return nil, err
 		}

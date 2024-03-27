@@ -1,10 +1,8 @@
 package keyring
 
 import (
-	"errors"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
-
 	errorsmod "cosmossdk.io/errors"
+	"errors"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -22,7 +20,7 @@ var (
 )
 
 func newRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
-	any, err := gogoprototypes.NewAnyWithCacheWithValue(pk)
+	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +30,7 @@ func newRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 
 // NewLocalRecord creates a new Record with local key item
 func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey) (*Record, error) {
-	any, err := gogoprototypes.NewAnyWithCacheWithValue(priv)
+	any, err := codectypes.NewAnyWithValue(priv)
 	if err != nil {
 		return nil, err
 	}

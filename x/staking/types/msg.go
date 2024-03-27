@@ -4,8 +4,6 @@ import (
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	types "github.com/cosmos/gogoproto/types/any"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,7 +30,7 @@ func NewMsgCreateValidator(
 	var pkAny *codectypes.Any
 	if pubKey != nil {
 		var err error
-		if pkAny, err = types.NewAnyWithCacheWithValue(pubKey); err != nil {
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
 			return nil, err
 		}
 	}
@@ -149,7 +147,7 @@ func NewMsgRotateConsPubKey(valAddr string, pubKey cryptotypes.PubKey) (*MsgRota
 	var pkAny *codectypes.Any
 	if pubKey != nil {
 		var err error
-		if pkAny, err = types.NewAnyWithCacheWithValue(pubKey); err != nil {
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
 			return nil, err
 		}
 	}

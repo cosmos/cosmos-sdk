@@ -3,8 +3,7 @@ package cli
 import (
 	"bytes"
 	"fmt"
-	types "github.com/cosmos/gogoproto/types/any"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -125,7 +124,7 @@ func printAndValidateSigs(
 				Sequence:      accSeq,
 				PubKey:        pubKey,
 			}
-			anyPk, err := types.NewAnyWithCacheWithValue(pubKey)
+			anyPk, err := codectypes.NewAnyWithValue(pubKey)
 			if err != nil {
 				cmd.PrintErrf("failed to pack public key: %v", err)
 				return false

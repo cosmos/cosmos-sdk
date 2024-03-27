@@ -1,7 +1,6 @@
 package codec_test
 
 import (
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"github.com/cosmos/gogoproto/types/any/test"
 	"testing"
 
@@ -79,7 +78,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 
 	// **** test JSON serialization ****
 
-	pkAny, err := gogoprototypes.NewAnyWithCacheWithValue(pk)
+	pkAny, err := codectypes.NewAnyWithValue(pk)
 	require.NoError(err)
 	bz, err := ccfg.Codec.MarshalJSON(pkAny)
 	require.NoError(err)

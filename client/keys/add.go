@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	types "github.com/cosmos/gogoproto/types/any"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"sort"
 	"strings"
 
@@ -230,7 +230,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		var pk cryptotypes.PubKey
 
 		// create an empty seckp256k1 pubkey since it is the key returned by algo Generate function.
-		enotySecpPubKey, err := types.NewAnyWithCacheWithValue(&secp256k1.PubKey{})
+		enotySecpPubKey, err := codectypes.NewAnyWithValue(&secp256k1.PubKey{})
 		if err != nil {
 			return err
 		}

@@ -2,8 +2,6 @@ package tx
 
 import (
 	"context"
-	types "github.com/cosmos/gogoproto/types/any"
-
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -63,7 +61,7 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*anypb.Any, len(msgs))
 	for i, msg := range msgs {
-		legacyAny, err := types.NewAnyWithCacheWithValue(msg)
+		legacyAny, err := codectypes.NewAnyWithValue(msg)
 		if err != nil {
 			return err
 		}
@@ -105,7 +103,7 @@ func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 
 // SetPubKey sets the aux signer's pubkey in the AuxSignerData.
 func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
-	anyPk, err := types.NewAnyWithCacheWithValue(pk)
+	anyPk, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return err
 	}

@@ -21,7 +21,7 @@ func TestAnyPackUnpack(t *testing.T) {
 	var animal testdata.Animal
 
 	// with cache
-	anyWithCache, err := gogoproto.NewAnyWithCacheWithValue(spot)
+	anyWithCache, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 	require.Equal(t, spot, anyWithCache.GetCachedValue())
 	err = registry.UnpackAny(anyWithCache, &animal)
@@ -36,7 +36,7 @@ func TestAnyResetCache(t *testing.T) {
 	var animal test.Animal
 
 	// with cache
-	anyWithCache, err := gogoproto.NewAnyWithCacheWithValue(spot)
+	anyWithCache, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 	require.Equal(t, spot, anyWithCache.GetCachedValue())
 
@@ -115,7 +115,7 @@ func TestUnpackInterfaces(t *testing.T) {
 	registry := test.NewTestInterfaceRegistry()
 
 	spot := &test.Dog{Name: "Spot"}
-	any, err := gogoproto.NewAnyWithCacheWithValue(spot)
+	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
 	hasAny := test.HasAnimal{
@@ -139,15 +139,15 @@ func TestNested(t *testing.T) {
 	registry := test.NewTestInterfaceRegistry()
 
 	spot := &test.Dog{Name: "Spot"}
-	any, err := gogoproto.NewAnyWithCacheWithValue(spot)
+	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
 	ha := &test.HasAnimal{Animal: any}
-	any2, err := gogoproto.NewAnyWithCacheWithValue(ha)
+	any2, err := types.NewAnyWithValue(ha)
 	require.NoError(t, err)
 
 	hha := &test.HasHasAnimal{HasAnimal: any2}
-	any3, err := gogoproto.NewAnyWithCacheWithValue(hha)
+	any3, err := types.NewAnyWithValue(hha)
 	require.NoError(t, err)
 
 	hhha := test.HasHasHasAnimal{HasHasAnimal: any3}
@@ -168,7 +168,7 @@ func TestNested(t *testing.T) {
 
 func TestAny_ProtoJSON(t *testing.T) {
 	spot := &test.Dog{Name: "Spot"}
-	any, err := gogoproto.NewAnyWithCacheWithValue(spot)
+	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
 	jm := &jsonpb.Marshaler{}

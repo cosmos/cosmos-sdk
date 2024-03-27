@@ -2,8 +2,6 @@ package tx
 
 import (
 	"fmt"
-	gogoproto "github.com/cosmos/gogoproto/types/any"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -158,7 +156,7 @@ func (w *builder) getTx() (*gogoTxWrapper, error) {
 func msgsV1toAnyV2(msgs []sdk.Msg) ([]*anypb.Any, error) {
 	anys := make([]*codectypes.Any, len(msgs))
 	for i, msg := range msgs {
-		anyMsg, err := gogoproto.NewAnyWithCacheWithValue(msg)
+		anyMsg, err := codectypes.NewAnyWithValue(msg)
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +210,7 @@ func (w *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 		)
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
 		if sig.PubKey != nil {
-			pubKey, err = gogoproto.NewAnyWithCacheWithValue(sig.PubKey)
+			pubKey, err = codectypes.NewAnyWithValue(sig.PubKey)
 			if err != nil {
 				return err
 			}

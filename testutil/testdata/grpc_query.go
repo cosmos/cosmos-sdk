@@ -3,7 +3,6 @@ package testdata
 import (
 	"context"
 	"fmt"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"github.com/cosmos/gogoproto/types/any/test"
 	"testing"
 
@@ -29,7 +28,7 @@ func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAny
 		return nil, fmt.Errorf("expected Animal")
 	}
 
-	any, err := gogoprototypes.NewAnyWithCacheWithValue(animal.(proto.Message))
+	any, err := types.NewAnyWithValue(animal.(proto.Message))
 	if err != nil {
 		return nil, err
 	}

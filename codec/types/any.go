@@ -5,3 +5,5 @@ import (
 )
 
 type Any = gogoproto.Any
+
+var NewAnyWithValue = gogoproto.NewAnyWithCacheWithValue

@@ -2,8 +2,6 @@ package tx
 
 import (
 	fmt "fmt"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,7 +17,7 @@ type MsgResponse interface{}
 
 // SetMsg takes a sdk.Msg and turn them into Any.
 func SetMsg(msg sdk.Msg) (*types.Any, error) {
-	any, err := gogoprototypes.NewAnyWithCacheWithValue(msg)
+	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +30,7 @@ func SetMsgs(msgs []sdk.Msg) ([]*types.Any, error) {
 	anys := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
 		var err error
-		anys[i], err = gogoprototypes.NewAnyWithCacheWithValue(msg)
+		anys[i], err = types.NewAnyWithValue(msg)
 		if err != nil {
 			return nil, err
 		}

@@ -3,8 +3,7 @@ package signing
 import (
 	"context"
 	"fmt"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
-
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -43,7 +42,7 @@ func GetSignBytesAdapter(
 
 	var pubKey *anypb.Any
 	if signerData.PubKey != nil {
-		anyPk, err := gogoprototypes.NewAnyWithCacheWithValue(signerData.PubKey)
+		anyPk, err := types.NewAnyWithValue(signerData.PubKey)
 		if err != nil {
 			return nil, err
 		}

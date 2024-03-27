@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"sort"
 
 	proto "github.com/cosmos/gogoproto/proto"
@@ -172,7 +171,7 @@ func PackAccounts(accounts GenesisAccounts) ([]*types.Any, error) {
 		if !ok {
 			return nil, fmt.Errorf("cannot proto marshal %T", acc)
 		}
-		any, err := gogoprototypes.NewAnyWithCacheWithValue(msg)
+		any, err := types.NewAnyWithValue(msg)
 		if err != nil {
 			return nil, err
 		}

@@ -91,7 +91,16 @@ func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKee
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
+		addr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetWithdrawAddress{}), "error converting delegator address"), nil, err
+		}
+		toAddr, err := ak.AddressCodec().BytesToString(simToAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetWithdrawAddress{}), "error converting withdraw address"), nil, err
+		}
+
+		msg := types.NewMsgSetWithdrawAddress(addr, toAddr)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -142,7 +151,12 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address.String(), validator.GetOperator())
+		addr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error converting delegator address"), nil, err
+		}
+
+		msg := types.NewMsgWithdrawDelegatorReward(addr, validator.GetOperator())
 
 		txCtx := simulation.OperationInput{
 			R:               r,

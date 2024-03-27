@@ -9,15 +9,15 @@ import (
 )
 
 func GetExecutionContext(ctx context.Context) *executionContext {
-	executionCtx, ok := ctx.(*executionContext)
+	_, ok := ctx.(*executionContext)
 	if !ok {
 		return nil
 	}
-	return executionCtx
+	return ctx.(*executionContext)
 }
 
 func NewExecutionContext() *executionContext {
-	executionCtx := &executionContext{}
+	executionCtx := &executionContext{Context: context.Background()}
 	executionCtx.Cache = NewModuleContainer()
 	state := mock.DB()
 	executionCtx.State = branch.DefaultNewWriterMap(state)

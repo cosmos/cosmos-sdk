@@ -284,7 +284,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 			sender,
 			funds,
 			k.sendModuleMessage,
-			k.sendModuleMessageUntyped,
+			k.SendModuleMessageUntyped,
 			k.queryModule,
 		)
 	}
@@ -318,7 +318,7 @@ func (k Keeper) SendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 		if err != nil {
 			return nil, err
 		}
-		resp, err := k.sendModuleMessageUntyped(ctx, sender, msg)
+		resp, err := k.SendModuleMessageUntyped(ctx, sender, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
 		}
@@ -331,9 +331,9 @@ func (k Keeper) SendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 	return anyResponses, nil
 }
 
-// sendModuleMessageUntyped can be used to send a message towards a module.
+// SendModuleMessageUntyped can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
-func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// we need to fetch the response type from the request message type.
 	// this is because the response type is not known.
 	respName := k.msgRouter.ResponseNameByMsgName(implementation.MessageName(msg))

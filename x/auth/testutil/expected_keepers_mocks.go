@@ -8,9 +8,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/cosmos/cosmos-sdk/codec/types"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
+	protoiface "google.golang.org/protobuf/runtime/protoiface"
 )
 
 // MockBankKeeper is a mock of BankKeeper interface.
@@ -37,7 +37,7 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // IsSendEnabledCoins mocks base method.
-func (m *MockBankKeeper) IsSendEnabledCoins(ctx context.Context, coins ...types0.Coin) error {
+func (m *MockBankKeeper) IsSendEnabledCoins(ctx context.Context, coins ...types.Coin) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx}
 	for _, a := range coins {
@@ -56,7 +56,7 @@ func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoins(ctx interface{}, coins 
 }
 
 // SendCoins mocks base method.
-func (m *MockBankKeeper) SendCoins(ctx context.Context, from, to types0.AccAddress, amt types0.Coins) error {
+func (m *MockBankKeeper) SendCoins(ctx context.Context, from, to types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoins", ctx, from, to, amt)
 	ret0, _ := ret[0].(error)
@@ -70,7 +70,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, from, to, amt interface{}) 
 }
 
 // SendCoinsFromAccountToModule mocks base method.
-func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types0.AccAddress, recipientModule string, amt types0.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromAccountToModule", ctx, senderAddr, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -106,17 +106,17 @@ func (m *MockAccountsModKeeper) EXPECT() *MockAccountsModKeeperMockRecorder {
 	return m.recorder
 }
 
-// SendAnyMessages mocks base method.
-func (m *MockAccountsModKeeper) SendAnyMessages(ctx context.Context, sender []byte, anyMessages []*types.Any) ([]*types.Any, error) {
+// SendModuleMessageUntyped mocks base method.
+func (m *MockAccountsModKeeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendAnyMessages", ctx, sender, anyMessages)
-	ret0, _ := ret[0].([]*types.Any)
+	ret := m.ctrl.Call(m, "SendModuleMessageUntyped", ctx, sender, msg)
+	ret0, _ := ret[0].(protoiface.MessageV1)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SendAnyMessages indicates an expected call of SendAnyMessages.
-func (mr *MockAccountsModKeeperMockRecorder) SendAnyMessages(ctx, sender, anyMessages interface{}) *gomock.Call {
+// SendModuleMessageUntyped indicates an expected call of SendModuleMessageUntyped.
+func (mr *MockAccountsModKeeperMockRecorder) SendModuleMessageUntyped(ctx, sender, msg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendAnyMessages", reflect.TypeOf((*MockAccountsModKeeper)(nil).SendAnyMessages), ctx, sender, anyMessages)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendModuleMessageUntyped", reflect.TypeOf((*MockAccountsModKeeper)(nil).SendModuleMessageUntyped), ctx, sender, msg)
 }

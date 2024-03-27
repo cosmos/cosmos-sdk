@@ -280,7 +280,6 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 }
 
 func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*types.NonAtomicExecResult, error) {
-	var msgsAny []*codectypes.Any
 	msgResponses := make([]*types.NonAtomicExecResult, 0, len(msgs))
 
 	for _, msg := range msgs {
@@ -292,33 +291,29 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 			}
 		}
 
-		anyValue, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			value := &types.NonAtomicExecResult{Error: err.Error()}
-			msgResponses = append(msgResponses, value)
-			continue
-		}
-		msgsAny = append(msgsAny, anyValue)
-
-	}
-
-	if err := ak.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
-		results, err := ak.AccountsModKeeper.SendAnyMessages(ctx, signer, msgsAny)
-		if err != nil {
-			// If an error occurs during message execution, append error response
-			value := &types.NonAtomicExecResult{Error: err.Error()}
-			msgResponses = append(msgResponses, value)
-		}
-
-		for _, res := range results {
-			response := &types.NonAtomicExecResult{
-				Resp: res,
+		if err := ak.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+			result, err := ak.AccountsModKeeper.SendModuleMessageUntyped(ctx, signer, msg)
+			if err != nil {
+				// If an error occurs during message execution, append error response
+				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
+				msgResponses = append(msgResponses, response)
+			} else {
+				resp, err := codectypes.NewAnyWithValue(result)
+				if err != nil {
+					value := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
+					msgResponses = append(msgResponses, value)
+				}
+				response := &types.NonAtomicExecResult{
+					Resp:  resp,
+					Error: "",
+				}
+				msgResponses = append(msgResponses, response)
 			}
-			msgResponses = append(msgResponses, response)
+
+			return nil
+		}); err != nil {
+			return nil, err
 		}
-		return nil
-	}); err != nil {
-		return nil, err
 	}
 
 	return msgResponses, nil

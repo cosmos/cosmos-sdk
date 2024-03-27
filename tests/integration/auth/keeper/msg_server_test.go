@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/bank/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/tx/signing"
@@ -41,9 +42,11 @@ type fixture struct {
 	app *integration.App
 
 	cdc codec.Codec
+	ctx sdk.Context
 
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
+	bankKeeper     bankkeeper.Keeper
 }
 
 var _ signing.SignModeHandler = directHandler{}
@@ -113,6 +116,9 @@ func initFixture(t *testing.T) *fixture {
 		authority.String(),
 	)
 
+	params := banktypes.DefaultParams()
+	assert.NilError(t, bankKeeper.SetParams(newCtx, params))
+
 	accountsModule := accounts.NewAppModule(cdc, accountsKeeper)
 	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, authKeeper)
@@ -137,8 +143,10 @@ func initFixture(t *testing.T) *fixture {
 	return &fixture{
 		app:            integrationApp,
 		cdc:            cdc,
+		ctx:            newCtx,
 		accountsKeeper: accountsKeeper,
 		authKeeper:     authKeeper,
+		bankKeeper:     bankKeeper,
 	}
 }
 
@@ -148,6 +156,8 @@ func TestAsyncExec(t *testing.T) {
 
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
+
+	assert.NilError(t, testutil.FundAccount(f.ctx, f.bankKeeper, addrs[0], sdk.NewCoins(sdk.NewInt64Coin("stake", 30))))
 
 	msg := &banktypes.MsgSend{
 		FromAddress: addrs[0].String(),
@@ -160,8 +170,8 @@ func TestAsyncExec(t *testing.T) {
 		Amount:      coins,
 	}
 	failingMsg := &banktypes.MsgSend{
-		FromAddress: "xyz",                                                 // Invalid sender address
-		ToAddress:   "abc",                                                 // Invalid recipient address
+		FromAddress: addrs[0].String(),
+		ToAddress:   addrs[1].String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin("stake", sdkmath.ZeroInt())), // No amount specified
 	}
 
@@ -224,18 +234,18 @@ func TestAsyncExec(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "multi msg with one failing being executed",
-			req: &types.MsgNonAtomicExec{
-				Signer: addrs[0].String(),
-				Msgs:   []*codectypes.Any{msgAny, failingMsgAny},
-			},
-			expectErr: false,
-		},
-		{
 			name: "multiple messages with different signers",
 			req: &types.MsgNonAtomicExec{
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{msgAny, msgAny2},
+			},
+			expectErr: false,
+		},
+		{
+			name: "multi msg with one failing being executed",
+			req: &types.MsgNonAtomicExec{
+				Signer: addrs[0].String(),
+				Msgs:   []*codectypes.Any{msgAny, failingMsgAny},
 			},
 			expectErr: false,
 		},
@@ -259,7 +269,6 @@ func TestAsyncExec(t *testing.T) {
 				result := authtypes.MsgNonAtomicExecResponse{}
 				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
-
 			}
 		})
 	}

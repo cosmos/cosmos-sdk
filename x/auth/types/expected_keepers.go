@@ -3,7 +3,8 @@ package types
 import (
 	"context"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,5 +16,5 @@ type BankKeeper interface {
 }
 
 type AccountsModKeeper interface {
-	SendAnyMessages(ctx context.Context, sender []byte, anyMessages []*codectypes.Any) ([]*codectypes.Any, error)
+	SendModuleMessageUntyped(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error)
 }

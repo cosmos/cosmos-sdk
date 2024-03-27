@@ -3,12 +3,15 @@ syntax = "proto3";
 package cosmos.accounts.defaults.multisig.v1;
 
 import "google/protobuf/any.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 
-option go_package = "cosmossdk.io/x/accounts/multisig/v1";
+option go_package = "cosmossdk.io/x/accounts/defaults/multisig/v1";
 
 // MsgInit is used to initialize a multisig account.
 message MsgInit {
-  // pub_key defines the pubkey bytes of the multisig members.
+  // pub_key defines the pubkey bytes of the multisig members. If the signing algo is "default"
+  // then these are addresses and not pubkeys.
   repeated bytes pub_keys = 1;
 
   repeated uint64 weights = 2;
@@ -17,7 +20,10 @@ message MsgInit {
 }
 
 message Config {
-  // algo defines the algorithm used for the multisig. secp256k1, bls12_381, etc.
+  // algo defines the algorithm used for the multisig. default, secp256k1, bls12_381, etc.
+  // can't be changed after creation.
+  // If it's "default" then no signature verification is carried out on the multisig, we expect
+  // the signer of the MsgVote to be the member.
   string algo = 1;
 
   int64 threshold = 2;
@@ -27,7 +33,7 @@ message Config {
   // voting_period is the duration in seconds for the voting period.
   int64 voting_period = 4;
 
-  // revote defines if participants can change their vote.
+  // revote defines if members can change their vote.
   bool revote = 5;
 
   // early_execution defines if the multisig can be executed before the voting period ends.
@@ -51,27 +57,20 @@ message MsgCreateProposal {
   repeated bytes signatures = 2;
 }
 
-// MsgSwapPubKey is used to change the pubkey for the account.
-message MsgModifyParticipants {
-  repeated Operation operations = 1;
-}
+// MsgUpdateConfigRequest is used to change the config or members.
+message MsgUpdateConfigRequest {
+  // only the members that are changing are required, if their weight is 0, they are removed.
+  repeated bytes update_pub_keys = 1;
 
-enum OperationType {
-  OPERATION_TYPE_UNSPECIFIED = 0;
-  OPERATION_TYPE_ADD         = 1;
-  OPERATION_TYPE_REMOVE      = 2;
-  OPERATION_TYPE_UPDATE      = 3;
-}
+  repeated uint64 update_weights = 2;
 
-message Operation {
-  OperationType type    = 1; // add, remove, update
-  bytes         pub_key = 2;
-  uint64        weight  = 3;
+  // not all fields from Config can be changed
+  optional Config Config = 3;
 }
 
 // MsgSwapPubKeyResponse is the response for the MsgSwapPubKey message.
 // This is empty.
-message MsgModifyParticipantsResponse {}
+message MsgUpdateConfigResponse {}
 
 // QuerySequence is the request for the account sequence.
 message QuerySequence {}
@@ -93,3 +92,24 @@ message QueryConfigResponse {
 
   Config Config = 3;
 }
+
+message QueryProposal {
+  uint64 proposal_id = 1;
+}
+
+message QueryProposalResponse {
+  Proposal proposal = 1;
+}
+
+message MsgVote {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  string signer      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 proposal_id = 2;
+  bool   vote        = 3;
+
+  // signature is only required when the algo is not "default".
+  optional bytes signature = 4;
+}
+
+message MsgVoteResponse {}

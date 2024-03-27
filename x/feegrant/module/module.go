@@ -10,16 +10,19 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/feegrant/ante"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/tx/decode"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -35,6 +38,8 @@ var (
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
+
+	_ appmodulev2.HasTxValidation[decode.DecodedTx] = AppModule{}
 )
 
 // AppModule implements an application module for the feegrant module.
@@ -97,7 +102,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // RegisterMigrations registers module migrations.
-func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
+func (am AppModule) RegisterMigrations(mr appmodulev2.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 
 	if err := mr.Register(feegrant.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -156,7 +161,20 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 
 // TxValidator implements appmodule.HasTxValidation.
 // It replaces auth ante handlers for server/v2
-func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	// TODO in follow-up
-	return nil
+func (am AppModule) TxValidator(ctx context.Context, tx decode.DecodedTx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	decorator := ante.NewDeductFeeDecorator(am.accountKeeper, am.bankKeeper, am.keeper, nil)
+
+	// setup AnteDecorators
+	anteDecorators := []sdk.AnteDecorator{
+		decorator,
+	}
+
+	// create the AnteHandler by chaining the AnteDecorators
+	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
+
+	// execute the AnteHandler
+	_, err := decorator.AnteHandle(sdkCtx, nil /** do not import runtime **/, sdkCtx.ExecMode() == sdk.ExecModeSimulate, anteHandler)
+
+	return err
 }

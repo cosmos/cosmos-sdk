@@ -137,48 +137,50 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 }
 
 // Hash implements the interface for the Tx interface.
-func (dtx *DecodedTx) Hash() [32]byte {
+func (dtx DecodedTx) Hash() [32]byte {
 	if !dtx.cachedHashed {
-		dtx.computeHashAndBytes()
+		dtx = dtx.computeHashAndBytes()
 	}
 	return dtx.cachedHash
 }
 
-func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
-	if dtx == nil || dtx.Tx == nil || dtx.Tx.AuthInfo == nil || dtx.Tx.AuthInfo.Fee == nil {
+func (dtx DecodedTx) GetGasLimit() (uint64, error) {
+	if dtx.Tx == nil || dtx.Tx.AuthInfo == nil || dtx.Tx.AuthInfo.Fee == nil {
 		return 0, errors.New("gas limit not available or one or more required fields are nil")
 	}
 	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (dtx *DecodedTx) GetMessages() ([]proto.Message, error) {
-	if dtx == nil || dtx.Messages == nil {
+func (dtx DecodedTx) GetMessages() ([]proto.Message, error) {
+	if len(dtx.Messages) == 0 {
 		return nil, errors.New("messages not available or are nil")
 	}
 	return dtx.Messages, nil
 }
 
-func (dtx *DecodedTx) GetSenders() ([][]byte, error) {
-	if dtx == nil || dtx.Signers == nil {
+func (dtx DecodedTx) GetSenders() ([][]byte, error) {
+	if len(dtx.Signers) == 0 {
 		return nil, errors.New("senders not available or are nil")
 	}
 	return dtx.Signers, nil
 }
 
-func (dtx *DecodedTx) Bytes() []byte {
+func (dtx DecodedTx) Bytes() []byte {
 	if !dtx.cachedHashed {
-		dtx.computeHashAndBytes()
+		dtx = dtx.computeHashAndBytes()
 	}
 	return dtx.cachedBytes
 }
 
-func (dtx *DecodedTx) computeHashAndBytes() {
-	bz, err := proto.Marshal(dtx.TxRaw)
-	if err != nil {
-		panic(err)
+func (dtx DecodedTx) computeHashAndBytes() DecodedTx {
+	if !dtx.cachedHashed {
+		bz, err := proto.Marshal(dtx.TxRaw)
+		if err != nil {
+			panic(err)
+		}
+		dtx.cachedBytes = bz
+		dtx.cachedHash = sha256.Sum256(bz)
+		dtx.cachedHashed = true
 	}
-
-	dtx.cachedBytes = bz
-	dtx.cachedHash = sha256.Sum256(bz)
-	dtx.cachedHashed = true
+	return dtx
 }

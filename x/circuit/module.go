@@ -10,13 +10,17 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/circuit/ante"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -31,6 +35,8 @@ var (
 	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
+
+	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
 )
 
 // AppModule implements an application module for the circuit module.
@@ -111,6 +117,26 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 		return nil, err
 	}
 	return am.cdc.MarshalJSON(gs)
+}
+
+// TxValidator implements appmodule.HasTxValidation.
+// It replaces auth ante handlers for server/v2
+func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	decorator := ante.NewCircuitBreakerDecorator(&am.keeper)
+
+	// setup AnteDecorators
+	anteDecorators := []sdk.AnteDecorator{
+		decorator,
+	}
+
+	// create the AnteHandler by chaining the AnteDecorators
+	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
+
+	// execute the AnteHandler
+	_, err := decorator.AnteHandle(sdkCtx, nil /** do not import runtime **/, sdkCtx.ExecMode() == sdk.ExecModeSimulate, anteHandler)
+
+	return err
 }
 
 func RegisterPreMessageHooks(builder any) {

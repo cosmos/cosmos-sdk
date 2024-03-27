@@ -65,7 +65,7 @@ message MsgUpdateConfigRequest {
   repeated uint64 update_weights = 2;
 
   // not all fields from Config can be changed
-  optional Config Config = 3;
+  Config Config = 3;
 }
 
 // MsgSwapPubKeyResponse is the response for the MsgSwapPubKey message.
@@ -113,3 +113,10 @@ message MsgVote {
 }
 
 message MsgVoteResponse {}
+
+
+message MsgExecuteProposal {
+  uint64 proposal_id = 1;
+}
+
+message MsgExecuteProposalResponse {}

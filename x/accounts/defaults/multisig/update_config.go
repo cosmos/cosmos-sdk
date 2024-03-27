@@ -3,7 +3,7 @@ package multisig
 import (
 	"context"
 
-	v1 "cosmossdk.io/api/cosmos/accounts/defaults/multisig/v1"
+	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 )
 
 // Authenticate implements the authentication flow of an abstracted base account.
@@ -24,7 +24,7 @@ func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfigReques
 	// TODO: verify if this looks good to everyone from a UX perspective
 	if msg.Config != nil {
 		// set config
-		if err := a.Config.Set(ctx, msg.Config); err != nil {
+		if err := a.Config.Set(ctx, *msg.Config); err != nil {
 			return nil, err
 		}
 	}

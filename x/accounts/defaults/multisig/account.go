@@ -35,7 +35,7 @@ var (
 type Account struct {
 	Members  collections.Map[[]byte, uint64]
 	Sequence collections.Sequence
-	Config   collections.Item[*v1.Config]
+	Config   collections.Item[v1.Config]
 
 	addrCodec address.Codec
 	hs        header.Service
@@ -43,7 +43,7 @@ type Account struct {
 	_           *signing.HandlerMap
 	customAlgos map[string]SignatureHandler
 
-	Proposals collections.Map[uint64, *v1.Proposal]
+	Proposals collections.Map[uint64, v1.Proposal]
 	Votes     collections.Map[collections.Pair[uint64, []byte], bool]
 }
 
@@ -56,8 +56,9 @@ func NewAccount(name string, handlerMap *signing.HandlerMap, opts Options) accou
 		return name, &Account{
 			Members:   collections.NewMap(deps.SchemaBuilder, MembersPrefix, "participants", collections.BytesKey, collections.Uint64Value),
 			Sequence:  collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
-			Config:    collections.NewItem(deps.SchemaBuilder, ConfigPrefix, "config", codec.CollValueV2[v1.Config]()),
-			Proposals: collections.NewMap(deps.SchemaBuilder, ProposalsPrefix, "proposals", collections.Uint64Key, codec.CollValueV2[v1.Proposal]()),
+			Config:    collections.NewItem(deps.SchemaBuilder, ConfigPrefix, "config", codec.CollValue[v1.Config](deps.LegacyStateCodec)),
+			Proposals: collections.NewMap(deps.SchemaBuilder, ProposalsPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](deps.LegacyStateCodec)),
+			Votes:     collections.NewMap(deps.SchemaBuilder, VotesPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.BoolValue),
 			addrCodec: deps.AddressCodec,
 			// signingHandlers: handlerMap,
 			hs: deps.Environment.HeaderService,
@@ -100,11 +101,55 @@ func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitRespons
 		totalWeight += weight
 	}
 
-	if err := validateConfig(msg.Config, totalWeight); err != nil {
+	if err := validateConfig(*msg.Config, totalWeight); err != nil {
 		return nil, err
 	}
 
 	return &v1.MsgInitResponse{}, nil
+}
+
+func (a Account) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse, error) {
+	cfg, err := a.Config.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var voterBz []byte
+	if cfg.Algo == DefaultSigningAlgo {
+		// if we are using the default algo, we use the signer as the voter
+		voterBz, err = a.addrCodec.StringToBytes(msg.Signer)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		voterBz, err = a.customAlgos[cfg.Algo].RecoverPubKey(msg.GetSignature())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// check if the voter is a member
+	_, err = a.Members.Get(ctx, voterBz)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the proposal exists
+	_, err = a.Proposals.Get(ctx, msg.ProposalId)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the voter has already voted
+	_, err = a.Votes.Get(ctx, collections.Join(msg.ProposalId, voterBz))
+	if err == nil && !cfg.Revote {
+		return nil, errors.New("voter has already voted, can't change its vote per config")
+	}
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return nil, err
+	}
+
+	return &v1.MsgVoteResponse{}, a.Votes.Set(ctx, collections.Join(msg.ProposalId, voterBz), msg.Vote)
 }
 
 // Authenticate implements the authentication flow of an abstracted base account.
@@ -112,7 +157,7 @@ func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthe
 	return &aa_interface_v1.MsgAuthenticateResponse{}, nil
 }
 
-func validateConfig(cfg *v1.Config, totalWeight uint64) error {
+func validateConfig(cfg v1.Config, totalWeight uint64) error {
 	// check for zero values
 	if cfg.Threshold == 0 || cfg.Quorum == 0 || cfg.VotingPeriod == 0 {
 		return errors.New("threshold, quorum and voting period must be greater than zero")

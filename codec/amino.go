@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	"io"
 
 	cmttypes "github.com/cometbft/cometbft/types"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

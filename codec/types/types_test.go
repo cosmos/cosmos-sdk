@@ -1,13 +1,13 @@
 package types_test
 
 import (
-	gogoproto "github.com/cosmos/gogoproto/types/any"
-	testdata "github.com/cosmos/gogoproto/types/any/test"
 	"strings"
 	"testing"
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/types/any"
+	testdata "github.com/cosmos/gogoproto/types/any/test"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

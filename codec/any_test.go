@@ -1,9 +1,9 @@
 package codec_test
 
 import (
-	"github.com/cosmos/gogoproto/types/any/test"
 	"testing"
 
+	"github.com/cosmos/gogoproto/types/any/test"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"

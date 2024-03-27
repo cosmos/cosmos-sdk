@@ -2,6 +2,7 @@ package multisig
 
 import (
 	fmt "fmt"
+
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

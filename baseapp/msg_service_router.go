@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"

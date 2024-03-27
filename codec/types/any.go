@@ -7,4 +7,5 @@ import (
 type Any = gogoproto.Any
 
 var NewAnyWithValue = gogoproto.NewAnyWithCacheWithValue
+
 var UnsafePackAny = gogoproto.UnsafePackAnyWithCache

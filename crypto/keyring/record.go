@@ -1,8 +1,9 @@
 package keyring
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
+
+	errorsmod "cosmossdk.io/errors"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

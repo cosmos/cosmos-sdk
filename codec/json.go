@@ -2,10 +2,10 @@ package codec
 
 import (
 	"bytes"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
+	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )

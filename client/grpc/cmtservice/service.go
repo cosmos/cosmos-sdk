@@ -2,6 +2,7 @@ package cmtservice
 
 import (
 	"context"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

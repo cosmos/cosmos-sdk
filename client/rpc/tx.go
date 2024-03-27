@@ -89,12 +89,18 @@ func newResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) 
 	return newTxResponseDeliverTx(res)
 }
 
+// QueryEventForTxCmd is an alias for WaitTxCmd, kept for backwards compatibility.
+func QueryEventForTxCmd() *cobra.Command {
+	return WaitTxCmd()
+}
+
 // WaitTx returns a CLI command that waits for a transaction with the given hash to be included in a block.
 func WaitTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "wait-tx [hash]",
-		Short: "Wait for a transaction to be included in a block",
-		Long:  `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
+		Use:     "wait-tx [hash]",
+		Aliases: []string{"event-query-tx-for"},
+		Short:   "Wait for a transaction to be included in a block",
+		Long:    `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
 		Example: fmt.Sprintf(`By providing the transaction hash:
 $ %[1]sd q wait-tx [hash]
 

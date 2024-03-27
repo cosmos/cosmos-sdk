@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 
-
 	"google.golang.org/protobuf/types/known/anypb"
 
 	txsigning "cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -28,6 +27,7 @@ func GetSignBytesAdapter(
 	ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
 	mode signing.SignMode,
+
 	signerData SignerData,
 	tx sdk.Tx,
 ) ([]byte, error) {
@@ -44,7 +44,7 @@ func GetSignBytesAdapter(
 
 	var pubKey *anypb.Any
 	if signerData.PubKey != nil {
-		anyPk, err := types.NewAnyWithValue(signerData.PubKey)
+		anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
 		if err != nil {
 			return nil, err
 		}

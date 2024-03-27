@@ -606,3 +606,17 @@ func NewMemoryStoreKeys(names ...string) map[string]*MemoryStoreKey {
 
 	return keys
 }
+
+// NewObjectStoreKeys constructs a new map matching store key names to their
+// respective ObjectStoreKey references.
+// The function will panic if there is a potential conflict in names (see `assertNoPrefix`
+// function for more details).
+func NewObjectStoreKeys(names ...string) map[string]*ObjectStoreKey {
+	assertNoCommonPrefix(names)
+	keys := make(map[string]*ObjectStoreKey)
+	for _, n := range names {
+		keys[n] = NewObjectStoreKey(n)
+	}
+
+	return keys
+}

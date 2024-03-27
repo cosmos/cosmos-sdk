@@ -90,17 +90,10 @@ func (store *GStore[V]) Get(key []byte) (value V) {
 	return value
 }
 
-func (store *GStore[V]) assertValidValue(value V) {
-	if store.isZero(value) {
-		panic("value is nil")
-	}
-	types.AssertValidValueLength(store.valueLen(value))
-}
-
 // Set implements types.KVStore.
 func (store *GStore[V]) Set(key []byte, value V) {
 	types.AssertValidKey(key)
-	store.assertValidValue(value)
+	types.AssertValidValueGeneric(value, store.isZero, store.valueLen)
 
 	store.mtx.Lock()
 	defer store.mtx.Unlock()

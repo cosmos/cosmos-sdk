@@ -30,6 +30,14 @@ func AssertValidValue(value []byte) {
 	AssertValidValueLength(len(value))
 }
 
+// AssertValidValueGeneric checks if the value is valid(value is not nil and within length limit)
+func AssertValidValueGeneric[V any](value V, isZero func(V) bool, valueLen func(V) int) {
+	if isZero(value) {
+		panic("value is nil")
+	}
+	AssertValidValueLength(valueLen(value))
+}
+
 // AssertValidValueLength checks if the value length is within length limit
 func AssertValidValueLength(l int) {
 	if l > MaxValueLength {

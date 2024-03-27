@@ -10,20 +10,53 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-var _ types.KVStore = Store{}
+type (
+	Store    = GStore[[]byte]
+	ObjStore = GStore[any]
+)
 
-// Store is similar with cometbft/cometbft-db/blob/v1.0.1/prefixdb.go
-// both gives access only to the limited subset of the store
-// for convenience or safety
-type Store struct {
-	parent types.KVStore
-	prefix []byte
-}
+var (
+	_ types.KVStore    = Store{}
+	_ types.ObjKVStore = ObjStore{}
+)
 
 func NewStore(parent types.KVStore, prefix []byte) Store {
-	return Store{
+	return NewGStore(
+		parent, prefix,
+		func(v []byte) bool { return v == nil },
+		func(v []byte) int { return len(v) },
+	)
+}
+
+func NewObjStore(parent types.ObjKVStore, prefix []byte) ObjStore {
+	return NewGStore(
+		parent, prefix,
+		func(v any) bool { return v == nil },
+		func(v any) int { return 1 },
+	)
+}
+
+// GStore is similar with cometbft/cometbft-db/blob/v1.0.1/prefixdb.go
+// both gives access only to the limited subset of the store
+// for convenience or safety
+type GStore[V any] struct {
+	parent types.GKVStore[V]
+	prefix []byte
+
+	isZero   func(V) bool
+	valueLen func(V) int
+}
+
+func NewGStore[V any](
+	parent types.GKVStore[V], prefix []byte,
+	isZero func(V) bool, valueLen func(V) int,
+) GStore[V] {
+	return GStore[V]{
 		parent: parent,
 		prefix: prefix,
+
+		isZero:   isZero,
+		valueLen: valueLen,
 	}
 }
 
@@ -34,7 +67,7 @@ func cloneAppend(bz, tail []byte) (res []byte) {
 	return
 }
 
-func (s Store) key(key []byte) (res []byte) {
+func (s GStore[V]) key(key []byte) (res []byte) {
 	if key == nil {
 		panic("nil key on Store")
 	}
@@ -43,13 +76,13 @@ func (s Store) key(key []byte) (res []byte) {
 }
 
 // GetStoreType implements Store
-func (s Store) GetStoreType() types.StoreType {
+func (s GStore[V]) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
 
 // CacheWrap implements CacheWrap
-func (s Store) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(s)
+func (s GStore[V]) CacheWrap() types.CacheWrap {
+	return cachekv.NewGStore(s, s.isZero, s.valueLen)
 }
 
 // CacheWrapWithTrace implements the KVStore interface.
@@ -58,31 +91,31 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 }
 
 // Get implements KVStore
-func (s Store) Get(key []byte) []byte {
+func (s GStore[V]) Get(key []byte) V {
 	res := s.parent.Get(s.key(key))
 	return res
 }
 
 // Has implements KVStore
-func (s Store) Has(key []byte) bool {
+func (s GStore[V]) Has(key []byte) bool {
 	return s.parent.Has(s.key(key))
 }
 
 // Set implements KVStore
-func (s Store) Set(key, value []byte) {
+func (s GStore[V]) Set(key []byte, value V) {
 	types.AssertValidKey(key)
-	types.AssertValidValue(value)
+	types.AssertValidValueGeneric(value, s.isZero, s.valueLen)
 	s.parent.Set(s.key(key), value)
 }
 
 // Delete implements KVStore
-func (s Store) Delete(key []byte) {
+func (s GStore[V]) Delete(key []byte) {
 	s.parent.Delete(s.key(key))
 }
 
 // Iterator implements KVStore
 // Check https://github.com/cometbft/cometbft-db/blob/v1.0.1/prefixdb.go#L109
-func (s Store) Iterator(start, end []byte) types.Iterator {
+func (s GStore[V]) Iterator(start, end []byte) types.GIterator[V] {
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -99,7 +132,7 @@ func (s Store) Iterator(start, end []byte) types.Iterator {
 
 // ReverseIterator implements KVStore
 // Check https://github.com/cometbft/cometbft-db/blob/v1.0.1/prefixdb.go#L132
-func (s Store) ReverseIterator(start, end []byte) types.Iterator {
+func (s GStore[V]) ReverseIterator(start, end []byte) types.GIterator[V] {
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -114,18 +147,18 @@ func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
-var _ types.Iterator = (*prefixIterator)(nil)
+var _ types.Iterator = (*prefixIterator[[]byte])(nil)
 
-type prefixIterator struct {
+type prefixIterator[V any] struct {
 	prefix []byte
 	start  []byte
 	end    []byte
-	iter   types.Iterator
+	iter   types.GIterator[V]
 	valid  bool
 }
 
-func newPrefixIterator(prefix, start, end []byte, parent types.Iterator) *prefixIterator {
-	return &prefixIterator{
+func newPrefixIterator[V any](prefix, start, end []byte, parent types.GIterator[V]) *prefixIterator[V] {
+	return &prefixIterator[V]{
 		prefix: prefix,
 		start:  start,
 		end:    end,
@@ -135,17 +168,17 @@ func newPrefixIterator(prefix, start, end []byte, parent types.Iterator) *prefix
 }
 
 // Domain implements Iterator
-func (pi *prefixIterator) Domain() ([]byte, []byte) {
+func (pi *prefixIterator[V]) Domain() ([]byte, []byte) {
 	return pi.start, pi.end
 }
 
 // Valid implements Iterator
-func (pi *prefixIterator) Valid() bool {
+func (pi *prefixIterator[V]) Valid() bool {
 	return pi.valid && pi.iter.Valid()
 }
 
 // Next implements Iterator
-func (pi *prefixIterator) Next() {
+func (pi *prefixIterator[V]) Next() {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Next()")
 	}
@@ -157,7 +190,7 @@ func (pi *prefixIterator) Next() {
 }
 
 // Key implements Iterator
-func (pi *prefixIterator) Key() (key []byte) {
+func (pi *prefixIterator[V]) Key() (key []byte) {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Key()")
 	}
@@ -169,7 +202,7 @@ func (pi *prefixIterator) Key() (key []byte) {
 }
 
 // Value implements Iterator
-func (pi *prefixIterator) Value() []byte {
+func (pi *prefixIterator[V]) Value() V {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Value()")
 	}
@@ -178,13 +211,13 @@ func (pi *prefixIterator) Value() []byte {
 }
 
 // Close implements Iterator
-func (pi *prefixIterator) Close() error {
+func (pi *prefixIterator[V]) Close() error {
 	return pi.iter.Close()
 }
 
 // Error returns an error if the prefixIterator is invalid defined by the Valid
 // method.
-func (pi *prefixIterator) Error() error {
+func (pi *prefixIterator[V]) Error() error {
 	if !pi.Valid() {
 		return errors.New("invalid prefixIterator")
 	}

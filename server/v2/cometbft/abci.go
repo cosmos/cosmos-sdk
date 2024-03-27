@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	corecomet "cosmossdk.io/core/comet"
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/event"

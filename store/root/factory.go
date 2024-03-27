@@ -91,5 +91,5 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
-	return New(opts.Logger, ss, sc, nil)
+	return New(opts.Logger, ss, sc, nil, nil)
 }

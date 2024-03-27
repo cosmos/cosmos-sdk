@@ -32,9 +32,9 @@ type Database interface {
 
 	// Iterator returns an iterator for iterating over a range of key-value pairs in the database
 	// for a given store key, version, start key, and end key.
-	Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error)
+	Iterator(storeKey []byte, version uint64, start, end []byte) (store.Iterator, error)
 
 	// ReverseIterator returns a reverse iterator for iterating over a range of key-value pairs in the database
 	// for a given store key, version, start key, and end key in reverse order.
-	ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error)
+	ReverseIterator(storeKey []byte, version uint64, start, end []byte) (store.Iterator, error)
 }

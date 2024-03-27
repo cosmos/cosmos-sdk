@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
-	stfgas "cosmossdk.io/server/v2/stf/gas"
 	rootstore "cosmossdk.io/store/v2/root"
 
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
@@ -84,26 +83,28 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to build STF message handler: %w", err)
 	}
-	queryHandler, err := a.app.queryRouterBuilder.Build()
+	stfQueryHandler, err := a.app.queryRouterBuilder.Build()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query handler: %w", err)
 	}
-	//_ = queryHandler
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	// TODO: what about gas service? do we just inject STF with a factory fn now?
-	gasMeter := stfgas.NewMeter
+	// TODO how to set?
+	// no-op postTxExec
+	postTxExec := func(ctx context.Context, tx transaction.Tx, success bool) error {
+		return nil
+	}
 
 	a.app.stf = stf.NewSTF[transaction.Tx](
 		stfMsgHandler,
-		queryHandler,
+		stfQueryHandler,
 		a.app.moduleManager.PreBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,
 		a.txValidator,
 		valUpdate,
-		gasMeter,
+		postTxExec,
 		a.branch,
 	)
 

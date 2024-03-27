@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestAsyncExec() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			s.acctsModKeeper.EXPECT().SendAnyMessages(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+			s.acctsModKeeper.EXPECT().SendModuleMessageUntyped(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 			_, err := s.msgServer.NonAtomicExec(s.ctx, tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)

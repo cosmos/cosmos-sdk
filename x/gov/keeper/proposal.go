@@ -156,7 +156,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		types.EventTypeSubmitProposal,
 		event.NewAttribute(types.AttributeKeyProposalType, proposalType.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-		event.NewAttribute(types.AttributeKeyProposalProposer, proposer.String()),
+		event.NewAttribute(types.AttributeKeyProposalProposer, proposerAddr),
 		event.NewAttribute(types.AttributeKeyProposalMessages, strings.Join(msgs, ",")),
 	); err != nil {
 		return v1.Proposal{}, fmt.Errorf("failed to emit event: %w", err)

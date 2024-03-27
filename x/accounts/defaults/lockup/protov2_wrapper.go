@@ -1,12 +1,14 @@
 package lockup
 
 import (
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 type ProtoMsg = protoiface.MessageV1

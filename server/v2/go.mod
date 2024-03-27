@@ -8,7 +8,6 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/server/v2 => .
 	cosmossdk.io/server/v2/appmanager => ./appmanager
-	cosmossdk.io/server/v2/core => ./core
 	cosmossdk.io/server/v2/stf => ./stf
 	cosmossdk.io/x/tx => ../../x/tx
 )
@@ -17,10 +16,9 @@ require (
 	cosmossdk.io/api v0.7.3
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/cosmos/gogogateway v1.2.0
-	github.com/cosmos/gogoproto v1.4.11
+	github.com/cosmos/gogoproto v1.4.12
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0

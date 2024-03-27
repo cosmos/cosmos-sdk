@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cast"
 
-	// "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -29,10 +28,6 @@ func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}
 
-	// snapshotDB, err := db.NewGoLevelDB("metadata", snapshotDir, nil) // TODO: goleveldb? talk with storage team on if this will change
-	// if err != nil {
-	// 	return nil, err
-	// }
 	snapshotStore, err := snapshots.NewStore(snapshotDir)
 	if err != nil {
 		return nil, err

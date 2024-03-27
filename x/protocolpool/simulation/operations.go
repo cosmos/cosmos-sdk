@@ -72,7 +72,11 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 			}
 		}
 
-		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address.String())
+		funderAddr, err := ak.AddressCodec().BytesToString(funder.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgFundCommunityPool{}), "unable to get funder address"), nil, err
+		}
+		msg := types.NewMsgFundCommunityPool(fundAmount, funderAddr)
 
 		txCtx := simulation.OperationInput{
 			R:             r,

@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
+	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	ammstore "cosmossdk.io/server/v2/appmanager/store"
-	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"

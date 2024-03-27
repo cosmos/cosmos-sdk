@@ -4,14 +4,12 @@ go 1.21
 
 replace (
 	cosmossdk.io/core => ../../../core
-	cosmossdk.io/server/v2/core => ../core
 	cosmossdk.io/server/v2/stf => ../stf
 	cosmossdk.io/store/v2 => ../../../store
 )
 
 require (
 	cosmossdk.io/core v0.12.0
-	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.9.0
@@ -31,7 +29,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft v0.38.6 // indirect
-	github.com/cosmos/gogoproto v1.4.11 // indirect
+	github.com/cosmos/gogoproto v1.4.12 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect

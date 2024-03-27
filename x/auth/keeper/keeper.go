@@ -300,13 +300,10 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 			} else {
 				resp, err := codectypes.NewAnyWithValue(result)
 				if err != nil {
-					value := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
-					msgResponses = append(msgResponses, value)
+					response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
+					msgResponses = append(msgResponses, response)
 				}
-				response := &types.NonAtomicExecResult{
-					Resp:  resp,
-					Error: "",
-				}
+				response := &types.NonAtomicExecResult{Resp: resp, Error: ""}
 				msgResponses = append(msgResponses, response)
 			}
 

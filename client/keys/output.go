@@ -2,9 +2,9 @@ package keys
 
 import (
 	"cosmossdk.io/core/address"
+	types "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -23,7 +23,7 @@ type KeyOutput struct {
 
 // NewKeyOutput creates a default KeyOutput instance without Mnemonic, Threshold and PubKeys
 func NewKeyOutput(name string, keyType keyring.KeyType, addr []byte, pk cryptotypes.PubKey, addressCodec address.Codec) (KeyOutput, error) {
-	apk, err := codectypes.NewAnyWithValue(pk)
+	apk, err := types.NewAnyWithCacheWithValue(pk)
 	if err != nil {
 		return KeyOutput{}, err
 	}

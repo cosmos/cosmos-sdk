@@ -3,6 +3,7 @@ package sims
 import (
 	"encoding/json"
 	"fmt"
+	types "github.com/cosmos/gogoproto/types/any"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -20,7 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -234,7 +234,7 @@ func GenesisStateWithValSet(
 			return nil, fmt.Errorf("failed to convert pubkey: %w", err)
 		}
 
-		pkAny, err := codectypes.NewAnyWithValue(pk)
+		pkAny, err := types.NewAnyWithCacheWithValue(pk)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new any: %w", err)
 		}

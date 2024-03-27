@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	types "github.com/cosmos/gogoproto/types/any"
 	"sort"
 	"strings"
 	"time"
@@ -43,7 +44,7 @@ var _ sdk.ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 func NewValidator(operator string, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
-	pkAny, err := codectypes.NewAnyWithValue(pubKey)
+	pkAny, err := types.NewAnyWithCacheWithValue(pubKey)
 	if err != nil {
 		return Validator{}, err
 	}

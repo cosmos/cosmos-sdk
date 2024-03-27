@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	types "github.com/cosmos/gogoproto/types/any"
 	"os"
 	"strings"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -132,7 +132,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			}
 
 			for _, sig := range sigs {
-				anyPk, err := codectypes.NewAnyWithValue(sig.PubKey)
+				anyPk, err := types.NewAnyWithCacheWithValue(sig.PubKey)
 				if err != nil {
 					return err
 				}
@@ -310,7 +310,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 
-			anyPk, err := codectypes.NewAnyWithValue(multisigPub)
+			anyPk, err := types.NewAnyWithCacheWithValue(multisigPub)
 			if err != nil {
 				return err
 			}

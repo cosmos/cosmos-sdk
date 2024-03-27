@@ -116,7 +116,7 @@ func ProvideAppBuilder(interfaceRegistry codectypes.InterfaceRegistry) (
 		cdc:                cdc,
 		amino:              amino,
 		msgRouterBuilder:   msgRouterBuilder,
-		queryRouterBuilder: nil, // TODO
+		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
 	}
 	appBuilder := &AppBuilder{app: app}
 
@@ -153,11 +153,20 @@ func SetupAppBuilder(inputs AppInputs) {
 	}
 }
 
-func ProvideModuleManager(logger log.Logger, cdc codec.Codec, config *runtimev2.Module, modules map[string]appmodulev2.AppModule) *MM {
+func ProvideModuleManager(
+	logger log.Logger,
+	cdc codec.Codec,
+	config *runtimev2.Module,
+	modules map[string]appmodulev2.AppModule,
+) *MM {
 	return NewModuleManager(logger, cdc, config, modules)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec address.ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	customGetSigners []signing.CustomGetSigner,
+) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,

@@ -30,10 +30,6 @@ type MsgRouterBuilder struct {
 }
 
 func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.Handler) error {
-	// TODO: remove nil check, this shouldn't happen. This is a panic condition.
-	if b == nil {
-		return fmt.Errorf("nil builder")
-	}
 	// panic on override
 	if _, ok := b.handlers[msgType]; ok {
 		return fmt.Errorf("handler already registered: %s", msgType)
@@ -102,7 +98,13 @@ func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
 	}, nil
 }
 
-func buildHandler(handler appmodulev2.Handler, preHandlers []appmodulev2.PreMsgHandler, globalPreHandler appmodulev2.PreMsgHandler, postHandlers []appmodulev2.PostMsgHandler, globalPostHandler appmodulev2.PostMsgHandler) appmodulev2.Handler {
+func buildHandler(
+	handler appmodulev2.Handler,
+	preHandlers []appmodulev2.PreMsgHandler,
+	globalPreHandler appmodulev2.PreMsgHandler,
+	postHandlers []appmodulev2.PostMsgHandler,
+	globalPostHandler appmodulev2.PostMsgHandler,
+) appmodulev2.Handler {
 	return func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
 		if len(preHandlers) != 0 {
 			for _, preHandler := range preHandlers {

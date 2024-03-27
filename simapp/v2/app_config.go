@@ -159,7 +159,11 @@ var (
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
 					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
-					GasConfig: &runtimev2.GasConfig{},
+					GasConfig: &runtimev2.GasConfig{
+						ValidateTxGasLimit: 100_000,
+						QueryGasLimit:      100_000,
+						SimulationGasLimit: 100_000,
+					},
 				}),
 			},
 			{

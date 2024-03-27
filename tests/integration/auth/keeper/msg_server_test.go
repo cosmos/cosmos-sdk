@@ -19,6 +19,8 @@ import (
 	"cosmossdk.io/x/auth/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
+	"cosmossdk.io/x/bank/keeper"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/tx/signing"
@@ -61,7 +63,7 @@ func initFixture(t *testing.T) *fixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, accounts.StoreKey,
 	)
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{}, accounts.AppModule{})
 	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
@@ -100,8 +102,20 @@ func initFixture(t *testing.T) *fixture {
 		authority.String(),
 	)
 
+	blockedAddresses := map[string]bool{
+		authKeeper.GetAuthority(): false,
+	}
+	bankKeeper := keeper.NewBaseKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
+		cdc,
+		authKeeper,
+		blockedAddresses,
+		authority.String(),
+	)
+
 	accountsModule := accounts.NewAppModule(cdc, accountsKeeper)
 	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, authKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
@@ -109,10 +123,16 @@ func initFixture(t *testing.T) *fixture {
 		map[string]appmodule.AppModule{
 			accounts.ModuleName:  accountsModule,
 			authtypes.ModuleName: authModule,
+			banktypes.ModuleName: bankModule,
 		})
 
+	authtypes.RegisterInterfaces(cdc.InterfaceRegistry())
+	banktypes.RegisterInterfaces(cdc.InterfaceRegistry())
+
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(authKeeper))
-	// banktypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
+	authtypes.RegisterQueryServer(integrationApp.QueryHelper(), authkeeper.NewQueryServer(authKeeper))
+
+	banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
 
 	return &fixture{
 		app:            integrationApp,
@@ -129,29 +149,29 @@ func TestAsyncExec(t *testing.T) {
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
 
-	msg := banktypes.MsgSend{
+	msg := &banktypes.MsgSend{
 		FromAddress: addrs[0].String(),
 		ToAddress:   addrs[1].String(),
 		Amount:      coins,
 	}
-	msg2 := banktypes.MsgSend{
+	msg2 := &banktypes.MsgSend{
 		FromAddress: addrs[1].String(),
 		ToAddress:   addrs[0].String(),
 		Amount:      coins,
 	}
-	failingMsg := banktypes.MsgSend{
+	failingMsg := &banktypes.MsgSend{
 		FromAddress: "xyz",                                                 // Invalid sender address
 		ToAddress:   "abc",                                                 // Invalid recipient address
 		Amount:      sdk.NewCoins(sdk.NewCoin("stake", sdkmath.ZeroInt())), // No amount specified
 	}
 
-	msgAny, err := codectypes.NewAnyWithValue(&msg)
+	msgAny, err := codectypes.NewAnyWithValue(msg)
 	assert.NilError(t, err)
 
-	msgAny2, err := codectypes.NewAnyWithValue(&msg2)
+	msgAny2, err := codectypes.NewAnyWithValue(msg2)
 	assert.NilError(t, err)
 
-	failingMsgAny, err := codectypes.NewAnyWithValue(&failingMsg)
+	failingMsgAny, err := codectypes.NewAnyWithValue(failingMsg)
 	assert.NilError(t, err)
 
 	testCases := []struct {

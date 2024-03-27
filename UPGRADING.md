@@ -31,6 +31,13 @@ clientCtx = clientCtx.
 
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
 
+Additionally, a simplification of the start command leads to the following change:
+
+```diff
+- server.AddCommands(rootCmd, newApp, func(startCmd *cobra.Command) {})
++ server.AddCommands(rootCmd, newApp, server.StartCmdOptions[servertypes.Application]{})
+```
+
 #### Server (`app.go`)
 
 ##### Module Manager

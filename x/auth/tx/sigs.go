@@ -1,8 +1,9 @@
 package tx
 
 import (
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"fmt"
+
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

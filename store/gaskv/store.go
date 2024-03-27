@@ -75,17 +75,10 @@ func (gs *GStore[V]) Get(key []byte) (value V) {
 	return value
 }
 
-func (gs *GStore[V]) assertValidValue(value V) {
-	if gs.isZero(value) {
-		panic("value is nil")
-	}
-	types.AssertValidValueLength(gs.valueLen(value))
-}
-
 // Set implements KVStore.
 func (gs *GStore[V]) Set(key []byte, value V) {
 	types.AssertValidKey(key)
-	gs.assertValidValue(value)
+	types.AssertValidValueGeneric(value, gs.isZero, gs.valueLen)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(key)), types.GasWritePerByteDesc)

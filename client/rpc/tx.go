@@ -3,7 +3,9 @@ package rpc
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -16,7 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/version"
 )
+
+const TimeoutFlag = "timeout"
 
 func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
 	if res == nil {
@@ -84,18 +89,36 @@ func newResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) 
 	return newTxResponseDeliverTx(res)
 }
 
-// QueryEventForTxCmd returns a CLI command that subscribes to a WebSocket connection and waits for a transaction event with the given hash.
+// QueryEventForTxCmd is an alias for WaitTxCmd, kept for backwards compatibility.
 func QueryEventForTxCmd() *cobra.Command {
+	return WaitTxCmd()
+}
+
+// WaitTx returns a CLI command that waits for a transaction with the given hash to be included in a block.
+func WaitTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "event-query-tx-for [hash]",
-		Short: "Query for a transaction by hash",
-		Long:  `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
-		Args:  cobra.ExactArgs(1),
+		Use:     "wait-tx [hash]",
+		Aliases: []string{"event-query-tx-for"},
+		Short:   "Wait for a transaction to be included in a block",
+		Long:    `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
+		Example: fmt.Sprintf(`By providing the transaction hash:
+$ %[1]sd q wait-tx [hash]
+
+Or, by piping a "tx" command:
+$ %[1]sd tx [flags] | %[1]sd q wait-tx
+`, version.AppName),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
+
+			timeout, err := cmd.Flags().GetDuration(TimeoutFlag)
+			if err != nil {
+				return err
+			}
+
 			c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
 			if err != nil {
 				return err
@@ -105,11 +128,34 @@ func QueryEventForTxCmd() *cobra.Command {
 			}
 			defer c.Stop() //nolint:errcheck // ignore stop error
 
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 
-			hash := args[0]
-			query := fmt.Sprintf("%s='%s' AND %s='%s'", tmtypes.EventTypeKey, tmtypes.EventTx, tmtypes.TxHashKey, hash)
+			var hash []byte
+			if len(args) == 0 {
+				// read hash from stdin
+				in, err := io.ReadAll(cmd.InOrStdin())
+				if err != nil {
+					return err
+				}
+				hashByt, err := parseHashFromInput(in)
+				if err != nil {
+					return err
+				}
+
+				hash = hashByt
+			} else {
+				// read hash from args
+				hashByt, err := hex.DecodeString(args[0])
+				if err != nil {
+					return err
+				}
+
+				hash = hashByt
+			}
+
+			// subscribe to websocket events
+			query := fmt.Sprintf("%s='%s' AND %s='%X'", tmtypes.EventTypeKey, tmtypes.EventTx, tmtypes.TxHashKey, hash)
 			const subscriber = "subscriber"
 			eventCh, err := c.Subscribe(ctx, subscriber, query)
 			if err != nil {
@@ -117,6 +163,19 @@ func QueryEventForTxCmd() *cobra.Command {
 			}
 			defer c.UnsubscribeAll(context.Background(), subscriber) //nolint:errcheck // ignore unsubscribe error
 
+			// return immediately if tx is already included in a block
+			res, err := c.Tx(ctx, hash, false)
+			if err == nil {
+				// tx already included in a block
+				res := &coretypes.ResultBroadcastTxCommit{
+					TxResult: res.TxResult,
+					Hash:     res.Hash,
+					Height:   res.Height,
+				}
+				return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
+			}
+
+			// tx not yet included in a block, wait for event on websocket
 			select {
 			case evt := <-eventCh:
 				if txe, ok := evt.Data.(tmtypes.EventDataTx); ok {
@@ -128,13 +187,32 @@ func QueryEventForTxCmd() *cobra.Command {
 					return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
 				}
 			case <-ctx.Done():
-				return errors.ErrLogic.Wrapf("timed out waiting for event, the transaction could have already been included or wasn't yet included")
+				return errors.ErrLogic.Wrapf("timed out waiting for transaction %X to be included in a block", hash)
 			}
 			return nil
 		},
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Duration(TimeoutFlag, 15*time.Second, "The maximum time to wait for the transaction to be included in a block")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func parseHashFromInput(in []byte) ([]byte, error) {
+	var resultTx coretypes.ResultTx
+	if err := json.Unmarshal(in, &resultTx); err == nil {
+		// input was JSON, return the hash
+		return resultTx.Hash, nil
+	}
+
+	// try to parse the hash from the output of a tx command
+	lines := strings.Split(string(in), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "txhash:") {
+			hash := strings.TrimSpace(line[len("txhash:"):])
+			return hex.DecodeString(hash)
+		}
+	}
+	return nil, fmt.Errorf("txhash not found")
 }

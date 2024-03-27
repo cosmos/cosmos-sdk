@@ -24,7 +24,10 @@ type AppManager[T transaction.Tx] struct {
 	stf stf.STFI[T]
 }
 
-func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T]) (*appmanager.BlockResponse, corestore.WriterMap, error) {
+func (a AppManager[T]) DeliverBlock(
+	ctx context.Context,
+	block *appmanager.BlockRequest[T],
+) (*appmanager.BlockResponse, corestore.WriterMap, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -86,6 +89,10 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Type) (transaction.Type, error) {
+func (a AppManager[T]) QueryWithState(
+	ctx context.Context,
+	state corestore.ReaderMap,
+	request transaction.Type,
+) (transaction.Type, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

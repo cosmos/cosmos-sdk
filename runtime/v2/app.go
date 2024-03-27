@@ -9,7 +9,7 @@ import (
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	coreappmanager "cosmossdk.io/core/app"
-	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
@@ -24,11 +24,11 @@ var _ AppI[transaction.Tx] = (*App)(nil)
 
 // AppI is an interface that defines the methods required by the App.
 type AppI[T transaction.Tx] interface {
-	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, corestore.WriterMap, error)
+	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, store.WriterMap, error)
 	ValidateTx(ctx context.Context, tx T) (coreappmanager.TxResult, error)
-	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, corestore.WriterMap, error)
+	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, store.WriterMap, error)
 	Query(ctx context.Context, version uint64, request transaction.Type) (transaction.Type, error)
-	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Type) (transaction.Type, error)
+	QueryWithState(ctx context.Context, state store.ReaderMap, request transaction.Type) (transaction.Type, error)
 
 	Logger() log.Logger
 	ModuleManager() *MM
@@ -51,7 +51,7 @@ type App struct {
 	stf                *stf.STF[transaction.Tx]
 	msgRouterBuilder   *stf.MsgRouterBuilder
 	queryRouterBuilder *stf.MsgRouterBuilder
-	db                 Store // TODO: double check
+	db                 Store
 
 	// app configuration
 	logger    log.Logger
@@ -129,4 +129,16 @@ func (a *App) GetStore() Store {
 
 func (a *App) GetLogger() log.Logger {
 	return a.logger
+}
+
+func (a *App) ExecuteGenesisTx(_ []byte) error {
+	panic("not implemented")
+}
+
+func (a *App) SetAppVersion(context.Context, uint64) error {
+	panic("not implemented")
+}
+
+func (a *App) AppVersion(context.Context) (uint64, error) {
+	panic("not implemented")
 }

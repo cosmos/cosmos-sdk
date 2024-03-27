@@ -7,7 +7,6 @@ import (
 	"github.com/tidwall/btree"
 
 	"cosmossdk.io/core/store"
-	corestore "cosmossdk.io/core/store"
 )
 
 func TestBranch(t *testing.T) {
@@ -30,7 +29,7 @@ func TestBranch(t *testing.T) {
 	}
 
 	iter := func(s interface {
-		Iterator(start, end []byte) (corestore.Iterator, error)
+		Iterator(start, end []byte) (store.Iterator, error)
 	}, start, end string, wantPairs [][2]string,
 	) {
 		startKey := []byte(start)
@@ -143,10 +142,10 @@ func (m memStore) Get(bytes []byte) ([]byte, error) {
 	return v.value, nil
 }
 
-func (m memStore) Iterator(start, end []byte) (corestore.Iterator, error) {
+func (m memStore) Iterator(start, end []byte) (store.Iterator, error) {
 	return newMemIterator(start, end, m.t, true), nil
 }
 
-func (m memStore) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
+func (m memStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	return newMemIterator(start, end, m.t, false), nil
 }

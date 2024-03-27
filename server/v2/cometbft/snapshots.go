@@ -7,13 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/spf13/cast"
-
 	"cosmossdk.io/store/v2/snapshots"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 // GetSnapshotStore returns a snapshot store for the given application options.
@@ -21,9 +17,8 @@ import (
 // It initializes a GoLevelDB database for storing metadata of the snapshots.
 // The snapshot store is then created using the initialized database and directory.
 // If any error occurs during the process, it is returned along with a nil snapshot store.
-func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
-	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
-	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
+func GetSnapshotStore(rootDir string) (*snapshots.Store, error) {
+	snapshotDir := filepath.Join(rootDir, "data", "snapshots")
 	if err := os.MkdirAll(snapshotDir, 0o744); err != nil {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}

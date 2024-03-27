@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/core/genesis"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -25,6 +28,8 @@ import (
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
+	storev2 "cosmossdk.io/store/v2"
+	rootstorev2 "cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -66,19 +71,20 @@ func (m appModule) IsAppModule()        {}
 func init() {
 	appconfig.Register(&runtimev2.Module{},
 		appconfig.Provide(
-			ProvideApp,
+			ProvideAppBuilder,
 			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
 			ProvideEnvironment,
 			ProvideModuleManager,
 			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
+			ProvideGenesisTxHandler,
+			ProvideAppVersionModifier,
 		),
-		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 
-func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
+func ProvideAppBuilder(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
@@ -86,7 +92,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	appmodulev2.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
-	error,
 ) {
 	protoFiles := proto.HybridResolver
 	protoTypes := protoregistry.GlobalTypes
@@ -106,15 +111,16 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App{
-		storeKeys:         nil,
-		interfaceRegistry: interfaceRegistry,
-		cdc:               cdc,
-		amino:             amino,
-		msgRouterBuilder:  msgRouterBuilder,
+		storeKeys:          nil,
+		interfaceRegistry:  interfaceRegistry,
+		cdc:                cdc,
+		amino:              amino,
+		msgRouterBuilder:   msgRouterBuilder,
+		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
 	}
 	appBuilder := &AppBuilder{app: app}
 
-	return cdc, amino, appBuilder, msgRouterBuilder, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, msgRouterBuilder, appModule{app}, protoFiles, protoTypes
 }
 
 type AppInputs struct {
@@ -127,6 +133,7 @@ type AppInputs struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       *codec.LegacyAmino
 	Logger            log.Logger
+	StoreOptions      *rootstorev2.FactoryOptions
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -137,13 +144,29 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+
+	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
+	// registerStoreKey could instead set this on StoreOptions directly
+	inputs.AppBuilder.storeOptions = inputs.StoreOptions
+	for _, sk := range inputs.AppBuilder.app.storeKeys {
+		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk.String())
+	}
 }
 
-func ProvideModuleManager(logger log.Logger, cdc codec.Codec, config *runtimev2.Module, modules map[string]appmodulev2.AppModule) *MM {
+func ProvideModuleManager(
+	logger log.Logger,
+	cdc codec.Codec,
+	config *runtimev2.Module,
+	modules map[string]appmodulev2.AppModule,
+) *MM {
 	return NewModuleManager(logger, cdc, config, modules)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	customGetSigners []signing.CustomGetSigner,
+) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -226,28 +249,20 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	return env, kvService, memService
 }
 
-type (
-	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
-	ValidatorAddressCodec address.Codec
-
-	// ConsensusAddressCodec is an alias for address.Codec for validator consensus addresses.
-	ConsensusAddressCodec address.Codec
-)
-
 type AddressCodecInputs struct {
 	depinject.In
 
 	AuthConfig    *authmodulev1.Module    `optional:"true"`
 	StakingConfig *stakingmodulev1.Module `optional:"true"`
 
-	AddressCodecFactory          func() address.Codec         `optional:"true"`
-	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
-	ConsensusAddressCodecFactory func() ConsensusAddressCodec `optional:"true"`
+	AddressCodecFactory          func() address.Codec                 `optional:"true"`
+	ValidatorAddressCodecFactory func() address.ValidatorAddressCodec `optional:"true"`
+	ConsensusAddressCodecFactory func() address.ConsensusAddressCodec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddressCodec, ConsensusAddressCodec) {
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, address.ValidatorAddressCodec, address.ConsensusAddressCodec) {
 	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
 	}
@@ -271,4 +286,37 @@ func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddress
 	return addresscodec.NewBech32Codec(in.AuthConfig.Bech32Prefix),
 		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixValidator),
 		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixConsensus)
+}
+
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+	return appBuilder.app
+}
+
+func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+	return app.app
+}
+
+// StoreV2Adapter is a PoC adapter for core store -> store v2 interface.
+// TODO: I think it'd be better if store v2 was just used directly, but as it stands the interfaces are incompatible.
+type StoreV2Adapter struct {
+	storev2.RootStore
+}
+
+func (s StoreV2Adapter) LatestVersion() (uint64, error) {
+	v, _, err := s.RootStore.StateLatest()
+	return v, err
+}
+
+func (s StoreV2Adapter) StateLatest() (uint64, store.ReaderMap, error) {
+	return s.StateLatest()
+}
+
+func (s StoreV2Adapter) StateAt(version uint64) (store.ReaderMap, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s StoreV2Adapter) StateCommit(changes []store.StateChanges) (store.Hash, error) {
+	//TODO implement me
+	panic("implement me")
 }

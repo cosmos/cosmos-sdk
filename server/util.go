@@ -311,8 +311,13 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	return conf, nil
 }
 
+<<<<<<< HEAD
 // add server commands
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
+=======
+// AddCommands add server commands
+func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], opts StartCmdOptions[T]) {
+>>>>>>> def211d86 (feat(server): add custom start handler (#19854))
 	cometCmd := &cobra.Command{
 		Use:     "comet",
 		Aliases: []string{"cometbft", "tendermint"},
@@ -329,9 +334,13 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		BootstrapStateCmd(appCreator),
 	)
 
+<<<<<<< HEAD
 	startCmd := StartCmd(appCreator, defaultNodeHome)
 	addStartFlags(startCmd)
 
+=======
+	startCmd := StartCmdWithOptions(appCreator, opts)
+>>>>>>> def211d86 (feat(server): add custom start handler (#19854))
 	rootCmd.AddCommand(
 		startCmd,
 		cometCmd,
@@ -341,10 +350,19 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 	)
 }
 
+// AddCommandsWithStartCmdOptions adds server commands with the provided StartCmdOptions.
+// Deprecated: Use AddCommands directly instead.
+func AddCommandsWithStartCmdOptions[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], opts StartCmdOptions[T]) {
+	AddCommands(rootCmd, appCreator, opts)
+}
+
 // AddTestnetCreatorCommand allows chains to create a testnet from the state existing in their node's data directory.
+<<<<<<< HEAD
 func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFlags types.ModuleInitFlags) {
+=======
+func AddTestnetCreatorCommand[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T]) {
+>>>>>>> def211d86 (feat(server): add custom start handler (#19854))
 	testnetCreateCmd := InPlaceTestnetCreator(appCreator)
-	addStartFlags(testnetCreateCmd)
 	rootCmd.AddCommand(testnetCreateCmd)
 }
 

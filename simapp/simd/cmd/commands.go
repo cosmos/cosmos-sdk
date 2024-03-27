@@ -21,8 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -106,9 +104,13 @@ custom-field = "{{ .Custom.CustomField }}"`
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
+<<<<<<< HEAD
 	interfaceRegistry codectypes.InterfaceRegistry,
 	appCodec codec.Codec,
 	basicManager module.BasicManager,
+=======
+	moduleManager *module.Manager,
+>>>>>>> def211d86 (feat(server): add custom start handler (#19854))
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -122,7 +124,11 @@ func initRootCmd(
 		snapshot.Cmd(newApp),
 	)
 
+<<<<<<< HEAD
 	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
+=======
+	server.AddCommands(rootCmd, newApp, server.StartCmdOptions[servertypes.Application]{})
+>>>>>>> def211d86 (feat(server): add custom start handler (#19854))
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(

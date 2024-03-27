@@ -96,7 +96,19 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
+<<<<<<< HEAD
 	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, tempApp.BasicModuleManager)
+=======
+	initRootCmd(rootCmd, encodingConfig.TxConfig, tempApp.ModuleManager)
+
+	// autocli opts
+	customClientTemplate, customClientConfig := initClientConfig()
+	var err error
+	initClientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
+>>>>>>> def211d86 (feat(server): add custom start handler (#19854))
 
 	// add keyring to autocli opts
 	autoCliOpts := tempApp.AutoCliOpts()

@@ -51,10 +51,14 @@ message Proposal {
 message MsgInitResponse {}
 
 message MsgCreateProposal {
-  Proposal proposal = 1;
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  Proposal proposal = 2;
 
   // append optional signatures
-  repeated bytes signatures = 2;
+  repeated bytes signatures = 3;
 }
 
 // MsgUpdateConfigRequest is used to change the config or members.

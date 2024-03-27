@@ -188,6 +188,7 @@ func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.Qu
 func (a *Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, a.Authenticate) // account abstraction
 	accountstd.RegisterExecuteHandler(builder, a.UpdateConfig)
+	accountstd.RegisterExecuteHandler(builder, a.Vote)
 }
 
 // RegisterInitHandler implements implementation.Account.

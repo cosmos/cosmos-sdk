@@ -10,7 +10,8 @@ import (
 func TestTimeKey(t *testing.T) {
 	key := NewTimeKey[time.Time]()
 	buffer := make([]byte, key.Size(time.Time{}))
-	T := time.UnixMilli(time.Now().UTC().UnixMilli()).UTC()
+	//T := time.UnixMilli(time.Now().UTC().UnixMilli()).UTC()
+	T := time.UnixMilli(time.Now().UnixMilli()).UTC()
 	t.Log(T)
 	bz, err := key.Encode(buffer, T)
 	require.NoError(t, err)

@@ -16,7 +16,7 @@ func (t timeKey[T]) Encode(buffer []byte, key T) (int, error) {
 	if len(buffer) < timeSize {
 		return 0, fmt.Errorf("buffer too small, required at least 8 bytes")
 	}
-	millis := time.Time(key).UnixNano() / int64(time.Millisecond)
+	millis := time.Time(key).UTC().UnixNano() / int64(time.Millisecond)
 	binary.BigEndian.PutUint64(buffer, uint64(millis))
 	return timeSize, nil
 }

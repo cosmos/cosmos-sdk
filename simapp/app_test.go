@@ -23,6 +23,7 @@ import (
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution"
+	"cosmossdk.io/x/epochs"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/gov"
@@ -212,6 +213,7 @@ func TestRunMigrations(t *testing.T) {
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
 					"protocolpool": protocolpool.AppModule{}.ConsensusVersion(),
+					"epochs":       epochs.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {

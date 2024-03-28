@@ -62,6 +62,8 @@
   - x/tx/**/*
 "C:x/upgrade":
   - x/upgrade/**/*
+"C:x/epochs":
+  - x/epochs/**/*
 "Type: ADR":
   - docs/architecture/**/*
 "Type: Build":

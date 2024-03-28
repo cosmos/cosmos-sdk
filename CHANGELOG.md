@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/gov) [#19853](https://github.com/cosmos/cosmos-sdk/pull/19853) Emit `depositor` in `EventTypeProposalDeposit`.
 * (x/gov) [#19844](https://github.com/cosmos/cosmos-sdk/pull/19844) Emit the proposer of governance proposals.
+* (baseapp) [#]() Remove the noop code that merge empty tracing context.
 
 ## Bug Fixes
 

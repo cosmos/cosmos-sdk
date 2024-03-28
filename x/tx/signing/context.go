@@ -29,7 +29,7 @@ type Context struct {
 	typeResolver          protoregistry.MessageTypeResolver
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
-	getSignersFuncs       map[protoreflect.FullName]GetSignersFunc
+	getSignersFuncs       map[protoreflect.MessageDescriptor]GetSignersFunc
 	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
 	maxRecursionDepth     int
 }
@@ -110,7 +110,7 @@ func NewContext(options Options) (*Context, error) {
 		typeResolver:          protoTypes,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
-		getSignersFuncs:       map[protoreflect.FullName]GetSignersFunc{},
+		getSignersFuncs:       map[protoreflect.MessageDescriptor]GetSignersFunc{},
 		customGetSignerFuncs:  customGetSignerFuncs,
 		maxRecursionDepth:     options.MaxRecursionDepth,
 	}
@@ -334,14 +334,14 @@ func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescript
 	if ok {
 		return f, nil
 	}
-	f, ok = c.getSignersFuncs[messageDescriptor.FullName()]
+	f, ok = c.getSignersFuncs[messageDescriptor]
 	if !ok {
 		var err error
 		f, err = c.makeGetSignersFunc(messageDescriptor)
 		if err != nil {
 			return nil, err
 		}
-		c.getSignersFuncs[messageDescriptor.FullName()] = f
+		c.getSignersFuncs[messageDescriptor] = f
 	}
 
 	return f, nil

@@ -4,7 +4,6 @@ go 1.21
 
 require (
 	cosmossdk.io/core v0.12.0
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/stretchr/testify v1.9.0

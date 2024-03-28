@@ -21,3 +21,9 @@ func NewMigrator(k Keeper) Migrator {
 func (m Migrator) Migrate1to2(ctx context.Context) error {
 	return nil
 }
+
+// Migrate2to3 migrates the x/mint module state from the consensus version 2 to
+// version 3.
+func (m Migrator) Migrate2to3(ctx context.Context) error {
+	return nil
+}

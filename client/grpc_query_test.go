@@ -90,15 +90,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	})
 	s.NoError(err)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height:             app.LastBlockHeight() + 1,
-		Hash:               app.LastCommitID().Hash,
-		NextValidatorsHash: valSet.Hash(),
-	})
-	s.NoError(err)
-
-	// end of app init
-
 	s.ctx = app.NewContext(false)
 	s.cdc = cdc
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
@@ -107,6 +98,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.bankClient = types.NewQueryClient(queryHelper)
 	s.testClient = testdata.NewQueryClient(queryHelper)
 	s.genesisAccount = acc
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		Hash:               app.LastCommitID().Hash,
+		NextValidatorsHash: valSet.Hash(),
+	})
+	s.NoError(err)
+	// end of app init
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

@@ -20,6 +20,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -36,8 +37,8 @@ func Example() {
 
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	logger := log.NewNopLogger()
-
-	cms := integration.CreateMultiStore(keys, logger)
+	okeys := storetypes.NewObjectStoreKeys(banktypes.ObjectStoreKey)
+	cms := integration.CreateMultiStore(keys, okeys, logger)
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -125,8 +126,8 @@ func Example_oneModule() {
 
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	logger := log.NewLogger(io.Discard)
-
-	cms := integration.CreateMultiStore(keys, logger)
+	okeys := storetypes.NewObjectStoreKeys(banktypes.ObjectStoreKey)
+	cms := integration.CreateMultiStore(keys, okeys, logger)
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(

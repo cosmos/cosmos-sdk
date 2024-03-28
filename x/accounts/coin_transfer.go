@@ -12,7 +12,7 @@ import (
 )
 
 // coinsTransferMsgFunc defines a function that creates a message to send coins from one
-// address to the other, and also a message that parses such  response.
+// address to the other, and also a message that parses such response.
 // This in most cases will be implemented as a bank.MsgSend creator, but we keep x/accounts independent of bank.
 type coinsTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
 

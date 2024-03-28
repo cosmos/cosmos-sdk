@@ -36,6 +36,17 @@ type BaseLockup struct {
 
 The continuous vesting account has a future start time and begins unlocking continuously until the specified enddate.
 
+To determine the amount of coins that are vested for a given block time `T`, the
+following is performed:
+
+1. Compute `X := T - StartTime`
+2. Compute `Y := EndTime - StartTime`
+3. Compute `V' := OV * (X / Y)`
+4. Compute `V := OV - V'`
+
+Thus, the total amount of _vested_ coins is `V'` and the remaining amount, `V`,
+is _vesting_.
+
 ```go
 type ContinuousLockingAccount struct {
 	*BaseLockup
@@ -57,6 +68,20 @@ type DelayedLockingAccount struct {
 
 The periodic vesting account locks tokens for a series of periods. The account can receive coins and send coins. After all the periods all the coins are unlocked and the account can send coins.
 
+Periodic vesting accounts require calculating the coins released during each period for a given block time `T`. Note that multiple periods could have passed when calling `GetVestedCoins`, so we must iterate over each period until the end of that period is after `T`.
+
+1. Set `CT := StartTime`
+2. Set `V' := 0`
+
+For each Period P:
+
+  1. Compute `X := T - CT`
+  2. IF `X >= P.Length`
+      1. Compute `V' += P.Amount`
+      2. Compute `CT += P.Length`
+      3. ELSE break
+  3. Compute `V := OV - V'`
+
 ```go
 type PeriodicLockingAccount struct {
 	*BaseLockup
@@ -74,3 +99,158 @@ type PermanentLockingAccount struct {
 	*BaseLockup
 }
 ```
+
+## Genesis Initialization
+
+<!-- TODO: once implemented -->
+
+
+
+## Examples
+
+### Simple
+
+Given a continuous vesting account with 10 vesting coins.
+
+```text
+OV = 10
+DF = 0
+DV = 0
+BC = 10
+V = 10
+V' = 0
+```
+
+1. Immediately receives 1 coin
+
+    ```text
+    BC = 11
+    ```
+
+2. Time passes, 2 coins vest
+
+    ```text
+    V = 8
+    V' = 2
+    ```
+
+3. Delegates 4 coins to validator A
+
+    ```text
+    DV = 4
+    BC = 7
+    ```
+
+4. Sends 3 coins
+
+    ```text
+    BC = 4
+    ```
+
+5. More time passes, 2 more coins vest
+
+    ```text
+    V = 6
+    V' = 4
+    ```
+
+6. Sends 2 coins. At this point the account cannot send anymore until further
+coins vest or it receives additional coins. It can still however, delegate.
+
+    ```text
+    BC = 2
+    ```
+
+### Slashing
+
+Same initial starting conditions as the simple example.
+
+1. Time passes, 5 coins vest
+
+    ```text
+    V = 5
+    V' = 5
+    ```
+
+2. Delegate 5 coins to validator A
+
+    ```text
+    DV = 5
+    BC = 5
+    ```
+
+3. Delegate 5 coins to validator B
+
+    ```text
+    DF = 5
+    BC = 0
+    ```
+
+4. Validator A gets slashed by 50%, making the delegation to A now worth 2.5 coins
+5. Undelegate from validator A (2.5 coins)
+
+    ```text
+    DF = 5 - 2.5 = 2.5
+    BC = 0 + 2.5 = 2.5
+    ```
+
+6. Undelegate from validator B (5 coins). The account at this point can only
+send 2.5 coins unless it receives more coins or until more coins vest.
+It can still however, delegate.
+
+    ```text
+    DV = 5 - 2.5 = 2.5
+    DF = 2.5 - 2.5 = 0
+    BC = 2.5 + 5 = 7.5
+    ```
+
+    Notice how we have an excess amount of `DV`.
+
+### Periodic Vesting
+
+A vesting account is created where 100 tokens will be released over 1 year, with
+1/4 of tokens vesting each quarter. The vesting schedule would be as follows:
+
+```yaml
+Periods:
+- amount: 25stake, length: 7884000
+- amount: 25stake, length: 7884000
+- amount: 25stake, length: 7884000
+- amount: 25stake, length: 7884000
+```
+
+```text
+OV = 100
+DF = 0
+DV = 0
+BC = 100
+V = 100
+V' = 0
+```
+
+1. Immediately receives 1 coin
+
+    ```text
+    BC = 101
+    ```
+
+2. Vesting period 1 passes, 25 coins vest
+
+    ```text
+    V = 75
+    V' = 25
+    ```
+
+3. During vesting period 2, 5 coins are transferred and 5 coins are delegated
+
+    ```text
+    DV = 5
+    BC = 91
+    ```
+
+4. Vesting period 2 passes, 25 coins vest
+
+    ```text
+    V = 50
+    V' = 50
+    ```

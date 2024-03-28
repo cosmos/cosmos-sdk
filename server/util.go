@@ -341,6 +341,35 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 	)
 }
 
+// AddCommandsWithStartCmdOptions adds server commands with the provided StartCmdOptions.
+func AddCommandsWithStartCmdOptions(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, opts StartCmdOptions) {
+	cometCmd := &cobra.Command{
+		Use:     "comet",
+		Aliases: []string{"cometbft", "tendermint"},
+		Short:   "CometBFT subcommands",
+	}
+
+	cometCmd.AddCommand(
+		ShowNodeIDCmd(),
+		ShowValidatorCmd(),
+		ShowAddressCmd(),
+		VersionCmd(),
+		cmtcmd.ResetAllCmd,
+		cmtcmd.ResetStateCmd,
+		BootstrapStateCmd(appCreator),
+	)
+
+	startCmd := StartCmdWithOptions(appCreator, defaultNodeHome, opts)
+
+	rootCmd.AddCommand(
+		startCmd,
+		cometCmd,
+		ExportCmd(appExport, defaultNodeHome),
+		version.NewVersionCommand(),
+		NewRollbackCmd(appCreator, defaultNodeHome),
+	)
+}
+
 // AddTestnetCreatorCommand allows chains to create a testnet from the state existing in their node's data directory.
 func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFlags types.ModuleInitFlags) {
 	testnetCreateCmd := InPlaceTestnetCreator(appCreator)

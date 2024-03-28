@@ -71,7 +71,8 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {
 		err := authzKeeper.SaveGrant(ctx, grantee, granter, sendAuthz, exp)
-		require.NoError(t, err, "Grant from %s", grantee.String())
+		addr, _ := accountKeeper.AddressCodec().BytesToString(grantee)
+		require.NoError(t, err, "Grant from %s", addr)
 	}
 	save(grantee1, &expiration)
 	save(grantee2, &expiration)
@@ -86,8 +87,10 @@ func TestExpiredGrantsQueue(t *testing.T) {
 		err := authzmodule.BeginBlocker(ctx, authzKeeper)
 		require.NoError(t, err)
 
+		addr, err := accountKeeper.AddressCodec().BytesToString(granter)
+		require.NoError(t, err)
 		res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
-			Granter: granter.String(),
+			Granter: addr,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, res)

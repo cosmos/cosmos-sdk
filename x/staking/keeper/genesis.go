@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
@@ -18,7 +17,7 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res []abci.ValidatorUpdate, err error) {
+func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]appmodule.ValidatorUpdate, error) {
 	bondedTokens := math.ZeroInt()
 	notBondedTokens := math.ZeroInt()
 
@@ -176,6 +175,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	}
 
 	// don't need to run CometBFT updates if we exported
+	var moduleValidatorUpdates []appmodule.ValidatorUpdate
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
 			valAddr, err := k.validatorAddressCodec.StringToBytes(lv.Address)
@@ -193,20 +193,20 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 				return nil, fmt.Errorf("validator %s not found", lv.Address)
 			}
 
-			update := validator.ABCIValidatorUpdate(k.PowerReduction(ctx))
+			update := validator.ModuleValidatorUpdate(k.PowerReduction(ctx))
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
-			res = append(res, update)
+			moduleValidatorUpdates = append(moduleValidatorUpdates, update)
 		}
 	} else {
 		var err error
 
-		res, err = k.ApplyAndReturnValidatorSetUpdates(ctx)
+		moduleValidatorUpdates, err = k.ApplyAndReturnValidatorSetUpdates(ctx)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return res, nil
+	return moduleValidatorUpdates, nil
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper. The

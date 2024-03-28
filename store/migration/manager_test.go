@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
@@ -50,7 +50,7 @@ func setupMigrationManager(t *testing.T) (*Manager, *commitment.CommitStore) {
 	newCommitStore, err := commitment.NewCommitStore(multiTrees1, db1, nil, log.NewNopLogger()) // for store/v2
 	require.NoError(t, err)
 
-	return NewManager(snapshotsManager, newStorageStore, newCommitStore, log.NewNopLogger()), commitStore
+	return NewManager(db, snapshotsManager, newStorageStore, newCommitStore, log.NewNopLogger()), commitStore
 }
 
 func TestMigrateState(t *testing.T) {
@@ -60,10 +60,10 @@ func TestMigrateState(t *testing.T) {
 	toVersion := uint64(100)
 	keyCount := 10
 	for version := uint64(1); version <= toVersion; version++ {
-		cs := store.NewChangeset()
+		cs := corestore.NewChangeset()
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				cs.Add(storeKey, []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)))
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}
 		}
 		require.NoError(t, orgCommitStore.WriteBatch(cs))
@@ -78,17 +78,17 @@ func TestMigrateState(t *testing.T) {
 	for version := uint64(1); version < toVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				val, err := m.commitSnapshotter.(*commitment.CommitStore).Get(storeKey, toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
+				val, err := m.stateCommitment.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
 				require.NoError(t, err)
 				require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", version, i)), val)
 			}
 		}
 	}
 	// check the latest state
-	val, err := m.commitSnapshotter.(*commitment.CommitStore).Get("store1", toVersion-1, []byte("key-100-1"))
+	val, err := m.stateCommitment.Get([]byte("store1"), toVersion-1, []byte("key-100-1"))
 	require.NoError(t, err)
 	require.Nil(t, val)
-	val, err = m.commitSnapshotter.(*commitment.CommitStore).Get("store2", toVersion-1, []byte("key-100-0"))
+	val, err = m.stateCommitment.Get([]byte("store2"), toVersion-1, []byte("key-100-0"))
 	require.NoError(t, err)
 	require.Nil(t, val)
 
@@ -96,7 +96,7 @@ func TestMigrateState(t *testing.T) {
 	for version := uint64(1); version < toVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				val, err := m.storageSnapshotter.(*storage.StorageStore).Get(storeKey, toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
+				val, err := m.stateStorage.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
 				require.NoError(t, err)
 				require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", version, i)), val)
 			}

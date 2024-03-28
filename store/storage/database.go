@@ -12,13 +12,13 @@ import (
 // backends, such as restoring snapshots.
 type Database interface {
 	NewBatch(version uint64) (store.Batch, error)
-	Has(storeKey string, version uint64, key []byte) (bool, error)
-	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+	Has(storeKey []byte, version uint64, key []byte) (bool, error)
+	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)
 	GetLatestVersion() (uint64, error)
 	SetLatestVersion(version uint64) error
 
-	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
-	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
+	Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
 
 	Prune(version uint64) error
 

@@ -54,9 +54,14 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#18768](https://github.com/cosmos/cosmos-sdk/pull/18768) Add MustValAddressFromBech32 function.
 * (gRPC) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) Add debug log prints for each gRPC request.
 * (x/consensus) [#19483](https://github.com/cosmos/cosmos-sdk/pull/19483) Add consensus messages registration to consensus module.
+* (types) [#19759](https://github.com/cosmos/cosmos-sdk/pull/19759) Align SignerExtractionAdapter in PriorityNonceMempool Remove.
+* (client) [#19870](https://github.com/cosmos/cosmos-sdk/pull/19870) Add new query command `wait-tx`. Alias `event-query-tx-for` to `wait-tx` for backward compatibility.
 
 ### Improvements
 
+* (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Add customizability to start command.
+    * Add `StartCmdOptions` in `server.AddCommands` instead of `servertypes.ModuleInitFlags`. To set custom flags set them in the `StartCmdOptions` struct on the `AddFlags` field.
+    * Add `StartCommandHandler` to `StartCmdOptions` to allow custom start command handlers. Users now have total control over how the app starts.
 * (types) [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) `PreBlock` now returns only an error for consistency with server/v2. The SDK has upgraded x/upgrade accordingly. `ResponsePreBlock` hence has been removed.
 * (server) [#19455](https://github.com/cosmos/cosmos-sdk/pull/19455) Allow calling back into the application struct in PostSetup.
 * (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) The notion of basic manager does not exist anymore (and all related helpers).
@@ -97,9 +102,15 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
 * (crypto) [#19691](https://github.com/cosmos/cosmos-sdk/pull/19691) Fix tx sign doesn't throw an error when incorrect Ledger is used.
+* [#19833](https://github.com/cosmos/cosmos-sdk/pull/19833) Fix some places in which we call Remove inside a Walk.
+* [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
 
 ### API Breaking Changes
 
+* (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Remove `servertypes.ModuleInitFlags` types and from `server.AddCommands` as `StartCmdOptions` already achieves the same goal.
+* (types) [#19792](https://github.com/cosmos/cosmos-sdk/pull/19792) In `MsgSimulatorFn` `sdk.Context` argument is replaced for an `address.Codec`. It also returns an error.
+* (types) [#19742](https://github.com/cosmos/cosmos-sdk/pull/19742) Removes the use of `Accounts.String`
+    * `SimulationState` now has address and validator codecs as fields.
 * (types) [#19447](https://github.com/cosmos/cosmos-sdk/pull/19447) `module.testutil.MakeTestEncodingConfig` now takes `CodecOptions` as argument.
 * (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) Remove basic manager and all related functions (`module.BasicManager`, `module.NewBasicManager`, `module.NewBasicManagerFromManager`, `NewGenesisOnlyAppModule`).
     * The module manager now can do everything that the basic manager was doing.

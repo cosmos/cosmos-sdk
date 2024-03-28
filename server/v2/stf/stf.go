@@ -90,6 +90,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 	// creates a new branch state, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
+	ctx = s.contextInitCache(ctx)
 
 	for _, msg := range block.ConsensusMessages {
 		_, err := s.handleMsg(ctx, msg)
@@ -205,6 +206,7 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WriterMap, gasLimit 
 	if err != nil {
 		return 0, nil, err
 	}
+	applyContextCache(ctx, validateCtx)
 
 	return validateCtx.meter.Consumed(), validateCtx.events, applyStateChanges(state, validateState)
 }
@@ -240,6 +242,7 @@ func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint
 		if applyErr != nil {
 			return nil, 0, nil, applyErr
 		}
+		applyContextCache(ctx, postTxCtx)
 		return nil, execCtx.meter.Consumed(), postTxCtx.events, txErr
 	}
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
@@ -258,6 +261,7 @@ func (s STF[T]) execTx(ctx context.Context, state store.WriterMap, gasLimit uint
 	if applyErr != nil {
 		return nil, 0, nil, applyErr
 	}
+	applyContextCache(ctx, postTxCtx)
 
 	return msgsResp, execCtx.meter.Consumed(), append(execCtx.events, postTxCtx.events...), nil
 }
@@ -281,6 +285,7 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WriterMap, gasLimit u
 		}
 		msgResps[i] = resp
 	}
+	applyContextCache(ctx, execCtx)
 	return msgResps, nil
 }
 
@@ -297,6 +302,7 @@ func (s STF[T]) preBlock(ctx context.Context, state store.WriterMap, txs []T) ([
 			event.Attribute{Key: "mode", Value: "PreBlock"},
 		)
 	}
+	applyContextCache(ctx, pbCtx)
 
 	return pbCtx.events, nil
 }
@@ -314,6 +320,7 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlo
 			event.Attribute{Key: "mode", Value: "BeginBlock"},
 		)
 	}
+	applyContextCache(ctx, bbCtx)
 
 	return bbCtx.events, nil
 }
@@ -338,6 +345,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WriterMap, hs header.S
 			event.Attribute{Key: "mode", Value: "BeginBlock"},
 		)
 	}
+	applyContextCache(ctx, ebCtx)
 
 	return ebCtx.events, valsetUpdates, nil
 }
@@ -349,6 +357,7 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.WriterMap, hs 
 	if err != nil {
 		return nil, nil, err
 	}
+	applyContextCache(ctx, ebCtx)
 	return ebCtx.events, valSetUpdates, nil
 }
 
@@ -408,6 +417,7 @@ type executionContext struct {
 	headerService header.Service
 	execMode      corecontext.ExecMode
 	State         store.WriterMap
+	Cache         ModuleContainer
 }
 
 func (s STF[T]) makeContext(
@@ -420,6 +430,13 @@ func (s STF[T]) makeContext(
 ) *executionContext {
 	meter := s.getGasMeter(gasLimit)
 	store = s.wrapWithGasMeter(meter, store)
+	var cache ModuleContainer
+	executionCtx, ok := ctx.(*executionContext)
+	if ok {
+		cache = executionCtx.Cache
+	} else {
+		cache = NewModuleContainer()
+	}
 	return &executionContext{
 		Context:       ctx,
 		state:         store,
@@ -430,6 +447,16 @@ func (s STF[T]) makeContext(
 		branchdb:      BrachService{s.branch},
 		headerService: headerservice, // todo need a wrapper
 		State:         store,
+		Cache:         cache,
+	}
+}
+
+func (s STF[T]) contextInitCache(
+	ctx context.Context,
+) *executionContext {
+	return &executionContext{
+		Context: ctx,
+		Cache:   NewModuleContainer(),
 	}
 }
 
@@ -439,6 +466,19 @@ func applyStateChanges(dst, src store.WriterMap) error {
 		return err
 	}
 	return dst.ApplyStateChanges(changes)
+}
+
+func applyContextCache(dst, src context.Context) error {
+	srcExecutionCtx, ok := src.(*executionContext)
+	if !ok {
+		return fmt.Errorf("Can not convert ctx to executionContext")
+	}
+	_, ok = dst.(*executionContext)
+	if !ok {
+		return fmt.Errorf("Can not convert ctx to executionContext")
+	}
+	dst.(*executionContext).Cache = srcExecutionCtx.Cache
+	return nil
 }
 
 // isCtxCancelled reports if the context was canceled.

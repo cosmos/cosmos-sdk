@@ -1,8 +1,6 @@
 package legacytx
 
 import (
-	types "github.com/cosmos/gogoproto/types/any"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -107,7 +105,7 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // so it can't be saved into protobuf configured storage. We are using it only for API
 // compatibility.
 func (tx *StdTx) AsAny() *codectypes.Any {
-	return types.UnsafePackAnyWithCache(tx)
+	return codectypes.UnsafePackAny(tx)
 }
 
 // GetMemo returns the memo

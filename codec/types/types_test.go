@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
-	gogoproto "github.com/cosmos/gogoproto/types/any"
 	testdata "github.com/cosmos/gogoproto/types/any/test"
 	"github.com/stretchr/testify/require"
 
@@ -189,7 +188,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	ha := &test.HasAnimal{
 		Animal: any,
 	}
-	err = ha.UnpackInterfaces(gogoproto.ProtoJSONPacker{JSONPBMarshaler: jm})
+	err = ha.UnpackInterfaces(types.ProtoJSONPacker{JSONPBMarshaler: jm})
 	require.NoError(t, err)
 	json, err = jm.MarshalToString(ha)
 	require.NoError(t, err)

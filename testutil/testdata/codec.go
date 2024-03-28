@@ -43,14 +43,14 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 func NewTestAmino() *amino.Codec {
 	cdc := amino.NewCodec()
 	cdc.RegisterInterface((*Animal)(nil), nil)
-	cdc.RegisterConcrete(&Dog{}, "testpb/Dog", nil)
-	cdc.RegisterConcrete(&Cat{}, "testpb/Cat", nil)
+	cdc.RegisterConcrete(&Dog{}, "test/Dog", nil)
+	cdc.RegisterConcrete(&Cat{}, "test/Cat", nil)
 
 	cdc.RegisterInterface((*HasAnimalI)(nil), nil)
-	cdc.RegisterConcrete(&HasAnimal{}, "testpb/HasAnimal", nil)
+	cdc.RegisterConcrete(&HasAnimal{}, "test/HasAnimal", nil)
 
 	cdc.RegisterInterface((*HasHasAnimalI)(nil), nil)
-	cdc.RegisterConcrete(&HasHasAnimal{}, "testpb/HasHasAnimal", nil)
+	cdc.RegisterConcrete(&HasHasAnimal{}, "test/HasHasAnimal", nil)
 
 	return cdc
 }

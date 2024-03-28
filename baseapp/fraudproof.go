@@ -66,7 +66,7 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 
 	storeKeyToWitnessData := cms.GetWitnessDataMap()
 
-	//TODO: NOT sure why we need to revert, it's probably better to use cached state and discard
+	// TODO: NOT sure why we need to revert, it's probably better to use cached state and discard
 
 	// Revert app to previous state
 	cms.SetInterBlockCache(nil)
@@ -76,7 +76,7 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 	}
 	app.deliverState = nil
 	// Fast-forward to right before fraudulent state transition occurred
-	app.BeginBlock(beginBlockRequest) //TODO: Potentially move inside next if statement
+	app.BeginBlock(beginBlockRequest) // TODO: Potentially move inside next if statement
 	if !isBeginBlockFraudulent {
 		app.executeNonFraudulentTransactions(req, isDeliverTxFraudulent)
 	}
@@ -121,7 +121,7 @@ func (app *BaseApp) executeNonFraudulentTransactions(req abci.RequestGenerateFra
 // Generate a fraudproof for an app with the given trace buffers
 func (app *BaseApp) getFraudProof(storeKeyToWitnessData map[string][]iavl.WitnessData) (FraudProof, error) {
 	fraudProof := FraudProof{}
-	fraudProof.stateWitness = make(map[string]StateWitness)
+	fraudProof.moduleToWitness = make(map[string]StateWitness)
 	fraudProof.BlockHeight = app.LastBlockHeight()
 	cms := app.cms.(*rootmulti.Store)
 
@@ -154,7 +154,7 @@ func (app *BaseApp) getFraudProof(storeKeyToWitnessData map[string][]iavl.Witnes
 			WitnessData: make([]*WitnessData, 0, len(iavlWitnessData)),
 		}
 		populateStateWitness(&stateWitness, iavlWitnessData)
-		fraudProof.stateWitness[storeKeyName] = stateWitness
+		fraudProof.moduleToWitness[storeKeyName] = stateWitness
 	}
 
 	return fraudProof, nil

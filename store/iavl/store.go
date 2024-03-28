@@ -296,11 +296,9 @@ func (st *Store) Root() ([]byte, error) {
 	iavlTree, ok := st.tree.(*iavl.MutableTree)
 	if !ok {
 		iavlTree := st.tree.(*iavl.DeepSubTree)
-		rootHash, err := iavlTree.GetInitialRootHash()
-		return rootHash, err
+		return iavlTree.GetInitialRootHash()
 	}
-	hash, err := iavlTree.WorkingHash()
-	return hash, err
+	return iavlTree.WorkingHash()
 }
 
 // Handle gatest the latest height, if height is 0
@@ -428,7 +426,6 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
 }
 
-// Takes a MutableTree, and a key and returns a DST Non-Existence Proof for the key
 func (st *Store) GetWitnessData() []iavl.WitnessData {
 	// value wasn't found
 	iavlTree := st.tree.((*iavl.MutableTree))

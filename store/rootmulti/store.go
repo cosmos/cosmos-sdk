@@ -369,7 +369,7 @@ func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
 	return rs
 }
 
-// SetTracer sets the tracer for the MultiStore that the underlying
+// SetTracingEnabledAll sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations.
 func (rs *Store) SetTracingEnabledAll(tracingEnabled bool) {
 	for skey := range rs.keysByName {
@@ -970,6 +970,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 		switch {
 		case params.deepIAVLTree != nil:
+			// we were given a specific tree to use, for e.g. verifying fraud proofs
 			store, err = iavl.LoadStoreWithDeepIAVLTree(params.deepIAVLTree)
 		case params.initialVersion == 0:
 			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, true)

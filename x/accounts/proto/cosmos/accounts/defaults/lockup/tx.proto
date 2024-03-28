@@ -2,8 +2,8 @@ syntax = "proto3";
 package cosmos.accounts.defaults.lockup;
 
 import "amino/amino.proto";
-import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/accounts/defaults/lockup/lockup.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -30,6 +30,9 @@ message MsgInitLockupAccount {
   // start of lockup
   google.protobuf.Timestamp start_time = 3
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+
+  // admin is an account who has ability to clawback locked funds
+  string admin = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgInitLockupAccountResponse defines the Msg/InitLockupAccount response type.
@@ -48,6 +51,8 @@ message MsgInitPeriodicLockingAccount {
   google.protobuf.Timestamp start_time = 2
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
   repeated Period locking_periods = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // admin is an account who has ability to clawback locked funds
+  string admin = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgInitPeriodicLockingAccountResponse defines the Msg/InitPeriodicLockingAccount
@@ -124,3 +129,17 @@ message MsgWithdrawResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
+
+// MsgClawback defines a message that the admin of the lockup clawback lockup account remaining locked coins
+message MsgClawback {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string          admin  = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated string denoms = 2;
+}
+
+// MsgClawbackResponse defines the response for MsgClawback
+message MsgClawbackResponse {}

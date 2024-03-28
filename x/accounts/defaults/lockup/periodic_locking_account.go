@@ -45,6 +45,10 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
 	}
+	admin, err := pva.addressCodec.StringToBytes(msg.Admin)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'admin' address: %s", err)
+	}
 
 	hs := pva.headerService.GetHeaderInfo(ctx)
 
@@ -94,6 +98,10 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		return nil, err
 	}
 	err = pva.Owner.Set(ctx, owner)
+	if err != nil {
+		return nil, err
+	}
+	err = pva.Admin.Set(ctx, admin)
 	if err != nil {
 		return nil, err
 	}

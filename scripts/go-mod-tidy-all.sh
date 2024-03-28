@@ -13,8 +13,9 @@ done
 # automatically.
 cd simapp
 if command -v nix &> /dev/null
-    nix develop .. -c gomod2nix
 then
+    nix develop .. -c gomod2nix
+
     if ! command -v gomod2nix &> /dev/null
     then
         echo "gomod2nix could not be found in PATH, installing..."

@@ -6,7 +6,6 @@ import (
 	strings "strings"
 
 	"github.com/cosmos/gogoproto/proto"
-	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -51,9 +50,6 @@ type (
 	// Tx defines an interface a transaction must fulfill.
 	Tx interface {
 		HasMsgs
-
-		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
-		GetMsgsV2() ([]protov2.Message, error)
 	}
 
 	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators

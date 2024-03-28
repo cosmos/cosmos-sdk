@@ -3,8 +3,6 @@ package tx
 import (
 	"fmt"
 
-	protov2 "google.golang.org/protobuf/proto"
-
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -97,20 +95,17 @@ func (t *Tx) ValidateBasic() error {
 // GetSigners retrieves all the signers of a tx.
 // This includes all unique signers of the messages (in order),
 // as well as the FeePayer (if specified and not already included).
-func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
+func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, error) {
 	var signers [][]byte
 	seen := map[string]bool{}
 
-	var msgsv2 []protov2.Message
 	for _, msg := range t.Body.Messages {
-		xs, msgv2, err := cdc.GetMsgAnySigners(msg)
+		extractedSigners, err := cdc.GetMsgAnySigners(msg)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		msgsv2 = append(msgsv2, msgv2)
-
-		for _, signer := range xs {
+		for _, signer := range extractedSigners {
 			if !seen[string(signer)] {
 				signers = append(signers, signer)
 				seen[string(signer)] = true
@@ -125,7 +120,7 @@ func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
 		var err error
 		feePayerAddr, err = cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feePayer)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 	if feePayerAddr != nil && !seen[string(feePayerAddr)] {
@@ -133,7 +128,7 @@ func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
 		seen[string(feePayerAddr)] = true
 	}
 
-	return signers, msgsv2, nil
+	return signers, nil
 }
 
 func (t *Tx) GetGas() uint64 {
@@ -154,7 +149,7 @@ func (t *Tx) FeePayer(cdc codec.Codec) []byte {
 		return feePayerAddr
 	}
 	// use first signer as default if no payer specified
-	signers, _, err := t.GetSigners(cdc)
+	signers, err := t.GetSigners(cdc)
 	if err != nil {
 		panic(err)
 	}

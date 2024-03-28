@@ -70,7 +70,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			}
 		}
 
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		signers, err := k.cdc.GetMsgV1Signers(msg)
 		if err != nil {
 			return v1.Proposal{}, err
 		}

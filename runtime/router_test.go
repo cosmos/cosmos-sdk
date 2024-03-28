@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -60,16 +59,6 @@ func TestRouterService(t *testing.T) {
 		require.NotNil(t, resp)
 	})
 
-	t.Run("invoke typed: valid msg (proto v2)", func(t *testing.T) {
-		resp := &counterv1.MsgIncreaseCountResponse{}
-		err := routerService.MessageRouterService().InvokeTyped(testCtx.Ctx, &counterv1.MsgIncreaseCounter{
-			Signer: "cosmos1",
-			Count:  42,
-		}, resp)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-	})
-
 	// Queries
 
 	t.Run("invalid query", func(t *testing.T) {
@@ -82,16 +71,6 @@ func TestRouterService(t *testing.T) {
 
 		resp := &countertypes.QueryGetCountResponse{}
 		err := routerService.QueryRouterService().InvokeTyped(testCtx.Ctx, &countertypes.QueryGetCountRequest{}, resp)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		require.Equal(t, int64(42), resp.TotalCount)
-	})
-
-	t.Run("invoke typed: valid query (proto v2)", func(t *testing.T) {
-		_ = counterKeeper.CountStore.Set(testCtx.Ctx, 42)
-
-		resp := &counterv1.QueryGetCountResponse{}
-		err := routerService.QueryRouterService().InvokeTyped(testCtx.Ctx, &counterv1.QueryGetCountRequest{}, resp)
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		require.Equal(t, int64(42), resp.TotalCount)

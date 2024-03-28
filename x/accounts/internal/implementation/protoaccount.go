@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.
@@ -64,7 +64,7 @@ func RegisterQueryHandler[
 
 func NewProtoMessageSchema[T any, PT ProtoMsgG[T]]() *MessageSchema {
 	msg := PT(new(T))
-	if _, ok := (interface{}(msg)).(proto.Message); ok {
+	if _, ok := (interface{}(msg)).(protov2.Message); ok {
 		panic("protov2 messages are not supported")
 	}
 	return &MessageSchema{

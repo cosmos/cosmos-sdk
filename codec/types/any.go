@@ -67,9 +67,8 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 		bz  []byte
 		err error
 	)
-	if msg, ok := v.(protov2.Message); ok {
-		protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
-		bz, err = protov2MarshalOpts.Marshal(msg)
+	if _, ok := v.(protov2.Message); ok {
+		return nil, fmt.Errorf("protov2 disallowed") // TODO: remove when all safe
 	} else {
 		bz, err = proto.Marshal(v)
 	}
@@ -109,9 +108,8 @@ func (any *Any) pack(x proto.Message) error {
 		bz  []byte
 		err error
 	)
-	if msg, ok := x.(protov2.Message); ok {
-		protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
-		bz, err = protov2MarshalOpts.Marshal(msg)
+	if _, ok := x.(protov2.Message); ok {
+		return fmt.Errorf("disallowed protov2") // TODO: remove me eventually
 	} else {
 		bz, err = proto.Marshal(x)
 	}

@@ -10,10 +10,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/status"
-	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -189,23 +187,16 @@ func TestGetSigners(t *testing.T) {
 	testAddrStr := testAddr.String()
 
 	msgSendV1 := &countertypes.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
-	msgSendV2 := &counterv1.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
 
-	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
-	require.NoError(t, err)
-	require.Equal(t, [][]byte{testAddr}, signers)
-	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
-
-	signers, err = cdc.GetMsgV2Signers(msgSendV2)
+	signers, err := cdc.GetMsgV1Signers(msgSendV1)
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{testAddr}, signers)
 
 	msgSendAny, err := types.NewAnyWithValue(msgSendV1)
 	require.NoError(t, err)
-	signers, msgSendV2Copy, err = cdc.GetMsgAnySigners(msgSendAny)
+	signers, err = cdc.GetMsgAnySigners(msgSendAny)
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{testAddr}, signers)
-	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
 }
 
 type testAddressCodec struct{}

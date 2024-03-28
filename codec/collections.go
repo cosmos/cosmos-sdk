@@ -6,8 +6,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"google.golang.org/protobuf/encoding/protojson"
-	protov2 "google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -89,51 +87,6 @@ func (c collValue[T, PT]) Stringify(value T) string {
 
 func (c collValue[T, PT]) ValueType() string {
 	return "github.com/cosmos/gogoproto/" + c.messageName
-}
-
-type protoMessageV2[T any] interface {
-	*T
-	protov2.Message
-}
-
-// CollValueV2 is used for protobuf values of the newest google.golang.org/protobuf API.
-func CollValueV2[T any, PT protoMessageV2[T]]() collcodec.ValueCodec[PT] {
-	return &collValue2[T, PT]{
-		messageName: string(PT(new(T)).ProtoReflect().Descriptor().FullName()),
-	}
-}
-
-type collValue2[T any, PT protoMessageV2[T]] struct {
-	messageName string
-}
-
-func (c collValue2[T, PT]) Encode(value PT) ([]byte, error) {
-	protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
-	return protov2MarshalOpts.Marshal(value)
-}
-
-func (c collValue2[T, PT]) Decode(b []byte) (PT, error) {
-	var value T
-	err := protov2.Unmarshal(b, PT(&value))
-	return &value, err
-}
-
-func (c collValue2[T, PT]) EncodeJSON(value PT) ([]byte, error) {
-	return protojson.Marshal(value)
-}
-
-func (c collValue2[T, PT]) DecodeJSON(b []byte) (PT, error) {
-	var value T
-	err := protojson.Unmarshal(b, PT(&value))
-	return &value, err
-}
-
-func (c collValue2[T, PT]) Stringify(value PT) string {
-	return fmt.Sprintf("%v", value)
-}
-
-func (c collValue2[T, PT]) ValueType() string {
-	return "google.golang.org/protobuf/" + c.messageName
 }
 
 // CollInterfaceValue instantiates a new collections.ValueCodec for a generic

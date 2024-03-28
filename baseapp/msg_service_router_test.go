@@ -107,7 +107,7 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 		testdata.MsgServerImpl{},
 	)
 
-	handler := app.MsgServiceRouter().HybridHandlerByMsgName("testpb.MsgCreateDog")
+	handler := app.MsgServiceRouter().HandlerByMsgName("testpb.MsgCreateDog")
 
 	require.NotNil(t, handler)
 	require.NoError(t, app.Init())

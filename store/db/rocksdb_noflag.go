@@ -8,19 +8,15 @@ import (
 	"cosmossdk.io/store/v2"
 )
 
-var (
-	_ store.RawDB = (*RocksDB)(nil)
-)
+var _ store.RawDB = (*RocksDB)(nil)
 
 // RocksDB implements RawDB using RocksDB as the underlying storage engine.
 // It is used for only store v2 migration, since some clients use RocksDB as
 // the IAVL v0/v1 backend.
-type RocksDB struct {
-}
+type RocksDB struct{}
 
 func NewRocksDB(name, dataDir string) (*RocksDB, error) {
 	panic("rocksdb must be built with -tags rocksdb")
-
 }
 
 func NewRocksDBWithOpts(dataDir string, opts store.DBOptions) (*RocksDB, error) {
@@ -57,8 +53,7 @@ func (db *RocksDB) NewBatchWithSize(_ int) store.RawBatch {
 
 var _ corestore.Iterator = (*rocksDBIterator)(nil)
 
-type rocksDBIterator struct {
-}
+type rocksDBIterator struct{}
 
 func (itr *rocksDBIterator) Domain() (start, end []byte) {
 	panic("rocksdb must be built with -tags rocksdb")
@@ -92,8 +87,7 @@ func (itr *rocksDBIterator) assertIsValid() {
 	panic("rocksdb must be built with -tags rocksdb")
 }
 
-type rocksDBBatch struct {
-}
+type rocksDBBatch struct{}
 
 func (b *rocksDBBatch) Set(key, value []byte) error {
 	panic("rocksdb must be built with -tags rocksdb")

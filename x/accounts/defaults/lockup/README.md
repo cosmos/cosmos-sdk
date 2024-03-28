@@ -1,4 +1,4 @@
-# LockUp Accounts
+# Lockup Accounts
 
 
 * [Vesting Account Types](#vesting-account-types)

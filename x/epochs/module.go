@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/simulation"
 	"cosmossdk.io/x/epochs/types"
@@ -26,7 +25,7 @@ var (
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-
+	
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
 )
@@ -64,11 +63,6 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// RegisterInterfaces registers the authz module's interface types
-// Keep this func for suitable app legacy
-func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 }
 
 // RegisterServices registers module services.

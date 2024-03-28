@@ -341,8 +341,8 @@ func CounterModule() ModuleOption {
 
 func EpochsModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs["epochs"] = &appv1alpha1.ModuleConfig{
-			Name:   "epochs",
+		config.ModuleConfigs[testutil.EpochsModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.EpochsModuleName,
 			Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 		}
 	}

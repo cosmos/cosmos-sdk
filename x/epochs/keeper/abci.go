@@ -15,24 +15,25 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	logger := k.Logger()
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 	err := k.EpochInfo.Walk(
 		ctx,
 		nil,
 		func(key string, epochInfo types.EpochInfo) (stop bool, err error) {
 			// If blocktime < initial epoch start time, return
-			if k.environment.HeaderService.GetHeaderInfo(ctx).Time.Before(epochInfo.StartTime) {
+			if headerInfo.Time.Before(epochInfo.StartTime) {
 				return false, nil
 			}
 			// if epoch counting hasn't started, signal we need to start.
 			shouldInitialEpochStart := !epochInfo.EpochCountingStarted
 
 			epochEndTime := epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
-			shouldEpochStart := (k.environment.HeaderService.GetHeaderInfo(ctx).Time.After(epochEndTime)) || shouldInitialEpochStart
+			shouldEpochStart := (headerInfo.Time.After(epochEndTime)) || shouldInitialEpochStart
 
 			if !shouldEpochStart {
 				return false, nil
 			}
-			epochInfo.CurrentEpochStartHeight = k.environment.HeaderService.GetHeaderInfo(ctx).Height
+			epochInfo.CurrentEpochStartHeight = headerInfo.Height
 
 			if shouldInitialEpochStart {
 				epochInfo.EpochCountingStarted = true

@@ -8,13 +8,12 @@ import "cosmos/epochs/v1beta1/genesis.proto";
 
 option go_package = "cosmossdk.io/x/epochs/types";
 
-// EventCreateGroup is an event emitted when a group is created.
+// EventEpochEnd is an event emitted when an epoch end.
 message EventEpochEnd {
-
   int64 epoch_number = 1;
 }
 
-// EventUpdateGroup is an event emitted when a group is updated.
+// EventEpochStart is an event emitted when an epoch start.
 message EventEpochStart {
 
   int64 epoch_number     = 1;

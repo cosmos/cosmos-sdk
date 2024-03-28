@@ -38,13 +38,21 @@ func NewItem[V any](
 // Get gets the item, if it is not set it returns an ErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.
 func (i Item[V]) Get(ctx context.Context) (V, error) {
+	var toCache bool
 	if i.getContainer != nil {
 		cached, found := i.getContainer(ctx).Get(i.m.prefix)
 		if found {
 			return cached.(V), nil
+		} else {
+			toCache = true
 		}
 	}
-	return i.m.Get(ctx, noKey{})
+	v, err := i.m.Get(ctx, noKey{})
+	if err == nil && toCache {
+		i.getContainer(ctx).Set(i.m.prefix, v)
+	}
+
+	return v, err
 }
 
 // Set sets the item in the store. If Value encoding fails then an ErrEncoding is returned.

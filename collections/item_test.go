@@ -10,9 +10,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
-	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 )
@@ -69,9 +69,18 @@ func TestCacheCtx(t *testing.T) {
 	require.Equal(t, uint64(1000), v.(uint64))
 
 	// get
+	// Remove item from cache
+	ctx.Cache.GetContainer([]byte(actorName)).Remove(NewPrefix("item"))
+
 	i, err := item.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, uint64(1000), i)
+
+	// item.Get() should add item to cache
+	cacheContainer = ctx.Cache.GetContainer([]byte(actorName))
+	v, ok = cacheContainer.Get([]byte("item"))
+	require.True(t, ok)
+	require.Equal(t, uint64(1000), v.(uint64))
 
 	// has
 	has, err := item.Has(ctx)

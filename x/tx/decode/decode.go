@@ -2,10 +2,12 @@ package decode
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
@@ -89,6 +91,10 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
+	if err := rejectAminoUnorderedTx(&authInfo, &body); err != nil {
+		return nil, err
+	}
+
 	theTx := &v1beta1.Tx{
 		Body:       &body,
 		AuthInfo:   &authInfo,
@@ -125,4 +131,32 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		TxBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
 		Signers:                      signers,
 	}, nil
+}
+
+// rejectAminoUnorderedTx checks if the given transaction should be rejected
+// based on the provided authentication information and transaction body. It
+// ensures the following:
+//
+// - The transaction must be unordered
+// - Each SignerInfo in the transaction must be of type ModeInfo_Single (i.e. multisigs are not allowed)
+// - The mode of each SignerInfo must NOT be SIGN_MODE_LEGACY_AMINO_JSON
+//
+// We return <nil> if the transaction is valid, otherwise an error is returned.
+func rejectAminoUnorderedTx(authInfo *v1beta1.AuthInfo, body *v1beta1.TxBody) error {
+	if !body.Unordered {
+		return nil
+	}
+
+	for _, info := range authInfo.SignerInfos {
+		single, ok := info.ModeInfo.Sum.(*v1beta1.ModeInfo_Single_)
+		if !ok {
+			return fmt.Errorf("unexpected mode info: %T; must be %T", info.ModeInfo.Sum, &v1beta1.ModeInfo_Single_{})
+		}
+
+		if single.Single.Mode == signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+			return errors.New("signing unordered txs with amino is prohibited")
+		}
+	}
+
+	return nil
 }

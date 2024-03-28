@@ -19,7 +19,7 @@ The x/accounts/lockup module provides the implementation for lockup accounts wit
 
 ### BaseVestingAccount
 
-The base vesting account is used by all default lockup accounts. It contains the basic information for a vesting account. The Base vesting account keeps knowledge of the staking delegations from the  account.
+The base vesting account is used by all default lockup accounts. It contains the basic information for a vesting account. The Base vesting account keeps knowledge of the staking delegations from the account.
 
 ```go
 type BaseLockup struct {

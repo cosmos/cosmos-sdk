@@ -232,6 +232,8 @@ func SimulateFromSeed(
 
 		logWriter.AddEntry(EndBlockEntry(blockHeight))
 
+		app.WorkingHash()
+
 		if config.Commit {
 			_, err := app.Commit()
 			if err != nil {

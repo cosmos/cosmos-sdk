@@ -235,7 +235,7 @@ func simulateMsgSubmitProposal(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		expedited := r.Intn(2) == 0
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true, expedited)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true, true, expedited)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "skip deposit"), nil, nil
@@ -288,11 +288,20 @@ func simulateMsgSubmitProposal(
 
 		opMsg := simtypes.NewOperationMsg(msg, true, "")
 
-		// get the submitted proposal ID
+		// Get the submitted proposal ID (current sequence value minus one).
 		proposalID, err := k.ProposalID.Peek(ctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate proposalID"), nil, err
 		}
+		proposalID--
+
+		proposal, err := k.Proposals.Get(ctx, proposalID)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to retrieve proposal"), nil, err
+		}
+
+		unixDiff := proposal.VotingEndTime.Unix() - proposal.VotingStartTime.Unix()
+		voteTime := time.Unix(r.Int63n(unixDiff), 0)
 
 		// 2) Schedule operations for votes
 		// 2.1) first pick a number of people to vote.
@@ -304,14 +313,11 @@ func simulateMsgSubmitProposal(
 
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
-		params, _ := k.Params.Get(ctx)
-		votingPeriod := params.VotingPeriod
 
 		fops := make([]simtypes.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
-			whenVote := ctx.HeaderInfo().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fops[i] = simtypes.FutureOperation{
-				BlockTime: whenVote,
+				BlockTime: voteTime,
 				Op:        operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID)),
 			}
 		}
@@ -342,7 +348,7 @@ func SimulateMsgDeposit(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to get proposal"), nil, err
 		}
 
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, p.Expedited)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, false, p.Expedited)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "skip deposit"), nil, nil
@@ -585,7 +591,8 @@ func randomDeposit(
 	bk types.BankKeeper,
 	k *keeper.Keeper,
 	addr sdk.AccAddress,
-	useMinAmount bool,
+	useMinInitAmt bool,
+	useMinAmt bool,
 	expedited bool,
 ) (deposit sdk.Coins, skip bool, err error) {
 	account := ak.GetAccount(ctx, addr)
@@ -617,21 +624,26 @@ func randomDeposit(
 
 	threshold := minDepositAmount.ToLegacyDec().Mul(minDepositRatio).TruncateInt()
 
-	minAmount := sdkmath.ZeroInt()
-	if useMinAmount {
+	minInitAmt := sdkmath.ZeroInt()
+	if useMinInitAmt {
 		minDepositPercent, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
 		if err != nil {
 			return nil, false, err
 		}
 
-		minAmount = sdkmath.LegacyNewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
+		minInitAmt = sdkmath.LegacyNewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
 	}
 
-	amount, err := simtypes.RandPositiveInt(r, minDepositAmount.Sub(minAmount))
+	minAmt := sdkmath.ZeroInt()
+	if useMinAmt {
+		minAmt = minDepositAmount
+	}
+
+	amount, err := simtypes.RandPositiveInt(r, minDepositAmount)
 	if err != nil {
 		return nil, false, err
 	}
-	amount = amount.Add(minAmount)
+	amount = amount.Add(minInitAmt).Add(minAmt)
 
 	if amount.GT(spendableBalance) || amount.LT(threshold) {
 		return nil, true, nil

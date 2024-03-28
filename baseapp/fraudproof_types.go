@@ -13,7 +13,7 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
-var ErrMoreThanOneBlockTypeUsed = errors.New("fraud proof has not exactly one type of fraudulent state transitions marked nil")
+var ErrNotExactlyOneTransitionTypePresent = errors.New("fraud proof has not exactly one type of fraudulent state transitions marked nil")
 
 // FraudProof represents a single-round fraudProof
 type FraudProof struct {
@@ -22,7 +22,7 @@ type FraudProof struct {
 
 	PreStateAppHash      []byte
 	ExpectedValidAppHash []byte
-	// A map from module name to state witness
+	// A map from module store key to state witness
 	stateWitness map[string]StateWitness
 
 	// Fraudulent state transition has to be one of these
@@ -32,11 +32,12 @@ type FraudProof struct {
 	FraudulentEndBlock   *abci.RequestEndBlock
 }
 
-// StateWitness with a list of all witness data
+// StateWitness with a list of all witness data, for a module
 type StateWitness struct {
-	// store level proof
+	// store level proof (proof of the substore belonging to the global store)
 	Proof    tmcrypto.ProofOp
 	RootHash []byte
+
 	// List of witness data
 	WitnessData []*WitnessData
 }
@@ -99,6 +100,10 @@ func (f *FraudProof) GetFraudulentBlockHeight() int64 {
 }
 
 func (f *FraudProof) GetModules() []string {
+	return f.GetStateWitnessKeys()
+}
+
+func (f *FraudProof) GetStateWitnessKeys() []string {
 	keys := make([]string, 0, len(f.stateWitness))
 	for k := range f.stateWitness {
 		keys = append(keys, k)
@@ -106,14 +111,14 @@ func (f *FraudProof) GetModules() []string {
 	return keys
 }
 
-// GetDeepIAVLTrees returns a map from storeKey to IAVL Deep Subtrees which have witness data and
-// initial root hash initialized from fraud proof
-func (f *FraudProof) GetDeepIAVLTrees() (map[string]*iavl.DeepSubTree, error) {
-	storeKeyToIAVLTree := make(map[string]*iavl.DeepSubTree)
-	for storeKey, stateWitness := range f.stateWitness {
-		dst := iavl.NewDeepSubTree(db.NewMemDB(), 100, false, f.BlockHeight)
+// GetModuleStoreKeysToDeepIAVLTree returns a map from module store keys to IAVL Deep Subtrees
+// which have witness data an initial root hash initialized from fraud proof
+func (f *FraudProof) GetModuleStoreKeysToDeepIAVLTree() (map[string]*iavl.DeepSubTree, error) {
+	ret := make(map[string]*iavl.DeepSubTree)
+	for moduleStoreKey, w := range f.stateWitness {
+		tree := iavl.NewDeepSubTree(db.NewMemDB(), 100, false, f.BlockHeight)
 		iavlWitnessData := make([]iavl.WitnessData, 0)
-		for _, witnessData := range stateWitness.WitnessData {
+		for _, witnessData := range w.WitnessData {
 			existenceProofs, err := convertToExistenceProofs(witnessData.Proofs)
 			if err != nil {
 				return nil, err
@@ -127,66 +132,80 @@ func (f *FraudProof) GetDeepIAVLTrees() (map[string]*iavl.DeepSubTree, error) {
 					Proofs:    existenceProofs,
 				},
 			)
-			dst.SetWitnessData(iavlWitnessData)
+			tree.SetWitnessData(iavlWitnessData)
 		}
-		dst.SetInitialRootHash(stateWitness.RootHash)
-		storeKeyToIAVLTree[storeKey] = dst
+		tree.SetInitialRootHash(w.RootHash)
+		ret[moduleStoreKey] = tree
 	}
-	return storeKeyToIAVLTree, nil
+	return ret, nil
 }
 
-// Returns true only if only one of the three pointers is nil
-func (f *FraudProof) checkFraudulentStateTransition() bool {
+func (f *FraudProof) exactlyOneTransition() bool {
+	cnt := 0
 	if f.FraudulentBeginBlock != nil {
-		return f.FraudulentDeliverTx == nil && f.FraudulentEndBlock == nil
+		cnt++
 	}
 	if f.FraudulentDeliverTx != nil {
-		return f.FraudulentEndBlock == nil
+		cnt++
 	}
-	return f.FraudulentEndBlock != nil
+	if f.FraudulentEndBlock != nil {
+		cnt++
+	}
+	return cnt == 1
 }
 
-// ValidateBasic performs fraud proof verification on a store and substore level
-func (f *FraudProof) ValidateBasic() (bool, error) {
-	if !f.checkFraudulentStateTransition() {
-		return false, ErrMoreThanOneBlockTypeUsed
+// ValidateBasic checks that the fraud proof is well-formed
+// based on https://github.com/celestiaorg/cosmos-sdk/compare/release/v0.46.x-celestia...rollkit:cosmos-sdk-old:manav/fraudproof_iavl_prototype#diff-b5f489a3fbc869bd5596de0eea860d2c9e44bcc3793be9b86bb24cc78460f9aaR147-R187
+func (f *FraudProof) ValidateBasic() error {
+	if !f.exactlyOneTransition() {
+		return ErrNotExactlyOneTransitionTypePresent
 	}
+
 	for storeKey, stateWitness := range f.stateWitness {
-		// Fraudproof verification on a store level
 		proofOp := stateWitness.Proof
 		proof, err := types.CommitmentOpDecoder(proofOp)
 		if err != nil {
-			return false, err
-		}
-		if !bytes.Equal(proof.GetKey(), []byte(storeKey)) {
-			return false, fmt.Errorf("got storeKey: %s, expected: %s", string(proof.GetKey()), storeKey)
-		}
-		appHash, err := proof.Run([][]byte{stateWitness.RootHash})
-		if err != nil {
-			return false, err
-		}
-		if !bytes.Equal(appHash[0], f.PreStateAppHash) {
-			return false, fmt.Errorf("got appHash: %s, expected: %s", string(f.PreStateAppHash), string(f.PreStateAppHash))
+			return err
 		}
 
-		// Fraudproof verification on a substore level
+		// Each proof must correspond to the correct key
+		if !bytes.Equal(proof.GetKey(), []byte(storeKey)) {
+			return fmt.Errorf("got storeKey: %s, expected: %s", string(proof.GetKey()), storeKey)
+		}
+
+		// Each substore must prove to the correct app hash
+		appHash, err := proof.Run([][]byte{stateWitness.RootHash})
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(appHash[0], f.PreStateAppHash) {
+			return fmt.Errorf("got appHash: %s, expected: %s", string(f.PreStateAppHash), string(f.PreStateAppHash))
+		}
+
+		// Now check inside the substore proofs
 		// Note: We can only verify the first witness in this witnessData
-		// with current root hash. Other proofs are verified in the IAVL tree.
-		if len(stateWitness.WitnessData) > 0 {
+		// with current root hash. Other proofs are verified in the IAVL tree. TODO(danwt): explain why
+		if 0 < len(stateWitness.WitnessData) {
 			witness := stateWitness.WitnessData[0]
 			for _, proofOp := range witness.Proofs {
 				op, existenceProof, err := getExistenceProof(*proofOp)
 				if err != nil {
-					return false, err
+					return err
 				}
 				verified := ics23.VerifyMembership(op.Spec, stateWitness.RootHash, op.Proof, op.Key, existenceProof.Value)
 				if !verified {
-					return false, fmt.Errorf("existence proof verification failed, expected rootHash: %s, key: %s, value: %s for storeKey: %s", string(stateWitness.RootHash), string(op.Key), string(existenceProof.Value), storeKey)
+					return fmt.Errorf(
+						"existence proof verification failed, expected rootHash: %s, key: %s, value: %s for storeKey: %s",
+						string(stateWitness.RootHash),
+						string(op.Key),
+						string(existenceProof.Value),
+						storeKey,
+					)
 				}
 			}
 		}
 	}
-	return true, nil
+	return nil
 }
 
 func toABCI(operation iavl.Operation) (abci.Operation, error) {

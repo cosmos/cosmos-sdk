@@ -5,7 +5,6 @@
     * [BaseVestingAccount](#basevestingaccount)
     * [ContinuousVestingAccount](#continuousvestingaccount)
     * [DelayedVestingAccount](#delayedvestingaccount)
-    * [Period](#period)
     * [PeriodicVestingAccount](#periodicvestingaccount)
     * [PermanentLockedAccount](#permanentlockedaccount)
 * [Genesis Initialization](#genesis-initialization)

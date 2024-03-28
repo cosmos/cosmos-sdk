@@ -8,7 +8,6 @@ import (
 	"io"
 
 	cmttypes "github.com/cometbft/cometbft/types"
-	gogoprototypes "github.com/cosmos/gogoproto/types/any"
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -62,19 +61,19 @@ func MustMarshalJSONIndent(cdc *LegacyAmino, obj interface{}) []byte {
 }
 
 func (cdc *LegacyAmino) marshalAnys(o interface{}) error {
-	return types.UnpackInterfaces(o, gogoprototypes.AminoPacker{Cdc: cdc.Amino})
+	return types.UnpackInterfaces(o, types.AminoPacker{Cdc: cdc.Amino})
 }
 
 func (cdc *LegacyAmino) unmarshalAnys(o interface{}) error {
-	return types.UnpackInterfaces(o, gogoprototypes.AminoUnpacker{Cdc: cdc.Amino})
+	return types.UnpackInterfaces(o, types.AminoUnpacker{Cdc: cdc.Amino})
 }
 
 func (cdc *LegacyAmino) jsonMarshalAnys(o interface{}) error {
-	return types.UnpackInterfaces(o, gogoprototypes.AminoJSONPacker{Cdc: cdc.Amino})
+	return types.UnpackInterfaces(o, types.AminoJSONPacker{Cdc: cdc.Amino})
 }
 
 func (cdc *LegacyAmino) jsonUnmarshalAnys(o interface{}) error {
-	return types.UnpackInterfaces(o, gogoprototypes.AminoJSONUnpacker{Cdc: cdc.Amino})
+	return types.UnpackInterfaces(o, types.AminoJSONUnpacker{Cdc: cdc.Amino})
 }
 
 func (cdc *LegacyAmino) Marshal(o interface{}) ([]byte, error) {

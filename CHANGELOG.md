@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#19884](https://github.com/cosmos/cosmos-sdk/pull/19884) Add start customizability to start command options.
 * (x/gov) [#19853](https://github.com/cosmos/cosmos-sdk/pull/19853) Emit `depositor` in `EventTypeProposalDeposit`.
 * (x/gov) [#19844](https://github.com/cosmos/cosmos-sdk/pull/19844) Emit the proposer of governance proposals.
+* (baseapp) [#19893](https://github.com/cosmos/cosmos-sdk/pull/19893) Remove the noop code that merge empty tracing context.
 
 ## Bug Fixes
 

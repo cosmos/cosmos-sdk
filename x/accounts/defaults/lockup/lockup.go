@@ -15,6 +15,8 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -31,6 +33,8 @@ var (
 	LockingPeriodsPrefix   = collections.NewPrefix(5)
 	OwnerPrefix            = collections.NewPrefix(6)
 	WithdrawedCoinsPrefix  = collections.NewPrefix(7)
+	AdminPrefix            = collections.NewPrefix(8)
+	UnbondingClawback      = collections.NewPrefix(9)
 )
 
 var (
@@ -45,14 +49,16 @@ type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...st
 // newBaseLockup creates a new BaseLockup object.
 func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 	BaseLockup := &BaseLockup{
-		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
-		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
-		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
-		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
-		WithdrawedCoins:  collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
-		addressCodec:     d.AddressCodec,
-		headerService:    d.Environment.HeaderService,
-		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		Owner:             collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
+		Admin:             collections.NewItem(d.SchemaBuilder, AdminPrefix, "admin", collections.BytesValue),
+		UnbondingClawback: collections.NewItem(d.SchemaBuilder, UnbondingClawback, "unbonding_clawback", codec.CollValue[lockuptypes.UnbondingClawback](d.LegacyStateCodec)),
+		OriginalLocking:   collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
+		DelegatedFree:     collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
+		DelegatedLocking:  collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
+		WithdrawedCoins:   collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
+		addressCodec:      d.AddressCodec,
+		headerService:     d.Environment.HeaderService,
+		EndTime:           collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 	}
 
 	return BaseLockup
@@ -60,13 +66,17 @@ func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 
 type BaseLockup struct {
 	// Owner is the address of the account owner.
-	Owner            collections.Item[[]byte]
-	OriginalLocking  collections.Map[string, math.Int]
-	DelegatedFree    collections.Map[string, math.Int]
-	DelegatedLocking collections.Map[string, math.Int]
-	WithdrawedCoins  collections.Map[string, math.Int]
-	addressCodec     address.Codec
-	headerService    header.Service
+	Owner collections.Item[[]byte]
+	// Admin is the address who have ability to request lockup account
+	// to return the funds
+	Admin             collections.Item[[]byte]
+	UnbondingClawback collections.Item[lockuptypes.UnbondingClawback]
+	OriginalLocking   collections.Map[string, math.Int]
+	DelegatedFree     collections.Map[string, math.Int]
+	DelegatedLocking  collections.Map[string, math.Int]
+	WithdrawedCoins   collections.Map[string, math.Int]
+	addressCodec      address.Codec
+	headerService     header.Service
 	// lockup end time.
 	EndTime collections.Item[time.Time]
 }
@@ -79,6 +89,14 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupA
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
 	}
 	err = bva.Owner.Set(ctx, owner)
+	if err != nil {
+		return nil, err
+	}
+	admin, err := bva.addressCodec.StringToBytes(msg.Admin)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'admin' address: %s", err)
+	}
+	err = bva.Admin.Set(ctx, admin)
 	if err != nil {
 		return nil, err
 	}
@@ -316,6 +334,147 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 	}, nil
 }
 
+func (bva *BaseLockup) ClawbackFunds(
+	ctx context.Context, msg *lockuptypes.MsgClawback, getLockedCoinsFunc getLockedCoinsFunc,
+) (
+	*lockuptypes.MsgClawbackResponse, error,
+) {
+	// Only allow admin to trigger this operation
+	adminAddr, err := bva.addressCodec.StringToBytes(msg.Admin)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'admin' address: %s", err)
+	}
+	admin, err := bva.Admin.Get(ctx)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid admin address: %s", err)
+	}
+	if !bytes.Equal(adminAddr, admin) {
+		return nil, fmt.Errorf("sender is not the admin of this vesting account")
+	}
+
+	// Send funds back to admin
+	whoami := accountstd.Whoami(ctx)
+	fromAddress, err := bva.addressCodec.BytesToString(whoami)
+	if err != nil {
+		return nil, err
+	}
+
+	pendingClawback, err := bva.UnbondingClawback.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	clawbackTokens := sdk.Coins{}
+
+	hs := bva.headerService.GetHeaderInfo(ctx)
+
+	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time)
+	if err != nil {
+		return nil, err
+	}
+
+	// Query bond denom
+	paramReq := &stakingtypes.QueryParamsRequest{}
+	paramResp, err := accountstd.QueryModule[stakingtypes.QueryParamsResponse](ctx, paramReq)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, denom := range msg.Denoms {
+		lockedAmt := lockedCoins.AmountOf(denom)
+
+		// in case of bond denom token, check for scenario when the locked token is being bonded
+		// causing the insufficient amount of token to clawback
+		if paramResp.Params.BondDenom == denom {
+			balance, err := bva.getBalance(ctx, fromAddress, denom)
+			if err != nil {
+				return nil, err
+			}
+
+			spendable, _, err := bva.getSpenableToken(ctx, *balance, sdk.NewCoin(denom, lockedAmt))
+			if err != nil {
+				return nil, err
+			}
+
+			if spendable.AmountOf(denom).LT(lockedAmt) {
+				// in case there is not enough token to clawback, proceed to unbond token
+				err := bva.forceUnbondLockingDelegations(ctx, fromAddress, paramResp.Params.BondDenom)
+				if err != nil {
+					return nil, err
+				}
+				clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, spendable.AmountOf(denom)))
+
+				pendingAmt := lockedAmt.Sub(spendable.AmountOf(denom))
+
+				pendingClawback.UnbondingAmt = append(pendingClawback.UnbondingAmt, sdk.NewCoin(denom, pendingAmt))
+				pendingClawback.EndTime = hs.Time.Add(paramResp.Params.UnbondingTime)
+
+				// track the pending clawback that are waiting for the unbonding to go through
+				bva.UnbondingClawback.Set(ctx, pendingClawback)
+				continue
+			}
+
+		}
+		clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, lockedAmt))
+	}
+
+	msgSend := makeMsgSend(fromAddress, string(adminAddr), lockedCoins)
+	_, err = sendMessage(ctx, msgSend)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.MsgClawbackResponse{}, nil
+}
+
+// forceUnbondAllDelegations unbonds all the delegations from the  given account address
+func (bva BaseLockup) forceUnbondLockingDelegations(
+	ctx context.Context,
+	delegator string,
+	bondDenom string,
+) error {
+	// Query account all delegations
+	delReq := &stakingtypes.QueryDelegatorDelegationsRequest{
+		DelegatorAddr: delegator,
+	}
+	delResps, err := accountstd.QueryModule[stakingtypes.QueryDelegatorDelegationsResponse](ctx, delReq)
+	if err != nil {
+		return err
+	}
+
+	for _, resp := range delResps.DelegationResponses {
+		del := resp.Delegation
+		delToken, err := getDelToken(ctx, del.DelegatorAddress, del.ValidatorAddress, del.Shares, bondDenom)
+		err = bva.TrackUndelegation(ctx, sdk.Coins{delToken})
+		if err != nil {
+			return err
+		}
+
+		msgUndelegate := makeMsgUndelegate(delegator, del.ValidatorAddress, delToken)
+		_, err = sendMessage(ctx, msgUndelegate)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getDelToken(ctx context.Context, delAddr, valAddr string, share math.LegacyDec, stakeDenom string) (sdk.Coin, error) {
+	// Query account balance for the sent denom
+	req := &stakingtypes.QueryDelegatorValidatorRequest{
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
+	}
+	resp, err := accountstd.QueryModule[stakingtypes.QueryDelegatorValidatorResponse](ctx, req)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	delAmt := resp.Validator.TokensFromShares(share)
+
+	return sdk.NewCoin(stakeDenom, delAmt.TruncateInt()), nil
+}
+
 func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
@@ -469,6 +628,21 @@ func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sd
 	return resp.Balance, nil
 }
 
+func (bva BaseLockup) getSpenableToken(ctx context.Context, balance, lockedCoin sdk.Coin) (sdk.Coins, bool, error) {
+	// get lockedCoin from that are not bonded for the sent denom
+	notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, lockedCoin, lockedCoin.Denom)
+	if err != nil {
+		return nil, false, err
+	}
+
+	spendable, hasNeg := sdk.Coins{balance}.SafeSub(notBondedLockedCoin)
+	if hasNeg {
+		return sdk.NewCoins(balance), true, nil
+	}
+
+	return spendable, false, nil
+}
+
 func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, amount, lockedCoins sdk.Coins) error {
 	// Check if any sent tokens is exceeds lockup account balances
 	for _, coin := range amount {
@@ -478,16 +652,13 @@ func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, am
 		}
 		lockedAmt := lockedCoins.AmountOf(coin.Denom)
 
-		// get lockedCoin from that are not bonded for the sent denom
-		notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, sdk.NewCoin(coin.Denom, lockedAmt), coin.Denom)
+		spendable, hasNeg, err := bva.getSpenableToken(ctx, *balance, sdk.NewCoin(coin.Denom, lockedAmt))
 		if err != nil {
 			return err
 		}
-
-		spendable, hasNeg := sdk.Coins{*balance}.SafeSub(notBondedLockedCoin)
 		if hasNeg {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
-				"locked amount exceeds account balance funds: %s > %s", notBondedLockedCoin, balance)
+				"locked amount exceeds account balance funds")
 		}
 
 		if _, hasNeg := spendable.SafeSub(coin); hasNeg {

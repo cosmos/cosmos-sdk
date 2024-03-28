@@ -38,7 +38,7 @@ type BaseLockup struct {
 
 ### ContinuousVestingAccount
 
-The continuous vesting account has a future start time and begins unlocking continuously until the specified enddate.
+The continuous vesting account has a future start time and begins unlocking continuously until the specified end date.
 
 To determine the amount of coins that are vested for a given block time `T`, the
 following is performed:

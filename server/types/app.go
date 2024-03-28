@@ -8,6 +8,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
+	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
@@ -66,6 +67,9 @@ type (
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
 	AppCreator func(log.Logger, dbm.DB, io.Writer, AppOptions) Application
+
+	// ModuleInitFlags takes a start command and adds modules specific init flags.
+	ModuleInitFlags func(startCmd *cobra.Command)
 
 	// ExportedApp represents an exported app state, along with
 	// validators, consensus params and latest app height.

@@ -84,11 +84,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-<<<<<<< HEAD:simapp/simd/cmd/root_v2.go
-	initRootCmd(rootCmd, clientCtx.TxConfig, clientCtx.InterfaceRegistry, clientCtx.Codec, moduleBasicManager)
-=======
-	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
->>>>>>> def211d86 (feat(server): add custom start handler (#19854)):simapp/simd/cmd/root_di.go
+	initRootCmd(rootCmd, clientCtx.TxConfig, moduleBasicManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

@@ -115,10 +115,12 @@ type StartCmdOptions struct {
 	// PostSetup can be used to setup extra services under the same cancellable context,
 	// it's not called in stand-alone mode, only for in-process mode.
 	PostSetup func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
+	// PostSetupStandalone can be used to setup extra services under the same cancellable context,
+	PostSetupStandalone func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
 	// StartCommandHanlder can be used to customize the start command handler
-	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], inProcessConsensus bool, opts StartCmdOptions[T]) error
+	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, inProcessConsensus bool, opts StartCmdOptions) error
 }
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -282,6 +284,12 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		return err
 	}
 
+	if opts.PostSetupStandalone != nil {
+		if err := opts.PostSetupStandalone(svrCtx, clientCtx, ctx, g); err != nil {
+			return err
+		}
+	}
+
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
 			svrCtx.Logger.Error("failed to start out-of-process ABCI server", "err", err)
@@ -299,8 +307,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 }
 
 func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application,
-	metrics *telemetry.Metrics, opts StartCmdOptions,
-) error {
+	metrics *telemetry.Metrics, opts StartCmdOptions) error {
 	cmtCfg := svrCtx.Config
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
@@ -606,12 +613,7 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	}
 
 	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
-<<<<<<< HEAD
-		app, err = testnetify(svrCtx, home, appCreator, db, traceWriter)
-=======
-		var appPtr *T
-		appPtr, err = testnetify[T](svrCtx, appCreator, db, traceWriter)
->>>>>>> def211d86 (feat(server): add custom start handler (#19854))
+		app, err = testnetify(svrCtx, appCreator, db, traceWriter)
 		if err != nil {
 			return app, traceCleanupFn, err
 		}
@@ -728,11 +730,7 @@ you want to test the upgrade handler itself.
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-<<<<<<< HEAD
-func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
-=======
-func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCreator[T], db dbm.DB, traceWriter io.WriteCloser) (*T, error) {
->>>>>>> def211d86 (feat(server): add custom start handler (#19854))
+func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)

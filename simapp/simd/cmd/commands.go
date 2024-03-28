@@ -104,13 +104,7 @@ custom-field = "{{ .Custom.CustomField }}"`
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-<<<<<<< HEAD
-	interfaceRegistry codectypes.InterfaceRegistry,
-	appCodec codec.Codec,
 	basicManager module.BasicManager,
-=======
-	moduleManager *module.Manager,
->>>>>>> def211d86 (feat(server): add custom start handler (#19854))
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -124,11 +118,11 @@ func initRootCmd(
 		snapshot.Cmd(newApp),
 	)
 
-<<<<<<< HEAD
-	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
-=======
-	server.AddCommands(rootCmd, newApp, server.StartCmdOptions[servertypes.Application]{})
->>>>>>> def211d86 (feat(server): add custom start handler (#19854))
+	server.AddCommandsWithStartCmdOptions(rootCmd, simapp.DefaultNodeHome, newApp, appExport, server.StartCmdOptions{
+		AddFlags: func(startCmd *cobra.Command) {
+			crisis.AddModuleInitFlags(startCmd)
+		},
+	})
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
@@ -138,10 +132,6 @@ func initRootCmd(
 		txCommand(),
 		keys.Commands(),
 	)
-}
-
-func addModuleInitFlags(startCmd *cobra.Command) {
-	crisis.AddModuleInitFlags(startCmd)
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter

@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
+	_ "cosmossdk.io/x/accounts"
 	xauthsigning "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -85,6 +86,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		err = depinject.Inject(
 			depinject.Configs(
 				configurator.NewAppConfig(
+					configurator.AccountsModule(),
 					configurator.AuthModule(),
 					configurator.TxModule(),
 					configurator.ConsensusModule(),

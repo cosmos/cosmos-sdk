@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -82,10 +83,11 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 type AccountKeeper struct {
 	addressCodec address.Codec
 
-	environment  appmodule.Environment
-	cdc          codec.BinaryCodec
-	permAddrs    map[string]types.PermissionsForAddress
-	bech32Prefix string
+	environment       appmodule.Environment
+	cdc               codec.BinaryCodec
+	permAddrs         map[string]types.PermissionsForAddress
+	bech32Prefix      string
+	AccountsModKeeper types.AccountsModKeeper
 
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
@@ -111,7 +113,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI,
+	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI, accountsModKeeper types.AccountsModKeeper,
 	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -122,16 +124,17 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	ak := AccountKeeper{
-		addressCodec:  ac,
-		bech32Prefix:  bech32Prefix,
-		environment:   env,
-		proto:         proto,
-		cdc:           cdc,
-		permAddrs:     permAddrs,
-		authority:     authority,
-		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
-		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		addressCodec:      ac,
+		bech32Prefix:      bech32Prefix,
+		environment:       env,
+		proto:             proto,
+		cdc:               cdc,
+		AccountsModKeeper: accountsModKeeper,
+		permAddrs:         permAddrs,
+		authority:         authority,
+		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -274,4 +277,41 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 		panic(err)
 	}
 	return params
+}
+
+func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*types.NonAtomicExecResult, error) {
+	msgResponses := make([]*types.NonAtomicExecResult, 0, len(msgs))
+
+	for _, msg := range msgs {
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := m.ValidateBasic(); err != nil {
+				value := &types.NonAtomicExecResult{Error: err.Error()}
+				msgResponses = append(msgResponses, value)
+				continue
+			}
+		}
+
+		if err := ak.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+			result, err := ak.AccountsModKeeper.SendModuleMessageUntyped(ctx, signer, msg)
+			if err != nil {
+				// If an error occurs during message execution, append error response
+				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
+				msgResponses = append(msgResponses, response)
+			} else {
+				resp, err := codectypes.NewAnyWithValue(result)
+				if err != nil {
+					response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
+					msgResponses = append(msgResponses, response)
+				}
+				response := &types.NonAtomicExecResult{Resp: resp, Error: ""}
+				msgResponses = append(msgResponses, response)
+			}
+
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	return msgResponses, nil
 }

@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
+	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	_ "cosmossdk.io/x/bank"
@@ -68,6 +69,7 @@ func (s *paginationTestSuite) SetupTest() {
 	app, err := testutilsims.Setup(
 		depinject.Configs(
 			configurator.NewAppConfig(
+				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.BankModule(),
 				configurator.ConsensusModule(),

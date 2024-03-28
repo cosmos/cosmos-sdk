@@ -40,6 +40,7 @@ var (
 type AppModule struct {
 	accountKeeper     keeper.AccountKeeper
 	randGenAccountsFn types.RandomGenesisAccountsFn
+	accountsModKeeper types.AccountsModKeeper
 	cdc               codec.Codec
 }
 
@@ -47,10 +48,11 @@ type AppModule struct {
 func (am AppModule) IsAppModule() {}
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, ak types.AccountsModKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
+		accountsModKeeper: ak,
 		cdc:               cdc,
 	}
 }

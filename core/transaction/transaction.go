@@ -20,12 +20,12 @@ type Tx interface {
 	// Hash returns the unique identifier for the Tx.
 	Hash() [32]byte // TODO evaluate if 32 bytes is the right size & benchmark overhead of hashing instead of using identifier
 	// GetMessages returns the list of state transitions of the Tx.
-	GetMessages() []Type
+	GetMessages() ([]Type, error)
 	// GetSenders returns the tx state transition sender.
-	GetSenders() []Identity // TODO reduce this to a single identity if accepted
+	GetSenders() ([]Identity, error) // TODO reduce this to a single identity if accepted
 	// GetGasLimit returns the gas limit of the tx. Must return math.MaxUint64 for infinite gas
 	// txs.
-	GetGasLimit() uint64
+	GetGasLimit() (uint64, error)
 	// Bytes returns the encoded version of this tx. Note: this is ideally cached
 	// from the first instance of the decoding of the tx.
 	Bytes() []byte

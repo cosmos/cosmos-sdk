@@ -39,6 +39,7 @@ type CoreAppModule interface {
 	appmodule.HasGenesisAuto
 	appmodulev2.HasBeginBlocker
 	appmodulev2.HasEndBlocker
+	appmodulev2.HasConsensusVersion
 	appmodule.HasPrecommit
 	appmodule.HasPrepareCheckState
 }

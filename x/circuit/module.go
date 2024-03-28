@@ -112,3 +112,7 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	}
 	return am.cdc.MarshalJSON(gs)
 }
+
+func RegisterPreMessageHooks(builder any) {
+	// TODO: register type
+}

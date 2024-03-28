@@ -12,12 +12,20 @@ replace (
 	github.com/cosmos/cosmos-sdk => ../../../.
 )
 
-// SimApp on main always tests the latest extracted SDK modules importing the sdk
+// Here are the short-lived replace from the SimApp
+// Replace here are pending PRs, or version to be tagged
+// replace (
+// 	<temporary replace>
+// )
 replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/client/v2 => ../../../client/v2
 	cosmossdk.io/core => ../../../core
 	cosmossdk.io/depinject => ../../../depinject
+)
+
+// SimApp on main always tests the latest extracted SDK modules importing the sdk
+replace (
 	cosmossdk.io/simapp => ../../../simapp
 	cosmossdk.io/x/accounts => ../../../x/accounts
 	cosmossdk.io/x/accounts/lockup => ../../../x/accounts/defaults/lockup
@@ -189,8 +197,6 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/onsi/gomega v1.27.4 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
 	github.com/opencontainers/runc v1.1.12 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.0 // indirect
 	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67 // indirect

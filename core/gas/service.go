@@ -45,10 +45,10 @@ type Service interface {
 
 // Meter represents a gas meter for modules consumption
 type Meter interface {
-	Consume(amount Gas, descriptor string)
-	Refund(amount Gas, descriptor string)
-	Remaining() Gas
+	Consumed() Gas
 	Limit() Gas
+	Consume(amount Gas, descriptor string) error
+	Refund(amount Gas, descriptor string) error
 }
 
 type GasConfig struct {

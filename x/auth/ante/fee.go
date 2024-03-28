@@ -13,7 +13,7 @@ import (
 
 // TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
 // the effective fee should be deducted later, and the priority should be returned in abci response.
-type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
+type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, error)
 
 // DeductFeeDecorator deducts fees from the fee payer. The fee payer is the fee granter (if specified) or first signer of the tx.
 // If the fee payer does not have the funds to pay for the fees, return an InsufficientFunds error.
@@ -49,14 +49,10 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 
-	var (
-		priority int64
-		err      error
-	)
-
+	var err error
 	fee := feeTx.GetFee()
 	if ctx.ExecMode() != sdk.ExecModeSimulate {
-		fee, priority, err = dfd.txFeeChecker(ctx, tx)
+		fee, err = dfd.txFeeChecker(ctx, tx)
 		if err != nil {
 			return ctx, err
 		}
@@ -65,9 +61,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 		return ctx, err
 	}
 
-	newCtx := ctx.WithPriority(priority)
-
-	return next(newCtx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
 }
 
 func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee sdk.Coins) error {

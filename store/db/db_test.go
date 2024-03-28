@@ -107,7 +107,7 @@ func TestPebbleDBSuite(t *testing.T) {
 }
 
 func TestRocksDBSuite(t *testing.T) {
-	db, err := NewRocksDB("test", t.TempDir())
+	db, err := NewRocksDB(t.TempDir())
 	require.NoError(t, err)
 
 	suite.Run(t, &DBTestSuite{

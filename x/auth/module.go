@@ -10,12 +10,15 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -137,6 +140,27 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 		return nil, err
 	}
 	return am.cdc.MarshalJSON(gs)
+}
+
+// TxValidator implements appmodule.HasTxValidation.
+// It replaces auth ante handlers for server/v2
+func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// supports legacy ante handler
+	// eventually do the reverse, write ante handler as TxValidator
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewSetUpContextDecorator(),
+		ante.NewValidateBasicDecorator(),
+		ante.NewTxTimeoutHeightDecorator(),
+		ante.NewValidateMemoDecorator(am.accountKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
+		ante.NewValidateSigCountDecorator(am.accountKeeper),
+	}
+
+	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
+	_, err := anteHandler(sdkCtx, nil /** do not import runtime **/, sdkCtx.ExecMode() == sdk.ExecModeSimulate)
+	return err
 }
 
 // ConsensusVersion implements HasConsensusVersion

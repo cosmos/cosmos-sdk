@@ -7,6 +7,7 @@ import (
 	"io"
 	"sort"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -55,7 +56,7 @@ type Encoder struct {
 // rules.
 func NewEncoder(options EncoderOptions) Encoder {
 	if options.FileResolver == nil {
-		options.FileResolver = protoregistry.GlobalFiles
+		options.FileResolver = gogoproto.HybridResolver
 	}
 	if options.TypeResolver == nil {
 		options.TypeResolver = protoregistry.GlobalTypes
@@ -71,7 +72,8 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"threshold_string": thresholdStringEncoder,
 		},
 		aminoFieldEncoders: map[string]FieldEncoder{
-			"legacy_coins": nullSliceAsEmptyEncoder,
+			"legacy_coins":    nullSliceAsEmptyEncoder,
+			"bytes_as_string": cosmosBytesAsString,
 		},
 		protoTypeEncoders: map[string]MessageEncoder{
 			"google.protobuf.Timestamp": marshalTimestamp,

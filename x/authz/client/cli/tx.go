@@ -67,7 +67,10 @@ func NewCmdExecAuthorization() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			grantee := clientCtx.GetFromAddress()
+			grantee, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
 				return errors.New("cannot broadcast tx during offline mode")
@@ -106,13 +109,18 @@ Examples:
 				return err
 			}
 
-			if strings.EqualFold(args[0], clientCtx.GetFromAddress().String()) {
-				return errors.New("grantee and granter should be different")
+			grantee := args[0]
+			if _, err := clientCtx.AddressCodec.StringToBytes(grantee); err != nil {
+				return err
 			}
 
-			grantee, err := clientCtx.AddressCodec.StringToBytes(args[0])
+			granter, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
+			}
+
+			if strings.EqualFold(grantee, granter) {
+				return errors.New("grantee and granter should be different")
 			}
 
 			var authorization authz.Authorization
@@ -211,11 +219,11 @@ Examples:
 
 				switch args[1] {
 				case delegate:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit, clientCtx.ValidatorAddressCodec)
 				case unbond:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit, clientCtx.ValidatorAddressCodec)
 				default:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit, clientCtx.ValidatorAddressCodec)
 				}
 				if err != nil {
 					return err
@@ -230,7 +238,7 @@ Examples:
 				return err
 			}
 
-			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, expire)
+			msg, err := authz.NewMsgGrant(granter, grantee, authorization, expire)
 			if err != nil {
 				return err
 			}

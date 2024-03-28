@@ -31,6 +31,13 @@ clientCtx = clientCtx.
 
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
 
+Additionally, a simplification of the start command leads to the following change:
+
+```diff
+- server.AddCommands(rootCmd, newApp, func(startCmd *cobra.Command) {})
++ server.AddCommands(rootCmd, newApp, server.StartCmdOptions[servertypes.Application]{})
+```
+
 #### Server (`app.go`)
 
 ##### Module Manager
@@ -144,6 +151,16 @@ If you were depending on `cosmossdk.io/api/tendermint`, please use the buf gener
 ### Modules
 
 #### `**all**`
+
+##### Simulation
+
+`MsgSimulatorFn` has been updated to return an error. Its context argument has been removed, and an address.Codec has
+been added to avoid the use of the Accounts.String() method.
+
+```diff
+-type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
++type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+```
 
 ##### Core API
 

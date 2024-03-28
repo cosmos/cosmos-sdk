@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/math"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/staking"
@@ -15,6 +15,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 func bootstrapGenesisTest(t *testing.T, numAddrs int) (*fixture, []sdk.AccAddress) {
@@ -127,13 +128,11 @@ func TestInitGenesis(t *testing.T) {
 	assert.Assert(t, found)
 	assert.Equal(t, types.Bonded, resVal.Status)
 
-	abcivals := make([]abci.ValidatorUpdate, len(vals))
-
+	validatorUpdates := make([]appmodule.ValidatorUpdate, len(vals))
 	for i, val := range validators {
-		abcivals[i] = val.ABCIValidatorUpdate((f.stakingKeeper.PowerReduction(f.sdkCtx)))
+		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	}
-
-	assert.DeepEqual(t, abcivals, vals)
+	assert.DeepEqual(t, validatorUpdates, vals)
 }
 
 func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
@@ -229,12 +228,11 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	vals, err := f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState)
 	assert.NilError(t, err)
 
-	abcivals := make([]abci.ValidatorUpdate, 100)
+	validatorUpdates := make([]module.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {
-		abcivals[i] = val.ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
+		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	}
-
 	// remove genesis validator
 	vals = vals[:100]
-	assert.DeepEqual(t, abcivals, vals)
+	assert.DeepEqual(t, validatorUpdates, vals)
 }

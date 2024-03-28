@@ -232,11 +232,22 @@ func TestManager_Restore(t *testing.T) {
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.NoError(t, err)
+
+	// Feeding the chunks should work
+	for i, chunk := range chunks {
+		done, err := manager.RestoreChunk(chunk)
+		require.NoError(t, err)
+		if i == len(chunks)-1 {
+			assert.True(t, done)
+		} else {
+			assert.False(t, done)
+		}
+	}
 }
 
 func TestManager_TakeError(t *testing.T) {
 	snapshotter := &mockErrorCommitSnapshotter{}
-	store, err := snapshots.NewStore(GetTempDir(t))
+	store, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 	manager := snapshots.NewManager(store, opts, snapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
 

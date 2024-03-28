@@ -8,11 +8,11 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+
 	"cosmossdk.io/depinject"
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
@@ -55,35 +55,40 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		depinject.Supply(appConfig),
 	}
 
+	moduleRegistry, err := internal.ModulesByModuleTypeName()
+	if err != nil {
+		return depinject.Error(err)
+	}
+
 	for _, module := range appConfig.Modules {
 		if module.Name == "" {
 			return depinject.Error(fmt.Errorf("module is missing name"))
 		}
 
-		if module.Config == nil {
-			return depinject.Error(fmt.Errorf("module %q is missing a config object", module.Name))
-		}
-
-		msgType, err := protoregistry.GlobalTypes.FindMessageByURL(module.Config.TypeUrl)
-		if err != nil {
-			return depinject.Error(err)
-		}
-
-		modules, err := internal.ModulesByProtoMessageName()
-		if err != nil {
-			return depinject.Error(err)
-		}
-
-		init, ok := modules[msgType.Descriptor().FullName()]
-		if !ok {
-			modDesc := proto.GetExtension(msgType.Descriptor().Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
-			if modDesc == nil {
-				return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
-					module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
+		moduleType := module.TypeUrl
+		if moduleType == "" {
+			if module.Config == nil {
+				return depinject.Error(fmt.Errorf("module %q is missing a type and a config", module.Name))
 			}
 
+			moduleType = module.Config.TypeUrl
+		}
+
+		init, ok := moduleRegistry[moduleType]
+		if !ok {
+			// TODO:
+			//modDesc := proto.GetExtension(msgType.Descriptor().Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
+			//if modDesc == nil {
+			//	return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
+			//		module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(moduleRegistry)))
+			//}
+
 			return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to make a module ready for app wiring: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",
-				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
+				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(moduleRegistry)))
+		}
+
+		if module.Config == nil {
+			return depinject.Error(fmt.Errorf("module %q is missing a config object", module.Name))
 		}
 
 		config := init.ConfigProtoMessage.ProtoReflect().Type().New().Interface()

@@ -2,8 +2,9 @@ package appconfig
 
 import (
 	"reflect"
+	"strings"
 
-	"google.golang.org/protobuf/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
@@ -19,12 +20,34 @@ var Register = RegisterModule
 // Protobuf message types used for module configuration should define the
 // cosmos.app.v1alpha.module option and must explicitly specify go_package
 // to make debugging easier for users.
-func RegisterModule(msg proto.Message, options ...Option) {
-	ty := reflect.TypeOf(msg)
+func RegisterModule(config any, options ...Option) {
+	ty := reflect.TypeOf(config)
 	init := &internal.ModuleInitializer{
-		ConfigProtoMessage: msg,
-		ConfigGoType:       ty,
+		ConfigGoType: ty,
 	}
+
+	var structTy reflect.Type
+	if msg := config.(gogoproto.Message); msg == nil {
+		init.ConfigProtoMessage = msg
+	} else {
+		if ty.Kind() != reflect.Struct {
+			panic("config must be a struct")
+		}
+
+		structTy = ty
+	}
+
+	numMethods := structTy.NumMethod()
+	for i := 0; i < numMethods; i++ {
+		method := structTy.Method(i)
+		f := method.Func.Interface()
+		if strings.HasPrefix(method.Name, "Provide") {
+			options = append(options, Provide(f))
+		} else if strings.HasPrefix(method.Name, "Invoke") {
+			options = append(options, Invoke(f))
+		}
+	}
+
 	internal.ModuleRegistry[ty] = init
 
 	for _, option := range options {

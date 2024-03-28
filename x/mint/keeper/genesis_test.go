@@ -71,6 +71,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 		math.LegacyNewDecWithPrec(9, 2),
 		math.LegacyNewDecWithPrec(69, 2),
 		uint64(60*60*8766/5),
+		math.ZeroInt(),
 	)
 
 	err := s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)

@@ -12,7 +12,6 @@ type SignatureHandler interface {
 	// established format.
 	ValidatePubKey([]byte) error
 
-	// not sure if needed
 	RecoverPubKey([]byte) ([]byte, error)
 
 	GetSignBytes(msgs []byte, pubkeys [][]byte) error

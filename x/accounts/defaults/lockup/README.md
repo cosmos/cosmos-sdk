@@ -70,7 +70,7 @@ type DelayedLockingAccount struct {
 
 ### PeriodicVestingAccount
 
-The periodic vesting account locks tokens for a series of periods. The account can receive coins and send coins. After all the periods all the coins are unlocked and the account can send coins.
+The periodic vesting account locks tokens for a series of periods. The account can receive coins and send coins. After all the periods, all the coins are unlocked and the account can send coins.
 
 Periodic vesting accounts require calculating the coins released during each period for a given block time `T`. Note that multiple periods could have passed when calling `GetVestedCoins`, so we must iterate over each period until the end of that period is after `T`.
 
@@ -96,7 +96,7 @@ type PeriodicLockingAccount struct {
 
 ### PermanentLockedAccount
 
-The permanent vesting account permentally locks the coins in the account. The account can only receive coins and cannot send coins. The account can be used to lock coins for a long period of time.
+The permanent vesting account permanently locks the coins in the account. The account can only receive coins and cannot send coins. The account can be used to lock coins for a long period of time.
 
 ```go
 type PermanentLockingAccount struct {
@@ -156,8 +156,8 @@ V' = 0
     V' = 4
     ```
 
-6. Sends 2 coins. At this point the account cannot send anymore until further
-coins vest or it receives additional coins. It can still however, delegate.
+6. Sends 2 coins. At this point, the account cannot send anymore until further
+coins vest or it receives additional coins. It can still, however, delegate.
 
     ```text
     BC = 2
@@ -198,7 +198,7 @@ Same initial starting conditions as the simple example.
 
 6. Undelegate from validator B (5 coins). The account at this point can only
 send 2.5 coins unless it receives more coins or until more coins vest.
-It can still however, delegate.
+It can still, however, delegate.
 
     ```text
     DV = 5 - 2.5 = 2.5

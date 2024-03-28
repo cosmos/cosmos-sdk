@@ -75,10 +75,10 @@ if err := rootCmd.Execute(); err != nil {
 
 ### Keyring
 
-`autocli` uses a keyring for key name resolving and signing transactions. Providing a keyring is optional, but if you want to use the `autocli` generated commands to sign transactions, you must provide a keyring.
+`autocli` uses a keyring for key name resolving names and signing transactions.
 
 :::tip
-This provides a better UX as it allows to resolve key names directly from the keyring in all transactions and commands.
+AutoCLI provides a better UX than normal cli as it allows to resolve key names directly from the keyring in all transactions and commands.
 
 ```sh
 <appd> q bank balances alice
@@ -87,8 +87,9 @@ This provides a better UX as it allows to resolve key names directly from the ke
 
 :::
 
-The keyring to be provided to `client/v2` must match the `client/v2` keyring interface.
-The keyring should be provided in the `appOptions` struct as follows, and can be gotten from the client context:
+The keyring used for resolving names and signing transactions is provided via the `client.Context`.
+The keyring is then converted to the `client/v2/autocli/keyring` interface.
+If no keyring is provided, the `autocli` generated command will not be able to sign transactions, but will still be able to query the chain.
 
 :::tip
 The Cosmos SDK keyring and Hubl keyring both implement the `client/v2/autocli/keyring` interface, thanks to the following wrapper:
@@ -98,18 +99,6 @@ keyring.NewAutoCLIKeyring(kb)
 ```
 
 :::
-
-:::warning
-When using AutoCLI the keyring will only be created once and before any command flag parsing.
-:::
-
-```go
-// Set the keyring in the appOptions
-appOptions.Keyring = keyring
-
-err := autoCliOpts.EnhanceRootCommand(rootCmd)
-...
-```
 
 ## Signing
 
@@ -220,14 +209,16 @@ For more information on `hubl`, including how to configure a new chain and query
 # Off-Chain
 
 Off-chain functionalities allow you to sign and verify files with two commands:
-+ `sign-file` for signing a file.
-+ `verify-file` for verifying a previously signed file.
+
+* `sign-file` for signing a file.
+* `verify-file` for verifying a previously signed file.
 
 Signing a file will result in a Tx with a `MsgSignArbitraryData` as described in the [Off-chain CIP](https://github.com/cosmos/cips/blob/main/cips/cip-X.md).
 
 ## Sign a file
 
 To sign a file `sign-file` command offers some helpful flags:
+
 ```text
       --encoding string          Choose an encoding method for the file content to be added as msg data (no-encoding|base64|hex) (default "no-encoding")
       --indent string            Choose an indent for the tx (default "  ")
@@ -237,8 +228,10 @@ To sign a file `sign-file` command offers some helpful flags:
 ```
 
 The `encoding` flag lets you choose how the contents of the file should be encoded. For example:
-+ `simd off-chain sign-file alice myFile.json`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json`
+
+  * ```json
       {
         "@type":  "/offchain.MsgSignArbitraryData",
         "appDomain":  "simd",
@@ -246,8 +239,10 @@ The `encoding` flag lets you choose how the contents of the file should be encod
         "data":  "Hello World!\n"
       }
      ```
-+ `simd off-chain sign-file alice myFile.json --encoding base64`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json --encoding base64`
+
+  * ```json
       {
         "@type":  "/offchain.MsgSignArbitraryData",
         "appDomain":  "simd",
@@ -255,8 +250,10 @@ The `encoding` flag lets you choose how the contents of the file should be encod
         "data":  "SGVsbG8gV29ybGQhCg=="
       }
      ```
-+ `simd off-chain sign-file alice myFile.json --encoding hex`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json --encoding hex`
+
+  * ```json
         {
           "@type":  "/offchain.MsgSignArbitraryData",
           "appDomain":  "simd",

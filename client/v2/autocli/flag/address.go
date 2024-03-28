@@ -9,16 +9,18 @@ import (
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type addressStringType struct{}
 
-func (a addressStringType) NewValue(_ context.Context, b *Builder) Value {
-	return &addressValue{addressCodec: b.AddressCodec, keyring: b.Keyring}
+func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
+	return &addressValue{addressCodec: b.AddressCodec, keyring: getKeyringFromCtx(ctx)}
 }
 
 func (a addressStringType) DefaultValue() string {
@@ -27,8 +29,8 @@ func (a addressStringType) DefaultValue() string {
 
 type validatorAddressStringType struct{}
 
-func (a validatorAddressStringType) NewValue(_ context.Context, b *Builder) Value {
-	return &addressValue{addressCodec: b.ValidatorAddressCodec, keyring: b.Keyring}
+func (a validatorAddressStringType) NewValue(ctx context.Context, b *Builder) Value {
+	return &addressValue{addressCodec: b.ValidatorAddressCodec, keyring: getKeyringFromCtx(ctx)}
 }
 
 func (a validatorAddressStringType) DefaultValue() string {
@@ -62,9 +64,11 @@ func (a *addressValue) Set(s string) error {
 		return nil
 	}
 
-	// failed all validation, just accept the input.
-	// TODO(@julienrbrt), for final client/v2 2.0.0 revert the logic and
-	// do a better keyring instantiation.
+	_, err = a.addressCodec.StringToBytes(s)
+	if err != nil {
+		return fmt.Errorf("invalid account address or key name: %w", err)
+	}
+
 	a.value = s
 
 	return nil
@@ -80,7 +84,7 @@ func (a consensusAddressStringType) NewValue(ctx context.Context, b *Builder) Va
 	return &consensusAddressValue{
 		addressValue: addressValue{
 			addressCodec: b.ConsensusAddressCodec,
-			keyring:      b.Keyring,
+			keyring:      getKeyringFromCtx(ctx),
 		},
 	}
 }
@@ -127,11 +131,7 @@ func (a *consensusAddressValue) Set(s string) error {
 	var pk cryptotypes.PubKey
 	err2 := cdc.UnmarshalInterfaceJSON([]byte(s), &pk)
 	if err2 != nil {
-		// failed all validation, just accept the input.
-		// TODO(@julienrbrt), for final client/v2 2.0.0 revert the logic and
-		// do a better keyring instantiation.
-		a.value = s
-		return nil
+		return fmt.Errorf("input isn't a pubkey %w or is an invalid account address: %w", err, err2)
 	}
 
 	a.value, err = a.addressCodec.BytesToString(pk.Address())
@@ -140,4 +140,19 @@ func (a *consensusAddressValue) Set(s string) error {
 	}
 
 	return nil
+}
+
+func getKeyringFromCtx(ctx context.Context) keyring.Keyring {
+	if ctx != nil {
+		if clientCtx := ctx.Value(client.ClientContextKey); clientCtx != nil {
+			keyring, err := sdkkeyring.NewAutoCLIKeyring(clientCtx.(*client.Context).Keyring)
+			if err != nil {
+				panic(fmt.Errorf("failed to create keyring: %w", err))
+			}
+
+			return keyring
+		}
+	}
+
+	return keyring.NoKeyring{}
 }

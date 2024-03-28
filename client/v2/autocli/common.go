@@ -56,14 +56,18 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Version:      options.Version,
 	}
 
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
+	cobraArgs, err := b.GetMinimumArgs(options)
 	if err != nil {
 		return nil, err
 	}
-
-	cmd.Args = binder.CobraArgs
+	cmd.Args = cobraArgs
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
+		if err != nil {
+			return err
+		}
+
 		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err

@@ -8,6 +8,11 @@
     * [Period](#period)
     * [PeriodicVestingAccount](#periodicvestingaccount)
     * [PermanentLockedAccount](#permanentlockedaccount)
+* [Genesis Initialization](#genesis-initialization)
+* [Examples](#examples)
+    * [Simple](#simple)
+    * [Slashing](#slashing)
+    * [Periodic Vesting](#periodic-vesting)
 
 The x/accounts/lockup module provides the implementation for lockup accounts within the x/accounts module.
 
@@ -103,8 +108,6 @@ type PermanentLockingAccount struct {
 ## Genesis Initialization
 
 <!-- TODO: once implemented -->
-
-
 
 ## Examples
 

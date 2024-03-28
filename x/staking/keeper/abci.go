@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/staking/types"
 

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/mint/types"
 

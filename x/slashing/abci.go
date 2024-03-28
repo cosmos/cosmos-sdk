@@ -2,6 +2,7 @@ package slashing
 
 import (
 	"context"
+
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/types"
 

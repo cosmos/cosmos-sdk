@@ -2,6 +2,7 @@ package crisis
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"

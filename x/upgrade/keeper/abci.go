@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/upgrade/types"
 	"errors"
 	"fmt"
+
+
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

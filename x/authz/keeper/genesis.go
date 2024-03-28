@@ -41,17 +41,27 @@ func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) error
 }
 
 // ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx context.Context) *authz.GenesisState {
+func (k Keeper) ExportGenesis(ctx context.Context) (*authz.GenesisState, error) {
 	var entries []authz.GrantAuthorization
-	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
+	err := k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
+		granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+		if err != nil {
+			return false, err
+		}
+		granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+		if err != nil {
+			return false, err
+		}
 		entries = append(entries, authz.GrantAuthorization{
-			Granter:       granter.String(),
-			Grantee:       grantee.String(),
+			Granter:       granterAddr,
+			Grantee:       granteeAddr,
 			Expiration:    grant.Expiration,
 			Authorization: grant.Authorization,
 		})
-		return false
+		return false, nil
 	})
-
-	return authz.NewGenesisState(entries)
+	if err != nil {
+		return nil, err
+	}
+	return authz.NewGenesisState(entries), nil
 }

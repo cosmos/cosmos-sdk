@@ -22,17 +22,19 @@ func TestRandomizedGenState(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 	s := rand.NewSource(1)
 	r := rand.New(s)
-
+	cdcOpts := codectestutil.CodecOptions{}
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	simState := moduletypes.SimulationState{
-		AppParams:    make(simtypes.AppParams),
-		Cdc:          encCfg.Codec,
-		Rand:         r,
-		NumBonded:    3,
-		Accounts:     accounts,
-		InitialStake: math.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		AppParams:      make(simtypes.AppParams),
+		Cdc:            encCfg.Codec,
+		AddressCodec:   cdcOpts.GetAddressCodec(),
+		ValidatorCodec: cdcOpts.GetValidatorCodec(),
+		Rand:           r,
+		NumBonded:      3,
+		Accounts:       accounts,
+		InitialStake:   math.NewInt(1000),
+		GenState:       make(map[string]json.RawMessage),
 	}
 
 	simulation.RandomizedGenState(&simState)

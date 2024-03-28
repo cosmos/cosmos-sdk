@@ -98,7 +98,7 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db, version), nil
 }
 
-func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
+func (db *Database) getSlice(storeKey []byte, version uint64, key []byte) (*grocksdb.Slice, error) {
 	if version < db.tsLow {
 		return nil, errors.ErrVersionPruned{EarliestVersion: db.tsLow}
 	}
@@ -131,7 +131,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), nil
 }
 
-func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
+func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return false, err
@@ -140,7 +140,7 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 	return slice.Exists(), nil
 }
 
-func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
+func (db *Database) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)
@@ -165,7 +165,7 @@ func (db *Database) Prune(version uint64) error {
 	return nil
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (db *Database) Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errors.ErrKeyEmpty
 	}
@@ -181,7 +181,7 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 	return newRocksDBIterator(itr, prefix, start, end, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errors.ErrKeyEmpty
 	}
@@ -208,11 +208,11 @@ func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 	return readOpts
 }
 
-func storePrefix(storeKey string) []byte {
-	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
+func storePrefix(storeKey []byte) []byte {
+	return append([]byte(StorePrefixTpl), storeKey...)
 }
 
-func prependStoreKey(storeKey string, key []byte) []byte {
+func prependStoreKey(storeKey []byte, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 

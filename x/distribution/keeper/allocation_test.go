@@ -32,7 +32,8 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -47,6 +48,9 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
+	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
@@ -55,11 +59,13 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		stakingKeeper,
 		poolKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
+		authorityAddr,
 	)
 
 	// create validator with 50% commission
-	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	operatorAddr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valConsPk0.Address())
+	require.NoError(t, err)
+	val, err := distrtestutil.CreateValidator(valConsPk0, operatorAddr, math.NewInt(100))
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val, nil).AnyTimes()
@@ -92,7 +98,8 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -107,6 +114,9 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
+	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
@@ -115,7 +125,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		stakingKeeper,
 		poolKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
+		authorityAddr,
 	)
 
 	// reset fee pool & set params
@@ -124,14 +134,18 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// create validator with 50% commission
 	valAddr0 := sdk.ValAddress(valConsAddr0)
-	val0, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	operatorAddr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valConsPk0.Address())
+	require.NoError(t, err)
+	val0, err := distrtestutil.CreateValidator(valConsPk0, operatorAddr, math.NewInt(100))
 	require.NoError(t, err)
 	val0.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val0, nil).AnyTimes()
 
 	// create second validator with 0% commission
 	valAddr1 := sdk.ValAddress(valConsAddr1)
-	val1, err := distrtestutil.CreateValidator(valConsPk1, math.NewInt(100))
+	operatorAddr, err = stakingKeeper.ValidatorAddressCodec().BytesToString(valConsPk1.Address())
+	require.NoError(t, err)
+	val1, err := distrtestutil.CreateValidator(valConsPk1, operatorAddr, math.NewInt(100))
 	require.NoError(t, err)
 	val1.Commission = stakingtypes.NewCommission(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk1)).Return(val1, nil).AnyTimes()
@@ -224,7 +238,8 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
@@ -239,6 +254,9 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
+	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
@@ -247,7 +265,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		stakingKeeper,
 		poolKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
+		authorityAddr,
 	)
 
 	// reset fee pool
@@ -256,21 +274,27 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	// create validator with 10% commission
 	valAddr0 := sdk.ValAddress(valConsAddr0)
-	val0, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	operatorAddr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valConsPk0.Address())
+	require.NoError(t, err)
+	val0, err := distrtestutil.CreateValidator(valConsPk0, operatorAddr, math.NewInt(100))
 	require.NoError(t, err)
 	val0.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val0, nil).AnyTimes()
 
 	// create second validator with 10% commission
 	valAddr1 := sdk.ValAddress(valConsAddr1)
-	val1, err := distrtestutil.CreateValidator(valConsPk1, math.NewInt(100))
+	operatorAddr, err = stakingKeeper.ValidatorAddressCodec().BytesToString(valConsPk1.Address())
+	require.NoError(t, err)
+	val1, err := distrtestutil.CreateValidator(valConsPk1, operatorAddr, math.NewInt(100))
 	require.NoError(t, err)
 	val1.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk1)).Return(val1, nil).AnyTimes()
 
 	// create third validator with 10% commission
 	valAddr2 := sdk.ValAddress(valConsAddr2)
-	val2, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr2).String(), valConsPk1, stakingtypes.Description{})
+	valAddr2Str, err := cdcOpts.GetValidatorCodec().BytesToString(valAddr2)
+	require.NoError(t, err)
+	val2, err := stakingtypes.NewValidator(valAddr2Str, valConsPk1, stakingtypes.Description{})
 	require.NoError(t, err)
 	val2.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk2)).Return(val2, nil).AnyTimes()

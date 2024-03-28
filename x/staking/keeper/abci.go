@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // BeginBlocker will persist the current header and validator set as a historical entry
@@ -17,7 +17,7 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 }
 
 // EndBlocker called at every block, update validator set
-func (k *Keeper) EndBlocker(ctx context.Context) ([]module.ValidatorUpdate, error) {
+func (k *Keeper) EndBlocker(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 	start := telemetry.Now()
 	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyEndBlocker)
 	return k.BlockValidatorUpdates(ctx)

@@ -1,6 +1,10 @@
 package keeper
 
-import "context"
+import (
+	"context"
+
+	"cosmossdk.io/math"
+)
 
 // Migrator is a struct for handling in-place state migrations.
 type Migrator struct {
@@ -25,5 +29,19 @@ func (m Migrator) Migrate1to2(ctx context.Context) error {
 // Migrate2to3 migrates the x/mint module state from the consensus version 2 to
 // version 3.
 func (m Migrator) Migrate2to3(ctx context.Context) error {
+	params, err := m.keeper.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Initialize the new MaxSupply parameter with the default value
+	params.MaxSupply = math.ZeroInt()
+
+	// Set the updated params
+	err = m.keeper.Params.Set(ctx, params)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

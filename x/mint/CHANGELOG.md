@@ -27,6 +27,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [19896](https://github.com/cosmos/cosmos-sdk/pull/19896) Added a new max supply genesis param to existing params.
+
 ### Improvements
 
 ### API Breaking Changes

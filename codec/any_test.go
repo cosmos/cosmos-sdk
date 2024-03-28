@@ -45,7 +45,7 @@ func TestMarshalAny(t *testing.T) {
 
 	// deserializing cat bytes should error in an empty registry
 	err = cdc.UnmarshalInterface(catBz, &animal)
-	require.ErrorContains(t, err, "no registered implementations of type testdata.Animal")
+	require.ErrorContains(t, err, "no registered implementations of type test.Animal")
 
 	// deserializing an empty byte array will return nil, but no error
 	err = cdc.UnmarshalInterface(emptyBz, &animal)

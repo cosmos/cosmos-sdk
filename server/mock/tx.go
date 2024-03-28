@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	errorsmod "cosmossdk.io/errors"
@@ -103,8 +103,8 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
-func (msg *KVStoreTx) GetMsgsV2() ([]protov2.Message, error) {
-	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}}, nil // this is a hack for tests
+func (msg *KVStoreTx) GetReflectMessages() ([]protoreflect.Message, error) {
+	return []protoreflect.Message{(&bankv1beta1.MsgSend{FromAddress: msg.address.String()}).ProtoReflect()}, nil // this is a hack for tests
 }
 
 func (msg *KVStoreTx) GetSignBytes() []byte {

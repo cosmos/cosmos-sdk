@@ -80,7 +80,6 @@ func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) erro
 }
 
 func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisAccount) error {
-	// TODO: maybe check if impl exists?
 	addrBytes, err := k.addressCodec.StringToBytes(acc.Address)
 	if err != nil {
 		return err

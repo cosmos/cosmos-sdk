@@ -14,6 +14,21 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
+// globalTelemetryEnabled is a private variable that stores the telemetry enabled state.
+// It is set on initialization and does not change for the lifetime of the program.
+var globalTelemetryEnabled bool
+
+// initTelemetry sets the global variable based on the configuration.
+// It is called only once, at startup, to set the telemetry enabled state.
+func initTelemetry(enabled bool) {
+	globalTelemetryEnabled = enabled
+}
+
+// isTelemetryEnabled provides controlled access to check if telemetry is enabled.
+func isTelemetryEnabled() bool {
+	return globalTelemetryEnabled
+}
+
 // globalLabels defines the set of global labels that will be applied to all
 // metrics emitted using the telemetry package function wrappers.
 var globalLabels = []metrics.Label{}
@@ -95,6 +110,7 @@ type GatherResponse struct {
 
 // New creates a new instance of Metrics
 func New(cfg Config) (_ *Metrics, rerr error) {
+	initTelemetry(cfg.Enabled)
 	if !cfg.Enabled {
 		return nil, nil
 	}

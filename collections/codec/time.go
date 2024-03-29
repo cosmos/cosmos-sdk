@@ -8,47 +8,47 @@ import (
 
 var timeSize = 8
 
-type timeKey[T time.Time] struct{}
+type timeKey struct{}
 
-func NewTimeKey[T time.Time]() KeyCodec[T] { return timeKey[T]{} }
+func NewTimeKey() KeyCodec[time.Time] { return timeKey{} }
 
-func (t timeKey[T]) Encode(buffer []byte, key T) (int, error) {
+func (t timeKey) Encode(buffer []byte, key time.Time) (int, error) {
 	if len(buffer) < timeSize {
 		return 0, fmt.Errorf("buffer too small, required at least 8 bytes")
 	}
-	millis := time.Time(key).UTC().UnixNano() / int64(time.Millisecond)
+	millis := key.UTC().UnixNano() / int64(time.Millisecond)
 	binary.BigEndian.PutUint64(buffer, uint64(millis))
 	return timeSize, nil
 }
 
-func (t timeKey[T]) Decode(buffer []byte) (int, T, error) {
+func (t timeKey) Decode(buffer []byte) (int, time.Time, error) {
 	if len(buffer) != timeSize {
-		return 0, T{}, fmt.Errorf("invalid time buffer buffer size")
+		return 0, time.Time{}, fmt.Errorf("invalid time buffer buffer size")
 	}
 	millis := int64(binary.BigEndian.Uint64(buffer))
-	return timeSize, T(time.UnixMilli(millis).UTC()), nil
+	return timeSize, time.UnixMilli(millis).UTC(), nil
 }
 
-func (t timeKey[T]) Size(_ T) int { return timeSize }
+func (t timeKey) Size(_ time.Time) int { return timeSize }
 
-func (t timeKey[T]) EncodeJSON(value T) ([]byte, error) { return time.Time(value).MarshalJSON() }
+func (t timeKey) EncodeJSON(value time.Time) ([]byte, error) { return value.MarshalJSON() }
 
-func (t timeKey[T]) DecodeJSON(b []byte) (T, error) {
+func (t timeKey) DecodeJSON(b []byte) (time.Time, error) {
 	time := time.Time{}
 	err := time.UnmarshalJSON(b)
-	return T(time), err
+	return time, err
 }
 
-func (t timeKey[T]) Stringify(key T) string { return time.Time(key).String() }
-func (t timeKey[T]) KeyType() string        { return "sdk/time.Time" }
-func (t timeKey[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
+func (t timeKey) Stringify(key time.Time) string { return key.String() }
+func (t timeKey) KeyType() string                { return "sdk/time.Time" }
+func (t timeKey) EncodeNonTerminal(buffer []byte, key time.Time) (int, error) {
 	return t.Encode(buffer, key)
 }
 
-func (t timeKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
+func (t timeKey) DecodeNonTerminal(buffer []byte) (int, time.Time, error) {
 	if len(buffer) < timeSize {
-		return 0, T{}, fmt.Errorf("invalid time buffer size, wanted: %d at least, got: %d", timeSize, len(buffer))
+		return 0, time.Time{}, fmt.Errorf("invalid time buffer size, wanted: %d at least, got: %d", timeSize, len(buffer))
 	}
 	return t.Decode(buffer[:timeSize])
 }
-func (t timeKey[T]) SizeNonTerminal(key T) int { return t.Size(key) }
+func (t timeKey) SizeNonTerminal(key time.Time) int { return t.Size(key) }

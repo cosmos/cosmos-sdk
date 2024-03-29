@@ -2,11 +2,10 @@ package collections
 
 import (
 	"context"
+	"cosmossdk.io/collections/codec"
 	"errors"
 	io "io"
 	"math"
-
-	"cosmossdk.io/collections/codec"
 )
 
 var (
@@ -51,6 +50,8 @@ var (
 	// BoolKey can be used to encode booleans. It uses a single byte to represent the boolean.
 	// 0x0 is used to represent false, and 0x1 is used to represent true.
 	BoolKey = codec.NewBoolKey[bool]()
+	// TimeKey can be used to encode time.Time keys. The encoding is done using the UnixMilli
+	TimeKey = codec.NewTimeKey()
 )
 
 // VALUES
@@ -72,6 +73,8 @@ var (
 	StringValue = codec.KeyToValueCodec(StringKey)
 	// BytesValue implements a ValueCodec for bytes.
 	BytesValue = codec.KeyToValueCodec(BytesKey)
+	// TimeValue implements a ValueCodec for time.Time.
+	TimeValue = codec.KeyToValueCodec(TimeKey)
 )
 
 // Collection is the interface that all collections implement. It will eventually

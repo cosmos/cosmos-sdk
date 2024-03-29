@@ -2,6 +2,7 @@ package codec_test
 
 import (
 	"testing"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
@@ -47,5 +48,8 @@ func TestKeyCorrectness(t *testing.T) {
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			collections.Join("hello", "testing"),
 		)
+	})
+	t.Run("time.Time", func(t *testing.T) {
+		colltest.TestKeyCodec(t, collections.TimeKey, time.UnixMilli(time.Now().UnixMilli()).UTC())
 	})
 }

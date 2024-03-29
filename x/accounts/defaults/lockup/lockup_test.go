@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"

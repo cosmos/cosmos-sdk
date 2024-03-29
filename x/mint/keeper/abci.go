@@ -27,7 +27,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 	}
 
 	// recalculate inflation rate
-	totalStakingSupply, err := k.StakingTokenSupply(ctx)
+	totalSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom).Amount // fetch total supply from the bank module
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 
 	// update minter's inflation and annual provisions
 	minter.Inflation = ic(ctx, minter, params, bondedRatio)
-	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
+	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalSupply)
 	if err = k.Minter.Set(ctx, minter); err != nil {
 		return err
 	}
@@ -51,9 +51,9 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 	maxSupply := params.MaxSupply
 	// if maxSupply is not infinite, check against max_supply parameter
 	if !maxSupply.IsZero() {
-		if totalStakingSupply.Add(mintedCoins.AmountOf(params.MintDenom)).GT(maxSupply) {
-			// calculate the difference between maxSupply and totalStakingSupply
-			diff := maxSupply.Sub(totalStakingSupply)
+		if totalSupply.Add(mintedCoins.AmountOf(params.MintDenom)).GT(maxSupply) {
+			// calculate the difference between maxSupply and totalSupply
+			diff := maxSupply.Sub(totalSupply)
 			// mint the difference
 			diffCoin := sdk.NewCoin(params.MintDenom, diff)
 			diffCoins := sdk.NewCoins(diffCoin)
@@ -62,13 +62,12 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 			if err := k.MintCoins(ctx, diffCoins); err != nil {
 				return err
 			}
-			mintedCoin = mintedCoin.Sub(diffCoin)
-			mintedCoins = sdk.NewCoins(mintedCoin)
+			mintedCoins = diffCoins
 		}
 	}
 
 	// mint coins if maxSupply is infinite or total staking supply is less than maxSupply
-	if maxSupply.IsZero() || totalStakingSupply.LT(maxSupply) {
+	if maxSupply.IsZero() || totalSupply.Add(mintedCoins.AmountOf(params.MintDenom)).LT(maxSupply) {
 		// mint coins
 		if err := k.MintCoins(ctx, mintedCoins); err != nil {
 			return err

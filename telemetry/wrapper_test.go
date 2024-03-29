@@ -21,3 +21,15 @@ func TestNow(t *testing.T) {
 	telemetryTime = Now()
 	assert.Equal(t, time.Time{}, telemetryTime, "Now() should return zero time when telemetry is disabled")
 }
+
+func TestIsTelemetryEnabled(t *testing.T) {
+	initTelemetry(true)
+	if !isTelemetryEnabled() {
+		t.Errorf("isTelemetryEnabled() should return true when globalTelemetryEnabled is set to true")
+	}
+
+	initTelemetry(false)
+	if isTelemetryEnabled() {
+		t.Errorf("isTelemetryEnabled() should return false when globalTelemetryEnabled is set to false")
+	}
+}

@@ -22,9 +22,16 @@ func NewBTreeStore[V any](btree btree.BTree[V], isZero func(V) bool, valueLen fu
 	return &BTreeStore[V]{btree, isZero, valueLen}
 }
 
+// Get Implements GKVStore.
+func (ts *BTreeStore[V]) Get(key []byte) (value V) {
+	value, _ = ts.BTree.Get(key)
+	return
+}
+
 // Has Implements GKVStore.
 func (ts *BTreeStore[V]) Has(key []byte) bool {
-	return !ts.isZero(ts.Get(key))
+	_, found := ts.BTree.Get(key)
+	return found
 }
 
 func (ts *BTreeStore[V]) Iterator(start, end []byte) types.GIterator[V] {

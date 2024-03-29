@@ -354,6 +354,12 @@ func (cid CommitID) String() string {
 	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
 }
 
+// BranchStore is an interface for stores that can be branched.
+type BranchStore interface {
+	Clone() BranchStore
+	Restore(BranchStore)
+}
+
 //----------------------------------------
 // Store types
 

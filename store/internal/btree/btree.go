@@ -36,22 +36,18 @@ func NewBTree[V any]() BTree[V] {
 	}
 }
 
+// Set supports nil as value when used as overlay
 func (bt BTree[V]) Set(key []byte, value V) {
 	bt.tree.Set(newItem(key, value))
 }
 
-func (bt BTree[V]) Get(key []byte) V {
-	var empty V
-	i, found := bt.tree.Get(newItem(key, empty))
-	if !found {
-		return empty
-	}
-	return i.value
+func (bt BTree[V]) Get(key []byte) (V, bool) {
+	i, found := bt.tree.Get(newItemWithKey[V](key))
+	return i.value, found
 }
 
 func (bt BTree[V]) Delete(key []byte) {
-	var empty V
-	bt.tree.Delete(newItem(key, empty))
+	bt.tree.Delete(newItemWithKey[V](key))
 }
 
 func (bt BTree[V]) Iterator(start, end []byte) (types.GIterator[V], error) {
@@ -80,6 +76,12 @@ func (bt BTree[V]) Clear() {
 	bt.tree.Clear()
 }
 
+func (bt BTree[V]) Scan(cb func(key []byte, value V) bool) {
+	bt.tree.Scan(func(i item[V]) bool {
+		return cb(i.key, i.value)
+	})
+}
+
 // item is a btree item with byte slices as keys and values
 type item[V any] struct {
 	key   []byte
@@ -94,4 +96,9 @@ func byKeys[V any](a, b item[V]) bool {
 // newItem creates a new pair item.
 func newItem[V any](key []byte, value V) item[V] {
 	return item[V]{key: key, value: value}
+}
+
+// newItem creates a new pair item with empty value.
+func newItemWithKey[V any](key []byte) item[V] {
+	return item[V]{key: key}
 }

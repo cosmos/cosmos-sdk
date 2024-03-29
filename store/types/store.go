@@ -354,6 +354,12 @@ func (cid CommitID) String() string {
 	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
 }
 
+// BranchStore
+type BranchStore interface {
+	Clone() BranchStore
+	Restore(BranchStore)
+}
+
 //----------------------------------------
 // Store types
 

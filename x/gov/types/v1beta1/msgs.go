@@ -84,20 +84,6 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
 	}
 
-	for _, coin := range m.InitialDeposit {
-		if coin.Denom != "inj" {
-			continue
-		}
-		minDepositAmount, ok := sdk.NewIntFromString("50000000000000000000") // 50 INJ
-		if !ok {
-			// should never happen, just defensive programming
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid minDepositAmount amount: %s", minDepositAmount.String())
-		}
-		if coin.Amount.LT(minDepositAmount) {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "proposals require a minDepositAmount of at least: %s", minDepositAmount.String())
-		}
-	}
-
 	content := m.GetContent()
 	if content == nil {
 		return sdkerrors.Wrap(types.ErrInvalidProposalContent, "missing content")

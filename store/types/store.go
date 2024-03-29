@@ -120,10 +120,7 @@ type MultiStore interface {
 	// call CacheMultiStore.Write().
 	CacheMultiStore() CacheMultiStore
 
-	// CacheMultiStoreWithVersion branches the underlying MultiStore where
-	// each stored is loaded at a specific version (height).
-	CacheMultiStoreWithVersion(version int64) (CacheMultiStore, error)
-
+	// GetStore is convenience for fetching substores.
 	// Convenience for fetching substores.
 	// If the store does not exist, panics.
 	GetStore(StoreKey) Store
@@ -142,6 +139,14 @@ type MultiStore interface {
 	// implied that the caller should update the context when necessary between
 	// tracing operations. The modified MultiStore is returned.
 	SetTracingContext(TraceContext) MultiStore
+}
+
+type RootMultiStore interface {
+	MultiStore
+
+	// CacheMultiStoreWithVersion branches the underlying MultiStore where
+	// each stored is loaded at a specific version (height).
+	CacheMultiStoreWithVersion(version int64) (CacheMultiStore, error)
 
 	// LatestVersion returns the latest version in the store
 	LatestVersion() int64
@@ -156,7 +161,7 @@ type CacheMultiStore interface {
 // CommitMultiStore is an interface for a MultiStore without cache capabilities.
 type CommitMultiStore interface {
 	Committer
-	MultiStore
+	RootMultiStore
 	snapshottypes.Snapshotter
 
 	// Mount a store of type using the given db.

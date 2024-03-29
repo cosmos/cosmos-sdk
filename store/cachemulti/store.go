@@ -110,11 +110,6 @@ func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
 }
 
-// LatestVersion returns the branch version of the store
-func (cms Store) LatestVersion() int64 {
-	panic("cannot get latest version from branch cached multi-store")
-}
-
 // GetStoreType returns the type of the store.
 func (cms Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMulti
@@ -141,15 +136,6 @@ func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 // Implements MultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
 	return newCacheMultiStoreFromCMS(cms)
-}
-
-// CacheMultiStoreWithVersion implements the MultiStore interface. It will panic
-// as an already cached multi-store cannot load previous versions.
-//
-// TODO: The store implementation can possibly be modified to support this as it
-// seems safe to load previous versions (heights).
-func (cms Store) CacheMultiStoreWithVersion(_ int64) (types.CacheMultiStore, error) {
-	panic("cannot branch cached multi-store with a version")
 }
 
 // GetStore returns an underlying Store by key.

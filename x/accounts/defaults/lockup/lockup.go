@@ -352,7 +352,6 @@ func (bva *BaseLockup) ClawbackFunds(
 		return nil, fmt.Errorf("sender is not the admin of this vesting account")
 	}
 
-	// Send funds back to admin
 	whoami := accountstd.Whoami(ctx)
 	fromAddress, err := bva.addressCodec.BytesToString(whoami)
 	if err != nil {
@@ -405,7 +404,7 @@ func (bva *BaseLockup) ClawbackFunds(
 
 				pendingAmt := lockedAmt.Sub(spendable.AmountOf(denom))
 
-				pendingClawback.UnbondingAmt = append(pendingClawback.UnbondingAmt, sdk.NewCoin(denom, pendingAmt))
+				pendingClawback.UnbondingAmt = pendingClawback.UnbondingAmt.Add(sdk.NewCoin(denom, pendingAmt))
 				pendingClawback.EndTime = hs.Time.Add(paramResp.Params.UnbondingTime)
 
 				// track the pending clawback that are waiting for the unbonding to go through
@@ -416,8 +415,12 @@ func (bva *BaseLockup) ClawbackFunds(
 		}
 		clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, lockedAmt))
 	}
+	if len(clawbackTokens) == 0 {
+		return nil, fmt.Errorf("no token available for clawback")
+	}
 
-	msgSend := makeMsgSend(fromAddress, string(adminAddr), lockedCoins)
+	// send back to admin
+	msgSend := makeMsgSend(fromAddress, string(adminAddr), clawbackTokens)
 	_, err = sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
@@ -637,10 +640,11 @@ func (bva BaseLockup) getSpenableToken(ctx context.Context, balance, lockedCoin 
 
 	spendable, hasNeg := sdk.Coins{balance}.SafeSub(notBondedLockedCoin)
 	if hasNeg {
-		return sdk.NewCoins(balance), true, nil
+		// if negative return coin with zero amount
+		spendable = sdk.Coins{sdk.NewCoin(lockedCoin.Denom, math.ZeroInt())}
 	}
 
-	return spendable, false, nil
+	return spendable, hasNeg, nil
 }
 
 func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, amount, lockedCoins sdk.Coins) error {
@@ -662,9 +666,6 @@ func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, am
 		}
 
 		if _, hasNeg := spendable.SafeSub(coin); hasNeg {
-			if len(spendable) == 0 {
-				spendable = sdk.Coins{sdk.NewCoin(coin.Denom, math.ZeroInt())}
-			}
 			return errorsmod.Wrapf(
 				sdkerrors.ErrInsufficientFunds,
 				"spendable balance %s is smaller than %s",

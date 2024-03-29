@@ -27,7 +27,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 	}
 
 	// recalculate inflation rate
-	totalSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom).Amount // fetch total supply from the bank module
+	totalStakingSupply, err := k.StakingTokenSupply(ctx)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 
 	// update minter's inflation and annual provisions
 	minter.Inflation = ic(ctx, minter, params, bondedRatio)
-	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalSupply)
+	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
 	if err = k.Minter.Set(ctx, minter); err != nil {
 		return err
 	}
@@ -49,6 +49,8 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 	mintedCoins := sdk.NewCoins(mintedCoin)
 
 	maxSupply := params.MaxSupply
+	totalSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom).Amount // fetch total supply from the bank module
+
 	// if maxSupply is not infinite, check against max_supply parameter
 	if !maxSupply.IsZero() {
 		if totalSupply.Add(mintedCoins.AmountOf(params.MintDenom)).GT(maxSupply) {

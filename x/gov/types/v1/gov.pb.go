@@ -6,12 +6,12 @@ package v1
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
@@ -307,7 +307,7 @@ type Proposal struct {
 	// id defines the unique id of the proposal.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// messages are the arbitrary messages to be executed if the proposal passes.
-	Messages []*types1.Any `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
+	Messages []*any.Any `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
 	// status defines the proposal status.
 	Status ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1.ProposalStatus" json:"status,omitempty"`
 	// final_tally_result is the final tally result of the proposal. When
@@ -395,7 +395,7 @@ func (m *Proposal) GetId() uint64 {
 	return 0
 }
 
-func (m *Proposal) GetMessages() []*types1.Any {
+func (m *Proposal) GetMessages() []*any.Any {
 	if m != nil {
 		return m.Messages
 	}
@@ -3025,7 +3025,7 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Messages = append(m.Messages, &types1.Any{})
+			m.Messages = append(m.Messages, &any.Any{})
 			if err := m.Messages[len(m.Messages)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

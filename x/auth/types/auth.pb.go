@@ -6,10 +6,10 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -30,10 +30,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // for basic account functionality. Any custom account type should extend this
 // type for additional functionality (e.g. vesting).
 type BaseAccount struct {
-	Address       string     `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	PubKey        *types.Any `protobuf:"bytes,2,opt,name=pub_key,json=pubKey,proto3" json:"public_key,omitempty"`
-	AccountNumber uint64     `protobuf:"varint,3,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
-	Sequence      uint64     `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	Address       string   `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	PubKey        *any.Any `protobuf:"bytes,2,opt,name=pub_key,json=pubKey,proto3" json:"public_key,omitempty"`
+	AccountNumber uint64   `protobuf:"varint,3,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
+	Sequence      uint64   `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
 
 func (m *BaseAccount) Reset()         { *m = BaseAccount{} }
@@ -726,7 +726,7 @@ func (m *BaseAccount) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.PubKey == nil {
-				m.PubKey = &types.Any{}
+				m.PubKey = &any.Any{}
 			}
 			if err := m.PubKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

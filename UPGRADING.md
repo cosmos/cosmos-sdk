@@ -440,6 +440,9 @@ With the deprecation of the Amino JSON codec defined in [cosmos/gogoproto](https
 
 For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/rapidgen/rapidgen.go#L102) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/tx/aminojson/aminojson_test.go#L94).
 
+Due to the `Any` type moving to the `github.com/cosmos/gogoproto/types/any` repository, module developers must update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for correct mapping to the new `Any` type location.
+
+
 **TODO: summarize proto annotation requirements.**
 
 #### Stringer

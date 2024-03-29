@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
@@ -22,22 +21,20 @@ import (
 const (
 	ModuleName = "accounts"
 	StoreKey   = "_" + ModuleName // unfortunately accounts collides with auth store key
+
+	ConsensusVersion = 1
 )
 
 // ModuleAccountAddress defines the x/accounts module address.
 var ModuleAccountAddress = address.Module(ModuleName)
 
-const (
-	ConsensusVersion = 1
-)
-
 var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ module.HasName = AppModule{}
 
-	_ module.HasName             = AppModule{}
-	_ appmodulev2.HasGenesis     = AppModule{}
-	_ module.HasConsensusVersion = AppModule{}
+	_ appmodule.AppModule           = AppModule{}
+	_ appmodule.HasServices         = AppModule{}
+	_ appmodule.HasGenesis          = AppModule{}
+	_ appmodule.HasConsensusVersion = AppModule{}
 )
 
 func NewAppModule(cdc codec.Codec, k Keeper) AppModule {
@@ -53,8 +50,8 @@ func (m AppModule) IsAppModule() {}
 
 func (AppModule) Name() string { return ModuleName }
 
-func (m AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	msgservice.RegisterMsgServiceDesc(registry, v1.MsgServiceDesc())
+func (m AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	msgservice.RegisterMsgServiceDesc(registrar, v1.MsgServiceDesc())
 }
 
 // App module services

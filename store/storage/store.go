@@ -42,30 +42,30 @@ func NewStorageStore(db Database, pruneOpts *store.PruneOptions, logger log.Logg
 }
 
 // Has returns true if the key exists in the store.
-func (ss *StorageStore) Has(storeKey string, version uint64, key []byte) (bool, error) {
+func (ss *StorageStore) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	return ss.db.Has(storeKey, version, key)
 }
 
 // Get returns the value associated with the given key.
-func (ss *StorageStore) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
+func (ss *StorageStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
 	return ss.db.Get(storeKey, version, key)
 }
 
 // ApplyChangeset applies the given changeset to the storage.
-func (ss *StorageStore) ApplyChangeset(version uint64, cs *store.Changeset) error {
+func (ss *StorageStore) ApplyChangeset(version uint64, cs *corestore.Changeset) error {
 	b, err := ss.db.NewBatch(version)
 	if err != nil {
 		return err
 	}
 
-	for storeKey, pairs := range cs.Pairs {
-		for _, kvPair := range pairs {
-			if kvPair.Value == nil {
-				if err := b.Delete(storeKey, kvPair.Key); err != nil {
+	for _, pairs := range cs.Changes {
+		for _, kvPair := range pairs.StateChanges {
+			if kvPair.Remove {
+				if err := b.Delete(pairs.Actor, kvPair.Key); err != nil {
 					return err
 				}
 			} else {
-				if err := b.Set(storeKey, kvPair.Key, kvPair.Value); err != nil {
+				if err := b.Set(pairs.Actor, kvPair.Key, kvPair.Value); err != nil {
 					return err
 				}
 			}
@@ -96,12 +96,12 @@ func (ss *StorageStore) SetLatestVersion(version uint64) error {
 }
 
 // Iterator returns an iterator over the specified domain and prefix.
-func (ss *StorageStore) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (ss *StorageStore) Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.Iterator(storeKey, version, start, end)
 }
 
 // ReverseIterator returns an iterator over the specified domain and prefix in reverse.
-func (ss *StorageStore) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (ss *StorageStore) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	return ss.db.ReverseIterator(storeKey, version, start, end)
 }
 
@@ -111,7 +111,7 @@ func (ss *StorageStore) Prune(version uint64) error {
 }
 
 // Restore restores the store from the given channel.
-func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) error {
+func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.StateChanges) error {
 	latestVersion, err := ss.db.GetLatestVersion()
 	if err != nil {
 		return fmt.Errorf("failed to get latest version: %w", err)
@@ -126,13 +126,17 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) 
 	}
 
 	for kvPair := range chStorage {
-		if err := b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value); err != nil {
-			return err
-		}
-
-		if b.Size() > defaultBatchBufferSize {
-			if err := b.Write(); err != nil {
+		for _, kv := range kvPair.StateChanges {
+			if err := b.Set(kvPair.Actor, kv.Key, kv.Value); err != nil {
 				return err
+			}
+			if b.Size() > defaultBatchBufferSize {
+				if err := b.Write(); err != nil {
+					return err
+				}
+				if err := b.Reset(); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -143,7 +147,7 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) 
 		}
 	}
 
-	return ss.db.SetLatestVersion(version)
+	return nil
 }
 
 // Close closes the store.

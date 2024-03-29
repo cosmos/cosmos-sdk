@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,15 +23,15 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.HasName                  = AppModule{}
-	_ module.HasAminoCodec            = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-	_ appmodulev2.HasGenesis          = AppModule{}
+	_ module.HasName       = AppModule{}
+	_ module.HasAminoCodec = AppModule{}
 
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasEndBlocker         = AppModule{}
+	_ appmodule.HasServices           = AppModule{}
+	_ appmodule.HasMigrations         = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.HasGenesis            = AppModule{}
 )
 
 // Module init related flags
@@ -75,8 +74,8 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	types.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
 }
 
 // AddModuleInitFlags implements servertypes.ModuleInitFlags interface.
@@ -135,7 +134,10 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 
 // ExportGenesis returns the exported genesis state as raw bytes for the crisis  module.
 func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	gs := am.keeper.ExportGenesis(ctx)
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		return nil, err
+	}
 	return am.cdc.MarshalJSON(gs)
 }
 

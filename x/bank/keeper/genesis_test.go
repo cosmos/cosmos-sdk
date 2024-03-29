@@ -38,7 +38,8 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 
 	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, types.DefaultParams()))
 
-	exportGenesis := suite.bankKeeper.ExportGenesis(ctx)
+	exportGenesis, err := suite.bankKeeper.ExportGenesis(ctx)
+	suite.Require().NoError(err)
 
 	suite.Require().Len(exportGenesis.Params.SendEnabled, 0) //nolint:staticcheck // we're testing the old way here
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)

@@ -54,14 +54,21 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#18768](https://github.com/cosmos/cosmos-sdk/pull/18768) Add MustValAddressFromBech32 function.
 * (gRPC) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) Add debug log prints for each gRPC request.
 * (x/consensus) [#19483](https://github.com/cosmos/cosmos-sdk/pull/19483) Add consensus messages registration to consensus module.
+* (types) [#19759](https://github.com/cosmos/cosmos-sdk/pull/19759) Align SignerExtractionAdapter in PriorityNonceMempool Remove.
+* (client) [#19870](https://github.com/cosmos/cosmos-sdk/pull/19870) Add new query command `wait-tx`. Alias `event-query-tx-for` to `wait-tx` for backward compatibility.
 
 ### Improvements
 
+* (types) [#19869](https://github.com/cosmos/cosmos-sdk/pull/19869) Removed `Any` type from `codec/types` and replaced it with an alias for `cosmos/gogoproto/types/any`.
+* (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Add customizability to start command.
+    * Add `StartCmdOptions` in `server.AddCommands` instead of `servertypes.ModuleInitFlags`. To set custom flags set them in the `StartCmdOptions` struct on the `AddFlags` field.
+    * Add `StartCommandHandler` to `StartCmdOptions` to allow custom start command handlers. Users now have total control over how the app starts.
 * (types) [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) `PreBlock` now returns only an error for consistency with server/v2. The SDK has upgraded x/upgrade accordingly. `ResponsePreBlock` hence has been removed.
 * (server) [#19455](https://github.com/cosmos/cosmos-sdk/pull/19455) Allow calling back into the application struct in PostSetup.
-* (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) The notion of basic manager does not exist anymore.
+* (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) The notion of basic manager does not exist anymore (and all related helpers).
     * The module manager now can do everything that the basic manager was doing.
-    * `AppModuleBasic` has been deprecated for extension interfaces. Modules can now implement `HasRegisterInterfaces`, `HasGRPCGateway` and `HasAminoCodec` when relevant.
+    * `AppModuleBasic` has been deprecated for extension interfaces.
+    * Modules can now implement `appmodule.HasRegisterInterfaces`, `modue.HasGRPCGateway` and `module.HasAminoCodec` when relevant.
     * SDK modules now directly implement those extension interfaces on `AppModule` instead of `AppModuleBasic`.
 * (client/keys) [#18950](https://github.com/cosmos/cosmos-sdk/pull/18950) Improve `<appd> keys add`, `<appd> keys import` and `<appd> keys rename` by checking name validation.
 * (client/keys) [#18745](https://github.com/cosmos/cosmos-sdk/pull/18745) Improve `<appd> keys export` and `<appd> keys mnemonic` by adding --yes option to skip interactive confirmation.
@@ -82,6 +89,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (crypto | x/auth) [#14372](https://github.com/cosmos/cosmos-sdk/pull/18194) Key checks on signatures antehandle.
 * (types) [#18963](https://github.com/cosmos/cosmos-sdk/pull/18963) Swap out amino json encoding of `ABCIMessageLogs` for std lib json encoding
 * (x/auth) [#19651](https://github.com/cosmos/cosmos-sdk/pull/19651) Allow empty public keys in `GetSignBytesAdapter`.
+* (x/genutil) [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) Update genesis api to match new `appmodule.HasGenesis` interface.
 
 ### Bug Fixes
 
@@ -94,9 +102,16 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
+* (crypto) [#19691](https://github.com/cosmos/cosmos-sdk/pull/19691) Fix tx sign doesn't throw an error when incorrect Ledger is used.
+* [#19833](https://github.com/cosmos/cosmos-sdk/pull/19833) Fix some places in which we call Remove inside a Walk.
+* [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
 
 ### API Breaking Changes
 
+* (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Remove `servertypes.ModuleInitFlags` types and from `server.AddCommands` as `StartCmdOptions` already achieves the same goal.
+* (types) [#19792](https://github.com/cosmos/cosmos-sdk/pull/19792) In `MsgSimulatorFn` `sdk.Context` argument is replaced for an `address.Codec`. It also returns an error.
+* (types) [#19742](https://github.com/cosmos/cosmos-sdk/pull/19742) Removes the use of `Accounts.String`
+    * `SimulationState` now has address and validator codecs as fields.
 * (types) [#19447](https://github.com/cosmos/cosmos-sdk/pull/19447) `module.testutil.MakeTestEncodingConfig` now takes `CodecOptions` as argument.
 * (types) [#19512](https://github.com/cosmos/cosmos-sdk/pull/19512) Remove basic manager and all related functions (`module.BasicManager`, `module.NewBasicManager`, `module.NewBasicManagerFromManager`, `NewGenesisOnlyAppModule`).
     * The module manager now can do everything that the basic manager was doing.
@@ -141,10 +156,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#18607](https://github.com/cosmos/cosmos-sdk/pull/18607) Removed address verifier from global config, moved verifier function to bech32 codec.
 * (server) [#18909](https://github.com/cosmos/cosmos-sdk/pull/18909) Remove configuration endpoint on grpc reflection endpoint in favour of auth module bech32prefix endpoint already exposed.
 * (crypto) [#19541](https://github.com/cosmos/cosmos-sdk/pull/19541) The deprecated `FromTmProtoPublicKey`, `ToTmProtoPublicKey`, `FromTmPubKeyInterface` and `ToTmPubKeyInterface` functions have been removed. Use their replacements (`Cmt` instead of `Tm`) instead.
-* (types) [#19652](https://github.com/cosmos/cosmos-sdk/pull/19652) 
+* (types) [#19652](https://github.com/cosmos/cosmos-sdk/pull/19652) and [#19758](https://github.com/cosmos/cosmos-sdk/pull/19758)
     * Moved`types/module.HasRegisterInterfaces` to `cosmossdk.io/core`.
-    * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.LegacyRegistry` interface.
-* (types) [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) All genesis interfaces now don't take `codec.JsonCodec`. Every module has the codec already, passing it created an unneeded dependency. Additionally, to reflect this change, the module manager does not take a codec either.
+    * Moved `RegisterInterfaces` and `RegisterImplementations` from `InterfaceRegistry` to `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
+* (types) [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) and [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) All genesis interfaces now don't take `codec.JsonCodec`.
+    * Every module has the codec already, passing it created an unneeded dependency.
+    * Additionally, to reflect this change, the module manager does not take a codec either.
+* (runtime) [#19747](https://github.com/cosmos/cosmos-sdk/pull/19747) `runtime.ValidatorAddressCodec` and `runtime.ConsensusAddressCodec` have been moved to `core`.
 
 ### Client Breaking Changes
 

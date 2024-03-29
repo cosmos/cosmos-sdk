@@ -7,15 +7,15 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -42,7 +42,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // proposal Content.
 type MsgSubmitProposal struct {
 	// messages are the arbitrary messages to be executed if proposal passes.
-	Messages []*types.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	Messages []*any.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	// initial_deposit is the deposit value that must be paid at proposal submission.
 	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=initial_deposit,json=initialDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_deposit"`
 	// proposer is the account address of the proposer.
@@ -104,7 +104,7 @@ func (m *MsgSubmitProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSubmitProposal proto.InternalMessageInfo
 
-func (m *MsgSubmitProposal) GetMessages() []*types.Any {
+func (m *MsgSubmitProposal) GetMessages() []*any.Any {
 	if m != nil {
 		return m.Messages
 	}
@@ -211,7 +211,7 @@ func (m *MsgSubmitProposalResponse) GetProposalId() uint64 {
 // This ensures backwards compatibility with v1beta1.MsgSubmitProposal.
 type MsgExecLegacyContent struct {
 	// content is the proposal's content.
-	Content *types.Any `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	Content *any.Any `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	// authority must be the gov module address.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
@@ -249,7 +249,7 @@ func (m *MsgExecLegacyContent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExecLegacyContent proto.InternalMessageInfo
 
-func (m *MsgExecLegacyContent) GetContent() *types.Any {
+func (m *MsgExecLegacyContent) GetContent() *any.Any {
 	if m != nil {
 		return m.Content
 	}
@@ -527,7 +527,7 @@ type MsgDeposit struct {
 	// depositor defines the deposit addresses from the proposals.
 	Depositor string `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
 	// amount to be deposited by depositor.
-	Amount []types1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
+	Amount []types.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgDeposit) Reset()         { *m = MsgDeposit{} }
@@ -577,7 +577,7 @@ func (m *MsgDeposit) GetDepositor() string {
 	return ""
 }
 
-func (m *MsgDeposit) GetAmount() []types1.Coin {
+func (m *MsgDeposit) GetAmount() []types.Coin {
 	if m != nil {
 		return m.Amount
 	}
@@ -1099,7 +1099,7 @@ type MsgSudoExec struct {
 	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// msg is the arbitrary message to be executed.
-	Msg *types.Any `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Msg *any.Any `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
 }
 
 func (m *MsgSudoExec) Reset()         { *m = MsgSudoExec{} }
@@ -1142,7 +1142,7 @@ func (m *MsgSudoExec) GetAuthority() string {
 	return ""
 }
 
-func (m *MsgSudoExec) GetMsg() *types.Any {
+func (m *MsgSudoExec) GetMsg() *any.Any {
 	if m != nil {
 		return m.Msg
 	}
@@ -2976,7 +2976,7 @@ func (m *MsgSubmitProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Messages = append(m.Messages, &types.Any{})
+			m.Messages = append(m.Messages, &any.Any{})
 			if err := m.Messages[len(m.Messages)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3010,7 +3010,7 @@ func (m *MsgSubmitProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InitialDeposit = append(m.InitialDeposit, types1.Coin{})
+			m.InitialDeposit = append(m.InitialDeposit, types.Coin{})
 			if err := m.InitialDeposit[len(m.InitialDeposit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3331,7 +3331,7 @@ func (m *MsgExecLegacyContent) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Content == nil {
-				m.Content = &types.Any{}
+				m.Content = &any.Any{}
 			}
 			if err := m.Content.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3968,7 +3968,7 @@ func (m *MsgDeposit) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Amount = append(m.Amount, types1.Coin{})
+			m.Amount = append(m.Amount, types.Coin{})
 			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -4489,7 +4489,7 @@ func (m *MsgSubmitMultipleChoiceProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InitialDeposit = append(m.InitialDeposit, types1.Coin{})
+			m.InitialDeposit = append(m.InitialDeposit, types.Coin{})
 			if err := m.InitialDeposit[len(m.InitialDeposit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -5039,7 +5039,7 @@ func (m *MsgSudoExec) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Msg == nil {
-				m.Msg = &types.Any{}
+				m.Msg = &any.Any{}
 			}
 			if err := m.Msg.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
@@ -20,6 +21,12 @@ const (
 	testStoreKey  = "test_store_key"
 	testStoreKey2 = "test_store_key2"
 	testStoreKey3 = "test_store_key3"
+)
+
+var (
+	testStoreKeyBytes  = []byte(testStoreKey)
+	testStoreKey2Bytes = []byte(testStoreKey2)
+	testStoreKey3Bytes = []byte(testStoreKey3)
 )
 
 type RootStoreTestSuite struct {
@@ -45,7 +52,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), nil, noopLog)
 	s.Require().NoError(err)
 
-	rs, err := New(noopLog, ss, sc, nil)
+	rs, err := New(noopLog, ss, sc, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
@@ -61,7 +68,7 @@ func (s *RootStoreTestSuite) TestGetStateCommitment() {
 }
 
 func (s *RootStoreTestSuite) TestGetStateStorage() {
-	s.Require().Equal(s.rootStore.GetStateStorage(), s.rootStore.(*Store).stateStore)
+	s.Require().Equal(s.rootStore.GetStateStorage(), s.rootStore.(*Store).stateStorage)
 }
 
 func (s *RootStoreTestSuite) TestSetInitialVersion() {
@@ -80,12 +87,12 @@ func (s *RootStoreTestSuite) TestSetCommitHeader() {
 }
 
 func (s *RootStoreTestSuite) TestQuery() {
-	_, err := s.rootStore.Query("", 1, []byte("foo"), true)
+	_, err := s.rootStore.Query([]byte{}, 1, []byte("foo"), true)
 	s.Require().Error(err)
 
 	// write and commit a changeset
-	cs := store.NewChangeset()
-	cs.Add(testStoreKey, []byte("foo"), []byte("bar"))
+	cs := corestore.NewChangeset()
+	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
 
 	workingHash, err := s.rootStore.WorkingHash(cs)
 	s.Require().NoError(err)
@@ -97,7 +104,7 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().Equal(workingHash, commitHash)
 
 	// ensure the proof is non-nil for the corresponding version
-	result, err := s.rootStore.Query(testStoreKey, 1, []byte("foo"), true)
+	result, err := s.rootStore.Query([]byte(testStoreKey), 1, []byte("foo"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.ProofOps)
 	s.Require().Equal([]byte("foo"), result.ProofOps[0].Key)
@@ -107,8 +114,8 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 	sc := s.rootStore.GetStateCommitment()
 
 	// create a changeset and commit it to SC ONLY
-	cs := store.NewChangeset()
-	cs.Add(testStoreKey, []byte("foo"), []byte("bar"))
+	cs := corestore.NewChangeset()
+	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
 
 	err := sc.WriteBatch(cs)
 	s.Require().NoError(err)
@@ -118,25 +125,25 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 	s.Require().NoError(err)
 
 	// ensure we can query for the key, which should fallback to SC
-	qResult, err := s.rootStore.Query(testStoreKey, 1, []byte("foo"), false)
+	qResult, err := s.rootStore.Query(testStoreKeyBytes, 1, []byte("foo"), false)
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("bar"), qResult.Value)
 
 	// non-existent key
-	qResult, err = s.rootStore.Query(testStoreKey, 1, []byte("non_existent_key"), false)
+	qResult, err = s.rootStore.Query(testStoreKeyBytes, 1, []byte("non_existent_key"), false)
 	s.Require().NoError(err)
 	s.Require().Nil(qResult.Value)
 }
 
 func (s *RootStoreTestSuite) TestQueryProof() {
-	cs := store.NewChangeset()
+	cs := corestore.NewChangeset()
 	// testStoreKey
-	cs.Add(testStoreKey, []byte("key1"), []byte("value1"))
-	cs.Add(testStoreKey, []byte("key2"), []byte("value2"))
+	cs.Add(testStoreKeyBytes, []byte("key1"), []byte("value1"), false)
+	cs.Add(testStoreKeyBytes, []byte("key2"), []byte("value2"), false)
 	// testStoreKey2
-	cs.Add(testStoreKey2, []byte("key3"), []byte("value3"))
+	cs.Add(testStoreKey2Bytes, []byte("key3"), []byte("value3"), false)
 	// testStoreKey3
-	cs.Add(testStoreKey3, []byte("key4"), []byte("value4"))
+	cs.Add(testStoreKey3Bytes, []byte("key4"), []byte("value4"), false)
 
 	// commit
 	_, err := s.rootStore.WorkingHash(cs)
@@ -145,12 +152,12 @@ func (s *RootStoreTestSuite) TestQueryProof() {
 	s.Require().NoError(err)
 
 	// query proof for testStoreKey
-	result, err := s.rootStore.Query(testStoreKey, 1, []byte("key1"), true)
+	result, err := s.rootStore.Query(testStoreKeyBytes, 1, []byte("key1"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.ProofOps)
 	cInfo, err := s.rootStore.GetStateCommitment().GetCommitInfo(1)
 	s.Require().NoError(err)
-	storeHash := cInfo.GetStoreCommitID(testStoreKey).Hash
+	storeHash := cInfo.GetStoreCommitID(testStoreKeyBytes).Hash
 	treeRoots, err := result.ProofOps[0].Run([][]byte{[]byte("value1")})
 	s.Require().NoError(err)
 	s.Require().Equal(treeRoots[0], storeHash)
@@ -164,8 +171,8 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	for v := 1; v <= 5; v++ {
 		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
 
-		cs := store.NewChangeset()
-		cs.Add(testStoreKey, []byte("key"), []byte(val))
+		cs := corestore.NewChangeset()
+		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
 		workingHash, err := s.rootStore.WorkingHash(cs)
 		s.Require().NoError(err)
@@ -199,7 +206,9 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	_, ro, err := s.rootStore.StateLatest()
 	s.Require().NoError(err)
 
-	val, err := ro.Get(testStoreKey, []byte("key"))
+	reader, err := ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	val, err := reader.Get([]byte("key"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("val003"), val)
 
@@ -207,8 +216,8 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	for v := 4; v <= 5; v++ {
 		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
 
-		cs := store.NewChangeset()
-		cs.Add(testStoreKey, []byte("key"), []byte(val))
+		cs := corestore.NewChangeset()
+		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
 		workingHash, err := s.rootStore.WorkingHash(cs)
 		s.Require().NoError(err)
@@ -229,7 +238,9 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	_, ro, err = s.rootStore.StateLatest()
 	s.Require().NoError(err)
 
-	val, err = ro.Get(testStoreKey, []byte("key"))
+	reader, err = ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	val, err = reader.Get([]byte("key"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("overwritten_val005"), val)
 }
@@ -240,12 +251,12 @@ func (s *RootStoreTestSuite) TestCommit() {
 	s.Require().Zero(lv)
 
 	// perform changes
-	cs := store.NewChangeset()
+	cs := corestore.NewChangeset()
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.Add(testStoreKey, []byte(key), []byte(val))
+		cs.Add(testStoreKeyBytes, []byte(key), []byte(val), false)
 	}
 
 	// committing w/o calling WorkingHash should error
@@ -273,7 +284,9 @@ func (s *RootStoreTestSuite) TestCommit() {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		result, err := ro.Get(testStoreKey, []byte(key))
+		reader, err := ro.GetReader(testStoreKeyBytes)
+		s.Require().NoError(err)
+		result, err := reader.Get([]byte(key))
 		s.Require().NoError(err)
 
 		s.Require().Equal([]byte(val), result)
@@ -284,12 +297,12 @@ func (s *RootStoreTestSuite) TestStateAt() {
 	// write keys over multiple versions
 	for v := uint64(1); v <= 5; v++ {
 		// perform changes
-		cs := store.NewChangeset()
+		cs := corestore.NewChangeset()
 		for i := 0; i < 100; i++ {
 			key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
 			val := fmt.Sprintf("val%03d_%03d", i, v) // val000_1, val001_1, ..., val099_1
 
-			cs.Add(testStoreKey, []byte(key), []byte(val))
+			cs.Add(testStoreKeyBytes, []byte(key), []byte(val), false)
 		}
 
 		// execute WorkingHash and Commit
@@ -314,7 +327,9 @@ func (s *RootStoreTestSuite) TestStateAt() {
 			key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
 			val := fmt.Sprintf("val%03d_%03d", i, v) // val000_1, val001_1, ..., val099_1
 
-			result, err := ro.Get(testStoreKey, []byte(key))
+			reader, err := ro.GetReader(testStoreKeyBytes)
+			s.Require().NoError(err)
+			result, err := reader.Get([]byte(key))
 			s.Require().NoError(err)
 			s.Require().Equal([]byte(val), result)
 		}

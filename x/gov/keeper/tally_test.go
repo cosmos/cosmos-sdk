@@ -145,9 +145,13 @@ func TestTally_Standard(t *testing.T) {
 			name: "one delegator votes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -170,9 +174,13 @@ func TestTally_Standard(t *testing.T) {
 			name: "one delegator votes yes, validator votes also yes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -196,9 +204,13 @@ func TestTally_Standard(t *testing.T) {
 			name: "one delegator votes yes, validator votes no: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -227,15 +239,21 @@ func TestTally_Standard(t *testing.T) {
 			name: "delegator with mixed delegations: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
+				val1Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[1])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{
 					{
-						DelegatorAddress: s.delAddrs[0].String(),
-						ValidatorAddress: s.valAddrs[0].String(),
+						DelegatorAddress: del0Addr,
+						ValidatorAddress: val0Addr,
 						Shares:           sdkmath.LegacyNewDec(21),
 					},
 					{
-						DelegatorAddress: s.delAddrs[0].String(),
-						ValidatorAddress: s.valAddrs[1].String(),
+						DelegatorAddress: del0Addr,
+						ValidatorAddress: val1Addr,
 						Shares:           sdkmath.LegacyNewDec(21),
 					},
 				}
@@ -460,8 +478,10 @@ func TestTally_Standard(t *testing.T) {
 				DoAndReturn(
 					func(ctx context.Context, fn func(index int64, validator sdk.ValidatorI) bool) error {
 						for i := int64(0); i < int64(numVals); i++ {
+							valAddr, err := mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddrs[i])
+							require.NoError(t, err)
 							fn(i, stakingtypes.Validator{
-								OperatorAddress: valAddrs[i].String(),
+								OperatorAddress: valAddr,
 								Status:          stakingtypes.Bonded,
 								Tokens:          sdkmath.NewInt(1000000),
 								DelegatorShares: sdkmath.LegacyNewDec(1000000),
@@ -591,9 +611,13 @@ func TestTally_Expedited(t *testing.T) {
 			name: "one delegator votes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -616,9 +640,13 @@ func TestTally_Expedited(t *testing.T) {
 			name: "one delegator votes yes, validator votes also yes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -642,9 +670,13 @@ func TestTally_Expedited(t *testing.T) {
 			name: "one delegator votes yes, validator votes no: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -673,15 +705,21 @@ func TestTally_Expedited(t *testing.T) {
 			name: "delegator with mixed delegations: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
+				val1Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[1])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{
 					{
-						DelegatorAddress: s.delAddrs[0].String(),
-						ValidatorAddress: s.valAddrs[0].String(),
+						DelegatorAddress: del0Addr,
+						ValidatorAddress: val0Addr,
 						Shares:           sdkmath.LegacyNewDec(21),
 					},
 					{
-						DelegatorAddress: s.delAddrs[0].String(),
-						ValidatorAddress: s.valAddrs[1].String(),
+						DelegatorAddress: del0Addr,
+						ValidatorAddress: val1Addr,
 						Shares:           sdkmath.LegacyNewDec(21),
 					},
 				}
@@ -712,16 +750,17 @@ func TestTally_Expedited(t *testing.T) {
 				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_TWO)
 				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_TWO)
 				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_TWO)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_TWO)
 			},
 			expectedPass: false,
 			expectedBurn: false,
 			expectedTally: v1.TallyResult{
 				YesCount:         "0",
-				AbstainCount:     "4000000",
+				AbstainCount:     "5000000",
 				NoCount:          "0",
 				NoWithVetoCount:  "0",
 				OptionOneCount:   "0",
-				OptionTwoCount:   "4000000",
+				OptionTwoCount:   "5000000",
 				OptionThreeCount: "0",
 				OptionFourCount:  "0",
 				SpamCount:        "0",
@@ -759,19 +798,21 @@ func TestTally_Expedited(t *testing.T) {
 				setTotalBonded(s, 10000000)
 				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
 				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ONE)
 				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_THREE)
 			},
 			expectedPass: false,
 			expectedBurn: false,
 			expectedTally: v1.TallyResult{
-				YesCount:         "2000000",
+				YesCount:         "3000000",
 				AbstainCount:     "0",
-				NoCount:          "2000000",
+				NoCount:          "3000000",
 				NoWithVetoCount:  "0",
-				OptionOneCount:   "2000000",
+				OptionOneCount:   "3000000",
 				OptionTwoCount:   "0",
-				OptionThreeCount: "2000000",
+				OptionThreeCount: "3000000",
 				OptionFourCount:  "0",
 				SpamCount:        "0",
 			},
@@ -907,8 +948,10 @@ func TestTally_Expedited(t *testing.T) {
 				DoAndReturn(
 					func(ctx context.Context, fn func(index int64, validator sdk.ValidatorI) bool) error {
 						for i := int64(0); i < int64(numVals); i++ {
+							valAddr, err := mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddrs[i])
+							require.NoError(t, err)
 							fn(i, stakingtypes.Validator{
-								OperatorAddress: valAddrs[i].String(),
+								OperatorAddress: valAddr,
 								Status:          stakingtypes.Bonded,
 								Tokens:          sdkmath.NewInt(1000000),
 								DelegatorShares: sdkmath.LegacyNewDec(1000000),
@@ -998,9 +1041,13 @@ func TestTally_Optimistic(t *testing.T) {
 			name: "one delegator votes: threshold no not reached, prop passes",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_THREE)
@@ -1065,8 +1112,10 @@ func TestTally_Optimistic(t *testing.T) {
 				DoAndReturn(
 					func(ctx context.Context, fn func(index int64, validator sdk.ValidatorI) bool) error {
 						for i := int64(0); i < int64(numVals); i++ {
+							valAddr, err := mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddrs[i])
+							require.NoError(t, err)
 							fn(i, stakingtypes.Validator{
-								OperatorAddress: valAddrs[i].String(),
+								OperatorAddress: valAddr,
 								Status:          stakingtypes.Bonded,
 								Tokens:          sdkmath.NewInt(1000000),
 								DelegatorShares: sdkmath.LegacyNewDec(1000000),
@@ -1196,9 +1245,13 @@ func TestTally_MultipleChoice(t *testing.T) {
 			name: "one delegator votes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -1221,9 +1274,13 @@ func TestTally_MultipleChoice(t *testing.T) {
 			name: "one delegator votes yes, validator votes also yes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -1247,9 +1304,13 @@ func TestTally_MultipleChoice(t *testing.T) {
 			name: "one delegator votes yes, validator votes no: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
+					DelegatorAddress: del0Addr,
+					ValidatorAddress: val0Addr,
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
 				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
@@ -1278,15 +1339,21 @@ func TestTally_MultipleChoice(t *testing.T) {
 			name: "delegator with mixed delegations: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
+				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				require.NoError(t, err)
+				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
+				require.NoError(t, err)
+				val1Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[1])
+				require.NoError(t, err)
 				delegations := []stakingtypes.Delegation{
 					{
-						DelegatorAddress: s.delAddrs[0].String(),
-						ValidatorAddress: s.valAddrs[0].String(),
+						DelegatorAddress: del0Addr,
+						ValidatorAddress: val0Addr,
 						Shares:           sdkmath.LegacyNewDec(21),
 					},
 					{
-						DelegatorAddress: s.delAddrs[0].String(),
-						ValidatorAddress: s.valAddrs[1].String(),
+						DelegatorAddress: del0Addr,
+						ValidatorAddress: val1Addr,
 						Shares:           sdkmath.LegacyNewDec(21),
 					},
 				}
@@ -1431,8 +1498,10 @@ func TestTally_MultipleChoice(t *testing.T) {
 				DoAndReturn(
 					func(ctx context.Context, fn func(index int64, validator sdk.ValidatorI) bool) error {
 						for i := int64(0); i < int64(numVals); i++ {
+							valAddr, err := mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddrs[i])
+							require.NoError(t, err)
 							fn(i, stakingtypes.Validator{
-								OperatorAddress: valAddrs[i].String(),
+								OperatorAddress: valAddr,
 								Status:          stakingtypes.Bonded,
 								Tokens:          sdkmath.NewInt(1000000),
 								DelegatorShares: sdkmath.LegacyNewDec(1000000),

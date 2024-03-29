@@ -59,7 +59,7 @@ require (
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/storage v1.36.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
-	cosmossdk.io/x/accounts/lockup v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -236,7 +236,7 @@ replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/x/accounts => ../x/accounts
-	cosmossdk.io/x/accounts/lockup => ../x/accounts/defaults/lockup
+	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
 	cosmossdk.io/x/auth => ../x/auth
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank

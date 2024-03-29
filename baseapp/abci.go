@@ -1221,7 +1221,7 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 	// use custom query multi-store if provided
 	qms := bapp.qms
 	if qms == nil {
-		qms = bapp.cms.(storetypes.MultiStore)
+		qms = storetypes.RootMultiStore(bapp.cms)
 	}
 
 	lastBlockHeight := qms.LatestVersion()

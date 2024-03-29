@@ -6,8 +6,9 @@ require (
 	cosmossdk.io/api v0.7.3
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
+	github.com/cosmos/gogoproto v1.4.12
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	google.golang.org/protobuf v1.33.0
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
@@ -33,3 +34,5 @@ require (
 	google.golang.org/grpc v1.62.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace cosmossdk.io/api => ../api

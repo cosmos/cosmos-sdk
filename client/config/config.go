@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -24,10 +23,6 @@ func DefaultConfig() *Config {
 		Output:                "text",
 		Node:                  "tcp://localhost:26657",
 		BroadcastMode:         "sync",
-		GRPC: GRPCConfig{
-			Address:  "",
-			Insecure: false,
-		},
 	}
 }
 
@@ -42,13 +37,13 @@ type Config struct {
 	Output                string     `mapstructure:"output" json:"output"`
 	Node                  string     `mapstructure:"node" json:"node"`
 	BroadcastMode         string     `mapstructure:"broadcast-mode" json:"broadcast-mode"`
-	GRPC                  GRPCConfig `mapstructure:"grpc" json:"grpc"`
+	GRPC                  GRPCConfig `mapstructure:",squash"`
 }
 
 // GRPCConfig holds the gRPC client configuration.
 type GRPCConfig struct {
-	Address  string `mapstructure:"address"  json:"address"`
-	Insecure bool   `mapstructure:"insecure"  json:"insecure"`
+	Address  string `mapstructure:"grpc-address"  json:"grpc-address"`
+	Insecure bool   `mapstructure:"grpc-insecure"  json:"grpc-insecure"`
 }
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client.Context
@@ -165,12 +160,6 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 	}
 
 	return ctx, nil
-}
-
-// CustomizeConfigTemplate inserts custom configuration settings into the default config template by replacing a predefined placeholder
-// This approach prevents issues that could arise from direct concatenation, such as incorrect section categorization of custom settings.
-func CustomizeConfigTemplate(customConfig string) string {
-	return strings.ReplaceAll(DefaultClientConfigTemplate, CustomConfigKey, customConfig)
 }
 
 // getGRPCClient creates and returns a new gRPC client connection based on the GRPCConfig.

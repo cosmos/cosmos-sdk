@@ -56,16 +56,14 @@ func initClientConfig() (string, interface{}) {
 		},
 	}
 
-	// Create a customConfig to define specific settings.
-	customConfig := strings.TrimSpace(`
+	// The default SDK app template is defined in serverconfig.DefaultConfigTemplate.
+	// We append the custom config template to the default one.
+	// And we set the default config to the custom app template.
+	customClientConfigTemplate := clientconfig.DefaultClientConfigTemplate + strings.TrimSpace(`
 # This is default the gas adjustment factor used in tx commands.
 # It can be overwritten by the --gas-adjustment flag in each tx command.
 gas-adjustment = {{ .GasConfig.GasAdjustment }}
 `)
-
-	// The CustomizeConfigTemplate function is then employed to seamlessly integrate these custom settings
-	// into the default configuration template.
-	customClientConfigTemplate := clientconfig.CustomizeConfigTemplate(customConfig)
 
 	return customClientConfigTemplate, customClientConfig
 }

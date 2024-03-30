@@ -60,7 +60,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
-* (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Enhanced configuration template customization mechanism to use a placeholder-based approach, ensuring proper categorization and scalability of custom settings within the configuration file.
 * (types) [#19869](https://github.com/cosmos/cosmos-sdk/pull/19869) Removed `Any` type from `codec/types` and replaced it with an alias for `cosmos/gogoproto/types/any`.
 * (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Add customizability to start command.
     * Add `StartCmdOptions` in `server.AddCommands` instead of `servertypes.ModuleInitFlags`. To set custom flags set them in the `StartCmdOptions` struct on the `AddFlags` field.

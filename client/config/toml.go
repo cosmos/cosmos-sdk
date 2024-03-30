@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	CustomConfigKey             = "#{CustomConfigs}"
 	DefaultClientConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
@@ -31,25 +30,16 @@ node = "{{ .Node }}"
 broadcast-mode = "{{ .BroadcastMode }}"
 
 ###############################################################################
-###                           custom config                                 ###
-###############################################################################
-
-### Custom Configurations
-# The placeholder below is used for injecting custom configurations.
-#{CustomConfigs}
-
-###############################################################################
 ###                           gRPC Configuration                            ###
 ###############################################################################
 
-[grpc]
 # gRPC server endpoint to which the client will connect.
 # It can be overwritten by the --grpc-addr flag in each command.
-address = "{{ .GRPC.Address }}"
+grpc-address = "{{ .GRPC.Address }}"
 
 # Allow the gRPC client to connect over insecure channels.
 # It can be overwritten by the --grpc-insecure flag in each command.
-insecure = {{ .GRPC.Insecure }}
+grpc-insecure = {{ .GRPC.Insecure }}
 `
 )
 

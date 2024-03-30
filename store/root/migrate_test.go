@@ -19,9 +19,7 @@ import (
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
-var (
-	storeKeys = []string{"store1", "store2", "store3"}
-)
+var storeKeys = []string{"store1", "store2", "store3"}
 
 type MigrateStoreTestSuite struct {
 	suite.Suite

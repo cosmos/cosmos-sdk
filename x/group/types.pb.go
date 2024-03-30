@@ -6,11 +6,11 @@ package group
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
@@ -650,7 +650,7 @@ type GroupPolicyInfo struct {
 	// would create a different result on a running proposal.
 	Version uint64 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
 	// decision_policy specifies the group policy's decision policy.
-	DecisionPolicy *types.Any `protobuf:"bytes,6,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
+	DecisionPolicy *any.Any `protobuf:"bytes,6,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
 	// created_at is a timestamp specifying when a group policy was created.
 	CreatedAt time.Time `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3,stdtime" json:"created_at"`
 }
@@ -729,7 +729,7 @@ type Proposal struct {
 	// executor_result is the final result of the proposal execution. Initial value is NotRun.
 	ExecutorResult ProposalExecutorResult `protobuf:"varint,11,opt,name=executor_result,json=executorResult,proto3,enum=cosmos.group.v1.ProposalExecutorResult" json:"executor_result,omitempty"`
 	// messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
-	Messages []*types.Any `protobuf:"bytes,12,rep,name=messages,proto3" json:"messages,omitempty"`
+	Messages []*any.Any `protobuf:"bytes,12,rep,name=messages,proto3" json:"messages,omitempty"`
 	// title is the title of the proposal
 	//
 	// Since: cosmos-sdk 0.47
@@ -3163,7 +3163,7 @@ func (m *GroupPolicyInfo) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.DecisionPolicy == nil {
-				m.DecisionPolicy = &types.Any{}
+				m.DecisionPolicy = &any.Any{}
 			}
 			if err := m.DecisionPolicy.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3571,7 +3571,7 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Messages = append(m.Messages, &types.Any{})
+			m.Messages = append(m.Messages, &any.Any{})
 			if err := m.Messages[len(m.Messages)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

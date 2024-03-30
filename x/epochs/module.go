@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/epochs/simulation"
 	"cosmossdk.io/x/epochs/types"
 
+	"cosmossdk.io/core/registry"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -25,7 +26,7 @@ var (
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-	
+
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
 )
@@ -74,6 +75,10 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 // DefaultGenesis returns the epochs module's default genesis state.
 func (am AppModule) DefaultGenesis() json.RawMessage {
 	return am.cdc.MustMarshalJSON(types.DefaultGenesis())
+}
+
+// RegisterInterfaces implements InterfaceModule.RegisterInterfaces
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 }
 
 // ValidateGenesis performs genesis state validation for the epochs module.

@@ -13,7 +13,7 @@
     * [Slashing](#slashing)
     * [Periodic Lockup](#periodic-lockup)
 
-The x/accounts/lockup module provides the implementation for lockup accounts within the x/accounts module.
+The x/accounts/defaults/lockup module provides the implementation for lockup accounts within the x/accounts module.
 
 ## Lockup Account Types
 

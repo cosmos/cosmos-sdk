@@ -44,17 +44,18 @@ func (b Batch) Size() int {
 	return len(b.batch.Data())
 }
 
-func (b Batch) Reset() {
+func (b Batch) Reset() error {
 	b.batch.Clear()
+	return nil
 }
 
-func (b Batch) Set(storeKey string, key, value []byte) error {
+func (b Batch) Set(storeKey []byte, key, value []byte) error {
 	prefixedKey := prependStoreKey(storeKey, key)
 	b.batch.PutCFWithTS(b.cfHandle, prefixedKey, b.ts[:], value)
 	return nil
 }
 
-func (b Batch) Delete(storeKey string, key []byte) error {
+func (b Batch) Delete(storeKey []byte, key []byte) error {
 	prefixedKey := prependStoreKey(storeKey, key)
 	b.batch.DeleteCFWithTS(b.cfHandle, prefixedKey, b.ts[:])
 	return nil

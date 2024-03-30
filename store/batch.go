@@ -13,7 +13,7 @@ type Batch interface {
 	Write() error
 
 	// Reset resets the batch.
-	Reset()
+	Reset() error
 }
 
 // RawBatch represents a group of writes. They may or may not be written atomically depending on the

@@ -54,8 +54,12 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
 	var cf []*types.ContinuousFund
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
+		if err != nil {
+			return true, err
+		}
 		cf = append(cf, &types.ContinuousFund{
-			Recipient:  key.String(),
+			Recipient:  recipient,
 			Percentage: value.Percentage,
 			Expiry:     value.Expiry,
 		})
@@ -67,8 +71,12 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	var budget []*types.Budget
 	err = k.BudgetProposal.Walk(ctx, nil, func(key sdk.AccAddress, value types.Budget) (stop bool, err error) {
+		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
+		if err != nil {
+			return true, err
+		}
 		budget = append(budget, &types.Budget{
-			RecipientAddress: key.String(),
+			RecipientAddress: recipient,
 			TotalBudget:      value.TotalBudget,
 			ClaimedAmount:    value.ClaimedAmount,
 			StartTime:        value.StartTime,

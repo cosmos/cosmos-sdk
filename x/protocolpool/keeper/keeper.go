@@ -113,16 +113,21 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
 
-func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAddress) (sdk.Coin, error) {
+func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string) (sdk.Coin, error) {
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
+	if err != nil {
+		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
 	cf, err := k.ContinuousFund.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, fmt.Errorf("no continuous fund found for recipient: %s", recipient.String())
+			return sdk.Coin{}, fmt.Errorf("no continuous fund found for recipient: %s", recipientAddr)
 		}
-		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipient.String())
+		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipientAddr)
 	}
 	if cf.Expiry != nil && cf.Expiry.Before(k.environment.HeaderService.GetHeaderInfo(ctx).Time) {
-		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipient.String())
+		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipientAddr)
 	}
 
 	toDistributeAmount, err := k.ToDistribute.Get(ctx)
@@ -138,15 +143,20 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	}
 
 	// withdraw continuous fund
-	withdrawnAmount, err := k.withdrawRecipientFunds(ctx, recipient)
+	withdrawnAmount, err := k.withdrawRecipientFunds(ctx, recipientAddr)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while withdrawing recipient funds for recipient: %s", recipient.String())
+		return sdk.Coin{}, fmt.Errorf("error while withdrawing recipient funds for recipient: %s", recipientAddr)
 	}
 
 	return withdrawnAmount, nil
 }
 
-func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAddress) (sdk.Coin, error) {
+func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipientAddr string) (sdk.Coin, error) {
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
+	if err != nil {
+		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
 	// get allocated continuous fund
 	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
@@ -165,7 +175,7 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAdd
 	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
 	err = k.DistributeFromStreamFunds(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %v", recipient.String(), err)
+		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %v", recipientAddr, err)
 	}
 
 	// reset fund distribution
@@ -257,8 +267,12 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 
 	// Calculate totalPercentageToBeDistributed and store values
 	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+		addr, err := k.authKeeper.AddressCodec().BytesToString(key)
+		if err != nil {
+			return true, err
+		}
 		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
-		recipientFundMap[key.String()] = value
+		recipientFundMap[addr] = value
 		return false, nil
 	})
 	if err != nil {
@@ -306,9 +320,14 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 	return k.ToDistribute.Set(ctx, math.ZeroInt())
 }
 
-func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
+func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
+	if err != nil {
+		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
 	// get claimable funds from distribution info
-	amount, err = k.getClaimableFunds(ctx, recipient)
+	amount, err = k.getClaimableFunds(ctx, recipientAddr)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error getting claimable funds: %w", err)
 	}
@@ -322,11 +341,16 @@ func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amoun
 	return amount, nil
 }
 
-func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
+func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
+	if err != nil {
+		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
 	budget, err := k.BudgetProposal.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, fmt.Errorf("no budget found for recipient: %s", recipient.String())
+			return sdk.Coin{}, fmt.Errorf("no budget found for recipient: %s", recipientAddr)
 		}
 		return sdk.Coin{}, err
 	}
@@ -340,7 +364,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 				return sdk.Coin{}, err
 			}
 			// Return the end of the budget
-			return sdk.Coin{}, fmt.Errorf("budget ended for recipient: %s", recipient.String())
+			return sdk.Coin{}, fmt.Errorf("budget ended for recipient: %s", recipientAddr)
 		}
 	}
 

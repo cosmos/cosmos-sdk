@@ -19,7 +19,7 @@ func TestProposalMsgs(t *testing.T) {
 	// initialize parameters
 	s := rand.NewSource(1)
 	r := rand.New(s)
-
+	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalMsgs function
@@ -32,7 +32,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgCommunityPoolSpend, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgCommunityPoolSpend, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(r, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
+	msg, err := w0.MsgSimulatorFn()(r, accounts, addressCodec)
 	assert.NilError(t, err)
 	msgCommunityPoolSpend, ok := msg.(*pooltypes.MsgCommunityPoolSpend)
 	assert.Assert(t, ok)
@@ -40,6 +40,8 @@ func TestProposalMsgs(t *testing.T) {
 	coins, err := sdk.ParseCoinsNormalized("100stake,2testtoken")
 	assert.NilError(t, err)
 
-	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgCommunityPoolSpend.Authority)
+	authAddr, err := addressCodec.BytesToString(address.Module("gov"))
+	assert.NilError(t, err)
+	assert.Equal(t, authAddr, msgCommunityPoolSpend.Authority)
 	assert.Assert(t, msgCommunityPoolSpend.Amount.Equal(coins))
 }

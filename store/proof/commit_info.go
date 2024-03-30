@@ -22,7 +22,7 @@ type (
 	// StoreInfo defines store-specific commit information. It contains a reference
 	// between a store name/key and the commit ID.
 	StoreInfo struct {
-		Name     string
+		Name     []byte
 		CommitID CommitID
 	}
 
@@ -49,14 +49,14 @@ func (ci *CommitInfo) Hash() []byte {
 		return ci.CommitHash
 	}
 
-	rootHash, _, _ := ci.GetStoreProof("")
+	rootHash, _, _ := ci.GetStoreProof([]byte{})
 	return rootHash
 }
 
 // GetStoreCommitID returns the CommitID for the given store key.
-func (ci *CommitInfo) GetStoreCommitID(storeKey string) CommitID {
+func (ci *CommitInfo) GetStoreCommitID(storeKey []byte) CommitID {
 	for _, si := range ci.StoreInfos {
-		if si.Name == storeKey {
+		if bytes.Equal(si.Name, storeKey) {
 			return si.CommitID
 		}
 	}
@@ -66,26 +66,26 @@ func (ci *CommitInfo) GetStoreCommitID(storeKey string) CommitID {
 // GetStoreProof takes in a storeKey and returns a proof of the store key in addition
 // to the root hash it should be proved against. If an empty string is provided, the first
 // store based on lexographical ordering will be proved.
-func (ci *CommitInfo) GetStoreProof(storeKey string) ([]byte, *CommitmentOp, error) {
+func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, error) {
 	sort.Slice(ci.StoreInfos, func(i, j int) bool {
-		return ci.StoreInfos[i].Name < ci.StoreInfos[j].Name
+		return bytes.Compare(ci.StoreInfos[i].Name, ci.StoreInfos[j].Name) < 0
 	})
 
 	index := 0
 	leaves := make([][]byte, len(ci.StoreInfos))
 	for i, si := range ci.StoreInfos {
 		var err error
-		leaves[i], err = LeafHash([]byte(si.Name), si.GetHash())
+		leaves[i], err = LeafHash(si.Name, si.GetHash())
 		if err != nil {
 			return nil, nil, err
 		}
-		if si.Name == storeKey {
+		if bytes.Equal(si.Name, storeKey) {
 			index = i
 		}
 	}
 
 	rootHash, inners := ProofFromByteSlices(leaves, index)
-	commitmentOp := ConvertCommitmentOp(inners, []byte(storeKey), ci.StoreInfos[index].GetHash())
+	commitmentOp := ConvertCommitmentOp(inners, storeKey, ci.StoreInfos[index].GetHash())
 
 	return rootHash, &commitmentOp, nil
 }
@@ -96,7 +96,7 @@ func (ci *CommitInfo) encodedSize() int {
 	size += encoding.EncodeVarintSize(ci.Timestamp.UnixNano())
 	size += encoding.EncodeUvarintSize(uint64(len(ci.StoreInfos)))
 	for _, storeInfo := range ci.StoreInfos {
-		size += encoding.EncodeBytesSize([]byte(storeInfo.Name))
+		size += encoding.EncodeBytesSize(storeInfo.Name)
 		size += encoding.EncodeBytesSize(storeInfo.CommitID.Hash)
 	}
 	return size
@@ -124,7 +124,7 @@ func (ci *CommitInfo) Marshal() ([]byte, error) {
 		return nil, err
 	}
 	for _, si := range ci.StoreInfos {
-		if err := encoding.EncodeBytes(&buf, []byte(si.Name)); err != nil {
+		if err := encoding.EncodeBytes(&buf, si.Name); err != nil {
 			return nil, err
 		}
 		if err := encoding.EncodeBytes(&buf, si.CommitID.Hash); err != nil {
@@ -165,7 +165,7 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 			return err
 		}
 		buf = buf[n:]
-		ci.StoreInfos[i].Name = string(name)
+		ci.StoreInfos[i].Name = name
 		// CommitID
 		hash, n, err := encoding.DecodeBytes(buf)
 		if err != nil {

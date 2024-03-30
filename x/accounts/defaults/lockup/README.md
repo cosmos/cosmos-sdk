@@ -1,23 +1,23 @@
 # Lockup Accounts
 
 
-* [Vesting Account Types](#vesting-account-types)
-    * [BaseVestingAccount](#basevestingaccount)
-    * [ContinuousVestingAccount](#continuousvestingaccount)
-    * [DelayedVestingAccount](#delayedvestingaccount)
-    * [PeriodicVestingAccount](#periodicvestingaccount)
+* [Lockup Account Types](#lockup-account-types)
+    * [BaseLockupAccount](#baselockupaccount)
+    * [ContinuousLockupAccount](#continuouslockupaccount)
+    * [DelayedLockupAccount](#delayedlockupaccount)
+    * [PeriodicLockupAccount](#periodiclockupaccount)
     * [PermanentLockedAccount](#permanentlockedaccount)
 * [Genesis Initialization](#genesis-initialization)
 * [Examples](#examples)
     * [Simple](#simple)
     * [Slashing](#slashing)
-    * [Periodic Vesting](#periodic-vesting)
+    * [Periodic Lockup](#periodic-lockup)
 
 The x/accounts/lockup module provides the implementation for lockup accounts within the x/accounts module.
 
-## Vesting Account Types
+## Lockup Account Types
 
-### BaseVestingAccount
+### BaseLockupAccount
 
 The base vesting account is used by all default lockup accounts. It contains the basic information for a vesting account. The Base vesting account keeps knowledge of the staking delegations from the account.
 
@@ -36,7 +36,7 @@ type BaseLockup struct {
 }
 ```
 
-### ContinuousVestingAccount
+### ContinuousLockupAccount
 
 The continuous vesting account has a future start time and begins unlocking continuously until the specified end date.
 
@@ -58,7 +58,7 @@ type ContinuousLockingAccount struct {
 }
 ```
 
-### DelayedVestingAccount
+### DelayedLockupAccount
 
 The delayed vesting account unlocks all tokens at a specific time. The account can receive coins and send coins. The account can be used to lock coins for a long period of time.
 
@@ -68,7 +68,7 @@ type DelayedLockingAccount struct {
 }
 ```
 
-### PeriodicVestingAccount
+### PeriodicLockupAccount
 
 The periodic vesting account locks tokens for a series of periods. The account can receive coins and send coins. After all the periods, all the coins are unlocked and the account can send coins.
 
@@ -208,7 +208,7 @@ It can still, however, delegate.
 
     Notice how we have an excess amount of `DV`.
 
-### Periodic Vesting
+### Periodic Lockup
 
 A vesting account is created where 100 tokens will be released over 1 year, with
 1/4 of tokens vesting each quarter. The vesting schedule would be as follows:
@@ -236,7 +236,7 @@ V' = 0
     BC = 101
     ```
 
-2. Vesting period 1 passes, 25 coins vest
+2. Lockup period 1 passes, 25 coins vest
 
     ```text
     V = 75
@@ -250,7 +250,7 @@ V' = 0
     BC = 91
     ```
 
-4. Vesting period 2 passes, 25 coins vest
+4. Lockup period 2 passes, 25 coins vest
 
     ```text
     V = 50

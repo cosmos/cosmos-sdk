@@ -9,11 +9,11 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/simulation"
 	"cosmossdk.io/x/epochs/types"
 
-	"cosmossdk.io/core/registry"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"

@@ -80,14 +80,14 @@ func TestCustomTemplateAndConfig(t *testing.T) {
 		Note: "Sent from the CLI.",
 	}
 
-	customClientConfigTemplate := config.DefaultClientConfigTemplate + `
+	customConfig := `
 # This is the gas adjustment factor used by the tx commands.
 # Sets the default and can be overwritten by the --gas-adjustment flag in tx commands.
 gas-adjustment = {{ .GasConfig.GasAdjustment }}
 # Memo to include in all transactions.
 note = "{{ .Note }}"
 `
-
+	customClientConfigTemplate := config.CustomizeConfigTemplate(customConfig)
 	t.Run("custom template and config provided", func(t *testing.T) {
 		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", customClientConfigTemplate, customClientConfig)
 		defer func() {

@@ -170,7 +170,7 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 // CustomizeConfigTemplate inserts custom configuration settings into the default config template by replacing a predefined placeholder
 // This approach prevents issues that could arise from direct concatenation, such as incorrect section categorization of custom settings.
 func CustomizeConfigTemplate(customConfig string) string {
-	return strings.Replace(DefaultClientConfigTemplate, CustomConfigKey, customConfig, -1)
+	return strings.ReplaceAll(DefaultClientConfigTemplate, CustomConfigKey, customConfig)
 }
 
 // getGRPCClient creates and returns a new gRPC client connection based on the GRPCConfig.

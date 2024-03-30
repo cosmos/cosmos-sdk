@@ -103,7 +103,12 @@ func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i,
 func (u Uint) AddUint64(u2 uint64) Uint { return u.Add(NewUint(u2)) }
 
 // Sub adds Uint from another
-func (u Uint) Sub(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Sub(u.i, u2.i)) }
+func (u Uint) Sub(u2 Uint) Uint {
+	if u.LT(u2) {
+		panic("underflow: subtraction result is less than zero")
+	}
+	return NewUintFromBigInt(new(big.Int).Sub(u.i, u2.i))
+}
 
 // SubUint64 adds Uint from another
 func (u Uint) SubUint64(u2 uint64) Uint { return u.Sub(NewUint(u2)) }

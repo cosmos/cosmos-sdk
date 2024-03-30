@@ -884,7 +884,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// EventCreateGroup is an event emitted when a group is created.
+// EventEpochEnd is an event emitted when an epoch end.
 type EventEpochEnd struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -920,7 +920,7 @@ func (x *EventEpochEnd) GetEpochNumber() int64 {
 	return 0
 }
 
-// EventUpdateGroup is an event emitted when a group is updated.
+// EventEpochStart is an event emitted when an epoch start.
 type EventEpochStart struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

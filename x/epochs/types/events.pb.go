@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// EventCreateGroup is an event emitted when a group is created.
+// EventEpochEnd is an event emitted when an epoch end.
 type EventEpochEnd struct {
 	EpochNumber int64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
 }
@@ -68,7 +68,7 @@ func (m *EventEpochEnd) GetEpochNumber() int64 {
 	return 0
 }
 
-// EventUpdateGroup is an event emitted when a group is updated.
+// EventEpochStart is an event emitted when an epoch start.
 type EventEpochStart struct {
 	EpochNumber    int64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
 	EpochStartTime int64 `protobuf:"varint,2,opt,name=epoch_start_time,json=epochStartTime,proto3" json:"epoch_start_time,omitempty"`

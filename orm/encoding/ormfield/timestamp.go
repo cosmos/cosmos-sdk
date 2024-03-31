@@ -82,7 +82,13 @@ func encodeNanos(nanosInt int64, w io.Writer) error {
 		nanosBz[i] = byte(nanosInt)
 		nanosInt >>= 8
 	}
-	nanosBz[0] |= 0xC0
+
+	// This condition is crucial to ensure the function's correct behavior when dealing with a Timestamp or Duration encoding.
+	// Specifically, this function is bypassed for Timestamp values when their nanoseconds part is zero.
+	// In the decodeNanos function, there's a preliminary check for a zero first byte, which represents all values ≤ 16777215 (00000000 11111111 11111111 11111111).
+	// Without this adjustment (setting the first byte to 0x80 with is 10000000 in binary format), decodeNanos would incorrectly return 0 for any number ≤ 16777215,
+	// leading to inaccurate decoding of nanoseconds.
+	nanosBz[0] |= 0x80
 	_, err := w.Write(nanosBz[:])
 	return err
 }
@@ -158,7 +164,11 @@ func decodeNanos(r Reader) (int32, error) {
 		return 0, io.EOF
 	}
 
-	nanos := int32(b0) & 0x3F // clear first two bits
+	// Clear the first bit, previously set in encodeNanos, to ensure this logic is applied
+	// and for numbers ≤ 16777215. This adjustment guarantees that we accurately interpret
+	// the value as intended when encoding smaller numbers.
+	nanos := int32(b0) & 0x7F
+
 	for i := 0; i < 3; i++ {
 		nanos <<= 8
 		nanos |= int32(nanosBz[i])

@@ -37,10 +37,12 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 
 	seconds, nanos := getDurationSecondsAndNanos(value)
 	secondsInt := seconds.Int()
-	if secondsInt < DurationSecondsMin || secondsInt > DurationSecondsMax {
-		return fmt.Errorf("duration seconds is out of range %d, must be between %d and %d", secondsInt, DurationSecondsMin, DurationSecondsMax)
+	nanosInt := nanos.Int()
+
+	if err := validateDurationRanges(secondsInt, nanosInt); err != nil {
+		return err
 	}
-	negative := secondsInt < 0
+
 	// we subtract the min duration value to make sure secondsInt is always non-negative and starts at 0.
 	secondsInt -= DurationSecondsMin
 	err := encodeSeconds(secondsInt, w)
@@ -48,21 +50,8 @@ func (d DurationCodec) Encode(value protoreflect.Value, w io.Writer) error {
 		return err
 	}
 
-	nanosInt := nanos.Int()
-	if nanosInt == 0 {
-		_, err = w.Write(timestampZeroNanosBz)
-		return err
-	}
-
-	if negative {
-		if nanosInt < DurationNanosMin || nanosInt > 0 {
-			return fmt.Errorf("negative duration nanos is out of range %d, must be between %d and %d", nanosInt, DurationNanosMin, 0)
-		}
-		nanosInt = DurationNanosMax + nanosInt + 1
-	} else if nanosInt < 0 || nanosInt > DurationNanosMax {
-		return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", nanosInt, 0, DurationNanosMax)
-	}
-
+	// we subtract the min duration value to make sure nanosInt is always non-negative and starts at 0.
+	nanosInt -= DurationNanosMin
 	return encodeNanos(nanosInt, w)
 }
 
@@ -72,10 +61,8 @@ func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, err
 	}
 
-	// we add the min duration value to get back the original value
+	// we add the min seconds duration value to get back the original value
 	seconds += DurationSecondsMin
-
-	negative := seconds < 0
 
 	msg := durationMsgType.New()
 	msg.Set(durationSecondsField, protoreflect.ValueOfInt64(seconds))
@@ -84,14 +71,8 @@ func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 	if err != nil {
 		return protoreflect.Value{}, err
 	}
-
-	if nanos == 0 {
-		return protoreflect.ValueOfMessage(msg), nil
-	}
-
-	if negative {
-		nanos = nanos - DurationNanosMax - 1
-	}
+	// we add the min nanos duration value to get back the original value
+	nanos += DurationNanosMin
 
 	msg.Set(durationNanosField, protoreflect.ValueOfInt32(nanos))
 	return protoreflect.ValueOfMessage(msg), nil
@@ -139,6 +120,36 @@ var (
 func getDurationSecondsAndNanos(value protoreflect.Value) (protoreflect.Value, protoreflect.Value) {
 	msg := value.Message()
 	return msg.Get(durationSecondsField), msg.Get(durationNanosField)
+}
+
+// validateDurationRanges checks whether seconds and nanoseconds are in valid ranges
+// for a protobuf Duration type. It ensures that seconds are within the allowed range
+// and, if seconds are zero or negative, verifies that nanoseconds are also within
+// the valid range. For negative seconds, nanoseconds must be non-positive.
+// Parameters:
+//   - seconds: The number of seconds component of the duration.
+//   - nanos: The number of nanoseconds component of the duration.
+//
+// Returns:
+//   - error: An error indicating if the duration components are out of range.
+func validateDurationRanges(seconds, nanos int64) error {
+	if seconds < DurationSecondsMin || seconds > DurationSecondsMax {
+		return fmt.Errorf("duration seconds is out of range %d, must be between %d and %d", seconds, DurationSecondsMin, DurationSecondsMax)
+	}
+
+	if seconds == 0 {
+		if nanos < DurationNanosMin || nanos > DurationNanosMax {
+			return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", nanos, DurationNanosMin, DurationNanosMax)
+		}
+	} else if seconds < 0 {
+		if nanos < DurationNanosMin || nanos > 0 {
+			return fmt.Errorf("negative duration nanos is out of range %d, must be between %d and %d", nanos, DurationNanosMin, 0)
+		}
+	} else if nanos < 0 || nanos > DurationNanosMax {
+		return fmt.Errorf("duration nanos is out of range %d, must be between %d and %d", nanos, 0, DurationNanosMax)
+	}
+
+	return nil
 }
 
 // DurationV0Codec encodes a google.protobuf.Duration value as 12 bytes using

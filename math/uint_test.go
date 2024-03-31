@@ -126,6 +126,19 @@ func (s *uintTestSuite) TestArithUint() {
 		n2 := uint64(rand.Uint32())
 		u2 := sdkmath.NewUint(n2)
 
+		if n1 >= n2 {
+			subs := []struct {
+				ures sdkmath.Uint
+				nres uint64
+			}{
+				{u1.Sub(u2), n1 - n2},
+			}
+
+			for tcnum, tc := range subs {
+				s.Require().Equal(tc.nres, tc.ures.Uint64(), "Uint subtraction operation does not match with uint64 operation. tc #%d", tcnum)
+			}
+		}
+
 		cases := []struct {
 			ures sdkmath.Uint
 			nres uint64

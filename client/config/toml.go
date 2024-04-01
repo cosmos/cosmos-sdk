@@ -29,10 +29,6 @@ node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
 
-###############################################################################
-###                           gRPC Configuration                            ###
-###############################################################################
-
 # gRPC server endpoint to which the client will connect.
 # It can be overwritten by the --grpc-addr flag in each command.
 grpc-address = "{{ .GRPC.Address }}"

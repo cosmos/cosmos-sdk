@@ -57,4 +57,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#16023](https://github.com/cosmos/cosmos-sdk/pull/16023) Fix bugs introduced by lack of CI tests in [#15138](https://github.com/cosmos/cosmos-sdk/pull/15138) and [#15813](https://github.com/cosmos/cosmos-sdk/pull/15813). This changes the duration encoding in [#15138](https://github.com/cosmos/cosmos-sdk/pull/15138) to correctly order values with negative nanos.
-* [#19909](https://github.com/cosmos/cosmos-sdk/pull/19909) This encodes negative, zero, and positive nanoseconds in a same way and fix the issue when comparing two duration objects. 
+* [#19909](https://github.com/cosmos/cosmos-sdk/pull/19909) Adjusts the encoding of negative, zero, and positive nanoseconds to ensure consistent comparison of duration objects. 

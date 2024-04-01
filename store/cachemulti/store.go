@@ -26,6 +26,8 @@ type Store struct {
 	traceWriter  io.Writer
 	traceContext types.TraceContext
 	parentStore  func(types.StoreKey) types.CacheWrap
+
+	branched bool
 }
 
 var _ types.CacheMultiStore = Store{}
@@ -44,7 +46,7 @@ func NewFromKVStore(
 	}
 
 	for key, store := range stores {
-		cms.initStore(key, store)
+		cms.stores[key] = cms.initStore(key, store)
 	}
 
 	return cms
@@ -79,9 +81,7 @@ func (cms Store) initStore(key types.StoreKey, store types.CacheWrapper) types.C
 			store = tracekv.NewStore(kvstore, cms.traceWriter, tctx)
 		}
 	}
-	cache := store.CacheWrap()
-	cms.stores[key] = cache
-	return cache
+	return store.CacheWrap()
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -117,6 +117,9 @@ func (cms Store) GetStoreType() types.StoreType {
 
 // Write calls Write on each underlying store.
 func (cms Store) Write() {
+	if cms.branched {
+		panic("cannot Write on branched store")
+	}
 	for _, store := range cms.stores {
 		store.Write()
 	}
@@ -139,9 +142,14 @@ func (cms Store) CacheMultiStore() types.CacheMultiStore {
 
 func (cms Store) getCacheWrap(key types.StoreKey) types.CacheWrap {
 	store, ok := cms.stores[key]
-	if !ok && cms.parentStore != nil {
+	if !ok {
 		// load on demand
-		store = cms.initStore(key, cms.parentStore(key))
+		if cms.branched {
+			store = cms.parentStore(key).(types.BranchStore).Clone().(types.CacheWrap)
+		} else if cms.parentStore != nil {
+			store = cms.initStore(key, cms.parentStore(key))
+		}
+		cms.stores[key] = store
 	}
 	if key == nil || store == nil {
 		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
@@ -174,4 +182,37 @@ func (cms Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
 		panic(fmt.Sprintf("store with key %v is not ObjKVStore", key))
 	}
 	return store
+}
+
+func (cms Store) Clone() Store {
+	return Store{
+		stores: make(map[types.StoreKey]types.CacheWrap),
+
+		traceWriter:  cms.traceWriter,
+		traceContext: cms.traceContext,
+		parentStore:  cms.getCacheWrap,
+
+		branched: true,
+	}
+}
+
+func (cms Store) Restore(other Store) {
+	if !other.branched {
+		panic("cannot restore from non-branched store")
+	}
+
+	// restore the stores
+	for k, v := range other.stores {
+		cms.stores[k].(types.BranchStore).Restore(v.(types.BranchStore))
+	}
+}
+
+func (cms Store) RunAtomic(cb func(types.CacheMultiStore) error) error {
+	branch := cms.Clone()
+	if err := cb(branch); err != nil {
+		return err
+	}
+
+	cms.Restore(branch)
+	return nil
 }

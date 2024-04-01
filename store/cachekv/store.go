@@ -56,10 +56,9 @@ func (store *GStore[V]) GetStoreType() types.StoreType {
 // Clone creates a copy-on-write snapshot of the cache store,
 // it only performs a shallow copy so is very fast.
 func (store *GStore[V]) Clone() types.BranchStore {
-	return &GStore[V]{
-		writeSet: store.writeSet.Copy(),
-		parent:   store.parent,
-	}
+	v := *store
+	v.writeSet = store.writeSet.Copy()
+	return &v
 }
 
 // swapCache swap out the internal cache store and leave the current store unusable.

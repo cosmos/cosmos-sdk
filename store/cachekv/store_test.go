@@ -447,6 +447,20 @@ func TestIteratorDeadlock(t *testing.T) {
 	defer it2.Close()
 }
 
+func TestBranchStore(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	store := cachekv.NewStore(mem)
+
+	store.Set([]byte("key1"), []byte("value1"))
+
+	branch := store.Clone().(types.CacheKVStore)
+	branch.Set([]byte("key1"), []byte("value2"))
+
+	require.Equal(t, []byte("value1"), store.Get([]byte("key1")))
+	store.Restore(branch.(types.BranchStore))
+	require.Equal(t, []byte("value2"), store.Get([]byte("key1")))
+}
+
 //-------------------------------------------------------------------------------------------
 // do some random ops
 

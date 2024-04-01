@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -403,6 +404,26 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	}
 
 	return cc, writeCache
+}
+
+// RunAtomic execute the callback function atomically, i.e. the state and event changes are
+// only persisted if the callback returns no error, or discarded as a whole.
+// It uses an efficient approach than CacheContext, without wrapping stores.
+func (c Context) RunAtomic(cb func(Context) error) error {
+	evtManager := NewEventManager()
+	cacheMS, ok := c.ms.(storetypes.CacheMultiStore)
+	if !ok {
+		return errors.New("multistore is not a CacheMultiStore")
+	}
+	if err := cacheMS.RunAtomic(func(ms storetypes.CacheMultiStore) error {
+		ctx := c.WithMultiStore(ms).WithEventManager(evtManager)
+		return cb(ctx)
+	}); err != nil {
+		return err
+	}
+
+	c.EventManager().EmitEvents(evtManager.Events())
+	return nil
 }
 
 var (

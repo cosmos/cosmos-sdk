@@ -194,7 +194,7 @@ func TestAppImportExport(t *testing.T) {
 		stakingtypes.StoreKey: {
 			stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
 			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
-			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
+			stakingtypes.UnbondingTypeKey,
 		},
 		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
 		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},

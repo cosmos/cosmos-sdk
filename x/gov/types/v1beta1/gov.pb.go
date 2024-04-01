@@ -7,13 +7,13 @@ import (
 	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
@@ -257,7 +257,7 @@ type Proposal struct {
 	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 	// content is the proposal's content.
-	Content *types1.Any `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	Content *any.Any `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
 	// status defines the proposal status.
 	Status ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
 	// final_tally_result is the final tally result of the proposal. When
@@ -1843,7 +1843,7 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Content == nil {
-				m.Content = &types1.Any{}
+				m.Content = &any.Any{}
 			}
 			if err := m.Content.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

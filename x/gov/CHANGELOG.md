@@ -62,6 +62,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19850](https://github.com/cosmos/cosmos-sdk/pull/19850) Removes the use of Accounts String method: 
+    * `NewDeposit`, `NewMsgDeposit`, `NewMsgVote`, `NewMsgVoteWeighted`, `NewVote`, `NewProposal`, `NewMsgSubmitProposal` now take a string as an argument instead of an `sdk.AccAddress`.
+    * `Prompt` and `PromptMetadata` take an address.Codec as arguments.
+    * `SetProposer` takes a String as an argument instead of a `fmt.Stringer`.
 * [#19481](https://github.com/cosmos/cosmos-sdk/pull/19481) Migrate module to use `appmodule.Environment`; `NewKeeper` now takes `appmodule.Environment` instead of a store service and no `baseapp.MessageRouter` anymore.
 * [#19481](https://github.com/cosmos/cosmos-sdk/pull/19481) v1beta1 proposal handlers now take a `context.Context` instead of an `sdk.Context`.
 * [#19592](https://github.com/cosmos/cosmos-sdk/pull/19592) `types.Config` and `types.DefaultConfig` have been moved to the keeper package in order to support the custom tallying function.

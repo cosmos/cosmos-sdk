@@ -83,8 +83,6 @@ type Keeper struct {
 	HistoricalInfo collections.Map[uint64, types.HistoricalRecord]
 	// LastTotalPower value: LastTotalPower
 	LastTotalPower collections.Item[math.Int]
-	// ValidatorUpdates value: ValidatorUpdates
-	ValidatorUpdates collections.Item[types.ValidatorUpdates]
 	// DelegationsByValidator key: valAddr+delAddr | value: none used (index key for delegations by validator index)
 	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
 	UnbondingID            collections.Sequence
@@ -171,7 +169,6 @@ func NewKeeper(
 		consensusAddressCodec: consensusAddressCodec,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, HistoricalInfoCodec(cdc)),
-		ValidatorUpdates:      collections.NewItem(sb, types.ValidatorUpdatesKey, "validator_updates", codec.CollValue[types.ValidatorUpdates](cdc)),
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",
 			collections.PairKeyCodec(

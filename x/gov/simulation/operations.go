@@ -185,8 +185,11 @@ func SimulateMsgSubmitLegacyProposal(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "content is nil"), nil, nil
 		}
 
-		govacc := k.GetGovernanceAccount(ctx)
-		contentMsg, err := v1.NewLegacyContent(content, govacc.GetAddress().String())
+		govacc, err := ak.AddressCodec().BytesToString(k.GetGovernanceAccount(ctx).GetAddress())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error getting governance account address"), nil, err
+		}
+		contentMsg, err := v1.NewLegacyContent(content, govacc)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error converting legacy content into proposal message"), nil, err
 		}
@@ -245,10 +248,14 @@ func simulateMsgSubmitProposal(
 			proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 		}
 
+		accAddr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error getting simAccount address"), nil, err
+		}
 		msg, err := v1.NewMsgSubmitProposal(
 			proposalMsgs,
 			deposit,
-			simAccount.Address.String(),
+			accAddr,
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
@@ -343,7 +350,11 @@ func SimulateMsgDeposit(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to generate deposit"), nil, err
 		}
 
-		msg := v1.NewMsgDeposit(simAccount.Address, proposalID, deposit)
+		addr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to get simAccount address"), nil, err
+		}
+		msg := v1.NewMsgDeposit(addr, proposalID, deposit)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -413,7 +424,11 @@ func operationSimulateMsgVote(
 		}
 
 		option := randomVotingOption(r)
-		msg := v1.NewMsgVote(simAccount.Address, proposalID, option, "")
+		addr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVote, "unable to get simAccount address"), nil, err
+		}
+		msg := v1.NewMsgVote(addr, proposalID, option, "")
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -476,7 +491,11 @@ func operationSimulateMsgVoteWeighted(
 		}
 
 		options := randomWeightedVotingOptions(r)
-		msg := v1.NewMsgVoteWeighted(simAccount.Address, proposalID, options, "")
+		addr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteWeighted, "unable to get simAccount address"), nil, err
+		}
+		msg := v1.NewMsgVoteWeighted(addr, proposalID, options, "")
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -516,7 +535,11 @@ func SimulateMsgCancelProposal(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "no proposals found"), nil, nil
 		}
 
-		if proposal.Proposer != simAccount.Address.String() {
+		proposerAddr, err := ak.AddressCodec().BytesToString(simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "invalid proposer"), nil, err
+		}
+		if proposal.Proposer != proposerAddr {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "invalid proposer"), nil, nil
 		}
 
@@ -527,7 +550,11 @@ func SimulateMsgCancelProposal(
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := v1.NewMsgCancelProposal(proposal.Id, account.GetAddress().String())
+		accAddr, err := ak.AddressCodec().BytesToString(account.GetAddress())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "could not get account address"), nil, err
+		}
+		msg := v1.NewMsgCancelProposal(proposal.Id, accAddr)
 
 		txCtx := simulation.OperationInput{
 			R:               r,

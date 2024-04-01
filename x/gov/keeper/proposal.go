@@ -80,7 +80,11 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 
 		// assert that the governance module account is the only signer of the messages
 		if !bytes.Equal(signers[0], k.GetGovernanceAccount(ctx).GetAddress()) {
-			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, sdk.AccAddress(signers[0]).String())
+			addr, err := k.authKeeper.AddressCodec().BytesToString(signers[0])
+			if err != nil {
+				return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, err.Error())
+			}
+			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, addr)
 		}
 
 		if err := k.environment.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
@@ -124,8 +128,12 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
+	proposerAddr, err := k.authKeeper.AddressCodec().BytesToString(proposer)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
 	submitTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
-	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*params.MaxDepositPeriod), metadata, title, summary, proposer, proposalType)
+	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*params.MaxDepositPeriod), metadata, title, summary, proposerAddr, proposalType)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -148,7 +156,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		types.EventTypeSubmitProposal,
 		event.NewAttribute(types.AttributeKeyProposalType, proposalType.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-		event.NewAttribute(types.AttributeKeyProposalProposer, proposer.String()),
+		event.NewAttribute(types.AttributeKeyProposalProposer, proposerAddr),
 		event.NewAttribute(types.AttributeKeyProposalMessages, strings.Join(msgs, ",")),
 	); err != nil {
 		return v1.Proposal{}, fmt.Errorf("failed to emit event: %w", err)

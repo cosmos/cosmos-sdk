@@ -165,7 +165,11 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		deposit.Amount = sdk.NewCoins(deposit.Amount...).Add(depositAmount...)
 	case errors.IsOf(err, collections.ErrNotFound):
 		// deposit doesn't exist
-		deposit = v1.NewDeposit(proposalID, depositorAddr, depositAmount)
+		addr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
+		if err != nil {
+			return false, err
+		}
+		deposit = v1.NewDeposit(proposalID, addr, depositAmount)
 	default:
 		// failed to get deposit
 		return false, err
@@ -177,9 +181,14 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		return false, err
 	}
 
+	depositorStrAddr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
+	if err != nil {
+		return false, err
+	}
+
 	if err := k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeProposalDeposit,
-		event.NewAttribute(types.AttributeKeyDepositor, depositorAddr.String()),
+		event.NewAttribute(types.AttributeKeyDepositor, depositorStrAddr),
 		event.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 	); err != nil {
@@ -248,7 +257,10 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 	// burn the cancellation fee or send the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the pool module account address
-		poolAddress := k.authKeeper.GetModuleAddress(pooltypes.ModuleName)
+		poolAddress, err := k.authKeeper.AddressCodec().BytesToString(k.authKeeper.GetModuleAddress(pooltypes.ModuleName))
+		if err != nil {
+			return err
+		}
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits
@@ -256,7 +268,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 			if err != nil {
 				return err
 			}
-		case poolAddress.String() == destAddress:
+		case poolAddress == destAddress:
 			err := k.poolKeeper.FundCommunityPool(ctx, cancellationCharges, k.ModuleAccountAddress())
 			if err != nil {
 				return err

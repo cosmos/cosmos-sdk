@@ -31,6 +31,13 @@ clientCtx = clientCtx.
 
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
 
+Additionally, a simplification of the start command leads to the following change:
+
+```diff
+- server.AddCommands(rootCmd, newApp, func(startCmd *cobra.Command) {})
++ server.AddCommands(rootCmd, newApp, server.StartCmdOptions[servertypes.Application]{})
+```
+
 #### Server (`app.go`)
 
 ##### Module Manager
@@ -432,6 +439,9 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 With the deprecation of the Amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
 
 For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/rapidgen/rapidgen.go#L102) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/tx/aminojson/aminojson_test.go#L94).
+
+Due to the `Any` type moving to the `github.com/cosmos/gogoproto/types/any` repository, module developers must update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for correct mapping to the new `Any` type location.
+
 
 **TODO: summarize proto annotation requirements.**
 

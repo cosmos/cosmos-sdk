@@ -73,7 +73,7 @@ func NewCometBFTServer[T transaction.Tx](
 	mempool := mempool.NoOpMempool[T]{}
 
 	// create consensus
-	consensus := NewConsensus[T](app, mempool, store, cfg, txCodec)
+	consensus := NewConsensus[T](app, mempool, store, cfg, txCodec, logger)
 
 	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
 	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())

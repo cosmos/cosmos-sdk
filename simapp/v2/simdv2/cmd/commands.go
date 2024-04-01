@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"os"
 	"os/signal"
 	"syscall"
@@ -32,7 +33,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	// end TODO
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -60,7 +60,7 @@ func initRootCmd(
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		// genesisCommand(txConfig, moduleManager, appExport),
+		//genesisCommand(txConfig, moduleManager, appExport),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -105,7 +105,12 @@ func startCommand() *cobra.Command {
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(txConfig client.TxConfig, moduleManager *module.Manager, appExport servertypes.AppExporter, cmds ...*cobra.Command) *cobra.Command {
+func genesisCommand(
+	txConfig client.TxConfig,
+	moduleManager *module.Manager,
+	appExport servertypes.AppExporter,
+	cmds ...*cobra.Command,
+) *cobra.Command {
 	cmd := genutilcli.Commands(txConfig, moduleManager, appExport)
 
 	for _, subCmd := range cmds {

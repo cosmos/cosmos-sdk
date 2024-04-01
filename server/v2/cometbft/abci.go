@@ -59,14 +59,16 @@ func NewConsensus[T transaction.Tx](
 	mp mempool.Mempool[T],
 	store types.Store,
 	cfg Config,
-	txcodec transaction.Codec[T],
+	txCodec transaction.Codec[T],
+	logger log.Logger,
 ) *Consensus[T] {
 	return &Consensus[T]{
 		mempool: mp,
 		store:   store,
 		app:     app,
 		cfg:     cfg,
-		txCodec: txcodec,
+		txCodec: txCodec,
+		logger:  logger,
 	}
 }
 
@@ -154,10 +156,10 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 		return nil, err
 	}
 
-	cp, err := c.GetConsensusParams(ctx)
-	if err != nil {
-		return nil, err
-	}
+	//cp, err := c.GetConsensusParams(ctx)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	cid, err := c.store.LastCommitID()
 	if err != nil {
@@ -165,9 +167,10 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 	}
 
 	return &abci.ResponseInfo{
-		Data:             c.cfg.Name,
-		Version:          c.cfg.Version,
-		AppVersion:       cp.GetVersion().App,
+		Data:    c.cfg.Name,
+		Version: c.cfg.Version,
+		//AppVersion:       cp.GetVersion().App,
+		AppVersion:       0, // TODO fetch from store?
 		LastBlockHeight:  int64(version),
 		LastBlockAppHash: cid.Hash,
 	}, nil

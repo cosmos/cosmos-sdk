@@ -47,7 +47,8 @@ func (k *Keeper) GetAuthority() string {
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of consensus module
-func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Keeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	fmt.Println("Params", req)
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -89,7 +90,10 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 // SetParams sets the consensus parameters on init of a chain. This is a consensus message. It can only be called by the consensus server
 // This is used in the consensus message handler set in module.go.
-func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*types.ConsensusMsgParamsResponse, error) {
+func (k Keeper) SetParams(
+	ctx context.Context,
+	req *types.ConsensusMsgParams,
+) (*types.ConsensusMsgParamsResponse, error) {
 	consensusParams, err := req.ToProtoConsensusParams()
 	if err != nil {
 		return nil, err

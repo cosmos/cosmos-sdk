@@ -45,8 +45,8 @@ type STFI[T transaction.Tx] interface {
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
-	handleMsg   appmodulev2.Handler
-	handleQuery appmodulev2.Handler
+	handleMsg   func(ctx context.Context, msg transaction.Type) (transaction.Type, error)
+	handleQuery func(ctx context.Context, req transaction.Type) (transaction.Type, error)
 
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
@@ -63,8 +63,8 @@ type STF[T transaction.Tx] struct {
 
 // NewSTF returns a new STF instance.
 func NewSTF[T transaction.Tx](
-	handleMsg appmodulev2.Handler,
-	handleQuery appmodulev2.Handler,
+	handleMsg func(ctx context.Context, msg transaction.Type) (transaction.Type, error),
+	handleQuery func(ctx context.Context, req transaction.Type) (transaction.Type, error),
 	doPreBlock func(ctx context.Context, txs []T) error,
 	doBeginBlock func(ctx context.Context) error,
 	doEndBlock func(ctx context.Context) error,

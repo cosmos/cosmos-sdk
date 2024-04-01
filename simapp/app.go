@@ -280,30 +280,6 @@ func NewSimApp(
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	// add keepers
-	accountsKeeper, err := accounts.NewKeeper(
-		appCodec,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), logger),
-		signingCtx.AddressCodec(),
-		appCodec,
-		app.MsgServiceRouter(),
-		app.GRPCQueryRouter(),
-		appCodec.InterfaceRegistry(),
-		// TESTING: do not add
-		accountstd.AddAccount("counter", counter.NewAccount),
-		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
-		// Lockup account
-		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
-		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
-		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
-		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
-		// PRODUCTION: add
-		baseaccount.NewAccount("base", txConfig.SignModeHandler()),
-	)
-	if err != nil {
-		panic(err)
-	}
-	app.AccountsKeeper = accountsKeeper
-
 	app.AuthKeeper = authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), logger), appCodec, authtypes.ProtoBaseAccount, maccPerms, signingCtx.AddressCodec(), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
@@ -353,6 +329,30 @@ func NewSimApp(
 	app.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
+
+	accountsKeeper, err := accounts.NewKeeper(
+		appCodec,
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), logger),
+		signingCtx.AddressCodec(),
+		appCodec,
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		appCodec.InterfaceRegistry(),
+		// TESTING: do not add
+		accountstd.AddAccount("counter", counter.NewAccount),
+		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
+		// Lockup account
+		lockup.NewContinuousLockingAccount(app.StakingKeeper, app.BankKeeper),
+		lockup.NewDelayedLockingAccount(app.StakingKeeper, app.BankKeeper),
+		lockup.NewPeriodicLockingAccount(app.StakingKeeper, app.BankKeeper),
+		lockup.NewPermanentLockingAccount(app.StakingKeeper, app.BankKeeper),
+		// PRODUCTION: add
+		baseaccount.NewAccount("base", txConfig.SignModeHandler()),
+	)
+	if err != nil {
+		panic(err)
+	}
+	app.AccountsKeeper = accountsKeeper
 
 	app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[circuittypes.StoreKey]), logger), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
 	app.BaseApp.SetCircuitBreaker(&app.CircuitKeeper)

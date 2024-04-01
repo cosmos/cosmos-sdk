@@ -44,7 +44,7 @@ func (plva PermanentLockingAccount) Init(ctx context.Context, msg *types.MsgInit
 
 // GetlockedCoinsWithDenoms returns the total number of locked coins. If no coins are
 // locked, nil is returned.
-func (plva PermanentLockingAccount) GetlockedCoinsWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
+func (plva PermanentLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	vestingCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		originalVestingAmt, err := plva.OriginalLocking.Get(ctx, denom)
@@ -59,7 +59,7 @@ func (plva PermanentLockingAccount) GetlockedCoinsWithDenoms(ctx context.Context
 func (plva *PermanentLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseLockup.Delegate(ctx, msg, plva.GetlockedCoinsWithDenoms)
+	return plva.BaseLockup.Delegate(ctx, msg, plva.GetLockedCoinsWithDenoms)
 }
 
 func (plva *PermanentLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
@@ -71,7 +71,13 @@ func (plva *PermanentLockingAccount) Undelegate(ctx context.Context, msg *types.
 func (plva *PermanentLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseLockup.SendCoins(ctx, msg, plva.GetlockedCoinsWithDenoms)
+	return plva.BaseLockup.SendCoins(ctx, msg, plva.GetLockedCoinsWithDenoms)
+}
+
+func (plva *PermanentLockingAccount) ClawbackFunds(ctx context.Context, msg *types.MsgClawback) (
+	*types.MsgClawbackResponse, error,
+) {
+	return plva.BaseLockup.ClawbackFunds(ctx, msg, plva.GetLockedCoinsWithDenoms)
 }
 
 func (plva PermanentLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
@@ -104,6 +110,7 @@ func (plva PermanentLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 	accountstd.RegisterExecuteHandler(builder, plva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, plva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, plva.SendCoins)
+	accountstd.RegisterExecuteHandler(builder, plva.ClawbackFunds)
 }
 
 func (plva PermanentLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

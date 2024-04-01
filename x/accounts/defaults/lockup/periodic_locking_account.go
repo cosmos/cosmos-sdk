@@ -135,6 +135,12 @@ func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, ms
 	return pva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
+func (pva *PeriodicLockingAccount) ClawbackFunds(ctx context.Context, msg *types.MsgClawback) (
+	*types.MsgClawbackResponse, error,
+) {
+	return pva.BaseLockup.ClawbackFunds(ctx, msg, pva.GetLockedCoinsWithDenoms)
+}
+
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (pva PeriodicLockingAccount) IteratePeriods(
 	ctx context.Context,
@@ -339,6 +345,7 @@ func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 	accountstd.RegisterExecuteHandler(builder, pva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, pva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, pva.WithdrawUnlockedCoins)
+	accountstd.RegisterExecuteHandler(builder, pva.ClawbackFunds)
 }
 
 func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

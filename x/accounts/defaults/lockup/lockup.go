@@ -407,7 +407,10 @@ func (bva *BaseLockup) ClawbackFunds(
 		clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, lockedAmt))
 
 		// clear the lock token tracking
-		bva.OriginalLocking.Remove(ctx, denom)
+		err = bva.OriginalLocking.Remove(ctx, denom)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if len(clawbackTokens) == 0 {
 		return nil, fmt.Errorf("no tokens available for clawback")

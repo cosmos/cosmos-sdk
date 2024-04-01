@@ -139,7 +139,7 @@ func (pva *PeriodicLockingAccount) ClawbackFunds(ctx context.Context, msg *types
 	return pva.BaseLockup.ClawbackFunds(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-// IterateSendEnabledEntries iterates over all the SendEnabled entries.
+// IteratePeriods iterates over all the Period entries.
 func (pva PeriodicLockingAccount) IteratePeriods(
 	ctx context.Context,
 	cb func(value types.Period) (bool, error),

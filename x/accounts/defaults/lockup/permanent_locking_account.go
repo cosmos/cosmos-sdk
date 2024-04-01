@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	types "cosmossdk.io/x/accounts/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -17,17 +17,19 @@ var (
 )
 
 // NewPermanentLockingAccount creates a new PermanentLockingAccount object.
-func NewPermanentLockingAccount(d accountstd.Dependencies) (*PermanentLockingAccount, error) {
-	baseLockup := newBaseLockup(d)
+func NewPermanentLockingAccount(sk types.StakingKeeper, bk types.BankKeeper) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		baseLockup := newBaseLockup(d, sk, bk)
 
-	return &PermanentLockingAccount{baseLockup}, nil
+		return PERMANENT_LOCKING_ACCOUNT, &PermanentLockingAccount{baseLockup}, nil
+	}
 }
 
 type PermanentLockingAccount struct {
 	*BaseLockup
 }
 
-func (plva PermanentLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupAccount) (*lockuptypes.MsgInitLockupAccountResponse, error) {
+func (plva PermanentLockingAccount) Init(ctx context.Context, msg *types.MsgInitLockupAccount) (*types.MsgInitLockupAccountResponse, error) {
 	resp, err := plva.BaseLockup.Init(ctx, msg)
 	if err != nil {
 		return nil, err
@@ -54,26 +56,26 @@ func (plva PermanentLockingAccount) GetlockedCoinsWithDenoms(ctx context.Context
 	return vestingCoins, nil
 }
 
-func (plva *PermanentLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (plva *PermanentLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return plva.BaseLockup.Delegate(ctx, msg, plva.GetlockedCoinsWithDenoms)
 }
 
-func (plva *PermanentLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (plva *PermanentLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return plva.BaseLockup.Undelegate(ctx, msg)
 }
 
-func (plva *PermanentLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (plva *PermanentLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return plva.BaseLockup.SendCoins(ctx, msg, plva.GetlockedCoinsWithDenoms)
 }
 
-func (plva PermanentLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
-	*lockuptypes.QueryLockupAccountInfoResponse, error,
+func (plva PermanentLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
+	*types.QueryLockupAccountInfoResponse, error,
 ) {
 	resp, err := plva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
 	if err != nil {

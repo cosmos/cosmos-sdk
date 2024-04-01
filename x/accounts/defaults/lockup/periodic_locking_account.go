@@ -9,7 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	"cosmossdk.io/x/accounts/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,25 +22,27 @@ var (
 )
 
 // NewPeriodicLockingAccount creates a new PeriodicLockingAccount object.
-func NewPeriodicLockingAccount(d accountstd.Dependencies) (*PeriodicLockingAccount, error) {
-	baseLockup := newBaseLockup(d)
+func NewPeriodicLockingAccount(sk types.StakingKeeper, bk types.BankKeeper) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		baseLockup := newBaseLockup(d, sk, bk)
 
-	periodicsVestingAccount := PeriodicLockingAccount{
-		BaseLockup:     baseLockup,
-		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
-		LockingPeriods: collections.NewVec(d.SchemaBuilder, LockingPeriodsPrefix, "locking_periods", codec.CollValue[lockuptypes.Period](d.LegacyStateCodec)),
+		periodicsVestingAccount := PeriodicLockingAccount{
+			BaseLockup:     baseLockup,
+			StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+			LockingPeriods: collections.NewVec(d.SchemaBuilder, LockingPeriodsPrefix, "locking_periods", codec.CollValue[types.Period](d.LegacyStateCodec)),
+		}
+
+		return PERIODIC_LOCKING_ACCOUNT, &periodicsVestingAccount, nil
 	}
-
-	return &periodicsVestingAccount, nil
 }
 
 type PeriodicLockingAccount struct {
 	*BaseLockup
 	StartTime      collections.Item[time.Time]
-	LockingPeriods collections.Vec[lockuptypes.Period]
+	LockingPeriods collections.Vec[types.Period]
 }
 
-func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitPeriodicLockingAccount) (*lockuptypes.MsgInitPeriodicLockingAccountResponse, error) {
+func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *types.MsgInitPeriodicLockingAccount) (*types.MsgInitPeriodicLockingAccountResponse, error) {
 	owner, err := pva.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
@@ -106,29 +108,29 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		return nil, err
 	}
 
-	return &lockuptypes.MsgInitPeriodicLockingAccountResponse{}, nil
+	return &types.MsgInitPeriodicLockingAccountResponse{}, nil
 }
 
-func (pva *PeriodicLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (pva *PeriodicLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return pva.BaseLockup.Delegate(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return pva.BaseLockup.Undelegate(ctx, msg)
 }
 
-func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return pva.BaseLockup.SendCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
-	*lockuptypes.MsgWithdrawResponse, error,
+func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *types.MsgWithdraw) (
+	*types.MsgWithdrawResponse, error,
 ) {
 	return pva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
@@ -136,9 +138,9 @@ func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, ms
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (pva PeriodicLockingAccount) IteratePeriods(
 	ctx context.Context,
-	cb func(value lockuptypes.Period) (bool, error),
+	cb func(value types.Period) (bool, error),
 ) error {
-	err := pva.LockingPeriods.Walk(ctx, nil, func(_ uint64, value lockuptypes.Period) (stop bool, err error) {
+	err := pva.LockingPeriods.Walk(ctx, nil, func(_ uint64, value types.Period) (stop bool, err error) {
 		return cb(value)
 	})
 	if err != nil {
@@ -184,7 +186,7 @@ func (pva PeriodicLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTim
 		return nil, nil, err
 	}
 
-	err = pva.IteratePeriods(ctx, func(period lockuptypes.Period) (stop bool, err error) {
+	err = pva.IteratePeriods(ctx, func(period types.Period) (stop bool, err error) {
 		x := blockTime.Sub(currentPeriodStartTime)
 		if x.Seconds() < period.Length.Seconds() {
 			return true, nil
@@ -251,7 +253,7 @@ func (pva PeriodicLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, 
 	}
 
 	unlocked := sdk.NewCoin(denom, math.ZeroInt())
-	err = pva.IteratePeriods(ctx, func(period lockuptypes.Period) (stop bool, err error) {
+	err = pva.IteratePeriods(ctx, func(period types.Period) (stop bool, err error) {
 		x := blockTime.Sub(currentPeriodStartTime)
 		if x.Seconds() < period.Length.Seconds() {
 			return true, nil
@@ -289,8 +291,8 @@ func (pva PeriodicLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, 
 	return lockedCoins, nil
 }
 
-func (pva PeriodicLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
-	*lockuptypes.QueryLockupAccountInfoResponse, error,
+func (pva PeriodicLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
+	*types.QueryLockupAccountInfoResponse, error,
 ) {
 	resp, err := pva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
 	if err != nil {
@@ -311,18 +313,18 @@ func (pva PeriodicLockingAccount) QueryLockupAccountInfo(ctx context.Context, re
 	return resp, nil
 }
 
-func (pva PeriodicLockingAccount) QueryLockingPeriods(ctx context.Context, msg *lockuptypes.QueryLockingPeriodsRequest) (
-	*lockuptypes.QueryLockingPeriodsResponse, error,
+func (pva PeriodicLockingAccount) QueryLockingPeriods(ctx context.Context, msg *types.QueryLockingPeriodsRequest) (
+	*types.QueryLockingPeriodsResponse, error,
 ) {
-	lockingPeriods := []*lockuptypes.Period{}
-	err := pva.IteratePeriods(ctx, func(period lockuptypes.Period) (stop bool, err error) {
+	lockingPeriods := []*types.Period{}
+	err := pva.IteratePeriods(ctx, func(period types.Period) (stop bool, err error) {
 		lockingPeriods = append(lockingPeriods, &period)
 		return false, nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &lockuptypes.QueryLockingPeriodsResponse{
+	return &types.QueryLockingPeriodsResponse{
 		LockingPeriods: lockingPeriods,
 	}, nil
 }

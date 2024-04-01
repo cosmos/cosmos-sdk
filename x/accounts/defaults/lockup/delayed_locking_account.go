@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	"cosmossdk.io/x/accounts/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,18 +18,20 @@ var (
 )
 
 // NewDelayedLockingAccount creates a new DelayedLockingAccount object.
-func NewDelayedLockingAccount(d accountstd.Dependencies) (*DelayedLockingAccount, error) {
-	baseLockup := newBaseLockup(d)
-	return &DelayedLockingAccount{
-		baseLockup,
-	}, nil
+func NewDelayedLockingAccount(sk types.StakingKeeper, bk types.BankKeeper) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		baseLockup := newBaseLockup(d, sk, bk)
+		return DELAYED_LOCKING_ACCOUNT, &DelayedLockingAccount{
+			baseLockup,
+		}, nil
+	}
 }
 
 type DelayedLockingAccount struct {
 	*BaseLockup
 }
 
-func (dva DelayedLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupAccount) (*lockuptypes.MsgInitLockupAccountResponse, error) {
+func (dva DelayedLockingAccount) Init(ctx context.Context, msg *types.MsgInitLockupAccount) (*types.MsgInitLockupAccountResponse, error) {
 	if msg.EndTime.IsZero() {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
@@ -37,26 +39,26 @@ func (dva DelayedLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgI
 	return dva.BaseLockup.Init(ctx, msg)
 }
 
-func (dva *DelayedLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (dva *DelayedLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return dva.BaseLockup.Delegate(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
-func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return dva.BaseLockup.Undelegate(ctx, msg)
 }
 
-func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return dva.BaseLockup.SendCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
-func (dva *DelayedLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
-	*lockuptypes.MsgWithdrawResponse, error,
+func (dva *DelayedLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *types.MsgWithdraw) (
+	*types.MsgWithdrawResponse, error,
 ) {
 	return dva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
@@ -124,8 +126,8 @@ func (dva DelayedLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, b
 	return vestingCoins, nil
 }
 
-func (dva DelayedLockingAccount) QueryVestingAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
-	*lockuptypes.QueryLockupAccountInfoResponse, error,
+func (dva DelayedLockingAccount) QueryVestingAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
+	*types.QueryLockupAccountInfoResponse, error,
 ) {
 	resp, err := dva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
 	if err != nil {

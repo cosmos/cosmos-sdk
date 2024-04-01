@@ -8,7 +8,7 @@ import (
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	"cosmossdk.io/x/accounts/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,15 +20,17 @@ var (
 )
 
 // NewContinuousLockingAccount creates a new ContinuousLockingAccount object.
-func NewContinuousLockingAccount(d accountstd.Dependencies) (*ContinuousLockingAccount, error) {
-	baseLockup := newBaseLockup(d)
+func NewContinuousLockingAccount(sk types.StakingKeeper, bk types.BankKeeper) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		baseLockup := newBaseLockup(d, sk, bk)
 
-	ContinuousLockingAccount := ContinuousLockingAccount{
-		BaseLockup: baseLockup,
-		StartTime:  collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		ContinuousLockingAccount := ContinuousLockingAccount{
+			BaseLockup: baseLockup,
+			StartTime:  collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		}
+
+		return CONTINUOUS_LOCKING_ACCOUNT, &ContinuousLockingAccount, nil
 	}
-
-	return &ContinuousLockingAccount, nil
 }
 
 type ContinuousLockingAccount struct {
@@ -36,7 +38,7 @@ type ContinuousLockingAccount struct {
 	StartTime collections.Item[time.Time]
 }
 
-func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupAccount) (*lockuptypes.MsgInitLockupAccountResponse, error) {
+func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *types.MsgInitLockupAccount) (*types.MsgInitLockupAccountResponse, error) {
 	if msg.EndTime.IsZero() {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
@@ -60,26 +62,26 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 	return cva.BaseLockup.Init(ctx, msg)
 }
 
-func (cva *ContinuousLockingAccount) Delegate(ctx context.Context, msg *lockuptypes.MsgDelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (cva *ContinuousLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return cva.BaseLockup.Delegate(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
-func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return cva.BaseLockup.Undelegate(ctx, msg)
 }
 
-func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	return cva.BaseLockup.SendCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
-func (cva *ContinuousLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
-	*lockuptypes.MsgWithdrawResponse, error,
+func (cva *ContinuousLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *types.MsgWithdraw) (
+	*types.MsgWithdrawResponse, error,
 ) {
 	return cva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
@@ -186,8 +188,8 @@ func (cva ContinuousLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context
 	return lockedCoins, nil
 }
 
-func (cva ContinuousLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *lockuptypes.QueryLockupAccountInfoRequest) (
-	*lockuptypes.QueryLockupAccountInfoResponse, error,
+func (cva ContinuousLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
+	*types.QueryLockupAccountInfoResponse, error,
 ) {
 	resp, err := cva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
 	if err != nil {

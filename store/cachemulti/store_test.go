@@ -1,6 +1,7 @@
 package cachemulti
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -49,6 +50,14 @@ func TestRunAtomic(t *testing.T) {
 		ms.GetObjKVStore(keys["obj"]).Set([]byte("key"), "value")
 		return nil
 	})
+	require.Equal(t, []byte("value"), s.GetKVStore(keys["abc"]).Get([]byte("key")))
+	require.Equal(t, "value", s.GetObjKVStore(keys["obj"]).Get([]byte("key")).(string))
+
+	require.Error(t, s.RunAtomic(func(ms types.CacheMultiStore) error {
+		ms.GetKVStore(keys["abc"]).Set([]byte("key"), []byte("value2"))
+		ms.GetObjKVStore(keys["obj"]).Set([]byte("key"), "value2")
+		return errors.New("failure")
+	}))
 	require.Equal(t, []byte("value"), s.GetKVStore(keys["abc"]).Get([]byte("key")))
 	require.Equal(t, "value", s.GetObjKVStore(keys["obj"]).Get([]byte("key")).(string))
 }

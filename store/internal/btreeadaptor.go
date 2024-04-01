@@ -8,7 +8,10 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-var _ types.KVStore = (*BTreeStore[[]byte])(nil)
+var (
+	_ types.KVStore    = (*BTreeStore[[]byte])(nil)
+	_ types.ObjKVStore = (*BTreeStore[any])(nil)
+)
 
 // BTreeStore is a wrapper for a BTree with GKVStore[V] implementation
 type BTreeStore[V any] struct {

@@ -119,10 +119,10 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 	return depinject.Configs(opts...)
 }
 
-func dumpRegisteredModules(modules map[protoreflect.FullName]*internal.ModuleInitializer) string {
+func dumpRegisteredModules(modules map[string]*internal.ModuleInitializer) string {
 	var mods []string
 	for name := range modules {
-		mods = append(mods, "  "+string(name))
+		mods = append(mods, "  "+name)
 	}
 	return fmt.Sprintf("registered modules are:\n%s", strings.Join(mods, "\n"))
 }

@@ -119,7 +119,7 @@ type Keeper struct {
 	// Params key: ParamsKeyPrefix | value: Params
 	Params collections.Item[types.Params]
 	// ValidatorConsensusKeyRotationRecordIndexKey: this key is used to restrict the validator next rotation within waiting (unbonding) period
-	ValidatorConsensusKeyRotationRecordIndexKey collections.KeySet[collections.Pair[[]byte, time.Time]]
+	ValidatorConsensusKeyRotationRecordIndexKey collections.Map[[]byte, time.Time]
 	// ValidatorConsensusKeyRotationRecordQueue: this key is used to set the unbonding period time on each rotation
 	ValidatorConsensusKeyRotationRecordQueue collections.Map[time.Time, types.ValAddrsOfRotatedConsKeys]
 	// NewToOldConsKeyMap: prefix for rotated old cons address to new cons address
@@ -264,10 +264,11 @@ func NewKeeper(
 		Params: collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 
 		// key format is: 104 | valAddr | time
-		ValidatorConsensusKeyRotationRecordIndexKey: collections.NewKeySet(
+		ValidatorConsensusKeyRotationRecordIndexKey: collections.NewMap(
 			sb, types.ValidatorConsensusKeyRotationRecordIndexKey,
 			"cons_pub_rotation_index",
-			collections.PairKeyCodec(collections.BytesKey, sdk.TimeKey),
+			collections.BytesKey,
+			collcodec.KeyToValueCodec[time.Time](sdk.TimeKey),
 		),
 
 		// key format is: 103 | time

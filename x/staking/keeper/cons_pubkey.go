@@ -17,8 +17,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// maxRotations is the value of max rotations can be made in unbonding period for a validator.
-const maxRotations = 1
 
 // setConsPubKeyRotationHistory sets the consensus key rotation of a validator into state
 func (k Keeper) setConsPubKeyRotationHistory(
@@ -45,7 +43,8 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	}
 
 	queueTime := headerInfo.Time.Add(ubdTime)
-	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime)); err != nil {
+
+	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, valAddr.Bytes(), queueTime); err != nil {
 		return err
 	}
 
@@ -133,17 +132,9 @@ func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) 
 
 // ExceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
 func (k Keeper) ExceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) error {
-	count := 0
-	rng := collections.NewPrefixedPairRange[[]byte, time.Time](valAddr)
+	found, _ := k.ValidatorConsensusKeyRotationRecordIndexKey.Has(ctx, valAddr)
 
-	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
-		count++
-		return count >= maxRotations, nil
-	}); err != nil {
-		return err
-	}
-
-	if count >= maxRotations {
+	if found {
 		return types.ErrExceedingMaxConsPubKeyRotations
 	}
 
@@ -186,7 +177,7 @@ func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx context.Context, maturedTi
 	}
 
 	for _, valAddr := range maturedRotatedValAddrs {
-		err := k.deleteConsKeyIndexKey(ctx, valAddr, maturedTime)
+		err := k.deleteConsKeyIndexKey(ctx, valAddr)
 		if err != nil {
 			return err
 		}
@@ -197,12 +188,8 @@ func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx context.Context, maturedTi
 
 // deleteConsKeyIndexKey deletes the keys which forms a with given validator address and time lesser than the given time.
 // eventually there should be only one occurrence since we allow only one rotation for bonding period.
-func (k Keeper) deleteConsKeyIndexKey(ctx context.Context, valAddr sdk.ValAddress, ts time.Time) error {
-	rng := new(collections.Range[collections.Pair[[]byte, time.Time]]).
-		StartInclusive(collections.Join(valAddr.Bytes(), time.Time{})).
-		EndInclusive(collections.Join(valAddr.Bytes(), ts))
-
-	return k.ValidatorConsensusKeyRotationRecordIndexKey.Clear(ctx, rng)
+func (k Keeper) deleteConsKeyIndexKey(ctx context.Context, valAddr sdk.ValAddress) error {
+	return k.ValidatorConsensusKeyRotationRecordIndexKey.Remove(ctx, valAddr)
 }
 
 // getAndRemoveAllMaturedRotatedKeys returns all matured valaddresses.

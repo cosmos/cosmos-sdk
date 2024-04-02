@@ -69,7 +69,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, sdk.IntValue),
 		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, sdk.IntValue),
 		ToDistribute:              collections.NewItem(sb, types.ToDistributeKey, "to_distribute", sdk.IntValue),
-		TotalFundPercentage: collections.NewItem(sb, types.TotalFundPercentageKey, "total_fund_percentage", sdk.IntValue),
+		TotalFundPercentage:       collections.NewItem(sb, types.TotalFundPercentageKey, "total_fund_percentage", sdk.IntValue),
 	}
 
 	schema, err := sb.Build()

@@ -106,23 +106,26 @@ func firstAddressFromGrantStoreKey(key []byte) sdk.AccAddress {
 	return sdk.AccAddress(key[1 : 1+addrLen])
 }
 
+// grantKeyToString converts a byte slice representing a grant key into a human-readable UTF-8 encoded string.
+// The expected format of the byte slice is as follows:
+// 0x01<prefix(1 Byte)><granterAddressLen(1 Byte)><granterAddress_Bytes><granteeAddressLen(1 Byte)><granteeAddress_Bytes><msgType_Bytes>
 func grantKeyToString(skey []byte) string {
 	// get grant key prefix
 	prefix := skey[bytePositionOfGrantKeyPrefix]
 
-	// get granter address len and granter address
+	// get granter address len and granter address, found at a specified position in the byte slice
 	granterAddressLen := int(skey[bytePositionOfGranterAddressLen])
 	startByteIndex := omitTwoBytes
 	endByteIndex := startByteIndex + granterAddressLen
 	granterAddressBytes := skey[startByteIndex:endByteIndex]
 
-	// get grantee address len and grantee address
+	// get grantee address len and grantee address, found at a specified position in the byte slice
 	granteeAddressLen := int(skey[endByteIndex])
 	startByteIndex = endByteIndex + 1
 	endByteIndex = startByteIndex + granteeAddressLen
 	granteeAddressBytes := skey[startByteIndex:endByteIndex]
 
-	// get message type
+	// get message type, start from the specific byte to the end
 	startByteIndex = endByteIndex
 	msgTypeBytes := skey[startByteIndex:]
 

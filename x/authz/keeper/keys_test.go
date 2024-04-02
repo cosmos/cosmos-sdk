@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/require"
 
@@ -47,6 +48,7 @@ func TestParseGrantStoreKey(t *testing.T) {
 	granterAddr, _ := sdk.AccAddressFromBech32("cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqjwl8sq")
 	msg := "/cosmos.bank.v1beta1.MsgSend"
 	skey := grantStoreKey(granteeAddr, granterAddr, msg)
+	require.False(t, utf8.Valid(skey))
 
 	// Action
 	actual := grantKeyToString(skey)
@@ -54,4 +56,5 @@ func TestParseGrantStoreKey(t *testing.T) {
 	// Assert
 	expected := "1|20|cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqjwl8sq|20|cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgp0ctjdj|/cosmos.bank.v1beta1.MsgSend"
 	require.Equal(t, expected, actual)
+	require.True(t, utf8.ValidString(actual))
 }

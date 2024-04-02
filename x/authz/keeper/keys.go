@@ -24,8 +24,14 @@ var (
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
-// StoreKey is the store key string for authz
-const StoreKey = authz.ModuleName
+const (
+	// StoreKey is the store key string for authz
+	StoreKey = authz.ModuleName
+
+	bytePositionOfGrantKeyPrefix    = 0
+	bytePositionOfGranterAddressLen = 1
+	omitTwoBytes                    = 2
+)
 
 // grantStoreKey - return authorization store key
 // Items are stored with the following key: values
@@ -101,17 +107,27 @@ func firstAddressFromGrantStoreKey(key []byte) sdk.AccAddress {
 }
 
 func grantKeyToString(skey []byte) string {
-	prefix := skey[0]
-	granterAddressLen := skey[1]
-	var ll = int(granterAddressLen)
-	granterAddressBytes := skey[2 : 2+ll]
-	granteeAddressLen := skey[2+ll]
-	var ll2 = int(granteeAddressLen)
-	granteeAddressBytes := skey[2+ll+1 : 2+ll+1+ll2]
-	msgTypeBytes := skey[2+ll+1+ll2:]
+	// get grant key prefix
+	prefix := skey[bytePositionOfGrantKeyPrefix]
 
+	// get granter address len and granter address
+	granterAddressLen := int(skey[bytePositionOfGranterAddressLen])
+	startByteIndex := omitTwoBytes
+	endByteIndex := startByteIndex + granterAddressLen
+	granterAddressBytes := skey[startByteIndex:endByteIndex]
+
+	// get grantee address len and grantee address
+	granteeAddressLen := int(skey[endByteIndex])
+	startByteIndex = endByteIndex + 1
+	endByteIndex = startByteIndex + granteeAddressLen
+	granteeAddressBytes := skey[startByteIndex:endByteIndex]
+
+	// get message type
+	startByteIndex = endByteIndex
+	msgTypeBytes := skey[startByteIndex:]
+
+	// build UTF-8 encoded string
 	granterAddr := sdk.AccAddress(granterAddressBytes)
 	granteeAddr := sdk.AccAddress(granteeAddressBytes)
-
-	return fmt.Sprintf("%d|%d|%s|%d|%s|%s", prefix, ll, granterAddr.String(), ll2, granteeAddr.String(), msgTypeBytes)
+	return fmt.Sprintf("%d|%d|%s|%d|%s|%s", prefix, granterAddressLen, granterAddr.String(), granteeAddressLen, granteeAddr.String(), msgTypeBytes)
 }

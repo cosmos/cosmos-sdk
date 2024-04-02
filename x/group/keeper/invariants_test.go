@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/x/group/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

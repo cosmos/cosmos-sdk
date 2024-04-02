@@ -244,7 +244,7 @@ func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string) (D
 var _ orm.Validateable = GroupPolicyInfo{}
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
-func NewGroupPolicyInfo(address string, group uint64, admin string, metadata string,
+func NewGroupPolicyInfo(address string, group uint64, admin, metadata string,
 	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time,
 ) (GroupPolicyInfo, error) {
 	p := GroupPolicyInfo{

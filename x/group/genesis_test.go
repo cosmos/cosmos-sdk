@@ -1,7 +1,6 @@
 package group
 
 import (
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 	"time"
 
@@ -9,6 +8,7 @@ import (
 
 	banktypes "cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

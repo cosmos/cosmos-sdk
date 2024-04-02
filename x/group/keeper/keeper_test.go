@@ -165,7 +165,6 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *TestSuite) TestProposalsByVPEnd() {
-
 	votingPeriod := s.policy.GetVotingPeriod()
 	ctx := s.sdkCtx
 	now := time.Now()

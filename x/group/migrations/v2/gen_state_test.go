@@ -2,7 +2,6 @@ package v2_test
 
 import (
 	"encoding/binary"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,6 +9,8 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	v2 "cosmossdk.io/x/group/migrations/v2"
+
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 )
 
 func TestMigrateGenState(t *testing.T) {

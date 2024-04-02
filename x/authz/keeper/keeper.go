@@ -217,17 +217,6 @@ func (k Keeper) SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, 
 // by the granter.
 func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) error {
 	store := k.environment.KVStoreService.OpenKVStore(ctx)
-	fmt.Println(grantee.Bytes()) //[165 136 86 240 253 83 191 5 139 73 9 162 26 236 1 145 7 186 97 1]
-	fmt.Println(granter.Bytes()) //	[165 136 86 240 253 83 191 5 139 73 9 162 26 236 1 145 7 186 97 0]
-
-	fmt.Println(grantee.String())
-	fmt.Println(granter.String())
-
-	//[165 136 86 240 253 83 191 5 139 73 9 162 26 236 1 145 7 186 97 1]
-	//	[165 136 86 240 253 83 191 5 139 73 9 162 26 236 1 145 7 186 97 0]
-	//	cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgp0ctjdj
-	//	cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqjwl8sq
-
 	skey := grantStoreKey(grantee, granter, msgType)
 	grant, found := k.getGrant(ctx, skey)
 	if !found {

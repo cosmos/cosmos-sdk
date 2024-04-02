@@ -81,11 +81,16 @@ func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) er
 	}
 }
 
-// cosmosBytesAsString replicates the behavior at:
+// cosmosInlineJSON takes bytes and inlines them into a JSON document.
+// This assumes the bytes contain valid JSON since otherwise the resulting document is invalid.
+//
+// This replicates the behavior of JSON messages embedded in protobuf bytes
+// required for CosmWasm, e.g.:
 // https://github.com/CosmWasm/wasmd/blob/08567ff20e372e4f4204a91ca64a371538742bed/x/wasm/types/tx.go#L20-L22
-func cosmosBytesAsString(_ *Encoder, v protoreflect.Value, w io.Writer) error {
+func cosmosInlineJSON(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch bz := v.Interface().(type) {
 	case []byte:
+		// Caution, this does not include a validity check as json.RawMessage can be anything 🤷‍♂️
 		blob, err := json.RawMessage(bz).MarshalJSON()
 		if err != nil {
 			return err

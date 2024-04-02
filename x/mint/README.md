@@ -39,11 +39,11 @@ which should help provide some liquidity.
 
 It can be broken down in the following way:
 
-* If the inflation rate is below the goal %-bonded the inflation rate will
+* If the actual percentage of bonded tokens is below the goal %-bonded the inflation rate will
    increase until a maximum value is reached
 * If the goal % bonded (67% in Cosmos-Hub) is maintained, then the inflation
    rate will stay constant
-* If the inflation rate is above the goal %-bonded the inflation rate will
+* If the actual percentage of bonded tokens is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
 
 

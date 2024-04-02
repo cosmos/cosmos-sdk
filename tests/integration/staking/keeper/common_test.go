@@ -23,7 +23,9 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -102,10 +104,13 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 func initFixture(tb testing.TB) *fixture {
 	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey, consensustypes.StoreKey,
 	)
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, staking.AppModule{})
 	cdc := encodingCfg.Codec
+
+	msgRouter := baseapp.NewMsgServiceRouter()
+	queryRouter := baseapp.NewGRPCQueryRouter()
 
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -123,7 +128,7 @@ func initFixture(tb testing.TB) *fixture {
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)),
 		cdc,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
@@ -143,7 +148,7 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
@@ -156,7 +161,10 @@ func initFixture(tb testing.TB) *fixture {
 			authtypes.ModuleName: authModule,
 			banktypes.ModuleName: bankModule,
 			types.ModuleName:     stakingModule,
-		})
+		},
+		msgRouter,
+		queryRouter,
+	)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

@@ -80,12 +80,15 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// create consensus keeper
 	ck := stakingtestutil.NewMockConsensusKeeper(ctrl)
+	ck.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
+		Params: simtestutil.DefaultConsensusParams,
+	}, nil).AnyTimes()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	consensustypes.RegisterQueryServer(queryHelper, ck)
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(s.baseApp.GRPCQueryRouter(), nil))
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(queryHelper.GRPCQueryRouter, s.baseApp.MsgServiceRouter()))
 	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
 		env,
@@ -103,8 +106,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.accountKeeper = accountKeeper
 
 	stakingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
-	queryHelper2 := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	stakingtypes.RegisterQueryServer(queryHelper2, stakingkeeper.Querier{Keeper: keeper})
+	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
 	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
 	s.msgServer = stakingkeeper.NewMsgServerImpl(keeper)
 }

@@ -1275,6 +1275,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 								return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 							}
 						},
+						Environment: suite.env,
 					},
 				)
 				require.NoError(t, err)

@@ -34,6 +34,9 @@ const DefaultGenTxGas = 10000000
 // DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
+	Version: &cmtproto.VersionParams{
+		App: 1,
+	},
 	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   100_000_000,
@@ -46,6 +49,7 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
 			cmttypes.ABCIPubKeyTypeEd25519,
+			cmttypes.ABCIPubKeyTypeSecp256k1,
 		},
 	},
 }

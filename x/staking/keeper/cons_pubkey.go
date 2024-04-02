@@ -17,7 +17,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-
 // setConsPubKeyRotationHistory sets the consensus key rotation of a validator into state
 func (k Keeper) setConsPubKeyRotationHistory(
 	ctx context.Context, valAddr sdk.ValAddress,
@@ -44,7 +43,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 
 	queueTime := headerInfo.Time.Add(ubdTime)
 
-	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, valAddr.Bytes(), queueTime); err != nil {
+	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, valAddr.Bytes()); err != nil {
 		return err
 	}
 

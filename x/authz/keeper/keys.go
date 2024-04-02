@@ -105,7 +105,7 @@ func grantKeyToString(skey []byte) string {
 	granterAddressLen := skey[1]
 	var ll = int(granterAddressLen)
 	granterAddressBytes := skey[2 : 2+ll]
-	granteeAddressLen := skey[2+ll+1]
+	granteeAddressLen := skey[2+ll]
 	var ll2 = int(granteeAddressLen)
 	granteeAddressBytes := skey[2+ll+1 : 2+ll+1+ll2]
 	msgTypeBytes := skey[2+ll+1+ll2:]
@@ -113,5 +113,5 @@ func grantKeyToString(skey []byte) string {
 	granterAddr := sdk.AccAddress(granterAddressBytes)
 	granteeAddr := sdk.AccAddress(granteeAddressBytes)
 
-	return fmt.Sprintf("%d %d %s %d %s %s", prefix, ll, granterAddr.String(), ll2, granteeAddr.String(), msgTypeBytes)
+	return fmt.Sprintf("%d|%d|%s|%d|%s|%s", prefix, ll, granterAddr.String(), ll2, granteeAddr.String(), msgTypeBytes)
 }

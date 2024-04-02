@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"sync/atomic"
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
@@ -232,6 +233,25 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
 	c.chainID = req.ChainId
+
+	// On a new chain, we consider the init chain block height as 0, even though
+	// req.InitialHeight is 1 by default.
+	// TODO
+
+	// Store the consensus params in the BaseApp's param store. Note, this must be
+	// done after the finalizeBlockState and context have been set as it's persisted
+	// to state.
+	if req.ConsensusParams != nil {
+		_, err := c.app.Message(ctx, &consensustypes.MsgUpdateParams{
+			Block:     req.ConsensusParams.Block,
+			Evidence:  req.ConsensusParams.Evidence,
+			Validator: req.ConsensusParams.Validator,
+			Abci:      req.ConsensusParams.Abci,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// TODO: populate
 	return &abci.ResponseInitChain{

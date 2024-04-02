@@ -86,6 +86,10 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 }
 
+func (a AppManager[T]) Message(ctx context.Context, message transaction.Type) (transaction.Type, error) {
+	return a.stf.Message(ctx, message)
+}
+
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state

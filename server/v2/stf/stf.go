@@ -17,7 +17,7 @@ import (
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
-var _ STF[transaction.Tx] = STF[transaction.Tx]{} // Ensure STF implements STFI.
+var _ STFI[transaction.Tx] = STF[transaction.Tx]{} // Ensure STF implements STFI.
 
 // STFI defines the state transition handler used by AppManager to execute
 // state transitions over some state. STF never writes to state, instead
@@ -39,6 +39,10 @@ type STFI[T transaction.Tx] interface {
 		gasLimit uint64,
 		queryRequest transaction.Type,
 	) (queryResponse transaction.Type, err error)
+	Message(
+		ctx context.Context,
+		msg transaction.Type,
+	) (response transaction.Type, err error)
 	// ValidateTx validates the TX.
 	ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T, hs header.Service) appmanager.TxResult
 }
@@ -436,6 +440,10 @@ func (s STF[T]) Query(
 	queryState := s.branch(state)
 	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit, corecontext.ExecModeSimulate, nil)
 	return s.handleQuery(queryCtx, req)
+}
+
+func (s STF[T]) Message(ctx context.Context, msg transaction.Type) (response transaction.Type, err error) {
+	return s.handleMsg(ctx, msg)
 }
 
 // clone clones STF.

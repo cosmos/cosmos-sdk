@@ -27,4 +27,5 @@ var (
 	RecipientFundPercentageKey   = collections.NewPrefix(4)
 	RecipientFundDistributionKey = collections.NewPrefix(5)
 	ToDistributeKey              = collections.NewPrefix(6)
+	TotalFundPercentageKey       = collections.NewPrefix(7)
 )

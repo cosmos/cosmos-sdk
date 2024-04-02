@@ -39,6 +39,9 @@ type Keeper struct {
 	RecipientFundDistribution collections.Map[sdk.AccAddress, math.Int]
 	// ToDistribute is to keep track of funds distributed
 	ToDistribute collections.Item[math.Int]
+	// TotalFundPercentage is to keep track total recipient fund percentage
+	// Helps eliminate unnecessary loops
+	TotalFundPercentage collections.Item[math.Int]
 }
 
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
@@ -66,6 +69,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, sdk.IntValue),
 		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, sdk.IntValue),
 		ToDistribute:              collections.NewItem(sb, types.ToDistributeKey, "to_distribute", sdk.IntValue),
+		TotalFundPercentage: collections.NewItem(sb, types.TotalFundPercentageKey, "total_fund_percentage", sdk.IntValue),
 	}
 
 	schema, err := sb.Build()
@@ -206,11 +210,10 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
-	totalStreamFundsPercentage := math.ZeroInt()
-	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
-		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
-		return false, nil
-	})
+	totalStreamFundsPercentage, err := k.TotalFundPercentage.Get(ctx)
+	if err != nil {
+		return err
+	}
 	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
 		return fmt.Errorf("total funds percentage cannot exceed 100")
 	}
@@ -260,18 +263,20 @@ func (k Keeper) hasPermission(ctx context.Context, addr []byte) (bool, error) {
 }
 
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
-	totalPercentageToBeDistributed := math.ZeroInt()
+	totalPercentageToBeDistributed, err := k.TotalFundPercentage.Get(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Create a map to store keys & values from RecipientFundPercentage during the first iteration
 	recipientFundMap := make(map[string]math.Int)
 
 	// Calculate totalPercentageToBeDistributed and store values
-	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
 		addr, err := k.authKeeper.AddressCodec().BytesToString(key)
 		if err != nil {
 			return true, err
 		}
-		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
 		recipientFundMap[addr] = value
 		return false, nil
 	})

@@ -826,11 +826,11 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 
 		accAddr, err := ak.AddressCodec().BytesToString(acc.Address)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, fmt.Sprintf("error getting admin address")), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "error getting admin address"), nil, err
 		}
 		groupPolicyStrAddr, err := ak.AddressCodec().BytesToString(groupPolicyBech32)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, fmt.Sprintf("error group policy admin address")), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "error group policy admin address"), nil, err
 		}
 
 		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(accAddr, groupPolicyStrAddr, &group.ThresholdDecisionPolicy{

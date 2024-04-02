@@ -32,7 +32,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* []() Removes the use of Address String methods:
+* [#19916](https://github.com/cosmos/cosmos-sdk/pull/19916) Removes the use of Address String methods:
     * `NewMsgCreateGroupPolicy` now takes a string as argument instead of an `AccAddress`.
     * `NewMsgUpdateGroupPolicyDecisionPolicy` now takes strings as argument instead of `AccAddress`.
     * `NewGroupPolicyInfo` address and admin arguments are now strings instead of `AccAddress`.

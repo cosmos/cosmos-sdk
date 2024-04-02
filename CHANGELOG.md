@@ -47,8 +47,9 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
 * (x/auth/ante) [#23283](https://github.com/cosmos/cosmos-sdk/pull/23283) Allow ed25519 transaction signatures.
 
+### Improvements 
 
-### Improvements
+* (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/xxxx) Add grpc client config to `client.toml`.
 
 ### Bug Fixes
 

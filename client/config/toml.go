@@ -8,7 +8,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-const defaultConfigTemplate = `# This is a TOML config file.
+const (
+	DefaultClientConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
 ###############################################################################
@@ -25,7 +26,16 @@ output = "{{ .Output }}"
 node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
+
+# gRPC server endpoint to which the client will connect.
+# It can be overwritten by the --grpc-addr flag in each command.
+grpc-address = "{{ .GRPC.Address }}"
+
+# Allow the gRPC client to connect over insecure channels.
+# It can be overwritten by the --grpc-insecure flag in each command.
+grpc-insecure = {{ .GRPC.Insecure }}
 `
+)
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
 // configFilePath.

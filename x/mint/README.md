@@ -63,6 +63,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/
 
 The mint module stores it's params in state with the prefix of `0x01`,
 it can be updated with governance or the address with authority.
+**Note:** With the latest update, the addition of the `MaxSupply` parameter allows controlling the maximum supply of tokens minted by the module. 
+A value of `0` indicates an unlimited supply.
 
 * Params: `mint/params -> legacy_amino(params)`
 
@@ -136,6 +138,7 @@ BlockProvision(params Params) sdk.Coin {
 ## Parameters
 
 The minting module contains the following parameters:
+Note: `0` indicates unlimited supply for MaxSupply param
 
 | Key                 | Type             | Example                |
 |---------------------|------------------|------------------------|

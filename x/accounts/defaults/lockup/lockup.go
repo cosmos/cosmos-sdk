@@ -693,7 +693,7 @@ func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, am
 	return nil
 }
 
-// IterateSendEnabledEntries iterates over all the SendEnabled entries.
+// IterateCoinEntries iterates over all the Coins entries.
 func (bva BaseLockup) IterateCoinEntries(
 	ctx context.Context,
 	entries collections.Map[string, math.Int],

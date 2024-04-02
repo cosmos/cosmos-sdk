@@ -214,12 +214,12 @@ func (k Keeper) getProposal(ctx context.Context, proposalID uint64) (group.Propo
 
 // VoteByProposalVoter queries a vote given a voter and a proposal ID.
 func (k Keeper) VoteByProposalVoter(ctx context.Context, request *group.QueryVoteByProposalVoterRequest) (*group.QueryVoteByProposalVoterResponse, error) {
-	addr, err := k.accKeeper.AddressCodec().StringToBytes(request.Voter)
+	_, err := k.accKeeper.AddressCodec().StringToBytes(request.Voter)
 	if err != nil {
 		return nil, err
 	}
 	proposalID := request.ProposalId
-	vote, err := k.getVote(ctx, proposalID, addr)
+	vote, err := k.getVote(ctx, proposalID, request.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -309,9 +309,9 @@ func (k Keeper) GroupsByMember(ctx context.Context, request *group.QueryGroupsBy
 }
 
 // getVote gets the vote info for the given proposal id and voter address.
-func (k Keeper) getVote(ctx context.Context, proposalID uint64, voter sdk.AccAddress) (group.Vote, error) {
+func (k Keeper) getVote(ctx context.Context, proposalID uint64, voter string) (group.Vote, error) {
 	var v group.Vote
-	return v, k.voteTable.GetOne(k.environment.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter.String()}), &v)
+	return v, k.voteTable.GetOne(k.environment.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter}), &v)
 }
 
 // getVotesByProposal returns an iterator for the given proposal id and page request.

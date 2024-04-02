@@ -231,7 +231,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 	tx.SetMemo(memo)
 	tx.SetFeeAmount(feeAmt)
 	tx.SetGasLimit(gas)
-	tx.SetFeeGranter(feeGranter)
+	tx.SetFeeGranter(feeGranter, "")
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {

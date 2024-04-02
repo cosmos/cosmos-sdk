@@ -14,6 +14,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -312,23 +313,41 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
+func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress, bech32Prefix string) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
 
-	w.tx.AuthInfo.Fee.Payer = feePayer.String()
+	if feePayer.Empty() || bech32Prefix == "" {
+		w.tx.AuthInfo.Fee.Payer = feePayer.String()
+	} else {
+		payer, err := bech32.ConvertAndEncode(bech32Prefix, feePayer)
+		if err != nil {
+			panic(err)
+		}
+
+		w.tx.AuthInfo.Fee.Payer = payer
+	}
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
+func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress, bech32Prefix string) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
 
-	w.tx.AuthInfo.Fee.Granter = feeGranter.String()
+	if feeGranter.Empty() || bech32Prefix == "" {
+		w.tx.AuthInfo.Fee.Granter = feeGranter.String()
+	} else {
+		granter, err := bech32.ConvertAndEncode(bech32Prefix, feeGranter)
+		if err != nil {
+			panic(err)
+		}
+
+		w.tx.AuthInfo.Fee.Granter = granter
+	}
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil

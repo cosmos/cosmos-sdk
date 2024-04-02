@@ -118,7 +118,7 @@ func TestBuilderWithAux(t *testing.T) {
 		})
 	}
 
-	w.SetFeePayer(feepayerAddr)
+	w.SetFeePayer(feepayerAddr, "")
 	w.SetFeeAmount(fee)
 	w.SetGasLimit(gas)
 	sigs, err := w.(authsigning.SigVerifiableTx).GetSignaturesV2()

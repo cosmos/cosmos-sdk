@@ -55,7 +55,7 @@ func TestDirectAuxHandler(t *testing.T) {
 	require.NoError(t, err)
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(fee.Amount)
-	txBuilder.SetFeePayer(feePayerAddr)
+	txBuilder.SetFeePayer(feePayerAddr, "")
 	txBuilder.SetGasLimit(fee.GasLimit)
 
 	err = txBuilder.SetSignatures(sig, feePayerSig)

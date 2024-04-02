@@ -27,6 +27,7 @@ import (
 type Factory struct {
 	keybase            keyring.Keyring
 	txConfig           client.TxConfig
+	bech32Prefix       string
 	accountRetriever   client.AccountRetriever
 	accountNumber      uint64
 	sequence           uint64
@@ -132,6 +133,12 @@ func (f Factory) SimulateAndExecute() bool { return f.simulateAndExecute }
 // WithTxConfig returns a copy of the Factory with an updated TxConfig.
 func (f Factory) WithTxConfig(g client.TxConfig) Factory {
 	f.txConfig = g
+	return f
+}
+
+// WithBech32Prefix returns a copy of the Factory with an updated Bech32Prefix.
+func (f Factory) WithBech32Prefix(prefix string) Factory {
+	f.bech32Prefix = prefix
 	return f
 }
 
@@ -337,8 +344,8 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetMemo(f.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(f.gas)
-	tx.SetFeeGranter(f.feeGranter)
-	tx.SetFeePayer(f.feePayer)
+	tx.SetFeeGranter(f.feeGranter, f.bech32Prefix)
+	tx.SetFeePayer(f.feePayer, f.bech32Prefix)
 	tx.SetTimeoutHeight(f.TimeoutHeight())
 
 	if etx, ok := tx.(client.ExtendedTxBuilder); ok {

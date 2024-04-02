@@ -302,7 +302,7 @@ func TestBuilderFeePayer(t *testing.T) {
 			txBuilder.SetFeeAmount(feeAmount)
 
 			// set fee payer
-			txBuilder.SetFeePayer(tc.txFeePayer)
+			txBuilder.SetFeePayer(tc.txFeePayer, "")
 			// and check it updates fields properly
 			signers, err := txBuilder.GetSigners()
 			require.NoError(t, err)
@@ -330,6 +330,6 @@ func TestBuilderFeeGranter(t *testing.T) {
 	require.Empty(t, txBuilder.GetTx().FeeGranter())
 
 	// set fee granter
-	txBuilder.SetFeeGranter(addr1)
+	txBuilder.SetFeeGranter(addr1, "")
 	require.Equal(t, addr1.String(), sdk.AccAddress(txBuilder.GetTx().FeeGranter()).String())
 }

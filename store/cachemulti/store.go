@@ -46,7 +46,7 @@ func NewFromKVStore(
 	}
 
 	for key, store := range stores {
-		cms.stores[key] = cms.initStore(key, store)
+		cms.initStore(key, store)
 	}
 
 	return cms
@@ -81,7 +81,9 @@ func (cms Store) initStore(key types.StoreKey, store types.CacheWrapper) types.C
 			store = tracekv.NewStore(kvstore, cms.traceWriter, tctx)
 		}
 	}
-	return store.CacheWrap()
+	cache := store.CacheWrap()
+	cms.stores[key] = cache
+	return cache
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -125,6 +127,12 @@ func (cms Store) Write() {
 	}
 }
 
+func (cms Store) Discard() {
+	for _, store := range cms.stores {
+		store.Discard()
+	}
+}
+
 // Implements CacheWrapper.
 func (cms Store) CacheWrap() types.CacheWrap {
 	return cms.CacheMultiStore().(types.CacheWrap)
@@ -142,14 +150,9 @@ func (cms Store) CacheMultiStore() types.CacheMultiStore {
 
 func (cms Store) getCacheWrap(key types.StoreKey) types.CacheWrap {
 	store, ok := cms.stores[key]
-	if !ok {
+	if !ok && cms.parentStore != nil {
 		// load on demand
-		if cms.branched {
-			store = cms.parentStore(key).(types.BranchStore).Clone().(types.CacheWrap)
-		} else if cms.parentStore != nil {
-			store = cms.initStore(key, cms.parentStore(key))
-		}
-		cms.stores[key] = store
+		store = cms.initStore(key, cms.parentStore(key))
 	}
 	if key == nil || store == nil {
 		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
@@ -185,12 +188,15 @@ func (cms Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
 }
 
 func (cms Store) Clone() Store {
+	stores := make(map[types.StoreKey]types.CacheWrap, len(cms.stores))
+	for k, v := range cms.stores {
+		stores[k] = v.(types.BranchStore).Clone().(types.CacheWrap)
+	}
 	return Store{
-		stores: make(map[types.StoreKey]types.CacheWrap),
-
+		stores:       stores,
 		traceWriter:  cms.traceWriter,
 		traceContext: cms.traceContext,
-		parentStore:  cms.getCacheWrap,
+		parentStore:  cms.parentStore,
 
 		branched: true,
 	}
@@ -201,9 +207,22 @@ func (cms Store) Restore(other Store) {
 		panic("cannot restore from non-branched store")
 	}
 
-	// restore the stores
+	// discard the non-exists stores
+	for k, v := range cms.stores {
+		if _, ok := other.stores[k]; !ok {
+			// clear the cache store if it's not in the other
+			v.Discard()
+		}
+	}
+
+	// restore the other stores
 	for k, v := range other.stores {
-		cms.stores[k].(types.BranchStore).Restore(v.(types.BranchStore))
+		store, ok := cms.stores[k]
+		if !ok {
+			store = cms.initStore(k, cms.parentStore(k))
+		}
+
+		store.(types.BranchStore).Restore(v.(types.BranchStore))
 	}
 }
 

@@ -122,6 +122,10 @@ func (store *GStore[V]) Write() {
 	store.writeSet.Clear()
 }
 
+func (store *GStore[V]) Discard() {
+	store.writeSet.Clear()
+}
+
 // CacheWrap implements CacheWrapper.
 func (store *GStore[V]) CacheWrap() types.CacheWrap {
 	return NewGStore(store, store.isZero, store.valueLen)

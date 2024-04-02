@@ -338,6 +338,9 @@ type CacheWrap interface {
 
 	// Write syncs with the underlying store.
 	Write()
+
+	// Discard the write set
+	Discard()
 }
 
 type CacheWrapper interface {

@@ -221,7 +221,7 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
 		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
-			"failed to delete grant with key %s given granter: %s, grantee: %s & msgType: %s ", granter.String(), grantee.String(), msgType)
+			"failed to delete grant with given granter: %s, grantee: %s & msgType: %s ", granter.String(), grantee.String(), msgType)
 	}
 
 	if grant.Expiration != nil {

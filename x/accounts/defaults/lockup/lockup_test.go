@@ -20,7 +20,7 @@ func setup(t *testing.T, ctx context.Context, ss store.KVStoreService) *BaseLock
 	baseLockup := newBaseLockup(deps)
 	_, err := baseLockup.Init(ctx, &lockuptypes.MsgInitLockupAccount{
 		Owner:   owner,
-		EndTime: time.Now().Add(time.Second),
+		EndTime: time.Now().Add(time.Minute),
 	})
 	require.NoError(t, err)
 
@@ -262,4 +262,13 @@ func TestGetNotBondedLockedCoin(t *testing.T) {
 
 		require.True(t, test.expLockCoin.Equal(lockedCoin), test.name+" locked amount must be equal")
 	}
+}
+
+func TestQueryLockupAccountBaseInfo(t *testing.T) {
+	ctx, ss := newMockContext(t)
+
+	baseLockup := setup(t, ctx, ss)
+
+	_, err := baseLockup.QueryLockupAccountBaseInfo(ctx, &lockuptypes.QueryLockupAccountInfoRequest{})
+	require.NoError(t, err)
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"cosmossdk.io/core/header"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
@@ -239,21 +240,31 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 	// req.InitialHeight is 1 by default.
 	// TODO
 
-	// Store the consensus params in the BaseApp's param store. Note, this must be
-	// done after the finalizeBlockState and context have been set as it's persisted
-	// to state.
+	var consMessages []transaction.Type
 	if req.ConsensusParams != nil {
-		_, err := c.app.Message(ctx, &consensustypes.MsgUpdateParams{
+		consMessages = append(consMessages, &consensustypes.MsgUpdateParams{
 			Authority: c.cfg.ConsensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,
 			Abci:      req.ConsensusParams.Abci,
 		})
-		if err != nil {
-			return nil, err
-		}
 	}
+
+	genesisHeaderInfo := header.Info{
+		Height:  req.InitialHeight,
+		Hash:    nil,
+		Time:    req.Time,
+		ChainID: req.ChainId,
+		AppHash: nil,
+	}
+
+	genesisState, err := c.app.InitGenesis(ctx, genesisHeaderInfo, consMessages, req.AppStateBytes)
+	if err != nil {
+		return nil, fmt.Errorf("genesis state init failure: %w", err)
+	}
+
+	println(genesisState) // TODO: this needs to be committed to store as height 0.
 
 	// TODO: populate
 	return &abci.ResponseInitChain{

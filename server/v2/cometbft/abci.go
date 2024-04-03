@@ -239,21 +239,18 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 	// req.InitialHeight is 1 by default.
 	// TODO
 
-	// Store the consensus params in the BaseApp's param store. Note, this must be
-	// done after the finalizeBlockState and context have been set as it's persisted
-	// to state.
+	var consMessages []transaction.Type
 	if req.ConsensusParams != nil {
-		_, err := c.app.Message(ctx, &consensustypes.MsgUpdateParams{
+		consMessages = append(consMessages, &consensustypes.MsgUpdateParams{
 			Authority: "consensus",
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,
 			Abci:      req.ConsensusParams.Abci,
 		})
-		if err != nil {
-			return nil, err
-		}
 	}
+
+	c.app.InitGenesis(ctx, consMessages, req.AppStateBytes)
 
 	// TODO: populate
 	return &abci.ResponseInitChain{

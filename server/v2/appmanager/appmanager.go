@@ -24,6 +24,14 @@ type AppManager[T transaction.Tx] struct {
 	stf stf.STFI[T]
 }
 
+func (a AppManager[T]) InitGenesis(
+	ctx context.Context,
+	consensusMessages []transaction.Type,
+	genesisState []byte,
+) (corestore.WriterMap, error) {
+
+}
+
 func (a AppManager[T]) DeliverBlock(
 	ctx context.Context,
 	block *appmanager.BlockRequest[T],

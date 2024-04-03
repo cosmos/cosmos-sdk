@@ -109,7 +109,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### API Breaking Changes
 
-* (x/genutil) []() Removes the use of Address String method:
+* (x/genutil) [#19926](https://github.com/cosmos/cosmos-sdk/pull/19926) Removes the use of Address String method:
     * `CollectTxs`, `GenAppStateFromConfig` and `AddGenesisAccount` add an address codec as argument.
     * `CollectGenTxsCmd` removed ValidatorAddressCodec argument. Now it takes it from the context.
     * `ValidateAccountInGenesis` now takes a string instead of an `AccAddress`.

@@ -243,7 +243,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 	var consMessages []transaction.Type
 	if req.ConsensusParams != nil {
 		consMessages = append(consMessages, &consensustypes.MsgUpdateParams{
-			Authority: "consensus",
+			Authority: c.cfg.ConsensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,

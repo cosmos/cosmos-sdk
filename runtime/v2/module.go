@@ -28,7 +28,6 @@ import (
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	storetypes "cosmossdk.io/store/types"
-	storev2 "cosmossdk.io/store/v2"
 	rootstorev2 "cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/tx/signing"
 
@@ -294,29 +293,4 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
-}
-
-// StoreV2Adapter is a PoC adapter for core store -> store v2 interface.
-// TODO: I think it'd be better if store v2 was just used directly, but as it stands the interfaces are incompatible.
-type StoreV2Adapter struct {
-	storev2.RootStore
-}
-
-func (s StoreV2Adapter) LatestVersion() (uint64, error) {
-	v, _, err := s.RootStore.StateLatest()
-	return v, err
-}
-
-func (s StoreV2Adapter) StateLatest() (uint64, store.ReaderMap, error) {
-	return s.StateLatest()
-}
-
-func (s StoreV2Adapter) StateAt(version uint64) (store.ReaderMap, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s StoreV2Adapter) StateCommit(changes []store.StateChanges) (store.Hash, error) {
-	//TODO implement me
-	panic("implement me")
 }

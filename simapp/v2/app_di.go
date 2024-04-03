@@ -34,6 +34,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 )
 
@@ -45,10 +46,11 @@ var DefaultNodeHome string
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino       *codec.LegacyAmino
-	appCodec          codec.Codec
-	txConfig          client.TxConfig
-	interfaceRegistry codectypes.InterfaceRegistry
+	legacyAmino        *codec.LegacyAmino
+	appCodec           codec.Codec
+	txConfig           client.TxConfig
+	interfaceRegistry  codectypes.InterfaceRegistry
+	consensusAuthority consensustypes.Authority
 
 	// keepers
 	AuthKeeper            authkeeper.AccountKeeper
@@ -187,6 +189,7 @@ func NewSimApp(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.PoolKeeper,
+		&app.consensusAuthority,
 	); err != nil {
 		panic(err)
 	}
@@ -238,4 +241,8 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
+}
+
+func (app *SimApp) GetConsensusAuthority() string {
+	return string(app.consensusAuthority)
 }

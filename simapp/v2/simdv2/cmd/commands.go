@@ -76,7 +76,7 @@ func startCommand() *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			sa := simapp.NewSimApp(serverCtx.Logger, serverCtx.Viper)
 			am := sa.App.AppManager
-			serverCfg := cometbft.Config{CmtConfig: serverCtx.Config}
+			serverCfg := cometbft.Config{CmtConfig: serverCtx.Config, ConsensusAuthority: sa.GetConsensusAuthority()}
 
 			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), serverCfg,
 				nil, //TODO

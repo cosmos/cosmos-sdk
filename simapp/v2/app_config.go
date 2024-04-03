@@ -247,8 +247,10 @@ var (
 				Config: appconfig.WrapAny(&govmodulev1.Module{}),
 			},
 			{
-				Name:   consensustypes.ModuleName,
-				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
+				Name: consensustypes.ModuleName,
+				Config: appconfig.WrapAny(&consensusmodulev1.Module{
+					Authority: "",
+				}),
 			},
 			{
 				Name:   circuittypes.ModuleName,

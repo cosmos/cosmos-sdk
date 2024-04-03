@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"sync/atomic"
+
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	coreappmgr "cosmossdk.io/core/app"
@@ -157,10 +158,10 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 		return nil, err
 	}
 
-	//cp, err := c.GetConsensusParams(ctx)
-	//if err != nil {
+	// cp, err := c.GetConsensusParams(ctx)
+	// if err != nil {
 	//	return nil, err
-	//}
+	// }
 
 	cid, err := c.store.LastCommitID()
 	if err != nil {
@@ -170,7 +171,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 	return &abci.ResponseInfo{
 		Data:    c.cfg.Name,
 		Version: c.cfg.Version,
-		//AppVersion:       cp.GetVersion().App,
+		// AppVersion:       cp.GetVersion().App,
 		AppVersion:       0, // TODO fetch from store?
 		LastBlockHeight:  int64(version),
 		LastBlockAppHash: cid.Hash,
@@ -243,6 +244,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 	// to state.
 	if req.ConsensusParams != nil {
 		_, err := c.app.Message(ctx, &consensustypes.MsgUpdateParams{
+			Authority: "consensus",
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,

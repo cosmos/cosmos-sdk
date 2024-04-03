@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"cosmossdk.io/core/header"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
@@ -250,7 +251,20 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 		})
 	}
 
-	_, _ = c.app.InitGenesis(ctx, consMessages, req.AppStateBytes)
+	genesisHeaderInfo := header.Info{
+		Height:  req.InitialHeight,
+		Hash:    nil,
+		Time:    req.Time,
+		ChainID: req.ChainId,
+		AppHash: nil,
+	}
+
+	genesisState, err := c.app.InitGenesis(ctx, genesisHeaderInfo, consMessages, req.AppStateBytes)
+	if err != nil {
+		return nil, fmt.Errorf("genesis state init failure: %w", err)
+	}
+
+	println(genesisState) // TODO: this needs to be committed to store as height 0.
 
 	// TODO: populate
 	return &abci.ResponseInitChain{

@@ -6,6 +6,7 @@ import (
 	"io"
 
 	appmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
@@ -26,10 +27,33 @@ type AppManager[T transaction.Tx] struct {
 
 func (a AppManager[T]) InitGenesis(
 	ctx context.Context,
+	headerInfo header.Info,
 	consensusMessages []transaction.Type,
-	genesisState []byte,
+	initGenesisJSON []byte,
 ) (corestore.WriterMap, error) {
-	panic("impl")
+	// run block 0
+	// TODO: in an ideal world, genesis state is simply an initial state being applied
+	// unaware of what that state means in relation to every other, so here we can
+	// chain genesis
+	block0 := &appmanager.BlockRequest[T]{
+		Height:            uint64(headerInfo.Height),
+		Time:              headerInfo.Time,
+		Hash:              headerInfo.Hash,
+		ChainId:           headerInfo.ChainID,
+		AppHash:           headerInfo.AppHash,
+		Txs:               nil,
+		ConsensusMessages: consensusMessages,
+	}
+
+	_, genesisState, err := a.DeliverBlock(ctx, block0)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: ok so the problem we have now, the genesis is a mix of initial state
+	// then followed by txs from the genutil module.
+
+	return genesisState, nil
 }
 
 func (a AppManager[T]) DeliverBlock(

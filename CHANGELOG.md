@@ -109,6 +109,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### API Breaking Changes
 
+* (x/genutil) []() Removes the use of Address String method:
+    * `CollectTxs`, `GenAppStateFromConfig` and `AddGenesisAccount` add an address codec as argument.
+    * `CollectGenTxsCmd` removed ValidatorAddressCodec argument. Now it takes it from the context.
+    * `ValidateAccountInGenesis` now takes a string instead of an `AccAddress`.
 * (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Remove `servertypes.ModuleInitFlags` types and from `server.AddCommands` as `StartCmdOptions` already achieves the same goal.
 * (types) [#19792](https://github.com/cosmos/cosmos-sdk/pull/19792) In `MsgSimulatorFn` `sdk.Context` argument is replaced for an `address.Codec`. It also returns an error.
 * (types) [#19742](https://github.com/cosmos/cosmos-sdk/pull/19742) Removes the use of `Accounts.String`

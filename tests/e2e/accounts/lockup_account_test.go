@@ -151,11 +151,18 @@ func TestPeriodicLockingAccount(t *testing.T) {
 	currentTime := time.Now()
 	fundAccount(t, app, ctx, accCreator, "1000000stake")
 
-	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.PERIODIC_LOCKING_ACCOUNT, accCreator, &types.MsgInitLockupAccount{
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.PERIODIC_LOCKING_ACCOUNT, accCreator, &types.MsgInitPeriodicLockingAccount{
 		Owner:     accOwner,
 		StartTime: currentTime,
-		// end time in 1 minutes
-		EndTime: time.Now().Add(time.Minute * 1),
+		LockingPeriods: []types.Period{
+			types.Period{
+				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
+				Length: time.Minute,
+			}, types.Period{
+				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
+				Length: time.Minute,
+			},
+		}
 	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	require.NoError(t, err)
 	randomAcc = secp256k1.GenPrivKey().PubKey().Address()

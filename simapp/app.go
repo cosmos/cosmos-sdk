@@ -337,7 +337,7 @@ func NewSimApp(
 	app.txConfig = txConfig
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(
-		appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), logger), app.AuthKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), signingCtx.ValidatorAddressCodec(), authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
+		appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), signingCtx.ValidatorAddressCodec(), authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[minttypes.StoreKey]), logger), app.StakingKeeper, app.AuthKeeper, app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
@@ -583,7 +583,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				Environment:              runtime.NewEnvironment(nil, app.logger), // nil is set as the kvstoreservice to avoid module access
+				Environment:              runtime.NewEnvironment(nil, app.logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), // nil is set as the kvstoreservice to avoid module access
 				AccountAbstractionKeeper: app.AccountsKeeper,
 				AccountKeeper:            app.AuthKeeper,
 				BankKeeper:               app.BankKeeper,

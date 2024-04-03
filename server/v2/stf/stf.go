@@ -481,6 +481,7 @@ type executionContext struct {
 	execMode   corecontext.ExecMode
 }
 
+// TODO: too many calls to makeContext can be expensive
 func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender transaction.Identity,

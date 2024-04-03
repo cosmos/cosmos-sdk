@@ -21,7 +21,7 @@ type Info struct {
 }
 
 func (i *Info) Bytes() []byte {
-	b, _ := json.Marshal(i)
+	b, _ := json.Marshal(i) // TODO: this needs to be more efficient
 	return b
 }
 

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	"cosmossdk.io/x/authz"
@@ -24,14 +23,8 @@ var (
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
-const (
-	// StoreKey is the store key string for authz
-	StoreKey = authz.ModuleName
-
-	bytePositionOfGrantKeyPrefix    = 0
-	bytePositionOfGranterAddressLen = 1
-	omitTwoBytes                    = 2
-)
+// StoreKey is the store key string for authz
+const StoreKey = authz.ModuleName
 
 // grantStoreKey - return authorization store key
 // Items are stored with the following key: values
@@ -104,33 +97,4 @@ func GrantQueueTimePrefix(expiration time.Time) []byte {
 func firstAddressFromGrantStoreKey(key []byte) sdk.AccAddress {
 	addrLen := key[0]
 	return sdk.AccAddress(key[1 : 1+addrLen])
-}
-
-// grantKeyToString converts a byte slice representing a grant key into a human-readable UTF-8 encoded string.
-// The expected format of the byte slice is as follows:
-// 0x01<prefix(1 Byte)><granterAddressLen(1 Byte)><granterAddress_Bytes><granteeAddressLen(1 Byte)><granteeAddress_Bytes><msgType_Bytes>
-func grantKeyToString(skey []byte) string {
-	// get grant key prefix
-	prefix := skey[bytePositionOfGrantKeyPrefix]
-
-	// get granter address len and granter address, found at a specified position in the byte slice
-	granterAddressLen := int(skey[bytePositionOfGranterAddressLen])
-	startByteIndex := omitTwoBytes
-	endByteIndex := startByteIndex + granterAddressLen
-	granterAddressBytes := skey[startByteIndex:endByteIndex]
-
-	// get grantee address len and grantee address, found at a specified position in the byte slice
-	granteeAddressLen := int(skey[endByteIndex])
-	startByteIndex = endByteIndex + 1
-	endByteIndex = startByteIndex + granteeAddressLen
-	granteeAddressBytes := skey[startByteIndex:endByteIndex]
-
-	// get message type, start from the specific byte to the end
-	startByteIndex = endByteIndex
-	msgTypeBytes := skey[startByteIndex:]
-
-	// build UTF-8 encoded string
-	granterAddr := sdk.AccAddress(granterAddressBytes)
-	granteeAddr := sdk.AccAddress(granteeAddressBytes)
-	return fmt.Sprintf("%d|%d|%s|%d|%s|%s", prefix, granterAddressLen, granterAddr.String(), granteeAddressLen, granteeAddr.String(), msgTypeBytes)
 }

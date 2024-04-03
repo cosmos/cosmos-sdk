@@ -817,8 +817,14 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		blockGasWanted uint64
 	)
 	for _, res := range txResults {
-		blockGasUsed += uint64(res.GasUsed)
-		blockGasWanted += uint64(res.GasWanted)
+		// GasUsed should not be -1 but just in case
+		if res.GasUsed > 0 {
+			blockGasUsed += uint64(res.GasUsed)
+		}
+		// GasWanted could be -1 if the tx is invalid
+		if res.GasWanted > 0 {
+			blockGasWanted += uint64(res.GasWanted)
+		}
 	}
 	app.finalizeBlockState.SetContext(
 		app.finalizeBlockState.Context().

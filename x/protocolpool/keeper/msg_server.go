@@ -142,7 +142,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Set recipient fund percentage & distribution
-	err = k.RecipientFundPercentage.Set(ctx, recipient, percentage.TruncateInt())
+	err = k.RecipientFundPercentage.Set(ctx, recipient, types.RecipientFundPercentageStatus{Percentage: percentage.TruncateInt()})
 	if err != nil {
 		return nil, err
 	}

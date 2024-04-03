@@ -172,6 +172,7 @@ func (s STF[T]) deliverTx(
 			Error: err,
 		}
 	}
+	println("oadskosak")
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode)
 	return appmanager.TxResult{
@@ -487,12 +488,13 @@ func (s STF[T]) makeContext(
 	gasLimit uint64,
 	execMode corecontext.ExecMode,
 ) *executionContext {
-	meter := s.getGasMeter(gasLimit)
-	store = s.wrapWithGasMeter(meter, store)
 	headerInfo, err := s.getHeaderInfo(store)
 	if err != nil {
 		panic(err) // TODO: remove panic pls
 	}
+
+	meter := s.getGasMeter(gasLimit)
+	store = s.wrapWithGasMeter(meter, store)
 	return &executionContext{
 		Context:    ctx,
 		state:      store,

@@ -7,7 +7,7 @@ import (
 )
 
 type Builder[T transaction.Tx] struct {
-	STF stf.STFI[T]
+	STF *stf.STF[T]
 	DB  store.Store
 	ValidateTxGasLimit,
 	QueryGasLimit,

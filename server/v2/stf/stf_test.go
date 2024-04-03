@@ -101,7 +101,7 @@ func TestSTF(t *testing.T) {
 		}, state)
 		require.NoError(t, err)
 		stateNotHas(t, newState, "gas_failure") // assert during out of gas no state changes leaked.
-		require.ErrorIs(t, result.TxResults[0].Error, coregas.ErrOutOfGas)
+		require.ErrorIs(t, result.TxResults[0].Error, coregas.ErrOutOfGas, result.TxResults[0].Error)
 	})
 
 	t.Run("fail exec tx", func(t *testing.T) {

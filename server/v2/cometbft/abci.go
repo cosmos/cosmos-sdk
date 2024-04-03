@@ -250,7 +250,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 		})
 	}
 
-	c.app.InitGenesis(ctx, consMessages, req.AppStateBytes)
+	_, _ = c.app.InitGenesis(ctx, consMessages, req.AppStateBytes)
 
 	// TODO: populate
 	return &abci.ResponseInitChain{

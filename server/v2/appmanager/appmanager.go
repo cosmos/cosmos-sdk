@@ -21,7 +21,7 @@ type AppManager[T transaction.Tx] struct {
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
 	importState func(ctx context.Context, src map[string]io.Reader) error
 
-	stf stf.STFI[T]
+	stf *stf.STF[T]
 }
 
 func (a AppManager[T]) InitGenesis(
@@ -29,7 +29,7 @@ func (a AppManager[T]) InitGenesis(
 	consensusMessages []transaction.Type,
 	genesisState []byte,
 ) (corestore.WriterMap, error) {
-
+	panic("impl")
 }
 
 func (a AppManager[T]) DeliverBlock(
@@ -61,7 +61,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
-	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx, nil), nil
+	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx), nil
 }
 
 // Simulate runs validation and execution flow of a Tx.

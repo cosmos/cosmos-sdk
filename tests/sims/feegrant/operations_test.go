@@ -86,7 +86,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
+		suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address))
 		err := banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}

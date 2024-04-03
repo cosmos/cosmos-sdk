@@ -244,7 +244,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 	// to state.
 	if req.ConsensusParams != nil {
 		_, err := c.app.Message(ctx, &consensustypes.MsgUpdateParams{
-			Authority: "consensus",
+			Authority: c.cfg.ConsensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,

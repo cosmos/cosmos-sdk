@@ -249,7 +249,7 @@ var (
 			{
 				Name: consensustypes.ModuleName,
 				Config: appconfig.WrapAny(&consensusmodulev1.Module{
-					Authority: "",
+					Authority: "consensus",
 				}),
 			},
 			{

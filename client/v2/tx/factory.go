@@ -24,21 +24,12 @@ import (
 	"strings"
 )
 
-// TxCodecProvider defines an interface that contains transaction
-// encoders and decoders
-type TxCodecProvider interface {
-	TxEncoder() sdk.TxV2Encoder
-	TxDecoder() sdk.TxV2Decoder
-	TxJSONEncoder() sdk.TxV2Encoder
-	TxJSONDecoder() sdk.TxV2Decoder
-}
-
 // Factory defines a client transaction factory that facilitates generating and
 // signing an application-specific transaction.
 type Factory struct {
 	keybase           keyring.Keyring
 	txBuilderProvider TxBuilderProvider
-	codec             TxCodecProvider
+	codec             TxEncodingConfig
 	accountRetriever  AccountRetriever
 	signingConfig     TxSigningConfig
 	TxParameters
@@ -79,30 +70,30 @@ func NewFactoryCLI(clientCtx txContext, flagSet *pflag.FlagSet) (Factory, error)
 		accountRetriever: clientCtx.AccountRetriever,
 		keybase:          clientCtx.Keyring,
 		TxParameters: TxParameters{
-			timeoutHeight: timeoutHeight,
-			memo:          memo,
-			chainID:       clientCtx.ChainID,
-			signMode:      signMode,
+			TimeoutHeight: timeoutHeight,
+			Memo:          memo,
+			ChainID:       clientCtx.ChainID,
+			SignMode:      signMode,
 			AccountConfig: AccountConfig{
-				accountNumber: accNum,
-				sequence:      accSeq,
-				fromName:      clientCtx.FromName,
-				fromAddress:   clientCtx.FromAddress,
+				AccountNumber: accNum,
+				Sequence:      accSeq,
+				FromName:      clientCtx.FromName,
+				FromAddress:   clientCtx.FromAddress,
 			},
 			GasConfig: GasConfig{
-				gas:           gasSetting.Gas,
-				gasAdjustment: gasAdj,
+				Gas:           gasSetting.Gas,
+				GasAdjustment: gasAdj,
 			},
 			FeeConfig: FeeConfig{
-				feeGranter: clientCtx.FeeGranter,
-				feePayer:   clientCtx.FeePayer,
+				FeeGranter: clientCtx.FeeGranter,
+				FeePayer:   clientCtx.FeePayer,
 			},
 			ExecutionOptions: ExecutionOptions{
-				unordered:          unordered,
-				offline:            clientCtx.Offline,
-				generateOnly:       clientCtx.GenerateOnly,
-				simulateAndExecute: gasSetting.Simulate,
-				preprocessTxHook:   clientCtx.PreprocessTxHook,
+				Unordered:          unordered,
+				Offline:            clientCtx.Offline,
+				GenerateOnly:       clientCtx.GenerateOnly,
+				SimulateAndExecute: gasSetting.Simulate,
+				PreprocessTxHook:   clientCtx.PreprocessTxHook,
 			},
 		},
 	}

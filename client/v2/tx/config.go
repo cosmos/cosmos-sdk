@@ -10,6 +10,16 @@ import (
 type TxConfig interface {
 	GetTxParams() TxParameters
 	GetSignConfig() TxSigningConfig
+	GetTxEncodingConfig() TxEncodingConfig
+}
+
+type TxEncodingConfig interface {
+	TxEncoder() sdk.TxEncoder
+	TxDecoder() sdk.TxDecoder
+	TxJSONEncoder() sdk.TxEncoder
+	TxJSONDecoder() sdk.TxDecoder
+	MarshalSignatureJSON([]signingtypes.SignatureV2) ([]byte, error)
+	UnmarshalSignatureJSON([]byte) ([]signingtypes.SignatureV2, error)
 }
 
 type TxSigningConfig interface {
@@ -64,5 +74,5 @@ type ExecutionOptions struct {
 }
 
 type ExtensionOptions struct {
-	extOptions []*codectypes.Any
+	ExtOptions []*codectypes.Any
 }

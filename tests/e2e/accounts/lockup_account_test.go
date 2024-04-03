@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	lockupaccount "cosmossdk.io/x/accounts/lockup"
@@ -26,6 +27,7 @@ func TestContinuousLockingAccount(t *testing.T) {
 	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
 	fundAccount(t, app, ctx, ownerAddrStr, "1000000stake")
+	randomAcc = secp256k1.GenPrivKey().PubKey().Address()
 
 	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.CONTINUOUS_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
 		Owner:     accOwner.string,
@@ -39,10 +41,14 @@ func TestContinuousLockingAccount(t *testing.T) {
 	t.Run("ok - execute send message", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
-			ToAddress: bechify(t, app, []byte("random-addr")),
+			ToAddress: app.AuthKeeper.AddressCodec().BytesToString(randomAcc),
 			Amount:    coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		balance, err := app.BankKeeper.GetBalance(ctx, randomAcc, "stake")
+		require.NoError(t, err)
+		require.True(t, balance.Amount.Equal(100))
 	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -54,6 +60,11 @@ func TestContinuousLockingAccount(t *testing.T) {
 			Amount:           coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		err = app.StakingKeeper.Delegations.Get(
+			ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(val.OperatorAddress)),
+		)
+		require.NoError(t, err)
 	})
 	t.Run("ok - execute undelegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -65,6 +76,12 @@ func TestContinuousLockingAccount(t *testing.T) {
 			Amount:           coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		ubd, err = app.StakingKeeper.GetUnbondingDelegation(
+			ctx, sdk.AccAddress(delegatorAddress), sdk.ValAddress(val.OperatorAddress),
+		)
+		require.NoError(t, err)
+		require.Equal(t, len(ubd.Entries), 1)
 	})
 }
 
@@ -79,14 +96,19 @@ func TestDelayedLockingAccount(t *testing.T) {
 		EndTime: time.Now().Add(time.Minute * 1),
 	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	require.NoError(t, err)
+	randomAcc = secp256k1.GenPrivKey().PubKey().Address()
 
 	t.Run("ok - execute send message", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
-			ToAddress: bechify(t, app, []byte("random-addr")),
+			ToAddress: app.AuthKeeper.AddressCodec().BytesToString(randomAcc),
 			Amount:    coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		balance, err := app.BankKeeper.GetBalance(ctx, randomAcc, "stake")
+		require.NoError(t, err)
+		require.True(t, balance.Amount.Equal(100))
 	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -98,6 +120,11 @@ func TestDelayedLockingAccount(t *testing.T) {
 			Amount:           coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		err = app.StakingKeeper.Delegations.Get(
+			ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(val.OperatorAddress)),
+		)
+		require.NoError(t, err)
 	})
 	t.Run("ok - execute undelegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -109,6 +136,12 @@ func TestDelayedLockingAccount(t *testing.T) {
 			Amount:           coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		ubd, err = app.StakingKeeper.GetUnbondingDelegation(
+			ctx, sdk.AccAddress(delegatorAddress), sdk.ValAddress(val.OperatorAddress),
+		)
+		require.NoError(t, err)
+		require.Equal(t, len(ubd.Entries), 1)
 	})
 }
 
@@ -125,14 +158,19 @@ func TestPeriodicLockingAccount(t *testing.T) {
 		EndTime: time.Now().Add(time.Minute * 1),
 	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	require.NoError(t, err)
+	randomAcc = secp256k1.GenPrivKey().PubKey().Address()
 
 	t.Run("ok - execute send message", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
-			ToAddress: bechify(t, app, []byte("random-addr")),
+			ToAddress: app.AuthKeeper.AddressCodec().BytesToString(randomAcc),
 			Amount:    coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		balance, err := app.BankKeeper.GetBalance(ctx, randomAcc, "stake")
+		require.NoError(t, err)
+		require.True(t, balance.Amount.Equal(100))
 	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -144,6 +182,11 @@ func TestPeriodicLockingAccount(t *testing.T) {
 			Amount:           coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		err = app.StakingKeeper.Delegations.Get(
+			ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(val.OperatorAddress)),
+		)
+		require.NoError(t, err)
 	})
 	t.Run("ok - execute undelegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -155,6 +198,12 @@ func TestPeriodicLockingAccount(t *testing.T) {
 			Amount:           coins(t, "100stake"),
 		}
 		excuteTx(t, ctx, msg, app, accountAddr, accOwner)
+
+		ubd, err = app.StakingKeeper.GetUnbondingDelegation(
+			ctx, sdk.AccAddress(delegatorAddress), sdk.ValAddress(val.OperatorAddress),
+		)
+		require.NoError(t, err)
+		require.Equal(t, len(ubd.Entries), 1)
 	})
 }
 

@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
@@ -414,6 +415,17 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 		return err
 	}
 	return nil
+}
+
+func (k Keeper) isAccountTypeRegistered(ctx context.Context, accountType string) (bool, error) {
+    _, err := k.AccountsByType.Get(ctx, []byte(accountType))
+    if err != nil {
+        if strings.Contains(err.Error(), "not found") {
+            return false, nil
+        }
+        return false, err
+    }
+    return true, nil
 }
 
 const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"

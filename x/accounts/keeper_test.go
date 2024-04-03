@@ -134,3 +134,24 @@ func TestKeeper_Query(t *testing.T) {
 		require.True(t, implementation.Equal(&types.Int64Value{Value: 1000}, resp))
 	})
 }
+
+func TestKeeper_IsAccountTypeRegistered(t *testing.T) {
+	// Setup
+	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
+
+	// Test for a registered account type
+	t.Run("registered account type", func(t *testing.T) {
+		// Check if the registered account type "test" exists
+		isRegistered, err := m.isAccountTypeRegistered(ctx, "test")
+		require.NoError(t, err)
+		require.True(t, isRegistered, "Expected account type 'test' to be registered")
+	})
+
+	// Test for an unregistered account type
+	t.Run("unregistered account type", func(t *testing.T) {
+		// Check if the unregistered account type "unknown" exists
+		isRegistered, err := m.isAccountTypeRegistered(ctx, "unknown")
+		require.NoError(t, err)
+		require.False(t, isRegistered, "Expected account type 'unknown' not to be registered")
+	})
+}

@@ -80,7 +80,14 @@ func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) erro
 }
 
 func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisAccount) error {
-	// TODO: maybe check if impl exists?
+	isRegistered, err := k.isAccountTypeRegistered(ctx, acc.AccountType)
+	if err != nil {
+		return err
+	}
+	if !isRegistered {
+		return fmt.Errorf("account type %s is not registered", acc.AccountType)
+	}
+
 	addrBytes, err := k.addressCodec.StringToBytes(acc.Address)
 	if err != nil {
 		return err

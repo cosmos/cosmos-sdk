@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -57,24 +58,6 @@ func TestUpdateDescription(t *testing.T) {
 	d, err = d1.UpdateDescription(d3)
 	require.Nil(t, err)
 	require.Equal(t, d, d3)
-}
-
-func TestABCIValidatorUpdate(t *testing.T) {
-	validator := newValidator(t, valAddr1, pk1)
-	abciVal := validator.ABCIValidatorUpdate(sdk.DefaultPowerReduction)
-	pk, err := validator.TmConsPublicKey()
-	require.NoError(t, err)
-	require.Equal(t, pk, abciVal.PubKey)
-	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
-}
-
-func TestABCIValidatorUpdateZero(t *testing.T) {
-	validator := newValidator(t, valAddr1, pk1)
-	abciVal := validator.ABCIValidatorUpdateZero()
-	pk, err := validator.TmConsPublicKey()
-	require.NoError(t, err)
-	require.Equal(t, pk, abciVal.PubKey)
-	require.Equal(t, int64(0), abciVal.Power)
 }
 
 func TestShareTokens(t *testing.T) {
@@ -136,8 +119,10 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
+	addr1, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr1)
+	require.NoError(t, err)
 	valA := types.Validator{
-		OperatorAddress: valAddr1.String(),
+		OperatorAddress: addr1,
 		ConsensusPubkey: pk1Any,
 		Status:          types.Bonded,
 		Tokens:          math.NewInt(100),
@@ -335,8 +320,9 @@ func TestBondStatus(t *testing.T) {
 }
 
 func mkValidator(tokens int64, shares math.LegacyDec) types.Validator {
+	vAddr1, _ := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr1)
 	return types.Validator{
-		OperatorAddress: valAddr1.String(),
+		OperatorAddress: vAddr1,
 		ConsensusPubkey: pk1Any,
 		Status:          types.Bonded,
 		Tokens:          math.NewInt(tokens),
@@ -347,7 +333,9 @@ func mkValidator(tokens int64, shares math.LegacyDec) types.Validator {
 // Creates a new validators and asserts the error check.
 func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey) types.Validator {
 	t.Helper()
-	v, err := types.NewValidator(operator.String(), pubKey, types.Description{})
+	addr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(operator)
+	require.NoError(t, err)
+	v, err := types.NewValidator(addr, pubKey, types.Description{})
 	require.NoError(t, err)
 	return v
 }

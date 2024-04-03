@@ -8,6 +8,8 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -39,7 +41,7 @@ type WeightedProposalMsg interface {
 	MsgSimulatorFn() MsgSimulatorFn // msg simulator function
 }
 
-type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
+type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
 
 type SimValFn func(r *rand.Rand) string
 

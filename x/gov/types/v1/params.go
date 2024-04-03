@@ -260,7 +260,7 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	}
 
 	if len(p.ProposalCancelDest) != 0 {
-		_, err := sdk.AccAddressFromBech32(p.ProposalCancelDest)
+		_, err := addressCodec.StringToBytes(p.ProposalCancelDest)
 		if err != nil {
 			return fmt.Errorf("deposits destination address is invalid: %s", p.ProposalCancelDest)
 		}

@@ -74,6 +74,8 @@ type Context struct {
 	txCount int
 	// sum the gas used by all the transactions in the current block, only accessible by end blocker
 	blockGasUsed uint64
+	// sum the gas wanted by all the transactions in the current block, only accessible by end blocker
+	blockGasWanted uint64
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -106,6 +108,7 @@ func (c Context) TxIndex() int                                  { return c.txInd
 func (c Context) MsgIndex() int                                 { return c.msgIndex }
 func (c Context) TxCount() int                                  { return c.txCount }
 func (c Context) BlockGasUsed() uint64                          { return c.blockGasUsed }
+func (c Context) BlockGasWanted() uint64                        { return c.blockGasWanted }
 
 // BlockHeader returns the header by value.
 func (c Context) BlockHeader() cmtproto.Header {
@@ -350,6 +353,11 @@ func (c Context) WithMsgIndex(msgIndex int) Context {
 
 func (c Context) WithBlockGasUsed(gasUsed uint64) Context {
 	c.blockGasUsed = gasUsed
+	return c
+}
+
+func (c Context) WithBlockGasWanted(gasWanted uint64) Context {
+	c.blockGasWanted = gasWanted
 	return c
 }
 

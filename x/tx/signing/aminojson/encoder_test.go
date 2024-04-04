@@ -56,15 +56,17 @@ func TestCosmosInlineJSON(t *testing.T) {
 			wantErr:    false,
 			wantOutput: `"hey yo"`,
 		},
-		// This test case is a bit tricky. Conceptually it makes no sense for this
-		// to pass. The question is just where the JSON validity check is done.
-		// In wasmd we have it in the message field validation. But it might make
-		// sense to move it here instead.
-		// For now it's better to consider this case undefined behaviour.
 		"supported type - invalid JSON": {
-			value:      protoreflect.ValueOfBytes([]byte(`foo`)),
-			wantErr:    false,
-			wantOutput: `foo`,
+			value:   protoreflect.ValueOfBytes([]byte(`foo`)),
+			wantErr: true,
+		},
+		"supported type - invalid JSON (empty)": {
+			value:   protoreflect.ValueOfBytes([]byte(``)),
+			wantErr: true,
+		},
+		"supported type - invalid JSON (nil bytes)": {
+			value:   protoreflect.ValueOfBytes(nil),
+			wantErr: true,
 		},
 		"unsupported type - bool": {
 			value:   protoreflect.ValueOfBool(true),

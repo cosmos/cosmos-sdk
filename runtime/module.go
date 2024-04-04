@@ -42,13 +42,10 @@ func (m appModule) IsOnePerModuleType() {}
 func (m appModule) IsAppModule()        {}
 
 func (m appModule) RegisterServices(configurator module.Configurator) { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
-	autocliv1.RegisterQueryServer(configurator.QueryServer(), NewAutoCLIQueryService(m.app.ModuleManager.Modules))
-
-	reflectionSvc, err := NewReflectionService()
+	err := m.app.registerRuntimeServices(configurator)
 	if err != nil {
 		panic(err)
 	}
-	reflectionv1.RegisterReflectionServiceServer(configurator.QueryServer(), reflectionSvc)
 }
 
 func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {

@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/auth/ante"
@@ -33,10 +34,11 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasName             = AppModule{}
 
-	_ appmodule.HasGenesis    = AppModule{}
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
+	_ appmodule.HasGenesis                        = AppModule{}
+	_ appmodule.AppModule                         = AppModule{}
+	_ appmodule.HasServices                       = AppModule{}
+	_ appmodule.HasMigrations                     = AppModule{}
+	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
 )
 
 // AppModule implements an application module for the auth module.
@@ -142,28 +144,36 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	return am.cdc.MarshalJSON(gs)
 }
 
-// TxValidator implements appmodule.HasTxValidation.
+// TxValidator implements appmodulev2.HasTxValidation.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// supports legacy ante handler
-	// eventually do the reverse, write ante handler as TxValidator
-	anteDecorators := []sdk.AnteDecorator{
-		ante.NewSetUpContextDecorator(),
-		ante.NewValidateBasicDecorator(),
-		ante.NewTxTimeoutHeightDecorator(),
+	validators := []interface {
+		ValidateTx(ctx context.Context, tx sdk.Tx) error
+	}{
+		ante.NewSetUpContextDecorator(am.accountKeeper),
+		ante.NewValidateBasicDecorator(am.accountKeeper),
+		ante.NewTxTimeoutHeightDecorator(am.accountKeeper),
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
 	}
 
-	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
-	_, err := anteHandler(sdkCtx, nil /** do not import runtime **/, sdkCtx.ExecMode() == sdk.ExecModeSimulate)
-	return err
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
+	}
+
+	for _, validator := range validators {
+		if err := validator.ValidateTx(ctx, sdkTx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// ConsensusVersion implements HasConsensusVersion
+// ConsensusVersion implements appmodule.HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // AppModuleSimulation functions

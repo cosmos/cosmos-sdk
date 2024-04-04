@@ -40,10 +40,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	anteDecorators := []sdk.AnteDecorator{
-		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		NewSetUpContextDecorator(options.AccountKeeper), // outermost AnteDecorator. SetUpContext must be called first
 		NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
-		NewValidateBasicDecorator(),
-		NewTxTimeoutHeightDecorator(),
+		NewValidateBasicDecorator(options.AccountKeeper),
+		NewTxTimeoutHeightDecorator(options.AccountKeeper),
 		NewValidateMemoDecorator(options.AccountKeeper),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),

@@ -53,6 +53,9 @@ type AccountKeeperI interface {
 
 	// AddressCodec returns the account address codec.
 	AddressCodec() address.Codec
+
+	// Environment returns the module's environment.
+	Environment() appmodule.Environment
 }
 
 func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
@@ -274,4 +277,9 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 		panic(err)
 	}
 	return params
+}
+
+// Environment returns the module's environment.
+func (ak AccountKeeper) Environment() appmodule.Environment {
+	return ak.environment
 }

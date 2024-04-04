@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"context"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -21,20 +22,33 @@ type GasTx interface {
 // on gas provided and gas used.
 // CONTRACT: Must be first decorator in the chain
 // CONTRACT: Tx must implement GasTx interface
-type SetUpContextDecorator struct{}
+type SetUpContextDecorator struct {
+	ak AccountKeeper
+}
 
-func NewSetUpContextDecorator() SetUpContextDecorator {
-	return SetUpContextDecorator{}
+func NewSetUpContextDecorator(ak AccountKeeper) SetUpContextDecorator {
+	return SetUpContextDecorator{
+		ak: ak,
+	}
 }
 
 func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if err := sud.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+
+	return next(ctx, tx, false)
+}
+
+func (sud SetUpContextDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) (err error) {
+	gasService := sud.ak.Environment().GasService
+
 	// all transactions must implement GasTx
-	gasTx, ok := tx.(GasTx)
+	gasTx, ok := tx.(GasTx) // TODO: what to do here
 	if !ok {
-		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
-		// during runTx.
-		newCtx = SetGasMeter(ctx, 0)
-		return newCtx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
+		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack during runTx.
+		// newCtx = SetGasMeter(ctx, 0)
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
 	}
 
 	newCtx = SetGasMeter(ctx, gasTx.GetGas())
@@ -43,7 +57,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 		// If there exists a maximum block gas limit, we must ensure that the tx
 		// does not exceed it.
 		if cp.Block.MaxGas > 0 && gasTx.GetGas() > uint64(cp.Block.MaxGas) {
-			return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), cp.Block.MaxGas)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), cp.Block.MaxGas)
 		}
 	}
 
@@ -58,7 +72,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 			case storetypes.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
-					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed())
+					rType.Descriptor, gasTx.GetGas(), gasService.GetGasMeter(ctx).Consumed())
 
 				err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
@@ -67,7 +81,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 		}
 	}()
 
-	return next(newCtx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return err
 }
 
 // SetGasMeter returns a new context with a gas meter set from a given context.

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/gogoproto/proto" // TODO: use protov2
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"

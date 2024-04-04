@@ -17,14 +17,15 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
+	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/server/v2/core/appmanager"
 )
 
 // parseQueryRequest parses a RequestQuery into a proto.Message, if it is a proto query
@@ -235,15 +236,15 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence
-func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
-	evidence := make([]comet.Evidence, len(ev))
+func ToSDKEvidence(ev []abci.Misbehavior) []*consensusv1.Evidence {
+	evidence := make([]*consensusv1.Evidence, len(ev))
 	for i, e := range ev {
-		evidence[i] = comet.Evidence{
-			Type:             comet.MisbehaviorType(e.Type),
+		evidence[i] = &consensusv1.Evidence{
+			EvidenceType:     consensusv1.MisbehaviorType(e.Type),
 			Height:           e.Height,
-			Time:             e.Time,
+			Time:             &timestamppb.Timestamp{Seconds: int64(e.Time.Second())}, // safe?
 			TotalVotingPower: e.TotalVotingPower,
-			Validator: comet.Validator{
+			Validator: &consensusv1.Validator{
 				Address: e.Validator.Address,
 				Power:   e.Validator.Power,
 			},
@@ -253,21 +254,21 @@ func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
 }
 
 // ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
-func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
-	ci := comet.CommitInfo{
+func ToSDKCommitInfo(commit abci.CommitInfo) *consensusv1.CommitInfo {
+	ci := consensusv1.CommitInfo{
 		Round: commit.Round,
 	}
 
 	for _, v := range commit.Votes {
-		ci.Votes = append(ci.Votes, comet.VoteInfo{
-			Validator: comet.Validator{
+		ci.Votes = append(ci.Votes, &consensusv1.VoteInfo{
+			Validator: &consensusv1.Validator{
 				Address: v.Validator.Address,
 				Power:   v.Validator.Power,
 			},
-			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+			BlockIdFlag: consensusv1.BlockIDFlag(v.BlockIdFlag),
 		})
 	}
-	return ci
+	return &ci
 }
 
 // ToSDKExtendedCommitInfo takes comet extended commit info and returns sdk commit info

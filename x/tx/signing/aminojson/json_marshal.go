@@ -7,6 +7,7 @@ import (
 	"io"
 	"sort"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -55,7 +56,7 @@ type Encoder struct {
 // rules.
 func NewEncoder(options EncoderOptions) Encoder {
 	if options.FileResolver == nil {
-		options.FileResolver = protoregistry.GlobalFiles
+		options.FileResolver = gogoproto.HybridResolver
 	}
 	if options.TypeResolver == nil {
 		options.TypeResolver = protoregistry.GlobalTypes

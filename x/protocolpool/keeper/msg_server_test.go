@@ -628,6 +628,9 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.withdrawnAmount, resp.Amount)
 
+				// Distribute fund to other validators
+				suite.poolKeeper.EndBlocker(suite.ctx)
+
 				// this condition is valid only for request with multiple continuous funds
 				if len(tc.recipientAddress) > 1 {
 					toClaim, err := suite.poolKeeper.RecipientFundDistribution.Get(suite.ctx, tc.recipientAddress[1])
@@ -886,6 +889,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, msg)
 				suite.Require().NoError(err)
 
+				// Distribute fund to other validators
 				suite.poolKeeper.EndBlocker(suite.ctx)
 			},
 			recipientAddr: recipientAddr,

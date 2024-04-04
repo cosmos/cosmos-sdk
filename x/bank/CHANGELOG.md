@@ -35,6 +35,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* []() Removal of the Address.String() method and related changes:
+    * Changed `NewInput`, `NewOutput`, `NewQueryBalanceRequest`, `NewQueryAllBalancesRequest`, `NewQuerySpendableBalancesRequest` to accept a string instead of an `AccAddress`.
+    * Added an address codec as an argument to `NewSendAuthorization`.
+    * (simulation) `RandomGenesisBalances` also returns an error.
 * [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) `BurnCoins` takes an address instead of a module name
 * [#19477](https://github.com/cosmos/cosmos-sdk/pull/19477) `appmodule.Environment` is passed to bank `NewKeeper`
 * [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) The genesis api has been updated to match `appmodule.HasGenesis`.

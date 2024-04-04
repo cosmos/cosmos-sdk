@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	bank "cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -147,10 +148,13 @@ func TestSanitizeBalances(t *testing.T) {
 	coins := sdk.Coins{coin}
 	addrs, _ := makeRandomAddressesAndPublicKeys(20)
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	var balances []bank.Balance
 	for _, addr := range addrs {
+		addrStr, err := ac.BytesToString(addr)
+		require.NoError(t, err)
 		balances = append(balances, bank.Balance{
-			Address: addr.String(),
+			Address: addrStr,
 			Coins:   coins,
 		})
 	}
@@ -180,9 +184,12 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 	addrs, _ := makeRandomAddressesAndPublicKeys(13)
 
 	var balances []bank.Balance
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	for _, addr := range addrs {
+		addrStr, err := ac.BytesToString(addr)
+		require.NoError(t, err)
 		balances = append(balances, bank.Balance{
-			Address: addr.String(),
+			Address: addrStr,
 			Coins:   coins,
 		})
 	}
@@ -198,8 +205,10 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 	coins2 := sdk.Coins{coin2, coin}
 	addrs2, _ := makeRandomAddressesAndPublicKeys(31)
 	for _, addr := range addrs2 {
+		addrStr, err := ac.BytesToString(addr)
+		require.NoError(t, err)
 		balances = append(balances, bank.Balance{
-			Address: addr.String(),
+			Address: addrStr,
 			Coins:   coins2,
 		})
 	}
@@ -238,11 +247,14 @@ func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
 	addrs, _ := makeRandomAddressesAndPublicKeys(nAddresses)
 
 	b.ResetTimer()
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	for i := 0; i < b.N; i++ {
 		var balances []bank.Balance
 		for _, addr := range addrs {
+			addrStr, err := ac.BytesToString(addr)
+			require.NoError(b, err)
 			balances = append(balances, bank.Balance{
-				Address: addr.String(),
+				Address: addrStr,
 				Coins:   coins,
 			})
 		}

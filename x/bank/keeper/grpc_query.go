@@ -292,7 +292,11 @@ func (k BaseKeeper) DenomOwners(
 			if err != nil {
 				return nil, err
 			}
-			return &types.DenomOwner{Address: key.K2().String(), Balance: sdk.NewCoin(req.Denom, amt)}, nil
+			addr, err := k.ak.AddressCodec().BytesToString(key.K2())
+			if err != nil {
+				return nil, err
+			}
+			return &types.DenomOwner{Address: addr, Balance: sdk.NewCoin(req.Denom, amt)}, nil
 		},
 		query.WithCollectionPaginationPairPrefix[string, sdk.AccAddress](req.Denom),
 	)

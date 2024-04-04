@@ -2,10 +2,11 @@ package transaction
 
 import "context"
 
-// ExecMode defines the execution mode which can be set on a Context.
+// ExecMode defines the execution mode
 type ExecMode uint8
 
 // All possible execution modes.
+// For backwards compatibility and easier casting, the exec mode values must be the same as in cosmos/cosmos-sdk/types package.
 const (
 	ExecModeCheck ExecMode = iota
 	_
@@ -18,7 +19,6 @@ const (
 )
 
 // Service creates a transaction service.
-// This service is used to get information about which context is used to execute a transaction.
 type Service interface {
 	ExecMode(ctx context.Context) ExecMode
 }

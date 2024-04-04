@@ -1893,7 +1893,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 		case banktypes.EventTypeCoinSpent:
 			coinsSpent, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			require.NoError(err)
-			_, err = sdk.AccAddressFromBech32(e.Attributes[0].Value)
+			_, err = suite.authKeeper.AddressCodec().StringToBytes(e.Attributes[0].Value)
 			require.NoError(err)
 
 			balances[e.Attributes[0].Value] = balances[e.Attributes[0].Value].Sub(coinsSpent...)
@@ -1901,7 +1901,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 		case banktypes.EventTypeCoinReceived:
 			coinsRecv, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			require.NoError(err)
-			_, err = sdk.AccAddressFromBech32(e.Attributes[0].Value)
+			_, err = suite.authKeeper.AddressCodec().StringToBytes(e.Attributes[0].Value)
 			require.NoError(err)
 			balances[e.Attributes[0].Value] = balances[e.Attributes[0].Value].Add(coinsRecv...)
 		}

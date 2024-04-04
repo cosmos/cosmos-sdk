@@ -159,7 +159,8 @@ func TestSanitizeBalances(t *testing.T) {
 		})
 	}
 	// 2. Sort the values.
-	sorted := bank.SanitizeGenesisBalances(balances)
+	sorted, err := bank.SanitizeGenesisBalances(balances, ac)
+	require.NoError(t, err)
 
 	// 3. Compare and ensure that all the values are sorted in ascending order.
 	// Invariant after sorting:
@@ -197,7 +198,7 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 	// 2. Add duplicate
 	dupIdx := 3
 	balances = append(balances, balances[dupIdx])
-	addr, _ := sdk.AccAddressFromBech32(balances[dupIdx].Address)
+	addr, _ := ac.StringToBytes(balances[dupIdx].Address)
 	expectedError := fmt.Sprintf("genesis state has a duplicate account: %q aka %x", balances[dupIdx].Address, addr)
 
 	// 3. Add more balances
@@ -215,7 +216,8 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 
 	// 4. Execute SanitizeGenesisBalances and expect an error
 	require.PanicsWithValue(t, expectedError, func() {
-		bank.SanitizeGenesisBalances(balances)
+		_, err := bank.SanitizeGenesisBalances(balances, ac)
+		require.NoError(t, err)
 	}, "SanitizeGenesisBalances should panic with duplicate accounts")
 }
 
@@ -247,6 +249,7 @@ func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
 	addrs, _ := makeRandomAddressesAndPublicKeys(nAddresses)
 
 	b.ResetTimer()
+	var err error
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	for i := 0; i < b.N; i++ {
 		var balances []bank.Balance
@@ -258,7 +261,8 @@ func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
 				Coins:   coins,
 			})
 		}
-		sink = bank.SanitizeGenesisBalances(balances)
+		sink, err = bank.SanitizeGenesisBalances(balances, ac)
+		require.NoError(b, err)
 	}
 	if sink == nil {
 		b.Fatal("Benchmark did not run")

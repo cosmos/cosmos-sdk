@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* []() Removal of the Address.String() method and related changes:
+* [#19954](https://github.com/cosmos/cosmos-sdk/pull/19954) Removal of the Address.String() method and related changes:
     * Changed `NewInput`, `NewOutput`, `NewQueryBalanceRequest`, `NewQueryAllBalancesRequest`, `NewQuerySpendableBalancesRequest` to accept a string instead of an `AccAddress`.
     * Added an address codec as an argument to `NewSendAuthorization`.
     * Added an address codec as an argument to `SanitizeGenesisBalances` which also returns an error.

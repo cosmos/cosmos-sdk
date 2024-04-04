@@ -70,7 +70,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 			}
 			err = k.EpochInfo.Set(ctx, epochInfo.Identifier, epochInfo)
 			if err != nil {
-				logger.Error(fmt.Sprintf("Error set epoch infor with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
+				logger.Error(fmt.Sprintf("Error set epoch info with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 				return false, nil
 			}
 			if err := k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {

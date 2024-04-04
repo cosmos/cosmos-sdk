@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/x/protocolpool/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 

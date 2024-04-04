@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -629,7 +628,8 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().Equal(tc.withdrawnAmount, resp.Amount)
 
 				// Distribute fund to other validators
-				suite.poolKeeper.EndBlocker(suite.ctx)
+				err := suite.poolKeeper.EndBlocker(suite.ctx)
+				suite.Require().NoError(err)
 
 				// this condition is valid only for request with multiple continuous funds
 				if len(tc.recipientAddress) > 1 {
@@ -890,7 +890,8 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.Require().NoError(err)
 
 				// Distribute fund to other validators
-				suite.poolKeeper.EndBlocker(suite.ctx)
+				err = suite.poolKeeper.EndBlocker(suite.ctx)
+				suite.Require().NoError(err)
 			},
 			recipientAddr: recipientAddr,
 			expErr:        false,
@@ -943,7 +944,6 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
-				fmt.Println(resp.WithdrawnAllocatedFund, tc.withdrawnFunds)
 				suite.Require().Equal(resp.WithdrawnAllocatedFund, tc.withdrawnFunds)
 			}
 			if tc.postRun != nil {

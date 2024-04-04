@@ -263,7 +263,6 @@ func (k Keeper) hasPermission(ctx context.Context, addr []byte) (bool, error) {
 }
 
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
-
 	// Create a map to store keys & values from RecipientFundPercentage during the first iteration
 	recipientFundMap := make(map[string]math.Int)
 

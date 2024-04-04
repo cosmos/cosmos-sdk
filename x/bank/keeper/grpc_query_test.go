@@ -3,7 +3,6 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"time"
 
 	"cosmossdk.io/core/header"
@@ -12,6 +11,7 @@ import (
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

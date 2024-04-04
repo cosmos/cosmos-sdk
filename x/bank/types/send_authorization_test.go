@@ -1,8 +1,7 @@
 package types_test
 
 import (
-	fmt "fmt"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -13,7 +13,7 @@ const (
 )
 
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
-func NewQueryBalanceRequest(addr string, denom string) *QueryBalanceRequest {
+func NewQueryBalanceRequest(addr, denom string) *QueryBalanceRequest {
 	return &QueryBalanceRequest{Address: addr, Denom: denom}
 }
 

@@ -65,7 +65,11 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 * [#19955](https://github.com/cosmos/cosmos-sdk/pull/19955) Don't shadow Amino marshalling error messages
 
+<<<<<<< HEAD
 ## [v0.13.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.1) - 2024-03-05
+=======
+## v0.13.1
+>>>>>>> 15ad85d4e (fix(x/tx): don't shadow Amino marshalling error messages (#19955))
 
 ### Features
 

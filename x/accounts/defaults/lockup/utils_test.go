@@ -11,9 +11,12 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 )
+
+type ProtoMsg = protoiface.MessageV1
 
 var TestFunds = sdk.NewCoins(sdk.NewCoin("test", math.NewInt(10)))
 

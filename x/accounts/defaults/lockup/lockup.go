@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -144,6 +145,16 @@ func (bva *BaseLockup) Delegate(
 	if err != nil {
 		return nil, err
 	}
+	msgDelegate := &stakingtypes.MsgDelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+		Amount:           msg.Amount,
+	}
+	responses, err := sendMessage(ctx, msgDelegate)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(responses)
 
 	err = bva.TrackDelegation(
 		ctx,
@@ -151,12 +162,6 @@ func (bva *BaseLockup) Delegate(
 		lockedCoins,
 		sdk.Coins{msg.Amount},
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	msgDelegate := makeMsgDelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
-	responses, err := sendMessage(ctx, msgDelegate)
 	if err != nil {
 		return nil, err
 	}
@@ -179,13 +184,17 @@ func (bva *BaseLockup) Undelegate(
 		return nil, err
 	}
 
-	err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount})
+	msgUndelegate := &stakingtypes.MsgUndelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+		Amount:           msg.Amount,
+	}
+	responses, err := sendMessage(ctx, msgUndelegate)
 	if err != nil {
 		return nil, err
 	}
 
-	msgUndelegate := makeMsgUndelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
-	responses, err := sendMessage(ctx, msgUndelegate)
+	err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +229,11 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	msgSend := makeMsgSend(fromAddress, msg.ToAddress, msg.Amount)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.ToAddress,
+		Amount:      msg.Amount,
+	}
 	responses, err := sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
@@ -304,7 +317,11 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, fmt.Errorf("no tokens available for withdrawing")
 	}
 
-	msgSend := makeMsgSend(fromAddress, msg.ToAddress, amount)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.ToAddress,
+		Amount:      amount,
+	}
 	_, err = sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
@@ -465,7 +482,7 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 
 func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {
 	// Query account balance for the sent denom
-	balanceQueryReq := banktypes.NewQueryBalanceRequest(sdk.AccAddress(sender), denom)
+	balanceQueryReq := &banktypes.QueryBalanceRequest{Address: sender, Denom: denom}
 	resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
 	if err != nil {
 		return nil, err

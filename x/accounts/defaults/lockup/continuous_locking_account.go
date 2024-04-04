@@ -41,7 +41,7 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
 
-	if msg.EndTime.Before(msg.StartTime) {
+	if msg.EndTime.Before(msg.StartTime) || msg.EndTime.Equal(msg.StartTime) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start before end)")
 	}
 

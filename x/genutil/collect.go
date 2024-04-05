@@ -25,11 +25,11 @@ import (
 // GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,
 	config *cfg.Config, initCfg types.InitConfig, genesis *types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
-	validator types.MessageValidator, valAddrCodec address.ValidatorAddressCodec,
+	validator types.MessageValidator, valAddrCodec address.ValidatorAddressCodec, addressCodec address.Codec,
 ) (appState json.RawMessage, err error) {
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
-		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genesis, genBalIterator, validator, valAddrCodec)
+		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genesis, genBalIterator, validator, valAddrCodec, addressCodec)
 	if err != nil {
 		return appState, err
 	}
@@ -68,7 +68,7 @@ func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodi
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
 func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	genesis *types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
-	validator types.MessageValidator, valAddrCodec address.ValidatorAddressCodec,
+	validator types.MessageValidator, valAddrCodec address.ValidatorAddressCodec, addressCodec address.Codec,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 	// prepare a map of all balances in genesis state to then validate
 	// against the validators addresses
@@ -142,7 +142,10 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 			return appGenTxs, persistentPeers, err
 		}
 
-		valAccAddr := sdk.AccAddress(valAddr).String()
+		valAccAddr, err := addressCodec.BytesToString(valAddr)
+		if err != nil {
+			return appGenTxs, persistentPeers, err
+		}
 
 		delBal, delOk := balancesMap[valAccAddr]
 		if !delOk {
@@ -158,7 +161,7 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		if !valOk {
 			_, file, no, ok := runtime.Caller(1)
 			if ok {
-				fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, sdk.AccAddress(msg.ValidatorAddress).String())
+				fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, valAccAddr)
 			}
 			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAddr, balancesMap)
 		}

@@ -69,7 +69,7 @@ func TestAssertKeyLength(t *testing.T) {
 			expectPanic: false,
 		},
 		{
-			name:        "Store key is greater then the given length",
+			name:        "Store key is greater than the given length",
 			key:         []byte("unique"),
 			length:      3,
 			expectPanic: true,

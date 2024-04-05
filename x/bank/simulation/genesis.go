@@ -87,14 +87,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 	totalSupply := simState.InitialStake.Mul(sdkmath.NewInt((numAccs + simState.NumBonded)))
 	supply := sdk.NewCoins(sdk.NewCoin(simState.BondDenom, totalSupply))
 
-	balancer, err := RandomGenesisBalances(simState)
+	balances, err := RandomGenesisBalances(simState)
 	if err != nil {
 		panic(err)
 	}
 
 	bankGenesis := types.GenesisState{
 		Params:      types.NewParams(defaultSendEnabledParam),
-		Balances:    balancer,
+		Balances:    balances,
 		Supply:      supply,
 		SendEnabled: sendEnabled,
 	}

@@ -56,8 +56,8 @@ func (suite *StoreKeySuite) TestMustLengthPrefix() {
 		expStoreKey []byte
 		expPanic    bool
 	}{
-		{"add length prefix for address", addr10byte, append([]byte{byte(10)}, addr10byte...), false},
-		{"too long address must rise a panic", addr256byte, nil, true},
+		{"10-byte address with length prefix", addr10byte, append([]byte{byte(10)}, addr10byte...), false},
+		{"256-byte address triggers panic due to excessive length", addr256byte, nil, true},
 	}
 
 	for _, tt := range tests {

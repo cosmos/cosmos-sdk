@@ -15,19 +15,19 @@ func TestAssertKeyAtLeastLength(t *testing.T) {
 		expectPanic bool
 	}{
 		{
-			name:        "Store key is less then the given length",
+			name:        "Store key length is less than the given length",
 			key:         []byte("hello"),
 			length:      10,
 			expectPanic: true,
 		},
 		{
-			name:        "Store key is equal to the given length",
+			name:        "Store key length is equal to the given length",
 			key:         []byte("store-key"),
 			length:      9,
 			expectPanic: false,
 		},
 		{
-			name:        "Store key is greater then the given length",
+			name:        "Store key length is greater than the given length",
 			key:         []byte("unique"),
 			length:      3,
 			expectPanic: false,
@@ -36,14 +36,12 @@ func TestAssertKeyAtLeastLength(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			defer func() {
-				r := recover()
-				if tc.expectPanic {
-					assert.NotNil(t, r)
-					return
-				}
-				assert.Nil(t, r)
-			}()
+			if tc.expectPanic {
+				assert.Panics(t, func() {
+					kv.AssertKeyAtLeastLength(tc.key, tc.length)
+				})
+				return
+			}
 			kv.AssertKeyAtLeastLength(tc.key, tc.length)
 		})
 	}
@@ -57,19 +55,19 @@ func TestAssertKeyLength(t *testing.T) {
 		expectPanic bool
 	}{
 		{
-			name:        "Store key is less then the given length",
+			name:        "Store key length is less than the given length",
 			key:         []byte("hello"),
 			length:      10,
 			expectPanic: true,
 		},
 		{
-			name:        "Store key is equal to the given length",
+			name:        "Store key length is equal to the given length",
 			key:         []byte("store-key"),
 			length:      9,
 			expectPanic: false,
 		},
 		{
-			name:        "Store key is greater than the given length",
+			name:        "Store key length is greater than the given length",
 			key:         []byte("unique"),
 			length:      3,
 			expectPanic: true,
@@ -78,14 +76,12 @@ func TestAssertKeyLength(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			defer func() {
-				r := recover()
-				if tc.expectPanic {
-					assert.NotNil(t, r)
-					return
-				}
-				assert.Nil(t, r)
-			}()
+			if tc.expectPanic {
+				assert.Panics(t, func() {
+					kv.AssertKeyLength(tc.key, tc.length)
+				})
+				return
+			}
 			kv.AssertKeyLength(tc.key, tc.length)
 		})
 	}

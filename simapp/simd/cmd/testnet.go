@@ -391,7 +391,10 @@ func initGenFiles(
 	var bankGenState banktypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
-	bankGenState.Balances = banktypes.SanitizeGenesisBalances(genBalances)
+	bankGenState.Balances, err = banktypes.SanitizeGenesisBalances(genBalances, clientCtx.AddressCodec)
+	if err != nil {
+		return err
+	}
 	for _, bal := range bankGenState.Balances {
 		bankGenState.Supply = bankGenState.Supply.Add(bal.Coins...)
 	}

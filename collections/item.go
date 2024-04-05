@@ -6,14 +6,14 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
-	"cosmossdk.io/server/v2/stf"
+	"cosmossdk.io/core/container"
 )
 
 // Item is a type declaration based on Map
 // with a non-existent key.
 type Item[V any] struct {
 	m            Map[noKey, V]
-	getContainer func(ctx context.Context) stf.Container
+	getContainer func(ctx context.Context) container.Service
 }
 
 // NewItem instantiates a new Item instance, given the value encoder of the item V.

@@ -7,9 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/server/v2/stf"
-
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/container"
 	"cosmossdk.io/core/store"
 )
 
@@ -38,7 +37,7 @@ func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) store.K
 func NewSchemaBuilder(service store.KVStoreService) *SchemaBuilder {
 	sb := NewSchemaBuilderFromAccessor(service.OpenKVStore)
 	kl, ok := service.(interface {
-		OpenContainer(ctx context.Context) stf.Container
+		OpenContainer(ctx context.Context) container.Service
 	})
 	if ok {
 		sb.schema.container = kl.OpenContainer
@@ -134,7 +133,7 @@ var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
 // methods for importing/exporting genesis data and for schema reflection for
 // clients.
 type Schema struct {
-	container           func(ctx context.Context) stf.Container
+	container           func(ctx context.Context) container.Service
 	storeAccessor       func(context.Context) store.KVStore
 	collectionsOrdered  []string
 	collectionsByPrefix map[string]Collection

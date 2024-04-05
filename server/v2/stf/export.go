@@ -3,10 +3,10 @@ package stf
 import (
 	"context"
 
+	"cosmossdk.io/core/container"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
-	"cosmossdk.io/core/container"
 )
 
 func GetExecutionContext(ctx context.Context) *executionContext {

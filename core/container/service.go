@@ -7,4 +7,3 @@ type Service interface {
 	Set(prefix []byte, value any)
 }
 
-

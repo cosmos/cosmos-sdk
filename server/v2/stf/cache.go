@@ -1,8 +1,8 @@
 package stf
 
 import (
-	// "fmt"
 	"unsafe"
+
 	"cosmossdk.io/core/container"
 )
 

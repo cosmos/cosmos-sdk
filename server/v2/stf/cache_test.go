@@ -1,24 +1,22 @@
 package stf
 
 import (
+	"context"
 	"testing"
 
-	"context"
-
 	"github.com/stretchr/testify/require"
-
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	"cosmossdk.io/collections"
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
-	"cosmossdk.io/collections"
 )
 
 var (
-	tempCache = NewModuleContainer()
+	tempCache    = NewModuleContainer()
 	actorNameStr = "test"
 )
 
@@ -68,7 +66,6 @@ func TestCacheCtx(t *testing.T) {
 	cacheContainer = ctx.Cache.GetContainer([]byte(actorNameStr))
 	v, ok = cacheContainer.Get([]byte("item"))
 	require.False(t, ok)
-
 }
 
 func TestSTFCache(t *testing.T) {
@@ -120,7 +117,6 @@ func TestSTFCache(t *testing.T) {
 		cacheHas(t, tempCache, collections.NewPrefix(1), "exec")
 		cacheHas(t, tempCache, collections.NewPrefix(5), "post-tx-exec")
 	})
-
 }
 
 func cacheSet(t *testing.T, ctx context.Context, prefix []byte, v string) error {

@@ -3,8 +3,8 @@ package stf
 import (
 	"context"
 
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/container"
+	"cosmossdk.io/core/store"
 )
 
 var _ store.KVStoreService = (*storeService)(nil)

@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
+	"cosmossdk.io/core/container"
 )
 
 func GetExecutionContext(ctx context.Context) *executionContext {
@@ -27,7 +28,7 @@ func NewExecutionContext() *executionContext {
 func NewStoreService(actor string) store.KVStoreService {
 	s := NewKVStoreService([]byte(actor))
 	service, ok := s.(interface {
-		OpenContainer(ctx context.Context) Container
+		OpenContainer(ctx context.Context) container.Service
 		OpenKVStore(ctx context.Context) store.KVStore
 	})
 	if ok {

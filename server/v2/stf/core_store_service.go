@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/container"
 )
 
 var _ store.KVStoreService = (*storeService)(nil)
@@ -32,6 +33,6 @@ func (s storeService) OpenMemoryStore(ctx context.Context) store.KVStore {
 	return s.OpenKVStore(ctx)
 }
 
-func (s storeService) OpenContainer(ctx context.Context) Container {
+func (s storeService) OpenContainer(ctx context.Context) container.Service {
 	return ctx.(*executionContext).Cache.GetContainer(s.actor)
 }

@@ -3,7 +3,10 @@ package stf
 import (
 	// "fmt"
 	"unsafe"
+	"cosmossdk.io/core/container"
 )
+
+var _ container.Service = (*Container)(nil)
 
 // Container is a map that stores objects in any
 type Container struct {
@@ -24,18 +27,6 @@ func (c Container) Get(prefix []byte) (value any, ok bool) {
 }
 
 func (c Container) Remove(prefix []byte) {
-	// tempMap := make(map[string]any)
-	// for key := range c.m {
-	// 	if key == unsafeString(prefix) {
-	// 		continue
-	// 	}
-	// 	v, _ := c.m[key]
-	// 	tempMap[key] = v
-	// }
-	// fmt.Println("tempMap", tempMap)
-	// c.m = tempMap
-	// fmt.Println("c", c)
-
 	delete(c.m, unsafeString(prefix))
 }
 

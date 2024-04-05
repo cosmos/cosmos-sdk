@@ -3,8 +3,9 @@ package address_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 func TestStoreKeySuite(t *testing.T) {

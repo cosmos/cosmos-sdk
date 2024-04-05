@@ -90,7 +90,7 @@ func (c Context) StreamingManager() storetypes.StreamingManager { return c.strea
 func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
 
-// BlockHeader returns the header is returned by value.
+// BlockHeader returns the header by value.
 func (c Context) BlockHeader() cmtproto.Header {
 	return c.header
 }

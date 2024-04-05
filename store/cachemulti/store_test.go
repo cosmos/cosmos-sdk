@@ -43,7 +43,7 @@ func TestRunAtomic(t *testing.T) {
 		keys["obj"]: objStore.CacheWrap(),
 	}}
 
-	s := Store{stores: map[types.StoreKey]types.CacheWrap{}, parentStore: parent.getCacheWrap}
+	s := Store{stores: map[types.StoreKey]types.CacheWrap{}, parentStore: parent.getCacheWrapper}
 	s.RunAtomic(func(ms types.CacheMultiStore) error {
 		ms.GetKVStore(keys["abc"]).Set([]byte("key"), []byte("value"))
 		ms.GetObjKVStore(keys["obj"]).Set([]byte("key"), "value")
@@ -77,7 +77,7 @@ func TestBranchStore(t *testing.T) {
 		keys["obj"]: objStore.CacheWrap(),
 	}}
 
-	s := Store{stores: map[types.StoreKey]types.CacheWrap{}, parentStore: parent.getCacheWrap}
+	s := Store{stores: map[types.StoreKey]types.CacheWrap{}, parentStore: parent.getCacheWrapper}
 	s.GetKVStore(keys["abc"]).Set([]byte("key"), []byte("value"))
 	snapshot := s.Clone()
 	s.GetKVStore(keys["abc"]).Set([]byte("key"), []byte("value2"))

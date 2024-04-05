@@ -25,7 +25,7 @@ type Store struct {
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
-	parentStore  func(types.StoreKey) types.CacheWrap
+	parentStore  func(types.StoreKey) types.CacheWrapper
 
 	branched bool
 }
@@ -61,12 +61,17 @@ func NewStore(
 	return NewFromKVStore(stores, traceWriter, traceContext)
 }
 
-func newCacheMultiStoreFromCMS(cms Store) Store {
+// NewFromParent constructs a cache multistore with a parent store lazily,
+// the parent is usually another cache multistore or the block-stm multiversion store.
+func NewFromParent(
+	parentStore func(types.StoreKey) types.CacheWrapper,
+	traceWriter io.Writer, traceContext types.TraceContext,
+) Store {
 	return Store{
 		stores:       make(map[types.StoreKey]types.CacheWrap),
-		traceWriter:  cms.traceWriter,
-		traceContext: cms.traceContext,
-		parentStore:  cms.getCacheWrap,
+		traceWriter:  traceWriter,
+		traceContext: traceContext,
+		parentStore:  parentStore,
 	}
 }
 
@@ -145,10 +150,10 @@ func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 
 // Implements MultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
-	return newCacheMultiStoreFromCMS(cms)
+	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, cms.traceContext)
 }
 
-func (cms Store) getCacheWrap(key types.StoreKey) types.CacheWrap {
+func (cms Store) getCacheWrapper(key types.StoreKey) types.CacheWrapper {
 	store, ok := cms.stores[key]
 	if !ok && cms.parentStore != nil {
 		// load on demand
@@ -162,7 +167,7 @@ func (cms Store) getCacheWrap(key types.StoreKey) types.CacheWrap {
 
 // GetStore returns an underlying Store by key.
 func (cms Store) GetStore(key types.StoreKey) types.Store {
-	store, ok := cms.getCacheWrap(key).(types.Store)
+	store, ok := cms.getCacheWrapper(key).(types.Store)
 	if !ok {
 		panic(fmt.Sprintf("store with key %v is not Store", key))
 	}
@@ -171,7 +176,7 @@ func (cms Store) GetStore(key types.StoreKey) types.Store {
 
 // GetKVStore returns an underlying KVStore by key.
 func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
-	store, ok := cms.getCacheWrap(key).(types.KVStore)
+	store, ok := cms.getCacheWrapper(key).(types.KVStore)
 	if !ok {
 		panic(fmt.Sprintf("store with key %v is not KVStore", key))
 	}
@@ -180,7 +185,7 @@ func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
 
 // GetObjKVStore returns an underlying KVStore by key.
 func (cms Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
-	store, ok := cms.getCacheWrap(key).(types.ObjKVStore)
+	store, ok := cms.getCacheWrapper(key).(types.ObjKVStore)
 	if !ok {
 		panic(fmt.Sprintf("store with key %v is not ObjKVStore", key))
 	}

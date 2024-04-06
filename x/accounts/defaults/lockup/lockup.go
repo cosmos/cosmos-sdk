@@ -145,23 +145,21 @@ func (bva *BaseLockup) Delegate(
 	if err != nil {
 		return nil, err
 	}
-	msgDelegate := &stakingtypes.MsgDelegate{
-		DelegatorAddress: delegatorAddress,
-		ValidatorAddress: msg.ValidatorAddress,
-		Amount:           msg.Amount,
-	}
-	responses, err := sendMessage(ctx, msgDelegate)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(responses)
-
 	err = bva.TrackDelegation(
 		ctx,
 		sdk.Coins{*balance},
 		lockedCoins,
 		sdk.Coins{msg.Amount},
 	)
+	if err != nil {
+		return nil, err
+	}
+	msgDelegate := &stakingtypes.MsgDelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+		Amount:           msg.Amount,
+	}
+	responses, err := sendMessage(ctx, msgDelegate)
 	if err != nil {
 		return nil, err
 	}

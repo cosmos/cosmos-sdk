@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/x/bank/testutil"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,26 +27,20 @@ var (
 type E2ETestSuite struct {
 	suite.Suite
 
-	app     *simapp.SimApp
-	cfg     network.Config
-	network network.NetworkI
+	app *simapp.SimApp
 }
 
-func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
-	return &E2ETestSuite{cfg: cfg}
+func NewE2ETestSuite() *E2ETestSuite {
+	return &E2ETestSuite{}
 }
 
 func (s *E2ETestSuite) SetupSuite() {
 	s.T().Log("setting up e2e test suite")
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.app = setupApp(s.T())
-	s.Require().NoError(err)
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e test suite")
-	s.network.Cleanup()
 }
 
 func setupApp(t *testing.T) *simapp.SimApp {
@@ -75,14 +68,14 @@ func (s *E2ETestSuite) TestContinuousLockingAccount() {
 	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
 	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
-	randAddr := secp256k1.GenPrivKey().PubKey().Address()
-	randAcc := sdk.AccAddress(randAddr.String())
+	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.CONTINUOUS_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
 		Owner:     ownerAddrStr,
 		StartTime: currentTime,
 		// end time in 1 minutes
-		EndTime: currentTime.Add(time.Second),
+		EndTime: currentTime.Add(time.Minute),
 	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	require.NoError(t, err)
 
@@ -98,9 +91,27 @@ func (s *E2ETestSuite) TestContinuousLockingAccount() {
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
+	t.Run("error - execute withdraw message, no withdrawable token", func(t *testing.T) {
+		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+		require.NoError(t, err)
+		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
+		require.NoError(t, err)
+		msg := &types.MsgWithdraw{
+			Withdrawer: ownerAddr,
+			ToAddress:  withdrawAddr,
+			Denoms:     []string{"stake"},
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
 
-	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	// Update context time
+	// 12 sec = 1/5 of a minute so 200stake should be released
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: currentTime.Add(time.Second * 12),
+	})
 
+	// Check if token is sendable
 	t.Run("ok - execute send message", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
@@ -111,6 +122,23 @@ func (s *E2ETestSuite) TestContinuousLockingAccount() {
 		require.NoError(t, err)
 
 		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
+		require.True(t, balance.Amount.Equal(math.NewInt(100)))
+	})
+	t.Run("oke - execute withdraw message", func(t *testing.T) {
+		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+		require.NoError(t, err)
+		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
+		require.NoError(t, err)
+		msg := &types.MsgWithdraw{
+			Withdrawer: ownerAddr,
+			ToAddress:  withdrawAddr,
+			Denoms:     []string{"stake"},
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		// withdrawable amount should be 200 - 100 = 100stake
+		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
 		require.True(t, balance.Amount.Equal(math.NewInt(100)))
 	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
@@ -166,13 +194,13 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
 	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
-	randAddr := secp256k1.GenPrivKey().PubKey().Address()
-	randAcc := sdk.AccAddress(randAddr.String())
+	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.DELAYED_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
 		Owner: ownerAddrStr,
 		// end time in 1 minutes
-		EndTime: currentTime.Add(time.Second),
+		EndTime: currentTime.Add(time.Minute),
 	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	require.NoError(t, err)
 
@@ -188,20 +216,18 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
-
-	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
-
-	t.Run("ok - execute send message", func(t *testing.T) {
-		msg := &types.MsgSend{
-			Sender:    ownerAddrStr,
-			ToAddress: addr,
-			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
-		}
-		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+	t.Run("error - execute withdraw message, no withdrawable token", func(t *testing.T) {
+		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 		require.NoError(t, err)
-
-		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
-		require.True(t, balance.Amount.Equal(math.NewInt(100)))
+		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
+		require.NoError(t, err)
+		msg := &types.MsgWithdraw{
+			Withdrawer: ownerAddr,
+			ToAddress:  withdrawAddr,
+			Denoms:     []string{"stake"},
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
 	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -244,6 +270,45 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
 	})
+
+	// Update context time
+	// After endtime fund should be unlock
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: currentTime.Add(time.Second * 61),
+	})
+
+	// Check if token is sendable after unlock
+	t.Run("ok - execute send message", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    ownerAddrStr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
+		require.True(t, balance.Amount.Equal(math.NewInt(100)))
+	})
+	// Test to withdraw all the remain funds to an account of choice
+	t.Run("oke - execute withdraw message", func(t *testing.T) {
+		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+		require.NoError(t, err)
+		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
+		require.NoError(t, err)
+		msg := &types.MsgWithdraw{
+			Withdrawer: ownerAddr,
+			ToAddress:  withdrawAddr,
+			Denoms:     []string{"stake"},
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		// withdrawable amount should be
+		// 1000stake - 100stake( above sent amt ) - 100stake(above delegate amt) = 800stake
+		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
+		require.True(t, balance.Amount.Equal(math.NewInt(800)))
+	})
 }
 
 func (s *E2ETestSuite) TestPeriodicLockingAccount() {
@@ -256,12 +321,11 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
 	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
-	randAddr := secp256k1.GenPrivKey().PubKey().Address()
-	randAcc := sdk.AccAddress(randAddr.String())
+	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.PERIODIC_LOCKING_ACCOUNT, accOwner, &types.MsgInitPeriodicLockingAccount{
-		Owner: ownerAddrStr,
-		// end time in 1 minutes
+		Owner:     ownerAddrStr,
 		StartTime: currentTime,
 		LockingPeriods: []types.Period{
 			{
@@ -278,6 +342,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
+	// No token being unlocked yet
 	t.Run("error - execute send message, not sufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
@@ -287,21 +352,68 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
+	t.Run("error - execute withdraw message, no withdrawable token", func(t *testing.T) {
+		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+		require.NoError(t, err)
+		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
+		require.NoError(t, err)
+		msg := &types.MsgWithdraw{
+			Withdrawer: ownerAddr,
+			ToAddress:  withdrawAddr,
+			Denoms:     []string{"stake"},
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
 
-	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	// Update context time
+	// After first period 500stake should be unlock
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: currentTime.Add(time.Minute),
+	})
 
+	// Check if 500 stake is sendable now
 	t.Run("ok - execute send message", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
 			ToAddress: addr,
-			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(500))},
 		}
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NoError(t, err)
 
 		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
-		require.True(t, balance.Amount.Equal(math.NewInt(100)))
+		require.True(t, balance.Amount.Equal(math.NewInt(500)))
 	})
+
+	// Update context time
+	// After second period 1000stake should be unlock
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: currentTime.Add(time.Minute * 2),
+	})
+
+	t.Run("oke - execute withdraw message", func(t *testing.T) {
+		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+		require.NoError(t, err)
+		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
+		require.NoError(t, err)
+		msg := &types.MsgWithdraw{
+			Withdrawer: ownerAddr,
+			ToAddress:  withdrawAddr,
+			Denoms:     []string{"stake"},
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		// withdrawable amount should be
+		// 1000stake - 500stake( above sent amt ) = 500stake
+		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
+		require.True(t, balance.Amount.Equal(math.NewInt(500)))
+	})
+
+	// Fund acc since we withdraw all the funds
+	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))})
+
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
 		require.NoError(t, err)

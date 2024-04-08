@@ -43,6 +43,12 @@ func (ts *Store) LastCommitID() (id types.CommitID) {
 	return
 }
 
+// Implements CommitStore
+func (ts *Store) SetCommitting() {}
+
+// Implements CommitStore
+func (ts *Store) UnsetCommitting() {}
+
 // Implements Store.
 func (ts *Store) GetStoreType() types.StoreType {
 	return types.StoreTypeTransient

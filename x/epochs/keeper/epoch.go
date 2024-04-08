@@ -28,8 +28,9 @@ func (k Keeper) AddEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
 	if epoch.StartTime.IsZero() {
 		epoch.StartTime = k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	}
-	epoch.CurrentEpochStartHeight = k.environment.HeaderService.GetHeaderInfo(ctx).Height
-
+	if epoch.CurrentEpochStartHeight == 0 {
+		epoch.CurrentEpochStartHeight = k.environment.HeaderService.GetHeaderInfo(ctx).Height
+	}
 	return k.EpochInfo.Set(ctx, epoch.Identifier, epoch)
 }
 

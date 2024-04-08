@@ -110,7 +110,7 @@ func (c Context) TxCount() int                                  { return c.txCou
 func (c Context) BlockGasUsed() uint64                          { return c.blockGasUsed }
 func (c Context) BlockGasWanted() uint64                        { return c.blockGasWanted }
 
-// BlockHeader returns the header by value.
+// BlockHeader returns the header by value (shallow copy).
 func (c Context) BlockHeader() cmtproto.Header {
 	return c.header
 }

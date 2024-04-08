@@ -455,8 +455,6 @@ func (mp *PriorityNonceMempool[C]) CountTx() int {
 // Remove removes a transaction from the mempool in O(log n) time, returning an
 // error if unsuccessful.
 func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
 	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
 		return err
@@ -468,6 +466,9 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	sig := sigs[0]
 	sender := sig.Signer.String()
 	nonce := sig.Sequence
+
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 
 	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
 	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {

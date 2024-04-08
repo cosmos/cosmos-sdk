@@ -174,7 +174,7 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 		}
 
 		var err error
-		c.client, err = grpc.Dial(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
+		c.client, err = grpc.NewClient(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
 		if err != nil {
 			res = errors.Join(res, err)
 			continue

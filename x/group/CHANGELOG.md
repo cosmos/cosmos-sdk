@@ -32,6 +32,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19916](https://github.com/cosmos/cosmos-sdk/pull/19916) Removes the use of Address String methods:
+    * `NewMsgCreateGroupPolicy` now takes a string as argument instead of an `AccAddress`.
+    * `NewMsgUpdateGroupPolicyDecisionPolicy` now takes strings as argument instead of `AccAddress`.
+    * `NewGroupPolicyInfo` address and admin arguments are now strings instead of `AccAddress`.
+    * `MigrateGenState` now takes an address codec as argument.
 * [#19638](https://github.com/cosmos/cosmos-sdk/pull/19638) Migrate module to use `appmodule.Environment` router service so no `baseapp.MessageRouter` is required is `NewKeeper` anymore.
 * [#19489](https://github.com/cosmos/cosmos-sdk/pull/19489) `appmodule.Environment` is received on the Keeper to get access to different application services.
 * [#19410](https://github.com/cosmos/cosmos-sdk/pull/19410) Migrate to Store Service.

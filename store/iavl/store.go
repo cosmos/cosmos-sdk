@@ -54,7 +54,8 @@ func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.Commit
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
 func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool) (types.CommitKVStore, error) {
-	tree := iavl.NewMutableTree(wrapper.NewIAVLDB(db), cacheSize, disableFastNode, clog.NewNopLogger(), iavl.InitialVersionOption(initialVersion))
+	// Create a new IAVL tree with the async pruning enabled
+	tree := iavl.NewMutableTree(wrapper.NewIAVLDB(db), cacheSize, disableFastNode, clog.NewNopLogger(), iavl.InitialVersionOption(initialVersion), iavl.AsyncPruningOption(true))
 
 	isUpgradeable, err := tree.IsUpgradeable()
 	if err != nil {
@@ -115,6 +116,17 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 	return &Store{
 		tree: &immutableTree{iTree},
 	}, nil
+}
+
+// SetCommitting marks the store as committing, which will prevent any
+// parallel writes to the store. It is referenced in the async pruning.
+func (st *Store) SetCommitting() {
+	st.tree.SetCommitting()
+}
+
+// UnsetCommitting marks the store as not committing.
+func (st *Store) UnsetCommitting() {
+	st.tree.UnsetCommitting()
 }
 
 // Commit commits the current store state and returns a CommitID with the new

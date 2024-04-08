@@ -62,6 +62,14 @@ func (ms multiStore) Commit() storetypes.CommitID {
 	panic("not implemented")
 }
 
+func (ms multiStore) SetCommitting() {
+	panic("not implemented")
+}
+
+func (ms multiStore) UnsetCommitting() {
+	panic("not implemented")
+}
+
 func (ms multiStore) LastCommitID() storetypes.CommitID {
 	panic("not implemented")
 }

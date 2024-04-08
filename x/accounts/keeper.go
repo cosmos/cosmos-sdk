@@ -126,6 +126,19 @@ type Keeper struct {
 	AccountsState collections.Map[collections.Pair[uint64, []byte], []byte]
 }
 
+// GetAccountNumber return a account number by address.
+func (k Keeper) GetAccountNumber(
+	ctx context.Context,
+	accountAddr []byte,
+) (uint64, error) {
+	accNum, err := k.AccountByNumber.Get(ctx, accountAddr)
+	if err != nil {
+		return 0, err
+	}
+
+	return accNum, nil
+}
+
 // Init creates a new account of the given type.
 func (k Keeper) Init(
 	ctx context.Context,

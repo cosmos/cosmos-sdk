@@ -60,3 +60,9 @@ func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
 		panic(err)
 	}
 }
+
+// IsAccountsModuleAccount check an address belong to an x/accounts account
+func (ak AccountKeeper) IsAccountsModuleAccount(ctx context.Context, addr sdk.AccAddress) bool {
+	_, err := ak.AccountsKeeper.GetAccountNumber(ctx, addr)
+	return err != nil
+}

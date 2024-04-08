@@ -39,6 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#19845](https://github.com/cosmos/cosmos-sdk/pull/19845) Use hybrid resolver instead of only protov2 registry
 
+### Bug Fixes
+
+* [#19955](https://github.com/cosmos/cosmos-sdk/pull/19955) Don't shadow Amino marshalling error messages
+
 ## v0.13.1
 
 ### Features

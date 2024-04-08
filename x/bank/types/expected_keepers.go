@@ -28,4 +28,6 @@ type AccountKeeper interface {
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 	SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
 	GetModulePermissions() map[string]types.PermissionsForAddress
+
+	IsAccountsModuleAccount(ctx context.Context, addr sdk.AccAddress) bool
 }

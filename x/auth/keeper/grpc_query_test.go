@@ -76,6 +76,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 	var req *types.QueryAccountRequest
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrString, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		msg       string
@@ -110,7 +112,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 		{
 			"account not found",
 			func() {
-				req = &types.QueryAccountRequest{Address: addr.String()}
+				req = &types.QueryAccountRequest{Address: addrString}
 			},
 			false,
 			func(res *types.QueryAccountResponse) {},
@@ -120,7 +122,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			func() {
 				suite.accountKeeper.SetAccount(suite.ctx,
 					suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr))
-				req = &types.QueryAccountRequest{Address: addr.String()}
+				req = &types.QueryAccountRequest{Address: addrString}
 			},
 			true,
 			func(res *types.QueryAccountResponse) {
@@ -508,13 +510,16 @@ func (suite *KeeperTestSuite) TestQueryAccountInfo() {
 	suite.Require().NoError(acc.SetSequence(10))
 	suite.accountKeeper.SetAccount(suite.ctx, acc)
 
+	addrString, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
+
 	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
-		Address: addr.String(),
+		Address: addrString,
 	})
 
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.Info)
-	suite.Require().Equal(addr.String(), res.Info.Address)
+	suite.Require().Equal(addrString, res.Info.Address)
 	suite.Require().Equal(acc.GetAccountNumber(), res.Info.AccountNumber)
 	suite.Require().Equal(acc.GetSequence(), res.Info.Sequence)
 	suite.Require().Equal("/"+proto.MessageName(pk), res.Info.PubKey.TypeUrl)
@@ -526,13 +531,15 @@ func (suite *KeeperTestSuite) TestQueryAccountInfo() {
 func (suite *KeeperTestSuite) TestQueryAccountInfoWithoutPubKey() {
 	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.accountKeeper.SetAccount(suite.ctx, acc)
-
+	addrString, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
+	
 	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
-		Address: addr.String(),
+		Address: addrString,
 	})
 
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.Info)
-	suite.Require().Equal(addr.String(), res.Info.Address)
+	suite.Require().Equal(addrString, res.Info.Address)
 	suite.Require().Nil(res.Info.PubKey)
 }

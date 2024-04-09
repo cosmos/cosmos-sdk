@@ -27,8 +27,9 @@ import (
 )
 
 var (
-	poolAcc   = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	streamAcc = authtypes.NewEmptyModuleAccount(types.StreamAccount)
+	ac           = codectestutil.CodecOptions{}.GetAddressCodec()
+	poolAcc, _   = authtypes.NewEmptyModuleAccount(ac, types.ModuleName)
+	streamAcc, _ = authtypes.NewEmptyModuleAccount(ac, types.StreamAccount)
 )
 
 type KeeperTestSuite struct {

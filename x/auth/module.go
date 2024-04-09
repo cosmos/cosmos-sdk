@@ -117,7 +117,7 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data)
+	return types.ValidateGenesis(data, am.accountKeeper.AddressCodec())
 }
 
 // InitGenesis performs genesis initialization for the auth module.

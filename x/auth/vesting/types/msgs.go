@@ -11,10 +11,10 @@ var (
 )
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
-func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
+func NewMsgCreateVestingAccount(fromAddr, toAddr string, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
 	return &MsgCreateVestingAccount{
-		FromAddress: fromAddr.String(),
-		ToAddress:   toAddr.String(),
+		FromAddress: fromAddr,
+		ToAddress:   toAddr,
 		Amount:      amount,
 		EndTime:     endTime,
 		Delayed:     delayed,
@@ -22,19 +22,19 @@ func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coin
 }
 
 // NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
-func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
+func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr string, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
 	return &MsgCreatePermanentLockedAccount{
-		FromAddress: fromAddr.String(),
-		ToAddress:   toAddr.String(),
+		FromAddress: fromAddr,
+		ToAddress:   toAddr,
 		Amount:      amount,
 	}
 }
 
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
-func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
+func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr string, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
 	return &MsgCreatePeriodicVestingAccount{
-		FromAddress:    fromAddr.String(),
-		ToAddress:      toAddr.String(),
+		FromAddress:    fromAddr,
+		ToAddress:      toAddr,
 		StartTime:      startTime,
 		VestingPeriods: periods,
 	}

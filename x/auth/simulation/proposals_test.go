@@ -10,8 +10,6 @@ import (
 	"cosmossdk.io/x/auth/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -37,7 +35,9 @@ func TestProposalMsgs(t *testing.T) {
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)
 
-	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
+	moduleAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(types.NewModuleAddress("gov"))
+	assert.NilError(t, err)
+	assert.Equal(t, moduleAddr, msgUpdateParams.Authority)
 	assert.Equal(t, uint64(999), msgUpdateParams.Params.MaxMemoCharacters)
 	assert.Equal(t, uint64(905), msgUpdateParams.Params.TxSigLimit)
 	assert.Equal(t, uint64(151), msgUpdateParams.Params.TxSizeCostPerByte)

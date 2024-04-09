@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -31,8 +32,9 @@ const (
 )
 
 var (
-	multiPermAcc  = types.NewEmptyModuleAccount(multiPerm, types.Burner, types.Minter, types.Staking)
-	randomPermAcc = types.NewEmptyModuleAccount(randomPerm, "random")
+	ac               = addresscodec.NewBech32Codec("cosmos")
+	multiPermAcc, _  = types.NewEmptyModuleAccount(ac, multiPerm, types.Burner, types.Minter, types.Staking)
+	randomPermAcc, _ = types.NewEmptyModuleAccount(ac, randomPerm, "random")
 )
 
 type KeeperTestSuite struct {
@@ -64,6 +66,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 		randomPerm:               {"random"},
 	}
 
+	authorityAddr, err := ac.BytesToString(types.NewModuleAddress("gov"))
+	suite.Require().NoError(err)
+
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		env,
 		suite.encCfg.Codec,
@@ -71,7 +76,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		types.NewModuleAddress("gov").String(),
+		authorityAddr,
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
@@ -91,7 +96,8 @@ func (suite *KeeperTestSuite) TestSupply_ValidatePermissions() {
 	suite.Require().NoError(err)
 
 	// unregistered permissions
-	otherAcc := types.NewEmptyModuleAccount("other", "other")
+	otherAcc, err := types.NewEmptyModuleAccount(suite.accountKeeper.AddressCodec(), "other", "other")
+	suite.Require().NoError(err)
 	err = suite.accountKeeper.ValidatePermissions(otherAcc)
 	suite.Require().Error(err)
 }
@@ -126,16 +132,24 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	// Fix duplicate account numbers
 	pubKey1 := ed25519.GenPrivKey().PubKey()
 	pubKey2 := ed25519.GenPrivKey().PubKey()
+
+	pubKey1Addr, err := suite.accountKeeper.AddressCodec().BytesToString(pubKey1.Address())
+	suite.Require().NoError(err)
+	pubKey2Addr, err := suite.accountKeeper.AddressCodec().BytesToString(pubKey2.Address())
+	suite.Require().NoError(err)
+	moduleAddr, err := suite.accountKeeper.AddressCodec().BytesToString(types.NewModuleAddress("testing"))
+	suite.Require().NoError(err)
+
 	accts := []sdk.AccountI{
 		&types.BaseAccount{
-			Address:       sdk.AccAddress(pubKey1.Address()).String(),
+			Address:       pubKey1Addr,
 			PubKey:        codectypes.UnsafePackAny(pubKey1),
 			AccountNumber: 0,
 			Sequence:      5,
 		},
 		&types.ModuleAccount{
 			BaseAccount: &types.BaseAccount{
-				Address:       types.NewModuleAddress("testing").String(),
+				Address:       moduleAddr,
 				PubKey:        nil,
 				AccountNumber: 0,
 				Sequence:      6,
@@ -144,7 +158,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 			Permissions: nil,
 		},
 		&types.BaseAccount{
-			Address:       sdk.AccAddress(pubKey2.Address()).String(),
+			Address:       pubKey2Addr,
 			PubKey:        codectypes.UnsafePackAny(pubKey2),
 			AccountNumber: 5,
 			Sequence:      7,
@@ -171,6 +185,8 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().Equal(len(keeperAccts), len(accts)+1, "number of accounts in the keeper vs in genesis state")
 	for i, genAcct := range accts {
 		genAcctAddr := genAcct.GetAddress()
+		getAcctStrAddr, err := suite.accountKeeper.AddressCodec().BytesToString(genAcctAddr)
+		suite.Require().NoError(err)
 		var keeperAcct sdk.AccountI
 		for _, kacct := range keeperAccts {
 			if genAcctAddr.Equals(kacct.GetAddress()) {
@@ -178,11 +194,11 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 				break
 			}
 		}
-		suite.Require().NotNilf(keeperAcct, "genesis account %s not in keeper accounts", genAcctAddr)
+		suite.Require().NotNilf(keeperAcct, "genesis account %s not in keeper accounts", getAcctStrAddr)
 		suite.Require().Equal(genAcct.GetPubKey(), keeperAcct.GetPubKey())
 		suite.Require().Equal(genAcct.GetSequence(), keeperAcct.GetSequence())
 		if i == 1 {
-			suite.Require().Equalf(1, int(keeperAcct.GetAccountNumber()), genAcctAddr.String())
+			suite.Require().Equalf(1, int(keeperAcct.GetAccountNumber()), getAcctStrAddr)
 		} else {
 			suite.Require().Equal(genAcct.GetSequence(), keeperAcct.GetSequence())
 		}
@@ -203,7 +219,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		Params: types.DefaultParams(),
 		Accounts: []*codectypes.Any{
 			codectypes.UnsafePackAny(&types.BaseAccount{
-				Address:       sdk.AccAddress(pubKey1.Address()).String(),
+				Address:       pubKey1Addr,
 				PubKey:        codectypes.UnsafePackAny(pubKey1),
 				AccountNumber: 0,
 				Sequence:      5,

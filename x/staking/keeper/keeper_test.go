@@ -32,9 +32,10 @@ import (
 )
 
 var (
-	bondedAcc    = authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
-	notBondedAcc = authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName)
-	PKs          = simtestutil.CreateTestPubKeys(500)
+	ac              = codectestutil.CodecOptions{}.GetAddressCodec()
+	bondedAcc, _    = authtypes.NewEmptyModuleAccount(ac, stakingtypes.BondedPoolName)
+	notBondedAcc, _ = authtypes.NewEmptyModuleAccount(ac, stakingtypes.NotBondedPoolName)
+	PKs             = simtestutil.CreateTestPubKeys(500)
 )
 
 type KeeperTestSuite struct {

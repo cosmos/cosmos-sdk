@@ -37,8 +37,13 @@ func (ar AccountRetriever) GetAccount(clientCtx client.Context, addr sdk.AccAddr
 func (ar AccountRetriever) GetAccountWithHeight(clientCtx client.Context, addr sdk.AccAddress) (client.Account, int64, error) {
 	var header metadata.MD
 
+	addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	queryClient := NewQueryClient(clientCtx)
-	res, err := queryClient.Account(context.Background(), &QueryAccountRequest{Address: addr.String()}, grpc.Header(&header))
+	res, err := queryClient.Account(context.Background(), &QueryAccountRequest{Address: addrStr}, grpc.Header(&header))
 	if err != nil {
 		return nil, 0, err
 	}

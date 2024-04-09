@@ -109,11 +109,16 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		}
 	}
 
+	deductFeesFromAddr, err := dfd.accountKeeper.AddressCodec().BytesToString(deductFeesFrom)
+	if err != nil {
+		return err
+	}
+
 	events := sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeTx,
 			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(deductFeesFrom).String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFromAddr),
 		),
 	}
 	ctx.EventManager().EmitEvents(events)

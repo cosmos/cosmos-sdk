@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,6 +28,7 @@ import (
 )
 
 func TestDeductFeesNoDelegation(t *testing.T) {
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	cases := map[string]struct {
 		fee      int64
 		valid    bool
@@ -60,7 +62,9 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				// Do not register the account
 				priv, _, addr := testdata.KeyTestPubAddr()
-				acc := authtypes.NewBaseAccountWithAddress(addr)
+				addrStr, err := ac.BytesToString(addr)
+				require.NoError(t, err)
+				acc := authtypes.NewBaseAccountWithAddress(addrStr)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(nil).Times(2)
 				return TestAccount{
 					acc:  acc,
@@ -82,8 +86,10 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				// Do not register the account
 				priv, _, addr := testdata.KeyTestPubAddr()
+				addrStr, err := ac.BytesToString(addr)
+				require.NoError(t, err)
 				return TestAccount{
-					acc:  authtypes.NewBaseAccountWithAddress(addr),
+					acc:  authtypes.NewBaseAccountWithAddress(addrStr),
 					priv: priv,
 				}, nil
 			},

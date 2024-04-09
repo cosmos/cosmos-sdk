@@ -485,7 +485,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 
 		genFiles = append(genFiles, cmtCfg.GenesisFile())
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
-		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr.String(), nil, 0, 0))
 
 		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
 		if err != nil {

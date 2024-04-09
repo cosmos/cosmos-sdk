@@ -49,7 +49,8 @@ func TestSlashingMsgs(t *testing.T) {
 	}
 	accs := []sims.GenesisAccount{{GenesisAccount: acc1, Coins: sdk.Coins{genCoin}}}
 
-	startupCfg := sims.DefaultStartUpConfig()
+	startupCfg, err := sims.DefaultStartUpConfig(addrCodec)
+	require.NoError(t, err)
 	startupCfg.GenesisAccounts = accs
 
 	var (

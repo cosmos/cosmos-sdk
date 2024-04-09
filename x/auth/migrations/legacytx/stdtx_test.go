@@ -3,6 +3,7 @@ package legacytx
 import (
 	"context"
 	"fmt"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -31,6 +32,8 @@ var (
 )
 
 func TestStdSignBytes(t *testing.T) {
+	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+	require.NoError(t, err)
 	type args struct {
 		chainID       string
 		accnum        uint64
@@ -72,17 +75,17 @@ func TestStdSignBytes(t *testing.T) {
 		},
 		{
 			"with fee granter, no fee payer (omitempty)",
-			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Granter: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Granter: addrStr}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
 			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","granter":"%s"},"memo":"memo","msgs":[%s],"sequence":"6"}`, addr, msgStr),
 		},
 		{
 			"with fee payer, no fee granter (omitempty)",
-			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addrStr}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
 			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","payer":"%s"},"memo":"memo","msgs":[%s],"sequence":"6"}`, addr, msgStr),
 		},
 		{
 			"with fee payer and fee granter",
-			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addr.String(), Granter: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addrStr, Granter: addrStr}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
 			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","granter":"%s","payer":"%s"},"memo":"memo","msgs":[%s],"sequence":"6"}`, addr, addr, msgStr),
 		},
 	}

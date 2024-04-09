@@ -13,9 +13,9 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 )
 
-func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
+func TxSignExec(clientCtx client.Context, from, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
-		fmt.Sprintf("--from=%s", from.String()),
+		fmt.Sprintf("--from=%s", from),
 		fmt.Sprintf("--%s=%s", flags.FlagHome, strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)),
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
 		filename,
@@ -63,9 +63,9 @@ func TxMultiSignExec(clientCtx client.Context, from, filename string, extraArgs 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetMultiSignCommand(), append(args, extraArgs...))
 }
 
-func TxSignBatchExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
+func TxSignBatchExec(clientCtx client.Context, from, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
-		fmt.Sprintf("--from=%s", from.String()),
+		fmt.Sprintf("--from=%s", from),
 		filename,
 	}
 

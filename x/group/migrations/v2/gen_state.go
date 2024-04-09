@@ -45,7 +45,7 @@ func MigrateGenState(oldState *authtypes.GenesisState, addressCodec address.Code
 		if err != nil {
 			panic(err)
 		}
-		baseAccount, err := authtypes.NewBaseAccountWithPubKey(cred)
+		baseAccount, err := authtypes.NewBaseAccountWithPubKey(cred, addressCodec)
 		if err != nil {
 			panic(err)
 		}

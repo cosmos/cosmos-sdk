@@ -54,7 +54,9 @@ func TestRandomizedGenState(t *testing.T) {
 	genAccounts, err := types.UnpackAccounts(authGenesis.Accounts)
 	require.NoError(t, err)
 	require.Len(t, genAccounts, 3)
-	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", genAccounts[2].GetAddress().String())
+	addr, err := simState.AddressCodec.BytesToString(genAccounts[2].GetAddress())
+	require.NoError(t, err)
+	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", addr)
 	require.Equal(t, uint64(0), genAccounts[2].GetAccountNumber())
 	require.Equal(t, uint64(0), genAccounts[2].GetSequence())
 }

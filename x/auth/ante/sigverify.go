@@ -339,8 +339,13 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 
 	anyPk, _ := codectypes.NewAnyWithValue(pubKey)
 
+	addr, err := svd.ak.AddressCodec().BytesToString(acc.GetAddress())
+	if err != nil {
+		return err
+	}
+
 	signerData := txsigning.SignerData{
-		Address:       acc.GetAddress().String(),
+		Address:       addr,
 		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      acc.GetSequence(),
@@ -354,7 +359,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 		return fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
 	}
 	txData := adaptableTx.GetSigningTxData()
-	err := authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
+	err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
 	if err != nil {
 		var errMsg string
 		if OnlyLegacyAminoSigners(sig.Data) {
@@ -385,7 +390,11 @@ func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI,
 		// if we're not in simulation mode, and we do not have a valid pubkey
 		// for this signer, then we simply error.
 		if ctx.ExecMode() != sdk.ExecModeSimulate {
-			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", acc.GetAddress().String())
+			addr, err := svd.ak.AddressCodec().BytesToString(acc.GetAddress())
+			if err != nil {
+				return fmt.Errorf("could not convert address to string: %s", err.Error())
+			}
+			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", addr)
 		}
 		// if we're in simulation mode, then we can populate the pubkey with the
 		// sim one and simply return.
@@ -397,7 +406,11 @@ func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI,
 	// if the address does not match the pubkey, then we error.
 	// TODO: in the future the relationship between address and pubkey should be more flexible.
 	if !acc.GetAddress().Equals(sdk.AccAddress(txPubKey.Address().Bytes())) {
-		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", acc.GetAddress(), txPubKey.Address())
+		addr, err := svd.ak.AddressCodec().BytesToString(acc.GetAddress())
+		if err != nil {
+			return fmt.Errorf("could not convert address to string: %s", err.Error())
+		}
+		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", addr, txPubKey.Address())
 	}
 
 	err := verifyIsOnCurve(txPubKey)

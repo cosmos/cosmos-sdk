@@ -43,8 +43,14 @@ func TestBuilderWithAux(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 
 	testdata.RegisterInterfaces(interfaceRegistry)
+
+	aux2StrAddr, err := ac.BytesToString(aux2Addr)
+	require.NoError(t, err)
+	feePayerStrAddr, err := ac.BytesToString(feepayerAddr)
+	require.NoError(t, err)
 
 	// Create an AuxTxBuilder for tipper (1st signer)
 	txBuilder, txSig := makeTxBuilder(t)
@@ -53,7 +59,7 @@ func TestBuilderWithAux(t *testing.T) {
 
 	// Create an AuxTxBuilder for aux2 (2nd signer)
 	aux2Builder := clienttx.NewAuxTxBuilder()
-	aux2Builder.SetAddress(aux2Addr.String())
+	aux2Builder.SetAddress(aux2StrAddr)
 	aux2Builder.SetAccountNumber(11)
 	aux2Builder.SetSequence(12)
 	aux2Builder.SetTimeoutHeight(3)
@@ -136,7 +142,7 @@ func TestBuilderWithAux(t *testing.T) {
 	require.NoError(t, err)
 
 	signerData := authsigning.SignerData{
-		Address:       feepayerAddr.String(),
+		Address:       feePayerStrAddr,
 		ChainID:       chainID,
 		AccountNumber: 11,
 		Sequence:      15,
@@ -194,14 +200,17 @@ func TestBuilderWithAux(t *testing.T) {
 
 func makeTxBuilder(t *testing.T) (clienttx.AuxTxBuilder, []byte) {
 	t.Helper()
+	tipperStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(tipperAddr)
+	require.NoError(t, err)
+
 	txBuilder := clienttx.NewAuxTxBuilder()
-	txBuilder.SetAddress(tipperAddr.String())
+	txBuilder.SetAddress(tipperStrAddr)
 	txBuilder.SetAccountNumber(1)
 	txBuilder.SetSequence(2)
 	txBuilder.SetTimeoutHeight(3)
 	txBuilder.SetMemo(memo)
 	txBuilder.SetChainID(chainID)
-	err := txBuilder.SetMsgs(msg)
+	err = txBuilder.SetMsgs(msg)
 	require.NoError(t, err)
 	err = txBuilder.SetPubKey(tipperPk)
 	require.NoError(t, err)

@@ -3,6 +3,7 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"os"
 	"testing"
 
@@ -65,7 +66,9 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(senderPrivKey.PubKey().Address())
+	require.NoError(t, err)
+	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
@@ -107,7 +110,9 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(senderPrivKey.PubKey().Address())
+	require.NoError(t, err)
+	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
@@ -167,7 +172,9 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	addr, err := app.AuthKeeper.AddressCodec().BytesToString(senderPrivKey.PubKey().Address())
+	require.NoError(t, err)
+	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
 	balances := []banktypes.Balance{
 		{
 			Address: acc.GetAddress().String(),

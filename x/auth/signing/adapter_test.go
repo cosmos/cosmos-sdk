@@ -18,14 +18,16 @@ func TestGetSignBytesAdapterNoPublicKey(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	txConfig := encodingConfig.TxConfig
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+	require.NoError(t, err)
 	signerData := authsign.SignerData{
-		Address:       addr.String(),
+		Address:       addrStr,
 		ChainID:       "test-chain",
 		AccountNumber: 11,
 		Sequence:      15,
 	}
 	w := txConfig.NewTxBuilder()
-	_, err := authsign.GetSignBytesAdapter(
+	_, err = authsign.GetSignBytesAdapter(
 		context.Background(),
 		txConfig.SignModeHandler(),
 		signing.SignMode_SIGN_MODE_DIRECT,

@@ -136,11 +136,15 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				if err != nil {
 					return err
 				}
+				sigAddr, err := clientCtx.AddressCodec.BytesToString(sig.PubKey.Address())
+				if err != nil {
+					return err
+				}
 				txSignerData := txsigning.SignerData{
 					ChainID:       txFactory.ChainID(),
 					AccountNumber: txFactory.AccountNumber(),
 					Sequence:      txFactory.Sequence(),
-					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
+					Address:       sigAddr,
 					PubKey: &anypb.Any{
 						TypeUrl: anyPk.TypeUrl,
 						Value:   anyPk.Value,
@@ -310,6 +314,11 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 
+			address, err := clientCtx.AddressCodec.BytesToString(pubKey.Address())
+			if err != nil {
+				return err
+			}
+
 			anyPk, err := codectypes.NewAnyWithValue(multisigPub)
 			if err != nil {
 				return err
@@ -318,7 +327,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),
 				Sequence:      txFactory.Sequence(),
-				Address:       sdk.AccAddress(pubKey.Address()).String(),
+				Address:       address,
 				PubKey: &anypb.Any{
 					TypeUrl: anyPk.TypeUrl,
 					Value:   anyPk.Value,

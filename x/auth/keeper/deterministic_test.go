@@ -71,14 +71,18 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		randomPerm:               {"random"},
 	}
 
+	ac := authcodec.NewBech32Codec("cosmos")
+	authorityAddr, err := ac.BytesToString(types.NewModuleAddress("gov"))
+	suite.Require().NoError(err)
+
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		env,
 		suite.encCfg.Codec,
 		types.ProtoBaseAccount,
 		maccPerms,
-		authcodec.NewBech32Codec("cosmos"),
+		ac,
 		"cosmos",
-		types.NewModuleAddress("gov").String(),
+		authorityAddr,
 	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
@@ -112,7 +116,10 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 		accNum := accNums[i]
 		seq := rapid.Uint64().Draw(t, "sequence")
 
-		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
+		baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
+		suite.Require().NoError(err)
+
+		acc1 := types.NewBaseAccount(baseAccAddr, &pub, accNum, seq)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 		accs = append(accs, acc1)
 	}
@@ -122,18 +129,25 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		accs := suite.createAndSetAccounts(t, 1)
-		req := &types.QueryAccountRequest{Address: accs[0].GetAddress().String()}
+		accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(accs[0].GetAddress())
+		suite.Require().NoError(err)
+		req := &types.QueryAccountRequest{Address: accAddr}
 		testdata.DeterministicIterations(suite.T(), suite.ctx, req, suite.queryClient.Account, 0, true)
 	})
 
 	// Regression tests
 	accNum := uint64(10087)
 	seq := uint64(98)
+	baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
 
-	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc1 := types.NewBaseAccount(baseAccAddr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
-	req := &types.QueryAccountRequest{Address: acc1.GetAddress().String()}
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc1.GetAddress())
+	suite.Require().NoError(err)
+
+	req := &types.QueryAccountRequest{Address: accAddr}
 
 	testdata.DeterministicIterations(suite.T(), suite.ctx, req, suite.queryClient.Account, 1543, false)
 }
@@ -166,12 +180,16 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	suite.Require().NoError(err)
 	accNum1 := uint64(107)
 	seq1 := uint64(10001)
+	baseAccAddr1, err := suite.accountKeeper.AddressCodec().BytesToString(addr1)
+	suite.Require().NoError(err)
 
 	accNum2 := uint64(100)
 	seq2 := uint64(10)
+	baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
 
-	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub1}, accNum1, seq1)
-	acc2 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum2, seq2)
+	acc1 := types.NewBaseAccount(baseAccAddr1, &secp256k1.PubKey{Key: pub1}, accNum1, seq1)
+	acc2 := types.NewBaseAccount(baseAccAddr, &secp256k1.PubKey{Key: pub}, accNum2, seq2)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	suite.accountKeeper.SetAccount(suite.ctx, acc2)
@@ -190,8 +208,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	// Regression test
 	accNum := uint64(10087)
 	seq := uint64(0)
+	baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
 
-	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc1 := types.NewBaseAccount(baseAccAddr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
@@ -229,18 +249,25 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 		accs := suite.createAndSetAccounts(t, 1)
 		suite.Require().Len(accs, 1)
 
-		req := &types.QueryAccountInfoRequest{Address: accs[0].GetAddress().String()}
+		acc0Addr, err := suite.accountKeeper.AddressCodec().BytesToString(accs[0].GetAddress())
+		suite.Require().NoError(err)
+
+		req := &types.QueryAccountInfoRequest{Address: acc0Addr}
 		testdata.DeterministicIterations(suite.T(), suite.ctx, req, suite.queryClient.AccountInfo, 0, true)
 	})
 
 	// Regression test
 	accNum := uint64(10087)
 	seq := uint64(10)
+	baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
 
-	acc := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc := types.NewBaseAccount(baseAccAddr, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.GetAddress())
+	suite.Require().NoError(err)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc)
-	req := &types.QueryAccountInfoRequest{Address: acc.GetAddress().String()}
+	req := &types.QueryAccountInfoRequest{Address: accAddr}
 	testdata.DeterministicIterations(suite.T(), suite.ctx, req, suite.queryClient.AccountInfo, 1543, false)
 }
 
@@ -291,14 +318,17 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			maccPerms[maccs[i]] = mPerms
 		}
 
+		authorityAddr, err := ac.BytesToString(types.NewModuleAddress("gov"))
+		suite.Require().NoError(err)
+
 		ak := keeper.NewAccountKeeper(
 			suite.environment,
 			suite.encCfg.Codec,
 			types.ProtoBaseAccount,
 			maccPerms,
-			authcodec.NewBech32Codec("cosmos"),
+			ac,
 			"cosmos",
-			types.NewModuleAddress("gov").String(),
+			authorityAddr,
 		)
 		suite.setModuleAccounts(suite.ctx, ak, maccs)
 
@@ -338,14 +368,18 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 
 		maccPerms[mName] = mPerms
 
+		ac := authcodec.NewBech32Codec("cosmos")
+		authorityAddr, err := ac.BytesToString(types.NewModuleAddress("gov"))
+		suite.Require().NoError(err)
+
 		ak := keeper.NewAccountKeeper(
 			suite.environment,
 			suite.encCfg.Codec,
 			types.ProtoBaseAccount,
 			maccPerms,
-			authcodec.NewBech32Codec("cosmos"),
+			ac,
 			"cosmos",
-			types.NewModuleAddress("gov").String(),
+			authorityAddr,
 		)
 		suite.setModuleAccounts(suite.ctx, ak, []string{mName})
 

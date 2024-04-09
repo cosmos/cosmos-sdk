@@ -91,15 +91,16 @@ func TestFundsMigration(t *testing.T) {
 	err = distrKeeper.FeePool.Set(ctx, feepool)
 	require.NoError(t, err)
 
-	distrAcc := authtypes.NewEmptyModuleAccount(disttypes.ModuleName)
-
+	distrAcc, err := authtypes.NewEmptyModuleAccount(accountKeeper.AddressCodec(), disttypes.ModuleName)
+	require.NoError(t, err)
 	// mint coins in distribution module account
 	distrModBal := sdk.NewCoins(sdk.NewInt64Coin("test", 10000000))
 	err = bankKeeper.MintCoins(ctx, distrAcc.GetName(), distrModBal)
 	require.NoError(t, err)
 
 	// Set pool module account
-	poolAcc := authtypes.NewEmptyModuleAccount(pooltypes.ModuleName)
+	poolAcc, err := authtypes.NewEmptyModuleAccount(accountKeeper.AddressCodec(), pooltypes.ModuleName)
+	require.NoError(t, err)
 
 	// migrate feepool funds from distribution module account to pool module account
 	_, err = v4.MigrateFunds(ctx, bankKeeper, feepool, distrAcc, poolAcc)

@@ -230,41 +230,44 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	defer outputFile.Close()
 	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
 
+	valAddr, err := clientCtx.AddressCodec.BytesToString(val.GetAddress())
+	s.Require().NoError(err)
+
 	// sign-batch file - offline is set but account-number and sequence are not
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--offline")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
 	// sign-batch file - offline and sequence is set but account-number is not set
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), "--offline")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\" not set")
 
 	// sign-batch file - offline and account-number is set but sequence is not set
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"), "--offline")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"sequence\" not set")
 
 	// sign-batch file - sequence and account-number are set when offline is false
-	res, err := authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"))
+	res, err := authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file
-	res, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
+	res, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file signature only
-	res, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
+	res, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// Sign batch malformed tx file.
 	malformedFile := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf("malformed%s", generatedStd))
 	defer malformedFile.Close()
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
 	s.Require().Error(err)
 
 	// Sign batch malformed tx file signature only.
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
 
 	// make a txn to increase the sequence of sender
@@ -293,7 +296,7 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	s.Require().Equal(seq+1, seq1)
 
 	// signing sign-batch should start from the last sequence.
-	signed, err := authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
+	signed, err := authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(signed.String(), "\n"), "\n")
 	s.Require().GreaterOrEqual(len(signedTxs), 1)
@@ -676,19 +679,22 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().EqualError(err, "signatures validation failed")
 	s.Require().True(strings.Contains(res.String(), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", val1.GetAddress().String())))
 
+	val1Addr, err := clientCtx.AddressCodec.BytesToString(val1.GetAddress())
+	s.Require().NoError(err)
+
 	// Test sign
 
 	// Does not work in offline mode
-	_, err = authclitestutil.TxSignExec(clientCtx, val1.GetAddress(), unsignedTxFile.Name(), "--offline")
+	_, err = authclitestutil.TxSignExec(clientCtx, val1Addr, unsignedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
 	// But works offline if we set account number and sequence
 	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
-	_, err = authclitestutil.TxSignExec(clientCtx, val1.GetAddress(), unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
+	_, err = authclitestutil.TxSignExec(clientCtx, val1Addr, unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
 	s.Require().NoError(err)
 
 	// Sign transaction
-	signedTx, err := authclitestutil.TxSignExec(clientCtx, val1.GetAddress(), unsignedTxFile.Name())
+	signedTx, err := authclitestutil.TxSignExec(clientCtx, val1Addr, unsignedTxFile.Name())
 	s.Require().NoError(err)
 	signedFinalTx, err := txCfg.TxJSONDecoder()(signedTx.Bytes())
 	s.Require().NoError(err)
@@ -802,7 +808,9 @@ func (s *E2ETestSuite) TestCLIMultisignInsufficientCosigners() {
 	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
-	account1Signature, err := authclitestutil.TxSignExec(clientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	addr1Str, err := clientCtx.AddressCodec.BytesToString(addr1)
+	s.Require().NoError(err)
+	account1Signature, err := authclitestutil.TxSignExec(clientCtx, addr1Str, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
@@ -924,8 +932,10 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	// Sign with account1
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
+	addr1Str, err := clientCtx.AddressCodec.BytesToString(addr1)
+	s.Require().NoError(err)
 	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authclitestutil.TxSignExec(clientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	account1Signature, err := authclitestutil.TxSignExec(clientCtx, addr1Str, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
@@ -934,7 +944,9 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	// Sign with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	account2Signature, err := authclitestutil.TxSignExec(clientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	addr2Str, err := clientCtx.AddressCodec.BytesToString(addr2)
+	s.Require().NoError(err)
+	account2Signature, err := authclitestutil.TxSignExec(clientCtx, addr2Str, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
@@ -943,7 +955,9 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	// Sign with dummy account
 	dummyAddr, err := dummyAcc.GetAddress()
 	s.Require().NoError(err)
-	_, err = authclitestutil.TxSignExec(clientCtx, dummyAddr, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	dummyAddrStr, err := clientCtx.AddressCodec.BytesToString(dummyAddr)
+	s.Require().NoError(err)
+	_, err = authclitestutil.TxSignExec(clientCtx, dummyAddrStr, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "signing key is not a part of multisig key")
 
@@ -1003,11 +1017,14 @@ func (s *E2ETestSuite) TestSignWithMultisig() {
 	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
 	defer multiGeneratedTx2File.Close()
 
+	addr1Str, err := s.ac.BytesToString(addr1)
+	s.Require().NoError(err)
+
 	// Sign using multisig. We're signing a tx on behalf of the multisig address,
 	// even though the tx signer is NOT the multisig address. This is fine though,
 	// as the main point of this test is to test the `--multisig` flag with an address
 	// that is not in the keyring.
-	_, err = authclitestutil.TxSignExec(val1.GetClientCtx(), addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
+	_, err = authclitestutil.TxSignExec(val1.GetClientCtx(), addr1Str, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
 	s.Require().Contains(err.Error(), "error getting account from keybase")
 }
 
@@ -1074,9 +1091,11 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
+	addr1Str, err := clientCtx.AddressCodec.BytesToString(addr1)
+	s.Require().NoError(err)
 	// Sign with account1
 	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authclitestutil.TxSignExec(clientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	account1Signature, err := authclitestutil.TxSignExec(clientCtx, addr1Str, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
@@ -1084,8 +1103,10 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
+	addr2Str, err := clientCtx.AddressCodec.BytesToString(addr2)
+	s.Require().NoError(err)
 	// Sign with account2
-	account2Signature, err := authclitestutil.TxSignExec(clientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	account2Signature, err := authclitestutil.TxSignExec(clientCtx, addr2Str, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
@@ -1175,8 +1196,10 @@ func (s *E2ETestSuite) TestSignBatchMultisig() {
 
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
+	addr1Str, err := clientCtx.AddressCodec.BytesToString(addr1)
+	s.Require().NoError(err)
 	// sign-batch file
-	res, err := authclitestutil.TxSignBatchExec(clientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
+	res, err := authclitestutil.TxSignBatchExec(clientCtx, addr1Str, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -1185,8 +1208,10 @@ func (s *E2ETestSuite) TestSignBatchMultisig() {
 
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
+	addr2Str, err := clientCtx.AddressCodec.BytesToString(addr2)
+	s.Require().NoError(err)
 	// sign-batch file with account2
-	res, err = authclitestutil.TxSignBatchExec(clientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
+	res, err = authclitestutil.TxSignBatchExec(clientCtx, addr2Str, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file2
@@ -1249,7 +1274,9 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	// sign-batch file
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
-	res, err := authclitestutil.TxSignBatchExec(clientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
+	addr1Str, err := clientCtx.AddressCodec.BytesToString(addr1)
+	s.Require().NoError(err)
+	res, err := authclitestutil.TxSignBatchExec(clientCtx, addr1Str, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -1259,7 +1286,9 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	// sign-batch file with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	res, err = authclitestutil.TxSignBatchExec(clientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
+	addr2Str, err := clientCtx.AddressCodec.BytesToString(addr2)
+	s.Require().NoError(err)
+	res, err = authclitestutil.TxSignBatchExec(clientCtx, addr2Str, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
@@ -1355,8 +1384,11 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 	defer unsignedTxFile.Close()
 
+	val1Str, err := clientCtx.AddressCodec.BytesToString(val1.GetAddress())
+	s.Require().NoError(err)
+
 	// Sign the file with the unsignedTx.
-	signedTx, err := authclitestutil.TxSignExec(clientCtx, val1.GetAddress(), unsignedTxFile.Name(), fmt.Sprintf("--%s=true", cli.FlagOverwrite))
+	signedTx, err := authclitestutil.TxSignExec(clientCtx, val1Str, unsignedTxFile.Name(), fmt.Sprintf("--%s=true", cli.FlagOverwrite))
 	s.Require().NoError(err)
 
 	// Remove the signerInfo's `public_key` field manually from the signedTx.
@@ -1422,7 +1454,7 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	defer unsignedTxFile.Close()
 
 	// Let val0 sign first the file with the unsignedTx.
-	signedByVal0, err := authclitestutil.TxSignExec(val0.GetClientCtx(), val0.GetAddress(), unsignedTxFile.Name(), "--overwrite", "--sign-mode=amino-json")
+	signedByVal0, err := authclitestutil.TxSignExec(val0.GetClientCtx(), val0Str, unsignedTxFile.Name(), "--overwrite", "--sign-mode=amino-json")
 	require.NoError(err)
 	signedByVal0File := testutil.WriteToNewTempFile(s.T(), signedByVal0.String())
 	defer signedByVal0File.Close()
@@ -1433,7 +1465,7 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 
 	signedTx, err := authclitestutil.TxSignExec(
 		val1.GetClientCtx(),
-		val1.GetAddress(),
+		val1Str,
 		signedByVal0File.Name(),
 		"--offline",
 		fmt.Sprintf("--account-number=%d", val1AccNum),

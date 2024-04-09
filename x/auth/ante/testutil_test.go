@@ -79,12 +79,15 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 		"random":                 {"random"},
 	}
 
+	ac := authcodec.NewBech32Codec("cosmos")
+	authorityAddr, err := ac.BytesToString(types.NewModuleAddress("gov"))
+	require.NoError(t, err)
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
-		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
+		runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), suite.encCfg.Codec,
+		types.ProtoBaseAccount, maccPerms, ac, sdk.Bech32MainPrefix, authorityAddr,
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
-	err := suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())
+	err = suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())
 	require.NoError(t, err)
 
 	// We're using TestMsg encoding in some tests, so register it here.
@@ -241,8 +244,12 @@ func (suite *AnteTestSuite) CreateTestTx(
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
+		addr, err := suite.accountKeeper.AddressCodec().BytesToString(priv.PubKey().Address())
+		if err != nil {
+			return nil, err
+		}
 		signerData := xauthsigning.SignerData{
-			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
+			Address:       addr,
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],

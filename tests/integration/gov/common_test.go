@@ -22,6 +22,7 @@ import (
 	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -102,6 +103,9 @@ func createTestSuite(t *testing.T) suite {
 	t.Helper()
 	res := suite{}
 
+	cfg, err := simtestutil.DefaultStartUpConfig(testutil.CodecOptions{}.GetAddressCodec())
+	require.NoError(t, err)
+
 	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
@@ -114,7 +118,7 @@ func createTestSuite(t *testing.T) suite {
 			),
 			depinject.Supply(sdklog.NewNopLogger()),
 		),
-		simtestutil.DefaultStartUpConfig(),
+		cfg,
 		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper,
 	)
 	require.NoError(t, err)

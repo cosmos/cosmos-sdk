@@ -110,7 +110,8 @@ func (s *KeeperTestSuite) TestValidatorIdentifier() {
 	s.Require().NoError(err)
 	s.Require().Nil(oldPk)
 
-	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
+	bondedPool, err := authtypes.NewEmptyModuleAccount(s.accountKeeper.AddressCodec(), types.BondedPoolName)
+	s.Require().NoError(err)
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
 	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
 

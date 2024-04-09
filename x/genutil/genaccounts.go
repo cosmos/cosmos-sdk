@@ -50,7 +50,7 @@ func AddGenesisAccount(
 	var genAccount authtypes.GenesisAccount
 
 	balances := banktypes.Balance{Address: addr, Coins: coins.Sort()}
-	baseAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
+	baseAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
 
 	if !vestingAmt.IsZero() {
 		baseVestingAccount, err := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
@@ -74,7 +74,10 @@ func AddGenesisAccount(
 			return errors.New("invalid vesting parameters; must supply start and end time or end time")
 		}
 	} else if moduleName != "" {
-		genAccount = authtypes.NewEmptyModuleAccount(moduleName, authtypes.Burner, authtypes.Minter)
+		genAccount, err = authtypes.NewEmptyModuleAccount(addressCodec, moduleName, authtypes.Burner, authtypes.Minter)
+		if err != nil {
+			return err
+		}
 	} else {
 		genAccount = baseAccount
 	}
@@ -98,7 +101,7 @@ func AddGenesisAccount(
 	bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 	if accs.Contains(accAddr) {
 		if !appendAcct {
-			return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", accAddr)
+			return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", addr)
 		}
 
 		genesisB := banktypes.GetGenesisStateFromAppState(cdc, appState)

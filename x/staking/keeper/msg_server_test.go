@@ -1205,7 +1205,8 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	existingPubkey, ok := validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().True(ok)
 
-	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
+	bondedPool, err := authtypes.NewEmptyModuleAccount(s.accountKeeper.AddressCodec(), types.BondedPoolName)
+	s.Require().NoError(err)
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
 	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
 

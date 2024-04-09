@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -135,9 +136,15 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Equal([][]byte{addr, msigAddr}, signers)
 	s.Require().NoError(sigTx.ValidateBasic())
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addrStr, err := ac.BytesToString(addr)
+	s.Require().NoError(err)
+	msigStrAddr, err := ac.BytesToString(msigAddr)
+	s.Require().NoError(err)
+
 	// sign transaction
 	signerData := signing.SignerData{
-		Address:       addr.String(),
+		Address:       addrStr,
 		ChainID:       "test",
 		AccountNumber: 1,
 		Sequence:      seq1,
@@ -150,7 +157,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(err)
 
 	signerData = signing.SignerData{
-		Address:       msigAddr.String(),
+		Address:       msigStrAddr,
 		ChainID:       "test",
 		AccountNumber: 3,
 		Sequence:      mseq,

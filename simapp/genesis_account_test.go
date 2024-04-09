@@ -10,14 +10,19 @@ import (
 	"cosmossdk.io/simapp"
 	authtypes "cosmossdk.io/x/auth/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestSimGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr := sdk.AccAddress(pubkey.Address())
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addr, err := ac.BytesToString(pubkey.Address())
+	require.NoError(t, err)
+	modAddr, err := ac.BytesToString(crypto.AddressHash([]byte("testmod")))
+	require.NoError(t, err)
 	vestingStart := time.Now().UTC()
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
@@ -45,7 +50,7 @@ func TestSimGenesisAccountValidate(t *testing.T) {
 		{
 			"valid basic account with module name",
 			simapp.SimGenesisAccount{
-				BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(crypto.AddressHash([]byte("testmod"))), nil, 0, 0),
+				BaseAccount: authtypes.NewBaseAccount(modAddr, nil, 0, 0),
 				ModuleName:  "testmod",
 			},
 			false,

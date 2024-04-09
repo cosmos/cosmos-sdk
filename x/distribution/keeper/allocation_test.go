@@ -107,7 +107,9 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
-	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
+	feeCollectorAcc, err := authtypes.NewEmptyModuleAccount(cdcOpts.GetAddressCodec(), "fee_collector")
+	require.NoError(t, err)
+
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
@@ -247,7 +249,9 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
-	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
+	feeCollectorAcc, err := authtypes.NewEmptyModuleAccount(cdcOpts.GetAddressCodec(), "fee_collector")
+	require.NoError(t, err)
+
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()

@@ -66,7 +66,9 @@ func (s *SimTestSuite) SetupTest() {
 
 	// create genesis accounts
 	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	addr, err := s.accountKeeper.AddressCodec().BytesToString(senderPrivKey.PubKey().Address())
+	require.NoError(s.T(), err)
+	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
 	accs := []simtestutil.GenesisAccount{
 		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000)))},
 	}
@@ -77,7 +79,8 @@ func (s *SimTestSuite) SetupTest() {
 	require.NoError(s.T(), err)
 	validator := cmttypes.NewValidator(cmtPk, 1)
 
-	startupCfg := simtestutil.DefaultStartUpConfig()
+	startupCfg, err := simtestutil.DefaultStartUpConfig(s.accountKeeper.AddressCodec())
+	require.NoError(s.T(), err)
 	startupCfg.GenesisAccounts = accs
 	startupCfg.ValidatorSet = func() (*cmttypes.ValidatorSet, error) {
 		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil

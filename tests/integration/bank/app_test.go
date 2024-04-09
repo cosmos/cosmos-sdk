@@ -86,7 +86,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		genAccounts = append(genAccounts, simtestutil.GenesisAccount{GenesisAccount: acc})
 	}
 
-	startupCfg := simtestutil.DefaultStartUpConfig()
+	startupCfg, err := simtestutil.DefaultStartUpConfig(cdctestutil.CodecOptions{}.GetAddressCodec())
 	startupCfg.GenesisAccounts = genAccounts
 
 	app, err := simtestutil.SetupWithConfiguration(
@@ -333,8 +333,8 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	addr2Str, err := ac.BytesToString(addr2)
 	require.NoError(t, err)
 
-	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
-	acc2 := authtypes.NewBaseAccountWithAddress(addr2)
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1Str)
+	acc2 := authtypes.NewBaseAccountWithAddress(addr2Str)
 	err = acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
@@ -396,7 +396,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 }
 
 func TestMsgSetSendEnabled(t *testing.T) {
-	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1.String())
 
 	genAccs := []authtypes.GenesisAccount{acc1}
 	s := createTestSuite(t, genAccs)

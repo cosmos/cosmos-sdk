@@ -643,15 +643,19 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 	// Sign with account1
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
+	addr1Str, err := clientCtx.AddressCodec.BytesToString(addr1)
+	s.Require().NoError(err)
 	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authtest.TxSignExec(clientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	account1Signature, err := authtest.TxSignExec(clientCtx, addr1Str, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
 	// Sign with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	account2Signature, err := authtest.TxSignExec(clientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	addr2Str, err := clientCtx.AddressCodec.BytesToString(addr2)
+	s.Require().NoError(err)
+	account2Signature, err := authtest.TxSignExec(clientCtx, addr2Str, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 

@@ -45,12 +45,23 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addrs := simtestutil.CreateIncrementalAccounts(5)
 	granter := addrs[0]
+	granterAddr, err := ac.BytesToString(granter)
+	require.NoError(t, err)
 	grantee1 := addrs[1]
+	grantee1Addr, err := ac.BytesToString(grantee1)
+	require.NoError(t, err)
 	grantee2 := addrs[2]
+	grantee2Addr, err := ac.BytesToString(grantee2)
+	require.NoError(t, err)
 	grantee3 := addrs[3]
+	grantee3Addr, err := ac.BytesToString(grantee3)
+	require.NoError(t, err)
 	grantee4 := addrs[4]
+	grantee4Addr, err := ac.BytesToString(grantee4)
+	require.NoError(t, err)
 	expiration := ctx.HeaderInfo().Time.AddDate(0, 1, 0)
 	expiration2 := expiration.AddDate(1, 0, 0)
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
@@ -58,11 +69,11 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := authztestutil.NewMockAccountKeeper(ctrl)
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter).Return(authtypes.NewBaseAccountWithAddress(granter)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee1).Return(authtypes.NewBaseAccountWithAddress(grantee1)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee2).Return(authtypes.NewBaseAccountWithAddress(grantee2)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee3).Return(authtypes.NewBaseAccountWithAddress(grantee3)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee4).Return(authtypes.NewBaseAccountWithAddress(grantee4)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter).Return(authtypes.NewBaseAccountWithAddress(granterAddr)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee1).Return(authtypes.NewBaseAccountWithAddress(grantee1Addr)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee2).Return(authtypes.NewBaseAccountWithAddress(grantee2Addr)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee3).Return(authtypes.NewBaseAccountWithAddress(grantee3Addr)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee4).Return(authtypes.NewBaseAccountWithAddress(grantee4Addr)).AnyTimes()
 
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 

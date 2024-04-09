@@ -401,10 +401,15 @@ func (k Keeper) CreateGroupPolicy(ctx context.Context, msg *group.MsgCreateGroup
 		break
 	}
 
+	accountStrAddr, err := k.accKeeper.AddressCodec().BytesToString(accountAddr)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "could not generate address")
+	}
+
 	groupPolicy, err := group.NewGroupPolicyInfo(
-		accountAddr,
+		accountStrAddr,
 		msg.GetGroupID(),
-		reqGroupAdmin,
+		msg.GetAdmin(),
 		msg.GetMetadata(),
 		1,
 		policy,
@@ -418,11 +423,11 @@ func (k Keeper) CreateGroupPolicy(ctx context.Context, msg *group.MsgCreateGroup
 		return nil, errorsmod.Wrap(err, "could not create group policy")
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).Emit(&group.EventCreateGroupPolicy{Address: accountAddr.String()}); err != nil {
+	if err := k.environment.EventService.EventManager(ctx).Emit(&group.EventCreateGroupPolicy{Address: accountStrAddr}); err != nil {
 		return nil, err
 	}
 
-	return &group.MsgCreateGroupPolicyResponse{Address: accountAddr.String()}, nil
+	return &group.MsgCreateGroupPolicyResponse{Address: accountStrAddr}, nil
 }
 
 func (k Keeper) UpdateGroupPolicyAdmin(ctx context.Context, msg *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {
@@ -579,7 +584,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, msg *group.MsgSubmitProposal
 	}
 
 	// Check that if the messages require signers, they are all equal to the given account address of group policy.
-	if err := ensureMsgAuthZ(msgs, groupPolicyAddr, k.cdc); err != nil {
+	if err := ensureMsgAuthZ(msgs, groupPolicyAddr, k.cdc, k.accKeeper.AddressCodec()); err != nil {
 		return nil, err
 	}
 

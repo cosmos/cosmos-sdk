@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/auth/ante"
@@ -37,6 +38,8 @@ var (
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasServices   = AppModule{}
 	_ appmodule.HasMigrations = AppModule{}
+
+	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
 )
 
 // AppModule implements an application module for the auth module.
@@ -142,7 +145,7 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	return am.cdc.MarshalJSON(gs)
 }
 
-// TxValidator implements appmodule.HasTxValidation.
+// TxValidator implements appmodulev2.HasTxValidator.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

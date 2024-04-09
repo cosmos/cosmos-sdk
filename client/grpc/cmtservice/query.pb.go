@@ -375,21 +375,9 @@ func (m *GetBlockByHeightRequest) GetHeight() int64 {
 
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
 type GetBlockByHeightResponse struct {
-<<<<<<< HEAD
 	BlockId *v1.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
-||||||| fea88d13c5
-	BlockId *types1.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
-=======
-	BlockId *types.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
->>>>>>> main
 	// Deprecated: please use `sdk_block` instead
-<<<<<<< HEAD
 	Block *v1.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
-||||||| fea88d13c5
-	Block *types1.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
-=======
-	Block *types.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
->>>>>>> main
 	// Since: cosmos-sdk 0.47
 	SdkBlock *Block `protobuf:"bytes,3,opt,name=sdk_block,json=sdkBlock,proto3" json:"sdk_block,omitempty"`
 }
@@ -427,26 +415,14 @@ func (m *GetBlockByHeightResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetBlockByHeightResponse proto.InternalMessageInfo
 
-<<<<<<< HEAD
 func (m *GetBlockByHeightResponse) GetBlockId() *v1.BlockID {
-||||||| fea88d13c5
-func (m *GetBlockByHeightResponse) GetBlockId() *types1.BlockID {
-=======
-func (m *GetBlockByHeightResponse) GetBlockId() *types.BlockID {
->>>>>>> main
 	if m != nil {
 		return m.BlockId
 	}
 	return nil
 }
 
-<<<<<<< HEAD
 func (m *GetBlockByHeightResponse) GetBlock() *v1.Block {
-||||||| fea88d13c5
-func (m *GetBlockByHeightResponse) GetBlock() *types1.Block {
-=======
-func (m *GetBlockByHeightResponse) GetBlock() *types.Block {
->>>>>>> main
 	if m != nil {
 		return m.Block
 	}
@@ -499,21 +475,9 @@ var xxx_messageInfo_GetLatestBlockRequest proto.InternalMessageInfo
 
 // GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
 type GetLatestBlockResponse struct {
-<<<<<<< HEAD
 	BlockId *v1.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
-||||||| fea88d13c5
-	BlockId *types1.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
-=======
-	BlockId *types.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
->>>>>>> main
 	// Deprecated: please use `sdk_block` instead
-<<<<<<< HEAD
 	Block *v1.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
-||||||| fea88d13c5
-	Block *types1.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
-=======
-	Block *types.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
->>>>>>> main
 	// Since: cosmos-sdk 0.47
 	SdkBlock *Block `protobuf:"bytes,3,opt,name=sdk_block,json=sdkBlock,proto3" json:"sdk_block,omitempty"`
 }
@@ -551,26 +515,14 @@ func (m *GetLatestBlockResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetLatestBlockResponse proto.InternalMessageInfo
 
-<<<<<<< HEAD
 func (m *GetLatestBlockResponse) GetBlockId() *v1.BlockID {
-||||||| fea88d13c5
-func (m *GetLatestBlockResponse) GetBlockId() *types1.BlockID {
-=======
-func (m *GetLatestBlockResponse) GetBlockId() *types.BlockID {
->>>>>>> main
 	if m != nil {
 		return m.BlockId
 	}
 	return nil
 }
 
-<<<<<<< HEAD
 func (m *GetLatestBlockResponse) GetBlock() *v1.Block {
-||||||| fea88d13c5
-func (m *GetLatestBlockResponse) GetBlock() *types1.Block {
-=======
-func (m *GetLatestBlockResponse) GetBlock() *types.Block {
->>>>>>> main
 	if m != nil {
 		return m.Block
 	}
@@ -3671,13 +3623,7 @@ func (m *GetBlockByHeightResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.BlockId == nil {
-<<<<<<< HEAD
 				m.BlockId = &v1.BlockID{}
-||||||| fea88d13c5
-				m.BlockId = &types1.BlockID{}
-=======
-				m.BlockId = &types.BlockID{}
->>>>>>> main
 			}
 			if err := m.BlockId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3713,13 +3659,7 @@ func (m *GetBlockByHeightResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Block == nil {
-<<<<<<< HEAD
 				m.Block = &v1.Block{}
-||||||| fea88d13c5
-				m.Block = &types1.Block{}
-=======
-				m.Block = &types.Block{}
->>>>>>> main
 			}
 			if err := m.Block.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3891,13 +3831,7 @@ func (m *GetLatestBlockResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.BlockId == nil {
-<<<<<<< HEAD
 				m.BlockId = &v1.BlockID{}
-||||||| fea88d13c5
-				m.BlockId = &types1.BlockID{}
-=======
-				m.BlockId = &types.BlockID{}
->>>>>>> main
 			}
 			if err := m.BlockId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3933,13 +3867,7 @@ func (m *GetLatestBlockResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Block == nil {
-<<<<<<< HEAD
 				m.Block = &v1.Block{}
-||||||| fea88d13c5
-				m.Block = &types1.Block{}
-=======
-				m.Block = &types.Block{}
->>>>>>> main
 			}
 			if err := m.Block.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

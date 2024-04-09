@@ -7,7 +7,6 @@ import (
 	fmt "fmt"
 	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	v11 "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	any "github.com/cosmos/gogoproto/types/any"
@@ -65,13 +64,7 @@ type TxResponse struct {
 	// additional metadata, emitted only by processing the messages.
 	//
 	// Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
-<<<<<<< HEAD
 	Events []v1.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
-||||||| fea88d13c5
-	Events []types1.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
-=======
-	Events []types.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
->>>>>>> main
 }
 
 func (m *TxResponse) Reset()      { *m = TxResponse{} }
@@ -339,13 +332,7 @@ type Result struct {
 	Log string `protobuf:"bytes,2,opt,name=log,proto3" json:"log,omitempty"`
 	// Events contains a slice of Event objects that were emitted during message
 	// or handler execution.
-<<<<<<< HEAD
 	Events []v1.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
-||||||| fea88d13c5
-	Events []types1.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
-=======
-	Events []types.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
->>>>>>> main
 	// msg_responses contains the Msg handler responses type packed in Anys.
 	//
 	// Since: cosmos-sdk 0.46
@@ -646,13 +633,7 @@ type SearchBlocksResult struct {
 	// Max count blocks per page
 	Limit int64 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
 	// List of blocks in current page
-<<<<<<< HEAD
 	Blocks []*v11.Block `protobuf:"bytes,6,rep,name=blocks,proto3" json:"blocks,omitempty"`
-||||||| fea88d13c5
-	Blocks []*types2.Block `protobuf:"bytes,6,rep,name=blocks,proto3" json:"blocks,omitempty"`
-=======
-	Blocks []*types1.Block `protobuf:"bytes,6,rep,name=blocks,proto3" json:"blocks,omitempty"`
->>>>>>> main
 }
 
 func (m *SearchBlocksResult) Reset()      { *m = SearchBlocksResult{} }
@@ -722,13 +703,7 @@ func (m *SearchBlocksResult) GetLimit() int64 {
 	return 0
 }
 
-<<<<<<< HEAD
 func (m *SearchBlocksResult) GetBlocks() []*v11.Block {
-||||||| fea88d13c5
-func (m *SearchBlocksResult) GetBlocks() []*types2.Block {
-=======
-func (m *SearchBlocksResult) GetBlocks() []*types1.Block {
->>>>>>> main
 	if m != nil {
 		return m.Blocks
 	}
@@ -1812,13 +1787,7 @@ func (this *SearchBlocksResult) String() string {
 	}
 	repeatedStringForBlocks := "[]*Block{"
 	for _, f := range this.Blocks {
-<<<<<<< HEAD
 		repeatedStringForBlocks += strings.Replace(fmt.Sprintf("%v", f), "Block", "v11.Block", 1) + ","
-||||||| fea88d13c5
-		repeatedStringForBlocks += strings.Replace(fmt.Sprintf("%v", f), "Block", "types2.Block", 1) + ","
-=======
-		repeatedStringForBlocks += strings.Replace(fmt.Sprintf("%v", f), "Block", "types1.Block", 1) + ","
->>>>>>> main
 	}
 	repeatedStringForBlocks += "}"
 	s := strings.Join([]string{`&SearchBlocksResult{`,
@@ -2236,13 +2205,7 @@ func (m *TxResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-<<<<<<< HEAD
 			m.Events = append(m.Events, v1.Event{})
-||||||| fea88d13c5
-			m.Events = append(m.Events, types1.Event{})
-=======
-			m.Events = append(m.Events, types.Event{})
->>>>>>> main
 			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2845,13 +2808,7 @@ func (m *Result) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-<<<<<<< HEAD
 			m.Events = append(m.Events, v1.Event{})
-||||||| fea88d13c5
-			m.Events = append(m.Events, types1.Event{})
-=======
-			m.Events = append(m.Events, types.Event{})
->>>>>>> main
 			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3596,13 +3553,7 @@ func (m *SearchBlocksResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-<<<<<<< HEAD
 			m.Blocks = append(m.Blocks, &v11.Block{})
-||||||| fea88d13c5
-			m.Blocks = append(m.Blocks, &types2.Block{})
-=======
-			m.Blocks = append(m.Blocks, &types1.Block{})
->>>>>>> main
 			if err := m.Blocks[len(m.Blocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

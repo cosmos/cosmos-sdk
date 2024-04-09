@@ -9,7 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,9 +17,7 @@ import (
 )
 
 // Compile-time type assertions
-var (
-	_ accountstd.Interface = (*PeriodicLockingAccount)(nil)
-)
+var _ accountstd.Interface = (*PeriodicLockingAccount)(nil)
 
 // NewPeriodicLockingAccount creates a new PeriodicLockingAccount object.
 func NewPeriodicLockingAccount(d accountstd.Dependencies) (*PeriodicLockingAccount, error) {

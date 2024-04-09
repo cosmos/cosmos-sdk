@@ -147,7 +147,7 @@ func (s *TestSuite) TestKeeperIter() {
 	granteeAddr := addrs[1]
 	granter2Addr := addrs[2]
 	e := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
-	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil, s.accountKeeper.AddressCodec())
 
 	err := s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
 	s.Require().NoError(err)
@@ -175,7 +175,7 @@ func (s *TestSuite) TestDispatchAction() {
 	s.Require().NoError(err)
 	recipientStrAddr, err := s.accountKeeper.AddressCodec().BytesToString(addrs[2])
 	s.Require().NoError(err)
-	a := banktypes.NewSendAuthorization(coins100, nil)
+	a := banktypes.NewSendAuthorization(coins100, nil, s.accountKeeper.AddressCodec())
 
 	testCases := []struct {
 		name      string
@@ -422,7 +422,7 @@ func (s *TestSuite) TestGetAuthorization() {
 
 	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
-	sendAuth := banktypes.NewSendAuthorization(coins10, nil)
+	sendAuth := banktypes.NewSendAuthorization(coins10, nil, s.accountKeeper.AddressCodec())
 
 	start := s.ctx.HeaderInfo().Time
 	expired := start.Add(time.Duration(1) * time.Second)

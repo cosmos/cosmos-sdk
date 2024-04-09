@@ -23,7 +23,6 @@ network.
 * [State](#state)
     * [Pool](#pool)
     * [LastTotalPower](#lasttotalpower)
-    * [ValidatorUpdates](#validatorupdates)
     * [UnbondingID](#unbondingid)
     * [Params](#params)
     * [Validator](#validator)
@@ -74,13 +73,6 @@ LastTotalPower tracks the total amounts of bonded tokens recorded during the pre
 Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 * LastTotalPower: `0x12 -> ProtocolBuffer(math.Int)`
-
-### ValidatorUpdates
-
-ValidatorUpdates contains the validator updates returned to ABCI at the end of every block.
-The values are overwritten in every block.
-
-* ValidatorUpdates `0x61 -> []abci.ValidatorUpdate`
 
 ### UnbondingID
 

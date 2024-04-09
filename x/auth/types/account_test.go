@@ -208,10 +208,10 @@ func TestGenesisAccountsContains(t *testing.T) {
 func TestNewModuleAddressOrBech32Address(t *testing.T) {
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	input := "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv"
-	addr, err := ac.BytesToString(types.NewModuleAddressOrBech32Address(input))
+	addr, err := ac.BytesToString(types.NewModuleAddressOrBech32Address(input, ac))
 	require.NoError(t, err)
 	require.Equal(t, input, addr)
-	disAddr, err := ac.BytesToString(types.NewModuleAddressOrBech32Address("distribution"))
+	disAddr, err := ac.BytesToString(types.NewModuleAddressOrBech32Address("distribution", ac))
 	require.NoError(t, err)
 	require.Equal(t, "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl", disAddr)
 }

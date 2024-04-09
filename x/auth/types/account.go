@@ -2,13 +2,14 @@ package types
 
 import (
 	"bytes"
-	coreaddress "cosmossdk.io/core/address"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/cometbft/cometbft/crypto"
+
+	coreaddress "cosmossdk.io/core/address"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -146,8 +147,8 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // NewModuleAddressOrBech32Address gets an input string and returns an AccAddress.
 // If the input is a valid address, it returns the address.
 // If the input is a module name, it returns the module address.
-func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
-	if addr, err := sdk.AccAddressFromBech32(input); err == nil {
+func NewModuleAddressOrBech32Address(input string, addressCodec coreaddress.Codec) sdk.AccAddress {
+	if addr, err := addressCodec.StringToBytes(input); err == nil {
 		return addr
 	}
 

@@ -53,7 +53,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := types.NewModuleAddress(GovModuleName)
 	if in.Config.Authority != "" {
-		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
+		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority, in.AddressCodec)
 	}
 
 	if in.RandomGenesisAccountsFn == nil {

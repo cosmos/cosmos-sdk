@@ -50,7 +50,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress("gov")
 	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority, in.AccountKeeper.AddressCodec())
 	}
 
 	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)

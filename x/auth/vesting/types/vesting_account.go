@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	vestexported "cosmossdk.io/x/auth/vesting/exported"
@@ -25,7 +26,7 @@ var (
 // NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
 // callers responsibility to ensure the base account has sufficient funds with
 // regards to the original vesting amount.
-func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) (*BaseVestingAccount, error) {
+func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64, addressCodec address.Codec) (*BaseVestingAccount, error) {
 	baseVestingAccount := &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
@@ -34,7 +35,7 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 		EndTime:          endTime,
 	}
 
-	return baseVestingAccount, baseVestingAccount.Validate()
+	return baseVestingAccount, baseVestingAccount.Validate(addressCodec)
 }
 
 // LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)
@@ -146,7 +147,7 @@ func (bva BaseVestingAccount) GetEndTime() int64 {
 }
 
 // Validate checks for errors on the account fields
-func (bva BaseVestingAccount) Validate() error {
+func (bva BaseVestingAccount) Validate(addressCodec address.Codec) error {
 	if bva.EndTime < 0 {
 		return errors.New("end time cannot be negative")
 	}
@@ -159,7 +160,7 @@ func (bva BaseVestingAccount) Validate() error {
 		return errors.New("delegated vesting amount cannot be greater than original vesting amount")
 	}
 
-	return bva.BaseAccount.Validate()
+	return bva.BaseAccount.Validate(addressCodec)
 }
 
 // Continuous Vesting Account
@@ -178,7 +179,9 @@ func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *C
 }
 
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount
-func NewContinuousVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime, endTime int64) (*ContinuousVestingAccount, error) {
+func NewContinuousVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime, endTime int64,
+	addressCodec address.Codec,
+) (*ContinuousVestingAccount, error) {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: originalVesting,
@@ -190,7 +193,7 @@ func NewContinuousVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting
 		BaseVestingAccount: baseVestingAcc,
 	}
 
-	return continuousVestingAccount, continuousVestingAccount.Validate()
+	return continuousVestingAccount, continuousVestingAccount.Validate(addressCodec)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -246,12 +249,12 @@ func (cva ContinuousVestingAccount) GetStartTime() int64 {
 }
 
 // Validate checks for errors on the account fields
-func (cva ContinuousVestingAccount) Validate() error {
+func (cva ContinuousVestingAccount) Validate(addressCodec address.Codec) error {
 	if cva.GetStartTime() >= cva.GetEndTime() {
 		return errors.New("vesting start-time cannot be before end-time")
 	}
 
-	return cva.BaseVestingAccount.Validate()
+	return cva.BaseVestingAccount.Validate(addressCodec)
 }
 
 // Periodic Vesting Account
@@ -271,7 +274,9 @@ func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, peri
 }
 
 // NewPeriodicVestingAccount returns a new PeriodicVestingAccount
-func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime int64, periods Periods) (*PeriodicVestingAccount, error) {
+func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime int64, periods Periods,
+	addressCodec address.Codec,
+) (*PeriodicVestingAccount, error) {
 	endTime := startTime
 	for _, p := range periods {
 		endTime += p.Length
@@ -289,7 +294,7 @@ func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting s
 		VestingPeriods:     periods,
 	}
 
-	return periodicVestingAccount, periodicVestingAccount.Validate()
+	return periodicVestingAccount, periodicVestingAccount.Validate(addressCodec)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -356,7 +361,7 @@ func (pva PeriodicVestingAccount) GetVestingPeriods() Periods {
 }
 
 // Validate checks for errors on the account fields
-func (pva PeriodicVestingAccount) Validate() error {
+func (pva PeriodicVestingAccount) Validate(addressCodec address.Codec) error {
 	if pva.GetStartTime() >= pva.GetEndTime() {
 		return errors.New("vesting start-time cannot be before end-time")
 	}
@@ -384,7 +389,7 @@ func (pva PeriodicVestingAccount) Validate() error {
 		return fmt.Errorf("original vesting coins (%v) does not match the sum of all coins in vesting periods (%v)", pva.OriginalVesting, originalVesting)
 	}
 
-	return pva.BaseVestingAccount.Validate()
+	return pva.BaseVestingAccount.Validate(addressCodec)
 }
 
 // Delayed Vesting Account
@@ -402,7 +407,7 @@ func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount
 }
 
 // NewDelayedVestingAccount returns a DelayedVestingAccount
-func NewDelayedVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) (*DelayedVestingAccount, error) {
+func NewDelayedVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64, addressCodec address.Codec) (*DelayedVestingAccount, error) {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: originalVesting,
@@ -411,7 +416,7 @@ func NewDelayedVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sd
 
 	delayedVestingAccount := &DelayedVestingAccount{baseVestingAcc}
 
-	return delayedVestingAccount, delayedVestingAccount.Validate()
+	return delayedVestingAccount, delayedVestingAccount.Validate(addressCodec)
 }
 
 // GetVestedCoins returns the total amount of vested coins for a delayed vesting
@@ -449,8 +454,8 @@ func (dva DelayedVestingAccount) GetStartTime() int64 {
 }
 
 // Validate checks for errors on the account fields
-func (dva DelayedVestingAccount) Validate() error {
-	return dva.BaseVestingAccount.Validate()
+func (dva DelayedVestingAccount) Validate(addressCodec address.Codec) error {
+	return dva.BaseVestingAccount.Validate(addressCodec)
 }
 
 //-----------------------------------------------------------------------------
@@ -462,7 +467,7 @@ var (
 )
 
 // NewPermanentLockedAccount returns a PermanentLockedAccount
-func NewPermanentLockedAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins) (*PermanentLockedAccount, error) {
+func NewPermanentLockedAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins, addressCodec address.Codec) (*PermanentLockedAccount, error) {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: coins,
@@ -471,7 +476,7 @@ func NewPermanentLockedAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins) 
 
 	permanentLockedAccount := &PermanentLockedAccount{baseVestingAcc}
 
-	return permanentLockedAccount, permanentLockedAccount.Validate()
+	return permanentLockedAccount, permanentLockedAccount.Validate(addressCodec)
 }
 
 // GetVestedCoins returns the total amount of vested coins for a permanent locked vesting
@@ -511,10 +516,10 @@ func (plva PermanentLockedAccount) GetEndTime() int64 {
 }
 
 // Validate checks for errors on the account fields
-func (plva PermanentLockedAccount) Validate() error {
+func (plva PermanentLockedAccount) Validate(addressCodec address.Codec) error {
 	if plva.EndTime > 0 {
 		return errors.New("permanently vested accounts cannot have an end-time")
 	}
 
-	return plva.BaseVestingAccount.Validate()
+	return plva.BaseVestingAccount.Validate(addressCodec)
 }

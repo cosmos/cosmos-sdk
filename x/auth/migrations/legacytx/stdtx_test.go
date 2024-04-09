@@ -3,7 +3,6 @@ package legacytx
 import (
 	"context"
 	"fmt"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/x/tx/signing/aminojson"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

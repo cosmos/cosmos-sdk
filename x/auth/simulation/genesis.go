@@ -52,7 +52,7 @@ func RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccoun
 			endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
 		}
 
-		bva, err := vestingtypes.NewBaseVestingAccount(bacc, initialVesting, endTime)
+		bva, err := vestingtypes.NewBaseVestingAccount(bacc, initialVesting, endTime, simState.AddressCodec)
 		if err != nil {
 			panic(err)
 		}

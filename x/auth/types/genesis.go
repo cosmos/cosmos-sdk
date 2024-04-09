@@ -141,7 +141,7 @@ func ValidateGenAccounts(accounts GenesisAccounts, addressCodec address.Codec) e
 		addrMap[addrStr] = true
 
 		// check account specific validation
-		if err := acc.Validate(); err != nil {
+		if err := acc.Validate(addressCodec); err != nil {
 			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %w", addrStr, err)
 		}
 	}

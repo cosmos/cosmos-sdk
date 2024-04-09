@@ -26,7 +26,7 @@ func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey, addressCodec coreaddres
 		return nil, fmt.Errorf("failed to create a valid account with credentials: %w", err)
 	}
 
-	if err := baseAccount.Validate(); err != nil {
+	if err := baseAccount.Validate(addressCodec); err != nil {
 		return nil, fmt.Errorf("failed to create a valid account with credentials: %w", err)
 	}
 

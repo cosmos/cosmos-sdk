@@ -70,7 +70,8 @@ func TestBaseSequence(t *testing.T) {
 
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(pubkey.Address())
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addr, err := ac.BytesToString(pubkey.Address())
 	require.NoError(t, err)
 	baseAcc := types.NewBaseAccount(addr, pubkey, 0, 0)
 
@@ -95,7 +96,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
+			require.Equal(t, tt.expErr, tt.acc.Validate(ac) != nil)
 		})
 	}
 }
@@ -167,7 +168,7 @@ func TestValidate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.acc.Validate()
+			err := tt.acc.Validate(ac)
 			require.Equal(t, tt.expErr, err)
 		})
 	}
@@ -218,5 +219,5 @@ func TestNewModuleAddressOrBech32Address(t *testing.T) {
 
 func TestModuleAccountValidateNilBaseAccount(t *testing.T) {
 	ma := &types.ModuleAccount{Name: "foo"}
-	_ = ma.Validate()
+	_ = ma.Validate(codectestutil.CodecOptions{}.GetAddressCodec())
 }

@@ -3,8 +3,8 @@ package keeper_test
 import (
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

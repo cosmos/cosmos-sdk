@@ -118,7 +118,7 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 }
 
 // Validate checks for errors on the account fields
-func (acc BaseAccount) Validate() error {
+func (acc BaseAccount) Validate(addressCodec coreaddress.Codec) error {
 	if acc.Address == "" || acc.PubKey == nil {
 		return nil
 	}
@@ -219,7 +219,7 @@ func (ma ModuleAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 }
 
 // Validate checks for errors on the account fields
-func (ma ModuleAccount) Validate() error {
+func (ma ModuleAccount) Validate(addressCodec coreaddress.Codec) error {
 	if strings.TrimSpace(ma.Name) == "" {
 		return errors.New("module account name cannot be blank")
 	}
@@ -228,11 +228,15 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("uninitialized ModuleAccount: BaseAccount is nil")
 	}
 
-	if ma.Address != sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))).String() {
+	addr, err := addressCodec.BytesToString(crypto.AddressHash([]byte(ma.Name)))
+	if err != nil {
+		return err
+	}
+	if ma.Address != addr {
 		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
 	}
 
-	return ma.BaseAccount.Validate()
+	return ma.BaseAccount.Validate(addressCodec)
 }
 
 type moduleAccountPretty struct {
@@ -309,5 +313,5 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 type GenesisAccount interface {
 	sdk.AccountI
 
-	Validate() error
+	Validate(codec coreaddress.Codec) error
 }

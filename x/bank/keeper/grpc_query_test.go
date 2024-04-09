@@ -213,6 +213,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 		sdk.NewCoins(fooCoins),
 		ctx.HeaderInfo().Time.Unix(),
 		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
+		suite.authKeeper.AddressCodec(),
 	)
 	suite.Require().NoError(err)
 
@@ -264,6 +265,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 		sdk.NewCoins(fooCoins),
 		ctx.HeaderInfo().Time.Unix(),
 		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
+		suite.authKeeper.AddressCodec(),
 	)
 	suite.Require().NoError(err)
 

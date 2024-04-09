@@ -533,7 +533,7 @@ func (suite *KeeperTestSuite) TestQueryAccountInfoWithoutPubKey() {
 	suite.accountKeeper.SetAccount(suite.ctx, acc)
 	addrString, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
 	suite.Require().NoError(err)
-	
+
 	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
 		Address: addrString,
 	})

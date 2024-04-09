@@ -3,6 +3,7 @@ package simapp
 import (
 	"errors"
 
+	"cosmossdk.io/core/address"
 	authtypes "cosmossdk.io/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +29,7 @@ type SimGenesisAccount struct {
 }
 
 // Validate checks for errors on the vesting and module account parameters
-func (sga SimGenesisAccount) Validate() error {
+func (sga SimGenesisAccount) Validate(addressCodec address.Codec) error {
 	if !sga.OriginalVesting.IsZero() {
 		if sga.StartTime >= sga.EndTime {
 			return errors.New("vesting start-time cannot be before end-time")
@@ -39,10 +40,10 @@ func (sga SimGenesisAccount) Validate() error {
 		ma := authtypes.ModuleAccount{
 			BaseAccount: sga.BaseAccount, Name: sga.ModuleName, Permissions: sga.ModulePermissions,
 		}
-		if err := ma.Validate(); err != nil {
+		if err := ma.Validate(addressCodec); err != nil {
 			return err
 		}
 	}
 
-	return sga.BaseAccount.Validate()
+	return sga.BaseAccount.Validate(addressCodec)
 }

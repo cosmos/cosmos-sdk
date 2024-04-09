@@ -1247,7 +1247,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 	suite.Require().NoError(err)
 
 	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix(), suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[1])
@@ -1274,7 +1274,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_NoSpendableCoins() {
 	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
 	suite.mockFundAccount(accAddrs[0])
 	suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], balances))
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix(), suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(vacc)
@@ -1310,7 +1310,7 @@ func (suite *KeeperTestSuite) TestValidateBalance() {
 	suite.Require().NoError(err)
 
 	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
-	vacc, err := vesting.NewContinuousVestingAccount(acc1, balances.Add(balances...), now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc1, balances.Add(balances...), now.Unix(), endTime.Unix(), suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[1])
@@ -1519,7 +1519,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
 	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix(), suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
@@ -1555,7 +1555,7 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 	suite.Require().NoError(err)
 
 	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix(), suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
@@ -1592,7 +1592,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 	suite.Require().NoError(err)
 
 	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
-	vacc, err := vesting.NewPeriodicVestingAccount(acc0, origCoins, now.Unix(), periods)
+	vacc, err := vesting.NewPeriodicVestingAccount(acc0, origCoins, now.Unix(), periods, suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
@@ -1629,7 +1629,7 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
 	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix(), suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
@@ -1672,7 +1672,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
 	}
 
-	vacc, err := vesting.NewPeriodicVestingAccount(acc0, origCoins, now.Unix(), periods)
+	vacc, err := vesting.NewPeriodicVestingAccount(acc0, origCoins, now.Unix(), periods, suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
@@ -1710,7 +1710,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
 	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.HeaderInfo().Time.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.HeaderInfo().Time.Unix(), endTime.Unix(), suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
@@ -1773,7 +1773,7 @@ func (suite *KeeperTestSuite) TestUndelegateCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
 	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix(), suite.authKeeper.AddressCodec())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])

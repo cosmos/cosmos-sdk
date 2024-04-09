@@ -1,12 +1,12 @@
 package tx
 
-import (
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-)
+import "fmt"
 
-type SigVerifiableTxV2 interface {
-	GetSigners() ([][]byte, error)
-	GetPubKeys() ([]cryptotypes.PubKey, error) // If signer already has pubkey in context, this list will have nil in its place
-	GetSignaturesV2() ([]signing.SignatureV2, error)
+// GasEstimateResponse defines a response definition for tx gas estimation.
+type GasEstimateResponse struct {
+	GasEstimate uint64 `json:"gas_estimate" yaml:"gas_estimate"`
+}
+
+func (gr GasEstimateResponse) String() string {
+	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
 }

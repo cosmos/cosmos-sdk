@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -16,18 +17,9 @@ import (
 	"os"
 )
 
-// GasEstimateResponse defines a response definition for tx gas estimation.
-type GasEstimateResponse struct {
-	GasEstimate uint64 `json:"gas_estimate" yaml:"gas_estimate"`
-}
-
-func (gr GasEstimateResponse) String() string {
-	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
-}
-
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxCLI(clientCtx txContext, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf, err := NewFactoryCLI(clientCtx, flagSet)
 	if err != nil {
 		return err
@@ -38,7 +30,7 @@ func GenerateOrBroadcastTxCLI(clientCtx txContext, flagSet *pflag.FlagSet, msgs 
 
 // GenerateOrBroadcastTxWithFactory will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxWithFactory(clientCtx txContext, txf Factory, msgs ...sdk.MsgV2) error {
+func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	// Validate all msgs before generating or broadcasting the tx.
 	// We were calling ValidateBasic separately in each CLI handler before.
 	// Right now, we're factorizing that call inside this function.
@@ -74,7 +66,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx txContext, txf Factory, msgs ...
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx txContext, txf Factory, msgs ...sdk.MsgV2) error {
+func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.MsgV2) error {
 	txf, err := txf.Prepare(clientCtx)
 	if err != nil {
 		return err
@@ -170,17 +162,17 @@ func CalculateGas(
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(clientCtx txContext, f Factory, msgs ...sdk.MsgV2) (tx.AuxSignerData, error) {
+func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
-	fromAddress, name, _, err := GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
+	fromAddress, name, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}
 
 	b.SetAddress(fromAddress.String())
 	if clientCtx.Offline {
-		b.SetAccountNumber(f.accountNumber)
-		b.SetSequence(f.sequence)
+		b.SetAccountNumber(f.AccountNumber())
+		b.SetSequence(f.Sequence())
 	} else {
 		accNum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, fromAddress)
 		if err != nil {
@@ -216,7 +208,7 @@ func makeAuxSignerData(clientCtx txContext, f Factory, msgs ...sdk.MsgV2) (tx.Au
 		return tx.AuxSignerData{}, err
 	}
 
-	sig, err := clientCtx.Keyring.Sign(name, signBz, f.signMode)
+	sig, err := clientCtx.Keyring.Sign(name, signBz, f.SignMode())
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}
@@ -227,7 +219,7 @@ func makeAuxSignerData(clientCtx txContext, f Factory, msgs ...sdk.MsgV2) (tx.Au
 
 // checkMultipleSigners checks that there can be maximum one DIRECT signer in
 // a tx.
-func checkMultipleSigners(tx TxV2) error {
+func checkMultipleSigners(tx sdk.Tx) error {
 	directSigners := 0
 	sigsV2, err := tx.GetSignaturesV2()
 	if err != nil {

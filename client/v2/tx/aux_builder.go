@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 
@@ -24,8 +24,8 @@ type AuxTxBuilder struct {
 	// TxBuilder. It's also added inside body.Messages, because:
 	// - b.msgs is used for constructing the AMINO sign bz,
 	// - b.body is used for constructing the DIRECT_AUX sign bz.
-	msgs          []sdk.MsgV2
-	body          *txv1beta1.TxBody
+	msgs          []sdk.Msg
+	body          *apitx.TxBody
 	auxSignerData *tx.AuxSignerData
 }
 
@@ -59,7 +59,7 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 }
 
 // SetMsgs sets an array of Msgs in the tx.
-func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.MsgV2) error {
+func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*anypb.Any, len(msgs))
 	for i, msg := range msgs {
 		legacyAny, err := codectypes.NewAnyWithValue(msg)
@@ -151,7 +151,7 @@ func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
-// SetSignature sets the aux signer's signature.
+// SetNonCriticalExtensionOptions sets the aux signer's non-critical extension options.
 func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()
 
@@ -208,7 +208,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 				FileResolver: proto.HybridResolver,
 			})
 
-			auxBody := &txv1beta1.TxBody{
+			auxBody := &apitx.TxBody{
 				Messages:      body.Messages,
 				Memo:          body.Memo,
 				TimeoutHeight: body.TimeoutHeight,
@@ -231,13 +231,13 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 				},
 				txsigning.TxData{
 					Body: auxBody,
-					AuthInfo: &txv1beta1.AuthInfo{
+					AuthInfo: &apitx.AuthInfo{
 						SignerInfos: nil,
 						// Aux signer never signs over fee.
 						// For LEGACY_AMINO_JSON, we use the convention to sign
 						// over empty fees.
 						// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
-						Fee: &txv1beta1.Fee{},
+						Fee: &apitx.Fee{},
 					},
 				},
 			)
@@ -261,7 +261,7 @@ func (b *AuxTxBuilder) GetAuxSignerData() (tx.AuxSignerData, error) {
 
 func (b *AuxTxBuilder) checkEmptyFields() {
 	if b.body == nil {
-		b.body = &txv1beta1.TxBody{}
+		b.body = &apitx.TxBody{}
 	}
 
 	if b.auxSignerData == nil {

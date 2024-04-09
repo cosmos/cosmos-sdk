@@ -1,13 +1,15 @@
 package tx
 
 import (
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	apibase "cosmossdk.io/api/cosmos/base/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/client/v2/offchain"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"google.golang.org/protobuf/types/known/anypb"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type ExtendedTxBuilder interface {
-	SetExtensionOptions(extOpts ...*codectypes.Any)
+	SetExtensionOptions(...*codectypes.Any)
 }
 
 // TxBuilder defines an interface which an application-defined concrete transaction
@@ -15,20 +17,20 @@ type ExtendedTxBuilder interface {
 // signatures, and provide canonical bytes to sign over. The transaction must
 // also know how to encode itself.
 type TxBuilder interface {
-	GetTx() txv1beta1.Tx
-	SetMsgs(msgs ...*anypb.Any) error
-	SetMemo(memo string)
-	SetFeeAmount(amount txv1beta1.Fee)
-	SetFeePayer(feePayer string)
-	SetGasLimit(limit uint64)
-	SetTimeoutHeight(height uint64)
-	SetFeeGranter(feeGranter string)
-	SetUnordered(v bool)
-	SetSignatures(doc txv1beta1.SignDoc) error
-	SetAuxSignerData(data txv1beta1.AuxSignerData) error
+	GetTx() apitx.Tx
+	SetMsgs(...sdk.Msg) error
+	SetMemo(string)
+	SetFeeAmount([]apibase.Coin)
+	SetFeePayer(string)
+	SetGasLimit(uint64)
+	SetTimeoutHeight(uint64)
+	SetFeeGranter(string)
+	SetUnordered(bool)
+	SetSignatures(...offchain.OffchainSignature) error
+	SetAuxSignerData(apitx.AuxSignerData) error
 }
 
 type TxBuilderProvider interface {
 	NewTxBuilder() TxBuilder
-	WrapTxBuilder(txv1beta1.Tx) (TxBuilder, error)
+	WrapTxBuilder(apitx.Tx) (TxBuilder, error)
 }

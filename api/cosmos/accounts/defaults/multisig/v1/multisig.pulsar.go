@@ -756,7 +756,6 @@ func (x *fastReflection_MsgInit) ProtoMethods() *protoiface.Methods {
 
 var (
 	md_Config                 protoreflect.MessageDescriptor
-	fd_Config_algo            protoreflect.FieldDescriptor
 	fd_Config_threshold       protoreflect.FieldDescriptor
 	fd_Config_quorum          protoreflect.FieldDescriptor
 	fd_Config_voting_period   protoreflect.FieldDescriptor
@@ -767,7 +766,6 @@ var (
 func init() {
 	file_cosmos_accounts_defaults_multisig_v1_multisig_proto_init()
 	md_Config = File_cosmos_accounts_defaults_multisig_v1_multisig_proto.Messages().ByName("Config")
-	fd_Config_algo = md_Config.Fields().ByName("algo")
 	fd_Config_threshold = md_Config.Fields().ByName("threshold")
 	fd_Config_quorum = md_Config.Fields().ByName("quorum")
 	fd_Config_voting_period = md_Config.Fields().ByName("voting_period")
@@ -840,12 +838,6 @@ func (x *fastReflection_Config) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Config) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Algo != "" {
-		value := protoreflect.ValueOfString(x.Algo)
-		if !f(fd_Config_algo, value) {
-			return
-		}
-	}
 	if x.Threshold != int64(0) {
 		value := protoreflect.ValueOfInt64(x.Threshold)
 		if !f(fd_Config_threshold, value) {
@@ -891,8 +883,6 @@ func (x *fastReflection_Config) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Config) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.Config.algo":
-		return x.Algo != ""
 	case "cosmos.accounts.defaults.multisig.v1.Config.threshold":
 		return x.Threshold != int64(0)
 	case "cosmos.accounts.defaults.multisig.v1.Config.quorum":
@@ -919,8 +909,6 @@ func (x *fastReflection_Config) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Config) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.Config.algo":
-		x.Algo = ""
 	case "cosmos.accounts.defaults.multisig.v1.Config.threshold":
 		x.Threshold = int64(0)
 	case "cosmos.accounts.defaults.multisig.v1.Config.quorum":
@@ -947,9 +935,6 @@ func (x *fastReflection_Config) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Config) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.Config.algo":
-		value := x.Algo
-		return protoreflect.ValueOfString(value)
 	case "cosmos.accounts.defaults.multisig.v1.Config.threshold":
 		value := x.Threshold
 		return protoreflect.ValueOfInt64(value)
@@ -985,8 +970,6 @@ func (x *fastReflection_Config) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Config) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.Config.algo":
-		x.Algo = value.Interface().(string)
 	case "cosmos.accounts.defaults.multisig.v1.Config.threshold":
 		x.Threshold = value.Int()
 	case "cosmos.accounts.defaults.multisig.v1.Config.quorum":
@@ -1017,8 +1000,6 @@ func (x *fastReflection_Config) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Config) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.Config.algo":
-		panic(fmt.Errorf("field algo of message cosmos.accounts.defaults.multisig.v1.Config is not mutable"))
 	case "cosmos.accounts.defaults.multisig.v1.Config.threshold":
 		panic(fmt.Errorf("field threshold of message cosmos.accounts.defaults.multisig.v1.Config is not mutable"))
 	case "cosmos.accounts.defaults.multisig.v1.Config.quorum":
@@ -1042,8 +1023,6 @@ func (x *fastReflection_Config) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Config) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.Config.algo":
-		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.defaults.multisig.v1.Config.threshold":
 		return protoreflect.ValueOfInt64(int64(0))
 	case "cosmos.accounts.defaults.multisig.v1.Config.quorum":
@@ -1123,10 +1102,6 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Algo)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.Threshold != 0 {
 			n += 1 + runtime.Sov(uint64(x.Threshold))
 		}
@@ -1179,7 +1154,7 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0
 			}
 			i--
-			dAtA[i] = 0x30
+			dAtA[i] = 0x28
 		}
 		if x.Revote {
 			i--
@@ -1189,29 +1164,22 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0
 			}
 			i--
-			dAtA[i] = 0x28
+			dAtA[i] = 0x20
 		}
 		if x.VotingPeriod != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.VotingPeriod))
 			i--
-			dAtA[i] = 0x20
+			dAtA[i] = 0x18
 		}
 		if x.Quorum != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.Quorum))
 			i--
-			dAtA[i] = 0x18
+			dAtA[i] = 0x10
 		}
 		if x.Threshold != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.Threshold))
 			i--
-			dAtA[i] = 0x10
-		}
-		if len(x.Algo) > 0 {
-			i -= len(x.Algo)
-			copy(dAtA[i:], x.Algo)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Algo)))
-			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x8
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1263,38 +1231,6 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Algo", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Algo = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Threshold", wireType)
 				}
@@ -1313,7 +1249,7 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 3:
+			case 2:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Quorum", wireType)
 				}
@@ -1332,7 +1268,7 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 4:
+			case 3:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VotingPeriod", wireType)
 				}
@@ -1351,7 +1287,7 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 5:
+			case 4:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Revote", wireType)
 				}
@@ -1371,7 +1307,7 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 					}
 				}
 				x.Revote = bool(v != 0)
-			case 6:
+			case 5:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EarlyExecution", wireType)
 				}
@@ -1482,6 +1418,7 @@ var (
 	fd_Proposal_title    protoreflect.FieldDescriptor
 	fd_Proposal_summary  protoreflect.FieldDescriptor
 	fd_Proposal_messages protoreflect.FieldDescriptor
+	fd_Proposal_execute  protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1490,6 +1427,7 @@ func init() {
 	fd_Proposal_title = md_Proposal.Fields().ByName("title")
 	fd_Proposal_summary = md_Proposal.Fields().ByName("summary")
 	fd_Proposal_messages = md_Proposal.Fields().ByName("messages")
+	fd_Proposal_execute = md_Proposal.Fields().ByName("execute")
 }
 
 var _ protoreflect.Message = (*fastReflection_Proposal)(nil)
@@ -1575,6 +1513,12 @@ func (x *fastReflection_Proposal) Range(f func(protoreflect.FieldDescriptor, pro
 			return
 		}
 	}
+	if x.Execute != false {
+		value := protoreflect.ValueOfBool(x.Execute)
+		if !f(fd_Proposal_execute, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1596,6 +1540,8 @@ func (x *fastReflection_Proposal) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Summary != ""
 	case "cosmos.accounts.defaults.multisig.v1.Proposal.messages":
 		return len(x.Messages) != 0
+	case "cosmos.accounts.defaults.multisig.v1.Proposal.execute":
+		return x.Execute != false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.Proposal"))
@@ -1618,6 +1564,8 @@ func (x *fastReflection_Proposal) Clear(fd protoreflect.FieldDescriptor) {
 		x.Summary = ""
 	case "cosmos.accounts.defaults.multisig.v1.Proposal.messages":
 		x.Messages = nil
+	case "cosmos.accounts.defaults.multisig.v1.Proposal.execute":
+		x.Execute = false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.Proposal"))
@@ -1646,6 +1594,9 @@ func (x *fastReflection_Proposal) Get(descriptor protoreflect.FieldDescriptor) p
 		}
 		listValue := &_Proposal_3_list{list: &x.Messages}
 		return protoreflect.ValueOfList(listValue)
+	case "cosmos.accounts.defaults.multisig.v1.Proposal.execute":
+		value := x.Execute
+		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.Proposal"))
@@ -1674,6 +1625,8 @@ func (x *fastReflection_Proposal) Set(fd protoreflect.FieldDescriptor, value pro
 		lv := value.List()
 		clv := lv.(*_Proposal_3_list)
 		x.Messages = *clv.list
+	case "cosmos.accounts.defaults.multisig.v1.Proposal.execute":
+		x.Execute = value.Bool()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.Proposal"))
@@ -1704,6 +1657,8 @@ func (x *fastReflection_Proposal) Mutable(fd protoreflect.FieldDescriptor) proto
 		panic(fmt.Errorf("field title of message cosmos.accounts.defaults.multisig.v1.Proposal is not mutable"))
 	case "cosmos.accounts.defaults.multisig.v1.Proposal.summary":
 		panic(fmt.Errorf("field summary of message cosmos.accounts.defaults.multisig.v1.Proposal is not mutable"))
+	case "cosmos.accounts.defaults.multisig.v1.Proposal.execute":
+		panic(fmt.Errorf("field execute of message cosmos.accounts.defaults.multisig.v1.Proposal is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.Proposal"))
@@ -1724,6 +1679,8 @@ func (x *fastReflection_Proposal) NewField(fd protoreflect.FieldDescriptor) prot
 	case "cosmos.accounts.defaults.multisig.v1.Proposal.messages":
 		list := []*anypb.Any{}
 		return protoreflect.ValueOfList(&_Proposal_3_list{list: &list})
+	case "cosmos.accounts.defaults.multisig.v1.Proposal.execute":
+		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.Proposal"))
@@ -1807,6 +1764,9 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if x.Execute {
+			n += 2
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1835,6 +1795,16 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Execute {
+			i--
+			if x.Execute {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x20
 		}
 		if len(x.Messages) > 0 {
 			for iNdEx := len(x.Messages) - 1; iNdEx >= 0; iNdEx-- {
@@ -2013,6 +1983,26 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Execute", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Execute = bool(v != 0)
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2404,65 +2394,15 @@ func (x *fastReflection_MsgInitResponse) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var _ protoreflect.List = (*_MsgCreateProposal_3_list)(nil)
-
-type _MsgCreateProposal_3_list struct {
-	list *[][]byte
-}
-
-func (x *_MsgCreateProposal_3_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_MsgCreateProposal_3_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfBytes((*x.list)[i])
-}
-
-func (x *_MsgCreateProposal_3_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Bytes()
-	concreteValue := valueUnwrapped
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_MsgCreateProposal_3_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Bytes()
-	concreteValue := valueUnwrapped
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_MsgCreateProposal_3_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message MsgCreateProposal at list field Signatures as it is not of Message kind"))
-}
-
-func (x *_MsgCreateProposal_3_list) Truncate(n int) {
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_MsgCreateProposal_3_list) NewElement() protoreflect.Value {
-	var v []byte
-	return protoreflect.ValueOfBytes(v)
-}
-
-func (x *_MsgCreateProposal_3_list) IsValid() bool {
-	return x.list != nil
-}
-
 var (
-	md_MsgCreateProposal            protoreflect.MessageDescriptor
-	fd_MsgCreateProposal_signer     protoreflect.FieldDescriptor
-	fd_MsgCreateProposal_proposal   protoreflect.FieldDescriptor
-	fd_MsgCreateProposal_signatures protoreflect.FieldDescriptor
+	md_MsgCreateProposal          protoreflect.MessageDescriptor
+	fd_MsgCreateProposal_proposal protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_defaults_multisig_v1_multisig_proto_init()
 	md_MsgCreateProposal = File_cosmos_accounts_defaults_multisig_v1_multisig_proto.Messages().ByName("MsgCreateProposal")
-	fd_MsgCreateProposal_signer = md_MsgCreateProposal.Fields().ByName("signer")
 	fd_MsgCreateProposal_proposal = md_MsgCreateProposal.Fields().ByName("proposal")
-	fd_MsgCreateProposal_signatures = md_MsgCreateProposal.Fields().ByName("signatures")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgCreateProposal)(nil)
@@ -2530,21 +2470,9 @@ func (x *fastReflection_MsgCreateProposal) Interface() protoreflect.ProtoMessage
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgCreateProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Signer != "" {
-		value := protoreflect.ValueOfString(x.Signer)
-		if !f(fd_MsgCreateProposal_signer, value) {
-			return
-		}
-	}
 	if x.Proposal != nil {
 		value := protoreflect.ValueOfMessage(x.Proposal.ProtoReflect())
 		if !f(fd_MsgCreateProposal_proposal, value) {
-			return
-		}
-	}
-	if len(x.Signatures) != 0 {
-		value := protoreflect.ValueOfList(&_MsgCreateProposal_3_list{list: &x.Signatures})
-		if !f(fd_MsgCreateProposal_signatures, value) {
 			return
 		}
 	}
@@ -2563,12 +2491,8 @@ func (x *fastReflection_MsgCreateProposal) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgCreateProposal) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signer":
-		return x.Signer != ""
 	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.proposal":
 		return x.Proposal != nil
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signatures":
-		return len(x.Signatures) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgCreateProposal"))
@@ -2585,12 +2509,8 @@ func (x *fastReflection_MsgCreateProposal) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgCreateProposal) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signer":
-		x.Signer = ""
 	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.proposal":
 		x.Proposal = nil
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signatures":
-		x.Signatures = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgCreateProposal"))
@@ -2607,18 +2527,9 @@ func (x *fastReflection_MsgCreateProposal) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgCreateProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signer":
-		value := x.Signer
-		return protoreflect.ValueOfString(value)
 	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.proposal":
 		value := x.Proposal
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signatures":
-		if len(x.Signatures) == 0 {
-			return protoreflect.ValueOfList(&_MsgCreateProposal_3_list{})
-		}
-		listValue := &_MsgCreateProposal_3_list{list: &x.Signatures}
-		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgCreateProposal"))
@@ -2639,14 +2550,8 @@ func (x *fastReflection_MsgCreateProposal) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgCreateProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signer":
-		x.Signer = value.Interface().(string)
 	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.proposal":
 		x.Proposal = value.Message().Interface().(*Proposal)
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signatures":
-		lv := value.List()
-		clv := lv.(*_MsgCreateProposal_3_list)
-		x.Signatures = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgCreateProposal"))
@@ -2672,14 +2577,6 @@ func (x *fastReflection_MsgCreateProposal) Mutable(fd protoreflect.FieldDescript
 			x.Proposal = new(Proposal)
 		}
 		return protoreflect.ValueOfMessage(x.Proposal.ProtoReflect())
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signatures":
-		if x.Signatures == nil {
-			x.Signatures = [][]byte{}
-		}
-		value := &_MsgCreateProposal_3_list{list: &x.Signatures}
-		return protoreflect.ValueOfList(value)
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signer":
-		panic(fmt.Errorf("field signer of message cosmos.accounts.defaults.multisig.v1.MsgCreateProposal is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgCreateProposal"))
@@ -2693,14 +2590,9 @@ func (x *fastReflection_MsgCreateProposal) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgCreateProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signer":
-		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.proposal":
 		m := new(Proposal)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.signatures":
-		list := [][]byte{}
-		return protoreflect.ValueOfList(&_MsgCreateProposal_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgCreateProposal"))
@@ -2770,19 +2662,9 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Signer)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.Proposal != nil {
 			l = options.Size(x.Proposal)
 			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if len(x.Signatures) > 0 {
-			for _, b := range x.Signatures {
-				l = len(b)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2813,15 +2695,6 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Signatures) > 0 {
-			for iNdEx := len(x.Signatures) - 1; iNdEx >= 0; iNdEx-- {
-				i -= len(x.Signatures[iNdEx])
-				copy(dAtA[i:], x.Signatures[iNdEx])
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signatures[iNdEx])))
-				i--
-				dAtA[i] = 0x1a
-			}
-		}
 		if x.Proposal != nil {
 			encoded, err := options.Marshal(x.Proposal)
 			if err != nil {
@@ -2833,13 +2706,6 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 			i -= len(encoded)
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.Signer) > 0 {
-			i -= len(x.Signer)
-			copy(dAtA[i:], x.Signer)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signer)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -2894,38 +2760,6 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Signer = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Proposal", wireType)
 				}
 				var msglen int
@@ -2959,38 +2793,6 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Proposal); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signatures", wireType)
-				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Signatures = append(x.Signatures, make([]byte, postIndex-iNdEx))
-				copy(x.Signatures[len(x.Signatures)-1], dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -6818,19 +6620,15 @@ func (x *fastReflection_QueryProposalResponse) ProtoMethods() *protoiface.Method
 
 var (
 	md_MsgVote             protoreflect.MessageDescriptor
-	fd_MsgVote_signer      protoreflect.FieldDescriptor
 	fd_MsgVote_proposal_id protoreflect.FieldDescriptor
 	fd_MsgVote_vote        protoreflect.FieldDescriptor
-	fd_MsgVote_signature   protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_defaults_multisig_v1_multisig_proto_init()
 	md_MsgVote = File_cosmos_accounts_defaults_multisig_v1_multisig_proto.Messages().ByName("MsgVote")
-	fd_MsgVote_signer = md_MsgVote.Fields().ByName("signer")
 	fd_MsgVote_proposal_id = md_MsgVote.Fields().ByName("proposal_id")
 	fd_MsgVote_vote = md_MsgVote.Fields().ByName("vote")
-	fd_MsgVote_signature = md_MsgVote.Fields().ByName("signature")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgVote)(nil)
@@ -6898,12 +6696,6 @@ func (x *fastReflection_MsgVote) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgVote) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Signer != "" {
-		value := protoreflect.ValueOfString(x.Signer)
-		if !f(fd_MsgVote_signer, value) {
-			return
-		}
-	}
 	if x.ProposalId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.ProposalId)
 		if !f(fd_MsgVote_proposal_id, value) {
@@ -6914,16 +6706,6 @@ func (x *fastReflection_MsgVote) Range(f func(protoreflect.FieldDescriptor, prot
 		value := protoreflect.ValueOfBool(x.Vote)
 		if !f(fd_MsgVote_vote, value) {
 			return
-		}
-	}
-	if x.XSignature != nil {
-		switch o := x.XSignature.(type) {
-		case *MsgVote_Signature:
-			v := o.Signature
-			value := protoreflect.ValueOfBytes(v)
-			if !f(fd_MsgVote_signature, value) {
-				return
-			}
 		}
 	}
 }
@@ -6941,20 +6723,10 @@ func (x *fastReflection_MsgVote) Range(f func(protoreflect.FieldDescriptor, prot
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgVote) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signer":
-		return x.Signer != ""
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.proposal_id":
 		return x.ProposalId != uint64(0)
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.vote":
 		return x.Vote != false
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signature":
-		if x.XSignature == nil {
-			return false
-		} else if _, ok := x.XSignature.(*MsgVote_Signature); ok {
-			return true
-		} else {
-			return false
-		}
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgVote"))
@@ -6971,14 +6743,10 @@ func (x *fastReflection_MsgVote) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgVote) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signer":
-		x.Signer = ""
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.proposal_id":
 		x.ProposalId = uint64(0)
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.vote":
 		x.Vote = false
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signature":
-		x.XSignature = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgVote"))
@@ -6995,23 +6763,12 @@ func (x *fastReflection_MsgVote) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgVote) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signer":
-		value := x.Signer
-		return protoreflect.ValueOfString(value)
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.proposal_id":
 		value := x.ProposalId
 		return protoreflect.ValueOfUint64(value)
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.vote":
 		value := x.Vote
 		return protoreflect.ValueOfBool(value)
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signature":
-		if x.XSignature == nil {
-			return protoreflect.ValueOfBytes(nil)
-		} else if v, ok := x.XSignature.(*MsgVote_Signature); ok {
-			return protoreflect.ValueOfBytes(v.Signature)
-		} else {
-			return protoreflect.ValueOfBytes(nil)
-		}
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgVote"))
@@ -7032,15 +6789,10 @@ func (x *fastReflection_MsgVote) Get(descriptor protoreflect.FieldDescriptor) pr
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgVote) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signer":
-		x.Signer = value.Interface().(string)
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.proposal_id":
 		x.ProposalId = value.Uint()
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.vote":
 		x.Vote = value.Bool()
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signature":
-		cv := value.Bytes()
-		x.XSignature = &MsgVote_Signature{Signature: cv}
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgVote"))
@@ -7061,14 +6813,10 @@ func (x *fastReflection_MsgVote) Set(fd protoreflect.FieldDescriptor, value prot
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgVote) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signer":
-		panic(fmt.Errorf("field signer of message cosmos.accounts.defaults.multisig.v1.MsgVote is not mutable"))
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.proposal_id":
 		panic(fmt.Errorf("field proposal_id of message cosmos.accounts.defaults.multisig.v1.MsgVote is not mutable"))
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.vote":
 		panic(fmt.Errorf("field vote of message cosmos.accounts.defaults.multisig.v1.MsgVote is not mutable"))
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signature":
-		panic(fmt.Errorf("field signature of message cosmos.accounts.defaults.multisig.v1.MsgVote is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgVote"))
@@ -7082,14 +6830,10 @@ func (x *fastReflection_MsgVote) Mutable(fd protoreflect.FieldDescriptor) protor
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgVote) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signer":
-		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.proposal_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.accounts.defaults.multisig.v1.MsgVote.vote":
 		return protoreflect.ValueOfBool(false)
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote.signature":
-		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.multisig.v1.MsgVote"))
@@ -7103,14 +6847,6 @@ func (x *fastReflection_MsgVote) NewField(fd protoreflect.FieldDescriptor) proto
 // It panics if the oneof descriptor does not belong to this message.
 func (x *fastReflection_MsgVote) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgVote._signature":
-		if x.XSignature == nil {
-			return nil
-		}
-		switch x.XSignature.(type) {
-		case *MsgVote_Signature:
-			return x.Descriptor().Fields().ByName("signature")
-		}
 	default:
 		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.defaults.multisig.v1.MsgVote", d.FullName()))
 	}
@@ -7167,21 +6903,11 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Signer)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.ProposalId != 0 {
 			n += 1 + runtime.Sov(uint64(x.ProposalId))
 		}
 		if x.Vote {
 			n += 2
-		}
-		if x.Signature != nil {
-			l = len(x.Signature)
-			if l > 0 {
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -7212,23 +6938,6 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		switch x := x.XSignature.(type) {
-		case *MsgVote_Signature:
-			i -= len(x.Signature)
-			copy(dAtA[i:], x.Signature)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signature)))
-			i--
-			dAtA[i] = 0x22
-		}
-		if x.Signature != nil {
-			if len(x.Signature) > 0 {
-				i -= len(x.Signature)
-				copy(dAtA[i:], x.Signature)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signature)))
-				i--
-				dAtA[i] = 0x22
-			}
-		}
 		if x.Vote {
 			i--
 			if x.Vote {
@@ -7237,19 +6946,12 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0
 			}
 			i--
-			dAtA[i] = 0x18
+			dAtA[i] = 0x10
 		}
 		if x.ProposalId != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.ProposalId))
 			i--
-			dAtA[i] = 0x10
-		}
-		if len(x.Signer) > 0 {
-			i -= len(x.Signer)
-			copy(dAtA[i:], x.Signer)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signer)))
-			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x8
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -7301,38 +7003,6 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Signer = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
 				}
@@ -7351,7 +7021,7 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 3:
+			case 2:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Vote", wireType)
 				}
@@ -7371,40 +7041,6 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 					}
 				}
 				x.Vote = bool(v != 0)
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
-				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Signature = append(x.Signature[:0], dAtA[iNdEx:postIndex]...)
-				if x.Signature == nil {
-					x.Signature = []byte{}
-				}
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -7798,14 +7434,12 @@ func (x *fastReflection_MsgVoteResponse) ProtoMethods() *protoiface.Methods {
 
 var (
 	md_MsgExecuteProposal             protoreflect.MessageDescriptor
-	fd_MsgExecuteProposal_signer      protoreflect.FieldDescriptor
 	fd_MsgExecuteProposal_proposal_id protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_defaults_multisig_v1_multisig_proto_init()
 	md_MsgExecuteProposal = File_cosmos_accounts_defaults_multisig_v1_multisig_proto.Messages().ByName("MsgExecuteProposal")
-	fd_MsgExecuteProposal_signer = md_MsgExecuteProposal.Fields().ByName("signer")
 	fd_MsgExecuteProposal_proposal_id = md_MsgExecuteProposal.Fields().ByName("proposal_id")
 }
 
@@ -7874,12 +7508,6 @@ func (x *fastReflection_MsgExecuteProposal) Interface() protoreflect.ProtoMessag
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgExecuteProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Signer != "" {
-		value := protoreflect.ValueOfString(x.Signer)
-		if !f(fd_MsgExecuteProposal_signer, value) {
-			return
-		}
-	}
 	if x.ProposalId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.ProposalId)
 		if !f(fd_MsgExecuteProposal_proposal_id, value) {
@@ -7901,8 +7529,6 @@ func (x *fastReflection_MsgExecuteProposal) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgExecuteProposal) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.signer":
-		return x.Signer != ""
 	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.proposal_id":
 		return x.ProposalId != uint64(0)
 	default:
@@ -7921,8 +7547,6 @@ func (x *fastReflection_MsgExecuteProposal) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgExecuteProposal) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.signer":
-		x.Signer = ""
 	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.proposal_id":
 		x.ProposalId = uint64(0)
 	default:
@@ -7941,9 +7565,6 @@ func (x *fastReflection_MsgExecuteProposal) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgExecuteProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.signer":
-		value := x.Signer
-		return protoreflect.ValueOfString(value)
 	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.proposal_id":
 		value := x.ProposalId
 		return protoreflect.ValueOfUint64(value)
@@ -7967,8 +7588,6 @@ func (x *fastReflection_MsgExecuteProposal) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgExecuteProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.signer":
-		x.Signer = value.Interface().(string)
 	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.proposal_id":
 		x.ProposalId = value.Uint()
 	default:
@@ -7991,8 +7610,6 @@ func (x *fastReflection_MsgExecuteProposal) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgExecuteProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.signer":
-		panic(fmt.Errorf("field signer of message cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal is not mutable"))
 	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.proposal_id":
 		panic(fmt.Errorf("field proposal_id of message cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal is not mutable"))
 	default:
@@ -8008,8 +7625,6 @@ func (x *fastReflection_MsgExecuteProposal) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgExecuteProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.signer":
-		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.defaults.multisig.v1.MsgExecuteProposal.proposal_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
@@ -8081,10 +7696,6 @@ func (x *fastReflection_MsgExecuteProposal) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Signer)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.ProposalId != 0 {
 			n += 1 + runtime.Sov(uint64(x.ProposalId))
 		}
@@ -8120,14 +7731,7 @@ func (x *fastReflection_MsgExecuteProposal) ProtoMethods() *protoiface.Methods {
 		if x.ProposalId != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.ProposalId))
 			i--
-			dAtA[i] = 0x10
-		}
-		if len(x.Signer) > 0 {
-			i -= len(x.Signer)
-			copy(dAtA[i:], x.Signer)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signer)))
-			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x8
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -8179,38 +7783,6 @@ func (x *fastReflection_MsgExecuteProposal) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Signer = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
 				}
@@ -8692,19 +8264,14 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// algo defines the algorithm used for the multisig. default, secp256k1, bls12_381, etc.
-	// can't be changed after creation.
-	// If it's "default" then no signature verification is carried out on the multisig, we expect
-	// the signer of the MsgVote to be the member.
-	Algo      string `protobuf:"bytes,1,opt,name=algo,proto3" json:"algo,omitempty"`
-	Threshold int64  `protobuf:"varint,2,opt,name=threshold,proto3" json:"threshold,omitempty"`
-	Quorum    int64  `protobuf:"varint,3,opt,name=quorum,proto3" json:"quorum,omitempty"`
+	Threshold int64 `protobuf:"varint,1,opt,name=threshold,proto3" json:"threshold,omitempty"`
+	Quorum    int64 `protobuf:"varint,2,opt,name=quorum,proto3" json:"quorum,omitempty"`
 	// voting_period is the duration in seconds for the voting period.
-	VotingPeriod int64 `protobuf:"varint,4,opt,name=voting_period,json=votingPeriod,proto3" json:"voting_period,omitempty"`
+	VotingPeriod int64 `protobuf:"varint,3,opt,name=voting_period,json=votingPeriod,proto3" json:"voting_period,omitempty"`
 	// revote defines if members can change their vote.
-	Revote bool `protobuf:"varint,5,opt,name=revote,proto3" json:"revote,omitempty"`
+	Revote bool `protobuf:"varint,4,opt,name=revote,proto3" json:"revote,omitempty"`
 	// early_execution defines if the multisig can be executed before the voting period ends.
-	EarlyExecution bool `protobuf:"varint,6,opt,name=early_execution,json=earlyExecution,proto3" json:"early_execution,omitempty"`
+	EarlyExecution bool `protobuf:"varint,5,opt,name=early_execution,json=earlyExecution,proto3" json:"early_execution,omitempty"`
 }
 
 func (x *Config) Reset() {
@@ -8725,13 +8292,6 @@ func (*Config) ProtoMessage() {}
 // Deprecated: Use Config.ProtoReflect.Descriptor instead.
 func (*Config) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Config) GetAlgo() string {
-	if x != nil {
-		return x.Algo
-	}
-	return ""
 }
 
 func (x *Config) GetThreshold() int64 {
@@ -8777,6 +8337,8 @@ type Proposal struct {
 	Title    string       `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Summary  string       `protobuf:"bytes,2,opt,name=summary,proto3" json:"summary,omitempty"`
 	Messages []*anypb.Any `protobuf:"bytes,3,rep,name=messages,proto3" json:"messages,omitempty"`
+	// if true, the proposal will execute as soon as the quorum is reached.
+	Execute bool `protobuf:"varint,4,opt,name=execute,proto3" json:"execute,omitempty"`
 }
 
 func (x *Proposal) Reset() {
@@ -8820,6 +8382,13 @@ func (x *Proposal) GetMessages() []*anypb.Any {
 	return nil
 }
 
+func (x *Proposal) GetExecute() bool {
+	if x != nil {
+		return x.Execute
+	}
+	return false
+}
+
 // MsgInitResponse is the response returned after base account initialization.
 // This is empty.
 type MsgInitResponse struct {
@@ -8853,10 +8422,7 @@ type MsgCreateProposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Signer   string    `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
-	Proposal *Proposal `protobuf:"bytes,2,opt,name=proposal,proto3" json:"proposal,omitempty"`
-	// append optional signatures that will be converted into positive votes
-	Signatures [][]byte `protobuf:"bytes,3,rep,name=signatures,proto3" json:"signatures,omitempty"`
+	Proposal *Proposal `protobuf:"bytes,1,opt,name=proposal,proto3" json:"proposal,omitempty"`
 }
 
 func (x *MsgCreateProposal) Reset() {
@@ -8879,23 +8445,9 @@ func (*MsgCreateProposal) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *MsgCreateProposal) GetSigner() string {
-	if x != nil {
-		return x.Signer
-	}
-	return ""
-}
-
 func (x *MsgCreateProposal) GetProposal() *Proposal {
 	if x != nil {
 		return x.Proposal
-	}
-	return nil
-}
-
-func (x *MsgCreateProposal) GetSignatures() [][]byte {
-	if x != nil {
-		return x.Signatures
 	}
 	return nil
 }
@@ -9200,11 +8752,8 @@ type MsgVote struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Signer     string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
-	ProposalId uint64 `protobuf:"varint,2,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Vote       bool   `protobuf:"varint,3,opt,name=vote,proto3" json:"vote,omitempty"`
-	// signature is only required when the algo is not "default".
-	Signature []byte `protobuf:"bytes,4,opt,name=signature,proto3,oneof" json:"signature,omitempty"`
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Vote       bool   `protobuf:"varint,2,opt,name=vote,proto3" json:"vote,omitempty"`
 }
 
 func (x *MsgVote) Reset() {
@@ -9227,13 +8776,6 @@ func (*MsgVote) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *MsgVote) GetSigner() string {
-	if x != nil {
-		return x.Signer
-	}
-	return ""
-}
-
 func (x *MsgVote) GetProposalId() uint64 {
 	if x != nil {
 		return x.ProposalId
@@ -9246,13 +8788,6 @@ func (x *MsgVote) GetVote() bool {
 		return x.Vote
 	}
 	return false
-}
-
-func (x *MsgVote) GetSignature() []byte {
-	if x != nil {
-		return x.Signature
-	}
-	return nil
 }
 
 type MsgVoteResponse struct {
@@ -9286,8 +8821,7 @@ type MsgExecuteProposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Signer     string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
-	ProposalId uint64 `protobuf:"varint,2,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 }
 
 func (x *MsgExecuteProposal) Reset() {
@@ -9308,13 +8842,6 @@ func (*MsgExecuteProposal) ProtoMessage() {}
 // Deprecated: Use MsgExecuteProposal.ProtoReflect.Descriptor instead.
 func (*MsgExecuteProposal) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *MsgExecuteProposal) GetSigner() string {
-	if x != nil {
-		return x.Signer
-	}
-	return ""
 }
 
 func (x *MsgExecuteProposal) GetProposalId() uint64 {
@@ -9372,116 +8899,100 @@ var file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDesc = []byte{
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65,
 	0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e,
 	0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69,
-	0x67, 0x22, 0xb8, 0x01, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x12, 0x0a, 0x04,
-	0x61, 0x6c, 0x67, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x61, 0x6c, 0x67, 0x6f,
-	0x12, 0x1c, 0x0a, 0x09, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x16,
-	0x0a, 0x06, 0x71, 0x75, 0x6f, 0x72, 0x75, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06,
-	0x71, 0x75, 0x6f, 0x72, 0x75, 0x6d, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x6f, 0x74, 0x69, 0x6e, 0x67,
-	0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0c, 0x76,
-	0x6f, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x72,
-	0x65, 0x76, 0x6f, 0x74, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x72, 0x65, 0x76,
-	0x6f, 0x74, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x65, 0x61, 0x72, 0x6c, 0x79, 0x5f, 0x65, 0x78, 0x65,
-	0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x06, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0e, 0x65, 0x61,
-	0x72, 0x6c, 0x79, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x6c, 0x0a, 0x08,
-	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c,
-	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x18,
-	0x0a, 0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79,
-	0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73,
-	0x67, 0x49, 0x6e, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xbe, 0x01,
-	0x0a, 0x11, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x73,
-	0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x4a, 0x0a, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c,
-	0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x18,
-	0x03, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65,
-	0x73, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0xad,
-	0x01, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x26, 0x0a, 0x0f, 0x75, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x5f, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x73, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x0c, 0x52, 0x0d, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79,
-	0x73, 0x12, 0x25, 0x0a, 0x0e, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x5f, 0x77, 0x65, 0x69, 0x67,
-	0x68, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x04, 0x52, 0x0d, 0x75, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x73, 0x12, 0x44, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75,
-	0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e,
-	0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22, 0x19,
-	0x0a, 0x17, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69,
-	0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x0f, 0x0a, 0x0d, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x53, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x33, 0x0a, 0x15, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x53, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22,
-	0x0d, 0x0a, 0x0b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22, 0x90,
-	0x01, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65,
-	0x79, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x75, 0x62, 0x4b, 0x65, 0x79,
-	0x73, 0x12, 0x18, 0x0a, 0x07, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03,
-	0x28, 0x04, 0x52, 0x07, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x73, 0x12, 0x44, 0x0a, 0x06, 0x43,
-	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x63, 0x6f,
+	0x67, 0x22, 0xa4, 0x01, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x1c, 0x0a, 0x09,
+	0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x09, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x71, 0x75,
+	0x6f, 0x72, 0x75, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x71, 0x75, 0x6f, 0x72,
+	0x75, 0x6d, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x6f, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x70, 0x65, 0x72,
+	0x69, 0x6f, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0c, 0x76, 0x6f, 0x74, 0x69, 0x6e,
+	0x67, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x76, 0x6f, 0x74,
+	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x72, 0x65, 0x76, 0x6f, 0x74, 0x65, 0x12,
+	0x27, 0x0a, 0x0f, 0x65, 0x61, 0x72, 0x6c, 0x79, 0x5f, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x69,
+	0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0e, 0x65, 0x61, 0x72, 0x6c, 0x79, 0x45,
+	0x78, 0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x86, 0x01, 0x0a, 0x08, 0x50, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x73,
+	0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x75,
+	0x6d, 0x6d, 0x61, 0x72, 0x79, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+	0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x78, 0x65, 0x63, 0x75,
+	0x74, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74,
+	0x65, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5f, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x4a, 0x0a, 0x08, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e, 0x2e, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65,
 	0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e,
-	0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69,
-	0x67, 0x22, 0x30, 0x0a, 0x0d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
-	0x61, 0x6c, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x49, 0x64, 0x22, 0x63, 0x0a, 0x15, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x70,
-	0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4a, 0x0a, 0x08,
-	0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
-	0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73,
-	0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x08,
-	0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x22, 0xae, 0x01, 0x0a, 0x07, 0x4d, 0x73, 0x67,
-	0x56, 0x6f, 0x74, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06,
-	0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73,
-	0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f,
-	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x76, 0x6f, 0x74, 0x65, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x76, 0x6f, 0x74, 0x65, 0x12, 0x21, 0x0a, 0x09, 0x73,
-	0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00,
-	0x52, 0x09, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x88, 0x01, 0x01, 0x3a, 0x0b,
-	0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x42, 0x0c, 0x0a, 0x0a, 0x5f,
-	0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67,
-	0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x74, 0x0a, 0x12,
-	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
-	0x61, 0x6c, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x73, 0x69,
-	0x67, 0x6e, 0x65, 0x72, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
-	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x49, 0x64, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e,
-	0x65, 0x72, 0x22, 0x1c, 0x0a, 0x1a, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65,
-	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x42, 0xb0, 0x02, 0x0a, 0x28, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74,
-	0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x42, 0x0d, 0x4d,
-	0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x40,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
-	0x2f, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73,
-	0x69, 0x67, 0x2f, 0x76, 0x31, 0x3b, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x76, 0x31,
-	0xa2, 0x02, 0x04, 0x43, 0x41, 0x44, 0x4d, 0xaa, 0x02, 0x24, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c,
-	0x74, 0x73, 0x2e, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x56, 0x31, 0xca, 0x02,
-	0x24, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
-	0x5c, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x5c, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x73,
-	0x69, 0x67, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x30, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41,
+	0x76, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x08, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x22, 0xad, 0x01, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x26, 0x0a, 0x0f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x5f, 0x70, 0x75, 0x62, 0x5f, 0x6b,
+	0x65, 0x79, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x0d, 0x75, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x75, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x5f, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x04,
+	0x52, 0x0d, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x73, 0x12,
+	0x44, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69,
+	0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x43,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x0f, 0x0a, 0x0d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63,
+	0x65, 0x22, 0x33, 0x0a, 0x15, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x71, 0x75, 0x65, 0x6e,
+	0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65,
+	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x73, 0x65,
+	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x0d, 0x0a, 0x0b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22, 0x90, 0x01, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x19, 0x0a,
+	0x08, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x52,
+	0x07, 0x70, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x77, 0x65, 0x69, 0x67,
+	0x68, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x04, 0x52, 0x07, 0x77, 0x65, 0x69, 0x67, 0x68,
+	0x74, 0x73, 0x12, 0x44, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75,
+	0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x52, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22, 0x30, 0x0a, 0x0d, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a,
+	0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x22, 0x63, 0x0a, 0x15, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x4a, 0x0a, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73,
+	0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x22,
+	0x3e, 0x0a, 0x07, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72,
+	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x76,
+	0x6f, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x76, 0x6f, 0x74, 0x65, 0x22,
+	0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x35, 0x0a, 0x12, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65,
+	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70,
+	0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70,
+	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x22, 0x1c, 0x0a, 0x1a, 0x4d, 0x73, 0x67,
+	0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xb0, 0x02, 0x0a, 0x28, 0x63, 0x6f, 0x6d, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e,
+	0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69,
+	0x67, 0x2e, 0x76, 0x31, 0x42, 0x0d, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x40, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
+	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73,
+	0x2f, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2f, 0x76, 0x31, 0x3b, 0x6d, 0x75, 0x6c,
+	0x74, 0x69, 0x73, 0x69, 0x67, 0x76, 0x31, 0xa2, 0x02, 0x04, 0x43, 0x41, 0x44, 0x4d, 0xaa, 0x02,
+	0x24, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
+	0x2e, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x73,
+	0x69, 0x67, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x24, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41,
 	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73,
-	0x5c, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x28, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x44, 0x65, 0x66,
-	0x61, 0x75, 0x6c, 0x74, 0x73, 0x3a, 0x3a, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x5c, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x30, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x44,
+	0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x5c, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67,
+	0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x28, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x73, 0x3a, 0x3a, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x3a, 0x3a, 0x4d, 0x75,
+	0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -9742,7 +9253,6 @@ func file_cosmos_accounts_defaults_multisig_v1_multisig_proto_init() {
 			}
 		}
 	}
-	file_cosmos_accounts_defaults_multisig_v1_multisig_proto_msgTypes[13].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

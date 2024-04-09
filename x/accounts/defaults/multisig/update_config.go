@@ -6,7 +6,7 @@ import (
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 )
 
-// Authenticate implements the authentication flow of an abstracted base account.
+// UpdateConfig updates the configuration of the multisig account.
 func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfigRequest) (*v1.MsgUpdateConfigResponse, error) {
 	// set members
 	for i := range msg.UpdatePubKeys {

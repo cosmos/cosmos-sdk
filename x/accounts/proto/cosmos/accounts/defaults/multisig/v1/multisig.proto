@@ -16,8 +16,6 @@ message MsgInit {
 
   repeated uint64 weights = 2;
 
-  //map<bytes, uint64> members = 1; // OR???
-
   Config Config = 3;
 }
 
@@ -25,30 +23,27 @@ message MsgInit {
 // off-chain would send a tx directly, won't create a proposal.
 
 message Config {
-  // algo defines the algorithm used for the multisig. default, secp256k1, bls12_381, etc.
-  // can't be changed after creation.
-  // If it's "default" then no signature verification is carried out on the multisig, we expect
-  // the signer of the MsgVote to be the member.
-  string algo = 1;
+  int64 threshold = 1;
 
-  int64 threshold = 2;
-
-  int64 quorum = 3;
+  int64 quorum = 2;
 
   // voting_period is the duration in seconds for the voting period.
-  int64 voting_period = 4;
+  int64 voting_period = 3;
 
   // revote defines if members can change their vote.
-  bool revote = 5;
+  bool revote = 4;
 
   // early_execution defines if the multisig can be executed before the voting period ends.
-  bool early_execution = 6;
+  bool early_execution = 5;
 }
 
 message Proposal {
   string   title                        = 1;
   string   summary                      = 2;
   repeated google.protobuf.Any messages = 3;
+
+  // if true, the proposal will execute as soon as the quorum is reached.
+  bool execute = 4;
 }
 
 // MsgInitResponse is the response returned after base account initialization.
@@ -56,18 +51,7 @@ message Proposal {
 message MsgInitResponse {}
 
 message MsgCreateProposal {
-  // I don't need the signer
-  // option (cosmos.msg.v1.signer) = "signer";
-  // string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  Proposal proposal = 2;
-
-  // TODO: Could i use this for the default sign mode? So I get signatures produced with cosmos sdk keys and execute asap.
-  // append optional signatures that will be converted into positive votes
-  repeated bytes signatures = 3;
-
-  // if true, the proposal will execute as soon as the quorum is reached.
-  bool execute = 4;
+  Proposal proposal = 1;
 }
 
 // MsgUpdateConfigRequest is used to change the config or members.
@@ -115,23 +99,14 @@ message QueryProposalResponse {
 }
 
 message MsgVote {
-  // option (cosmos.msg.v1.signer) = "signer";
-
-  // string signer      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  uint64 proposal_id = 2;
-  bool   vote        = 3;
-
-  // signature is only required when the algo is not "default".
-  optional bytes signature = 4;
+  uint64 proposal_id = 1;
+  bool   vote        = 2;
 }
 
 message MsgVoteResponse {}
 
 message MsgExecuteProposal {
-  option (cosmos.msg.v1.signer) = "signer";
-
-  string signer      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  uint64 proposal_id = 2;
+  uint64 proposal_id = 1;
 }
 
 message MsgExecuteProposalResponse {}

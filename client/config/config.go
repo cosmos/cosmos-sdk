@@ -175,7 +175,7 @@ func getGRPCClient(grpcConfig GRPCConfig) (*grpc.ClientConn, error) {
 	}
 
 	dialOptions := []grpc.DialOption{transport}
-	grpcClient, err := grpc.Dial(grpcConfig.Address, dialOptions...)
+	grpcClient, err := grpc.NewClient(grpcConfig.Address, dialOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial gRPC server at %s: %w", grpcConfig.Address, err)
 	}

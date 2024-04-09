@@ -1,12 +1,14 @@
 package commitment
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"sync"
 
 	"github.com/stretchr/testify/suite"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	dbm "cosmossdk.io/store/v2/db"
@@ -34,16 +36,16 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	latestVersion := uint64(10)
 	kvCount := 10
 	for i := uint64(1); i <= latestVersion; i++ {
-		kvPairs := make(map[string]store.KVPairs)
+		kvPairs := make(map[string]corestore.KVPairs)
 		for _, storeKey := range storeKeys {
-			kvPairs[storeKey] = store.KVPairs{}
+			kvPairs[storeKey] = corestore.KVPairs{}
 			for j := 0; j < kvCount; j++ {
 				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
 				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
-				kvPairs[storeKey] = append(kvPairs[storeKey], store.KVPair{Key: key, Value: value})
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteBatch(store.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteBatch(corestore.NewChangesetWithPairs(kvPairs)))
 
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
@@ -79,13 +81,15 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 
 	streamReader, err := snapshots.NewStreamReader(chunks)
 	s.Require().NoError(err)
-	chStorage := make(chan *store.KVPair, 100)
+	chStorage := make(chan *corestore.StateChanges, 100)
 	leaves := make(map[string]string)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		for kv := range chStorage {
-			leaves[fmt.Sprintf("%s_%s", kv.StoreKey, kv.Key)] = string(kv.Value)
+			for _, actor := range kv.StateChanges {
+				leaves[fmt.Sprintf("%s_%s", kv.Actor, actor.Key)] = string(actor.Value)
+			}
 		}
 		wg.Done()
 	}()
@@ -110,7 +114,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	for _, storeInfo := range targetCommitInfo.StoreInfos {
 		matched := false
 		for _, latestStoreInfo := range cInfo.StoreInfos {
-			if storeInfo.Name == latestStoreInfo.Name {
+			if bytes.Equal(storeInfo.Name, latestStoreInfo.Name) {
 				s.Require().Equal(latestStoreInfo.GetHash(), storeInfo.GetHash())
 				matched = true
 			}
@@ -131,16 +135,16 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	latestVersion := uint64(100)
 	kvCount := 10
 	for i := uint64(1); i <= latestVersion; i++ {
-		kvPairs := make(map[string]store.KVPairs)
+		kvPairs := make(map[string]corestore.KVPairs)
 		for _, storeKey := range storeKeys {
-			kvPairs[storeKey] = store.KVPairs{}
+			kvPairs[storeKey] = corestore.KVPairs{}
 			for j := 0; j < kvCount; j++ {
 				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
 				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
-				kvPairs[storeKey] = append(kvPairs[storeKey], store.KVPair{Key: key, Value: value})
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteBatch(store.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteBatch(corestore.NewChangesetWithPairs(kvPairs)))
 
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)

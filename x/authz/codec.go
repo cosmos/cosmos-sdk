@@ -23,8 +23,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry
-func RegisterInterfaces(registry registry.LegacyRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	registrar.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgGrant{},
 		&MsgRevoke{},
 		&MsgExec{},
@@ -34,12 +34,12 @@ func RegisterInterfaces(registry registry.LegacyRegistry) {
 	// and authz depends on x/bank and x/staking in other places, these registrations are placed here
 	// to prevent a cyclic dependency.
 	// see: https://github.com/cosmos/cosmos-sdk/pull/16509
-	registry.RegisterInterface(
+	registrar.RegisterInterface(
 		"cosmos.authz.v1beta1.Authorization",
 		(*Authorization)(nil),
 		&GenericAuthorization{},
 		&bank.SendAuthorization{},
 		&staking.StakeAuthorization{},
 	)
-	msgservice.RegisterMsgServiceDesc(registry, MsgServiceDesc())
+	msgservice.RegisterMsgServiceDesc(registrar, MsgServiceDesc())
 }

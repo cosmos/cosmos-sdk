@@ -18,24 +18,26 @@ const (
 
 type batchOp struct {
 	action     batchAction
-	storeKey   string
+	storeKey   []byte
 	key, value []byte
 }
 
 type Batch struct {
+	db      *sql.DB
 	tx      *sql.Tx
 	ops     []batchOp
 	size    int
 	version uint64
 }
 
-func NewBatch(storage *sql.DB, version uint64) (*Batch, error) {
-	tx, err := storage.Begin()
+func NewBatch(db *sql.DB, version uint64) (*Batch, error) {
+	tx, err := db.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 
 	return &Batch{
+		db:      db,
 		tx:      tx,
 		ops:     make([]batchOp, 0),
 		version: version,
@@ -46,19 +48,27 @@ func (b *Batch) Size() int {
 	return b.size
 }
 
-func (b *Batch) Reset() {
+func (b *Batch) Reset() error {
 	b.ops = nil
 	b.ops = make([]batchOp, 0)
 	b.size = 0
+
+	tx, err := b.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	b.tx = tx
+	return nil
 }
 
-func (b *Batch) Set(storeKey string, key, value []byte) error {
+func (b *Batch) Set(storeKey, key, value []byte) error {
 	b.size += len(key) + len(value)
 	b.ops = append(b.ops, batchOp{action: batchActionSet, storeKey: storeKey, key: key, value: value})
 	return nil
 }
 
-func (b *Batch) Delete(storeKey string, key []byte) error {
+func (b *Batch) Delete(storeKey, key []byte) error {
 	b.size += len(key)
 	b.ops = append(b.ops, batchOp{action: batchActionDel, storeKey: storeKey, key: key})
 	return nil

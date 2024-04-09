@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,8 +17,8 @@ import (
 const gasCostPerIteration = uint64(10)
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
-func NewStakeAuthorization(allowed, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
-	allowedValidators, deniedValidators, err := validateAllowAndDenyValidators(allowed, denied)
+func NewStakeAuthorization(allowed, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin, valAddressCodec address.Codec) (*StakeAuthorization, error) {
+	allowedValidators, deniedValidators, err := validateAllowAndDenyValidators(allowed, denied, valAddressCodec)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +154,7 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 	}, nil
 }
 
-func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress) ([]string, []string, error) {
+func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress, valAddressCodec address.Codec) ([]string, []string, error) {
 	if len(allowed) == 0 && len(denied) == 0 {
 		return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("both allowed & deny list cannot be empty")
 	}
@@ -166,11 +167,15 @@ func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress) ([]string,
 	if len(allowed) > 0 {
 		foundAllowedValidators := make(map[string]bool, len(allowed))
 		for i, validator := range allowed {
-			if foundAllowedValidators[validator.String()] {
-				return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate allowed validator address: %s", validator.String())
+			valAddr, err := valAddressCodec.BytesToString(validator)
+			if err != nil {
+				return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("could not convert validator address")
 			}
-			foundAllowedValidators[validator.String()] = true
-			allowedValidators[i] = validator.String()
+			if foundAllowedValidators[valAddr] {
+				return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate allowed validator address: %s", valAddr)
+			}
+			foundAllowedValidators[valAddr] = true
+			allowedValidators[i] = valAddr
 		}
 		return allowedValidators, nil, nil
 	}
@@ -178,11 +183,15 @@ func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress) ([]string,
 	deniedValidators := make([]string, len(denied))
 	foundDeniedValidators := make(map[string]bool, len(denied))
 	for i, validator := range denied {
-		if foundDeniedValidators[validator.String()] {
-			return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate denied validator address: %s", validator.String())
+		valAddr, err := valAddressCodec.BytesToString(validator)
+		if err != nil {
+			return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("could not convert validator address")
 		}
-		foundDeniedValidators[validator.String()] = true
-		deniedValidators[i] = validator.String()
+		if foundDeniedValidators[valAddr] {
+			return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate denied validator address: %s", valAddr)
+		}
+		foundDeniedValidators[valAddr] = true
+		deniedValidators[i] = valAddr
 	}
 
 	return nil, deniedValidators, nil

@@ -68,7 +68,9 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		}
 
 		a.ModuleManager.Modules[name] = appModule
-		appModule.RegisterInterfaces(a.interfaceRegistry)
+		if mod, ok := appModule.(appmodule.HasRegisterInterfaces); ok {
+			mod.RegisterInterfaces(a.interfaceRegistry)
+		}
 
 		if mod, ok := appModule.(module.HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(a.amino)
@@ -187,9 +189,9 @@ func (a *App) PrepareCheckStater(ctx sdk.Context) {
 func (a *App) InitChainer(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InfoResponse, error) {
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return a.ModuleManager.InitGenesis(ctx, a.cdc, genesisState)
+	return a.ModuleManager.InitGenesis(ctx, genesisState)
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided

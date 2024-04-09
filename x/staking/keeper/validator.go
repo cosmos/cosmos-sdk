@@ -494,9 +494,24 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	rng := new(collections.Range[collections.Triple[uint64, time.Time, uint64]]).
 		EndInclusive(collections.Join3(uint64(29), blockTime, blockHeight))
 
-	return k.ValidatorQueue.Walk(ctx, rng, func(key collections.Triple[uint64, time.Time, uint64], value types.ValAddresses) (stop bool, err error) {
-		return false, k.unbondMatureValidators(ctx, blockHeight, blockTime, key, value)
-	})
+	// get all the values before performing any delete operations
+	iter, err := k.ValidatorQueue.Iterate(ctx, rng)
+	if err != nil {
+		return err
+	}
+
+	kvs, err := iter.KeyValues()
+	if err != nil {
+		return err
+	}
+
+	for _, kv := range kvs {
+		if err := k.unbondMatureValidators(ctx, blockHeight, blockTime, kv.Key, kv.Value); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (k Keeper) unbondMatureValidators(

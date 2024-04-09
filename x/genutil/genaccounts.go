@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	authtypes "cosmossdk.io/x/auth/types"
 	authvesting "cosmossdk.io/x/auth/vesting/types"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -23,12 +24,18 @@ import (
 // and coins to be appended to the account already in the genesis.json file.
 func AddGenesisAccount(
 	cdc codec.Codec,
+	addressCodec address.Codec,
 	accAddr sdk.AccAddress,
 	appendAcct bool,
 	genesisFileURL, amountStr, vestingAmtStr string,
 	vestingStart, vestingEnd int64,
 	moduleName string,
 ) error {
+	addr, err := addressCodec.BytesToString(accAddr)
+	if err != nil {
+		return err
+	}
+
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)
@@ -42,7 +49,7 @@ func AddGenesisAccount(
 	// create concrete account type based on input parameters
 	var genAccount authtypes.GenesisAccount
 
-	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
+	balances := banktypes.Balance{Address: addr, Coins: coins.Sort()}
 	baseAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
 	if !vestingAmt.IsZero() {
@@ -96,12 +103,12 @@ func AddGenesisAccount(
 
 		genesisB := banktypes.GetGenesisStateFromAppState(cdc, appState)
 		for idx, acc := range genesisB.Balances {
-			if acc.Address != accAddr.String() {
+			if acc.Address != addr {
 				continue
 			}
 
 			updatedCoins := acc.Coins.Add(coins...)
-			bankGenState.Balances[idx] = banktypes.Balance{Address: accAddr.String(), Coins: updatedCoins.Sort()}
+			bankGenState.Balances[idx] = banktypes.Balance{Address: addr, Coins: updatedCoins.Sort()}
 			break
 		}
 	} else {
@@ -124,8 +131,10 @@ func AddGenesisAccount(
 		bankGenState.Balances = append(bankGenState.Balances, balances)
 	}
 
-	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
-
+	bankGenState.Balances, err = banktypes.SanitizeGenesisBalances(bankGenState.Balances, addressCodec)
+	if err != nil {
+		return fmt.Errorf("failed to sanitize genesis balance: %w", err)
+	}
 	bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 
 	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)

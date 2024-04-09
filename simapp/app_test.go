@@ -23,6 +23,7 @@ import (
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution"
+	"cosmossdk.io/x/epochs"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/gov"
@@ -34,7 +35,6 @@ import (
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -213,6 +213,7 @@ func TestRunMigrations(t *testing.T) {
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
 					"protocolpool": protocolpool.AppModule{}.ConsensusVersion(),
+					"epochs":       epochs.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
@@ -278,7 +279,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	vm, err := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	require.NoError(t, err)
 	for v, i := range app.ModuleManager.Modules {
-		if i, ok := i.(module.HasConsensusVersion); ok {
+		if i, ok := i.(appmodule.HasConsensusVersion); ok {
 			require.Equal(t, vm[v], i.ConsensusVersion())
 		}
 	}
@@ -313,8 +314,8 @@ func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
 
 func TestAddressCodecFactory(t *testing.T) {
 	var addrCodec address.Codec
-	var valAddressCodec runtime.ValidatorAddressCodec
-	var consAddressCodec runtime.ConsensusAddressCodec
+	var valAddressCodec address.ValidatorAddressCodec
+	var consAddressCodec address.ConsensusAddressCodec
 
 	err := depinject.Inject(
 		depinject.Configs(
@@ -340,8 +341,8 @@ func TestAddressCodecFactory(t *testing.T) {
 			depinject.Supply(
 				log.NewNopLogger(),
 				func() address.Codec { return customAddressCodec{} },
-				func() runtime.ValidatorAddressCodec { return customAddressCodec{} },
-				func() runtime.ConsensusAddressCodec { return customAddressCodec{} },
+				func() address.ValidatorAddressCodec { return customAddressCodec{} },
+				func() address.ConsensusAddressCodec { return customAddressCodec{} },
 			),
 		),
 		&addrCodec, &valAddressCodec, &consAddressCodec)

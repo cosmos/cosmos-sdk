@@ -9,8 +9,10 @@ import (
 
 	protoio "github.com/cosmos/gogoproto/io"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	internal "cosmossdk.io/store/v2/internal/conv"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
@@ -42,7 +44,7 @@ type CommitStore struct {
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
 	if pruneOpts == nil {
 		pruneOpts = store.DefaultPruneOptions()
 	}
@@ -50,19 +52,22 @@ func NewCommitStore(multiTrees map[string]Tree, db store.RawDB, pruneOpts *store
 	return &CommitStore{
 		logger:       logger,
 		db:           db,
-		multiTrees:   multiTrees,
+		multiTrees:   trees,
 		pruneOptions: pruneOpts,
 	}, nil
 }
 
-func (c *CommitStore) WriteBatch(cs *store.Changeset) error {
-	for storeKey, pairs := range cs.Pairs {
-		tree, ok := c.multiTrees[storeKey]
+func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
+	for _, pairs := range cs.Changes {
+
+		key := internal.UnsafeBytesToStr(pairs.Actor)
+
+		tree, ok := c.multiTrees[key]
 		if !ok {
-			return fmt.Errorf("store key %s not found in multiTrees", storeKey)
+			return fmt.Errorf("store key %s not found in multiTrees", key)
 		}
-		for _, kv := range pairs {
-			if kv.Value == nil {
+		for _, kv := range pairs.StateChanges {
+			if kv.Remove {
 				if err := tree.Remove(kv.Key); err != nil {
 					return err
 				}
@@ -78,8 +83,9 @@ func (c *CommitStore) WriteBatch(cs *store.Changeset) error {
 func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
+		bz := []byte(storeKey)
 		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name: storeKey,
+			Name: bz,
 			CommitID: proof.CommitID{
 				Version: version,
 				Hash:    tree.WorkingHash(),
@@ -210,7 +216,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 			}
 		}
 		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name:     storeKey,
+			Name:     []byte(storeKey),
 			CommitID: commitID,
 		})
 	}
@@ -244,8 +250,8 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 	return nil
 }
 
-func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	tree, ok := c.multiTrees[storeKey]
+func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
+	tree, ok := c.multiTrees[internal.UnsafeBytesToStr(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -270,8 +276,8 @@ func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]p
 	return []proof.CommitmentOp{commitOp, *storeCommitmentOp}, nil
 }
 
-func (c *CommitStore) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	tree, ok := c.multiTrees[storeKey]
+func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
+	tree, ok := c.multiTrees[internal.UnsafeBytesToStr(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -370,7 +376,7 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 }
 
 // Restore implements snapshotstypes.CommitSnapshotter.
-func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (snapshotstypes.SnapshotItem, error) {
+func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges) (snapshotstypes.SnapshotItem, error) {
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
@@ -395,8 +401,9 @@ loop:
 				}
 				importer.Close()
 			}
+
 			storeKey = item.Store.Name
-			tree := c.multiTrees[storeKey]
+			tree := c.multiTrees[item.Store.Name]
 			if tree == nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", storeKey)
 			}
@@ -424,11 +431,18 @@ loop:
 				if node.Value == nil {
 					node.Value = []byte{}
 				}
+
+				key := []byte(storeKey)
 				// If the node is a leaf node, it will be written to the storage.
-				chStorage <- &store.KVPair{
-					Key:      node.Key,
-					Value:    node.Value,
-					StoreKey: storeKey,
+				chStorage <- &corestore.StateChanges{
+					Actor: key,
+					StateChanges: []corestore.KVPair{
+						{
+							Key:    node.Key,
+							Value:  node.Value,
+							Remove: false,
+						},
+					},
 				}
 			}
 			err := importer.Add(node)

@@ -68,13 +68,16 @@ func (s *KeeperTestSuite) SetupTest() {
 	stakingKeeper.EXPECT().BondDenom(ctx).Return("stake", nil).AnyTimes()
 	s.stakingKeeper = stakingKeeper
 
+	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
+	s.Require().NoError(err)
+
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
 		environment,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		authtypes.NewModuleAddress(types.GovModuleName).String(),
+		authority,
 	)
 	s.ctx = ctx
 	s.poolKeeper = poolKeeper

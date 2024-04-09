@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	_ module.HasName                  = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ module.HasName = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
 // AppModule implements an application module
@@ -47,6 +47,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	types.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
 }

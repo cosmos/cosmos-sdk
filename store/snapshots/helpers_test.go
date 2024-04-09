@@ -7,16 +7,15 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
-	"os"
 	"testing"
 	"time"
 
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -110,7 +109,7 @@ type mockCommitSnapshotter struct {
 }
 
 func (m *mockCommitSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair,
+	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges,
 ) (snapshotstypes.SnapshotItem, error) {
 	if format == 0 {
 		return snapshotstypes.SnapshotItem{}, snapshotstypes.ErrUnknownFormat
@@ -158,7 +157,7 @@ func (m *mockCommitSnapshotter) SupportedFormats() []uint32 {
 
 type mockStorageSnapshotter struct{}
 
-func (m *mockStorageSnapshotter) Restore(version uint64, chStorage <-chan *store.KVPair) error {
+func (m *mockStorageSnapshotter) Restore(version uint64, chStorage <-chan *corestore.StateChanges) error {
 	return nil
 }
 
@@ -171,7 +170,7 @@ func (m *mockErrorCommitSnapshotter) Snapshot(height uint64, protoWriter protoio
 }
 
 func (m *mockErrorCommitSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair,
+	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges,
 ) (snapshotstypes.SnapshotItem, error) {
 	return snapshotstypes.SnapshotItem{}, errors.New("mock restore error")
 }
@@ -235,7 +234,7 @@ func (m *hungCommitSnapshotter) Snapshot(height uint64, protoWriter protoio.Writ
 }
 
 func (m *hungCommitSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair,
+	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges,
 ) (snapshotstypes.SnapshotItem, error) {
 	panic("not implemented")
 }
@@ -287,17 +286,4 @@ func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadR
 	}
 	// finalize restoration
 	return nil
-}
-
-// GetTempDir returns a writable temporary director for the test to use.
-func GetTempDir(tb testing.TB) string {
-	tb.Helper()
-	// os.MkDir() is used instead of testing.T.TempDir()
-	// see https://github.com/cosmos/cosmos-sdk/pull/8475 and
-	// https://github.com/cosmos/cosmos-sdk/pull/10341 for
-	// this change's rationale.
-	tempdir, err := os.MkdirTemp("", "")
-	require.NoError(tb, err)
-	tb.Cleanup(func() { _ = os.RemoveAll(tempdir) })
-	return tempdir
 }

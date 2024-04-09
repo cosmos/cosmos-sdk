@@ -49,6 +49,7 @@ func MigrateStore(ctx context.Context, storeService corestoretypes.KVStoreServic
 	if err != nil {
 		return fmt.Errorf("failed to get gov params: %w", err)
 	}
+	govParams.ExpeditedQuorum = govParams.Quorum
 
 	defaultParams := v1.DefaultParams()
 	govParams.YesQuorum = defaultParams.YesQuorum

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
@@ -57,7 +57,7 @@ type ResponseQuery struct {
 	Index     int64
 	Key       []byte
 	Value     []byte
-	ProofOps  *crypto.ProofOps
+	ProofOps  *cmtprotocrypto.ProofOps
 	Height    int64
 	Codespace string
 }

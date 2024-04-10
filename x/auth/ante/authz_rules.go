@@ -19,7 +19,8 @@ func (az AuthzDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, n
 	for _, msg := range msgs {
 		// Check if the message is an authorization message
 		if authzMsg, ok := msg.(*authztypes.MsgGrant); ok {
-			authz, err := authzMsg.Grant.GetAuthorization()
+
+			authz, err := authzMsg.GetAuthorization()
 			if err != nil {
 				return ctx, err
 			}

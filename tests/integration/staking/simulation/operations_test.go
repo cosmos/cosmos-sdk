@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -33,6 +32,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"

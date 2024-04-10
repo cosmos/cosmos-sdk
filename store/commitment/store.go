@@ -44,7 +44,12 @@ type CommitStore struct {
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(
+	trees map[string]Tree,
+	db store.RawDB,
+	pruneOpts *store.PruneOptions,
+	logger log.Logger,
+) (*CommitStore, error) {
 	if pruneOpts == nil {
 		pruneOpts = store.DefaultPruneOptions()
 	}
@@ -376,7 +381,12 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 }
 
 // Restore implements snapshotstypes.CommitSnapshotter.
-func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges) (snapshotstypes.SnapshotItem, error) {
+func (c *CommitStore) Restore(
+	version uint64,
+	format uint32,
+	protoReader protoio.Reader,
+	chStorage chan<- *corestore.StateChanges,
+) (snapshotstypes.SnapshotItem, error) {
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem

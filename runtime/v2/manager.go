@@ -2,9 +2,13 @@ package runtime
 
 import (
 	"context"
+	"cosmossdk.io/core/genesis"
 	"encoding/json"
 	"errors"
 	"fmt"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"sort"
 
 	"github.com/golang/protobuf/proto"
@@ -140,9 +144,87 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-// InitGenesis performs init genesis functionality for modules.
-func (m *MM) InitGenesis() {
-	panic("implement me")
+// InitGenesisJSON performs init genesis functionality for modules.
+func (m *MM) InitGenesisJSON(
+	ctx context.Context,
+	genesisData map[string]json.RawMessage,
+) (*abci.ResponseInitChain, error) {
+	var validatorUpdates []appmodulev2.ValidatorUpdate
+	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
+	for _, moduleName := range m.config.InitGenesis {
+		if genesisData[moduleName] == nil {
+			continue
+		}
+
+		mod := m.modules[moduleName]
+		// we might get an adapted module, a native core API module or a legacy module
+		if module, ok := mod.(appmodule.HasGenesisAuto); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			// core API genesis
+			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
+			if err != nil {
+				return &abci.ResponseInitChain{}, err
+			}
+
+			err = module.InitGenesis(ctx, source)
+			if err != nil {
+				return &abci.ResponseInitChain{}, err
+			}
+		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
+				return &abci.ResponseInitChain{}, err
+			}
+		} else if module, ok := mod.(appmodulev2.HasABCIGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
+			if err != nil {
+				return &abci.ResponseInitChain{}, err
+			}
+
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
+					return &abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
+				}
+				validatorUpdates = moduleValUpdates
+			}
+		}
+	}
+
+	// a chain must initialize with a non-empty validator set
+	if len(validatorUpdates) == 0 {
+		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
+	}
+
+	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
+	for i, v := range validatorUpdates {
+		var pubkey cmtcryptoproto.PublicKey
+		switch v.PubKeyType {
+		case "ed25519":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Ed25519{
+					Ed25519: v.PubKey,
+				},
+			}
+		case "secp256k1":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
+					Secp256K1: v.PubKey,
+				},
+			}
+		}
+
+		cometValidatorUpdates[i] = abci.ValidatorUpdate{
+			PubKey: pubkey,
+			Power:  v.Power,
+		}
+	}
+
+	return &abci.ResponseInitChain{
+		Validators: cometValidatorUpdates,
+	}, nil
 }
 
 // ExportGenesis performs export genesis functionality for modules

@@ -263,6 +263,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 	if err != nil {
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
+	c.app.QueryWithState()
 
 	println(genesisState) // TODO: this needs to be committed to store as height 0.
 

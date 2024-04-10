@@ -1,7 +1,9 @@
 package appmanager
 
 import (
+	"bytes"
 	"context"
+	"cosmossdk.io/core/appmodule/v2"
 	"fmt"
 	"io"
 
@@ -22,6 +24,8 @@ type AppManager[T transaction.Tx] struct {
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
 	importState func(ctx context.Context, src map[string]io.Reader) error
 
+	importStatev2 func(ctx context.Context, src io.Reader) ([]*appmodule.ValidatorUpdate, error)
+
 	stf *stf.STF[T]
 }
 
@@ -29,31 +33,36 @@ func (a AppManager[T]) InitGenesis(
 	ctx context.Context,
 	headerInfo header.Info,
 	consensusMessages []transaction.Type,
-	initGenesisJSON []byte,
-) (corestore.WriterMap, error) {
-	// run block 0
-	// TODO: in an ideal world, genesis state is simply an initial state being applied
-	// unaware of what that state means in relation to every other, so here we can
-	// chain genesis
-	block0 := &appmanager.BlockRequest[T]{
-		Height:            uint64(headerInfo.Height),
-		Time:              headerInfo.Time,
-		Hash:              headerInfo.Hash,
-		ChainId:           headerInfo.ChainID,
-		AppHash:           headerInfo.AppHash,
-		Txs:               nil,
-		ConsensusMessages: consensusMessages,
-	}
-
-	_, genesisState, err := a.DeliverBlock(ctx, block0)
+	genesisStateBz []byte,
+) ([]*appmodule.ValidatorUpdate, error) {
+	validatorUpdates, err := a.importState(ctx, bytes.NewBuffer(genesisStateBz))
 	if err != nil {
 		return nil, err
 	}
 
+	// run block 0
+	// TODO: in an ideal world, genesis state is simply an initial state being applied
+	// unaware of what that state means in relation to every other, so here we can
+	// chain genesis
+	//block0 := &appmanager.BlockRequest[T]{
+	//	Height:            uint64(headerInfo.Height),
+	//	Time:              headerInfo.Time,
+	//	Hash:              headerInfo.Hash,
+	//	ChainId:           headerInfo.ChainID,
+	//	AppHash:           headerInfo.AppHash,
+	//	Txs:               nil,
+	//	ConsensusMessages: consensusMessages,
+	//}
+	//
+	//_, genesisState, err := a.DeliverBlock(ctx, block0)
+	//if err != nil {
+	//	return nil, err
+	//}
+
 	// TODO: ok so the problem we have now, the genesis is a mix of initial state
 	// then followed by txs from the genutil module.
 
-	return genesisState, nil
+	return validatorUpdates, nil
 }
 
 func (a AppManager[T]) DeliverBlock(

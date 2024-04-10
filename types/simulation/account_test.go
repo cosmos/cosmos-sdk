@@ -22,6 +22,7 @@ func TestRandomAccounts(t *testing.T) {
 		{"0-accounts", 0, 0},
 		{"1-accounts", 1, 1},
 		{"100-accounts", 100, 100},
+		{"-1-accounts", 0, 0},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -62,7 +63,8 @@ func TestRandomFees(t *testing.T) {
 		wantErr        bool
 	}{
 		{"0 coins", sdk.Coins{}, true, false},
-		{"0 coins", sdk.NewCoins(sdk.NewInt64Coin("aaa", 10), sdk.NewInt64Coin("bbb", 5)), false, false},
+		{"2 coins", sdk.NewCoins(sdk.NewInt64Coin("aaa", 10), sdk.NewInt64Coin("bbb", 5)), false, false},
+		{"1 coin with 0 amount", sdk.Coins{sdk.NewInt64Coin("ccc", 0)}, true, true},
 	}
 	for _, tt := range tests {
 		tt := tt

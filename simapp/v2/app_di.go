@@ -93,7 +93,7 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 ) *SimApp {
 	homeDir := appOpts.Get("home").(string) // TODO
-	scRawDb, err := db.NewGoLevelDB("application", homeDir, nil)
+	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(homeDir, "data"), nil)
 	if err != nil {
 		panic(err)
 	}

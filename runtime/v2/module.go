@@ -240,7 +240,7 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		BranchService:   nil, // TODO
 		EventService:    stf.NewEventService(),
 		GasService:      stf.NewGasMeterService(),
-		HeaderService:   nil, // TODO
+		HeaderService:   stf.HeaderService{},
 		KVStoreService:  kvService,
 		MemStoreService: memService,
 	}

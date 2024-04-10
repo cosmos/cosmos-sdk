@@ -23,3 +23,6 @@ type AccountKeeper interface {
 type FeegrantKeeper interface {
 	UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
 }
+
+type AuthzKeeper interface {
+}

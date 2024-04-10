@@ -287,11 +287,9 @@ func NewSimApp(
 	// add keepers
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), logger),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey], runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), logger),
 		signingCtx.AddressCodec(),
 		appCodec,
-		app.MsgServiceRouter(),
-		app.GRPCQueryRouter(),
 		appCodec.InterfaceRegistry(),
 		// TESTING: do not add
 		accountstd.AddAccount("counter", counter.NewAccount),

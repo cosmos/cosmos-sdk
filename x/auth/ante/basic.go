@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -20,18 +21,18 @@ import (
 // ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
 // is not dependent on application state.
 type ValidateBasicDecorator struct {
-	ak AccountKeeper
+	env appmodule.Environment
 }
 
-func NewValidateBasicDecorator(ak AccountKeeper) ValidateBasicDecorator {
+func NewValidateBasicDecorator(env appmodule.Environment) ValidateBasicDecorator {
 	return ValidateBasicDecorator{
-		ak: ak,
+		env: env,
 	}
 }
 
 func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// no need to validate basic on recheck tx, call next antehandler
-	txService := vbd.ak.Environment().TransactionService
+	txService := vbd.env.TransactionService
 	if txService.ExecMode(ctx) == transaction.ExecModeReCheck {
 		return next(ctx, tx, false)
 	}

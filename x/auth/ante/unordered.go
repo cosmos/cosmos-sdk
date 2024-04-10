@@ -3,6 +3,7 @@ package ante
 import (
 	"crypto/sha256"
 
+	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
@@ -29,14 +30,14 @@ type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
 	maxUnOrderedTTL uint64
 	txManager       *unorderedtx.Manager
-	ak              AccountKeeper
+	env             appmodule.Environment
 }
 
-func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager, ak AccountKeeper) *UnorderedTxDecorator {
+func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager, env appmodule.Environment) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxUnOrderedTTL: maxTTL,
 		txManager:       m,
-		ak:              ak,
+		env:             env,
 	}
 }
 
@@ -68,7 +69,7 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
 	}
 
-	if d.ak.Environment().TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
+	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
 		// a new tx included in the block, add the hash to the unordered tx manager
 		d.txManager.Add(txHash, ttl)
 	}

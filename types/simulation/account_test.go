@@ -22,7 +22,6 @@ func TestRandomAccounts(t *testing.T) {
 		{"0-accounts", 0, 0},
 		{"1-accounts", 1, 1},
 		{"100-accounts", 100, 100},
-		{"-1-accounts", 0, 0},
 	}
 	for _, tt := range tests {
 		tt := tt

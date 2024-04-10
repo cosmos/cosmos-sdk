@@ -122,7 +122,7 @@ func TestRandomDecAmount(t *testing.T) {
 		{"max number is 1000", rand.New(rand.NewSource(1)), math.LegacyNewDec(1000), "1000.000000000000000000"},
 		{"max number is 531234567", rand.New(rand.NewSource(50)), math.LegacyNewDec(531234567), "531234567.000000000000000000"},
 		{"negative max number", rand.New(rand.NewSource(99)), math.LegacyNewDec(-10), "0.000000000000000000"},
-		{"too small max number", rand.New(rand.NewSource(50)), math.LegacyNewDec(0), "0.000000000000000000"},
+		{"max number is zero", rand.New(rand.NewSource(50)), math.LegacyNewDec(0), "0.000000000000000000"},
 	}
 	for _, tt := range tests {
 		tc := tt

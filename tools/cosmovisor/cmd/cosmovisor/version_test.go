@@ -5,6 +5,7 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/tools/cosmovisor"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
@@ -23,5 +24,5 @@ func TestVersionCommand_Error(t *testing.T) {
 	ctx := context.WithValue(context.Background(), log.ContextKey, logger)
 
 	require.Error(t, rootCmd.ExecuteContext(ctx))
-	require.Contains(t, out.String(), "DAEMON_NAME is not set")
+	require.Contains(t, out.String(), cosmovisor.ErrEmptyConfigENV.Error())
 }

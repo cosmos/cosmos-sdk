@@ -15,6 +15,8 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/pelletier/go-toml/v2"
+	"github.com/spf13/viper"
 )
 
 // environment variable names
@@ -42,26 +44,33 @@ const (
 	genesisDir  = "genesis"
 	upgradesDir = "upgrades"
 	currentLink = "current"
+
+	cfgFileName  = "config"
+	cfgExtension = "toml"
+)
+
+var (
+	ErrEmptyConfigENV = errors.New("config env variable not set or empty")
 )
 
 // Config is the information passed in to control the daemon
 type Config struct {
-	Home                     string
-	Name                     string
-	AllowDownloadBinaries    bool
-	DownloadMustHaveChecksum bool
-	RestartAfterUpgrade      bool
-	RestartDelay             time.Duration
-	ShutdownGrace            time.Duration
-	PollInterval             time.Duration
-	UnsafeSkipBackup         bool
-	DataBackupPath           string
-	PreupgradeMaxRetries     int
-	DisableLogs              bool
-	ColorLogs                bool
-	TimeFormatLogs           string
-	CustomPreupgrade         string
-	DisableRecase            bool
+	Home                     string        `toml:"DAEMON_HOME" mapstructure:"DAEMON_HOME"`
+	Name                     string        `toml:"DAEMON_NAME" mapstructure:"DAEMON_NAME"`
+	AllowDownloadBinaries    bool          `toml:"DAEMON_ALLOW_DOWNLOAD_BINARIES" mapstructure:"DAEMON_ALLOW_DOWNLOAD_BINARIES" default:"false"`
+	DownloadMustHaveChecksum bool          `toml:"DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM" mapstructure:"DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM" default:"false"`
+	RestartAfterUpgrade      bool          `toml:"DAEMON_RESTART_AFTER_UPGRADE" mapstructure:"DAEMON_RESTART_AFTER_UPGRADE" default:"true"`
+	RestartDelay             time.Duration `toml:"DAEMON_RESTART_DELAY" mapstructure:"DAEMON_RESTART_DELAY"`
+	ShutdownGrace            time.Duration `toml:"DAEMON_SHUTDOWN_GRACE" mapstructure:"DAEMON_SHUTDOWN_GRACE"`
+	PollInterval             time.Duration `toml:"DAEMON_POLL_INTERVAL" mapstructure:"DAEMON_POLL_INTERVAL" default:"300ms"`
+	UnsafeSkipBackup         bool          `toml:"UNSAFE_SKIP_BACKUP" mapstructure:"UNSAFE_SKIP_BACKUP" default:"false"`
+	DataBackupPath           string        `toml:"DAEMON_DATA_BACKUP_DIR" mapstructure:"DAEMON_DATA_BACKUP_DIR"`
+	PreUpgradeMaxRetries     int           `toml:"DAEMON_PREUPGRADE_MAX_RETRIES" mapstructure:"DAEMON_PREUPGRADE_MAX_RETRIES" default:"0"`
+	DisableLogs              bool          `toml:"COSMOVISOR_DISABLE_LOGS" mapstructure:"COSMOVISOR_DISABLE_LOGS" default:"false"`
+	ColorLogs                bool          `toml:"COSMOVISOR_COLOR_LOGS" mapstructure:"COSMOVISOR_COLOR_LOGS" default:"true"`
+	TimeFormatLogs           string        `toml:"COSMOVISOR_TIMEFORMAT_LOGS" mapstructure:"COSMOVISOR_TIMEFORMAT_LOGS" default:"kitchen"`
+	CustomPreUpgrade         string        `toml:"COSMOVISOR_CUSTOM_PREUPGRADE" mapstructure:"COSMOVISOR_CUSTOM_PREUPGRADE" default:""`
+	DisableRecase            bool          `toml:"COSMOVISOR_DISABLE_RECASE" mapstructure:"COSMOVISOR_DISABLE_RECASE" default:"false"`
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -145,6 +154,42 @@ func (cfg *Config) CurrentBin() (string, error) {
 	return binpath, nil
 }
 
+// GetConfigFromFile will read the configuration from the file at the given path.
+// It will return an error if the file does not exist or if the configuration is invalid.
+// If ENV variables are set, they will override the values in the file.
+func GetConfigFromFile(filePath string) (*Config, error) {
+	if filePath == "" {
+		return nil, ErrEmptyConfigENV
+	}
+
+	// ensure the file exist
+	if _, err := os.Stat(filePath); err != nil {
+		return nil, fmt.Errorf("config file does not exist: at %s : %w", filePath, err)
+	}
+
+	// read the configuration from the file
+	viper.SetConfigFile(filePath)
+	// load the env variables
+	// if the env variable is set, it will override the value provided by the config
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	cfg := &Config{}
+	if err := viper.Unmarshal(cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal configuration: %w", err)
+	}
+
+	errs := cfg.validate()
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	return cfg, nil
+}
+
 // GetConfigFromEnv will read the environmental variables into a config
 // and then validate it is reasonable
 func GetConfigFromEnv() (*Config, error) {
@@ -153,7 +198,7 @@ func GetConfigFromEnv() (*Config, error) {
 		Home:             os.Getenv(EnvHome),
 		Name:             os.Getenv(EnvName),
 		DataBackupPath:   os.Getenv(EnvDataBackupPath),
-		CustomPreupgrade: os.Getenv(EnvCustomPreupgrade),
+		CustomPreUpgrade: os.Getenv(EnvCustomPreupgrade),
 	}
 
 	if cfg.DataBackupPath == "" {
@@ -220,8 +265,8 @@ func GetConfigFromEnv() (*Config, error) {
 		}
 	}
 
-	envPreupgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
-	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
+	envPreUpgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
+	if cfg.PreUpgradeMaxRetries, err = strconv.Atoi(envPreUpgradeMaxRetriesVal); err != nil && envPreUpgradeMaxRetriesVal != "" {
 		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
 	}
 
@@ -395,12 +440,13 @@ func BooleanOption(name string, defaultVal bool) (bool, error) {
 	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
 }
 
-// checks and validates env option
+// TimeFormatOptionFromEnv checks and validates the time format option
 func TimeFormatOptionFromEnv(env, defaultVal string) (string, error) {
 	val, set := os.LookupEnv(env)
 	if !set {
 		return defaultVal, nil
 	}
+
 	switch val {
 	case "layout":
 		return time.Layout, nil
@@ -445,11 +491,11 @@ func (cfg Config) DetailString() string {
 		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
-		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
+		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreUpgradeMaxRetries)},
 		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
 		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
-		{EnvCustomPreupgrade, cfg.CustomPreupgrade},
+		{EnvCustomPreupgrade, cfg.CustomPreUpgrade},
 		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
 	}
 
@@ -478,4 +524,33 @@ func (cfg Config) DetailString() string {
 		fmt.Fprintf(&sb, dFmt, kv.name, kv.value)
 	}
 	return sb.String()
+}
+
+// Export exports the configuration to a file at the given path.
+func (cfg Config) Export(path string) (string, error) {
+	// if path is empty, use the default path
+	if path == "" {
+		path = filepath.Join(cfg.Root(), filepath.Join(cfgFileName+"."+cfgExtension))
+	}
+
+	// ensure the path has proper extension
+	if !strings.HasSuffix(path, cfgExtension) {
+		return "", fmt.Errorf("provided config file must have %s extension", cfgExtension)
+	}
+
+	// create the file
+	file, err := os.Create(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to create configuration file: %w", err)
+	}
+
+	defer file.Close()
+
+	// write the configuration to the file
+	err = toml.NewEncoder(file).Encode(cfg)
+	if err != nil {
+		return "", fmt.Errorf("failed to encode configuration: %w", err)
+	}
+
+	return path, nil
 }

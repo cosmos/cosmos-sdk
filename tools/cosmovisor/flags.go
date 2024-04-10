@@ -6,4 +6,6 @@ const (
 	FlagCosmovisorOnly    = "cosmovisor-only"
 	FlagForce             = "force"
 	FlagUpgradeHeight     = "upgrade-height"
+	FlagConfig            = "config"
+	FlagExportConfig      = "export-config"
 )

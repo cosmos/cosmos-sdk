@@ -1,14 +1,22 @@
 package main
 
 import (
-	"github.com/spf13/cobra"
+	"os"
 
 	"cosmossdk.io/tools/cosmovisor"
+	"github.com/spf13/cobra"
+)
+
+const (
+	cfgENV = "CONFIG"
 )
 
 var runCmd = &cobra.Command{
-	Use:                "run",
-	Short:              "Run an APP command.",
+	Use:   "run",
+	Short: "Run an APP command.",
+	Long: `Run an APP command. This command is intended to be used by the cosmovisor process manager.
+It will run the configured program and monitor it for upgrades.
+Initialise the cosmovisor configuration with the 'init' command.`,
 	SilenceUsage:       true,
 	DisableFlagParsing: true,
 	RunE: func(_ *cobra.Command, args []string) error {
@@ -18,7 +26,7 @@ var runCmd = &cobra.Command{
 
 // run runs the configured program with the given args and monitors it for upgrades.
 func run(args []string, options ...RunOption) error {
-	cfg, err := cosmovisor.GetConfigFromEnv()
+	cfg, err := cosmovisor.GetConfigFromFile(os.Getenv(cfgENV))
 	if err != nil {
 		return err
 	}

@@ -25,13 +25,19 @@ func NewAddUpgradeCmd() *cobra.Command {
 
 	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary / upgrade-info.json file")
 	addUpgrade.Flags().Int64(cosmovisor.FlagUpgradeHeight, 0, "define a height at which to upgrade the binary automatically (without governance proposal)")
+	addUpgrade.Flags().String(cosmovisor.FlagConfig, "", "path to cosmovisor config file")
 
 	return addUpgrade
 }
 
 // AddUpgrade adds upgrade info to manifest
 func AddUpgrade(cmd *cobra.Command, args []string) error {
-	cfg, err := cosmovisor.GetConfigFromEnv()
+	configPath, err := cmd.Flags().GetString(cosmovisor.FlagConfig)
+	if err != nil {
+		return fmt.Errorf("failed to get config flag: %w", err)
+	}
+
+	cfg, err := cosmovisor.GetConfigFromFile(configPath)
 	if err != nil {
 		return err
 	}

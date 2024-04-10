@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
@@ -15,14 +17,21 @@ import (
 	"cosmossdk.io/x/upgrade/plan"
 )
 
-var initCmd = &cobra.Command{
-	Use:          "init <path to executable>",
-	Short:        "Initialize a cosmovisor daemon home directory.",
-	Args:         cobra.ExactArgs(1),
-	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return InitializeCosmovisor(nil, args)
-	},
+func NewIntCmd() *cobra.Command {
+	var initCmd = &cobra.Command{
+		Use:          "init <path to executable>",
+		Short:        "Initialize a cosmovisor daemon home directory.",
+		Args:         cobra.ExactArgs(1),
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			mustNoError(viper.BindPFlags(cmd.Flags()))
+			return InitializeCosmovisor(nil, args)
+		},
+	}
+
+	initCmd.Flags().String(cosmovisor.FlagExportConfig, "", "path to export the configuration file to (default is <-home_path->/cosmovisor/config.toml")
+
+	return initCmd
 }
 
 // InitializeCosmovisor initializes the cosmovisor directories, current link, and initial executable.
@@ -88,12 +97,20 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 	}
 	logger.Info(fmt.Sprintf("the current symlink points to: %q", cur))
 
+	filePath, err := cfg.Export(viper.GetString(cosmovisor.FlagExportConfig))
+	if err != nil {
+		return fmt.Errorf("failed to export configuration: %w", err)
+	}
+
+	logger.Info(fmt.Sprintf("exported configuration to: %s", filePath))
+
 	return nil
 }
 
 // getConfigForInitCmd gets just the configuration elements needed to initialize cosmovisor.
 func getConfigForInitCmd() (*cosmovisor.Config, error) {
 	var errs []error
+
 	// Note: Not using GetConfigFromEnv here because that checks that the directories already exist.
 	// We also don't care about the rest of the configuration stuff in here.
 	cfg := &cosmovisor.Config{
@@ -105,19 +122,27 @@ func getConfigForInitCmd() (*cosmovisor.Config, error) {
 	if cfg.ColorLogs, err = cosmovisor.BooleanOption(cosmovisor.EnvColorLogs, true); err != nil {
 		errs = append(errs, err)
 	}
+
 	if cfg.TimeFormatLogs, err = cosmovisor.TimeFormatOptionFromEnv(cosmovisor.EnvTimeFormatLogs, time.Kitchen); err != nil {
 		errs = append(errs, err)
+	}
+
+	// if backup is not set, use the home directory
+	if cfg.DataBackupPath == "" {
+		cfg.DataBackupPath = cfg.Home
 	}
 
 	if len(cfg.Name) == 0 {
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvName))
 	}
+
 	switch {
 	case len(cfg.Home) == 0:
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvHome))
 	case !filepath.IsAbs(cfg.Home):
 		errs = append(errs, fmt.Errorf("%s must be an absolute path", cosmovisor.EnvHome))
 	}
+
 	if len(errs) > 0 {
 		return cfg, errors.Join(errs...)
 	}

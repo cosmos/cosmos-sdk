@@ -12,7 +12,7 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	rootCmd.AddCommand(
-		initCmd,
+		NewIntCmd(),
 		runCmd,
 		configCmd,
 		NewVersionCmd(),
@@ -20,4 +20,10 @@ func NewRootCmd() *cobra.Command {
 	)
 
 	return rootCmd
+}
+
+func mustNoError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

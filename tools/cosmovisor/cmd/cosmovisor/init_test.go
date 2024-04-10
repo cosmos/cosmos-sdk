@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -18,7 +20,10 @@ import (
 )
 
 const (
-	notset = " is not set"
+	notset            = " is not set"
+	cosmovisorDirName = "cosmovisor"
+
+	cfgFileWithExt = "config.toml"
 )
 
 type InitTestSuite struct {
@@ -79,6 +84,7 @@ func (s *InitTestSuite) clearEnv() *cosmovisorInitEnv {
 	for envVar := range rv.ToMap() {
 		rv.Set(envVar, os.Getenv(envVar))
 		s.Require().NoError(os.Unsetenv(envVar))
+		viper.Reset()
 	}
 	return &rv
 }
@@ -247,7 +253,7 @@ func (p *BufferedPipe) panicIfStarted(msg string) {
 func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, log.Logger) {
 	bufferedStdOut, err := StartNewBufferedPipe("stdout", os.Stdout)
 	s.Require().NoError(err, "creating stdout buffered pipe")
-	logger := log.NewLogger(bufferedStdOut, log.ColorOption(false), log.TimeFormatOption(time.RFC3339Nano)).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewLogger(bufferedStdOut, log.ColorOption(false), log.TimeFormatOption(time.RFC3339Nano)).With(log.ModuleKey, cosmovisorDirName)
 	return &bufferedStdOut, logger
 }
 
@@ -360,7 +366,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "pear",
 		}
-		genDir := filepath.Join(env.Home, "cosmovisor", "genesis")
+		genDir := filepath.Join(env.Home, cosmovisorDirName, "genesis")
 		genBin := filepath.Join(genDir, "bin")
 		require.NoError(t, os.MkdirAll(genDir, 0o755), "creating genesis directory")
 		require.NoError(t, copyFile(hwExe, genBin), "copying exe to genesis/bin")
@@ -380,7 +386,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		}
 		// Create the genesis bin executable path fully as a directory (instead of a file).
 		// That should get through all the other stuff, but error when EnsureBinary is called.
-		genBinExe := filepath.Join(env.Home, "cosmovisor", "genesis", "bin", env.Name)
+		genBinExe := filepath.Join(env.Home, cosmovisorDirName, "genesis", "bin", env.Name)
 		require.NoError(t, os.MkdirAll(genBinExe, 0o755))
 		expErr := fmt.Sprintf("%s is not a regular file", env.Name)
 		// Check the log messages just to make sure it's erroring where expecting.
@@ -416,7 +422,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "orange",
 		}
-		rootDir := filepath.Join(env.Home, "cosmovisor")
+		rootDir := filepath.Join(env.Home, cosmovisorDirName)
 		require.NoError(t, os.MkdirAll(rootDir, 0o755))
 		curLn := filepath.Join(rootDir, "current")
 		genDir := filepath.Join(rootDir, "genesis")
@@ -431,6 +437,22 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		bufferBz := buffer.Collect()
 		bufferStr := string(bufferBz)
 		assert.Contains(t, bufferStr, "checking on the current symlink and creating it if needed")
+	})
+
+	s.T().Run("flag export config file invalid extension", func(t *testing.T) {
+		testDir := t.TempDir()
+		env := &cosmovisorInitEnv{
+			Home: filepath.Join(testDir, "home"),
+			Name: "pineapple",
+		}
+
+		s.setEnv(t, env)
+		// setting an invalid extension for config file
+		viper.Set(cosmovisor.FlagExportConfig, filepath.Join(env.Home, cosmovisorDirName, "config.json"))
+		_, logger := s.NewCapturingLogger()
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+		err := InitializeCosmovisor(logger, []string{hwExe})
+		require.ErrorContains(t, err, "config file must have toml extension")
 	})
 
 	// Failure cases not tested:
@@ -465,8 +487,8 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "blank",
 		}
-		curLn := filepath.Join(env.Home, "cosmovisor", "current")
-		genBinDir := filepath.Join(env.Home, "cosmovisor", "genesis", "bin")
+		curLn := filepath.Join(env.Home, cosmovisorDirName, "current")
+		genBinDir := filepath.Join(env.Home, cosmovisorDirName, "genesis", "bin")
 		genBinExe := filepath.Join(genBinDir, env.Name)
 		expInLog := []string{
 			"checking on the genesis/bin directory",
@@ -476,6 +498,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("making sure %q is executable", genBinExe),
 			"checking on the current symlink and creating it if needed",
 			fmt.Sprintf("the current symlink points to: %q", genBinExe),
+			fmt.Sprintf("exported configuration to: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(s.T(), env)
@@ -508,7 +531,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "nocur",
 		}
-		rootDir := filepath.Join(env.Home, "cosmovisor")
+		rootDir := filepath.Join(env.Home, cosmovisorDirName)
 		genBinDir := filepath.Join(rootDir, "genesis", "bin")
 		genBinDirExe := filepath.Join(genBinDir, env.Name)
 		require.NoError(t, os.MkdirAll(genBinDir, 0o755), "making genesis bin dir")
@@ -528,6 +551,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("the %q file already exists", genBinDirExe),
 			fmt.Sprintf("making sure %q is executable", genBinDirExe),
 			fmt.Sprintf("the current symlink points to: %q", genBinDirExe),
+			fmt.Sprintf("exported configuration to: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(t, env)
@@ -548,7 +572,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "emptygen",
 		}
-		rootDir := filepath.Join(env.Home, "cosmovisor")
+		rootDir := filepath.Join(env.Home, cosmovisorDirName)
 		genBinDir := filepath.Join(rootDir, "genesis", "bin")
 		genBinExe := filepath.Join(genBinDir, env.Name)
 		require.NoError(t, os.MkdirAll(genBinDir, 0o755), "making genesis bin dir")
@@ -560,6 +584,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("copying executable into place: %q", genBinExe),
 			fmt.Sprintf("making sure %q is executable", genBinExe),
 			fmt.Sprintf("the current symlink points to: %q", genBinExe),
+			fmt.Sprintf("exported configuration to: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(t, env)
@@ -572,5 +597,47 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 		for _, exp := range expInLog {
 			assert.Contains(t, bufferStr, exp)
 		}
+	})
+
+	s.T().Run("flag export config use provide path", func(t *testing.T) {
+		testDir := s.T().TempDir()
+		env := &cosmovisorInitEnv{
+			Home: filepath.Join(testDir, "home"),
+			Name: "emptygen",
+		}
+
+		s.setEnv(t, env)
+		buffer, logger := s.NewCapturingLogger()
+
+		expectedPath := filepath.Join(env.Home, cfgFileWithExt)
+		// setting a path to export flag
+		viper.Set(cosmovisor.FlagExportConfig, expectedPath)
+		expectedInLog := fmt.Sprintf("exported configuration to: %s", expectedPath)
+
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+		err := InitializeCosmovisor(logger, []string{hwExe})
+		require.NoError(t, err, "calling InitializeCosmovisor")
+		bufferBz := buffer.Collect()
+		bufferStr := string(bufferBz)
+		assert.Contains(t, bufferStr, expectedInLog)
+	})
+
+	s.T().Run("flag export config use default path if not provided", func(t *testing.T) {
+		testDir := s.T().TempDir()
+		env := &cosmovisorInitEnv{
+			Home: filepath.Join(testDir, "home"),
+			Name: "emptygen",
+		}
+
+		s.setEnv(t, env)
+		buffer, logger := s.NewCapturingLogger()
+		// setting empty path to export flag
+		viper.Set(cosmovisor.FlagExportConfig, "")
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+		err := InitializeCosmovisor(logger, []string{hwExe})
+		require.NoError(t, err, "calling InitializeCosmovisor")
+		bufferBz := buffer.Collect()
+		bufferStr := string(bufferBz)
+		assert.Contains(t, bufferStr, fmt.Sprintf("exported configuration to: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)))
 	})
 }

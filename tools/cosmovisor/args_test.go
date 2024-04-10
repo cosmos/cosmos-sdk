@@ -412,7 +412,7 @@ func (s *argsTestSuite) TestDetailString() {
 		PollInterval:             pollInterval,
 		UnsafeSkipBackup:         unsafeSkipBackup,
 		DataBackupPath:           dataBackupPath,
-		PreupgradeMaxRetries:     preupgradeMaxRetries,
+		PreUpgradeMaxRetries:     preupgradeMaxRetries,
 	}
 
 	expectedPieces := []string{
@@ -477,11 +477,11 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			PollInterval:             time.Millisecond * time.Duration(interval),
 			UnsafeSkipBackup:         skipBackup,
 			DataBackupPath:           dataBackupPath,
-			PreupgradeMaxRetries:     preupgradeMaxRetries,
+			PreUpgradeMaxRetries:     preupgradeMaxRetries,
 			DisableLogs:              disableLogs,
 			ColorLogs:                colorLogs,
 			TimeFormatLogs:           timeFormatLogs,
-			CustomPreupgrade:         customPreUpgrade,
+			CustomPreUpgrade:         customPreUpgrade,
 			DisableRecase:            disableRecase,
 			ShutdownGrace:            time.Duration(shutdownGrace),
 		}
@@ -791,7 +791,7 @@ func BenchmarkDetailString(b *testing.B) {
 		AllowDownloadBinaries: true,
 		UnsafeSkipBackup:      true,
 		PollInterval:          450 * time.Second,
-		PreupgradeMaxRetries:  1e7,
+		PreUpgradeMaxRetries:  1e7,
 	}
 
 	b.ReportAllocs()

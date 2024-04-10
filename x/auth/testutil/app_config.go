@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	_ "cosmossdk.io/x/accounts"       // import as blank for app wiring
 	_ "cosmossdk.io/x/auth"           // import as blank for app wiring
 	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
 	_ "cosmossdk.io/x/auth/vesting"   // import as blank for app wiring
@@ -13,6 +14,7 @@ import (
 )
 
 var AppConfig = configurator.NewAppConfig(
+	configurator.AccountsModule(),
 	configurator.AuthModule(),
 	configurator.BankModule(),
 	configurator.VestingModule(),

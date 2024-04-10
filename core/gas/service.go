@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"math"
+
+	cosmossdk_io_math "cosmossdk.io/math"
 )
 
 // ErrOutOfGas must be used by GasMeter implementers to signal
@@ -19,6 +21,23 @@ type Gas = uint64
 
 // NoGasLimit signals that no gas limit must be applied.
 const NoGasLimit Gas = math.MaxUint64
+
+type DecCoins []DecCoin
+
+type DecCoin struct {
+	Denom  string
+	Amount cosmossdk_io_math.LegacyDec
+}
+
+// IsZero returns whether all coins are zero
+func (coins DecCoins) IsZero() bool {
+	for _, coin := range coins {
+		if !coin.Amount.IsZero() {
+			return false
+		}
+	}
+	return true
+}
 
 // Service represents a gas service which can retrieve and set a gas meter in a context.
 // gas.Service is a core API type that should be provided by the runtime module being used to
@@ -41,6 +60,8 @@ type Service interface {
 	WithBlockGasMeter(ctx context.Context, meter Meter) context.Context
 
 	GetGasConfig(ctx context.Context) GasConfig
+
+	MinGasPrices(ctx context.Context) DecCoins
 }
 
 // Meter represents a gas meter for modules consumption

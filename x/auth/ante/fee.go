@@ -16,7 +16,7 @@ import (
 
 // TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
 // the effective fee should be deducted later, and the priority should be returned in abci response.
-type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, error)
+type TxFeeChecker func(ctx context.Context, tx sdk.Tx, accountKeeper AccountKeeper) (sdk.Coins, error)
 
 // DeductFeeDecorator deducts fees from the fee payer. The fee payer is the fee granter (if specified) or first signer of the tx.
 // If the fee payer does not have the funds to pay for the fees, return an InsufficientFunds error.
@@ -58,7 +58,7 @@ func (dfd DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	var err error
 	fee := feeTx.GetFee()
 	if txService.ExecMode(ctx) != transaction.ExecModeSimulate {
-		fee, err = dfd.txFeeChecker(ctx, tx)
+		fee, err = dfd.txFeeChecker(ctx, tx, dfd.accountKeeper)
 		if err != nil {
 			return err
 		}

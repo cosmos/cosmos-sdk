@@ -34,6 +34,17 @@ func (g GasService) GetGasConfig(ctx context.Context) gas.GasConfig {
 	return gas.GasConfig(sdk.UnwrapSDKContext(ctx).KVGasConfig())
 }
 
+func (g GasService) MinGasPrices(ctx context.Context) gas.DecCoins {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	minGasPrice := sdkCtx.MinGasPrices()
+	txDecCoins := make(gas.DecCoins, len(minGasPrice))
+	for i, s := range minGasPrice {
+		txDecCoins[i].Amount = s.Amount
+		txDecCoins[i].Denom = s.Denom
+	}
+	return txDecCoins
+}
+
 // ______________________________________________________________________________________________
 // Gas Meter Wrappers
 // ______________________________________________________________________________________________

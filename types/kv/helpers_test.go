@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
+
 	"github.com/stretchr/testify/assert"
 )
 

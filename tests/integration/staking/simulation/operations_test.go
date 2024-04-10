@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -60,13 +61,13 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	sdk.DefaultPowerReduction = math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
-
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	s.r = rand.New(rand.NewSource(1))
 	accounts := simtypes.RandomAccounts(s.r, 4)
 
 	// create genesis accounts
 	senderPrivKey := secp256k1.GenPrivKey()
-	addr, err := s.accountKeeper.AddressCodec().BytesToString(senderPrivKey.PubKey().Address())
+	addr, err := ac.BytesToString(senderPrivKey.PubKey().Address())
 	require.NoError(s.T(), err)
 	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
 	accs := []simtestutil.GenesisAccount{
@@ -79,7 +80,7 @@ func (s *SimTestSuite) SetupTest() {
 	require.NoError(s.T(), err)
 	validator := cmttypes.NewValidator(cmtPk, 1)
 
-	startupCfg, err := simtestutil.DefaultStartUpConfig(s.accountKeeper.AddressCodec())
+	startupCfg, err := simtestutil.DefaultStartUpConfig(ac)
 	require.NoError(s.T(), err)
 	startupCfg.GenesisAccounts = accs
 	startupCfg.ValidatorSet = func() (*cmttypes.ValidatorSet, error) {

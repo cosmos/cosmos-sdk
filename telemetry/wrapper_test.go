@@ -5,50 +5,46 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
 )
 
-// TelemetrySuite is a struct that holds the setup for the telemetry tests.
-// It includes a mutex to ensure that tests that depend on the global state
-// do not run in parallel, which can cause race conditions and unpredictable results.
-type TelemetrySuite struct {
-	suite.Suite
-	mu sync.Mutex
+var mu sync.Mutex
+
+func initTelemetry(v bool) {
+	globalTelemetryEnabled = v
 }
 
-// SetupTest is called before each test to reset the global state to a known disabled state.
-// This ensures each test starts with the telemetry disabled
-func (suite *TelemetrySuite) SetupTest() {
+// Reset the global state to a known disabled state before each test.
+func setupTest(t *testing.T) {
+	mu.Lock() // Ensure no other test can modify global state at the same time.
+	defer mu.Unlock()
 	initTelemetry(false)
 }
 
 // TestNow tests the Now function when telemetry is enabled and disabled.
-func (suite *TelemetrySuite) TestNow() {
-	suite.mu.Lock()
-	defer suite.mu.Unlock()
+func TestNow(t *testing.T) {
+	setupTest(t) // Locks the mutex to avoid race condition.
 
 	initTelemetry(true)
 	telemetryTime := Now()
-	suite.NotEqual(time.Time{}, telemetryTime, "Now() should not return zero time when telemetry is enabled")
+	assert.NotEqual(t, time.Time{}, telemetryTime, "Now() should not return zero time when telemetry is enabled")
+
+	setupTest(t) // Reset the global state and lock the mutex again.
 
 	initTelemetry(false)
 	telemetryTime = Now()
-	suite.Equal(time.Time{}, telemetryTime, "Now() should return zero time when telemetry is disabled")
+	assert.Equal(t, time.Time{}, telemetryTime, "Now() should return zero time when telemetry is disabled")
 }
 
-// TestIsTelemetryEnabled tests the isTelemetryEnabled function.
-func (suite *TelemetrySuite) TestIsTelemetryEnabled() {
-	suite.mu.Lock()
-	defer suite.mu.Unlock()
+// TestIsTelemetryEnabled tests the IsTelemetryEnabled function.
+func TestIsTelemetryEnabled(t *testing.T) {
+	setupTest(t) // Locks the mutex to avoid race condition.
 
 	initTelemetry(true)
-	suite.True(isTelemetryEnabled(), "isTelemetryEnabled() should return true when globalTelemetryEnabled is set to true")
+	assert.True(t, IsTelemetryEnabled(), "IsTelemetryEnabled() should return true when globalTelemetryEnabled is set to true")
+
+	setupTest(t) // Reset the global state and lock the mutex again.
 
 	initTelemetry(false)
-	suite.False(isTelemetryEnabled(), "isTelemetryEnabled() should return false when globalTelemetryEnabled is set to false")
-}
-
-// TestTelemetrySuite initiates the test suite.
-func TestTelemetrySuite(t *testing.T) {
-	suite.Run(t, new(TelemetrySuite))
+	assert.False(t, IsTelemetryEnabled(), "IsTelemetryEnabled() should return false when globalTelemetryEnabled is set to false")
 }

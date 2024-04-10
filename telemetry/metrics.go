@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
@@ -17,17 +16,11 @@ import (
 
 // globalTelemetryEnabled is a private variable that stores the telemetry enabled state.
 // It is set on initialization and does not change for the lifetime of the program.
-var globalTelemetryEnabled atomic.Bool
+var globalTelemetryEnabled bool
 
-// initTelemetry sets the global variable based on the configuration.
-// It is called only once, at startup, to set the telemetry enabled state.
-func initTelemetry(enabled bool) {
-	globalTelemetryEnabled.Store(enabled)
-}
-
-// isTelemetryEnabled provides controlled access to check if telemetry is enabled.
-func isTelemetryEnabled() bool {
-	return globalTelemetryEnabled.Load()
+// IsTelemetryEnabled provides controlled access to check if telemetry is enabled.
+func IsTelemetryEnabled() bool {
+	return globalTelemetryEnabled
 }
 
 // globalLabels defines the set of global labels that will be applied to all
@@ -111,7 +104,7 @@ type GatherResponse struct {
 
 // New creates a new instance of Metrics
 func New(cfg Config) (_ *Metrics, rerr error) {
-	initTelemetry(cfg.Enabled)
+	globalTelemetryEnabled = cfg.Enabled
 	if !cfg.Enabled {
 		return nil, nil
 	}

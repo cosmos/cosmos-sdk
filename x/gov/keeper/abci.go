@@ -21,8 +21,7 @@ import (
 
 // EndBlocker is called every block.
 func (k Keeper) EndBlocker(ctx context.Context) error {
-	start := telemetry.Now()
-	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := k.Logger()
 	// delete dead proposals from store and returns theirs deposits.

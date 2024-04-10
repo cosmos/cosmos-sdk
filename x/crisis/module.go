@@ -117,12 +117,11 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 
 // InitGenesis performs genesis initialization for the crisis module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	start := telemetry.Now()
 	var genesisState types.GenesisState
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
+	telemetry.MeasureSince(telemetry.Now(), "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 	if !am.skipGenesisInvariants {

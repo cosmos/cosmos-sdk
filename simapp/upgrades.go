@@ -36,11 +36,11 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{
-				accounts.ModuleName,
-				protocolpooltypes.ModuleName,
+				accounts.StoreKey,
+				protocolpooltypes.StoreKey,
 			},
 			Deleted: []string{
-				crisistypes.ModuleName, // The SDK discontinued the crisis module in v0.51.0
+				crisistypes.StoreKey, // The SDK discontinued the crisis module in v0.51.0
 			},
 		}
 

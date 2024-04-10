@@ -55,8 +55,8 @@ func NewModuleManager(
 	if len(config.EndBlockers) == 0 {
 		config.EndBlockers = modulesName
 	}
-	if len(config.TxValidation) == 0 {
-		config.TxValidation = modulesName
+	if len(config.TxValidators) == 0 {
+		config.TxValidators = modulesName
 	}
 	if len(config.InitGenesis) == 0 {
 		config.InitGenesis = modulesName
@@ -236,12 +236,12 @@ func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error 
 }
 
 // TxValidators validates incoming transactions
-func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
+func (m *MM) TxValidators() func(ctx context.Context, tx transaction.Tx) error {
 	return func(ctx context.Context, tx transaction.Tx) error {
-		for _, moduleName := range m.config.TxValidation {
-			if module, ok := m.modules[moduleName].(appmodulev2.HasTxValidation[transaction.Tx]); ok {
+		for _, moduleName := range m.config.TxValidators {
+			if module, ok := m.modules[moduleName].(appmodulev2.HasTxValidator[transaction.Tx]); ok {
 				if err := module.TxValidator(ctx, tx); err != nil {
-					return fmt.Errorf("failed to run txvalidator for %s: %w", moduleName, err)
+					return fmt.Errorf("failed to run tx validator for %s: %w", moduleName, err)
 				}
 			}
 		}
@@ -355,10 +355,10 @@ func (m *MM) validateConfig() error {
 		return err
 	}
 
-	if err := m.assertNoForgottenModules("TxValidation", m.config.TxValidation, func(moduleName string) bool {
+	if err := m.assertNoForgottenModules("TxValidators", m.config.TxValidators, func(moduleName string) bool {
 		module := m.modules[moduleName]
-		_, hasTxValidation := module.(appmodulev2.HasTxValidation[transaction.Tx])
-		return !hasTxValidation
+		_, hasTxValidator := module.(appmodulev2.HasTxValidator[transaction.Tx])
+		return !hasTxValidator
 	}); err != nil {
 		return err
 	}

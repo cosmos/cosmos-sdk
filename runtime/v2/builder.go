@@ -72,7 +72,7 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 
 	// default tx validator
 	if a.txValidator == nil {
-		a.txValidator = a.app.moduleManager.TxValidation()
+		a.txValidator = a.app.moduleManager.TxValidators()
 	}
 
 	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {

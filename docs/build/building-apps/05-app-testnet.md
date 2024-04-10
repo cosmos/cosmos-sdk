@@ -195,8 +195,8 @@ Before we can run the testnet we must plug everything together.
 in `root.go`, in the `initRootCmd` function we add:
 
 ```diff
-  server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createMerlinAppAndExport, addModuleInitFlags)
-	++ server.AddTestnetCreatorCommand(rootCmd, simapp.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
+server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createMerlinAppAndExport)
++server.AddTestnetCreatorCommand(rootCmd, simapp.DefaultNodeHome, newTestnetApp)
 ```
 
 Next we will add a newTestnetApp helper function:

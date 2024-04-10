@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
-### Featureso0-
+### Features
 
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.

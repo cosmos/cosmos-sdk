@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
@@ -39,7 +40,7 @@ func (k Keeper) doExecuteMsgs(ctx context.Context, proposal group.Proposal, grou
 		return err
 	}
 
-	if err := ensureMsgAuthZ(msgs, groupPolicyAcc, k.cdc); err != nil {
+	if err := ensureMsgAuthZ(msgs, groupPolicyAcc, k.cdc, k.accKeeper.AddressCodec()); err != nil {
 		return err
 	}
 
@@ -53,7 +54,7 @@ func (k Keeper) doExecuteMsgs(ctx context.Context, proposal group.Proposal, grou
 
 // ensureMsgAuthZ checks that if a message requires signers that all of them
 // are equal to the given account address of group policy.
-func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Codec) error {
+func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Codec, addressCodec address.Codec) error {
 	for i := range msgs {
 		// In practice, GetMsgV1Signers should return a non-empty array without duplicates.
 		signers, _, err := cdc.GetMsgV1Signers(msgs[i])
@@ -65,7 +66,11 @@ func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Cod
 		// But here, we loop through all the signers just to be sure.
 		for _, acct := range signers {
 			if !bytes.Equal(groupPolicyAcc, acct) {
-				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), acct)
+				groupPolicyAddr, err := addressCodec.BytesToString(groupPolicyAcc)
+				if err != nil {
+					return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; error retrieving group policy address")
+				}
+				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAddr, acct)
 			}
 		}
 	}

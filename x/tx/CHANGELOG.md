@@ -33,11 +33,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* [#19786](https://github.com/cosmos/cosmos-sdk/pull/19786) Add bytes as string option to encoder.
+* [#19786](https://github.com/cosmos/cosmos-sdk/pull/19786)/[#19919](https://github.com/cosmos/cosmos-sdk/pull/19919) Add "inline_json" option to Amino JSON encoder.
 
 ### Improvements
 
 * [#19845](https://github.com/cosmos/cosmos-sdk/pull/19845) Use hybrid resolver instead of only protov2 registry
+
+### Bug Fixes
+
+* [#19955](https://github.com/cosmos/cosmos-sdk/pull/19955) Don't shadow Amino marshalling error messages
 
 ## v0.13.1
 

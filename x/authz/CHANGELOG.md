@@ -43,3 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Consensus Breaking Changes
 
 * [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist.
+
+### Bug Fixes
+
+* [#19874](https://github.com/cosmos/cosmos-sdk/pull/19923) Now when querying transaction events (cosmos.tx.v1beta1.Service/GetTxsEvent) the response will contains only UTF-8 characters

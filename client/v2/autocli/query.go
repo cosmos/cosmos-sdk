@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
@@ -14,6 +16,8 @@ import (
 
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a
@@ -181,6 +185,42 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		nanos := msg.Get(nanosField).Int()
 
 		_, err := fmt.Fprintf(w, `"%s"`, (time.Duration(seconds)*time.Second + (time.Duration(nanos) * time.Nanosecond)).String())
+		return err
+	}).DefineTypeEncoding("cosmos.base.v1beta1.DecCoin", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
+		var (
+			denomName  protoreflect.Name = "denom"
+			amountName protoreflect.Name = "amount"
+		)
+
+		fields := msg.Descriptor().Fields()
+		denomField := fields.ByName(denomName)
+		if denomField == nil {
+			return fmt.Errorf("expected denom field")
+		}
+
+		denom := msg.Get(denomField).String()
+
+		amountField := fields.ByName(amountName)
+		if amountField == nil {
+			return fmt.Errorf("expected amount field")
+		}
+
+		amount := msg.Get(amountField).String()
+		decimalPlace := len(amount) - math.LegacyPrecision
+		if decimalPlace > 0 {
+			amount = amount[:decimalPlace] + "." + amount[decimalPlace:]
+		} else if decimalPlace == 0 {
+			amount = "0." + amount
+		} else {
+			amount = "0." + strings.Repeat("0", -decimalPlace) + amount
+		}
+
+		amountDec, err := math.LegacyNewDecFromStr(amount)
+		if err != nil {
+			return fmt.Errorf("invalid amount: %s: %w", amount, err)
+		}
+
+		_, err = fmt.Fprintf(w, `"%s"`, sdk.NewDecCoinFromDec(denom, amountDec)) // TODO(@julienrbrt): Eventually remove this SDK dependency
 		return err
 	})
 }

@@ -398,7 +398,6 @@ func (c *Consensus[T]) FinalizeBlock(
 	if err != nil {
 		return nil, err
 	}
-	// TODO: re-enable after https://github.com/cosmos/cosmos-sdk/pull/19775 is merged
 	appHash, err := c.store.Commit(nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)

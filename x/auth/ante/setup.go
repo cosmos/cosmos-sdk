@@ -67,14 +67,14 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 		}
 	}()
 
-	return next(newCtx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(newCtx, tx, false)
 }
 
 // SetGasMeter returns a new context with a gas meter set from a given context.
 func SetGasMeter(ctx sdk.Context, gasLimit uint64) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
-	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.BlockHeight() == 0 {
+	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.BlockHeight() == 0 { // NOTE: using environment here breaks the API of SetGasMeter, an alternative must be found for server/v2. ref: https://github.com/cosmos/cosmos-sdk/issues/19640
 		return ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	}
 

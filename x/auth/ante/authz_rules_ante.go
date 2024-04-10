@@ -9,11 +9,11 @@ import (
 )
 
 type AuthzDecorator struct {
-	_ AuthzKeeper
+	azk AuthzKeeper
 }
 
 // AuthzDecorator checks the authorization message grants for some rules.
-func (az AuthzDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (azd AuthzDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	msgs := tx.GetMsgs()
 	for _, msg := range msgs {
 		// Check if the message is an authorization message
@@ -26,7 +26,12 @@ func (az AuthzDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, n
 
 			switch authzConverted := authz.(type) {
 			case *banktypes.SendAuthorization:
-				if checkSendAuthzRulesVoilated(authzConverted) {
+				rules, err := azd.azk.GetAuthzRules(ctx)
+				if err != nil {
+					return ctx, err
+				}
+
+				if checkSendAuthzRulesVoilated(authzMsg, authzConverted, rules.Send) {
 					return ctx, fmt.Errorf("authz rules are not meeting")
 				}
 
@@ -40,7 +45,16 @@ func (az AuthzDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, n
 	return next(ctx, tx, simulate)
 }
 
-func checkSendAuthzRulesVoilated(authz *banktypes.SendAuthorization) bool {
-	// more rules can be added here.
-	return authz.SpendLimit.IsAllGT(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)))
+func checkSendAuthzRulesVoilated(msgGrant *authztypes.MsgGrant, authz *banktypes.SendAuthorization, sendAuthzRules authztypes.SendAuthzRules) bool {
+	if authz.SpendLimit.IsAllGT(sendAuthzRules.SpendLimit) {
+		return true
+	}
+
+	for _, blockedRecipient := range sendAuthzRules.BlockedRecipients {
+		if msgGrant.Grantee == blockedRecipient {
+			return true
+		}
+	}
+
+	return false
 }

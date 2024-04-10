@@ -68,6 +68,38 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 	return grant, true
 }
 
+func (k Keeper) GetAuthzRules(ctx context.Context) (authz.AuthzRules, error) {
+	store := k.storeService.OpenKVStore(ctx)
+
+	bz, err := store.Get(AuthzRulesPrefix)
+	if err != nil {
+		return authz.AuthzRules{}, err
+	}
+
+	if bz == nil {
+		return authz.AuthzRules{}, sdkerrors.ErrNotFound.Wrap("nil value")
+	}
+
+	var authzRules authz.AuthzRules
+	err = k.cdc.Unmarshal(bz, &authzRules)
+	if err != nil {
+		return authz.AuthzRules{}, err
+	}
+
+	return authzRules, nil
+}
+
+func (k Keeper) SetAuthzRules(ctx context.Context, rules authz.AuthzRules) error {
+	store := k.storeService.OpenKVStore(ctx)
+
+	bz, err := k.cdc.Marshal(&rules)
+	if err != nil {
+		return err
+	}
+
+	return store.Set(AuthzRulesPrefix, bz)
+}
+
 func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)

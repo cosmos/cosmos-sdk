@@ -87,6 +87,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	}
 
 	startupCfg, err := simtestutil.DefaultStartUpConfig(cdctestutil.CodecOptions{}.GetAddressCodec())
+	require.NoError(t, err)
 	startupCfg.GenesisAccounts = genAccounts
 
 	app, err := simtestutil.SetupWithConfiguration(

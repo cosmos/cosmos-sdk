@@ -9,8 +9,7 @@ import (
 )
 
 type AuthzDecorator struct {
-	accountKeeper AccountKeeper
-	authzKeeper   AuthzKeeper
+	_ AuthzKeeper
 }
 
 // AuthzDecorator checks the authorization message grants for some rules.

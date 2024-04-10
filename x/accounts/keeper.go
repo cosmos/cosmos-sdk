@@ -37,19 +37,6 @@ var (
 	AccountByNumber = collections.NewPrefix(2)
 )
 
-// QueryRouter represents a router which can be used to route queries to the correct module.
-// It returns the handler given the message name, if multiple handlers are returned, then
-// it is up to the caller to choose which one to call.
-type QueryRouter interface {
-	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error
-}
-
-// MsgRouter represents a router which can be used to route messages to the correct module.
-type MsgRouter interface {
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
-	ResponseNameByMsgName(name string) string
-}
-
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
 	// GetMsgV1Signers returns the signers of the message.
@@ -66,8 +53,6 @@ func NewKeeper(
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
-	execRouter MsgRouter,
-	queryRouter QueryRouter,
 	ir InterfaceRegistry,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
@@ -75,9 +60,7 @@ func NewKeeper(
 	keeper := Keeper{
 		environment:      env,
 		addressCodec:     addressCodec,
-		msgRouter:        execRouter,
 		signerProvider:   signerProvider,
-		queryRouter:      queryRouter,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
@@ -103,9 +86,7 @@ type Keeper struct {
 	// deps coming from the runtime
 	environment      appmodule.Environment
 	addressCodec     address.Codec
-	msgRouter        MsgRouter // todo use env
 	signerProvider   SignerProvider
-	queryRouter      QueryRouter // todo use env
 	makeSendCoinsMsg coinsTransferMsgFunc
 
 	accounts map[string]implementation.Implementation
@@ -343,17 +324,11 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 // sendModuleMessageUntyped can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
 func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
-	// we need to fetch the response type from the request message type.
-	// this is because the response type is not known.
-	respName := k.msgRouter.ResponseNameByMsgName(implementation.MessageName(msg))
-	if respName == "" {
-		return nil, fmt.Errorf("could not find response type for message %T", msg)
-	}
-	// get response type
-	resp, err := implementation.FindMessageByName(respName)
+	resp, err := k.environment.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
+
 	// send the message
 	return resp, k.sendModuleMessage(ctx, sender, msg, resp)
 }
@@ -373,27 +348,14 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 	if !bytes.Equal(sender, wantSenders[0]) {
 		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	messageName := implementation.MessageName(msg)
-	handler := k.msgRouter.HybridHandlerByMsgName(messageName)
-	if handler == nil {
-		return fmt.Errorf("unknown message: %s", messageName)
-	}
-	return handler(ctx, msg, msgResp)
+	return k.environment.RouterService.MessageRouterService().InvokeTyped(ctx, msg, msgResp)
 }
 
 // queryModule is the entrypoint for an account to query a module.
 // It will try to find the query handler for the given query and execute it.
 // If multiple query handlers are found, it will return an error.
 func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementation.ProtoMsg) error {
-	queryName := implementation.MessageName(queryReq)
-	handlers := k.queryRouter.HybridHandlerByRequestName(queryName)
-	if len(handlers) == 0 {
-		return fmt.Errorf("unknown query: %s", queryName)
-	}
-	if len(handlers) > 1 {
-		return fmt.Errorf("multiple handlers for query: %s", queryName)
-	}
-	return handlers[0](ctx, queryReq, queryResp)
+	return k.environment.RouterService.QueryRouterService().InvokeTyped(ctx, queryReq, queryResp)
 }
 
 // maybeSendFunds will send the provided coins between the provided addresses, if amt

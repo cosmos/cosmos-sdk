@@ -9,13 +9,18 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -35,32 +40,53 @@ func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
 
 func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
 
-var _ InterfaceRegistry = (*interfaceRegistry)(nil)
-
-type interfaceRegistry struct{}
-
-func (i interfaceRegistry) RegisterInterface(string, any, ...protoiface.MessageV1) {}
-
-func (i interfaceRegistry) RegisterImplementations(any, ...protoiface.MessageV1) {}
-
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
+
+	ir := codectypes.NewInterfaceRegistry()
+	msgRouter := baseapp.NewMsgServiceRouter()
+	msgRouter.SetInterfaceRegistry(ir)
+	queryRouter := baseapp.NewGRPCQueryRouter()
+	queryRouter.SetInterfaceRegistry(ir)
+
+	ir.RegisterImplementations((*sdk.Msg)(nil),
+		&bankv1beta1.MsgSend{},
+		&bankv1beta1.MsgBurn{},
+		&bankv1beta1.MsgSetSendEnabled{},
+		&bankv1beta1.MsgMultiSend{},
+		&bankv1beta1.MsgUpdateParams{},
+	)
+	queryRouter.RegisterService(&bankv1beta1.Query_ServiceDesc, &bankQueryServer{})
+	msgRouter.RegisterService(&bankv1beta1.Msg_ServiceDesc, &bankMsgServer{})
+
 	ss, ctx := colltest.MockStore()
-	env := runtime.NewEnvironment(ss, log.NewNopLogger())
+	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithRouterService(
+		queryRouter,
+		msgRouter,
+	))
 	env.EventService = eventService{}
-	m, err := NewKeeper(nil, env, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
+	m, err := NewKeeper(nil, env, addressCodec{}, nil, ir, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }
 
-var _ QueryRouter = (*mockQuery)(nil)
+type bankQueryServer struct {
+	bankv1beta1.UnimplementedQueryServer
+}
 
-type mockQuery func(ctx context.Context, req, resp implementation.ProtoMsg) error
+func (b bankQueryServer) Balance(context.Context, *bankv1beta1.QueryBalanceRequest) (*bankv1beta1.QueryBalanceResponse, error) {
+	return &bankv1beta1.QueryBalanceResponse{Balance: &basev1beta1.Coin{
+		Denom:  "atom",
+		Amount: "1000",
+	}}, nil
+}
 
-func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error {
-	return []func(ctx context.Context, req, resp protoiface.MessageV1) error{func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return m(ctx, req, resp)
-	}}
+type bankMsgServer struct {
+	bankv1beta1.UnimplementedMsgServer
+}
+
+func (b bankMsgServer) Send(context.Context, *bankv1beta1.MsgSend) (*bankv1beta1.MsgSendResponse, error) {
+	return &bankv1beta1.MsgSendResponse{}, nil
 }
 
 var _ SignerProvider = (*mockSigner)(nil)
@@ -73,18 +99,4 @@ func (m mockSigner) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Mess
 		return nil, nil, err
 	}
 	return [][]byte{s}, nil, nil
-}
-
-var _ MsgRouter = (*mockExec)(nil)
-
-type mockExec func(ctx context.Context, msg, msgResp implementation.ProtoMsg) error
-
-func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
-	return func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return m(ctx, req, resp)
-	}
-}
-
-func (m mockExec) ResponseNameByMsgName(name string) string {
-	return name + "Response"
 }

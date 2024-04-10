@@ -1,7 +1,6 @@
 package accounts
 
 import (
-	"context"
 	"testing"
 
 	"github.com/cosmos/gogoproto/types"
@@ -16,7 +15,6 @@ func TestGenesis(t *testing.T) {
 		acc, err := NewTestAccount(deps)
 		return "test", acc, err
 	})
-	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error { return nil })
 	// we init two accounts of the same type
 
 	// we set counter to 10

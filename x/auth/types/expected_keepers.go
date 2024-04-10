@@ -15,5 +15,5 @@ type BankKeeper interface {
 
 // AccountsKeeper defines the contract for x/accounts APIs
 type AccountsKeeper interface {
-	GetAccountNumber(ctx context.Context, accountAddr []byte) (uint64, error)
+	IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool
 }

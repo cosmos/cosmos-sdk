@@ -156,7 +156,7 @@ state from each `KVStore` to disk and returning an application state Merkle root
 Queries can be performed to return state data along with associated state
 commitment proofs for both previous heights/versions and the current state root.
 Queries are routed based on store name, i.e. a module, along with other parameters
-which are defined in `abci.RequestQuery`.
+which are defined in `abci.QueryRequest`.
 
 The `rootmulti.Store` also provides primitives for pruning data at a given
 height/version from state storage. When a height is committed, the `rootmulti.Store`

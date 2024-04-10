@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
 	"cosmossdk.io/core/address"

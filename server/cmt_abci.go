@@ -28,7 +28,7 @@ func (w cometABCIWrapper) CheckTx(_ context.Context, req *abci.CheckTxRequest) (
 	return w.app.CheckTx(req)
 }
 
-func (w cometABCIWrapper) InitChain(_ context.Context, req *abci.InitChainRequest) (*abci.InitChainRequest, error) {
+func (w cometABCIWrapper) InitChain(_ context.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 	return w.app.InitChain(req)
 }
 

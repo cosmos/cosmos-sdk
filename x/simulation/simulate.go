@@ -37,7 +37,7 @@ func initChain(
 	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)
-	req := abci.RequestInitChain{
+	req := abci.InitChainRequest{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,

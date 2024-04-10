@@ -123,9 +123,9 @@ func RandomRequestFinalizeBlock(
 	blockHeight int64,
 	time time.Time,
 	proposer []byte,
-) *abci.RequestFinalizeBlock {
+) *abci.FinalizeBlockRequest {
 	if len(validators) == 0 {
-		return &abci.RequestFinalizeBlock{
+		return &abci.FinalizeBlockRequest{
 			Height:          blockHeight,
 			Time:            time,
 			ProposerAddress: proposer,
@@ -171,7 +171,7 @@ func RandomRequestFinalizeBlock(
 
 	// return if no past times
 	if len(pastTimes) == 0 {
-		return &abci.RequestFinalizeBlock{
+		return &abci.FinalizeBlockRequest{
 			Height:          blockHeight,
 			Time:            time,
 			ProposerAddress: proposer,
@@ -204,7 +204,7 @@ func RandomRequestFinalizeBlock(
 
 		evidence = append(evidence,
 			abci.Misbehavior{
-				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
+				Type:             abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
 				Time:             misbehaviorTime,
@@ -215,7 +215,7 @@ func RandomRequestFinalizeBlock(
 		event("begin_block", "evidence", "ok")
 	}
 
-	return &abci.RequestFinalizeBlock{
+	return &abci.FinalizeBlockRequest{
 		Height:          blockHeight,
 		Time:            time,
 		ProposerAddress: proposer,

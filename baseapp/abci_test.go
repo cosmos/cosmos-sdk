@@ -47,7 +47,7 @@ import (
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 
-	reqInfo := abci.RequestInfo{}
+	reqInfo := abci.InfoRequest{}
 	res, err := suite.baseApp.Info(&reqInfo)
 	require.NoError(t, err)
 
@@ -57,14 +57,25 @@ func TestABCI_Info(t *testing.T) {
 	require.Equal(t, t.Name(), res.GetData())
 	require.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, appHash, res.LastBlockAppHash)
-	require.Equal(t, suite.baseApp.AppVersion(), res.AppVersion)
+	appVersion, err := suite.baseApp.AppVersion(ctx)
+	require.NoError(t, err)
+	require.Equal(t, appVersion, res.AppVersion)
+
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+	require.NoError(t, err)
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
+	require.NoError(t, suite.baseApp.SetAppVersion(ctx, 1))
+	res, err = suite.baseApp.Info(&reqInfo)
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), res.AppVersion)
 }
 
 func TestABCI_First_block_Height(t *testing.T) {
 	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"))
 	app := suite.baseApp
 
-	_, err := app.InitChain(&abci.RequestInitChain{
+	_, err := app.InitChain(&abci.InitChainRequest{
 		ChainId:         "test-chain-id",
 		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}},
 		InitialHeight:   1,
@@ -89,23 +100,23 @@ func TestABCI_InitChain(t *testing.T) {
 
 	// set a value in the store on init chain
 	key, value := []byte("hello"), []byte("goodbye")
-	var initChainer sdk.InitChainer = func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
-		return &abci.ResponseInitChain{}, nil
+		return &abci.InitChainResponse{}, nil
 	}
 
-	query := abci.RequestQuery{
+	query := abci.QueryRequest{
 		Path: "/store/main/key",
 		Data: key,
 	}
 
 	// initChain is nil and chain ID is wrong - errors
-	_, err := app.InitChain(&abci.RequestInitChain{ChainId: "wrong-chain-id"})
+	_, err := app.InitChain(&abci.InitChainRequest{ChainId: "wrong-chain-id"})
 	require.Error(t, err)
 
 	// initChain is nil - nothing happens
-	_, err = app.InitChain(&abci.RequestInitChain{ChainId: "test-chain-id"})
+	_, err = app.InitChain(&abci.InitChainRequest{ChainId: "test-chain-id"})
 	require.NoError(t, err)
 	resQ, err := app.Query(context.TODO(), &query)
 	require.NoError(t, err)
@@ -119,7 +130,7 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, int64(0), app.LastBlockHeight())
 
-	initChainRes, err := app.InitChain(&abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
+	initChainRes, err := app.InitChain(&abci.InitChainRequest{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
 	require.NoError(t, err)
 
 	// The AppHash returned by a new chain is the sha256 hash of "".
@@ -138,7 +149,7 @@ func TestABCI_InitChain(t *testing.T) {
 	chainID = getCheckStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Hash:   initChainRes.AppHash,
 		Height: 1,
 	})
@@ -166,7 +177,7 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, value, resQ.Value)
 
 	// commit and ensure we can still query
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: app.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -182,7 +193,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
-		&abci.RequestInitChain{
+		&abci.InitChainRequest{
 			InitialHeight: 3,
 		},
 	)
@@ -199,16 +210,16 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
-		&abci.RequestInitChain{
+		&abci.InitChainRequest{
 			InitialHeight: 3,
 		},
 	)
 	require.NoError(t, err)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 4})
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 4})
 	require.Error(t, err, "invalid height: 4; expected: 3")
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 3})
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 3})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -254,13 +265,13 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	})
 
 	_, err := app.InitChain(
-		&abci.RequestInitChain{
+		&abci.InitChainRequest{
 			InitialHeight: 1,
 		},
 	)
 	require.NoError(t, err)
 
-	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 
 	require.Len(t, res.Events, 2)
@@ -288,24 +299,24 @@ func TestABCI_ExtendVote(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-		voteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
-		return &abci.ResponseExtendVote{VoteExtension: []byte(voteExt)}, nil
+	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
+		voteExt := fooStr + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
+		return &abci.ExtendVoteResponse{VoteExtension: []byte(voteExt)}, nil
 	})
 
-	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		// do some kind of verification here
 		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 		}
 
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	})
 
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	_, err := app.InitChain(
-		&abci.RequestInitChain{
+		&abci.InitChainRequest{
 			InitialHeight: 1,
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Abci: &cmtproto.ABCIParams{
@@ -317,51 +328,51 @@ func TestABCI_ExtendVote(t *testing.T) {
 	require.NoError(t, err)
 
 	// Votes not enabled yet
-	_, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 123, Hash: []byte("thehash")})
+	_, err = app.ExtendVote(context.Background(), &abci.ExtendVoteRequest{Height: 123, Hash: []byte("thehash")})
 	require.ErrorContains(t, err, "vote extensions are not enabled")
 
 	// First vote on the first enabled height
-	res, err := app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 200, Hash: []byte("thehash")})
+	res, err := app.ExtendVote(context.Background(), &abci.ExtendVoteRequest{Height: 200, Hash: []byte("thehash")})
 	require.NoError(t, err)
 	require.Len(t, res.VoteExtension, 20)
 
-	res, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 1000, Hash: []byte("thehash")})
+	res, err = app.ExtendVote(context.Background(), &abci.ExtendVoteRequest{Height: 1000, Hash: []byte("thehash")})
 	require.NoError(t, err)
 	require.Len(t, res.VoteExtension, 21)
 
 	// Error during vote extension should return an empty vote extension and no error
-	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
 		return nil, errors.New("some error")
 	})
-	res, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 1000, Hash: []byte("thehash")})
+	res, err = app.ExtendVote(context.Background(), &abci.ExtendVoteRequest{Height: 1000, Hash: []byte("thehash")})
 	require.NoError(t, err)
 	require.Len(t, res.VoteExtension, 0)
 
 	// Verify Vote Extensions
-	_, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 123, VoteExtension: []byte("1234567")})
+	_, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 123, VoteExtension: []byte("1234567")})
 	require.ErrorContains(t, err, "vote extensions are not enabled")
 
 	// First vote on the first enabled height
-	vres, err := app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
+	vres, err := app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT, vres.Status)
 
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT, vres.Status)
 
 	// Reject because it's just some random bytes
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT, vres.Status)
 
 	// Reject because the verification failed (no error)
-	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		return nil, errors.New("some error")
 	})
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT, vres.Status)
 }
 
 // TestABCI_OnlyVerifyVoteExtension makes sure we can call VerifyVoteExtension
@@ -371,19 +382,19 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		// do some kind of verification here
 		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 		}
 
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	})
 
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	_, err := app.InitChain(
-		&abci.RequestInitChain{
+		&abci.InitChainRequest{
 			InitialHeight: 1,
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Abci: &cmtproto.ABCIParams{
@@ -395,30 +406,30 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify Vote Extensions
-	_, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 123, VoteExtension: []byte("1234567")})
+	_, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 123, VoteExtension: []byte("1234567")})
 	require.ErrorContains(t, err, "vote extensions are not enabled")
 
 	// First vote on the first enabled height
-	vres, err := app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
+	vres, err := app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT, vres.Status)
 
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT, vres.Status)
 
 	// Reject because it's just some random bytes
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT, vres.Status)
 
 	// Reject because the verification failed (no error)
-	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		return nil, errors.New("some error")
 	})
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT, vres.Status)
 }
 
 func TestABCI_GRPCQuery(t *testing.T) {
@@ -431,7 +442,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, grpcQueryOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -440,7 +451,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	reqBz, err := req.Marshal()
 	require.NoError(t, err)
 
-	resQuery, err := suite.baseApp.Query(context.TODO(), &abci.RequestQuery{
+	resQuery, err := suite.baseApp.Query(context.TODO(), &abci.QueryRequest{
 		Data: reqBz,
 		Path: "/testpb.Query/SayHello",
 	})
@@ -448,12 +459,12 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	require.Equal(t, sdkerrors.ErrInvalidHeight.ABCICode(), resQuery.Code, resQuery)
 	require.Contains(t, resQuery.Log, "TestABCI_GRPCQuery is not ready; please wait for first block")
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: suite.baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
 
-	reqQuery := abci.RequestQuery{
+	reqQuery := abci.QueryRequest{
 		Data: reqBz,
 		Path: "/testpb.Query/SayHello",
 	}
@@ -469,29 +480,29 @@ func TestABCI_GRPCQuery(t *testing.T) {
 
 func TestABCI_P2PQuery(t *testing.T) {
 	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAddrPeerFilter(func(addrport string) *abci.ResponseQuery {
+		bapp.SetAddrPeerFilter(func(addrport string) *abci.QueryResponse {
 			require.Equal(t, "1.1.1.1:8000", addrport)
-			return &abci.ResponseQuery{Code: uint32(3)}
+			return &abci.QueryResponse{Code: uint32(3)}
 		})
 	}
 
 	idPeerFilterOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetIDPeerFilter(func(id string) *abci.ResponseQuery {
+		bapp.SetIDPeerFilter(func(id string) *abci.QueryResponse {
 			require.Equal(t, "testid", id)
-			return &abci.ResponseQuery{Code: uint32(4)}
+			return &abci.QueryResponse{Code: uint32(4)}
 		})
 	}
 
 	suite := NewBaseAppSuite(t, addrPeerFilterOpt, idPeerFilterOpt)
 
-	addrQuery := abci.RequestQuery{
+	addrQuery := abci.QueryRequest{
 		Path: "/p2p/filter/addr/1.1.1.1:8000",
 	}
 	res, err := suite.baseApp.Query(context.TODO(), &addrQuery)
 	require.NoError(t, err)
 	require.Equal(t, uint32(3), res.Code)
 
-	idQuery := abci.RequestQuery{
+	idQuery := abci.QueryRequest{
 		Path: "/p2p/filter/id/testid",
 	}
 	res, err = suite.baseApp.Query(context.TODO(), &idQuery)
@@ -512,7 +523,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	_, err := app.InitChain(&abci.RequestInitChain{
+	_, err := app.InitChain(&abci.InitChainRequest{
 		ConsensusParams: cp,
 	})
 	require.NoError(t, err)
@@ -541,7 +552,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	_, err := app.InitChain(&abci.RequestInitChain{
+	_, err := app.InitChain(&abci.InitChainRequest{
 		ConsensusParams: cp,
 	})
 	require.NoError(t, err)
@@ -568,7 +579,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
 
 	nTxs := int64(5)
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -578,7 +589,7 @@ func TestABCI_CheckTx(t *testing.T) {
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
-		r, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: txBytes})
+		r, err := suite.baseApp.CheckTx(&abci.CheckTxRequest{Tx: txBytes})
 		require.NoError(t, err)
 		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 		require.Empty(t, r.GetEvents())
@@ -591,7 +602,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.Equal(t, nTxs, storedCounter)
 
 	// if a block is committed, CheckTx state should be reset
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 		Hash:   []byte("hash"),
 	})
@@ -613,7 +624,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -637,7 +648,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 			txs = append(txs, txBytes)
 		}
 
-		res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 			Height: int64(blockN) + 1,
 			Txs:    txs,
 		})
@@ -663,7 +674,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -680,7 +691,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 		Txs:    [][]byte{txBytes},
 	})
@@ -712,7 +723,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	txBytes, err = suite.txConfig.TxEncoder()(builder.GetTx())
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 		Txs:    [][]byte{txBytes},
 	})
@@ -743,7 +754,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -772,7 +783,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		require.Equal(t, gasConsumed, gInfo.GasUsed)
 
 		// simulate by calling Query with encoded tx
-		query := abci.RequestQuery{
+		query := abci.QueryRequest{
 			Path: "/app/simulate",
 			Data: txBytes,
 		}
@@ -788,7 +799,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		require.Equal(t, result.Events, simRes.Result.Events)
 		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
 
-		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
+		_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: count})
 		require.NoError(t, err)
 		_, err = suite.baseApp.Commit()
 		require.NoError(t, err)
@@ -805,12 +816,11 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
-
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	require.NoError(t, err)
@@ -818,7 +828,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	// malformed transaction bytes
 	{
 		bz := []byte("example vote extension")
-		result, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		result, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 			Height: 1,
 			Txs:    [][]byte{bz},
 		})
@@ -833,7 +843,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		emptyTx := suite.txConfig.NewTxBuilder().GetTx()
 		bz, err := suite.txConfig.TxEncoder()(emptyTx)
 		require.NoError(t, err)
-		result, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		result, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 			Height: 1,
 			Txs:    [][]byte{bz},
 		})
@@ -951,12 +961,12 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	require.NoError(t, err)
@@ -993,7 +1003,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	}
 
 	// Deliver the txs
-	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 2,
 		Txs:    txs,
 	})
@@ -1043,7 +1053,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxGas: 100,
@@ -1052,7 +1062,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -1078,7 +1088,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		tx := tc.tx
 
 		// reset block gas
-		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
+		_, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: suite.baseApp.LastBlockHeight() + 1})
 		require.NoError(t, err)
 
 		// execute the transaction multiple times
@@ -1144,7 +1154,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxGas: 9,
@@ -1163,7 +1173,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	txBytes2, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: suite.baseApp.LastBlockHeight() + 1,
 		Txs:    [][]byte{txBytes, txBytes2},
 	})
@@ -1183,7 +1193,7 @@ func TestABCI_Query(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -1191,7 +1201,7 @@ func TestABCI_Query(t *testing.T) {
 	// NOTE: "/store/key1" tells us KVStore
 	// and the final "/key" says to use the data as the
 	// key in the given KVStore ...
-	query := abci.RequestQuery{
+	query := abci.QueryRequest{
 		Path: "/store/key1/key",
 		Data: key,
 	}
@@ -1214,7 +1224,7 @@ func TestABCI_Query(t *testing.T) {
 	bz, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 		Txs:    [][]byte{bz},
 	})
@@ -1328,7 +1338,7 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 		tc := tc
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-		_, err = tc.bapp.InitChain(&abci.RequestInitChain{
+		_, err := tc.bapp.InitChain(&abci.InitChainRequest{
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Evidence: &cmtproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
@@ -1358,7 +1368,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 		wasPrepareCheckStateCalled = true
 	})
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -1382,7 +1392,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 		wasPrecommiterCalled = true
 	})
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -1401,7 +1411,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -1410,9 +1420,9 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	reqCheckTx := abci.RequestCheckTx{
+	reqCheckTx := abci.CheckTxRequest{
 		Tx:   txBytes,
-		Type: abci.CheckTxType_New,
+		Type: abci.CHECK_TX_TYPE_CHECK,
 	}
 	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
@@ -1425,7 +1435,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	err = pool.Insert(sdk.Context{}, tx2)
 	require.NoError(t, err)
 
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
@@ -1437,17 +1447,17 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 		txBytes,
 		tx2Bytes,
 	}
-	reqProcessProposal := abci.RequestProcessProposal{
+	reqProcessProposal := abci.ProcessProposalRequest{
 		Txs:    reqProposalTxBytes[:],
 		Height: reqPrepareProposal.Height,
 	}
 
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 
 	// the same txs as in PrepareProposal
-	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: suite.baseApp.LastBlockHeight() + 1,
 		Txs:    reqProposalTxBytes[:],
 	})
@@ -1463,30 +1473,30 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	someKey := []byte("some-key")
 
 	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-			ctx.KVStore(capKey1).Set(someKey, []byte("foo"))
-			return &abci.ResponseInitChain{}, nil
+		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
+			ctx.KVStore(capKey1).Set(someKey, []byte(fooStr))
+			return &abci.InitChainResponse{}, nil
 		})
 	}
 
 	prepareOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 			value := ctx.KVStore(capKey1).Get(someKey)
 			// We should be able to access any state written in InitChain
-			require.Equal(t, "foo", string(value))
-			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
+			require.Equal(t, fooStr, string(value))
+			return &abci.PrepareProposalResponse{Txs: req.Txs}, nil
 		})
 	}
 
 	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		InitialHeight:   1,
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
 
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     1, // this value can't be 0
 	}
@@ -1495,50 +1505,50 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	require.Equal(t, 0, len(resPrepareProposal.Txs))
 
 	reqProposalTxBytes := [][]byte{}
-	reqProcessProposal := abci.RequestProcessProposal{
+	reqProcessProposal := abci.ProcessProposalRequest{
 		Txs:    reqProposalTxBytes,
 		Height: reqPrepareProposal.Height,
 	}
 
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 }
 
 func TestABCI_Proposals_WithVE(t *testing.T) {
 	someVoteExtension := []byte("some-vote-extension")
 
 	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-			return &abci.ResponseInitChain{}, nil
+		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
+			return &abci.InitChainResponse{}, nil
 		})
 	}
 
 	prepareOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 			// Inject the vote extension to the beginning of the proposal
 			txs := make([][]byte, len(req.Txs)+1)
 			txs[0] = someVoteExtension
 			copy(txs[1:], req.Txs)
 
-			return &abci.ResponsePrepareProposal{Txs: txs}, nil
+			return &abci.PrepareProposalResponse{Txs: txs}, nil
 		})
 
-		bapp.SetProcessProposal(func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		bapp.SetProcessProposal(func(ctx sdk.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
 			// Check that the vote extension is still there
 			require.Equal(t, someVoteExtension, req.Txs[0])
-			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+			return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT}, nil
 		})
 	}
 
 	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		InitialHeight:   1,
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
-
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	require.NoError(t, err)
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 100000,
 		Height:     1, // this value can't be 0
 	}
@@ -1546,17 +1556,17 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 
-	reqProcessProposal := abci.RequestProcessProposal{
+	reqProcessProposal := abci.ProcessProposalRequest{
 		Txs:    resPrepareProposal.Txs,
 		Height: reqPrepareProposal.Height,
 	}
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 
 	// Run finalize block and ensure that the vote extension is still there and that
 	// the proposal is accepted
-	result, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	result, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Txs:    resPrepareProposal.Txs,
 		Height: reqPrepareProposal.Height,
 	})
@@ -1578,7 +1588,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -1589,7 +1599,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 1500,
 		Height:     1,
 	}
@@ -1608,7 +1618,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -1617,7 +1627,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	err = pool.Insert(sdk.Context{}, tx)
 	require.NoError(t, err)
 
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
@@ -1632,7 +1642,7 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	// set max block gas limit to 99, this will allow 9 txs of 10 gas each.
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{MaxGas: 99},
 		},
@@ -1657,7 +1667,7 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 	}
 
 	// ensure we only select transactions that fit within the block gas limit
-	res, err := suite.baseApp.PrepareProposal(&abci.RequestPrepareProposal{
+	res, err := suite.baseApp.PrepareProposal(&abci.PrepareProposalRequest{
 		MaxTxBytes: 1_000_000, // large enough to ignore restriction
 		Height:     1,
 	})
@@ -1673,7 +1683,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	// set max block gas limit to 100
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{MaxGas: 100},
 		},
@@ -1696,7 +1706,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 	}
 
 	// ensure we only select transactions that fit within the block gas limit
-	res, err := suite.baseApp.PrepareProposal(&abci.RequestPrepareProposal{
+	res, err := suite.baseApp.PrepareProposal(&abci.PrepareProposalRequest{
 		MaxTxBytes: 1_000_000, // large enough to ignore restriction
 		Height:     1,
 	})
@@ -1714,7 +1724,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -1723,9 +1733,9 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	reqCheckTx := abci.RequestCheckTx{
+	reqCheckTx := abci.CheckTxRequest{
 		Tx:   txBytes,
-		Type: abci.CheckTxType_New,
+		Type: abci.CHECK_TX_TYPE_CHECK,
 	}
 	checkTxRes, err := suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
@@ -1738,7 +1748,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 2, pool.CountTx())
 
-	req := abci.RequestPrepareProposal{
+	req := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
@@ -1749,18 +1759,18 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 
 func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 	prepareOpt := func(app *baseapp.BaseApp) {
-		app.SetPrepareProposal(func(ctx sdk.Context, rpp *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		app.SetPrepareProposal(func(ctx sdk.Context, rpp *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 			panic(errors.New("test"))
 		})
 	}
 	suite := NewBaseAppSuite(t, prepareOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
 
-	req := abci.RequestPrepareProposal{
+	req := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
@@ -1790,7 +1800,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 			ctx = ctx.WithBlockHeight(req.Height).WithChainID(bapp.ChainID())
 			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
 			ctx = ctx.WithCometInfo(info)
@@ -1804,13 +1814,13 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 			if extsEnabled {
 				req.Txs = append(req.Txs, []byte("some-tx-that-does-something-from-votes"))
 			}
-			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
+			return &abci.PrepareProposalResponse{Txs: req.Txs}, nil
 		})
 	}
 
 	suite := NewBaseAppSuite(t, prepareOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		InitialHeight: 1,
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Abci: &cmtproto.ABCIParams{
@@ -1821,7 +1831,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	require.NoError(t, err)
 
 	// first test without vote extensions, no new txs should be added
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     1, // this value can't be 0
 	}
@@ -1853,7 +1863,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	extSig, err := privkey.Sign(bz)
 	require.NoError(t, err)
 
-	reqPrepareProposal = abci.RequestPrepareProposal{
+	reqPrepareProposal = abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     3, // this value can't be 0
 		LocalLastCommit: abci.ExtendedCommitInfo{
@@ -1876,7 +1886,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 
 	// now vote extensions but our sole voter doesn't reach majority
-	reqPrepareProposal = abci.RequestPrepareProposal{
+	reqPrepareProposal = abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     3, // this value can't be 0
 		LocalLastCommit: abci.ExtendedCommitInfo{
@@ -1901,21 +1911,21 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 
 func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	processOpt := func(app *baseapp.BaseApp) {
-		app.SetProcessProposal(func(ctx sdk.Context, rpp *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		app.SetProcessProposal(func(ctx sdk.Context, rpp *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
 			panic(errors.New("test"))
 		})
 	}
 	suite := NewBaseAppSuite(t, processOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
 
 	require.NotPanics(t, func() {
-		res, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
+		res, err := suite.baseApp.ProcessProposal(&abci.ProcessProposalRequest{Height: 1})
 		require.NoError(t, err)
-		require.Equal(t, res.Status, abci.ResponseProcessProposal_REJECT)
+		require.Equal(t, res.Status, abci.PROCESS_PROPOSAL_STATUS_REJECT)
 	})
 }
 
@@ -1927,31 +1937,31 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	someKey := []byte("some-key")
 
 	prepareOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 			// This key should not exist given that we reset the state on every call.
 			require.False(t, ctx.KVStore(capKey1).Has(someKey))
 			ctx.KVStore(capKey1).Set(someKey, someKey)
-			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
+			return &abci.PrepareProposalResponse{Txs: req.Txs}, nil
 		})
 	}
 
 	processOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetProcessProposal(func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		bapp.SetProcessProposal(func(ctx sdk.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
 			// This key should not exist given that we reset the state on every call.
 			require.False(t, ctx.KVStore(capKey1).Has(someKey))
 			ctx.KVStore(capKey1).Set(someKey, someKey)
-			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+			return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT}, nil
 		})
 	}
 
 	suite := NewBaseAppSuite(t, prepareOpt, processOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
 
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     2, // this value can't be 0
 	}
@@ -1965,7 +1975,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	}
 
 	reqProposalTxBytes := [][]byte{}
-	reqProcessProposal := abci.RequestProcessProposal{
+	reqProcessProposal := abci.ProcessProposalRequest{
 		Txs:    reqProposalTxBytes,
 		Height: 2,
 	}
@@ -1975,7 +1985,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 		require.NoError(t, err)
-		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+		require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 	}
 }
 
@@ -2000,13 +2010,13 @@ func TestABCI_HaltChain(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
-			suite.baseApp.InitChain(&abci.RequestInitChain{
+			_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 				ConsensusParams: &cmtproto.ConsensusParams{},
 				InitialHeight:   tc.blockHeight,
 			})
 
 			app := suite.baseApp
-			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 				Height: tc.blockHeight,
 				Time:   time.Unix(tc.blockTime, 0),
 			})
@@ -2026,11 +2036,11 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	logger := log.NewTestLogger(t)
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
-	_, err := app.InitChain(&abci.RequestInitChain{})
+	_, err := app.InitChain(&abci.InitChainRequest{})
 	require.NoError(t, err)
 
 	wasHookCalled := false
-	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
 		wasHookCalled = true
 
 		ctx.EventManager().EmitEvent(sdk.NewEvent("preblockertest", sdk.NewAttribute("height", fmt.Sprintf("%d", req.Height))))
@@ -2038,7 +2048,7 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	})
 	app.Seal()
 
-	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 	require.Equal(t, true, wasHookCalled)
 	require.Len(t, res.Events, 1)
@@ -2046,15 +2056,15 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 
 	// Now try erroring
 	app = baseapp.NewBaseApp(name, logger, db, nil)
-	_, err = app.InitChain(&abci.RequestInitChain{})
+	_, err = app.InitChain(&abci.InitChainRequest{})
 	require.NoError(t, err)
 
-	app.SetPreBlocker(func(_ sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-		return nil, errors.New("some error")
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
+		return errors.New("some error")
 	})
 	app.Seal()
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.Error(t, err)
 }
 
@@ -2084,26 +2094,26 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	}
 
 	baseappOpts := func(app *baseapp.BaseApp) {
-		app.SetExtendVoteHandler(func(sdk.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		app.SetExtendVoteHandler(func(sdk.Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
 			// here we would have a process to get the price from an external source
 			price := 10000000 + rand.Int63n(1000000)
 			ve := make([]byte, 8)
 			binary.BigEndian.PutUint64(ve, uint64(price))
-			return &abci.ResponseExtendVote{VoteExtension: ve}, nil
+			return &abci.ExtendVoteResponse{VoteExtension: ve}, nil
 		})
 
-		app.SetVerifyVoteExtensionHandler(func(_ sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		app.SetVerifyVoteExtensionHandler(func(_ sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 			vePrice := binary.BigEndian.Uint64(req.VoteExtension)
 			// here we would do some price validation, must not be 0 and not too high
 			if vePrice > 11000000 || vePrice == 0 {
 				// usually application should always return ACCEPT unless they really want to discard the entire vote
-				return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+				return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 			}
 
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 		})
 
-		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 			txs := [][]byte{}
 			ctx = ctx.WithBlockHeight(req.Height).WithChainID(app.ChainID())
 			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
@@ -2121,25 +2131,25 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				}
 			}
 
-			return &abci.ResponsePrepareProposal{Txs: txs}, nil
+			return &abci.PrepareProposalResponse{Txs: txs}, nil
 		})
 
-		app.SetProcessProposal(func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		app.SetProcessProposal(func(ctx sdk.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
 			// here we check if the proposal is valid, mainly if the vote extensions appended to the txs are valid
 			for _, v := range req.Txs {
 				// pretend this is a way to check if the tx is actually a VE
 				if len(v) == 8 {
 					// pretend this is a way to check if the VE is valid
 					if binary.BigEndian.Uint64(v) > 11000000 || binary.BigEndian.Uint64(v) == 0 {
-						return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+						return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_REJECT}, nil
 					}
 				}
 			}
 
-			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+			return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT}, nil
 		})
 
-		app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
 			count := uint64(0)
 			pricesSum := uint64(0)
 			for _, v := range req.Txs {
@@ -2166,7 +2176,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, baseappOpts)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Abci: &cmtproto.ABCIParams{
 				VoteExtensionsEnableHeight: 1,
@@ -2178,7 +2188,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	allVEs := [][]byte{}
 	// simulate getting 10 vote extensions from 10 validators
 	for i := 0; i < 10; i++ {
-		ve, err := suite.baseApp.ExtendVote(context.TODO(), &abci.RequestExtendVote{Height: 1})
+		ve, err := suite.baseApp.ExtendVote(context.TODO(), &abci.ExtendVoteRequest{Height: 1})
 		require.NoError(t, err)
 		allVEs = append(allVEs, ve.VoteExtension)
 	}
@@ -2197,12 +2207,12 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	// verify all votes, only 10 should be accepted
 	successful := 0
 	for _, v := range allVEs {
-		res, err := suite.baseApp.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{
+		res, err := suite.baseApp.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{
 			Height:        1,
 			VoteExtension: v,
 		})
 		require.NoError(t, err)
-		if res.Status == abci.ResponseVerifyVoteExtension_ACCEPT {
+		if res.Status == abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT {
 			successful++
 		}
 	}
@@ -2222,7 +2232,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 		)
 	}
 
-	prepPropReq := &abci.RequestPrepareProposal{
+	prepPropReq := &abci.PrepareProposalRequest{
 		Height: 1,
 		LocalLastCommit: abci.ExtendedCommitInfo{
 			Round: 0,
@@ -2248,11 +2258,11 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Txs, 0)
 
-	procPropRes, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: 1, Txs: resp.Txs})
+	procPropRes, err := suite.baseApp.ProcessProposal(&abci.ProcessProposalRequest{Height: 1, Txs: resp.Txs})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, procPropRes.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, procPropRes.Status)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: resp.Txs})
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: resp.Txs})
 	require.NoError(t, err)
 
 	// The average price will be nil during the first block, given that we don't have
@@ -2295,11 +2305,11 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Txs, 10)
 
-	procPropRes, err = suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: 2, Txs: resp.Txs})
+	procPropRes, err = suite.baseApp.ProcessProposal(&abci.ProcessProposalRequest{Height: 2, Txs: resp.Txs})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, procPropRes.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, procPropRes.Status)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2, Txs: resp.Txs})
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2, Txs: resp.Txs})
 	require.NoError(t, err)
 
 	// Check if the average price was available in FinalizeBlock's context
@@ -2318,25 +2328,25 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 func TestABCI_PrepareProposal_Panic(t *testing.T) {
 	prepareOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 			if len(req.Txs) == 3 {
 				panic("i don't like number 3, panic")
 			}
 			// return empty if no panic
-			return &abci.ResponsePrepareProposal{}, nil
+			return &abci.PrepareProposalResponse{}, nil
 		})
 	}
 
 	suite := NewBaseAppSuite(t, prepareOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		InitialHeight:   1,
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
 
 	txs := [][]byte{{1}, {2}}
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     1, // this value can't be 0
 		Txs:        txs,
@@ -2356,7 +2366,7 @@ func TestABCI_PrepareProposal_Panic(t *testing.T) {
 func TestOptimisticExecution(t *testing.T) {
 	suite := NewBaseAppSuite(t, baseapp.SetOptimisticExecution())
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -2367,17 +2377,17 @@ func TestOptimisticExecution(t *testing.T) {
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
-		reqProcProp := abci.RequestProcessProposal{
+		reqProcProp := abci.ProcessProposalRequest{
 			Txs:    [][]byte{txBytes},
 			Height: suite.baseApp.LastBlockHeight() + 1,
 			Hash:   []byte("some-hash" + strconv.FormatInt(suite.baseApp.LastBlockHeight()+1, 10)),
 		}
 
 		respProcProp, err := suite.baseApp.ProcessProposal(&reqProcProp)
-		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, respProcProp.Status)
+		require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, respProcProp.Status)
 		require.NoError(t, err)
 
-		reqFinalizeBlock := abci.RequestFinalizeBlock{
+		reqFinalizeBlock := abci.FinalizeBlockRequest{
 			Height: reqProcProp.Height,
 			Txs:    reqProcProp.Txs,
 			Hash:   reqProcProp.Hash,

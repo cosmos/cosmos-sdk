@@ -9,7 +9,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
+	"cosmossdk.io/x/accounts/defaults/lockup"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -64,6 +66,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	accountskeeper, err := NewKeeper(
 		in.Cdc, in.Environment, in.AddressCodec, in.Cdc,
 		in.ExecRouter, in.QueryRouter, in.Registry, account,
+		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
+		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
+		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
+		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
 	)
 	if err != nil {
 		panic(err)

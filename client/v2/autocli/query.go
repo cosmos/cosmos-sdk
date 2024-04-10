@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -205,8 +206,13 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		}
 
 		amount := msg.Get(amountField).String()
-		if len(amount) >= math.LegacyPrecision {
+		if len(amount) > math.LegacyPrecision {
 			amount = amount[:len(amount)-math.LegacyPrecision] + "." + amount[len(amount)-math.LegacyPrecision:]
+		} else if len(amount) == math.LegacyPrecision {
+			amount = "0." + amount
+		} else {
+			decimalPlace := len(amount) - math.LegacyPrecision
+			amount = "0." + strings.Repeat("0", -decimalPlace) + amount
 		}
 
 		amountDec, err := math.LegacyNewDecFromStr(amount)

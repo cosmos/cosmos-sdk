@@ -9,7 +9,7 @@ type ExecMode uint8
 // For backwards compatibility and easier casting, the exec mode values must be the same as in cosmos/cosmos-sdk/types package.
 const (
 	ExecModeCheck ExecMode = iota
-	_
+	ExecModeReCheck
 	ExecModeSimulate
 	_
 	_

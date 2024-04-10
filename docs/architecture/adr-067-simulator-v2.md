@@ -118,10 +118,10 @@ func (s *Simulator) SimulateBlock() {
   rProposer := s.SelectRandomProposer()
   rTxs := s.SelectTxs()
 
-  prepareResp, err := s.app.PrepareProposal(&abci.RequestPrepareProposal{Txs: rTxs})
+  prepareResp, err := s.app.PrepareProposal(&abci.PrepareProposalRequest{Txs: rTxs})
   // handle error
 
-  processResp, err := s.app.ProcessProposal(&abci.RequestProcessProposal{
+  processResp, err := s.app.ProcessProposal(&abci.ProcessProposalRequest{
     Txs: prepareResp.Txs,
     // ...
   })

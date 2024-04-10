@@ -11,7 +11,7 @@ ABCI2.0 (colloquially called ABCI++) allows an application to extend a pre-commi
 validator process. The Cosmos SDK defines [`baseapp.ExtendVoteHandler`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/types/abci.go#L26-L27):
 
 ```go
-type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
+type ExtendVoteHandler func(Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
 ```
 
 An application can set this handler in `app.go` via the `baseapp.SetExtendVoteHandler`

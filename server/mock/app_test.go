@@ -52,7 +52,7 @@ func TestInitApp(t *testing.T) {
 	require.NoError(t, err)
 
 	// make sure we can query these values
-	query := abci.RequestQuery{
+	query := abci.QueryRequest{
 		Path: "/store/main/key",
 		Data: []byte("foo"),
 	}
@@ -87,7 +87,7 @@ func TestDeliverTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// make sure we can query these values
-	query := abci.RequestQuery{
+	query := abci.QueryRequest{
 		Path: "/store/main/key",
 		Data: []byte(key),
 	}

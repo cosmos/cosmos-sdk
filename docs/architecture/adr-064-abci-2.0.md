@@ -103,7 +103,7 @@ vote extensions.
 We propose the following new handlers for applications to implement:
 
 ```go
-type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseExtendVote
+type ExtendVoteHandler func(sdk.Context, abci.ExtendVoteRequest) abci.ExtendVoteResponse
 type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
 ```
 
@@ -144,7 +144,7 @@ type VoteExtensionHandler struct {
 
 // ExtendVoteHandler can do something with h.mk and possibly h.state to create
 // a vote extension, such as fetching a series of prices for supported assets.
-func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.RequestExtendVote) abci.ResponseExtendVote {
+func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.ExtendVoteRequest) abci.ExtendVoteResponse {
 	prices := GetPrices(ctx, h.mk.Assets())
 	bz, err := EncodePrices(h.cdc, prices)
 	if err != nil {
@@ -156,7 +156,7 @@ func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.Reques
 	// NOTE: Vote extensions can be overridden since we can timeout in a round.
 	SetPrices(h.state, req, bz)
 
-	return abci.ResponseExtendVote{VoteExtension: bz}
+	return abci.ExtendVoteResponse{VoteExtension: bz}
 }
 
 // VerifyVoteExtensionHandler can do something with h.state and req to verify

@@ -37,7 +37,7 @@ func (h *VoteExtensionHandler) SetHandlers(bApp *baseapp.BaseApp) {
 }
 
 func (h *VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
-	return func(_ sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	return func(_ sdk.Context, req *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
 		buf := make([]byte, 1024)
 
 		_, err := rand.Read(buf)
@@ -56,7 +56,7 @@ func (h *VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
 			return nil, fmt.Errorf("failed to encode vote extension: %w", err)
 		}
 
-		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+		return &abci.ExtendVoteResponse{VoteExtension: bz}, nil
 	}
 }
 

@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
@@ -21,6 +22,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -160,6 +162,22 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 // TxValidator implements appmodulev2.HasTxValidator.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	// TODO in follow-up
+	validators := []interface {
+		ValidateTx(ctx context.Context, tx sdk.Tx) error
+	}{
+		ante.NewDeductFeeDecorator(am.accountKeeper, am.bankKeeper, am.keeper, nil),
+	}
+
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
+	}
+
+	for _, validator := range validators {
+		if err := validator.ValidateTx(ctx, sdkTx); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

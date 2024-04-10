@@ -2,8 +2,11 @@ package ante
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/types"
 
@@ -39,32 +42,43 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 	}
 }
 
-func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
+// ValidateTx implements an TxValidator decorator for the DeductFeeDecorator
+func (dfd DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
+	txService := dfd.accountKeeper.Environment().TransactionService
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	if ctx.ExecMode() != sdk.ExecModeSimulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
+	headerInfo := dfd.accountKeeper.Environment().HeaderService.GetHeaderInfo(ctx)
+	if txService.ExecMode(ctx) != transaction.ExecModeSimulate && headerInfo.Height > 0 && feeTx.GetGas() == 0 {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 
 	var err error
 	fee := feeTx.GetFee()
-	if ctx.ExecMode() != sdk.ExecModeSimulate {
+	if txService.ExecMode(ctx) != transaction.ExecModeSimulate {
 		fee, err = dfd.txFeeChecker(ctx, tx)
 		if err != nil {
-			return ctx, err
+			return err
 		}
 	}
 	if err := dfd.checkDeductFee(ctx, tx, fee); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
+	if err := dfd.ValidateTx(ctx, tx); err != nil {
 		return ctx, err
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }
 
-func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee sdk.Coins) error {
+func (dfd DeductFeeDecorator) checkDeductFee(ctx context.Context, sdkTx sdk.Tx, fee sdk.Coins) error {
 	feeTx, ok := sdkTx.(sdk.FeeTx)
 	if !ok {
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -103,20 +117,20 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		}
 	}
 
-	events := sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(deductFeesFrom).String()),
-		),
+	eventManager := dfd.accountKeeper.Environment().EventService.EventManager(ctx)
+	if err := eventManager.EmitKV(
+		sdk.EventTypeTx,
+		event.NewAttribute(sdk.AttributeKeyFee, fee.String()),
+		event.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(deductFeesFrom).String()),
+	); err != nil {
+		return err
 	}
-	ctx.EventManager().EmitEvents(events)
 
 	return nil
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc []byte, fees sdk.Coins) error {
+func DeductFees(bankKeeper types.BankKeeper, ctx context.Context, acc []byte, fees sdk.Coins) error {
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}

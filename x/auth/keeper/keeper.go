@@ -275,3 +275,8 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	}
 	return params
 }
+
+// Environment returns the module's environment.
+func (ak AccountKeeper) Environment() appmodule.Environment {
+	return ak.environment
+}

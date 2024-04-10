@@ -206,12 +206,12 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		}
 
 		amount := msg.Get(amountField).String()
-		if len(amount) > math.LegacyPrecision {
-			amount = amount[:len(amount)-math.LegacyPrecision] + "." + amount[len(amount)-math.LegacyPrecision:]
-		} else if len(amount) == math.LegacyPrecision {
+		decimalPlace := len(amount) - math.LegacyPrecision
+		if decimalPlace > 0 {
+			amount = amount[:decimalPlace] + "." + amount[decimalPlace:]
+		} else if decimalPlace == 0 {
 			amount = "0." + amount
 		} else {
-			decimalPlace := len(amount) - math.LegacyPrecision
 			amount = "0." + strings.Repeat("0", -decimalPlace) + amount
 		}
 

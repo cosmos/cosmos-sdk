@@ -126,17 +126,13 @@ type Keeper struct {
 	AccountsState collections.Map[collections.Pair[uint64, []byte], []byte]
 }
 
-// GetAccountNumber return a account number by address.
-func (k Keeper) GetAccountNumber(
+// IsAccountsModuleAccount check if an address belong to a smart account.
+func (k Keeper) IsAccountsModuleAccount(
 	ctx context.Context,
 	accountAddr []byte,
-) (uint64, error) {
-	accNum, err := k.AccountByNumber.Get(ctx, accountAddr)
-	if err != nil {
-		return 0, err
-	}
-
-	return accNum, nil
+) bool {
+	_, err := k.AccountByNumber.Get(ctx, accountAddr)
+	return err == nil
 }
 
 // Init creates a new account of the given type.

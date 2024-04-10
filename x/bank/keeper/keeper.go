@@ -437,11 +437,12 @@ func (k BaseKeeper) setSupply(ctx context.Context, coin sdk.Coin) {
 
 // trackDelegation tracks the delegation of the given account if it is a vesting account
 func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
-	if k.ak.IsAccountsModuleAccount(ctx, addr) {
-		return nil
-	}
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
+		// check if it's an x/accounts smart account
+		if k.ak.HasAccount(ctx, addr) {
+			return nil
+		}
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
@@ -457,11 +458,12 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 
 // trackUndelegation tracks undelegation of the given account if it is a vesting account
 func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
-	if k.ak.IsAccountsModuleAccount(ctx, addr) {
-		return nil
-	}
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
+		// check if it's an x/accounts smart account
+		if k.ak.HasAccount(ctx, addr) {
+			return nil
+		}
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 

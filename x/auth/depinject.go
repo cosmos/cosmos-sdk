@@ -27,7 +27,7 @@ func init() {
 
 type ModuleInputs struct {
 	depinject.In
-	AccountsKeeper types.AccountsKeeper
+	AccountsModKeeper types.AccountsModKeeper
 
 	Config      *modulev1.Module
 	Environment appmodule.Environment
@@ -70,7 +70,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	k := keeper.NewAccountKeeper(in.Environment, in.Cdc, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth, in.AccountsKeeper)
+	k := keeper.NewAccountKeeper(in.Environment, in.Cdc, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth, in.AccountsModKeeper)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

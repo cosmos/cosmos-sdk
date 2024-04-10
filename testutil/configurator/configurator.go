@@ -1,6 +1,7 @@
 package configurator
 
 import (
+	accountsmodulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -89,6 +90,7 @@ func defaultConfig() *Config {
 			testutil.ProtocolPoolModuleName,
 		},
 		InitGenesisOrder: []string{
+			testutil.AccountsModuleName,
 			testutil.AuthModuleName,
 			testutil.BankModuleName,
 			testutil.DistributionModuleName,
@@ -326,6 +328,15 @@ func ProtocolPoolModule() ModuleOption {
 		config.ModuleConfigs[testutil.ProtocolPoolModuleName] = &appv1alpha1.ModuleConfig{
 			Name:   testutil.ProtocolPoolModuleName,
 			Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+		}
+	}
+}
+
+func AccountsModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.AccountsModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.AccountsModuleName,
+			Config: appconfig.WrapAny(&accountsmodulev1.Module{}),
 		}
 	}
 }

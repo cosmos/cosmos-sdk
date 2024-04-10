@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 var _ address.Codec = (*addressCodec)(nil)

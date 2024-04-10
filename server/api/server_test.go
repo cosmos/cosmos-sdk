@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 
+	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/auth"
 	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"

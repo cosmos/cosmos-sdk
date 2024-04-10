@@ -217,15 +217,15 @@ func (mr *MockAccountKeeperMockRecorder) ValidatePermissions(macc interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissions", reflect.TypeOf((*MockAccountKeeper)(nil).ValidatePermissions), macc)
 }
 
-// ValidatePermissions mocks base method.
-func (m *MockAccountKeeper) IsAccountsModuleAccount(ctx context.Context, addr types0.AccAddress) bool {
+// IsAccountsModuleAccount mocks base method.
+func (m *MockAccountKeeper) IsAccountsModuleAccount(ctx context.Context, addr []byte) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsAccountsModuleAccount", ctx, addr)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// ValidatePermissions indicates an expected call of ValidatePermissions.
+// IsAccountsModuleAccount indicates an expected call of IsAccountsModuleAccount.
 func (mr *MockAccountKeeperMockRecorder) IsAccountsModuleAccount(ctx, addr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAccountsModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).IsAccountsModuleAccount), ctx, addr)

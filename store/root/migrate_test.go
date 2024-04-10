@@ -19,9 +19,7 @@ import (
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
-var (
-	storeKeys = []string{"store1", "store2", "store3"}
-)
+var storeKeys = []string{"store1", "store2", "store3"}
 
 type MigrateStoreTestSuite struct {
 	suite.Suite
@@ -90,7 +88,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	s.Require().NoError(err)
 
 	// start the migration process
-	s.rootStore.StartMigration()
+	s.Require().NoError(s.rootStore.StartMigration())
 
 	// continue to apply changeset against the original store
 	latestVersion := originalLatestVersion + 1

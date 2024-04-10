@@ -31,7 +31,7 @@ This section should include a motivation sub-section and a definitions sub-secti
 
 ### System model and properties
 
-This section should include an assumptions sub-section if any, the mandatory properties sub-section, and a dependencies sub-section. Note that the first two sub-section are are tightly coupled: how to enforce a property will depend directly on the assumptions made. This sub-section is important to capture the interactions of the specified feature with the "rest-of-the-world", i.e., with other features of the ecosystem.
+This section should include an assumptions sub-section if any, the mandatory properties sub-section, and a dependencies sub-section. Note that the first two sub-section are tightly coupled: how to enforce a property will depend directly on the assumptions made. This sub-section is important to capture the interactions of the specified feature with the "rest-of-the-world", i.e., with other features of the ecosystem.
 
 * *Assumptions* - A list of any assumptions made by the feature designer. It should capture which features are used by the feature under specification, and what do we expect from them.
 * *Properties* - A list of the desired properties or characteristics of the feature specified, and expected effects or failures when the properties are violated. In case it is relevant, it can also include a list of properties that the feature does not guarantee.

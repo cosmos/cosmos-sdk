@@ -11,6 +11,7 @@ import (
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	countermodulev1 "cosmossdk.io/api/cosmos/counter/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
@@ -65,6 +66,7 @@ func defaultConfig() *Config {
 			testutil.ParamsModuleName,
 			"vesting",
 			testutil.CircuitModuleName,
+			testutil.EpochsModuleName,
 		},
 		EndBlockersOrder: []string{
 			"crisis",
@@ -108,6 +110,7 @@ func defaultConfig() *Config {
 			"vesting",
 			testutil.CircuitModuleName,
 			testutil.ProtocolPoolModuleName,
+			testutil.EpochsModuleName,
 		},
 		setInitGenesis: true,
 	}
@@ -343,6 +346,15 @@ func CounterModule() ModuleOption {
 		config.ModuleConfigs["counter"] = &appv1alpha1.ModuleConfig{
 			Name:   "counter",
 			Config: appconfig.WrapAny(&countermodulev1.Module{}),
+		}
+	}
+}
+
+func EpochsModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.EpochsModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.EpochsModuleName,
+			Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 		}
 	}
 }

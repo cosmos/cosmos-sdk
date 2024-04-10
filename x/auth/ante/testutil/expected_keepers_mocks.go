@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	address "cosmossdk.io/core/address"
+	appmodule "cosmossdk.io/core/appmodule"
 	types "cosmossdk.io/x/auth/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -49,6 +50,20 @@ func (m *MockAccountKeeper) AddressCodec() address.Codec {
 func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddressCodec", reflect.TypeOf((*MockAccountKeeper)(nil).AddressCodec))
+}
+
+// Environment mocks base method.
+func (m *MockAccountKeeper) Environment() appmodule.Environment {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Environment")
+	ret0, _ := ret[0].(appmodule.Environment)
+	return ret0
+}
+
+// Environment indicates an expected call of Environment.
+func (mr *MockAccountKeeperMockRecorder) Environment() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Environment", reflect.TypeOf((*MockAccountKeeper)(nil).Environment))
 }
 
 // GetAccount mocks base method.

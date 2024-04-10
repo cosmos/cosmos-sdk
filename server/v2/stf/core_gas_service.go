@@ -32,3 +32,7 @@ func (g gasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.C
 func (g gasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) context.Context {
 	panic("unimplemented")
 }
+
+func (g gasService) MinGasPrices(ctx context.Context) gas.DecCoins {
+	panic("unimplemented")
+}

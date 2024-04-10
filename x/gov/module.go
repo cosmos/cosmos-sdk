@@ -110,9 +110,9 @@ func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Comma
 }
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	v1.RegisterInterfaces(registry)
-	v1beta1.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	v1.RegisterInterfaces(registrar)
+	v1beta1.RegisterInterfaces(registrar)
 }
 
 // RegisterInvariants registers module invariants
@@ -123,7 +123,11 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	msgServer := keeper.NewMsgServerImpl(am.keeper)
-	v1beta1.RegisterMsgServer(registrar, keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
+	addr, err := am.accountKeeper.AddressCodec().BytesToString(am.accountKeeper.GetModuleAddress(govtypes.ModuleName))
+	if err != nil {
+		return err
+	}
+	v1beta1.RegisterMsgServer(registrar, keeper.NewLegacyMsgServerImpl(addr, msgServer))
 	v1.RegisterMsgServer(registrar, msgServer)
 
 	v1beta1.RegisterQueryServer(registrar, keeper.NewLegacyQueryServer(am.keeper))

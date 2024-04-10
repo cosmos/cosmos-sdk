@@ -50,8 +50,6 @@ type AppModuleBasic interface {
 	HasName
 	HasGRPCGateway
 	HasAminoCodec
-
-	appmodulev2.HasRegisterInterfaces
 }
 
 // AppModule is the form for an application module. Most of
@@ -61,7 +59,6 @@ type AppModule interface {
 	HasName
 
 	appmodulev2.AppModule
-	appmodulev2.HasRegisterInterfaces
 }
 
 // HasName allows the module to provide its own name for legacy purposes.
@@ -312,10 +309,10 @@ func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (m *Manager) RegisterInterfaces(registry registry.LegacyRegistry) {
+func (m *Manager) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	for _, b := range m.Modules {
 		if mod, ok := b.(appmodule.HasRegisterInterfaces); ok {
-			mod.RegisterInterfaces(registry)
+			mod.RegisterInterfaces(registrar)
 		}
 	}
 }

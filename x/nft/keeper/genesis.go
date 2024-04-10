@@ -31,7 +31,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *nft.GenesisState) error {
 }
 
 // ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx context.Context) *nft.GenesisState {
+func (k Keeper) ExportGenesis(ctx context.Context) (*nft.GenesisState, error) {
 	classes := k.GetClasses(ctx)
 	nftMap := make(map[string][]*nft.NFT)
 	for _, class := range classes {
@@ -40,7 +40,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) *nft.GenesisState {
 			owner := k.GetOwner(ctx, n.ClassId, n.Id)
 			ownerStr, err := k.ac.BytesToString(owner.Bytes())
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 			nftArr, ok := nftMap[ownerStr]
 			if !ok {
@@ -66,5 +66,5 @@ func (k Keeper) ExportGenesis(ctx context.Context) *nft.GenesisState {
 	return &nft.GenesisState{
 		Classes: classes,
 		Entries: entries,
-	}
+	}, nil
 }

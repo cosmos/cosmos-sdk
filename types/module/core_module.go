@@ -189,9 +189,9 @@ func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux 
 }
 
 // RegisterInterfaces implements HasRegisterInterfaces
-func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.LegacyRegistry) {
+func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.InterfaceRegistrar) {
 	if mod, ok := c.module.(interface {
-		RegisterInterfaces(registry.LegacyRegistry)
+		RegisterInterfaces(registry.InterfaceRegistrar)
 	}); ok {
 		mod.RegisterInterfaces(reg)
 	}

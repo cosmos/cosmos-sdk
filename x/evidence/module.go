@@ -84,8 +84,8 @@ func (am AppModule) GetTxCmd() *cobra.Command {
 }
 
 // RegisterInterfaces registers the evidence module's interface types
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	types.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
 }
 
 // RegisterServices registers module services.

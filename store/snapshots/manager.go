@@ -11,9 +11,9 @@ import (
 	"sort"
 	"sync"
 
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -245,7 +245,7 @@ func (m *Manager) CreateMigration(height uint64, protoWriter WriteCloser) error 
 	if err != nil {
 		return err
 	}
-	defer m.end()
+	// m.end() will be called by the migration manager with EndMigration().
 
 	go func() {
 		if err := m.commitSnapshotter.Snapshot(height, protoWriter); err != nil {
@@ -256,6 +256,13 @@ func (m *Manager) CreateMigration(height uint64, protoWriter WriteCloser) error 
 	}()
 
 	return nil
+}
+
+// EndMigration ends the migration operation.
+// It will replace the current commitSnapshotter with the new one.
+func (m *Manager) EndMigration(commitSnapshotter CommitSnapshotter) {
+	defer m.end()
+	m.commitSnapshotter = commitSnapshotter
 }
 
 // List lists snapshots, mirroring ABCI ListSnapshots. It can be concurrent with other operations.
@@ -392,7 +399,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	}
 
 	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
-	chStorage := make(chan *store.KVPair, defaultStorageChannelBufferSize)
+	chStorage := make(chan *corestore.StateChanges, defaultStorageChannelBufferSize)
 	defer close(chStorage)
 
 	storageErrs := make(chan error, 1)

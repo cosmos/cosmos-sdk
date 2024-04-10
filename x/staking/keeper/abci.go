@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -19,7 +18,7 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 }
 
 // EndBlocker called at every block, update validator set
-func (k *Keeper) EndBlocker(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+func (k *Keeper) EndBlocker(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	return k.BlockValidatorUpdates(ctx)
 }

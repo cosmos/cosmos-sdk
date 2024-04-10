@@ -77,8 +77,8 @@ func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the feegrant module's interface types
-func (AppModule) RegisterInterfaces(registry registry.LegacyRegistry) {
-	feegrant.RegisterInterfaces(registry)
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	feegrant.RegisterInterfaces(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the feegrant module.

@@ -16,6 +16,10 @@ type DBTestSuite struct {
 	db store.RawDB
 }
 
+func (s *DBTestSuite) TearDownSuite() {
+	s.Require().NoError(s.db.Close())
+}
+
 func (s *DBTestSuite) TestDBOperations() {
 	// Set
 	b := s.db.NewBatch()
@@ -90,6 +94,24 @@ func (s *DBTestSuite) TestIterator() {
 func TestMemDBSuite(t *testing.T) {
 	suite.Run(t, &DBTestSuite{
 		db: NewMemDB(),
+	})
+}
+
+func TestPebbleDBSuite(t *testing.T) {
+	db, err := NewPebbleDB("test", t.TempDir())
+	require.NoError(t, err)
+
+	suite.Run(t, &DBTestSuite{
+		db: db,
+	})
+}
+
+func TestRocksDBSuite(t *testing.T) {
+	db, err := NewRocksDB("test", t.TempDir())
+	require.NoError(t, err)
+
+	suite.Run(t, &DBTestSuite{
+		db: db,
 	})
 }
 

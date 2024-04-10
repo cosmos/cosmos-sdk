@@ -34,9 +34,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
+// appModule defines runtime as an AppModule
 type appModule struct {
 	app *App
 }
+
+func (m appModule) IsOnePerModuleType() {}
+func (m appModule) IsAppModule()        {}
 
 func (m appModule) RegisterServices(configurator module.Configurator) { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	autocliv1.RegisterQueryServer(configurator.QueryServer(), services.NewAutoCLIQueryService(m.app.ModuleManager.Modules))
@@ -48,8 +52,32 @@ func (m appModule) RegisterServices(configurator module.Configurator) { // nolin
 	reflectionv1.RegisterReflectionServiceServer(configurator.QueryServer(), reflectionSvc)
 }
 
-func (m appModule) IsOnePerModuleType() {}
-func (m appModule) IsAppModule()        {}
+func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return &autocliv1.ModuleOptions{
+		Query: &autocliv1.ServiceCommandDescriptor{
+			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+				"autocli": {
+					Service: autocliv1.Query_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "AppOptions",
+							Short:     "Query the custom autocli options",
+						},
+					},
+				},
+				"reflection": {
+					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "FileDescriptors",
+							Short:     "Query the app's protobuf file descriptors",
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
 var (
 	_ appmodule.AppModule = appModule{}
@@ -148,7 +176,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec address.ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -251,28 +279,20 @@ func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
 }
 
-type (
-	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
-	ValidatorAddressCodec address.Codec
-
-	// ConsensusAddressCodec is an alias for address.Codec for validator consensus addresses.
-	ConsensusAddressCodec address.Codec
-)
-
 type AddressCodecInputs struct {
 	depinject.In
 
 	AuthConfig    *authmodulev1.Module    `optional:"true"`
 	StakingConfig *stakingmodulev1.Module `optional:"true"`
 
-	AddressCodecFactory          func() address.Codec         `optional:"true"`
-	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
-	ConsensusAddressCodecFactory func() ConsensusAddressCodec `optional:"true"`
+	AddressCodecFactory          func() address.Codec                 `optional:"true"`
+	ValidatorAddressCodecFactory func() address.ValidatorAddressCodec `optional:"true"`
+	ConsensusAddressCodecFactory func() address.ConsensusAddressCodec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddressCodec, ConsensusAddressCodec) {
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, address.ValidatorAddressCodec, address.ConsensusAddressCodec) {
 	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
 	}

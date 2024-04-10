@@ -3,9 +3,9 @@ package kv_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 func TestAssertKeyAtLeastLength(t *testing.T) {

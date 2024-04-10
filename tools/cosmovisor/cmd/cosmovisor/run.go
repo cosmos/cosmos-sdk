@@ -3,8 +3,9 @@ package main
 import (
 	"os"
 
-	"cosmossdk.io/tools/cosmovisor"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 const (
@@ -16,7 +17,7 @@ var runCmd = &cobra.Command{
 	Short: "Run an APP command.",
 	Long: `Run an APP command. This command is intended to be used by the cosmovisor process manager.
 It will run the configured program and monitor it for upgrades.
-Initialise the cosmovisor configuration with the 'init' command.`,
+Initialize the cosmovisor configuration with the 'init' command.`,
 	SilenceUsage:       true,
 	DisableFlagParsing: true,
 	RunE: func(_ *cobra.Command, args []string) error {

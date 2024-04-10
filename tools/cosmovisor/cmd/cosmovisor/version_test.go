@@ -5,10 +5,10 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/tools/cosmovisor"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 func TestVersionCommand_Error(t *testing.T) {

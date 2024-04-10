@@ -8,9 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
@@ -18,7 +17,7 @@ import (
 )
 
 func NewIntCmd() *cobra.Command {
-	var initCmd = &cobra.Command{
+	initCmd := &cobra.Command{
 		Use:          "init <path to executable>",
 		Short:        "Initialize a cosmovisor daemon home directory.",
 		Args:         cobra.ExactArgs(1),

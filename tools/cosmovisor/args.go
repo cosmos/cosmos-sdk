@@ -12,11 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pelletier/go-toml/v2"
+	"github.com/spf13/viper"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/pelletier/go-toml/v2"
-	"github.com/spf13/viper"
 )
 
 // environment variable names
@@ -49,9 +50,7 @@ const (
 	cfgExtension = "toml"
 )
 
-var (
-	ErrEmptyConfigENV = errors.New("config env variable not set or empty")
-)
+var ErrEmptyConfigENV = errors.New("config env variable not set or empty")
 
 // Config is the information passed in to control the daemon
 type Config struct {
@@ -79,6 +78,11 @@ type Config struct {
 // Root returns the root directory where all info lives
 func (cfg *Config) Root() string {
 	return filepath.Join(cfg.Home, rootName)
+}
+
+// DefaultCfgPath returns the default path to the configuration file.
+func (cfg *Config) DefaultCfgPath() string {
+	return filepath.Join(cfg.Root(), cfgFileName+"."+cfgExtension)
 }
 
 // GenesisBin is the path to the genesis binary - must be in place to start manager
@@ -530,7 +534,7 @@ func (cfg Config) DetailString() string {
 func (cfg Config) Export(path string) (string, error) {
 	// if path is empty, use the default path
 	if path == "" {
-		path = filepath.Join(cfg.Root(), filepath.Join(cfgFileName+"."+cfgExtension))
+		path = cfg.DefaultCfgPath()
 	}
 
 	// ensure the path has proper extension

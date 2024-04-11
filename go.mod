@@ -183,6 +183,7 @@ require (
 replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
+	cosmossdk.io/collections => ./collections
 	cosmossdk.io/depinject => ./depinject
 	cosmossdk.io/x/accounts => ./x/accounts
 	cosmossdk.io/x/auth => ./x/auth

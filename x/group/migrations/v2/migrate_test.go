@@ -19,7 +19,6 @@ import (
 	groupkeeper "cosmossdk.io/x/group/keeper"
 	v2 "cosmossdk.io/x/group/migrations/v2"
 	groupmodule "cosmossdk.io/x/group/module"
-	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

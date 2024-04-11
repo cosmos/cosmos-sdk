@@ -4,16 +4,17 @@ import (
 	"context"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	banktypes "cosmossdk.io/x/bank/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/runtime/protoiface"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type ProtoMsg = protoiface.MessageV1
@@ -62,7 +63,6 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			require.True(t, ok)
 			gogoproto.Merge(resp.(gogoproto.Message), &banktypes.QueryBalanceResponse{
 				Balance: &sdk.Coin{
-
 					Denom:  "test",
 					Amount: math.NewInt(5),
 				},

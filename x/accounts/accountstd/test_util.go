@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

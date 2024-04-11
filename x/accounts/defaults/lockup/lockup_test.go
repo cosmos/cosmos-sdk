@@ -5,12 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/require"
 )
 
 func setup(t *testing.T, ctx context.Context, ss store.KVStoreService) *BaseLockup {

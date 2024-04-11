@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -444,6 +445,41 @@ func (s *argsTestSuite) TestDetailString() {
 	}
 }
 
+var newConfig = func(
+	home, name string,
+	downloadBin bool,
+	downloadMustHaveChecksum bool,
+	restartUpgrade bool,
+	restartDelay int,
+	skipBackup bool,
+	dataBackupPath string,
+	interval, preupgradeMaxRetries int,
+	disableLogs, colorLogs bool,
+	timeFormatLogs string,
+	customPreUpgrade string,
+	disableRecase bool,
+	shutdownGrace int,
+) *Config {
+	return &Config{
+		Home:                     home,
+		Name:                     name,
+		AllowDownloadBinaries:    downloadBin,
+		DownloadMustHaveChecksum: downloadMustHaveChecksum,
+		RestartAfterUpgrade:      restartUpgrade,
+		RestartDelay:             time.Millisecond * time.Duration(restartDelay),
+		PollInterval:             time.Millisecond * time.Duration(interval),
+		UnsafeSkipBackup:         skipBackup,
+		DataBackupPath:           dataBackupPath,
+		PreUpgradeMaxRetries:     preupgradeMaxRetries,
+		DisableLogs:              disableLogs,
+		ColorLogs:                colorLogs,
+		TimeFormatLogs:           timeFormatLogs,
+		CustomPreUpgrade:         customPreUpgrade,
+		DisableRecase:            disableRecase,
+		ShutdownGrace:            time.Duration(shutdownGrace),
+	}
+}
+
 func (s *argsTestSuite) TestGetConfigFromEnv() {
 	initialEnv := s.clearEnv()
 	defer s.setEnv(nil, initialEnv)
@@ -451,41 +487,6 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, perr := filepath.Abs(relPath)
 	s.Require().NoError(perr)
-
-	newConfig := func(
-		home, name string,
-		downloadBin bool,
-		downloadMustHaveChecksum bool,
-		restartUpgrade bool,
-		restartDelay int,
-		skipBackup bool,
-		dataBackupPath string,
-		interval, preupgradeMaxRetries int,
-		disableLogs, colorLogs bool,
-		timeFormatLogs string,
-		customPreUpgrade string,
-		disableRecase bool,
-		shutdownGrace int,
-	) *Config {
-		return &Config{
-			Home:                     home,
-			Name:                     name,
-			AllowDownloadBinaries:    downloadBin,
-			DownloadMustHaveChecksum: downloadMustHaveChecksum,
-			RestartAfterUpgrade:      restartUpgrade,
-			RestartDelay:             time.Millisecond * time.Duration(restartDelay),
-			PollInterval:             time.Millisecond * time.Duration(interval),
-			UnsafeSkipBackup:         skipBackup,
-			DataBackupPath:           dataBackupPath,
-			PreUpgradeMaxRetries:     preupgradeMaxRetries,
-			DisableLogs:              disableLogs,
-			ColorLogs:                colorLogs,
-			TimeFormatLogs:           timeFormatLogs,
-			CustomPreUpgrade:         customPreUpgrade,
-			DisableRecase:            disableRecase,
-			ShutdownGrace:            time.Duration(shutdownGrace),
-		}
-	}
 
 	tests := []struct {
 		name             string
@@ -780,6 +781,160 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			}
 			assert.Equal(t, tc.expectedCfg, cfg, "config")
 		})
+	}
+}
+
+func setUpDir(t *testing.T) string {
+	t.Helper()
+
+	home := t.TempDir()
+	err := os.MkdirAll(filepath.Join(home, rootName), 0o755)
+	require.NoError(t, err)
+	return home
+}
+
+func setupConfig(t *testing.T, home string) string {
+	cfg := newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, "kitchen", "", true, 10)
+	path := filepath.Join(home, rootName, "config.toml")
+	f, err := os.Create(path)
+	require.NoError(t, err)
+
+	enc := toml.NewEncoder(f)
+	require.NoError(t, enc.Encode(&cfg))
+
+	err = f.Close()
+	require.NoError(t, err)
+
+	return path
+}
+
+func TestConfigFromFile(t *testing.T) {
+	home := setUpDir(t)
+	// create a config file
+	cfgFilePath := setupConfig(t, home)
+
+	testCases := []struct {
+		name          string
+		config        *Config
+		expectedCfg   func() *Config
+		filePath      string
+		expectedError string
+		malleate      func()
+	}{
+		{
+			name: "valid config",
+			expectedCfg: func() *Config {
+				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10)
+			},
+			filePath:      cfgFilePath,
+			expectedError: "",
+			malleate:      func() {},
+		},
+
+		{
+			name: "empty config file path",
+			expectedCfg: func() *Config {
+				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10)
+			},
+			filePath:      "",
+			expectedError: ErrEmptyConfigENV.Error(),
+			malleate:      func() {},
+		},
+		{
+			name: "invalid config file path",
+			expectedCfg: func() *Config {
+				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10)
+			},
+			filePath:      filepath.Join(home, "invalid.toml"),
+			expectedError: "config not found",
+			malleate:      func() {},
+		},
+		{
+			name:          "env variable will override config file fields",
+			filePath:      cfgFilePath,
+			expectedError: "",
+			malleate: func() {
+				// set env variable different from the config file
+				os.Setenv(EnvName, "env-name")
+			},
+			expectedCfg: func() *Config {
+				return newConfig(home, "env-name", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10)
+
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			tc.malleate()
+			actualCfg, err := GetConfigFromFile(tc.filePath)
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedError)
+				return
+			}
+
+			require.NoError(t, err)
+			require.EqualValues(t, tc.expectedCfg(), actualCfg)
+
+		})
+	}
+}
+
+func TestConfigExport(t *testing.T) {
+	home := setUpDir(t)
+	// create a config file
+	cfgFilePath := setupConfig(t, home)
+	// load file
+	expectedCfg, err := GetConfigFromFile(cfgFilePath)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name          string
+		filePath      string
+		expectedPath  string
+		expectedError string
+	}{
+		{
+			name:          "valid config",
+			filePath:      cfgFilePath,
+			expectedPath:  filepath.Join(expectedCfg.Root(), "config.toml"),
+			expectedError: "",
+		},
+		{
+			name:          "empty config file path will use default path",
+			filePath:      "",
+			expectedPath:  expectedCfg.DefaultCfgPath(),
+			expectedError: "",
+		},
+		{
+			name:          "invalid file extension",
+			filePath:      filepath.Join(home, rootName, "config.json"),
+			expectedPath:  "",
+			expectedError: "invalid file extension must have toml extension",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			actualPath, err := expectedCfg.Export(tc.filePath)
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedError)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, actualPath, tc.expectedPath)
+
+			// load file
+			actualCfg, err := GetConfigFromFile(actualPath)
+			require.NoError(t, err)
+
+			require.EqualValues(t, expectedCfg, actualCfg)
+		})
+
 	}
 }
 

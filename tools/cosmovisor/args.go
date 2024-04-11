@@ -20,6 +20,8 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
+var ErrEmptyConfigENV = errors.New("config env variable not set or empty")
+
 // environment variable names
 const (
 	EnvHome                     = "DAEMON_HOME"
@@ -49,8 +51,6 @@ const (
 	cfgFileName  = "config"
 	cfgExtension = "toml"
 )
-
-var ErrEmptyConfigENV = errors.New("config env variable not set or empty")
 
 // Config is the information passed in to control the daemon
 type Config struct {
@@ -168,7 +168,7 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 
 	// ensure the file exist
 	if _, err := os.Stat(filePath); err != nil {
-		return nil, fmt.Errorf("config file does not exist: at %s : %w", filePath, err)
+		return nil, fmt.Errorf("config not found: at %s : %w", filePath, err)
 	}
 
 	// read the configuration from the file
@@ -186,7 +186,16 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal configuration: %w", err)
 	}
 
-	errs := cfg.validate()
+	var (
+		err  error
+		errs []error
+	)
+
+	if cfg.TimeFormatLogs, err = getTimeFormatOption(cfg.TimeFormatLogs); err != nil {
+		errs = append(errs, err)
+	}
+
+	errs = append(errs, cfg.validate()...)
 	if len(errs) > 0 {
 		return nil, errors.Join(errs...)
 	}
@@ -404,6 +413,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	return err
 }
 
+// UpgradeInfo returns the current upgrade info
 func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 	if cfg.currentUpgrade.Name != "" {
 		return cfg.currentUpgrade, nil
@@ -430,7 +440,7 @@ returnError:
 	return cfg.currentUpgrade, fmt.Errorf("failed to read %q: %w", filename, err)
 }
 
-// checks and validates env option
+// BooleanOption checks and validate env option
 func BooleanOption(name string, defaultVal bool) (bool, error) {
 	p := strings.ToLower(os.Getenv(name))
 	switch p {
@@ -451,6 +461,10 @@ func TimeFormatOptionFromEnv(env, defaultVal string) (string, error) {
 		return defaultVal, nil
 	}
 
+	return getTimeFormatOption(val)
+}
+
+func getTimeFormatOption(val string) (string, error) {
 	switch val {
 	case "layout":
 		return time.Layout, nil
@@ -480,6 +494,40 @@ func TimeFormatOptionFromEnv(env, defaultVal string) (string, error) {
 		return "", nil
 	}
 	return "", fmt.Errorf("env variable %q must have a timeformat value (\"layout|ansic|unixdate|rubydate|rfc822|rfc822z|rfc850|rfc1123|rfc1123z|rfc3339|rfc3339nano|kitchen\"), got %q", EnvTimeFormatLogs, val)
+
+}
+
+// ValueToTimeFormatOption converts the time format option to the env value
+func ValueToTimeFormatOption(format string) string {
+	switch format {
+	case time.Layout:
+		return "layout"
+	case time.ANSIC:
+		return "ansic"
+	case time.UnixDate:
+		return "unixdate"
+	case time.RubyDate:
+		return "rubydate"
+	case time.RFC822:
+		return "rfc822"
+	case time.RFC822Z:
+		return "rfc822z"
+	case time.RFC850:
+		return "rfc850"
+	case time.RFC1123:
+		return "rfc1123"
+	case time.RFC1123Z:
+		return "rfc1123z"
+	case time.RFC3339:
+		return "rfc3339"
+	case time.RFC3339Nano:
+		return "rfc3339nano"
+	case time.Kitchen:
+		return "kitchen"
+	default:
+		return ""
+	}
+
 }
 
 // DetailString returns a multi-line string with details about this config.
@@ -539,14 +587,17 @@ func (cfg Config) Export(path string) (string, error) {
 
 	// ensure the path has proper extension
 	if !strings.HasSuffix(path, cfgExtension) {
-		return "", fmt.Errorf("provided config file must have %s extension", cfgExtension)
+		return "", fmt.Errorf("invalid file extension must have %s extension", cfgExtension)
 	}
 
 	// create the file
-	file, err := os.Create(path)
+	file, err := os.Create(filepath.Clean(path))
 	if err != nil {
 		return "", fmt.Errorf("failed to create configuration file: %w", err)
 	}
+
+	// convert the time value to its format option
+	cfg.TimeFormatLogs = ValueToTimeFormatOption(cfg.TimeFormatLogs)
 
 	defer file.Close()
 

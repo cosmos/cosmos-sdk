@@ -131,8 +131,8 @@ func (k Keeper) IsAccountsModuleAccount(
 	ctx context.Context,
 	accountAddr []byte,
 ) bool {
-	_, err := k.AccountByNumber.Get(ctx, accountAddr)
-	return err == nil
+	hasAcc, _ := k.AccountByNumber.Has(ctx, accountAddr)
+	return hasAcc
 }
 
 // Init creates a new account of the given type.

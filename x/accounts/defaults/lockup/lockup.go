@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
+	distrtypes "cosmossdk.io/x/distribution/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -204,6 +205,44 @@ func (bva *BaseLockup) Undelegate(
 
 		msgUndelegate := makeMsgUndelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
 		resp, err := sendMessage(ctx, msgUndelegate)
+		if err != nil {
+			return err
+		}
+
+		responses = append(responses, resp...)
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+}
+
+func (bva *BaseLockup) WithdrawReward(
+	ctx context.Context, msg *lockuptypes.MsgWithdrawReward,
+) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	err := bva.checkSender(ctx, msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	whoami := accountstd.Whoami(ctx)
+	delegatorAddress, err := bva.addressCodec.BytesToString(whoami)
+	if err != nil {
+		return nil, err
+	}
+
+	responses := []*codectypes.Any{}
+
+	err = bva.branchService.Execute(ctx, func(ctx context.Context) error {
+		msgWithdraw := &distrtypes.MsgWithdrawDelegatorReward{
+			DelegatorAddress: delegatorAddress,
+			ValidatorAddress: msg.ValidatorAddress,
+		}
+		resp, err := sendMessage(ctx, msgWithdraw)
 		if err != nil {
 			return err
 		}

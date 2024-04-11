@@ -72,6 +72,12 @@ func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *lockup
 	return cva.BaseLockup.Undelegate(ctx, msg)
 }
 
+func (cva *ContinuousLockingAccount) WithdrawReward(ctx context.Context, msg *lockuptypes.MsgWithdrawReward) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return cva.BaseLockup.WithdrawReward(ctx, msg)
+}
+
 func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -217,6 +223,7 @@ func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 	accountstd.RegisterExecuteHandler(builder, cva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, cva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, cva.SendCoins)
+	accountstd.RegisterExecuteHandler(builder, cva.WithdrawReward)
 	accountstd.RegisterExecuteHandler(builder, cva.WithdrawUnlockedCoins)
 }
 

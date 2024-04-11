@@ -11,6 +11,8 @@ require (
 	github.com/cosmos/gogoproto v1.4.12
 )
 
+require cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
+
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20240130113600-88ef6483f90f.1 // indirect
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
@@ -20,6 +22,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.0.2 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/distribution v0.0.0-20240410222740-c56152dfac35
 	cosmossdk.io/x/tx v0.13.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

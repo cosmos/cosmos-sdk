@@ -111,6 +111,12 @@ func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *lockupty
 	return pva.BaseLockup.Undelegate(ctx, msg)
 }
 
+func (pva *PeriodicLockingAccount) WithdrawReward(ctx context.Context, msg *lockuptypes.MsgWithdrawReward) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	return pva.BaseLockup.WithdrawReward(ctx, msg)
+}
+
 func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -325,6 +331,7 @@ func (pva PeriodicLockingAccount) RegisterInitHandler(builder *accountstd.InitBu
 func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, pva.Undelegate)
+	accountstd.RegisterExecuteHandler(builder, pva.WithdrawReward)
 	accountstd.RegisterExecuteHandler(builder, pva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, pva.WithdrawUnlockedCoins)
 }

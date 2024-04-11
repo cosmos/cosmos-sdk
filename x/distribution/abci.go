@@ -1,7 +1,11 @@
 package distribution
 
 import (
+<<<<<<< HEAD:x/distribution/abci.go
 	"time"
+=======
+	"cosmossdk.io/x/distribution/types"
+>>>>>>> 2496cfdf5 (feat: Conditionally emit metrics based on enablement (#19903)):x/distribution/keeper/abci.go
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,8 +15,14 @@ import (
 
 // BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block.
+<<<<<<< HEAD:x/distribution/abci.go
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+=======
+// TODO: use context.Context after including the comet service
+func (k Keeper) BeginBlocker(ctx sdk.Context) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+>>>>>>> 2496cfdf5 (feat: Conditionally emit metrics based on enablement (#19903)):x/distribution/keeper/abci.go
 
 	// determine the total power signing the block
 	var previousTotalPower int64

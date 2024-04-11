@@ -116,7 +116,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
 	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI,
-	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, AccountsModKeeper types.AccountsModKeeper,
+	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, accountsModKeeper types.AccountsModKeeper,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -136,7 +136,7 @@ func NewAccountKeeper(
 		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
-		AccountsModKeeper: AccountsModKeeper,
+		AccountsModKeeper: accountsModKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {

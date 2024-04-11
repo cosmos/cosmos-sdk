@@ -70,7 +70,7 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 
 	// default tx validator
 	if a.txValidator == nil {
-		a.txValidator = a.app.moduleManager.TxValidation()
+		a.txValidator = a.app.moduleManager.TxValidators()
 	}
 
 	a.app.db = db
@@ -96,6 +96,7 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 		endBlocker,
 		a.txValidator,
 		valUpdate,
+		nil, // stfMsgHandler, // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
 		a.branch,
 	)
 	appManagerBuilder := appmanager.Builder[transaction.Tx]{

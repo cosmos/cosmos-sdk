@@ -7,14 +7,14 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -38,7 +38,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // proposal Content.
 type MsgSubmitProposal struct {
 	// content is the proposal's content.
-	Content *types.Any `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	Content *any.Any `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	// initial_deposit is the deposit value that must be paid at proposal submission.
 	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=initial_deposit,json=initialDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_deposit"`
 	// proposer is the account address of the proposer.
@@ -1125,7 +1125,7 @@ func (m *MsgSubmitProposal) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Content == nil {
-				m.Content = &types.Any{}
+				m.Content = &any.Any{}
 			}
 			if err := m.Content.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1160,7 +1160,7 @@ func (m *MsgSubmitProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InitialDeposit = append(m.InitialDeposit, types1.Coin{})
+			m.InitialDeposit = append(m.InitialDeposit, types.Coin{})
 			if err := m.InitialDeposit[len(m.InitialDeposit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1751,7 +1751,7 @@ func (m *MsgDeposit) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Amount = append(m.Amount, types1.Coin{})
+			m.Amount = append(m.Amount, types.Coin{})
 			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

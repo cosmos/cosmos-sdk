@@ -34,9 +34,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
+// appModule defines runtime as an AppModule
 type appModule struct {
 	app *App
 }
+
+func (m appModule) IsOnePerModuleType() {}
+func (m appModule) IsAppModule()        {}
 
 func (m appModule) RegisterServices(configurator module.Configurator) { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	autocliv1.RegisterQueryServer(configurator.QueryServer(), services.NewAutoCLIQueryService(m.app.ModuleManager.Modules))
@@ -48,8 +52,32 @@ func (m appModule) RegisterServices(configurator module.Configurator) { // nolin
 	reflectionv1.RegisterReflectionServiceServer(configurator.QueryServer(), reflectionSvc)
 }
 
-func (m appModule) IsOnePerModuleType() {}
-func (m appModule) IsAppModule()        {}
+func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return &autocliv1.ModuleOptions{
+		Query: &autocliv1.ServiceCommandDescriptor{
+			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+				"autocli": {
+					Service: autocliv1.Query_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "AppOptions",
+							Short:     "Query the custom autocli options",
+						},
+					},
+				},
+				"reflection": {
+					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "FileDescriptors",
+							Short:     "Query the app's protobuf file descriptors",
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
 var (
 	_ appmodule.AppModule = appModule{}

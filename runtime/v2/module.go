@@ -43,6 +43,9 @@ type appModule struct {
 	app *App
 }
 
+func (m appModule) IsOnePerModuleType() {}
+func (m appModule) IsAppModule()        {}
+
 func (m appModule) RegisterServices(registar grpc.ServiceRegistrar) error {
 	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
 	if err != nil {
@@ -60,8 +63,39 @@ func (m appModule) RegisterServices(registar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-func (m appModule) IsOnePerModuleType() {}
-func (m appModule) IsAppModule()        {}
+func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return &autocliv1.ModuleOptions{
+		Query: &autocliv1.ServiceCommandDescriptor{
+			Service: appv1alpha1.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Config",
+					Short:     "Query the current app config",
+				},
+			},
+			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+				"autocli": {
+					Service: autocliv1.Query_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "AppOptions",
+							Short:     "Query the custom autocli options",
+						},
+					},
+				},
+				"reflection": {
+					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "FileDescriptors",
+							Short:     "Query the app's protobuf file descriptors",
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
 func init() {
 	appconfig.Register(&runtimev2.Module{},

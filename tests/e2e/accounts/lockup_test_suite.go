@@ -124,7 +124,7 @@ func (s *E2ETestSuite) TestContinuousLockingAccount() {
 		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
 		require.True(t, balance.Amount.Equal(math.NewInt(100)))
 	})
-	t.Run("oke - execute withdraw message", func(t *testing.T) {
+	t.Run("ok - execute withdraw message", func(t *testing.T) {
 		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 		require.NoError(t, err)
 		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
@@ -291,7 +291,7 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 		require.True(t, balance.Amount.Equal(math.NewInt(100)))
 	})
 	// Test to withdraw all the remain funds to an account of choice
-	t.Run("oke - execute withdraw message", func(t *testing.T) {
+	t.Run("ok - execute withdraw message", func(t *testing.T) {
 		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 		require.NoError(t, err)
 		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)

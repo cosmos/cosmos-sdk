@@ -50,11 +50,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
-	ac := codecaddress.NewBech32Codec("cosmos")
 	for i := 0; i < len(suite.addrs); i++ {
 		suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[i])).AnyTimes()
 	}
 
+	ac := codecaddress.NewBech32Codec("cosmos")
 	suite.accountKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 	for _, addr := range suite.addrs {
 		str, err := ac.BytesToString(addr)

@@ -1206,7 +1206,6 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	s.Require().True(ok)
 
 	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
-	s.Require().NoError(err)
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
 	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
 

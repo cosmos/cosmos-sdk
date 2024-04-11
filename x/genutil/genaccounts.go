@@ -75,9 +75,6 @@ func AddGenesisAccount(
 		}
 	} else if moduleName != "" {
 		genAccount = authtypes.NewEmptyModuleAccount(moduleName, authtypes.Burner, authtypes.Minter)
-		if err != nil {
-			return err
-		}
 	} else {
 		genAccount = baseAccount
 	}

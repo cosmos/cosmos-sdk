@@ -27,7 +27,6 @@ import (
 )
 
 var (
-	ac        = codectestutil.CodecOptions{}.GetAddressCodec()
 	poolAcc   = authtypes.NewEmptyModuleAccount(types.ModuleName)
 	streamAcc = authtypes.NewEmptyModuleAccount(types.StreamAccount)
 )

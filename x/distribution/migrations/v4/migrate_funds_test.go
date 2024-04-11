@@ -92,7 +92,7 @@ func TestFundsMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	distrAcc := authtypes.NewEmptyModuleAccount(disttypes.ModuleName)
-	require.NoError(t, err)
+
 	// mint coins in distribution module account
 	distrModBal := sdk.NewCoins(sdk.NewInt64Coin("test", 10000000))
 	err = bankKeeper.MintCoins(ctx, distrAcc.GetName(), distrModBal)

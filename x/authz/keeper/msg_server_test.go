@@ -126,12 +126,13 @@ func (suite *TestSuite) TestGrant() {
 			malleate: func() *authz.MsgGrant {
 				newAcc := sdk.AccAddress("valid")
 				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), newAcc).Return(nil).AnyTimes()
-				addr, err := suite.accountKeeper.AddressCodec().BytesToString(newAcc)
-				suite.Require().NoError(err)
 				acc := authtypes.NewBaseAccountWithAddress(newAcc)
 				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), newAcc).Return(acc).AnyTimes()
 
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneYear)
+				suite.Require().NoError(err)
+
+				addr, err := suite.accountKeeper.AddressCodec().BytesToString(newAcc)
 				suite.Require().NoError(err)
 
 				return &authz.MsgGrant{

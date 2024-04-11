@@ -2,6 +2,7 @@ package v2_test
 
 import (
 	"encoding/binary"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,12 +10,9 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	v2 "cosmossdk.io/x/group/migrations/v2"
-
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 )
 
 func TestMigrateGenState(t *testing.T) {
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	tests := []struct {
 		name     string
 		oldState *authtypes.GenesisState
@@ -76,7 +74,7 @@ func TestMigrateGenState(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			require.Error(t, authtypes.ValidateGenesis(*tc.oldState))
-			actualState := v2.MigrateGenState(tc.oldState, ac)
+			actualState := v2.MigrateGenState(tc.oldState, codectestutil.CodecOptions{}.GetAddressCodec())
 			require.Equal(t, tc.newState, actualState)
 			require.NoError(t, authtypes.ValidateGenesis(*actualState))
 		})

@@ -49,8 +49,6 @@ const (
 )
 
 var (
-	ac = codectestutil.CodecOptions{}.GetAddressCodec()
-
 	holderAcc    = authtypes.NewEmptyModuleAccount(holder)
 	randomAcc    = authtypes.NewEmptyModuleAccount(randomPerm)
 	burnerAcc    = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner, authtypes.Staking)
@@ -667,14 +665,13 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	require := suite.Require()
 	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))
 
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
 	suite.Require().NoError(err)
 	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
 	suite.Require().NoError(err)
 	acc2StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[2])
 	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
 	input := banktypes.Input{
 		Address: acc0StrAddr, Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
@@ -1360,11 +1357,11 @@ func (suite *KeeperTestSuite) TestHasBalance() {
 
 func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	require := suite.Require()
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
+	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
+	suite.Require().NoError(err)
 	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
 	suite.Require().NoError(err)
 
@@ -1401,16 +1398,16 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+
+	require.NoError(suite.bankKeeper.SetParams(ctx, banktypes.DefaultParams()))
+
 	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
 	suite.Require().NoError(err)
 	acc2StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[2])
 	suite.Require().NoError(err)
 	acc3StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[3])
 	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-
-	require.NoError(suite.bankKeeper.SetParams(ctx, banktypes.DefaultParams()))
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))

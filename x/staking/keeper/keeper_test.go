@@ -32,7 +32,6 @@ import (
 )
 
 var (
-	ac           = codectestutil.CodecOptions{}.GetAddressCodec()
 	bondedAcc    = authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
 	notBondedAcc = authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName)
 	PKs          = simtestutil.CreateTestPubKeys(500)

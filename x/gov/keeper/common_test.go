@@ -77,12 +77,11 @@ type mocks struct {
 }
 
 func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
-	ac := address.NewBech32Codec("cosmos")
-	emptyModuleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName)
+
 	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAddress(protocolModuleName).Return(poolAcct).AnyTimes()
-	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(emptyModuleAcc).AnyTimes()
-	m.acctKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
+	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
+	m.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 }
 
 func mockDefaultExpectations(ctx sdk.Context, m mocks) error {
@@ -179,11 +178,9 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) error {
 	balances := make(map[string]sdk.Coins)
 	balances[poolAcctStr] = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)))
 
-	emptyModuleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName)
-
 	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), mintModuleName, gomock.Any()).AnyTimes()
-	bankKeeper.EXPECT().BurnCoins(gomock.Any(), emptyModuleAcc.GetAddress(), gomock.Any()).AnyTimes()
+	bankKeeper.EXPECT().BurnCoins(gomock.Any(), authtypes.NewEmptyModuleAccount(types.ModuleName).GetAddress(), gomock.Any()).AnyTimes()
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), mintModuleName, types.ModuleName, gomock.Any()).AnyTimes()
 
 	// But we do track normal account balances.

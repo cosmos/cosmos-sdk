@@ -97,9 +97,7 @@ func DefaultStartUpConfig() StartupConfig {
 // Setup initializes a new runtime.App and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	startupCfg := DefaultStartUpConfig()
-
-	return SetupWithConfiguration(appConfig, startupCfg, extraOutputs...)
+	return SetupWithConfiguration(appConfig, DefaultStartUpConfig(), extraOutputs...)
 }
 
 // SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.

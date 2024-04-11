@@ -238,26 +238,9 @@ func (m *MM) ExportGenesisForModules(ctx sdk.Context, modulesToExport []string) 
 	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
-		if module, ok := mod.(appmodule.HasGenesisAuto); ok {
-			// core API genesis
-			channels[moduleName] = make(chan genesisResult)
-			go func(module appmodule.HasGenesisAuto, ch chan genesisResult) {
-				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
-				target := genesis.RawJSONTarget{}
-				err := module.ExportGenesis(ctx, target.Target())
-				if err != nil {
-					ch <- genesisResult{nil, err}
-					return
-				}
-
-				rawJSON, err := target.JSON()
-				if err != nil {
-					ch <- genesisResult{nil, err}
-					return
-				}
-
-				ch <- genesisResult{rawJSON, nil}
-			}(module, channels[moduleName])
+		if _, ok := mod.(appmodule.HasGenesisAuto); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			return nil, fmt.Errorf("Not support auto genesis, module: %v", moduleName)
 		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
 			go func(module appmodulev2.HasGenesis, ch chan genesisResult) {

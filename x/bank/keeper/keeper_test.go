@@ -1778,6 +1778,7 @@ func (suite *KeeperTestSuite) TestUndelegateCoins_Invalid() {
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
 
+	suite.authKeeper.EXPECT().HasAccount(ctx, accAddrs[0]).Return(false)
 	suite.mockDelegateCoins(ctx, acc0, holderAcc)
 	require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 

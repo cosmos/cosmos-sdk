@@ -17,6 +17,7 @@ import (
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
+	_ "cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	_ "cosmossdk.io/x/feegrant/module"
@@ -24,7 +25,6 @@ import (
 	_ "cosmossdk.io/x/mint"
 	_ "cosmossdk.io/x/staking"
 
-	_ "cosmossdk.io/x/consensus"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"

@@ -19,10 +19,10 @@ import (
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking"
 
-	_ "cosmossdk.io/x/consensus"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"

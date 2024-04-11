@@ -13,9 +13,9 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 
-	_ "cosmossdk.io/x/consensus"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"

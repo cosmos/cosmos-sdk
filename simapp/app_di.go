@@ -24,6 +24,7 @@ import (
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
+	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	epochskeeper "cosmossdk.io/x/epochs/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -38,7 +39,6 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
-	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -303,7 +303,7 @@ func NewSimApp(
 	return app
 }
 
-// overwritte default ante handlers with custom ante handlers
+// overwrite default ante handlers with custom ante handlers
 // set SkipAnteHandler to true in app config and set custom ante handler on baseapp
 func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(

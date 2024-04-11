@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/x/auth/vesting"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
+	"cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
@@ -29,7 +30,6 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 
-	"cosmossdk.io/x/consensus"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

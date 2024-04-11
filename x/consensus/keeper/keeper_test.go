@@ -10,9 +10,9 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
-
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	"cosmossdk.io/x/consensus/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"

@@ -17,6 +17,7 @@ import (
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	_ "cosmossdk.io/x/gov"
@@ -24,7 +25,6 @@ import (
 	_ "cosmossdk.io/x/protocolpool"
 	_ "cosmossdk.io/x/staking"
 
-	_ "cosmossdk.io/x/consensus"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cdctestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

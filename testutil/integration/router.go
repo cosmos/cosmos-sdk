@@ -16,9 +16,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	authtx "cosmossdk.io/x/auth/tx"
 	authtypes "cosmossdk.io/x/auth/types"
-
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	consensusparamtypes "cosmossdk.io/x/consensus/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

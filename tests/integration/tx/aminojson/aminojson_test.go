@@ -44,6 +44,7 @@ import (
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/distribution"
 	disttypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/evidence"
@@ -61,7 +62,6 @@ import (
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
 
-	"cosmossdk.io/x/consensus"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

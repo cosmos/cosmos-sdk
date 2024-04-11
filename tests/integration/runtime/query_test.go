@@ -17,9 +17,9 @@ import (
 	_ "cosmossdk.io/x/auth"
 	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
+	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 
-	_ "cosmossdk.io/x/consensus"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"

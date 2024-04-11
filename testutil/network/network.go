@@ -30,10 +30,10 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank" // import bank as a blank
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/staking" // import staking as a blank
+	_ "cosmossdk.io/x/consensus" // import consensus as a blank
+	_ "cosmossdk.io/x/staking"   // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	_ "cosmossdk.io/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

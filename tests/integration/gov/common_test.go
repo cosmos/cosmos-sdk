@@ -15,6 +15,7 @@ import (
 	_ "cosmossdk.io/x/auth"
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank"
+	_ "cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -22,7 +23,6 @@ import (
 	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	_ "cosmossdk.io/x/consensus"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"

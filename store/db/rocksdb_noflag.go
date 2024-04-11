@@ -82,7 +82,3 @@ func (itr *rocksDBIterator) Error() error {
 func (itr *rocksDBIterator) Close() error {
 	panic("rocksdb must be built with -tags rocksdb")
 }
-
-func (itr *rocksDBIterator) assertIsValid() {
-	panic("rocksdb must be built with -tags rocksdb")
-}

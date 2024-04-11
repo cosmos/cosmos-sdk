@@ -17,7 +17,7 @@ func TestGetPubKey(t *testing.T) {
 func TestSignVote(t *testing.T) {
 	pv := NewPV()
 	v := cmtproto.Vote{}
-	err := pv.SignVote("chain-id", &v)
+	err := pv.SignVote("chain-id", &v, false)
 	require.NoError(t, err)
 	require.NotNil(t, v.Signature)
 }

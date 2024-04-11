@@ -125,7 +125,7 @@ func SignCheckDeliver(
 	bz, err := txCfg.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	resBlock, err := app.FinalizeBlock(&types2.RequestFinalizeBlock{
+	resBlock, err := app.FinalizeBlock(&types2.FinalizeBlockRequest{
 		Height: header.Height,
 		Txs:    [][]byte{bz},
 	})

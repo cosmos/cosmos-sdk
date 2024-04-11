@@ -17,13 +17,18 @@ import (
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
+	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
+	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -139,14 +144,166 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-// InitGenesis performs init genesis functionality for modules.
-func (m *MM) InitGenesis() {
-	panic("implement me")
+func (m *MM) InitGenesis(ctx context.Context, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
+	var validatorUpdates []appmodulev2.ValidatorUpdate
+	m.logger.Info("initializing blockchain state from genesis.json")
+
+	for _, moduleName := range m.config.InitGenesis {
+		if genesisData[moduleName] == nil {
+			continue
+		}
+
+		mod := m.modules[moduleName]
+		// Check if module has auto genesis, if so return err
+		if _, ok := mod.(appmodule.HasGenesisAuto); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			return &abci.ResponseInitChain{}, fmt.Errorf("Not support auto genesis, module: %v", moduleName)
+		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
+				return &abci.ResponseInitChain{}, err
+			}
+		} else if module, ok := mod.(sdkmodule.HasABCIGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
+			if err != nil {
+				return &abci.ResponseInitChain{}, err
+			}
+
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
+					return &abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
+				}
+				validatorUpdates = moduleValUpdates
+			}
+		}
+	}
+
+	// a chain must initialize with a non-empty validator set
+	if len(validatorUpdates) == 0 {
+		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
+	}
+
+	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
+	for i, v := range validatorUpdates {
+		var pubkey cmtcryptoproto.PublicKey
+		switch v.PubKeyType {
+		case "ed25519":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Ed25519{
+					Ed25519: v.PubKey,
+				},
+			}
+		case "secp256k1":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
+					Secp256K1: v.PubKey,
+				},
+			}
+		}
+
+		cometValidatorUpdates[i] = abci.ValidatorUpdate{
+			PubKey: pubkey,
+			Power:  v.Power,
+		}
+	}
+
+	return &abci.ResponseInitChain{
+		Validators: cometValidatorUpdates,
+	}, nil
 }
 
 // ExportGenesis performs export genesis functionality for modules
-func (m *MM) ExportGenesis() {
-	panic("implement me")
+func (m *MM) ExportGenesis(ctx sdk.Context) (map[string]json.RawMessage, error) {
+	return m.ExportGenesisForModules(ctx, []string{})
+}
+
+// ExportGenesisForModules performs export genesis functionality for modules
+func (m *MM) ExportGenesisForModules(ctx sdk.Context, modulesToExport []string) (map[string]json.RawMessage, error) {
+	if len(modulesToExport) == 0 {
+		modulesToExport = m.config.ExportGenesis
+	}
+	// verify modules exists in app, so that we don't panic in the middle of an export
+	if err := m.checkModulesExists(modulesToExport); err != nil {
+		return nil, err
+	}
+
+	type genesisResult struct {
+		bz  json.RawMessage
+		err error
+	}
+
+	channels := make(map[string]chan genesisResult)
+	for _, moduleName := range modulesToExport {
+		mod := m.modules[moduleName]
+		if module, ok := mod.(appmodule.HasGenesisAuto); ok {
+			// core API genesis
+			channels[moduleName] = make(chan genesisResult)
+			go func(module appmodule.HasGenesisAuto, ch chan genesisResult) {
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+				target := genesis.RawJSONTarget{}
+				err := module.ExportGenesis(ctx, target.Target())
+				if err != nil {
+					ch <- genesisResult{nil, err}
+					return
+				}
+
+				rawJSON, err := target.JSON()
+				if err != nil {
+					ch <- genesisResult{nil, err}
+					return
+				}
+
+				ch <- genesisResult{rawJSON, nil}
+			}(module, channels[moduleName])
+		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+			channels[moduleName] = make(chan genesisResult)
+			go func(module appmodulev2.HasGenesis, ch chan genesisResult) {
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+				jm, err := module.ExportGenesis(ctx)
+				if err != nil {
+					ch <- genesisResult{nil, err}
+					return
+				}
+				ch <- genesisResult{jm, nil}
+			}(module, channels[moduleName])
+		} else if module, ok := mod.(sdkmodule.HasABCIGenesis); ok {
+			channels[moduleName] = make(chan genesisResult)
+			go func(module sdkmodule.HasABCIGenesis, ch chan genesisResult) {
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+				jm, err := module.ExportGenesis(ctx)
+				if err != nil {
+					ch <- genesisResult{nil, err}
+				}
+				ch <- genesisResult{jm, nil}
+			}(module, channels[moduleName])
+		}
+	}
+
+	genesisData := make(map[string]json.RawMessage)
+	for moduleName := range channels {
+		res := <-channels[moduleName]
+		if res.err != nil {
+			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
+		}
+
+		genesisData[moduleName] = res.bz
+	}
+
+	return genesisData, nil
+}
+
+// checkModulesExists verifies that all modules in the list exist in the app
+func (m *MM) checkModulesExists(moduleName []string) error {
+	for _, name := range moduleName {
+		if _, ok := m.modules[name]; !ok {
+			return fmt.Errorf("module %s does not exist", name)
+		}
+	}
+
+	return nil
 }
 
 // BeginBlock runs the begin-block logic of all modules

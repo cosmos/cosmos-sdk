@@ -1,6 +1,6 @@
 module cosmossdk.io/x/protocolpool
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.3
@@ -174,5 +174,6 @@ replace (
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
 )

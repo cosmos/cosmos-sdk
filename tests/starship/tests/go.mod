@@ -1,8 +1,6 @@
 module github.com/cosmos-sdk/tests/starship/tests
 
-go 1.22
-
-toolchain go1.22.0
+go 1.22.2
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
@@ -25,6 +23,7 @@ replace (
 	cosmossdk.io/x/authz => ../../../x/authz
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/circuit => ../../../x/circuit
+	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/distribution => ../../../x/distribution
 	cosmossdk.io/x/epochs => ../../../x/epochs
 	cosmossdk.io/x/evidence => ../../../x/evidence
@@ -71,6 +70,7 @@ require (
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/distribution v0.0.0-20240227221813-a248d05f70f4 // indirect
 	cosmossdk.io/x/epochs v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect

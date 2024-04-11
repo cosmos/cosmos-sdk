@@ -1,6 +1,6 @@
 module cosmossdk.io/x/distribution
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.3
@@ -29,6 +29,8 @@ require (
 	google.golang.org/grpc v1.63.2
 	gotest.tools/v3 v3.5.1
 )
+
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
@@ -175,5 +177,6 @@ replace (
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
 )

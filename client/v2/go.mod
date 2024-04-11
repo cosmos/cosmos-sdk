@@ -1,6 +1,6 @@
 module cosmossdk.io/client/v2
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.3
@@ -26,7 +26,7 @@ require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
-	cosmossdk.io/math v1.3.0 // indirect
+	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.0.2 // indirect
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -180,6 +180,7 @@ replace (
 	cosmossdk.io/x/accounts => ./../../x/accounts
 	cosmossdk.io/x/auth => ./../../x/auth
 	cosmossdk.io/x/bank => ./../../x/bank
+	cosmossdk.io/x/consensus => ./../../x/consensus
 	cosmossdk.io/x/distribution => ./../../x/distribution
 	cosmossdk.io/x/gov => ./../../x/gov
 	cosmossdk.io/x/mint => ./../../x/mint

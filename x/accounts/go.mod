@@ -1,6 +1,6 @@
 module cosmossdk.io/x/accounts
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.3
@@ -171,6 +171,7 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/mint => ../mint
 	cosmossdk.io/x/slashing => ../slashing

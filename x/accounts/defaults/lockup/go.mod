@@ -1,6 +1,6 @@
 module cosmossdk.io/x/accounts/defaults/lockup
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/collections v0.4.0
@@ -169,6 +169,7 @@ replace (
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/auth => ../../../auth
 	cosmossdk.io/x/bank => ../../../bank
+	cosmossdk.io/x/consensus => ../../../consensus
 	cosmossdk.io/x/distribution => ../../../distribution
 	cosmossdk.io/x/gov => ../../../gov
 	cosmossdk.io/x/mint => ../../../mint

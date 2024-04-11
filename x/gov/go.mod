@@ -1,6 +1,6 @@
 module cosmossdk.io/x/gov
 
-go 1.21
+go 1.22.2
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
@@ -168,6 +168,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
@@ -177,5 +179,6 @@ replace (
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
 )

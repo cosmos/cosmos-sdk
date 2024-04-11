@@ -1,6 +1,6 @@
 module cosmossdk.io/x/group
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.3
@@ -13,6 +13,7 @@ require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
@@ -181,6 +182,7 @@ replace (
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/authz => ../authz
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/mint => ../mint

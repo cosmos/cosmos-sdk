@@ -1,6 +1,6 @@
 module cosmossdk.io/x/bank
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.3
@@ -164,6 +164,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
+
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
@@ -173,5 +175,6 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
 )

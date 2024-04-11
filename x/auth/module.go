@@ -149,9 +149,7 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 
-	validators := []interface {
-		ValidateTx(ctx context.Context, tx sdk.Tx) error
-	}{
+	validators := []appmodulev2.TxValidator[sdk.Tx]{
 		ante.NewValidateBasicDecorator(am.accountKeeper.Environment()),
 		ante.NewTxTimeoutHeightDecorator(am.accountKeeper.Environment()),
 		ante.NewValidateMemoDecorator(am.accountKeeper),

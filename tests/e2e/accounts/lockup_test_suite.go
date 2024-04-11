@@ -470,10 +470,7 @@ func (s *E2ETestSuite) TestPermanentLockingAccount() {
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.PERMANENT_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
-		Owner:     ownerAddrStr,
-		StartTime: currentTime,
-		// end time in 1 minutes
-		EndTime: currentTime.Add(time.Minute),
+		Owner: ownerAddrStr,
 	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	require.NoError(t, err)
 

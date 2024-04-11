@@ -857,8 +857,7 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(pubkey.Address())
-	require.NoError(t, err)
+	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 0, 0)
 	initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
 	baseVestingWithCoins, err := types.NewBaseVestingAccount(baseAcc, initialVesting, 100)
@@ -947,12 +946,8 @@ func TestGenesisAccountValidate(t *testing.T) {
 
 func initBaseAccount(addressCodec address.Codec) (*authtypes.BaseAccount, sdk.Coins, error) {
 	_, _, addr := testdata.KeyTestPubAddr()
-	addrStr, err := addressCodec.BytesToString(addr)
-	if err != nil {
-		return nil, nil, err
-	}
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
-	bacc := authtypes.NewBaseAccountWithAddress(addrStr)
+	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
 	return bacc, origCoins, nil
 }

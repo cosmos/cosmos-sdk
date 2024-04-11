@@ -21,7 +21,6 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -66,9 +65,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(senderPrivKey.PubKey().Address())
-	require.NoError(t, err)
-	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
@@ -110,9 +107,7 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(senderPrivKey.PubKey().Address())
-	require.NoError(t, err)
-	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
@@ -172,9 +167,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	addr, err := app.AuthKeeper.AddressCodec().BytesToString(senderPrivKey.PubKey().Address())
-	require.NoError(t, err)
-	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balances := []banktypes.Balance{
 		{
 			Address: acc.GetAddress().String(),

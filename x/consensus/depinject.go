@@ -2,7 +2,6 @@ package consensus
 
 import (
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -29,10 +28,9 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	Environment  appmodule.Environment
-	AddressCodec address.Codec
+	Config      *modulev1.Module
+	Cdc         codec.Codec
+	Environment appmodule.Environment
 }
 
 type ModuleOutputs struct {
@@ -47,7 +45,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress("gov")
 	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority, in.AddressCodec)
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.Environment, authority.String())

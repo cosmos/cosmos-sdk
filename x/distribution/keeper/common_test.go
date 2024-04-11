@@ -4,7 +4,6 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -20,5 +19,5 @@ var (
 	valConsAddr1 = sdk.ConsAddress(valConsPk1.Address())
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 
-	distrAcc, _ = authtypes.NewEmptyModuleAccount(codectestutil.CodecOptions{}.GetAddressCodec(), types.ModuleName)
+	distrAcc = authtypes.NewEmptyModuleAccount(types.ModuleName)
 )

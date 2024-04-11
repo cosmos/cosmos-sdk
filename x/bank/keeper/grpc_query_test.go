@@ -196,7 +196,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 		CountTotal: false,
 	}
 	req := types.NewQuerySpendableBalancesRequest(addrStr, pageReq)
-	acc := authtypes.NewBaseAccountWithAddress(addrStr)
+	acc := authtypes.NewBaseAccountWithAddress(addr)
 
 	suite.mockSpendableCoins(ctx, acc)
 	res, err := queryClient.SpendableBalances(ctx, req)
@@ -247,7 +247,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	suite.Require().NoError(err)
 
 	req := types.NewQuerySpendableBalanceByDenomRequest(addrStr, fooDenom)
-	acc := authtypes.NewBaseAccountWithAddress(addrStr)
+	acc := authtypes.NewBaseAccountWithAddress(addr)
 
 	suite.mockSpendableCoins(ctx, acc)
 	res, err := queryClient.SpendableBalanceByDenom(ctx, req)

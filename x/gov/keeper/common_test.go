@@ -78,10 +78,7 @@ type mocks struct {
 
 func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
 	ac := address.NewBech32Codec("cosmos")
-	emptyModuleAcc, err := authtypes.NewEmptyModuleAccount(ac, types.ModuleName)
-	if err != nil {
-		panic(err)
-	}
+	emptyModuleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName)
 	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAddress(protocolModuleName).Return(poolAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(emptyModuleAcc).AnyTimes()
@@ -182,10 +179,7 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) error {
 	balances := make(map[string]sdk.Coins)
 	balances[poolAcctStr] = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)))
 
-	emptyModuleAcc, err := authtypes.NewEmptyModuleAccount(addressCdc, types.ModuleName)
-	if err != nil {
-		return err
-	}
+	emptyModuleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName)
 
 	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), mintModuleName, gomock.Any()).AnyTimes()

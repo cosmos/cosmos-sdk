@@ -64,9 +64,7 @@ func initKeeper(t *testing.T) *fixture {
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
 	var err error
 	for i, addr := range accAddrs {
-		addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(accAddr)
-		require.NoError(t, err)
-		accountKeeper.EXPECT().GetAccount(gomock.Any(), addr).Return(authtypes.NewBaseAccountWithAddress(addrStr)).AnyTimes()
+		accountKeeper.EXPECT().GetAccount(gomock.Any(), addr).Return(authtypes.NewBaseAccountWithAddress(addr)).AnyTimes()
 		addrs[i], err = addressCodec.BytesToString(addr)
 		require.NoError(t, err)
 	}

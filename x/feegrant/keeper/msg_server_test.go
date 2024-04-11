@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 
 				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAccAddr).Return(nil).AnyTimes()
 
-				acc := authtypes.NewBaseAccountWithAddress(grantee)
+				acc := authtypes.NewBaseAccountWithAddress(granteeAccAddr)
 				add, err := addressCodec.StringToBytes(grantee)
 				suite.Require().NoError(err)
 

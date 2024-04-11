@@ -56,17 +56,11 @@ func (s *GenesisTestSuite) SetupTest() {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-
-	accAddrStr, err := ac.BytesToString(accAddr)
-	s.Require().NoError(err)
-	memberAddrStr, err := ac.BytesToString(memberAddr)
-	s.Require().NoError(err)
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddrStr)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), memberAddr).Return(authtypes.NewBaseAccountWithAddress(memberAddrStr)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), memberAddr).Return(authtypes.NewBaseAccountWithAddress(memberAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	bApp := baseapp.NewBaseApp(

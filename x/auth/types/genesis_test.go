@@ -18,18 +18,13 @@ import (
 )
 
 func TestSanitize(t *testing.T) {
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	addr1Str, err := ac.BytesToString(addr1)
-	require.NoError(t, err)
-	authAcc1 := types.NewBaseAccountWithAddress(addr1Str)
-	err = authAcc1.SetAccountNumber(1)
+	authAcc1 := types.NewBaseAccountWithAddress(addr1)
+	err := authAcc1.SetAccountNumber(1)
 	require.NoError(t, err)
 
 	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	addr2Str, err := ac.BytesToString(addr2)
-	require.NoError(t, err)
-	authAcc2 := types.NewBaseAccountWithAddress(addr2Str)
+	authAcc2 := types.NewBaseAccountWithAddress(addr2)
 
 	genAccs := types.GenesisAccounts{authAcc1, authAcc2}
 
@@ -50,30 +45,21 @@ var (
 
 // require duplicate accounts fails validation
 func TestValidateGenesisDuplicateAccounts(t *testing.T) {
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	addr, err := ac.BytesToString(addr1)
-	require.NoError(t, err)
-	acc1 := types.NewBaseAccountWithAddress(addr)
+	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 
 	genAccs := make(types.GenesisAccounts, 2)
 	genAccs[0] = acc1
 	genAccs[1] = acc1
 
-	require.Error(t, types.ValidateGenAccounts(genAccs, ac))
+	require.Error(t, types.ValidateGenAccounts(genAccs))
 }
 
 func TestGenesisAccountIterator(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	cdc := encodingConfig.Codec
 
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	acc1Addr, err := ac.BytesToString(addr1)
-	require.NoError(t, err)
-	acc2Addr, err := ac.BytesToString(addr2)
-	require.NoError(t, err)
-
-	acc1 := types.NewBaseAccountWithAddress(acc1Addr)
-	acc2 := types.NewBaseAccountWithAddress(acc2Addr)
+	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc2 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 
 	genAccounts := types.GenesisAccounts{acc1, acc2}
 

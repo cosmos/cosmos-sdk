@@ -4,11 +4,10 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var govAcc, _ = authtypes.NewEmptyModuleAccount(codectestutil.CodecOptions{}.GetAddressCodec(), banktypes.GovModuleName, authtypes.Minter)
+var govAcc = authtypes.NewEmptyModuleAccount(banktypes.GovModuleName, authtypes.Minter)
 
 func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	// default params

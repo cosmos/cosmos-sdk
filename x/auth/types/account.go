@@ -9,8 +9,6 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 
-	coreaddress "cosmossdk.io/core/address"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,9 +24,9 @@ var (
 )
 
 // NewBaseAccount creates a new BaseAccount object.
-func NewBaseAccount(address string, pubKey cryptotypes.PubKey, accountNumber, sequence uint64) *BaseAccount {
+func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
-		Address:       address,
+		Address:       address.String(),
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
@@ -48,9 +46,9 @@ func ProtoBaseAccount() sdk.AccountI {
 
 // NewBaseAccountWithAddress - returns a new base account with a given address
 // leaving AccountNumber and Sequence to zero.
-func NewBaseAccountWithAddress(addr string) *BaseAccount {
+func NewBaseAccountWithAddress(addr sdk.AccAddress) *BaseAccount {
 	return &BaseAccount{
-		Address: addr,
+		Address: addr.String(),
 	}
 }
 
@@ -147,8 +145,8 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // NewModuleAddressOrBech32Address gets an input string and returns an AccAddress.
 // If the input is a valid address, it returns the address.
 // If the input is a module name, it returns the module address.
-func NewModuleAddressOrBech32Address(input string, addressCodec coreaddress.Codec) sdk.AccAddress {
-	if addr, err := addressCodec.StringToBytes(input); err == nil {
+func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
+	if addr, err := sdk.AccAddressFromBech32(input); err == nil {
 		return addr
 	}
 
@@ -161,13 +159,9 @@ func NewModuleAddress(name string) sdk.AccAddress {
 }
 
 // NewEmptyModuleAccount creates a empty ModuleAccount from a string
-func NewEmptyModuleAccount(addressCodec coreaddress.Codec, name string, permissions ...string) (*ModuleAccount, error) {
+func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)
-	baseAddr, err := addressCodec.BytesToString(moduleAddress)
-	if err != nil {
-		return nil, err
-	}
-	baseAcc := NewBaseAccountWithAddress(baseAddr)
+	baseAcc := NewBaseAccountWithAddress(moduleAddress)
 
 	if err := validatePermissions(permissions...); err != nil {
 		panic(err)
@@ -177,7 +171,7 @@ func NewEmptyModuleAccount(addressCodec coreaddress.Codec, name string, permissi
 		BaseAccount: baseAcc,
 		Name:        name,
 		Permissions: permissions,
-	}, nil
+	}
 }
 
 // NewModuleAccount creates a new ModuleAccount instance
@@ -236,18 +230,23 @@ func (ma ModuleAccount) Validate() error {
 }
 
 type moduleAccountPretty struct {
-	Address       string   `json:"address"`
-	PubKey        string   `json:"public_key"`
-	AccountNumber uint64   `json:"account_number"`
-	Sequence      uint64   `json:"sequence"`
-	Name          string   `json:"name"`
-	Permissions   []string `json:"permissions"`
+	Address       sdk.AccAddress `json:"address"`
+	PubKey        string         `json:"public_key"`
+	AccountNumber uint64         `json:"account_number"`
+	Sequence      uint64         `json:"sequence"`
+	Name          string         `json:"name"`
+	Permissions   []string       `json:"permissions"`
 }
 
 // MarshalJSON returns the JSON representation of a ModuleAccount.
 func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
+	accAddr, err := sdk.AccAddressFromBech32(ma.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	return json.Marshal(moduleAccountPretty{
-		Address:       ma.Address,
+		Address:       accAddr,
 		PubKey:        "",
 		AccountNumber: ma.AccountNumber,
 		Sequence:      ma.Sequence,

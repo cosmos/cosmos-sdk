@@ -67,9 +67,7 @@ func (s *SimTestSuite) SetupTest() {
 
 	// create genesis accounts
 	senderPrivKey := secp256k1.GenPrivKey()
-	addr, err := ac.BytesToString(senderPrivKey.PubKey().Address())
-	require.NoError(s.T(), err)
-	acc := authtypes.NewBaseAccount(addr, senderPrivKey.PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	accs := []simtestutil.GenesisAccount{
 		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000)))},
 	}

@@ -301,7 +301,7 @@ func initTestnetFiles(
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addrStr, Coins: coins.Sort()})
-		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addrStr, nil, 0, 0))
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valStr, err := clientCtx.ValidatorAddressCodec.BytesToString(sdk.ValAddress(addr))
 		if err != nil {

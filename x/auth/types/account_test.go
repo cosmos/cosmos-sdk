@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,20 +17,17 @@ import (
 )
 
 func TestBaseAddressPubKey(t *testing.T) {
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	_, pub1, addr1 := testdata.KeyTestPubAddr()
-	addr1Str, err := ac.BytesToString(addr1)
-	require.NoError(t, err)
 	_, pub2, addr2 := testdata.KeyTestPubAddr()
 
-	acc := types.NewBaseAccountWithAddress(addr1Str)
+	acc := types.NewBaseAccountWithAddress(addr1)
 
 	// check the address (set) and pubkey (not set)
 	require.EqualValues(t, addr1, acc.GetAddress())
 	require.EqualValues(t, nil, acc.GetPubKey())
 
 	// can't override address
-	err = acc.SetAddress(addr2)
+	err := acc.SetAddress(addr2)
 	require.NotNil(t, err)
 	require.EqualValues(t, addr1, acc.GetAddress())
 
@@ -58,20 +56,17 @@ func TestBaseAddressPubKey(t *testing.T) {
 
 func TestBaseSequence(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
-	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
-	require.NoError(t, err)
-	acc := types.NewBaseAccountWithAddress(addrStr)
+	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)
 
-	err = acc.SetSequence(seq)
+	err := acc.SetSequence(seq)
 	require.Nil(t, err)
 	require.Equal(t, seq, acc.GetSequence())
 }
 
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(pubkey.Address())
-	require.NoError(t, err)
+	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := types.NewBaseAccount(addr, pubkey, 0, 0)
 
 	tests := []struct {
@@ -102,11 +97,10 @@ func TestGenesisAccountValidate(t *testing.T) {
 
 func TestModuleAccountString(t *testing.T) {
 	name := "test"
-	moduleAcc, err := types.NewEmptyModuleAccount(codectestutil.CodecOptions{}.GetAddressCodec(), name, types.Minter, types.Burner, types.Staking)
-	require.NoError(t, err)
+	moduleAcc := types.NewEmptyModuleAccount(name, types.Minter, types.Burner, types.Staking)
 	want := `base_account:<address:"cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe" > name:"test" permissions:"minter" permissions:"burner" permissions:"staking" `
 	require.Equal(t, want, moduleAcc.String())
-	err = moduleAcc.SetSequence(10)
+	err := moduleAcc.SetSequence(10)
 	require.NoError(t, err)
 	want = `base_account:<address:"cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe" sequence:10 > name:"test" permissions:"minter" permissions:"burner" permissions:"staking" `
 	require.Equal(t, want, moduleAcc.String())
@@ -114,8 +108,7 @@ func TestModuleAccountString(t *testing.T) {
 
 func TestHasPermissions(t *testing.T) {
 	name := "test"
-	macc, err := types.NewEmptyModuleAccount(codectestutil.CodecOptions{}.GetAddressCodec(), name, types.Staking, types.Minter, types.Burner)
-	require.NoError(t, err)
+	macc := types.NewEmptyModuleAccount(name, types.Staking, types.Minter, types.Burner)
 	cases := []struct {
 		permission string
 		expectHas  bool
@@ -137,12 +130,9 @@ func TestHasPermissions(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	addr, err := ac.BytesToString(secp256k1.GenPrivKey().PubKey().Address())
-	require.NoError(t, err)
+	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	baseAcc := types.NewBaseAccount(addr, nil, 0, 0)
-	emptyModuleAccount, err := types.NewEmptyModuleAccount(ac, "test")
-	require.NoError(t, err)
+	emptyModuleAccount := types.NewEmptyModuleAccount("test")
 	tests := []struct {
 		name   string
 		acc    types.GenesisAccount
@@ -175,8 +165,7 @@ func TestValidate(t *testing.T) {
 
 func TestModuleAccountJSON(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(pubkey.Address())
-	require.NoError(t, err)
+	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := types.NewBaseAccount(addr, nil, 10, 50)
 	acc := types.NewModuleAccount(baseAcc, "test", "burner")
 
@@ -194,8 +183,7 @@ func TestModuleAccountJSON(t *testing.T) {
 
 func TestGenesisAccountsContains(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(pubkey.Address())
-	require.NoError(t, err)
+	addr := sdk.AccAddress(pubkey.Address())
 	acc := types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0)
 
 	genAccounts := types.GenesisAccounts{}
@@ -208,10 +196,10 @@ func TestGenesisAccountsContains(t *testing.T) {
 func TestNewModuleAddressOrBech32Address(t *testing.T) {
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	input := "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv"
-	addr, err := ac.BytesToString(types.NewModuleAddressOrBech32Address(input, ac))
+	addr, err := ac.BytesToString(types.NewModuleAddressOrBech32Address(input))
 	require.NoError(t, err)
 	require.Equal(t, input, addr)
-	disAddr, err := ac.BytesToString(types.NewModuleAddressOrBech32Address("distribution", ac))
+	disAddr, err := ac.BytesToString(types.NewModuleAddressOrBech32Address("distribution"))
 	require.NoError(t, err)
 	require.Equal(t, "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl", disAddr)
 }

@@ -17,13 +17,9 @@ import (
 )
 
 func (suite *TestSuite) createAccounts() []sdk.AccAddress {
-	addr0, err := suite.accountKeeper.AddressCodec().BytesToString(suite.addrs[0])
-	suite.Require().NoError(err)
-	addr1, err := suite.accountKeeper.AddressCodec().BytesToString(suite.addrs[1])
-	suite.Require().NoError(err)
 	addrs := simtestutil.CreateIncrementalAccounts(2)
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(addr0)).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(addr1)).AnyTimes()
+	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0])).AnyTimes()
+	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1])).AnyTimes()
 	return addrs
 }
 
@@ -132,7 +128,7 @@ func (suite *TestSuite) TestGrant() {
 				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), newAcc).Return(nil).AnyTimes()
 				addr, err := suite.accountKeeper.AddressCodec().BytesToString(newAcc)
 				suite.Require().NoError(err)
-				acc := authtypes.NewBaseAccountWithAddress(addr)
+				acc := authtypes.NewBaseAccountWithAddress(newAcc)
 				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), newAcc).Return(acc).AnyTimes()
 
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneYear)

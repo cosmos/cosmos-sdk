@@ -39,7 +39,7 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(sdk.AccAddress(senderPrivKey.PubKey().Address()).String(), senderPrivKey.PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(sdk.AccAddress(senderPrivKey.PubKey().Address()), senderPrivKey.PubKey(), 0, 0)
 	balances := []banktypes.Balance{
 		{
 			Address: acc.GetAddress().String(),

@@ -34,34 +34,26 @@ func TestFeegrantPruning(t *testing.T) {
 
 	addrs := simtestutil.CreateIncrementalAccounts(4)
 	granter1 := addrs[0]
-	granter1Addr, err := ac.BytesToString(granter1)
-	require.NoError(t, err)
 	granter2 := addrs[1]
-	granter2Addr, err := ac.BytesToString(granter2)
-	require.NoError(t, err)
 	granter3 := addrs[2]
-	granter3Addr, err := ac.BytesToString(granter3)
-	require.NoError(t, err)
 	grantee := addrs[3]
-	granteeAddr, err := ac.BytesToString(grantee)
-	require.NoError(t, err)
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
 	now := testCtx.Ctx.HeaderInfo().Time
 	oneDay := now.AddDate(0, 0, 1)
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter1).Return(authtypes.NewBaseAccountWithAddress(granter1Addr)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter2).Return(authtypes.NewBaseAccountWithAddress(granter2Addr)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter3).Return(authtypes.NewBaseAccountWithAddress(granter3Addr)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee).Return(authtypes.NewBaseAccountWithAddress(grantee)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter1).Return(authtypes.NewBaseAccountWithAddress(granter1)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter2).Return(authtypes.NewBaseAccountWithAddress(granter2)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter3).Return(authtypes.NewBaseAccountWithAddress(granter3)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 	feegrantKeeper := keeper.NewKeeper(env, encCfg.Codec, accountKeeper)
 
-	err = feegrantKeeper.GrantAllowance(
+	err := feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter1,
 		grantee,

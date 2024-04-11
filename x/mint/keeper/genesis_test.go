@@ -24,7 +24,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-var minterAcc, _ = authtypes.NewEmptyModuleAccount(codectestutil.CodecOptions{}.GetAddressCodec(), types.ModuleName, authtypes.Minter)
+var minterAcc = authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
 
 type GenesisTestSuite struct {
 	suite.Suite

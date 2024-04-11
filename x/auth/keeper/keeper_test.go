@@ -32,9 +32,9 @@ const (
 )
 
 var (
-	ac               = addresscodec.NewBech32Codec("cosmos")
-	multiPermAcc, _  = types.NewEmptyModuleAccount(ac, multiPerm, types.Burner, types.Minter, types.Staking)
-	randomPermAcc, _ = types.NewEmptyModuleAccount(ac, randomPerm, "random")
+	ac            = addresscodec.NewBech32Codec("cosmos")
+	multiPermAcc  = types.NewEmptyModuleAccount(multiPerm, types.Burner, types.Minter, types.Staking)
+	randomPermAcc = types.NewEmptyModuleAccount(randomPerm, "random")
 )
 
 type KeeperTestSuite struct {
@@ -96,8 +96,7 @@ func (suite *KeeperTestSuite) TestSupply_ValidatePermissions() {
 	suite.Require().NoError(err)
 
 	// unregistered permissions
-	otherAcc, err := types.NewEmptyModuleAccount(suite.accountKeeper.AddressCodec(), "other", "other")
-	suite.Require().NoError(err)
+	otherAcc := types.NewEmptyModuleAccount("other", "other")
 	err = suite.accountKeeper.ValidatePermissions(otherAcc)
 	suite.Require().Error(err)
 }

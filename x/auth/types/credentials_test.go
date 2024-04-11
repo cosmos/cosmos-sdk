@@ -53,13 +53,13 @@ func TestNewBaseAccountWithPubKey(t *testing.T) {
 
 	credential, err := authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}...)
 	require.NoError(t, err)
-	account, err := authtypes.NewBaseAccountWithPubKey(credential, codectestutil.CodecOptions{}.GetAddressCodec())
+	account, err := authtypes.NewBaseAccountWithPubKey(credential)
 	require.NoError(t, err)
 	require.Equal(t, expected, account.GetAddress())
 	require.Equal(t, credential, account.GetPubKey())
 }
 
 func TestNewBaseAccountWithPubKey_WrongCredentials(t *testing.T) {
-	_, err := authtypes.NewBaseAccountWithPubKey(cryptotypes.PubKey(nil), codectestutil.CodecOptions{}.GetAddressCodec())
+	_, err := authtypes.NewBaseAccountWithPubKey(cryptotypes.PubKey(nil))
 	require.Error(t, err)
 }

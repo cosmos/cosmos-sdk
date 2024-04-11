@@ -60,10 +60,7 @@ func initFixture(t *testing.T) *genesisFixture {
 func TestImportExportGenesis(t *testing.T) {
 	f := initFixture(t)
 
-	granterStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(granteeAddr)
-	assert.NilError(t, err)
-
-	f.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granterStrAddr)).AnyTimes()
+	f.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
 
 	coins := sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(1_000)))
 	now := f.ctx.HeaderInfo().Time
@@ -71,7 +68,7 @@ func TestImportExportGenesis(t *testing.T) {
 	msgSrvr := keeper.NewMsgServerImpl(f.feegrantKeeper)
 
 	allowance := &feegrant.BasicAllowance{SpendLimit: coins, Expiration: &oneYear}
-	err = f.feegrantKeeper.GrantAllowance(f.ctx, granterAddr, granteeAddr, allowance)
+	err := f.feegrantKeeper.GrantAllowance(f.ctx, granterAddr, granteeAddr, allowance)
 	assert.NilError(t, err)
 
 	genesis, err := f.feegrantKeeper.ExportGenesis(f.ctx)

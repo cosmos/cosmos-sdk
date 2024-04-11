@@ -241,7 +241,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
 		"auth/module_account": {
 			gogo: &authtypes.ModuleAccount{
-				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1.String()), Permissions: []string{},
+				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: []string{},
 			},
 			pulsar: &authapi.ModuleAccount{
 				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{},

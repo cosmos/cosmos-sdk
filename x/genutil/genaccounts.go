@@ -50,7 +50,7 @@ func AddGenesisAccount(
 	var genAccount authtypes.GenesisAccount
 
 	balances := banktypes.Balance{Address: addr, Coins: coins.Sort()}
-	baseAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
+	baseAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
 	if !vestingAmt.IsZero() {
 		baseVestingAccount, err := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
@@ -74,7 +74,7 @@ func AddGenesisAccount(
 			return errors.New("invalid vesting parameters; must supply start and end time or end time")
 		}
 	} else if moduleName != "" {
-		genAccount, err = authtypes.NewEmptyModuleAccount(addressCodec, moduleName, authtypes.Burner, authtypes.Minter)
+		genAccount = authtypes.NewEmptyModuleAccount(moduleName, authtypes.Burner, authtypes.Minter)
 		if err != nil {
 			return err
 		}

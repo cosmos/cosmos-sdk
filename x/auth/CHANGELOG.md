@@ -44,10 +44,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [#19997](https://github.com/cosmos/cosmos-sdk/pull/19997) Removal of the Address.String() method and related changes:
-    * Changed `NewBaseAccount`, `NewBaseAccountWithAddress`, `GetAccountWithHeight` to accept a string instead of an `AccAddress`.
-    * Added an address codec as an argument to `NewBaseAccountWithPubKey` which also returns an error.
-    * Added an address codec as an argument to `ValidateGenAccounts` and `ValidateGenesis`.
-    * Changed `NewMsgCreateVestingAccount`, `NewMsgCreatePermanentLockedAccount`and `NewMsgCreatePeriodicVestingAccount` to accept strings instead of `AccAddress`.
+    * Changed ``, ``, `GetAccountWithHeight` to accept a string instead of an `AccAddress`.
+    * Added an address codec as an argument to `` which also returns an error.
+    * Added an address codec as an argument to `` and ``.
+    * Changed ``, ``and `` to accept strings instead of `AccAddress`.
 * [#19447](https://github.com/cosmos/cosmos-sdk/pull/19447) Address and validator address codecs are now arguments of `NewTxConfig`. `NewDefaultSigningOptions` has been replaced with `NewSigningOptions` which takes address and validator address codecs as arguments.
 * [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
 * [#19161](https://github.com/cosmos/cosmos-sdk/pull/19161) Remove `simulate` from `SetGasMeter`

@@ -51,15 +51,14 @@ const (
 var (
 	ac = codectestutil.CodecOptions{}.GetAddressCodec()
 
-	holderAcc, _    = authtypes.NewEmptyModuleAccount(ac, holder)
-	randomAcc, _    = authtypes.NewEmptyModuleAccount(ac, randomPerm)
-	burnerAcc, _    = authtypes.NewEmptyModuleAccount(ac, authtypes.Burner, authtypes.Burner, authtypes.Staking)
-	minterAcc, _    = authtypes.NewEmptyModuleAccount(ac, authtypes.Minter, authtypes.Minter)
-	mintAcc, _      = authtypes.NewEmptyModuleAccount(ac, banktypes.MintModuleName, authtypes.Minter)
-	multiPermAcc, _ = authtypes.NewEmptyModuleAccount(ac, multiPerm, authtypes.Burner, authtypes.Minter, authtypes.Staking)
+	holderAcc    = authtypes.NewEmptyModuleAccount(holder)
+	randomAcc    = authtypes.NewEmptyModuleAccount(randomPerm)
+	burnerAcc    = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner, authtypes.Staking)
+	minterAcc    = authtypes.NewEmptyModuleAccount(authtypes.Minter, authtypes.Minter)
+	mintAcc      = authtypes.NewEmptyModuleAccount(banktypes.MintModuleName, authtypes.Minter)
+	multiPermAcc = authtypes.NewEmptyModuleAccount(multiPerm, authtypes.Burner, authtypes.Minter, authtypes.Staking)
 
-	baseAccStr, _ = ac.BytesToString([]byte("baseAcc"))
-	baseAcc       = authtypes.NewBaseAccountWithAddress(baseAccStr)
+	baseAcc = authtypes.NewBaseAccountWithAddress(sdk.AccAddress([]byte("baseAcc")))
 
 	accAddrs = []sdk.AccAddress{
 		sdk.AccAddress([]byte("addr1_______________")),
@@ -610,10 +609,7 @@ func (suite *KeeperTestSuite) TestSendCoinsNewAccount() {
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	require.Equal(balances, acc1Balances)
 
@@ -651,7 +647,7 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
 	suite.Require().NoError(err)
 
-	suite.mockInputOutputCoins([]sdk.AccountI{authtypes.NewBaseAccountWithAddress(acc0StrAddr)}, []sdk.AccAddress{accAddrs[1]})
+	suite.mockInputOutputCoins([]sdk.AccountI{authtypes.NewBaseAccountWithAddress(accAddrs[0])}, []sdk.AccAddress{accAddrs[1]})
 	input := banktypes.Input{
 		Address: acc0StrAddr, Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
 	}
@@ -678,7 +674,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	acc2StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[2])
 	suite.Require().NoError(err)
 
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
 	input := banktypes.Input{
 		Address: acc0StrAddr, Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
@@ -787,7 +783,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 	fromAddr := accAddrs[0]
 	fromStrAddr, err := suite.authKeeper.AddressCodec().BytesToString(fromAddr)
 	suite.Require().NoError(err)
-	fromAcc := authtypes.NewBaseAccountWithAddress(fromStrAddr)
+	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
 	inputAccs := []sdk.AccountI{fromAcc}
 	toAddr1 := accAddrs[1]
 	toAddr1Str, err := suite.authKeeper.AddressCodec().BytesToString(toAddr1)
@@ -1020,9 +1016,7 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 	require := suite.Require()
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
 	suite.mockFundAccount(accAddrs[1])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[1], balances))
@@ -1104,9 +1098,7 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 	setupCtx := suite.ctx
 	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
 	fromAddr := accAddrs[0]
-	fromStrAddr, err := suite.authKeeper.AddressCodec().BytesToString(fromAddr)
-	suite.Require().NoError(err)
-	fromAcc := authtypes.NewBaseAccountWithAddress(fromStrAddr)
+	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
 	toAddr1 := accAddrs[1]
 	toAddr2 := accAddrs[2]
 
@@ -1243,10 +1235,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
@@ -1268,10 +1257,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_NoSpendableCoins() {
 	origCoins := coins
 	sendCoins := coins
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	suite.mockFundAccount(accAddrs[0])
 	suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], balances))
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
@@ -1292,10 +1278,7 @@ func (suite *KeeperTestSuite) TestValidateBalance() {
 	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(nil)
 	require.Error(suite.bankKeeper.ValidateBalance(ctx, accAddrs[0]))
 
@@ -1306,10 +1289,7 @@ func (suite *KeeperTestSuite) TestValidateBalance() {
 	suite.mockValidateBalance(acc0)
 	require.NoError(suite.bankKeeper.ValidateBalance(ctx, accAddrs[0]))
 
-	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
-	suite.Require().NoError(err)
-
-	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
+	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
 	vacc, err := vesting.NewContinuousVestingAccount(acc1, balances.Add(balances...), now.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
@@ -1383,7 +1363,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
 	suite.Require().NoError(err)
 
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
 	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
 	suite.Require().NoError(err)
@@ -1428,7 +1408,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	acc3StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[3])
 	suite.Require().NoError(err)
 
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
 	require.NoError(suite.bankKeeper.SetParams(ctx, banktypes.DefaultParams()))
 
@@ -1512,13 +1492,8 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	lockedCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
-	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
@@ -1551,10 +1526,7 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
@@ -1588,10 +1560,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
 	}
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	vacc, err := vesting.NewPeriodicVestingAccount(acc0, origCoins, now.Unix(), periods)
 	suite.Require().NoError(err)
 
@@ -1622,13 +1591,8 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
-	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
@@ -1659,13 +1623,8 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
-	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
 	periods := vesting.Periods{
 		vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
 		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
@@ -1703,13 +1662,8 @@ func (suite *KeeperTestSuite) TestDelegateCoins() {
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
-	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.HeaderInfo().Time.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
@@ -1766,13 +1720,8 @@ func (suite *KeeperTestSuite) TestUndelegateCoins() {
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
-	suite.Require().NoError(err)
-
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
-	acc1 := authtypes.NewBaseAccountWithAddress(acc1StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
@@ -1823,9 +1772,7 @@ func (suite *KeeperTestSuite) TestUndelegateCoins_Invalid() {
 	origCoins := sdk.NewCoins(newFooCoin(100))
 	delCoins := sdk.NewCoins(newFooCoin(50))
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-	acc0 := authtypes.NewBaseAccountWithAddress(acc0StrAddr)
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(nil)
 	require.Error(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))

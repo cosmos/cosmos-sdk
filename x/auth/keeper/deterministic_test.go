@@ -116,10 +116,7 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 		accNum := accNums[i]
 		seq := rapid.Uint64().Draw(t, "sequence")
 
-		baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
-		suite.Require().NoError(err)
-
-		acc1 := types.NewBaseAccount(baseAccAddr, &pub, accNum, seq)
+		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 		accs = append(accs, acc1)
 	}
@@ -138,10 +135,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	// Regression tests
 	accNum := uint64(10087)
 	seq := uint64(98)
-	baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
-	suite.Require().NoError(err)
 
-	acc1 := types.NewBaseAccount(baseAccAddr, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
 	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc1.GetAddress())
@@ -180,16 +175,12 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	suite.Require().NoError(err)
 	accNum1 := uint64(107)
 	seq1 := uint64(10001)
-	baseAccAddr1, err := suite.accountKeeper.AddressCodec().BytesToString(addr1)
-	suite.Require().NoError(err)
 
 	accNum2 := uint64(100)
 	seq2 := uint64(10)
-	baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
-	suite.Require().NoError(err)
 
-	acc1 := types.NewBaseAccount(baseAccAddr1, &secp256k1.PubKey{Key: pub1}, accNum1, seq1)
-	acc2 := types.NewBaseAccount(baseAccAddr, &secp256k1.PubKey{Key: pub}, accNum2, seq2)
+	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub1}, accNum1, seq1)
+	acc2 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum2, seq2)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	suite.accountKeeper.SetAccount(suite.ctx, acc2)
@@ -208,10 +199,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	// Regression test
 	accNum := uint64(10087)
 	seq := uint64(0)
-	baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
-	suite.Require().NoError(err)
 
-	acc1 := types.NewBaseAccount(baseAccAddr, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
@@ -259,10 +248,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 	// Regression test
 	accNum := uint64(10087)
 	seq := uint64(10)
-	baseAccAddr, err := suite.accountKeeper.AddressCodec().BytesToString(addr)
-	suite.Require().NoError(err)
 
-	acc := types.NewBaseAccount(baseAccAddr, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.GetAddress())
 	suite.Require().NoError(err)
 

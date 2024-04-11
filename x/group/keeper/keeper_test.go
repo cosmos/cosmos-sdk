@@ -67,9 +67,7 @@ func (s *TestSuite) SetupTest() {
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
 	var err error
 	for i := range s.addrs {
-		addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(s.addrs[i])
-		s.Require().NoError(err)
-		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(addrStr)).AnyTimes()
+		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[i])).AnyTimes()
 		s.addrsStr[i], err = addressCodec.BytesToString(s.addrs[i])
 		s.Require().NoError(err)
 	}
@@ -149,10 +147,10 @@ func (s *TestSuite) setNextAccount() {
 	ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{keeper.GroupPolicyTablePrefix}, derivationKey)
 	s.Require().NoError(err)
 
-	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(ac, s.accountKeeper.AddressCodec())
+	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(ac)
 	s.Require().NoError(err)
 
-	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(ac, s.accountKeeper.AddressCodec())
+	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(ac)
 	s.Require().NoError(err)
 	err = groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
 	s.Require().NoError(err)

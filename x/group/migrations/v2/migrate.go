@@ -74,7 +74,7 @@ func Migrate(
 		if err != nil {
 			return err
 		}
-		baseAccount, err := authtypes.NewBaseAccountWithPubKey(ac, accountKeeper.AddressCodec())
+		baseAccount, err := authtypes.NewBaseAccountWithPubKey(ac)
 		if err != nil {
 			return fmt.Errorf("failed to create new group policy account: %w", err)
 		}

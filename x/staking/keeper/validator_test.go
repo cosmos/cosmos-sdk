@@ -496,8 +496,7 @@ func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
 	powers := []int64{10, 20}
 	var validators [2]stakingtypes.Validator
 
-	bonedPool, err := authtypes.NewEmptyModuleAccount(s.accountKeeper.AddressCodec(), stakingtypes.BondedPoolName)
-	s.Require().NoError(err)
+	bonedPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
 	ak.EXPECT().GetModuleAccount(gomock.Any(), stakingtypes.BondedPoolName).Return(bonedPool).AnyTimes()
 	bk.EXPECT().GetBalance(gomock.Any(), bonedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
 

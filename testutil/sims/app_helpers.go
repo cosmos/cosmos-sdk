@@ -86,11 +86,7 @@ type StartupConfig struct {
 
 func DefaultStartUpConfig(addressCodec address.Codec) (StartupConfig, error) {
 	priv := secp256k1.GenPrivKey()
-	addr, err := addressCodec.BytesToString(priv.PubKey().Address())
-	if err != nil {
-		return StartupConfig{}, err
-	}
-	ba := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
 	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)))}
 	return StartupConfig{
 		ValidatorSet:    CreateRandomValidatorSet,

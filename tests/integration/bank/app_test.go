@@ -334,8 +334,8 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	addr2Str, err := ac.BytesToString(addr2)
 	require.NoError(t, err)
 
-	acc1 := authtypes.NewBaseAccountWithAddress(addr1Str)
-	acc2 := authtypes.NewBaseAccountWithAddress(addr2Str)
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+	acc2 := authtypes.NewBaseAccountWithAddress(addr2)
 	err = acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
@@ -397,7 +397,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 }
 
 func TestMsgSetSendEnabled(t *testing.T) {
-	acc1 := authtypes.NewBaseAccountWithAddress(addr1.String())
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
 
 	genAccs := []authtypes.GenesisAccount{acc1}
 	s := createTestSuite(t, genAccs)

@@ -8,8 +8,6 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/address"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -64,7 +62,7 @@ func GetGenesisStateFromAppState(cdc codec.Codec, appState map[string]json.RawMe
 
 // ValidateGenesis performs basic validation of auth genesis data returning an
 // error for any failed validation criteria.
-func ValidateGenesis(data GenesisState, addressCodec address.Codec) error {
+func ValidateGenesis(data GenesisState) error {
 	if err := data.Params.Validate(); err != nil {
 		return err
 	}
@@ -74,7 +72,7 @@ func ValidateGenesis(data GenesisState, addressCodec address.Codec) error {
 		return err
 	}
 
-	return ValidateGenAccounts(genAccs, addressCodec)
+	return ValidateGenAccounts(genAccs)
 }
 
 // SanitizeGenesisAccounts sorts accounts and coin sets.
@@ -125,15 +123,12 @@ func SanitizeGenesisAccounts(genAccs GenesisAccounts) GenesisAccounts {
 }
 
 // ValidateGenAccounts validates an array of GenesisAccounts and checks for duplicates
-func ValidateGenAccounts(accounts GenesisAccounts, addressCodec address.Codec) error {
+func ValidateGenAccounts(accounts GenesisAccounts) error {
 	addrMap := make(map[string]bool, len(accounts))
 
 	for _, acc := range accounts {
 		// check for duplicated accounts
-		addrStr, err := addressCodec.BytesToString(acc.GetAddress())
-		if err != nil {
-			return err
-		}
+		addrStr := acc.GetAddress().String()
 		if _, ok := addrMap[addrStr]; ok {
 			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
 		}

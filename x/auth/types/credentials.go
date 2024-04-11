@@ -3,25 +3,19 @@ package types
 import (
 	"bytes"
 	"fmt"
-
-	coreaddress "cosmossdk.io/core/address"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 // NewBaseAccountWithPubKey creates an account with an a pubkey.
-func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey, addressCodec coreaddress.Codec) (*BaseAccount, error) {
+func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey) (*BaseAccount, error) {
 	if pubkey == nil {
 		return nil, fmt.Errorf("pubkey cannot be nil")
 	}
 
-	addr, err := addressCodec.BytesToString(pubkey.Address())
-	if err != nil {
-		return nil, err
-	}
-
-	baseAccount := NewBaseAccountWithAddress(addr)
+	baseAccount := NewBaseAccountWithAddress(sdk.AccAddress(pubkey.Address()))
 	if err := baseAccount.SetPubKey(pubkey); err != nil {
 		return nil, fmt.Errorf("failed to create a valid account with credentials: %w", err)
 	}

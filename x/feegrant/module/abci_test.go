@@ -1,7 +1,6 @@
 package module_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -18,6 +17,7 @@ import (
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"

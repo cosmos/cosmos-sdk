@@ -666,6 +666,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+
 	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
 	suite.Require().NoError(err)
 	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])

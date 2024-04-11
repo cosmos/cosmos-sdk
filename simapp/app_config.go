@@ -198,8 +198,10 @@ var (
 				Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
 			},
 			{
-				Name:   "tx",
-				Config: appconfig.WrapAny(&txconfigv1.Config{}),
+				Name: "tx",
+				Config: appconfig.WrapAny(&txconfigv1.Config{
+					SkipAnteHandler: true, // SimApp is using non default AnteHandler such as circuit and unorderedtx decorators
+				}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,

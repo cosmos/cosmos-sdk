@@ -17,6 +17,7 @@ import (
 func TestSimGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
+
 	vestingStart := time.Now().UTC()
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))

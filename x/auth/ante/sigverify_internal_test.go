@@ -6,15 +6,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-
+	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/auth/ante"
 	authcodec "cosmossdk.io/x/auth/codec"
-	"cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -29,6 +28,10 @@ func (*mockAccount) Environment() appmodule.Environment {
 	}
 }
 
+func (*mockAccount) AddressCodec() coreaddress.Codec {
+	return address.NewBech32Codec("cosmos")
+}
+
 type mockTransactionService struct {
 	transaction.Service
 }
@@ -40,9 +43,10 @@ func (*mockTransactionService) ExecMode(ctx context.Context) transaction.ExecMod
 func TestSigVerify_setPubKey(t *testing.T) {
 	svd := ante.NewSigVerificationDecorator(&mockAccount{}, nil, nil, nil)
 
-
 	alicePk := secp256k1.GenPrivKey().PubKey()
 	bobPk := secp256k1.GenPrivKey().PubKey()
+
+	cdc := authcodec.NewBech32Codec("cosmos")
 
 	aliceAddr, err := cdc.BytesToString(alicePk.Address())
 	require.NoError(t, err)

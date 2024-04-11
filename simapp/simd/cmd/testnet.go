@@ -276,10 +276,6 @@ func initTestnetFiles(
 			_ = os.RemoveAll(args.outputDir)
 			return err
 		}
-		addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
-		if err != nil {
-			return err
-		}
 
 		info := map[string]string{"secret": secret}
 
@@ -300,7 +296,7 @@ func initTestnetFiles(
 			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
 		}
 
-		genBalances = append(genBalances, banktypes.Balance{Address: addrStr, Coins: coins.Sort()})
+		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valStr, err := clientCtx.ValidatorAddressCodec.BytesToString(sdk.ValAddress(addr))

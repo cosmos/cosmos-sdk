@@ -17,16 +17,13 @@ import (
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
-	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
@@ -144,7 +141,7 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-func (m *MM) InitGenesis(ctx context.Context, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
+func (m *MM) InitGenesis(ctx context.Context, genesisData map[string]json.RawMessage) ([]appmodulev2.ValidatorUpdate, error) {
 	var validatorUpdates []appmodulev2.ValidatorUpdate
 	m.logger.Info("initializing blockchain state from genesis.json")
 
@@ -154,27 +151,23 @@ func (m *MM) InitGenesis(ctx context.Context, genesisData map[string]json.RawMes
 		}
 
 		mod := m.modules[moduleName]
-		// Check if module has auto genesis, if so return err
-		if _, ok := mod.(appmodule.HasGenesisAuto); ok {
-			m.logger.Debug("running initialization for module", "module", moduleName)
-			return &abci.ResponseInitChain{}, fmt.Errorf("Not support auto genesis, module: %v", moduleName)
-		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+		if module, ok := mod.(appmodulev2.HasGenesis); ok {
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return &abci.ResponseInitChain{}, err
+				return nil, err
 			}
 		} else if module, ok := mod.(sdkmodule.HasABCIGenesis); ok {
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
 			if err != nil {
-				return &abci.ResponseInitChain{}, err
+				return nil, err
 			}
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return &abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
+					return nil, errors.New("validator InitGenesis updates already set by a previous module")
 				}
 				validatorUpdates = moduleValUpdates
 			}
@@ -183,36 +176,12 @@ func (m *MM) InitGenesis(ctx context.Context, genesisData map[string]json.RawMes
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
+		return nil, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
-	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
-	for i, v := range validatorUpdates {
-		var pubkey cmtcryptoproto.PublicKey
-		switch v.PubKeyType {
-		case "ed25519":
-			pubkey = cmtcryptoproto.PublicKey{
-				Sum: &cmtcryptoproto.PublicKey_Ed25519{
-					Ed25519: v.PubKey,
-				},
-			}
-		case "secp256k1":
-			pubkey = cmtcryptoproto.PublicKey{
-				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
-					Secp256K1: v.PubKey,
-				},
-			}
-		}
-
-		cometValidatorUpdates[i] = abci.ValidatorUpdate{
-			PubKey: pubkey,
-			Power:  v.Power,
-		}
-	}
-
-	return &abci.ResponseInitChain{
-		Validators: cometValidatorUpdates,
-	}, nil
+	// Not convert to abci response
+	// Return appmodule.ValidatorUpdates instead
+	return validatorUpdates, nil
 }
 
 // ExportGenesis performs export genesis functionality for modules
@@ -238,10 +207,7 @@ func (m *MM) ExportGenesisForModules(ctx sdk.Context, modulesToExport []string) 
 	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
-		if _, ok := mod.(appmodule.HasGenesisAuto); ok {
-			m.logger.Debug("running initialization for module", "module", moduleName)
-			return nil, fmt.Errorf("Not support auto genesis, module: %v", moduleName)
-		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+		if module, ok := mod.(appmodulev2.HasGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
 			go func(module appmodulev2.HasGenesis, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
@@ -504,34 +470,32 @@ func (m *MM) validateConfig() error {
 
 	if err := m.assertNoForgottenModules("InitGenesis", m.config.InitGenesis, func(moduleName string) bool {
 		module := m.modules[moduleName]
+		if _, hasGenesis := module.(appmodule.HasGenesisAuto); hasGenesis {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
+		}
+
 		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
 			return !hasGenesis
 		}
 
-		// TODO, if we actually don't support old genesis, let's panic here saying this module isn't server/v2 compatible
-		if _, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis); hasABCIGenesis {
-			return !hasABCIGenesis
-		}
-
-		_, hasGenesis := module.(sdkmodule.HasGenesis)
-		return !hasGenesis
+		_, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis)
+		return !hasABCIGenesis
 	}); err != nil {
 		return err
 	}
 
 	if err := m.assertNoForgottenModules("ExportGenesis", m.config.ExportGenesis, func(moduleName string) bool {
 		module := m.modules[moduleName]
+		if _, hasGenesis := module.(appmodule.HasGenesisAuto); hasGenesis {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
+		}
+
 		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
 			return !hasGenesis
 		}
 
-		// TODO, if we actually don't support old genesis, let's panic here saying this module isn't server/v2 compatible
-		if _, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis); hasABCIGenesis {
-			return !hasABCIGenesis
-		}
-
-		_, hasGenesis := module.(sdkmodule.HasGenesis)
-		return !hasGenesis
+		_, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis)
+		return !hasABCIGenesis
 	}); err != nil {
 		return err
 	}

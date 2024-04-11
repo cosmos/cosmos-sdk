@@ -4,10 +4,15 @@ import (
 	"context"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+type HasEnvironment interface {
+	Environment() appmodule.Environment
+}
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
 // Interface provides support to use non-sdk AccountKeeper for AnteHandler's decorators.
@@ -16,8 +21,9 @@ type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 	GetModuleAddress(moduleName string) sdk.AccAddress
-	AddressCodec() address.Codec
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	AddressCodec() address.Codec
+	Environment() appmodule.Environment
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

@@ -54,7 +54,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	expiration := ctx.HeaderInfo().Time.AddDate(0, 1, 0)
 	expiration2 := expiration.AddDate(1, 0, 0)
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
-	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil)
+	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil, codectestutil.CodecOptions{}.GetAddressCodec())
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := authztestutil.NewMockAccountKeeper(ctrl)

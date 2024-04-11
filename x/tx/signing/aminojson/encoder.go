@@ -81,16 +81,21 @@ func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) er
 	}
 }
 
-// cosmosBytesAsString replicates the behavior at:
+// cosmosInlineJSON takes bytes and inlines them into a JSON document.
+//
+// This requires the bytes contain valid JSON since otherwise the resulting document would be invalid.
+// Invalid JSON will result in an error.
+//
+// This replicates the behavior of JSON messages embedded in protobuf bytes
+// required for CosmWasm, e.g.:
 // https://github.com/CosmWasm/wasmd/blob/08567ff20e372e4f4204a91ca64a371538742bed/x/wasm/types/tx.go#L20-L22
-func cosmosBytesAsString(_ *Encoder, v protoreflect.Value, w io.Writer) error {
+func cosmosInlineJSON(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch bz := v.Interface().(type) {
 	case []byte:
-		blob, err := json.RawMessage(bz).MarshalJSON()
-		if err != nil {
-			return err
+		if !json.Valid(bz) {
+			return errors.New("invalid JSON bytes")
 		}
-		_, err = w.Write(blob)
+		_, err := w.Write(bz)
 		return err
 	default:
 		return fmt.Errorf("unsupported type %T", bz)

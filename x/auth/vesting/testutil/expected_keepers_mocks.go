@@ -106,6 +106,20 @@ func (m *MockAccountsModKeeper) EXPECT() *MockAccountsModKeeperMockRecorder {
 	return m.recorder
 }
 
+// IsAccountsModuleAccount mocks base method.
+func (m *MockAccountsModKeeper) IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsAccountsModuleAccount", ctx, accountAddr)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsAccountsModuleAccount indicates an expected call of IsAccountsModuleAccount.
+func (mr *MockAccountsModKeeperMockRecorder) IsAccountsModuleAccount(ctx, accountAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAccountsModuleAccount", reflect.TypeOf((*MockAccountsModKeeper)(nil).IsAccountsModuleAccount), ctx, accountAddr)
+}
+
 // SendModuleMessageUntyped mocks base method.
 func (m *MockAccountsModKeeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
 	m.ctrl.T.Helper()

@@ -58,7 +58,6 @@ func Example() {
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
-		nil,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -155,7 +154,6 @@ func Example_oneModule() {
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
-		nil,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)

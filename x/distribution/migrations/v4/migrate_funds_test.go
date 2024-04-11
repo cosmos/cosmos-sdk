@@ -63,7 +63,6 @@ func TestFundsMigration(t *testing.T) {
 		addressCodec,
 		sdk.Bech32MainPrefix,
 		authority,
-		nil,
 	)
 
 	// create bank keeper

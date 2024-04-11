@@ -57,7 +57,7 @@ func NewSTF[T transaction.Tx](
 		doValidatorUpdate: doValidatorUpdate,
 		postTxExec:        postTxExec, // TODO
 		branch:            branch,
-		getGasMeter:       stfgas.DefaultGetMeter,
+		getGasMeter:       stfgas.DefaultGasMeter,
 		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter,
 	}
 }
@@ -172,7 +172,6 @@ func (s STF[T]) deliverTx(
 			Error: err,
 		}
 	}
-	println("oadskosak")
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode)
 	return appmanager.TxResult{

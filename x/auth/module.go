@@ -152,7 +152,6 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	validators := []interface {
 		ValidateTx(ctx context.Context, tx sdk.Tx) error
 	}{
-		ante.NewSetUpContextDecorator(am.accountKeeper),
 		ante.NewValidateBasicDecorator(am.accountKeeper.Environment()),
 		ante.NewTxTimeoutHeightDecorator(am.accountKeeper.Environment()),
 		ante.NewValidateMemoDecorator(am.accountKeeper),

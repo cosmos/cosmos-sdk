@@ -38,6 +38,7 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
+	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -50,7 +51,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 )
 
 // DefaultNodeHome default home directories for the application daemon

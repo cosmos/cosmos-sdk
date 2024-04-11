@@ -22,6 +22,7 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking"
 
+	_ "cosmossdk.io/x/consensus"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -29,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 var (

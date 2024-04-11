@@ -33,6 +33,7 @@ import (
 	_ "cosmossdk.io/x/staking" // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	_ "cosmossdk.io/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -53,7 +54,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 

@@ -44,8 +44,8 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
+	consensustypes "cosmossdk.io/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 type GeneratedType struct {

@@ -29,6 +29,7 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 
+	"cosmossdk.io/x/consensus"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -38,7 +39,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.

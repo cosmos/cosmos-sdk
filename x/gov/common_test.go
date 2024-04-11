@@ -5,7 +5,7 @@ import (
 	"cosmossdk.io/x/gov/types/v1beta1"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "cosmossdk.io/x/consensus"
 )
 
 var (

@@ -9,13 +9,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-<<<<<<< HEAD
-	baseaccount "cosmossdk.io/x/accounts/defaults/base"
-=======
 	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
 	"cosmossdk.io/x/accounts/defaults/lockup"
->>>>>>> testing_stuff
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"

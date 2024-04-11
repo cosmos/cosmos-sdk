@@ -26,7 +26,12 @@ type Handler = func(ctx context.Context, request, response protoiface.MessageV1)
 
 // MakeHybridHandler returns a handler that can handle both gogo and protov2 messages, no matter
 // if the handler is a gogo or protov2 handler.
-func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
+func MakeHybridHandler(
+	cdc codec.BinaryCodec,
+	sd *grpc.ServiceDesc,
+	method grpc.MethodDesc,
+	handler interface{},
+) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
 	if err != nil {
@@ -49,7 +54,12 @@ func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.
 }
 
 // makeProtoV2HybridHandler returns a handler that can handle both gogo and protov2 messages.
-func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.BinaryCodec, method grpc.MethodDesc, handler any) (Handler, error) {
+func makeProtoV2HybridHandler(
+	prefMethod protoreflect.MethodDescriptor,
+	cdc codec.BinaryCodec,
+	method grpc.MethodDesc,
+	handler any,
+) (Handler, error) {
 	// it's a protov2 handler, if a gogo counterparty is not found we cannot handle gogo messages.
 	gogoExists := gogoproto.MessageType(string(prefMethod.Output().FullName())) != nil
 	if !gogoExists {
@@ -114,7 +124,12 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 	}, nil
 }
 
-func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.BinaryCodec, method grpc.MethodDesc, handler any) (Handler, error) {
+func makeGogoHybridHandler(
+	prefMethod protoreflect.MethodDescriptor,
+	cdc codec.BinaryCodec,
+	method grpc.MethodDesc,
+	handler any,
+) (Handler, error) {
 	// it's a gogo handler, we check if the existing protov2 counterparty exists.
 	_, err := protoregistry.GlobalTypes.FindMessageByName(prefMethod.Output().FullName())
 	if err != nil {

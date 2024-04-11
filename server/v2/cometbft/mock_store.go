@@ -1,19 +1,19 @@
 package cometbft
 
 import (
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	ammstore "cosmossdk.io/server/v2/appmanager/store"
-	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/server/v2/stf/branch"
+	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/storage/pebbledb"
-	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/store/v2/proof"
-	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 type MockStore struct {
-	Storage ammstore.Storage[*pebbledb.Database]
+	Storage  ammstore.Storage[*pebbledb.Database]
 	Commiter commitment.CommitStore
 }
 
@@ -26,8 +26,8 @@ func NewMockStore() *MockStore {
 	return &MockStore{Storage: ss, Commiter: *sc}
 }
 
-func (s *MockStore) LatestVersion() (uint64, error) {
-	v, _, err :=  s.Storage.StateLatest()
+func (s *MockStore) GetLatestVersion() (uint64, error) {
+	v, _, err := s.Storage.StateLatest()
 	return v, err
 }
 
@@ -35,14 +35,14 @@ func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
 	return s.Storage.StateLatest()
 }
 
-func (s *MockStore) StateCommit(changes []corestore.StateChanges) (corestore.Hash, error) {
+func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, error) {
 	_, state, _ := s.Storage.StateLatest()
 	writer := branch.DefaultNewWriterMap(state)
-	err := writer.ApplyStateChanges(changes)
+	err := writer.ApplyStateChanges(changeset.Changes)
 	return []byte{}, err
 }
 
-func (s *MockStore) GetStateStorage() storev2.VersionedDatabase { 
+func (s *MockStore) GetStateStorage() storev2.VersionedDatabase {
 	// TODO
 	return nil
 }
@@ -51,20 +51,20 @@ func (s *MockStore) GetStateCommitment() storev2.Committer {
 	return &s.Commiter
 }
 
-type Result struct{
+type Result struct {
 	key      []byte
 	value    []byte
 	version  uint64
 	proofOps []proof.CommitmentOp
 }
 
-func (s *MockStore) Query(storeKey string, version uint64, key []byte, prove bool) (storev2.QueryResult, error) {
+func (s *MockStore) Query(storeKey []byte, version uint64, key []byte, prove bool) (storev2.QueryResult, error) {
 	state, err := s.Storage.StateAt(version)
-	reader, err := state.GetReader([]byte(storeKey))
+	reader, err := state.GetReader(storeKey)
 	value, err := reader.Get(key)
 	res := storev2.QueryResult{
-		Key: key,
-		Value: value,
+		Key:     key,
+		Value:   value,
 		Version: version,
 	}
 	return res, err
@@ -74,10 +74,6 @@ func (s *MockStore) LastCommitID() (proof.CommitID, error) {
 	v, _, err := s.Storage.StateLatest()
 	return proof.CommitID{
 		Version: v,
-		Hash: []byte{},
+		Hash:    []byte{},
 	}, err
 }
-
-
-
-

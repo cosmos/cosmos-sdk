@@ -16,6 +16,7 @@ func initTelemetry(v bool) {
 
 // Reset the global state to a known disabled state before each test.
 func setupTest(t *testing.T) {
+	t.Helper()
 	mu.Lock() // Ensure no other test can modify global state at the same time.
 	defer mu.Unlock()
 	initTelemetry(false)

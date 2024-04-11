@@ -2,8 +2,12 @@ package cometbft
 
 import (
 	"context"
+	staking "cosmossdk.io/x/staking/types"
 	"errors"
 	"fmt"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"sync/atomic"
 
 	"cosmossdk.io/core/header"
@@ -264,12 +268,32 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
+	// TODO: this query forms a dependency on x/staking, remove it.
+	// we have agreed the code smell is the tight coupling of validators and x/staking
+	// future work will be to query validators from state using only a abstraction in core
+	res, err := c.app.QueryWithState(ctx, genesisState, &staking.QueryValidatorsRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query validators: %w", err)
+	}
+	valRes := res.(*staking.QueryValidatorsResponse)
+	var validatorUpdates []abci.ValidatorUpdate
+	for _, val := range valRes.Validators {
+		cmtPk, err := cryptocodec.ToCmtProtoPublicKey(val.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey))
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert consensus pubkey: %w", err)
+		}
+		validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{
+			PubKey: cmtPk,
+			Power:  val.ConsensusPower(sdktypes.DefaultPowerReduction),
+		})
+	}
+
 	println(genesisState) // TODO: this needs to be committed to store as height 0.
 
 	// TODO: populate
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
-		Validators:      req.Validators,
+		Validators:      validatorUpdates,
 		AppHash:         []byte{},
 	}, nil
 }

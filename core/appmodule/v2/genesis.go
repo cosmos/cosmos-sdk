@@ -15,3 +15,7 @@ type HasGenesis interface {
 	InitGenesis(ctx context.Context, data json.RawMessage) error
 	ExportGenesis(ctx context.Context) (json.RawMessage, error)
 }
+
+type HasABCIGenesis interface {
+	InitGenesis(ctx context.Context, data json.RawMessage) ([]ValidatorUpdate, error)
+}

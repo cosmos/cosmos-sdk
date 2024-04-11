@@ -1,6 +1,7 @@
 package appmanager
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -20,7 +21,7 @@ type AppManager[T transaction.Tx] struct {
 	db store.Store
 
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
-	importState func(ctx context.Context, src map[string]io.Reader) error
+	importState func(ctx context.Context, src io.Reader) error
 
 	stf *stf.STF[T]
 }
@@ -31,6 +32,10 @@ func (a AppManager[T]) InitGenesis(
 	consensusMessages []transaction.Type,
 	initGenesisJSON []byte,
 ) (corestore.WriterMap, error) {
+	err := a.importState(ctx, bytes.NewBuffer(initGenesisJSON))
+	if err != nil {
+		return nil, fmt.Errorf("unable to import genesis state: %w", err)
+	}
 	// run block 0
 	// TODO: in an ideal world, genesis state is simply an initial state being applied
 	// unaware of what that state means in relation to every other, so here we can

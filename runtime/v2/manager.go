@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"cosmossdk.io/core/genesis"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -140,9 +141,53 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-// InitGenesis performs init genesis functionality for modules.
-func (m *MM) InitGenesis() {
-	panic("implement me")
+// InitGenesisJSON performs init genesis functionality for modules from genesis data in JSON format
+func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.RawMessage) error {
+	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
+	var seenValUpdates bool
+	for _, moduleName := range m.config.InitGenesis {
+		if genesisData[moduleName] == nil {
+			continue
+		}
+
+		mod := m.modules[moduleName]
+		// we might get an adapted module, a native core API module or a legacy module
+		if module, ok := mod.(appmodule.HasGenesisAuto); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			// core API genesis
+			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
+			if err != nil {
+				return err
+			}
+
+			err = module.InitGenesis(ctx, source)
+			if err != nil {
+				return err
+			}
+		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
+				return err
+			}
+		} else if module, ok := mod.(appmodulev2.HasABCIGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
+			if err != nil {
+				return err
+			}
+
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if seenValUpdates {
+					return errors.New("validator InitGenesis updates already set by a previous module")
+				} else {
+					seenValUpdates = true
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // ExportGenesis performs export genesis functionality for modules

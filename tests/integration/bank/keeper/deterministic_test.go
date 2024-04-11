@@ -93,6 +93,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authority.String(),
+		nil,
 	)
 
 	blockedAddresses := map[string]bool{

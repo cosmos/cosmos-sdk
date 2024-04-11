@@ -27,6 +27,7 @@ func init() {
 
 type ModuleInputs struct {
 	depinject.In
+	AccountsModKeeper types.AccountsModKeeper
 
 	Config            *modulev1.Module
 	Environment       appmodule.Environment

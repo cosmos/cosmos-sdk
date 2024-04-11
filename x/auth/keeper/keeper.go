@@ -84,13 +84,13 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
-	addressCodec address.Codec
-
-	environment       appmodule.Environment
-	cdc               codec.BinaryCodec
-	permAddrs         map[string]types.PermissionsForAddress
-	bech32Prefix      string
+	addressCodec      address.Codec
 	AccountsModKeeper types.AccountsModKeeper
+
+	environment  appmodule.Environment
+	cdc          codec.BinaryCodec
+	permAddrs    map[string]types.PermissionsForAddress
+	bech32Prefix string
 
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI

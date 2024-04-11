@@ -137,6 +137,7 @@ func initFixture(tb testing.TB) *fixture {
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authority.String(),
+		acctsModKeeper,
 	)
 
 	blockedAddresses := map[string]bool{

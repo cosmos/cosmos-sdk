@@ -29,9 +29,3 @@ type AccountKeeper interface {
 	SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
 	GetModulePermissions() map[string]types.PermissionsForAddress
 }
-
-// SendRestrictionWrapper is a wrapper for modules to inject SendRestrictionFn using depinject.
-type SendRestrictionWrapper struct{ SendRestrictionFn }
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (SendRestrictionWrapper) IsOnePerModuleType() {}

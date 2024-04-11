@@ -96,7 +96,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 func InvokeSetSendRestrictions(
 	config *modulev1.Module,
 	keeper keeper.BaseKeeper,
-	restrictions map[string]types.SendRestrictionFn,
+	restrictions map[string]types.SendRestrictionWrapper,
 ) error {
 	if config == nil {
 		return nil
@@ -123,7 +123,7 @@ func InvokeSetSendRestrictions(
 			return fmt.Errorf("can't find send restriction for module %s", module)
 		}
 
-		keeper.AppendSendRestriction(restriction)
+		keeper.AppendSendRestriction(restriction.SendRestrictionFn)
 	}
 
 	return nil

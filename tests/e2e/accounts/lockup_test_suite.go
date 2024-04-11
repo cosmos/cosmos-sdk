@@ -82,7 +82,7 @@ func (s *E2ETestSuite) TestContinuousLockingAccount() {
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
-	t.Run("error - execute send message, not sufficient fund", func(t *testing.T) {
+	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
 			ToAddress: addr,
@@ -207,7 +207,7 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
-	t.Run("error - execute send message, not sufficient fund", func(t *testing.T) {
+	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
 			ToAddress: addr,
@@ -343,7 +343,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	require.NoError(t, err)
 
 	// No token being unlocked yet
-	t.Run("error - execute send message, not sufficient fund", func(t *testing.T) {
+	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
 			ToAddress: addr,
@@ -414,6 +414,110 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	// Fund acc since we withdraw all the funds
 	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))})
 
+	t.Run("ok - execute delegate message", func(t *testing.T) {
+		vals, err := app.StakingKeeper.GetAllValidators(ctx)
+		require.NoError(t, err)
+		val := vals[0]
+		msg := &types.MsgDelegate{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		valbz, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+		require.NoError(t, err)
+
+		del, err := app.StakingKeeper.Delegations.Get(
+			ctx, collections.Join(sdk.AccAddress(accountAddr), sdk.ValAddress(valbz)),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, del)
+	})
+	t.Run("ok - execute undelegate message", func(t *testing.T) {
+		vals, err := app.StakingKeeper.GetAllValidators(ctx)
+		require.NoError(t, err)
+		val := vals[0]
+		msg := &types.MsgUndelegate{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+		valbz, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+		require.NoError(t, err)
+
+		ubd, err := app.StakingKeeper.GetUnbondingDelegation(
+			ctx, sdk.AccAddress(accountAddr), sdk.ValAddress(valbz),
+		)
+		require.NoError(t, err)
+		require.Equal(t, len(ubd.Entries), 1)
+	})
+}
+
+func (s *E2ETestSuite) TestPermanentLockingAccount() {
+	t := s.T()
+	app := setupApp(t)
+	currentTime := time.Now()
+	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger()).WithHeaderInfo(header.Info{
+		Time: currentTime,
+	})
+	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+	require.NoError(t, err)
+	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
+	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.PERMANENT_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
+		Owner:     ownerAddrStr,
+		StartTime: currentTime,
+		// end time in 1 minutes
+		EndTime: currentTime.Add(time.Minute),
+	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	require.NoError(t, err)
+
+	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
+	require.NoError(t, err)
+
+	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    ownerAddrStr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
+
+	t.Run("error - execute delegate message, insufficient fund", func(t *testing.T) {
+		vals, err := app.StakingKeeper.GetAllValidators(ctx)
+		require.NoError(t, err)
+		val := vals[0]
+		msg := &types.MsgDelegate{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
+
+	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+
+	t.Run("ok - execute send message", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    ownerAddrStr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
+		require.True(t, balance.Amount.Equal(math.NewInt(100)))
+	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
 		require.NoError(t, err)

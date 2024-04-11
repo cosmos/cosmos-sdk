@@ -318,7 +318,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			"cosmos",
 			authorityAddr,
 			nil,
-
 		)
 		suite.setModuleAccounts(suite.ctx, ak, maccs)
 

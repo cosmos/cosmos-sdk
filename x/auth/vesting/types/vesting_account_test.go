@@ -68,8 +68,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 		ac,
 		"cosmos",
 		authorityAddr,
-    nil,
-
+		nil,
 	)
 }
 

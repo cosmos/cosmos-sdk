@@ -10,6 +10,7 @@ import (
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
@@ -215,7 +216,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ boo
 
 	ctx.EventManager().EmitEvents(events)
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }
 
 // authenticate the authentication of the TX for a specific tx signer.
@@ -280,7 +281,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 	pubKey cryptotypes.PubKey,
 	signature signing.SignatureV2,
 ) error {
-	if ctx.ExecMode() == sdk.ExecModeSimulate && pubKey == nil {
+	if svd.ak.Environment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate && pubKey == nil {
 		pubKey = simSecp256k1Pubkey
 	}
 
@@ -310,7 +311,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	// we're in simulation mode, or in ReCheckTx, or context is not
 	// on sig verify tx, then we do not need to verify the signatures
 	// in the tx.
-	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
+	if svd.ak.Environment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
 		return nil
 	}
 
@@ -389,7 +390,7 @@ func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI,
 	if txPubKey == nil {
 		// if we're not in simulation mode, and we do not have a valid pubkey
 		// for this signer, then we simply error.
-		if ctx.ExecMode() != sdk.ExecModeSimulate {
+		if svd.ak.Environment().TransactionService.ExecMode(ctx) != transaction.ExecModeSimulate {
 			addr, err := svd.ak.AddressCodec().BytesToString(acc.GetAddress())
 			if err != nil {
 				return fmt.Errorf("could not convert address to string: %s", err.Error())
@@ -492,7 +493,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ b
 		}
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas

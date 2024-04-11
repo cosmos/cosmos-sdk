@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
-	anypb "google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
@@ -29,12 +29,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (w *gogoTxWrapper, err error) {
-	// set msgsv1
-	msgv1, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
-	}
+func newWrapperFromDecodedTx(
+	addrCodec address.Codec,
+	cdc codec.BinaryCodec,
+	decodedTx *decode.DecodedTx,
+) (w *gogoTxWrapper, err error) {
 	// set fees
 	fees := make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
@@ -76,7 +75,6 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 	return &gogoTxWrapper{
 		cdc:        cdc,
 		decodedTx:  decodedTx,
-		msgsV1:     msgv1,
 		fees:       fees,
 		feePayer:   feePayer,
 		feeGranter: feeGranter,
@@ -89,7 +87,6 @@ type gogoTxWrapper struct {
 	decodedTx *decode.DecodedTx
 	cdc       codec.BinaryCodec
 
-	msgsV1     []proto.Message
 	fees       sdk.Coins
 	feePayer   []byte
 	feeGranter []byte
@@ -134,11 +131,22 @@ func (w *gogoTxWrapper) GetGasLimit() (uint64, error) {
 	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (w *gogoTxWrapper) GetMessages() ([]protov2.Message, error) {
+func (w *gogoTxWrapper) GetMessages() ([]proto.Message, error) {
 	if w.decodedTx == nil || w.decodedTx.Messages == nil {
 		return nil, errors.New("messages not available or are nil")
 	}
 	return w.decodedTx.Messages, nil
+}
+
+func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
+	return w.decodedTx.Messages
+}
+
+func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
+	if w.decodedTx == nil || w.decodedTx.DynamicMessages == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
+	return w.decodedTx.DynamicMessages, nil
 }
 
 func (w *gogoTxWrapper) GetSenders() ([][]byte, error) {
@@ -159,17 +167,6 @@ type ExtensionOptionsTxBuilder interface {
 
 	SetExtensionOptions(...*codectypes.Any)
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
-}
-
-func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	if w.msgsV1 == nil {
-		panic("fill in msgs")
-	}
-	return w.msgsV1
-}
-
-func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
-	return w.decodedTx.Messages, nil
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {

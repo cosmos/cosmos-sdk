@@ -18,7 +18,7 @@ import (
 
 const (
 	driverName       = "sqlite3"
-	dbName           = "file:ss.db?cache=shared&mode=rwc&_journal_mode=WAL"
+	dbName           = "ss.db?cache=shared&mode=rwc&_journal_mode=WAL"
 	reservedStoreKey = "_RESERVED_"
 	keyLatestHeight  = "latest_height"
 	keyPruneHeight   = "prune_height"

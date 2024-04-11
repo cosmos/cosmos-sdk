@@ -7,11 +7,11 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -39,7 +39,7 @@ type MsgGrantAllowance struct {
 	// grantee is the address of the user being granted an allowance of another user's funds.
 	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
 	// allowance can be any of basic, periodic, allowed fee allowance.
-	Allowance *types.Any `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
+	Allowance *any.Any `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 
 func (m *MsgGrantAllowance) Reset()         { *m = MsgGrantAllowance{} }
@@ -89,7 +89,7 @@ func (m *MsgGrantAllowance) GetGrantee() string {
 	return ""
 }
 
-func (m *MsgGrantAllowance) GetAllowance() *types.Any {
+func (m *MsgGrantAllowance) GetAllowance() *any.Any {
 	if m != nil {
 		return m.Allowance
 	}
@@ -925,7 +925,7 @@ func (m *MsgGrantAllowance) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Allowance == nil {
-				m.Allowance = &types.Any{}
+				m.Allowance = &any.Any{}
 			}
 			if err := m.Allowance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

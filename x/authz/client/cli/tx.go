@@ -159,7 +159,7 @@ Examples:
 					return err
 				}
 
-				authorization = bank.NewSendAuthorization(spendLimit, allowed)
+				authorization = bank.NewSendAuthorization(spendLimit, allowed, clientCtx.AddressCodec)
 
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)

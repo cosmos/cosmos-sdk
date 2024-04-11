@@ -3,6 +3,8 @@ package ante
 import (
 	"context"
 
+	"cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/migrations/legacytx"
@@ -21,12 +23,12 @@ import (
 // ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
 // is not dependent on application state.
 type ValidateBasicDecorator struct {
-	ak AccountKeeper
+	env appmodule.Environment
 }
 
-func NewValidateBasicDecorator(ak AccountKeeper) ValidateBasicDecorator {
+func NewValidateBasicDecorator(env appmodule.Environment) ValidateBasicDecorator {
 	return ValidateBasicDecorator{
-		ak: ak,
+		env: env,
 	}
 }
 
@@ -40,7 +42,8 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool,
 
 func (vbd ValidateBasicDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	// no need to validate basic on recheck tx, call next antehandler
-	if ctx.ExecMode() == sdk.ExecModeReCheck {
+	txService := vbd.env.TransactionService
+	if txService.ExecMode(ctx) == transaction.ExecModeReCheck {
 		return nil
 	}
 
@@ -134,7 +137,8 @@ func (cgts ConsumeTxSizeGasDecorator) ValidateTx(ctx context.Context, tx sdk.Tx)
 	}
 
 	// simulate gas cost for signatures in simulate mode
-	if ctx.ExecMode() == sdk.ExecModeSimulate {
+	txService := cgts.ak.Environment().TransactionService
+	if txService.ExecMode(ctx) == transaction.ExecModeSimulate {
 		// in simulate mode, each element should be a nil signature
 		sigs, err := sigTx.GetSignaturesV2()
 		if err != nil {
@@ -208,7 +212,7 @@ type (
 	// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 	// tx height timeout.
 	TxTimeoutHeightDecorator struct {
-		ak AccountKeeper
+		env appmodule.Environment
 	}
 
 	// TxWithTimeoutHeight defines the interface a tx must implement in order for
@@ -222,9 +226,9 @@ type (
 
 // TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 // tx height timeout.
-func NewTxTimeoutHeightDecorator(ak AccountKeeper) TxTimeoutHeightDecorator {
+func NewTxTimeoutHeightDecorator(env appmodule.Environment) TxTimeoutHeightDecorator {
 	return TxTimeoutHeightDecorator{
-		ak: ak,
+		env: env,
 	}
 }
 
@@ -248,7 +252,7 @@ func (txh TxTimeoutHeightDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) e
 	}
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
-	headerInfo := txh.ak.Environment().HeaderService.GetHeaderInfo(ctx)
+	headerInfo := txh.env.HeaderService.GetHeaderInfo(ctx)
 
 	if timeoutHeight > 0 && uint64(headerInfo.Height) > timeoutHeight {
 		return errorsmod.Wrapf(

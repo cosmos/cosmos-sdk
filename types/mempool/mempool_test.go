@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	protov2 "google.golang.org/protobuf/proto"
@@ -87,7 +88,7 @@ func (tx testTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (tx testTx) GetMessages() ([]protov2.Message, error) {
+func (tx testTx) GetMessages() ([]proto.Message, error) {
 	return nil, nil
 }
 
@@ -121,7 +122,7 @@ func (sigErrTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (sigErrTx) GetMessages() ([]protov2.Message, error) {
+func (sigErrTx) GetMessages() ([]proto.Message, error) {
 	return nil, nil
 }
 
@@ -251,7 +252,7 @@ type MempoolTestSuite struct {
 
 func (s *MempoolTestSuite) resetMempool() {
 	s.iterations = 0
-	s.mempool = mempool.NewSenderNonceMempool()
+	s.mempool = mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 }
 
 func (s *MempoolTestSuite) SetupTest() {

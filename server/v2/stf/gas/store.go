@@ -3,7 +3,6 @@ package gas
 import (
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/store"
-	corestore "cosmossdk.io/core/store"
 )
 
 // Gas consumption descriptors.
@@ -92,7 +91,7 @@ func (s *Store) ChangeSets() ([]store.KVPair, error) {
 	return s.parent.ChangeSets()
 }
 
-func (s *Store) Iterator(start, end []byte) (corestore.Iterator, error) {
+func (s *Store) Iterator(start, end []byte) (store.Iterator, error) {
 	itr, err := s.parent.Iterator(start, end)
 	if err != nil {
 		return nil, err
@@ -101,7 +100,7 @@ func (s *Store) Iterator(start, end []byte) (corestore.Iterator, error) {
 	return newIterator(itr, s.gasMeter, s.gasConfig), nil
 }
 
-func (s *Store) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
+func (s *Store) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	itr, err := s.parent.ReverseIterator(start, end)
 	if err != nil {
 		return nil, err
@@ -110,15 +109,15 @@ func (s *Store) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	return newIterator(itr, s.gasMeter, s.gasConfig), nil
 }
 
-var _ corestore.Iterator = (*iterator)(nil)
+var _ store.Iterator = (*iterator)(nil)
 
 type iterator struct {
 	gasMeter  gas.Meter
 	gasConfig StoreConfig
-	parent    corestore.Iterator
+	parent    store.Iterator
 }
 
-func newIterator(parent corestore.Iterator, gm gas.Meter, gc StoreConfig) corestore.Iterator {
+func newIterator(parent store.Iterator, gm gas.Meter, gc StoreConfig) store.Iterator {
 	return &iterator{
 		parent:    parent,
 		gasConfig: gc,

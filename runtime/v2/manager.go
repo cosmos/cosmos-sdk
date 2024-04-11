@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
@@ -54,8 +55,8 @@ func NewModuleManager(
 	if len(config.EndBlockers) == 0 {
 		config.EndBlockers = modulesName
 	}
-	if len(config.TxValidation) == 0 {
-		config.TxValidation = modulesName
+	if len(config.TxValidators) == 0 {
+		config.TxValidators = modulesName
 	}
 	if len(config.InitGenesis) == 0 {
 		config.InitGenesis = modulesName
@@ -235,12 +236,12 @@ func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error 
 }
 
 // TxValidators validates incoming transactions
-func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
+func (m *MM) TxValidators() func(ctx context.Context, tx transaction.Tx) error {
 	return func(ctx context.Context, tx transaction.Tx) error {
-		for _, moduleName := range m.config.TxValidation {
-			if module, ok := m.modules[moduleName].(appmodulev2.HasTxValidation[transaction.Tx]); ok {
+		for _, moduleName := range m.config.TxValidators {
+			if module, ok := m.modules[moduleName].(appmodulev2.HasTxValidator[transaction.Tx]); ok {
 				if err := module.TxValidator(ctx, tx); err != nil {
-					return fmt.Errorf("failed to run txvalidator for %s: %w", moduleName, err)
+					return fmt.Errorf("failed to run tx validator for %s: %w", moduleName, err)
 				}
 			}
 		}
@@ -354,10 +355,10 @@ func (m *MM) validateConfig() error {
 		return err
 	}
 
-	if err := m.assertNoForgottenModules("TxValidation", m.config.TxValidation, func(moduleName string) bool {
+	if err := m.assertNoForgottenModules("TxValidators", m.config.TxValidators, func(moduleName string) bool {
 		module := m.modules[moduleName]
-		_, hasTxValidation := module.(appmodulev2.HasTxValidation[transaction.Tx])
-		return !hasTxValidation
+		_, hasTxValidator := module.(appmodulev2.HasTxValidator[transaction.Tx])
+		return !hasTxValidator
 	}); err != nil {
 		return err
 	}
@@ -406,7 +407,11 @@ func (m *MM) validateConfig() error {
 // assertNoForgottenModules checks that we didn't forget any modules in the *runtimev2.Module config.
 // `pass` is a closure which allows one to omit modules from `moduleNames`.
 // If you provide non-nil `pass` and it returns true, the module would not be subject of the assertion.
-func (m *MM) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(moduleName string) bool) error {
+func (m *MM) assertNoForgottenModules(
+	setOrderFnName string,
+	moduleNames []string,
+	pass func(moduleName string) bool,
+) error {
 	ms := make(map[string]bool)
 	for _, m := range moduleNames {
 		ms[m] = true
@@ -476,7 +481,7 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
 		// TODO(tip): what if a query is not deterministic?
-		err := registerMethod(c.cdc, c.stfQueryRouter, sd, md, ss)
+		err := registerMethod(c.stfQueryRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
 		}
@@ -486,7 +491,7 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 
 func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
-		err := registerMethod(c.cdc, c.stfMsgRouter, sd, md, ss)
+		err := registerMethod(c.stfMsgRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
 		}
@@ -494,30 +499,28 @@ func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{})
 	return nil
 }
 
-func registerMethod(cdc codec.BinaryCodec, stfRouter *stf.MsgRouterBuilder, sd *grpc.ServiceDesc, md grpc.MethodDesc, ss interface{}) error {
+func registerMethod(
+	stfRouter *stf.MsgRouterBuilder,
+	sd *grpc.ServiceDesc,
+	md grpc.MethodDesc,
+	ss interface{},
+) error {
 	requestName, err := protocompat.RequestFullNameFromMethodDesc(sd, md)
 	if err != nil {
 		return err
 	}
 
-	responseName, err := protocompat.ResponseFullNameFromMethodDesc(sd, md)
-	if err != nil {
-		return err
-	}
-
-	// now we create the hybrid handler
-	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, md, ss)
-	if err != nil {
-		return err
-	}
-
-	responseV2Type, err := protoregistry.GlobalTypes.FindMessageByName(responseName)
-	if err != nil {
-		return err
-	}
-
-	return stfRouter.RegisterHandler(string(requestName), func(ctx context.Context, msg appmodulev2.Message) (resp appmodulev2.Message, err error) {
-		resp = responseV2Type.New().Interface().(appmodulev2.Message)
-		return resp, hybridHandler(ctx, msg, resp)
+	return stfRouter.RegisterHandler(string(requestName), func(
+		ctx context.Context,
+		msg appmodulev2.Message,
+	) (resp appmodulev2.Message, err error) {
+		res, err := md.Handler(ss, ctx, func(dstMsg any) error {
+			proto.Merge(dstMsg.(proto.Message), msg)
+			return nil
+		}, nil)
+		if err != nil {
+			return nil, err
+		}
+		return res.(appmodulev2.Message), nil
 	})
 }

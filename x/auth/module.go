@@ -34,11 +34,12 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasName             = AppModule{}
 
-	_ appmodule.HasGenesis                        = AppModule{}
-	_ appmodule.AppModule                         = AppModule{}
-	_ appmodule.HasServices                       = AppModule{}
-	_ appmodule.HasMigrations                     = AppModule{}
-	_ appmodulev2.HasTxValidation[transaction.Tx] = AppModule{}
+	_ appmodule.HasGenesis    = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasServices   = AppModule{}
+	_ appmodule.HasMigrations = AppModule{}
+
+	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
 )
 
 // AppModule implements an application module for the auth module.
@@ -144,7 +145,7 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	return am.cdc.MarshalJSON(gs)
 }
 
-// TxValidator implements appmodulev2.HasTxValidation.
+// TxValidator implements appmodulev2.HasTxValidator.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 
@@ -152,8 +153,8 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		ValidateTx(ctx context.Context, tx sdk.Tx) error
 	}{
 		ante.NewSetUpContextDecorator(am.accountKeeper),
-		ante.NewValidateBasicDecorator(am.accountKeeper),
-		ante.NewTxTimeoutHeightDecorator(am.accountKeeper),
+		ante.NewValidateBasicDecorator(am.accountKeeper.Environment()),
+		ante.NewTxTimeoutHeightDecorator(am.accountKeeper.Environment()),
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),

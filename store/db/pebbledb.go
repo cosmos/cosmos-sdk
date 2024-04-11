@@ -7,11 +7,12 @@ import (
 	"path/filepath"
 	"slices"
 
+	"github.com/cockroachdb/pebble"
+	"github.com/spf13/cast"
+
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
-	"github.com/cockroachdb/pebble"
-	"github.com/spf13/cast"
 )
 
 var _ store.RawDB = (*PebbleDB)(nil)
@@ -24,9 +25,7 @@ type PebbleDB struct {
 }
 
 func NewPebbleDB(name, dataDir string) (*PebbleDB, error) {
-
 	return NewPebbleDBWithOpts(name, dataDir, nil)
-
 }
 
 func NewPebbleDBWithOpts(name, dataDir string, opts store.DBOptions) (*PebbleDB, error) {

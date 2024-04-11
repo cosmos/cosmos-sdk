@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/core/transaction"
 	"fmt"
 	"math"
 	"strings"
@@ -12,10 +13,8 @@ import (
 	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -28,39 +27,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 )
 
-// parseQueryRequest parses a RequestQuery into a proto.Message, if it is a proto query
-func parseQueryRequest(req *abci.RequestQuery) (proto.Message, error) {
-	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
-	if err != nil {
-		return nil, err
-	}
-
-	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
-	if !ok {
-		return nil, fmt.Errorf("invalid method descriptor %s", desc.FullName())
-	}
-
-	queryReqType := dynamicpb.NewMessage(methodDesc.Input())
-	err = proto.Unmarshal(req.Data, queryReqType)
-
-	return queryReqType, err
-}
-
-// queryResponse needs the request to get the path
-func queryResponse(req *abci.RequestQuery, res proto.Message) (*abci.ResponseQuery, error) {
-	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
-	if err != nil {
-		return nil, err
-	}
-
-	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
-	if !ok {
-		return nil, fmt.Errorf("invalid method descriptor %s", desc.FullName())
-	}
-
-	queryRespType := dynamicpb.NewMessage(methodDesc.Output())
-	proto.Merge(queryRespType, res)
-	bz, err := proto.Marshal(res)
+func queryResponse(res transaction.Type) (*abci.ResponseQuery, error) {
+	// TODO(kocu): we are tightly coupled go gogoproto here, is this problem?
+	bz, err := gogoproto.Marshal(res)
 	if err != nil {
 		return nil, err
 	}
@@ -212,11 +181,12 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 
 	msgResponses := make([]*anypb.Any, len(txRes.Resp))
 	for i, resp := range txRes.Resp {
-		any, err := anypb.New(resp)
+		// use this hack to maintain the protov2 API here for now
+		anyMsg, err := gogoany.NewAnyWithCacheWithValue(resp)
 		if err != nil {
 			return nil, err
 		}
-		msgResponses[i] = any
+		msgResponses[i] = &anypb.Any{TypeUrl: anyMsg.TypeUrl, Value: anyMsg.Value}
 	}
 
 	res := &v1beta1.SimulationResponse{
@@ -333,10 +303,11 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.RequestFinalizeBloc
 	return nil
 }
 
-// GetConsensusParams makes a query to the consensus module in order to get the latest consensus parameters from committed state
+// GetConsensusParams makes a query to the consensus module in order to get the latest consensus
+// parameters from committed state
 func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	cs := &cmtproto.ConsensusParams{}
-	latestVersion, err := c.store.LatestVersion()
+	latestVersion, err := c.store.GetLatestVersion()
 
 	res, err := c.app.Query(ctx, latestVersion, &consensusv1.QueryParamsRequest{})
 	if err != nil {

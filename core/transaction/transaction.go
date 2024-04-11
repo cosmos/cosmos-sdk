@@ -1,11 +1,11 @@
 package transaction
 
 import (
-	"google.golang.org/protobuf/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 type (
-	Type     = proto.Message
+	Type     = gogoproto.Message
 	Identity = []byte
 )
 

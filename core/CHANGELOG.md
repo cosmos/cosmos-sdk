@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Add transaction service.
 * [#18379](https://github.com/cosmos/cosmos-sdk/pull/18379) Add branch service.
 * [#18457](https://github.com/cosmos/cosmos-sdk/pull/18457) Add branch.ExecuteWithGasLimit.
 * [#19041](https://github.com/cosmos/cosmos-sdk/pull/19041) Add `appmodule.Environment` interface to fetch different services
@@ -48,7 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Create V2 appmodule with v2 api for runtime/v2
     * Introduce `Transaction.Tx` for use in runtime/v2
     * Introduce `HasUpdateValidators` interface and `ValidatorUpdate` struct for validator updates 
-    * Introduce `HasTxValidation` interface for modules to register tx validation handlers
+    * Introduce `HasTxValidator` interface for modules to register tx validation handlers
     * `HasGenesis` interface for modules to register import, export, validation and default genesis handlers. The new api works with `proto.Message`
     * Add `PreMsghandler`and `PostMsgHandler` for pre and post message hooks
     * Add `MsgHandler` as an alternative to grpc handlers

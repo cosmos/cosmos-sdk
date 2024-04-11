@@ -182,7 +182,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 func TestTxHeightTimeoutDecorator(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 
-	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator(suite.accountKeeper))
+	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator(suite.accountKeeper.Environment()))
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()

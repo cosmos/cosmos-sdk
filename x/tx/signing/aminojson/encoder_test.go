@@ -9,21 +9,64 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-func TestCosmosBytesAsString(t *testing.T) {
+func TestCosmosInlineJSON(t *testing.T) {
 	cases := map[string]struct {
 		value      protoreflect.Value
 		wantErr    bool
 		wantOutput string
 	}{
-		"valid bytes - json": {
+		"supported type - valid JSON object": {
 			value:      protoreflect.ValueOfBytes([]byte(`{"test":"value"}`)),
 			wantErr:    false,
 			wantOutput: `{"test":"value"}`,
 		},
-		"valid bytes - string": {
-			value:      protoreflect.ValueOfBytes([]byte(`foo`)),
+		"supported type - valid JSON array": {
+			// spaces are normalized away
+			value:      protoreflect.ValueOfBytes([]byte(`[1,2,3]`)),
 			wantErr:    false,
-			wantOutput: `foo`,
+			wantOutput: `[1,2,3]`,
+		},
+		"supported type - valid JSON is not normalized": {
+			value:      protoreflect.ValueOfBytes([]byte(`[1, 2, 3]`)),
+			wantErr:    false,
+			wantOutput: `[1, 2, 3]`,
+		},
+		"supported type - valid JSON array (empty)": {
+			value:      protoreflect.ValueOfBytes([]byte(`[]`)),
+			wantErr:    false,
+			wantOutput: `[]`,
+		},
+		"supported type - valid JSON number": {
+			value:      protoreflect.ValueOfBytes([]byte(`43.72`)),
+			wantErr:    false,
+			wantOutput: `43.72`,
+		},
+		"supported type - valid JSON boolean": {
+			value:      protoreflect.ValueOfBytes([]byte(`true`)),
+			wantErr:    false,
+			wantOutput: `true`,
+		},
+		"supported type - valid JSON null": {
+			value:      protoreflect.ValueOfBytes([]byte(`null`)),
+			wantErr:    false,
+			wantOutput: `null`,
+		},
+		"supported type - valid JSON string": {
+			value:      protoreflect.ValueOfBytes([]byte(`"hey yo"`)),
+			wantErr:    false,
+			wantOutput: `"hey yo"`,
+		},
+		"supported type - invalid JSON": {
+			value:   protoreflect.ValueOfBytes([]byte(`foo`)),
+			wantErr: true,
+		},
+		"supported type - invalid JSON (empty)": {
+			value:   protoreflect.ValueOfBytes([]byte(``)),
+			wantErr: true,
+		},
+		"supported type - invalid JSON (nil bytes)": {
+			value:   protoreflect.ValueOfBytes(nil),
+			wantErr: true,
 		},
 		"unsupported type - bool": {
 			value:   protoreflect.ValueOfBool(true),
@@ -38,7 +81,7 @@ func TestCosmosBytesAsString(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			var buf bytes.Buffer
-			err := cosmosBytesAsString(nil, tc.value, &buf)
+			err := cosmosInlineJSON(nil, tc.value, &buf)
 
 			if tc.wantErr {
 				require.Error(t, err)

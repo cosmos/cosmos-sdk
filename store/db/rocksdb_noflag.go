@@ -86,29 +86,3 @@ func (itr *rocksDBIterator) Close() error {
 func (itr *rocksDBIterator) assertIsValid() {
 	panic("rocksdb must be built with -tags rocksdb")
 }
-
-type rocksDBBatch struct{}
-
-func (b *rocksDBBatch) Set(key, value []byte) error {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (b *rocksDBBatch) Delete(key []byte) error {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (b *rocksDBBatch) Write() error {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (b *rocksDBBatch) WriteSync() error {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (b *rocksDBBatch) Close() error {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (b *rocksDBBatch) GetByteSize() (int, error) {
-	panic("rocksdb must be built with -tags rocksdb")
-}

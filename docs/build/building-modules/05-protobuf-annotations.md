@@ -126,8 +126,21 @@ Encoding instructs the amino json marshaler how to encode certain fields that ma
 https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9d6/proto/cosmos/bank/v1beta1/genesis.proto#L23
 ```
 
-Another example is how `bytes` is encoded when using the amino json encoding format. The `bytes_as_string` option tells the json marshaler [how to encode bytes as string](https://github.com/pinosu/cosmos-sdk/blob/9879ece09c58068402782fa2096199dc89a23d13/x/tx/signing/aminojson/json_marshal.go#L75).
+Another example is a protobuf `bytes` that contains a valid JSON document.
+The `inline_json` option tells the json marshaler to embed the JSON bytes into the wrapping document without escaping.
 
 ```proto
-(amino.encoding)         = "bytes_as_string",
+(amino.encoding)         = "inline_json",
 ```
+
+E.g. the bytes containing `{"foo":123}` in the `envelope` field would lead to the following JSON:
+
+```json
+{
+  "envelope": {
+    "foo": 123
+  }
+}
+```
+
+If the bytes are not valid JSON, this leads to JSON broken documents. Thus a JSON validity check needs to be in place at some point of the process.

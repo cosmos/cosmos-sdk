@@ -26,4 +26,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Improvements
-[#19924](https://github.com/cosmos/cosmos-sdk/pull/19924) Add isAccountTypeRegistered function and corresponding test 
+* ([#19924](https://github.com/cosmos/cosmos-sdk/pull/19924)) Add `isAccountTypeRegistered` function and corresponding test.

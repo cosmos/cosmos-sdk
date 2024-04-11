@@ -28,7 +28,6 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -59,7 +58,7 @@ var appConfig = configurator.NewAppConfig(
 func TestImportExportQueues(t *testing.T) {
 	var err error
 
-	cfg, err := simtestutil.DefaultStartUpConfig(testutil.CodecOptions{}.GetAddressCodec())
+	cfg, err := simtestutil.DefaultStartUpConfig()
 	assert.NilError(t, err)
 
 	s1 := suite{}
@@ -125,7 +124,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	s2 := suite{}
 	db := dbm.NewMemDB()
-	conf2, err := simtestutil.DefaultStartUpConfig(testutil.CodecOptions{}.GetAddressCodec())
+	conf2, err := simtestutil.DefaultStartUpConfig()
 	assert.NilError(t, err)
 	conf2.DB = db
 	s2.app, err = simtestutil.SetupWithConfiguration(

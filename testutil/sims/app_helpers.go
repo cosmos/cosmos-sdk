@@ -11,7 +11,6 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/core/address"
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
@@ -21,7 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -84,7 +82,7 @@ type StartupConfig struct {
 	DB              dbm.DB
 }
 
-func DefaultStartUpConfig(addressCodec address.Codec) (StartupConfig, error) {
+func DefaultStartUpConfig() (StartupConfig, error) {
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
 	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)))}
@@ -99,7 +97,7 @@ func DefaultStartUpConfig(addressCodec address.Codec) (StartupConfig, error) {
 // Setup initializes a new runtime.App and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	startupCfg, err := DefaultStartUpConfig(testutil.CodecOptions{}.GetAddressCodec())
+	startupCfg, err := DefaultStartUpConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +107,7 @@ func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.Ap
 // SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	cfg, err := DefaultStartUpConfig(testutil.CodecOptions{}.GetAddressCodec())
+	cfg, err := DefaultStartUpConfig()
 	if err != nil {
 		return nil, err
 	}

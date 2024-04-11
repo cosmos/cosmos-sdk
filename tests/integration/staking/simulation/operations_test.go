@@ -32,7 +32,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -61,7 +60,6 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	sdk.DefaultPowerReduction = math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	s.r = rand.New(rand.NewSource(1))
 	accounts := simtypes.RandomAccounts(s.r, 4)
 
@@ -78,7 +76,7 @@ func (s *SimTestSuite) SetupTest() {
 	require.NoError(s.T(), err)
 	validator := cmttypes.NewValidator(cmtPk, 1)
 
-	startupCfg, err := simtestutil.DefaultStartUpConfig(ac)
+	startupCfg, err := simtestutil.DefaultStartUpConfig()
 	require.NoError(s.T(), err)
 	startupCfg.GenesisAccounts = accs
 	startupCfg.ValidatorSet = func() (*cmttypes.ValidatorSet, error) {

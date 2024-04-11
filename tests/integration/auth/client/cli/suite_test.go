@@ -728,7 +728,6 @@ func (s *CLITestSuite) TestCLIMultisign() {
 
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
-
 	// Sign with account1
 	s.clientCtx.HomeDir = strings.Replace(s.clientCtx.HomeDir, "simd", "simcli", 1)
 	account1Signature, err := authtestutil.TxSignExec(s.clientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
@@ -739,7 +738,6 @@ func (s *CLITestSuite) TestCLIMultisign() {
 
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-
 	// Sign with account2
 	account2Signature, err := authtestutil.TxSignExec(s.clientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
@@ -800,7 +798,6 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
-
 	// sign-batch file
 	res, err := authtestutil.TxSignBatchExec(s.clientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
@@ -952,7 +949,7 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	defer unsignedTxFile.Close()
 
 	// Let val0 sign first the file with the unsignedTx.
-	signedByVal0, err := authtestutil.TxSignExec(s.clientCtx, s.val, unsignedTxFile.Name(), "--overwrite", "--sign-mode=amino-json")
+	signedByVal0, err := authtestutil.TxSignExec(s.clientCtx, val0, unsignedTxFile.Name(), "--overwrite", "--sign-mode=amino-json")
 	s.Require().NoError(err)
 	signedByVal0File := testutil.WriteToNewTempFile(s.T(), signedByVal0.String())
 	defer signedByVal0File.Close()

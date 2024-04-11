@@ -77,7 +77,7 @@ func (suite *SimTestSuite) SetupTest() {
 		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 	}
 
-	startupCfg, err := simtestutil.DefaultStartUpConfig(suite.accountKeeper.AddressCodec())
+	startupCfg, err := simtestutil.DefaultStartUpConfig()
 	suite.Require().NoError(err)
 	startupCfg.ValidatorSet = createValidator
 

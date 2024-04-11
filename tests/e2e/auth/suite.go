@@ -230,43 +230,41 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	defer outputFile.Close()
 	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
 
-	valAddr := val.GetAddress()
-
 	// sign-batch file - offline is set but account-number and sequence are not
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--offline")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
 	// sign-batch file - offline and sequence is set but account-number is not set
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), "--offline")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\" not set")
 
 	// sign-batch file - offline and account-number is set but sequence is not set
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"), "--offline")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"sequence\" not set")
 
 	// sign-batch file - sequence and account-number are set when offline is false
-	res, err := authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"))
+	res, err := authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file
-	res, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
+	res, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file signature only
-	res, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
+	res, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// Sign batch malformed tx file.
 	malformedFile := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf("malformed%s", generatedStd))
 	defer malformedFile.Close()
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
 	s.Require().Error(err)
 
 	// Sign batch malformed tx file signature only.
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, valAddr, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
 
 	// make a txn to increase the sequence of sender
@@ -295,7 +293,7 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	s.Require().Equal(seq+1, seq1)
 
 	// signing sign-batch should start from the last sequence.
-	signed, err := authclitestutil.TxSignBatchExec(clientCtx, valAddr, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
+	signed, err := authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(signed.String(), "\n"), "\n")
 	s.Require().GreaterOrEqual(len(signedTxs), 1)

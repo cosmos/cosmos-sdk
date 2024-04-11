@@ -451,7 +451,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		_, logger := s.NewCapturingLogger()
 		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
-		require.ErrorContains(t, err, "config file must have toml extension")
+		require.ErrorContains(t, err, "invalid file extension")
 	})
 
 	// Failure cases not tested:

@@ -794,6 +794,8 @@ func setUpDir(t *testing.T) string {
 }
 
 func setupConfig(t *testing.T, home string) string {
+	t.Helper()
+
 	cfg := newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, "kitchen", "", true, 10)
 	path := filepath.Join(home, rootName, "config.toml")
 	f, err := os.Create(path)
@@ -859,7 +861,6 @@ func TestConfigFromFile(t *testing.T) {
 			},
 			expectedCfg: func() *Config {
 				return newConfig(home, "env-name", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10)
-
 			},
 		},
 	}
@@ -877,7 +878,6 @@ func TestConfigFromFile(t *testing.T) {
 
 			require.NoError(t, err)
 			require.EqualValues(t, tc.expectedCfg(), actualCfg)
-
 		})
 	}
 }

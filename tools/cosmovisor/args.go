@@ -494,7 +494,6 @@ func getTimeFormatOption(val string) (string, error) {
 		return "", nil
 	}
 	return "", fmt.Errorf("env variable %q must have a timeformat value (\"layout|ansic|unixdate|rubydate|rfc822|rfc822z|rfc850|rfc1123|rfc1123z|rfc3339|rfc3339nano|kitchen\"), got %q", EnvTimeFormatLogs, val)
-
 }
 
 // ValueToTimeFormatOption converts the time format option to the env value
@@ -527,7 +526,6 @@ func ValueToTimeFormatOption(format string) string {
 	default:
 		return ""
 	}
-
 }
 
 // DetailString returns a multi-line string with details about this config.

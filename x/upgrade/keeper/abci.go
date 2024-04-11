@@ -2,15 +2,14 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/x/upgrade/expected"
 	"errors"
 	"fmt"
 	"time"
 
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PreBlocker will check if there is a scheduled plan and if it is ready to be executed.
@@ -21,7 +20,7 @@ import (
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
-func (k Keeper) PreBlocker(ctx context.Context) error {
+func (k Keeper) PreBlocker(ctx context.Context, consensusKeeper expected.ConsensusKeeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	blockHeight := k.environment.HeaderService.GetHeaderInfo(ctx).Height
@@ -31,7 +30,6 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 	}
 	found := err == nil
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO remove with consensus messages
 	if !k.DowngradeVerified() {
 		k.SetDowngradeVerified(true)
 		// This check will make sure that we are using a valid binary.
@@ -48,7 +46,10 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
 				var appVersion uint64
 
-				cp := sdkCtx.ConsensusParams()
+				cp, err := consensusKeeper.GetParams(ctx)
+				if err != nil {
+					return err
+				}
 				if cp.Version != nil {
 					appVersion = cp.Version.App
 				}
@@ -96,8 +97,10 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
 		logger.Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
-		sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
-		if err := k.ApplyUpgrade(sdkCtx, plan); err != nil {
+		// TODO: commented out for now to unblock server v2 work; can this be removed entirely once block gas
+		// is deprecated?
+		//sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+		if err := k.ApplyUpgrade(ctx, plan); err != nil {
 			return err
 		}
 		return nil

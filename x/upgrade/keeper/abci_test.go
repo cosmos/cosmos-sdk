@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"cosmossdk.io/x/upgrade/expected"
 	"errors"
 	"os"
 	"testing"
@@ -48,7 +49,11 @@ func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
 	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+	s.keeper.SetUpgradeHandler("test", func(
+		ctx context.Context,
+		plan types.Plan,
+		vm appmodule.VersionMap,
+	) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -66,7 +71,11 @@ func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, pro
 	require.ErrorContains(t, err, "UPGRADE \""+proposalName+"\" NEEDED at height: ")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler(proposalName, func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+	s.keeper.SetUpgradeHandler(proposalName, func(
+		ctx context.Context,
+		plan types.Plan,
+		vm appmodule.VersionMap,
+	) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -133,7 +142,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
-	s.preModule = upgrade.NewAppModule(s.keeper)
+	s.preModule = upgrade.NewAppModule(s.keeper, &emptyConsensusParams{})
 	return &s
 }
 
@@ -168,7 +177,11 @@ func TestHaltIfTooNew(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that we don't panic with registered plan not in database at all")
 	var called int
-	s.keeper.SetUpgradeHandler("future", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+	s.keeper.SetUpgradeHandler("future", func(
+		_ context.Context,
+		_ types.Plan,
+		vm appmodule.VersionMap,
+	) (appmodule.VersionMap, error) {
 		called++
 		return vm, nil
 	})
@@ -414,7 +427,11 @@ func TestBinaryVersion(t *testing.T) {
 		{
 			"test not panic: upgrade handler is present for last applied upgrade",
 			func() sdk.Context {
-				s.keeper.SetUpgradeHandler("test0", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+				s.keeper.SetUpgradeHandler("test0", func(
+					_ context.Context,
+					_ types.Plan,
+					vm appmodule.VersionMap,
+				) (appmodule.VersionMap, error) {
 					return vm, nil
 				})
 
@@ -471,7 +488,7 @@ func TestDowngradeVerification(t *testing.T) {
 	require.NoError(t, err)
 
 	k := keeper.NewKeeper(env, skip, encCfg.Codec, t.TempDir(), nil, authority)
-	m := upgrade.NewAppModule(k)
+	m := upgrade.NewAppModule(k, &emptyConsensusParams{})
 
 	// submit a plan.
 	planName := "downgrade"
@@ -480,7 +497,11 @@ func TestDowngradeVerification(t *testing.T) {
 	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// set the handler.
-	k.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+	k.SetUpgradeHandler(planName, func(
+		_ context.Context,
+		_ types.Plan,
+		vm appmodule.VersionMap,
+	) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -495,7 +516,11 @@ func TestDowngradeVerification(t *testing.T) {
 	}{
 		"valid binary": {
 			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
-				k.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+				k.SetUpgradeHandler(planName, func(
+					ctx context.Context,
+					plan types.Plan,
+					vm appmodule.VersionMap,
+				) (appmodule.VersionMap, error) {
 					return vm, nil
 				})
 			},
@@ -520,7 +545,7 @@ func TestDowngradeVerification(t *testing.T) {
 
 		// downgrade. now keeper does not have the handler.
 		k := keeper.NewKeeper(env, skip, encCfg.Codec, t.TempDir(), nil, authority)
-		m := upgrade.NewAppModule(k)
+		m := upgrade.NewAppModule(k, &emptyConsensusParams{})
 
 		// assertions
 		lastAppliedPlan, _, err := k.GetLastCompletedUpgrade(ctx)
@@ -542,4 +567,12 @@ func TestDowngradeVerification(t *testing.T) {
 			require.NoError(t, err, name)
 		}
 	}
+}
+
+type emptyConsensusParams struct{}
+
+var _ expected.ConsensusKeeper = &emptyConsensusParams{}
+
+func (e emptyConsensusParams) GetParams(ctx context.Context) (cmtproto.ConsensusParams, error) {
+	return cmtproto.ConsensusParams{}, nil
 }

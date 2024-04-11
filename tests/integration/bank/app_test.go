@@ -86,8 +86,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		genAccounts = append(genAccounts, simtestutil.GenesisAccount{GenesisAccount: acc})
 	}
 
-	startupCfg, err := simtestutil.DefaultStartUpConfig()
-	require.NoError(t, err)
+	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = genAccounts
 
 	app, err := simtestutil.SetupWithConfiguration(

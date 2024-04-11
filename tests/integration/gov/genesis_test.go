@@ -58,16 +58,13 @@ var appConfig = configurator.NewAppConfig(
 func TestImportExportQueues(t *testing.T) {
 	var err error
 
-	cfg, err := simtestutil.DefaultStartUpConfig()
-	assert.NilError(t, err)
-
 	s1 := suite{}
 	s1.app, err = simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			appConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		cfg,
+		simtestutil.DefaultStartUpConfig(),
 		&s1.AccountKeeper, &s1.BankKeeper, &s1.GovKeeper, &s1.StakingKeeper, &s1.cdc, &s1.appBuilder,
 	)
 	assert.NilError(t, err)
@@ -124,8 +121,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	s2 := suite{}
 	db := dbm.NewMemDB()
-	conf2, err := simtestutil.DefaultStartUpConfig()
-	assert.NilError(t, err)
+	conf2 := simtestutil.DefaultStartUpConfig()
 	conf2.DB = db
 	s2.app, err = simtestutil.SetupWithConfiguration(
 		depinject.Configs(

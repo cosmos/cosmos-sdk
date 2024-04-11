@@ -76,8 +76,7 @@ func (s *SimTestSuite) SetupTest() {
 	require.NoError(s.T(), err)
 	validator := cmttypes.NewValidator(cmtPk, 1)
 
-	startupCfg, err := simtestutil.DefaultStartUpConfig()
-	require.NoError(s.T(), err)
+	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = accs
 	startupCfg.ValidatorSet = func() (*cmttypes.ValidatorSet, error) {
 		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil

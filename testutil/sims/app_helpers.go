@@ -82,7 +82,7 @@ type StartupConfig struct {
 	DB              dbm.DB
 }
 
-func DefaultStartUpConfig() (StartupConfig, error) {
+func DefaultStartUpConfig() StartupConfig {
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
 	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)))}
@@ -91,26 +91,21 @@ func DefaultStartUpConfig() (StartupConfig, error) {
 		AtGenesis:       false,
 		GenesisAccounts: []GenesisAccount{ga},
 		DB:              dbm.NewMemDB(),
-	}, nil
+	}
 }
 
 // Setup initializes a new runtime.App and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	startupCfg, err := DefaultStartUpConfig()
-	if err != nil {
-		return nil, err
-	}
+	startupCfg := DefaultStartUpConfig()
+
 	return SetupWithConfiguration(appConfig, startupCfg, extraOutputs...)
 }
 
 // SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	cfg, err := DefaultStartUpConfig()
-	if err != nil {
-		return nil, err
-	}
+	cfg := DefaultStartUpConfig()
 	cfg.AtGenesis = true
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
 }

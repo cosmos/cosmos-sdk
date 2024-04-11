@@ -808,7 +808,6 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-
 	// sign-batch file with account2
 	res, err = authtestutil.TxSignBatchExec(s.clientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)

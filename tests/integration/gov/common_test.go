@@ -102,9 +102,6 @@ func createTestSuite(t *testing.T) suite {
 	t.Helper()
 	res := suite{}
 
-	cfg, err := simtestutil.DefaultStartUpConfig()
-	require.NoError(t, err)
-
 	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
@@ -117,7 +114,7 @@ func createTestSuite(t *testing.T) suite {
 			),
 			depinject.Supply(sdklog.NewNopLogger()),
 		),
-		cfg,
+		simtestutil.DefaultStartUpConfig(),
 		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper,
 	)
 	require.NoError(t, err)

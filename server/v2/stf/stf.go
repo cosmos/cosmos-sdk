@@ -451,6 +451,14 @@ func (s STF[T]) Message(ctx context.Context, msg transaction.Type) (response tra
 	return s.handleMsg(ctx, msg)
 }
 
+// TODO: this is made to support genesis, if genesis was just the execution of messages instead
+// of being something custom then we would not need this. PLEASE DO NOT USE.
+func (s STF[T]) RunWithCtx(ctx context.Context, state store.ReaderMap, closure func(ctx context.Context) error) (store.WriterMap, error) {
+	branchedState := s.branch(state)
+	stfCtx := s.makeContext(ctx, nil, branchedState, gas.NoGasLimit, corecontext.ExecModeFinalize)
+	return branchedState, closure(stfCtx)
+}
+
 // clone clones STF.
 func (s STF[T]) clone() STF[T] {
 	return STF[T]{

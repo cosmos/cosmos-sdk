@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-
 	"slices"
 
 	"github.com/linxGnu/grocksdb"
@@ -100,7 +99,7 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 
 func (db *Database) getSlice(storeKey []byte, version uint64, key []byte) (*grocksdb.Slice, error) {
 	if version < db.tsLow {
-		return nil, errors.ErrVersionPruned{EarliestVersion: db.tsLow}
+		return nil, errors.ErrVersionPruned{EarliestVersion: db.tsLow, RequestedVersion: &version}
 	}
 
 	return db.storage.GetCF(

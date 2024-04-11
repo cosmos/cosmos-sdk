@@ -83,6 +83,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		ac,
 		"cosmos",
 		authorityAddr,
+		nil,
 	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
@@ -316,6 +317,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			ac,
 			"cosmos",
 			authorityAddr,
+			nil,
+
 		)
 		suite.setModuleAccounts(suite.ctx, ak, maccs)
 
@@ -367,6 +370,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			ac,
 			"cosmos",
 			authorityAddr,
+			nil,
 		)
 		suite.setModuleAccounts(suite.ctx, ak, []string{mName})
 

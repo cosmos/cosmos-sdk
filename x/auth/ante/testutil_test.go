@@ -85,6 +85,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), suite.encCfg.Codec,
 		types.ProtoBaseAccount, maccPerms, ac, sdk.Bech32MainPrefix, authorityAddr,
+
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 	err = suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())

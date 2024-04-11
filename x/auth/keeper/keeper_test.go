@@ -77,6 +77,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authorityAddr,
+		nil,
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)

@@ -27,6 +27,7 @@ import (
 
 func Test_TestnetCmd(t *testing.T) {
 	config := configurator.NewAppConfig(
+		configurator.AccountsModule(),
 		configurator.AuthModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),
@@ -44,7 +45,7 @@ func Test_TestnetCmd(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.NotNil(t, moduleManager)
-	require.Len(t, moduleManager.Modules, 7)
+	require.Len(t, moduleManager.Modules, 8)
 
 	home := t.TempDir()
 	cdcOpts := codectestutil.CodecOptions{}

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -157,7 +158,7 @@ func TestAsyncExec(t *testing.T) {
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
 
-	assert.NilError(t, testutil.FundAccount(f.ctx, f.bankKeeper, addrs[0], sdk.NewCoins(sdk.NewInt64Coin("stake", 30))))
+	assert.NilError(t, testutil.FundAccount(f.ctx, f.bankKeeper, addrs[0], sdk.NewCoins(sdk.NewInt64Coin("stake", 50))))
 
 	msg := &banktypes.MsgSend{
 		FromAddress: addrs[0].String(),
@@ -240,6 +241,7 @@ func TestAsyncExec(t *testing.T) {
 				Msgs:   []*codectypes.Any{msgAny, msgAny2},
 			},
 			expectErr: false,
+			expErrMsg: "unauthorized: sender does not match expected sender",
 		},
 		{
 			name: "multi msg with one failing being executed",
@@ -248,6 +250,7 @@ func TestAsyncExec(t *testing.T) {
 				Msgs:   []*codectypes.Any{msgAny, failingMsgAny},
 			},
 			expectErr: false,
+			expErrMsg: "invalid coins",
 		},
 	}
 
@@ -269,6 +272,15 @@ func TestAsyncExec(t *testing.T) {
 				result := authtypes.MsgNonAtomicExecResponse{}
 				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
+
+				if tc.expErrMsg != "" {
+					for _, res := range result.Results {
+						if res.Error != "" {
+							assert.Assert(t, strings.Contains(res.Error, tc.expErrMsg))
+						}
+						continue
+					}
+				}
 			}
 		})
 	}

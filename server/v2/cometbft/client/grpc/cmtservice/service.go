@@ -4,10 +4,13 @@ import (
 	"context"
 	"strings"
 
+	tmp2p "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/p2p"
+	tmtypes "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
+	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	tmv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/encoding"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -18,13 +21,14 @@ import (
 )
 
 var (
-	_ ServiceServer = queryServer{}
+	_ tmv1beta1.ServiceServer = queryServer{}
 )
 
 type (
 	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
 
 	queryServer struct {
+		tmv1beta1.UnimplementedServiceServer
 		client      rpc.CometRPC
 		queryFn     abciQueryFn
 		consAddrCdc address.Codec
@@ -36,8 +40,8 @@ func NewQueryServer(
 	client rpc.CometRPC,
 	queryFn abciQueryFn,
 	consAddrCdc address.Codec,
-) ServiceServer {
-	return queryServer{
+) tmv1beta1.ServiceServer {
+	return &queryServer{
 		queryFn:     queryFn,
 		client:      client,
 		consAddrCdc: consAddrCdc,
@@ -50,39 +54,39 @@ func (s queryServer) GetNodeStatus(ctx context.Context) (*coretypes.ResultStatus
 }
 
 // GetSyncing implements ServiceServer.GetSyncing
-func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*GetSyncingResponse, error) {
+func (s queryServer) GetSyncing(ctx context.Context, _ *tmv1beta1.GetSyncingRequest) (*tmv1beta1.GetSyncingResponse, error) {
 	status, err := s.client.Status(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &GetSyncingResponse{
+	return &tmv1beta1.GetSyncingResponse{
 		Syncing: status.SyncInfo.CatchingUp,
 	}, nil
 }
 
 // GetLatestBlock implements ServiceServer.GetLatestBlock
-func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockRequest) (*GetLatestBlockResponse, error) {
+func (s queryServer) GetLatestBlock(ctx context.Context, _ *tmv1beta1.GetLatestBlockRequest) (*tmv1beta1.GetLatestBlockResponse, error) {
 	block, err := s.client.Block(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	protoBlockID := block.BlockID.ToProto()
-	protoBlock, err := block.Block.ToProto()
-	if err != nil {
-		return nil, err
-	}
-
-	return &GetLatestBlockResponse{
-		BlockId:  &protoBlockID,
-		Block:    protoBlock,
-		SdkBlock: convertBlock(protoBlock, s.consAddrCdc),
+	return &tmv1beta1.GetLatestBlockResponse{
+		BlockId: &tmtypes.BlockID{
+			Hash: block.BlockID.Hash,
+			PartSetHeader: &tmtypes.PartSetHeader{
+				Total: block.BlockID.PartSetHeader.Total,
+				Hash:  block.BlockID.PartSetHeader.Hash,
+			},
+		},
+		Block:    blockToProto(block.Block),
+		SdkBlock: blockToSdkBlock(block.Block, s.consAddrCdc),
 	}, nil
 }
 
 // GetBlockByHeight implements ServiceServer.GetBlockByHeight
-func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error) {
+func (s queryServer) GetBlockByHeight(ctx context.Context, req *tmv1beta1.GetBlockByHeightRequest) (*tmv1beta1.GetBlockByHeightResponse, error) {
 	nodeStatus, err := s.client.Status(ctx)
 	if err != nil {
 		return nil, err
@@ -99,21 +103,21 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 		return nil, err
 	}
 
-	protoBlockID := b.BlockID.ToProto()
-	protoBlock, err := b.Block.ToProto()
-	if err != nil {
-		return nil, err
-	}
-
-	return &GetBlockByHeightResponse{
-		BlockId:  &protoBlockID,
-		Block:    protoBlock,
-		SdkBlock: convertBlock(protoBlock, s.consAddrCdc),
+	return &tmv1beta1.GetBlockByHeightResponse{
+		BlockId: &tmtypes.BlockID{
+			Hash: b.BlockID.Hash,
+			PartSetHeader: &tmtypes.PartSetHeader{
+				Total: b.BlockID.PartSetHeader.Total,
+				Hash:  b.BlockID.PartSetHeader.Hash,
+			},
+		},
+		Block:    blockToProto(b.Block),
+		SdkBlock: blockToSdkBlock(b.Block, s.consAddrCdc),
 	}, nil
 }
 
 // GetLatestValidatorSet implements ServiceServer.GetLatestValidatorSet
-func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestValidatorSetRequest) (*GetLatestValidatorSetResponse, error) {
+func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *tmv1beta1.GetLatestValidatorSetRequest) (*tmv1beta1.GetLatestValidatorSetResponse, error) {
 	page, limit, err := ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
@@ -123,7 +127,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 }
 
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
-func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error) {
+func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *tmv1beta1.GetValidatorSetByHeightRequest) (*tmv1beta1.GetValidatorSetByHeightResponse, error) {
 	page, limit, err := ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
@@ -145,29 +149,29 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 		return nil, err
 	}
 
-	return &GetValidatorSetByHeightResponse{
+	return &tmv1beta1.GetValidatorSetByHeightResponse{
 		BlockHeight: r.BlockHeight,
 		Validators:  r.Validators,
 		Pagination:  r.Pagination,
 	}, nil
 }
 
-func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc.CometRPC, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
+func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc.CometRPC, height *int64, page, limit int) (*tmv1beta1.GetLatestValidatorSetResponse, error) {
 	vs, err := client.Validators(ctx, height, &page, &limit)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := GetLatestValidatorSetResponse{
+	resp := &tmv1beta1.GetLatestValidatorSetResponse{
 		BlockHeight: vs.BlockHeight,
-		Validators:  make([]*Validator, len(vs.Validators)),
-		Pagination: &PageResponse{
+		Validators:  make([]*tmv1beta1.Validator, len(vs.Validators)),
+		Pagination: &queryv1beta1.PageResponse{
 			Total: uint64(vs.Total),
 		},
 	}
 
 	for i, v := range vs.Validators {
-		pk, err := encoding.PubKeyToProto(v.PubKey)
+		pk, err := pubKeyToProto(v.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -177,7 +181,7 @@ func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc
 			return nil, err
 		}
 
-		resp.Validators[i] = &Validator{
+		resp.Validators[i] = &tmv1beta1.Validator{
 			Address:          addr,
 			ProposerPriority: v.ProposerPriority,
 			PubKey:           pk,
@@ -185,32 +189,47 @@ func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc
 		}
 	}
 
-	return &resp, nil
+	return resp, nil
 }
 
 // GetNodeInfo implements ServiceServer.GetNodeInfo
-func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
+func (s queryServer) GetNodeInfo(ctx context.Context, _ *tmv1beta1.GetNodeInfoRequest) (*tmv1beta1.GetNodeInfoResponse, error) {
 	nodeStatus, err := s.client.Status(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	protoNodeInfo := nodeStatus.NodeInfo.ToProto()
 	nodeInfo := version.NewInfo()
 
-	deps := make([]*Module, len(nodeInfo.BuildDeps))
+	deps := make([]*tmv1beta1.Module, len(nodeInfo.BuildDeps))
 
 	for i, dep := range nodeInfo.BuildDeps {
-		deps[i] = &Module{
+		deps[i] = &tmv1beta1.Module{
 			Path:    dep.Path,
 			Sum:     dep.Sum,
 			Version: dep.Version,
 		}
 	}
 
-	resp := GetNodeInfoResponse{
-		DefaultNodeInfo: protoNodeInfo,
-		ApplicationVersion: &VersionInfo{
+	resp := tmv1beta1.GetNodeInfoResponse{
+		DefaultNodeInfo: &tmp2p.DefaultNodeInfo{
+			ProtocolVersion: &tmp2p.ProtocolVersion{
+				P2P:   nodeStatus.NodeInfo.ProtocolVersion.P2P,
+				Block: nodeStatus.NodeInfo.ProtocolVersion.Block,
+				App:   nodeStatus.NodeInfo.ProtocolVersion.App,
+			},
+			DefaultNodeId: string(nodeStatus.NodeInfo.DefaultNodeID),
+			ListenAddr:    nodeStatus.NodeInfo.ListenAddr,
+			Network:       nodeStatus.NodeInfo.Network,
+			Version:       nodeStatus.NodeInfo.Version,
+			Channels:      nodeStatus.NodeInfo.Channels,
+			Moniker:       nodeStatus.NodeInfo.Moniker,
+			Other: &tmp2p.DefaultNodeInfoOther{
+				TxIndex:    nodeStatus.NodeInfo.Other.TxIndex,
+				RpcAddress: nodeStatus.NodeInfo.Other.RPCAddress,
+			},
+		},
+		ApplicationVersion: &tmv1beta1.VersionInfo{
 			AppName:          nodeInfo.AppName,
 			Name:             nodeInfo.Name,
 			GitCommit:        nodeInfo.GitCommit,
@@ -224,7 +243,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*G
 	return &resp, nil
 }
 
-func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABCIQueryResponse, error) {
+func (s queryServer) ABCIQuery(ctx context.Context, req *tmv1beta1.ABCIQueryRequest) (*tmv1beta1.ABCIQueryResponse, error) {
 	if s.queryFn == nil {
 		return nil, status.Error(codes.Internal, "ABCI Query handler undefined")
 	}
@@ -248,7 +267,7 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 		}
 	}
 
-	res, err := s.queryFn(ctx, req.ToABCIRequestQuery())
+	res, err := s.queryFn(ctx, ToABCIRequestQuery(req))
 	if err != nil {
 		return nil, err
 	}
@@ -262,13 +281,14 @@ func RegisterTendermintService(
 	queryFn abciQueryFn,
 	consAddrCodec address.Codec,
 ) {
-	RegisterServiceServer(server, NewQueryServer(client, queryFn, consAddrCodec))
+	tmv1beta1.RegisterServiceServer(server, NewQueryServer(client, queryFn, consAddrCodec))
 }
 
 // RegisterGRPCGatewayRoutes mounts the CometBFT service's GRPC-gateway routes on the
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
-	_ = RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))
+	// TODO: how to fix this? the generated gw file uses gogoproto.
+	_ = RegisterServiceHandlerClient(context.Background(), mux, tmv1beta1.NewServiceClient(clientConn))
 }
 
 // SplitABCIQueryPath splits a string path using the delimiter '/'.

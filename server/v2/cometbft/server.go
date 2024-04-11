@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/genutil"
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
@@ -22,7 +23,6 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	cmttypes "github.com/cometbft/cometbft/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -131,7 +131,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(s.App),
-		getGenDocProvider(s.config.CmtConfig),
+		getGenDocProvider(s.config.CmtConfig, s.config.Name),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),
 		wrappedLogger,
@@ -167,9 +167,9 @@ func (s *CometBFTServer[T]) Config() (any, *viper.Viper) {
 }
 
 // returns a function which returns the genesis doc from the genesis file.
-func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
+func getGenDocProvider(cfg *cmtcfg.Config, appName string) func() (*cmttypes.GenesisDoc, error) {
 	return func() (*cmttypes.GenesisDoc, error) {
-		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		appGenesis, err := genutil.AppGenesisFromFile(cfg.GenesisFile(), appName)
 		if err != nil {
 			return nil, err
 		}

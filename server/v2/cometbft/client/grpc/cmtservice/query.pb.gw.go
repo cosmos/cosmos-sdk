@@ -22,6 +22,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	tmv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
 )
 
 // Suppress "imported and not used" errors
@@ -33,8 +34,8 @@ var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 var _ = metadata.Join
 
-func request_Service_GetNodeInfo_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetNodeInfoRequest
+func request_Service_GetNodeInfo_0(ctx context.Context, marshaler runtime.Marshaler, client tmv1beta1.ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq tmv1beta1.GetNodeInfoRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetNodeInfo(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))

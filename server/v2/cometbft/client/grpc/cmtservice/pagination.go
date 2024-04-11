@@ -3,6 +3,7 @@ package cmtservice
 import (
 	math "math"
 
+	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 )
@@ -20,7 +21,7 @@ const DefaultLimit = 100
 var PaginationMaxLimit uint64 = math.MaxUint64
 
 // ParsePagination validate PageRequest and returns page number & limit.
-func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
+func ParsePagination(pageReq *queryv1beta1.PageRequest) (page, limit int, err error) {
 	offset := 0
 	limit = DefaultLimit
 

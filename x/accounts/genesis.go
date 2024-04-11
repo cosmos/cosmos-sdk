@@ -85,7 +85,7 @@ func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisAccount) error
 		return err
 	}
 	if !isRegistered {
-		return fmt.Errorf("account type %s is not registered", acc.AccountType)
+		return fmt.Errorf("%s %d: account type `%s` is not registered", file, line, acc.AccountType)
 	}
 
 	addrBytes, err := k.addressCodec.StringToBytes(acc.Address)

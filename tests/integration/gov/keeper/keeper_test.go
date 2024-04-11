@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
@@ -27,7 +28,6 @@ import (
 	"cosmossdk.io/x/staking"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

@@ -37,13 +37,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ## Features
+
 * [#19764](https://github.com/cosmos/cosmos-sdk/issues/19764) Use config file for cosmovisor configuration.
 
 ## Improvements
+
 * [#19995](https://github.com/cosmos/cosmos-sdk/pull/19995):
-  * Add `--export-config` flag to provide `config.toml` path to initialise configuration in `cosmovisor init`.
-  * Set `CONFIG` environment variable to provide `config.toml` path to load the configuration in `cosmovisor run`
-  * Add `--config` flag to provide `config.toml` path to the configuration file in `cosmovisor add-upgrade`.
+    * Add `--export-config` flag to provide `config.toml` path to initialise configuration in `cosmovisor init`.
+    * Set `CONFIG` environment variable to provide `config.toml` path to load the configuration in `cosmovisor run`
+    * Add `--config` flag to provide `config.toml` path to the configuration file in `cosmovisor add-upgrade`.
 
 ## v1.5.0 - 2023-07-17
 

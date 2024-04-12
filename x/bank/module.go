@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -153,10 +152,9 @@ func (AppModule) QuerierRoute() string { return types.RouterKey }
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	start := time.Now()
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
+	telemetry.MeasureSince(telemetry.Now(), "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 }

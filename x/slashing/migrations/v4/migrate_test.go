@@ -11,8 +11,8 @@ import (
 	"cosmossdk.io/x/slashing"
 	v4 "cosmossdk.io/x/slashing/migrations/v4"
 	slashingtypes "cosmossdk.io/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"

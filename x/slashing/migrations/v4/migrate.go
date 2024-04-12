@@ -2,11 +2,11 @@ package v4
 
 import (
 	"context"
-	"cosmossdk.io/core/address"
 
 	"github.com/bits-and-blooms/bitset"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/slashing/types"

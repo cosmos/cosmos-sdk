@@ -43,6 +43,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#409](https://github.com/agoric-labs/cosmos-sdk/pull/409) Flag to select ABCI client type.
 * (deps) [#412](https://github.com/agoric-labs/cosmos-sdk/pull/412) Bump iavl to v0.19.7
 
+### Bug Fixes
+
+* (baseapp) [#413](https://github.com/agoric-labs/cosmos-sdk/pull/413) Ignore events from simulated transactions
+
 ### API Breaking
 
 * (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support

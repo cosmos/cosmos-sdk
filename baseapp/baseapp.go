@@ -767,7 +767,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
-			if app.deliverState != nil {
+			if app.deliverState != nil && mode == runTxModeDeliver {
 				app.deliverState.eventHistory = append(app.deliverState.eventHistory, result.Events...)
 			}
 		}

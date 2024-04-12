@@ -85,7 +85,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 To look up one or more specific denoms, supply them as arguments to this command.
 To look up all denoms, do not provide any arguments.`,
 					),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denoms"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denoms", Varargs: true}},
 				},
 			},
 		},

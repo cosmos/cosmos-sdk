@@ -129,8 +129,8 @@ func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) 
 	return pk, nil
 }
 
-// ExceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
-func (k Keeper) ExceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) error {
+// IsAlreadyRotating returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
+func (k Keeper) IsAlreadyRotating(ctx context.Context, valAddr sdk.ValAddress) error {
 	found, _ := k.ValidatorConsensusKeyRotationRecordIndexKey.Has(ctx, valAddr)
 
 	if found {

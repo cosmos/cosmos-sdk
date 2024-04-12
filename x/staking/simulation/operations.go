@@ -803,7 +803,7 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "not enough balance to pay fee"), nil, nil
 		}
 
-		if err := k.ExceedsMaxRotations(ctx, valBytes); err != nil {
+		if err := k.IsAlreadyRotating(ctx, valBytes); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "rotations limit reached within unbonding period"), nil, nil
 		}
 

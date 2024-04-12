@@ -113,6 +113,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * [#19833](https://github.com/cosmos/cosmos-sdk/pull/19833) Fix some places in which we call Remove inside a Walk.
 * [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
 * (baseapp) [#19970](https://github.com/cosmos/cosmos-sdk/pull/19970) Fix default config values to use no-op mempool as default.
+* (x/bank) [#20028](https://github.com/cosmos/cosmos-sdk/pull/20028) Align query with multi denoms for send-enabled.
 
 ### API Breaking Changes
 

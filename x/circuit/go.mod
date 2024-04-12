@@ -153,6 +153,3 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-// TODO(@julienrbrt): to remove in https://github.com/cosmos/cosmos-sdk/pull/19998
-replace github.com/cosmos/cosmos-sdk => ../../.

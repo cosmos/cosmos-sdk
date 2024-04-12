@@ -135,38 +135,12 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	}
 }
 
-<<<<<<< HEAD
 // InitGenesis performs genesis initialization for the crisis module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	start := time.Now()
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
-=======
-// DefaultGenesis returns default genesis state as raw bytes for the crisis module.
-func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the crisis module.
-func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return types.ValidateGenesis(&data)
-}
-
-// InitGenesis performs genesis initialization for the crisis module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	var genesisState types.GenesisState
-	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
-		return err
-	}
 	telemetry.MeasureSince(telemetry.Now(), "InitGenesis", "crisis", "unmarshal")
->>>>>>> 2496cfdf5 (feat: Conditionally emit metrics based on enablement (#19903))
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 	if !am.skipGenesisInvariants {

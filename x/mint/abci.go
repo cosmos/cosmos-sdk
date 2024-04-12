@@ -10,13 +10,8 @@ import (
 )
 
 // BeginBlocker mints new tokens for the previous block.
-<<<<<<< HEAD:x/mint/abci.go
 func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalculationFn) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-=======
-func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationFn) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
->>>>>>> 2496cfdf5 (feat: Conditionally emit metrics based on enablement (#19903)):x/mint/keeper/abci.go
 
 	// fetch stored minter & params
 	minter, err := k.Minter.Get(ctx)

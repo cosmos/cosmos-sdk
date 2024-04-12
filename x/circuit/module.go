@@ -65,7 +65,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 	return data.Validate()
 }
 
-<<<<<<< HEAD
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the circuit module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
@@ -111,15 +110,9 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // InitGenesis performs genesis initialization for the circuit module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	start := time.Now()
-=======
-// InitGenesis performs genesis initialization for the circuit module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	start := telemetry.Now()
->>>>>>> 2496cfdf5 (feat: Conditionally emit metrics based on enablement (#19903))
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
+	telemetry.MeasureSince(telemetry.Now(), "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 }

@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (auth) [#407](https://github.com/agoric-labs/cosmos-sdk/pull/407) Configurable fee collector module account in DeductFeeDecorator.
+* (server) [#409](https://github.com/agoric-labs/cosmos-sdk/pull/409) Flag to select ABCI client type.
 
 ### API Breaking
 

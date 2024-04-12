@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
+	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tcmd "github.com/tendermint/tendermint/cmd/cometbft/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
@@ -59,6 +60,7 @@ const (
 	FlagIAVLCacheSize       = "iavl-cache-size"
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
 	FlagIAVLLazyLoading     = "iavl-lazy-loading"
+	FlagAbciClientType      = "abci-client-type"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -80,6 +82,11 @@ const (
 	flagGRPCAddress    = "grpc.address"
 	flagGRPCWebEnable  = "grpc-web.enable"
 	flagGRPCWebAddress = "grpc-web.address"
+)
+
+const (
+	abciClientTypeCommitting = "committing"
+	abciClientTypeLocal      = "local"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -142,9 +149,18 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				})
 			}
 
+			abciClientType, err := cmd.Flags().GetString(FlagAbciClientType)
+			if err != nil {
+				return err
+			}
+			clientCreator, err := getAbciClientCreator(abciClientType)
+			if err != nil {
+				return err
+			}
+
 			// amino is needed here for backwards compatibility of REST routes
 			err = wrapCPUProfile(serverCtx, func() error {
-				return startInProcess(serverCtx, clientCtx, appCreator)
+				return startInProcess(serverCtx, clientCtx, appCreator, clientCreator)
 			})
 			errCode, ok := err.(ErrorCode)
 			if !ok {
@@ -194,6 +210,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
+	cmd.Flags().String(FlagAbciClientType, abciClientTypeCommitting, fmt.Sprintf(`Type of ABCI client ("%s" or "%s")`, abciClientTypeCommitting, abciClientTypeLocal))
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -254,7 +271,9 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	return WaitForQuitSignals()
 }
 
-func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
+type abciClientCreator func(abcitypes.Application) proxy.ClientCreator
+
+func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator, clientCreator abciClientCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -302,7 +321,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			cfg,
 			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 			nodeKey,
-			proxy.NewCommittingClientCreator(app),
+			clientCreator(app),
 			genDocProvider,
 			node.DefaultDBProvider,
 			node.DefaultMetricsProvider(cfg.Instrumentation),
@@ -499,6 +518,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	// wait for signal capture and gracefully return
 	return WaitForQuitSignals()
+}
+
+func getAbciClientCreator(abciClientType string) (abciClientCreator, error) {
+	switch abciClientType {
+	case abciClientTypeCommitting:
+		return proxy.NewCommittingClientCreator, nil
+	case abciClientTypeLocal:
+		return proxy.NewLocalClientCreator, nil
+	}
+	return nil, fmt.Errorf(`unknown ABCI client type "%s"`, abciClientType)
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {

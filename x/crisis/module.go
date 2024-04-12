@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -121,7 +120,6 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}
-	telemetry.MeasureSince(telemetry.Now(), "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 	if !am.skipGenesisInvariants {

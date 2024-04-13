@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/core/address"
 	v4 "cosmossdk.io/x/slashing/migrations/v4"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -10,12 +11,16 @@ import (
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
-	keeper Keeper
+	keeper   Keeper
+	valCodec address.ValidatorAddressCodec
 }
 
 // NewMigrator returns a new Migrator.
-func NewMigrator(keeper Keeper) Migrator {
-	return Migrator{keeper: keeper}
+func NewMigrator(keeper Keeper, valCodec address.ValidatorAddressCodec) Migrator {
+	return Migrator{
+		keeper:   keeper,
+		valCodec: valCodec,
+	}
 }
 
 // Migrate1to2 migrates from version 1 to 2.
@@ -40,5 +45,5 @@ func (m Migrator) Migrate3to4(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return v4.Migrate(ctx, m.keeper.cdc, store, params)
+	return v4.Migrate(ctx, m.keeper.cdc, store, params, m.valCodec)
 }

@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -92,12 +91,10 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 
 // InitGenesis performs genesis initialization for the circuit module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	start := telemetry.Now()
 	var genesisState types.GenesisState
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
 
 	return am.keeper.InitGenesis(ctx, &genesisState)
 }

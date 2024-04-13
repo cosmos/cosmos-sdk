@@ -1,13 +1,9 @@
 package secp256r1
 
 import (
-<<<<<<< HEAD
-	tmcrypto "github.com/cometbft/cometbft/crypto"
-=======
 	"encoding/base64"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
->>>>>>> 037cf98f7 (fix: Implement gogoproto customtype to secp256r1 keys (#20027))
+	tmcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/gogoproto/proto"
 
 	ecdsa "github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"

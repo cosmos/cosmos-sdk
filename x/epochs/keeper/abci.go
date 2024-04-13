@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"cosmossdk.io/x/epochs/types"
 
@@ -12,7 +11,7 @@ import (
 
 // BeginBlocker of epochs module.
 func (k Keeper) BeginBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
 	logger := k.Logger()
 	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)

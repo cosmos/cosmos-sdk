@@ -126,6 +126,15 @@ type Keeper struct {
 	AccountsState collections.Map[collections.Pair[uint64, []byte], []byte]
 }
 
+// IsAccountsModuleAccount check if an address belong to a smart account.
+func (k Keeper) IsAccountsModuleAccount(
+	ctx context.Context,
+	accountAddr []byte,
+) bool {
+	hasAcc, _ := k.AccountByNumber.Has(ctx, accountAddr)
+	return hasAcc
+}
+
 // Init creates a new account of the given type.
 func (k Keeper) Init(
 	ctx context.Context,

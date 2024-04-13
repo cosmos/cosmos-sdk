@@ -226,11 +226,30 @@ func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, mod
 
 // outOrStdoutFormat formats the output based on the output flag and writes it to the command's output stream.
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
-	clientCtx, err := client.GetClientTxContext(cmd)
-	if err != nil {
-		return err
+	var clientCtx client.Context
+	if v := cmd.Context().Value(client.ClientContextKey); v != nil {
+		clientCtx = *(v.(*client.Context))
+	} else {
+		clientCtx = client.Context{}
 	}
 
+	flagSet := cmd.Flags()
+	if clientCtx.OutputFormat == "" || flagSet.Changed(flags.FlagOutput) {
+		output, _ := flagSet.GetString(flags.FlagOutput)
+		clientCtx = clientCtx.WithOutputFormat(output)
+	}
+
+	if !clientCtx.IsAux || flagSet.Changed(flags.FlagAux) {
+		isAux, _ := flagSet.GetBool(flags.FlagAux)
+		if isAux {
+			// If the user didn't explicitly set an --output flag, use JSON by default.
+			if clientCtx.OutputFormat == "" || !flagSet.Changed(flags.FlagOutput) {
+				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
+			}
+		}
+	}
+
+	var err error
 	outputType := clientCtx.OutputFormat
 	// if the output type is text, convert the json to yaml
 	// if output type is json or nil, default to json

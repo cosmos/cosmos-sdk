@@ -668,11 +668,15 @@ func BenchmarkLegacyQuoMut(b *testing.B) {
 
 func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
+	baseArr := make([]math.LegacyDec, b.N)
+	for i := 0; i < b.N; i++ {
+		baseArr[i] = b1.Clone()
+	}
 	b2 := math.LegacyNewDec(4371)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sink = b1.QuoTruncateMut(b2)
+		sink = baseArr[i].QuoTruncateMut(b2)
 	}
 
 	if sink == nil {
@@ -697,11 +701,15 @@ func BenchmarkLegacySqrtOnMersennePrime(b *testing.B) {
 
 func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
+	baseArr := make([]math.LegacyDec, b.N)
+	for i := 0; i < b.N; i++ {
+		baseArr[i] = b1.Clone()
+	}
 	b2 := math.LegacyNewDec(4371)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sink = b1.QuoRoundupMut(b2)
+		sink = baseArr[i].QuoRoundupMut(b2)
 	}
 
 	if sink == nil {

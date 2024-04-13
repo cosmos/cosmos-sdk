@@ -399,11 +399,10 @@ func (d LegacyDec) QuoTruncate(d2 LegacyDec) LegacyDec {
 
 // QuoTruncateMut mutable quotient truncate
 func (d LegacyDec) QuoTruncateMut(d2 LegacyDec) LegacyDec {
-	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
+	// multiply precision once
+	d.i.Mul(d.i, precisionReuse)
 	d.i.Quo(d.i, d2.i)
 
-	chopPrecisionAndTruncate(d.i)
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -418,10 +417,12 @@ func (d LegacyDec) QuoRoundUp(d2 LegacyDec) LegacyDec {
 // QuoRoundupMut mutable quotient, round up
 func (d LegacyDec) QuoRoundupMut(d2 LegacyDec) LegacyDec {
 	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
-	d.i.Quo(d.i, d2.i)
+	d.i.Mul(d.i, precisionReuse)
+	_, rem := d.i.QuoRem(d.i, d2.i, big.NewInt(0))
+	if rem.Sign() != 0 {
+		d.i.Add(d.i, oneInt)
+	}
 
-	chopPrecisionAndRoundUp(d.i)
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}

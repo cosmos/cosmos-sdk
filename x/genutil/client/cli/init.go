@@ -15,6 +15,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -161,6 +162,9 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 			appGenesis.InitialHeight = initHeight
 			appGenesis.Consensus = &types.ConsensusGenesis{
 				Validators: nil,
+				Params: &cmttypes.ConsensusParams{
+					Validator: cmttypes.ValidatorParams{},
+				},
 			}
 
 			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)

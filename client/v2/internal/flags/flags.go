@@ -17,7 +17,6 @@ const (
 	// FlagNoProposal is the flag convert a gov proposal command into a normal command.
 	// This is used to allow user of chains with custom authority to not use gov submit proposals for usual proposal commands.
 	FlagNoProposal = "no-proposal"
-	FlagAux        = "aux"
 )
 
 // List of supported output formats

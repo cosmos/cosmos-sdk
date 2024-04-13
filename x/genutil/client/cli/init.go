@@ -162,9 +162,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 			appGenesis.InitialHeight = initHeight
 			appGenesis.Consensus = &types.ConsensusGenesis{
 				Validators: nil,
-				Params: &cmttypes.ConsensusParams{
-					Validator: cmttypes.ValidatorParams{},
-				},
+				Params:     cmttypes.DefaultConsensusParams(),
 			}
 
 			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)

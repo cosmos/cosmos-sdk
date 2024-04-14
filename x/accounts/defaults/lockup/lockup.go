@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -25,8 +24,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-type ProtoMsg = protoiface.MessageV1
 
 var (
 	OriginalLockingPrefix  = collections.NewPrefix(0)
@@ -526,7 +523,7 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 
 func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {
 	// Query account balance for the sent denom
-	balanceQueryReq := banktypes.NewQueryBalanceRequest(sender, denom)
+	balanceQueryReq := &banktypes.QueryBalanceRequest{Address: sender, Denom: denom}
 	resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
 	if err != nil {
 		return nil, err
@@ -571,7 +568,7 @@ func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, am
 	return nil
 }
 
-// IterateSendEnabledEntries iterates over all the SendEnabled entries.
+// IterateCoinEntries iterates over all the CoinEntries entries.
 func (bva BaseLockup) IterateCoinEntries(
 	ctx context.Context,
 	entries collections.Map[string, math.Int],

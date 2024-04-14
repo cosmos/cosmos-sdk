@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -19,11 +20,14 @@ import (
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	distrtypes "cosmossdk.io/x/distribution/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+type ProtoMsg = protoiface.MessageV1
 
 var (
 	OriginalLockingPrefix  = collections.NewPrefix(0)
@@ -163,7 +167,11 @@ func (bva *BaseLockup) Delegate(
 			return err
 		}
 
-		msgDelegate := makeMsgDelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
+		msgDelegate := &stakingtypes.MsgDelegate{
+			DelegatorAddress: delegatorAddress,
+			ValidatorAddress: msg.ValidatorAddress,
+			Amount:           msg.Amount,
+		}
 		resp, err := sendMessage(ctx, msgDelegate)
 		if err != nil {
 			return err
@@ -203,7 +211,11 @@ func (bva *BaseLockup) Undelegate(
 			return err
 		}
 
-		msgUndelegate := makeMsgUndelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
+		msgUndelegate := &stakingtypes.MsgUndelegate{
+			DelegatorAddress: delegatorAddress,
+			ValidatorAddress: msg.ValidatorAddress,
+			Amount:           msg.Amount,
+		}
 		resp, err := sendMessage(ctx, msgUndelegate)
 		if err != nil {
 			return err
@@ -288,7 +300,11 @@ func (bva *BaseLockup) SendCoins(
 	responses := []*codectypes.Any{}
 
 	err = bva.branchService.Execute(ctx, func(ctx context.Context) error {
-		msgSend := makeMsgSend(fromAddress, msg.ToAddress, msg.Amount)
+		msgSend := &banktypes.MsgSend{
+			FromAddress: fromAddress,
+			ToAddress:   msg.ToAddress,
+			Amount:      msg.Amount,
+		}
 		resp, err := sendMessage(ctx, msgSend)
 		if err != nil {
 			return err
@@ -382,7 +398,12 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 			return fmt.Errorf("no tokens available for withdrawing")
 		}
 
-		msgSend := makeMsgSend(fromAddress, msg.ToAddress, amount)
+		msgSend := &banktypes.MsgSend{
+			FromAddress: fromAddress,
+			ToAddress:   msg.ToAddress,
+			Amount:      amount,
+		}
+
 		_, err = sendMessage(ctx, msgSend)
 		if err != nil {
 			return err

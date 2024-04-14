@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Api Breaking Changes
 
+* [#20016](https://github.com/cosmos/cosmos-sdk/pull/20016) `NewMsgSubmitEvidence` now takes a string as argument instead of an `AccAddress`.
 * [#19482](https://github.com/cosmos/cosmos-sdk/pull/19482) `appmodule.Environment` is passed to `NewKeeper` instead of individual services
 * [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) `NewAppModule` now takes in a `codec.Codec` as its first argument
 

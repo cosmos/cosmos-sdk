@@ -141,7 +141,7 @@ func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, ms
 	return pva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-// IterateSendEnabledEntries iterates over all the SendEnabled entries.
+// IteratePeriods iterates over all the Periods entries.
 func (pva PeriodicLockingAccount) IteratePeriods(
 	ctx context.Context,
 	cb func(value lockuptypes.Period) (bool, error),

@@ -89,15 +89,15 @@ func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockT
 	unlockedCoins = sdk.Coins{}
 	lockedCoins = sdk.Coins{}
 
-	var originalVesting sdk.Coins
+	var originalLocking sdk.Coins
 	err = cva.IterateCoinEntries(ctx, cva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		vestedCoin, vestingCoin, err := cva.GetLockCoinInfoWithDenom(ctx, blockTime, key)
+		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
+		unlockedCoin, lockedCoin, err := cva.GetLockCoinInfoWithDenom(ctx, blockTime, key)
 		if err != nil {
 			return true, err
 		}
-		unlockedCoins = append(unlockedCoins, *vestedCoin)
-		lockedCoins = append(lockedCoins, *vestingCoin)
+		unlockedCoins = append(unlockedCoins, *unlockedCoin)
+		lockedCoins = append(lockedCoins, *lockedCoin)
 		return false, nil
 	})
 	if err != nil {

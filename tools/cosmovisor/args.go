@@ -54,22 +54,22 @@ const (
 
 // Config is the information passed in to control the daemon
 type Config struct {
-	Home                     string        `toml:"DAEMON_HOME" mapstructure:"DAEMON_HOME"`
-	Name                     string        `toml:"DAEMON_NAME" mapstructure:"DAEMON_NAME"`
-	AllowDownloadBinaries    bool          `toml:"DAEMON_ALLOW_DOWNLOAD_BINARIES" mapstructure:"DAEMON_ALLOW_DOWNLOAD_BINARIES" default:"false"`
-	DownloadMustHaveChecksum bool          `toml:"DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM" mapstructure:"DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM" default:"false"`
-	RestartAfterUpgrade      bool          `toml:"DAEMON_RESTART_AFTER_UPGRADE" mapstructure:"DAEMON_RESTART_AFTER_UPGRADE" default:"true"`
-	RestartDelay             time.Duration `toml:"DAEMON_RESTART_DELAY" mapstructure:"DAEMON_RESTART_DELAY"`
-	ShutdownGrace            time.Duration `toml:"DAEMON_SHUTDOWN_GRACE" mapstructure:"DAEMON_SHUTDOWN_GRACE"`
-	PollInterval             time.Duration `toml:"DAEMON_POLL_INTERVAL" mapstructure:"DAEMON_POLL_INTERVAL" default:"300ms"`
-	UnsafeSkipBackup         bool          `toml:"UNSAFE_SKIP_BACKUP" mapstructure:"UNSAFE_SKIP_BACKUP" default:"false"`
-	DataBackupPath           string        `toml:"DAEMON_DATA_BACKUP_DIR" mapstructure:"DAEMON_DATA_BACKUP_DIR"`
-	PreUpgradeMaxRetries     int           `toml:"DAEMON_PREUPGRADE_MAX_RETRIES" mapstructure:"DAEMON_PREUPGRADE_MAX_RETRIES" default:"0"`
-	DisableLogs              bool          `toml:"COSMOVISOR_DISABLE_LOGS" mapstructure:"COSMOVISOR_DISABLE_LOGS" default:"false"`
-	ColorLogs                bool          `toml:"COSMOVISOR_COLOR_LOGS" mapstructure:"COSMOVISOR_COLOR_LOGS" default:"true"`
-	TimeFormatLogs           string        `toml:"COSMOVISOR_TIMEFORMAT_LOGS" mapstructure:"COSMOVISOR_TIMEFORMAT_LOGS" default:"kitchen"`
-	CustomPreUpgrade         string        `toml:"COSMOVISOR_CUSTOM_PREUPGRADE" mapstructure:"COSMOVISOR_CUSTOM_PREUPGRADE" default:""`
-	DisableRecase            bool          `toml:"COSMOVISOR_DISABLE_RECASE" mapstructure:"COSMOVISOR_DISABLE_RECASE" default:"false"`
+	Home                     string        `toml:"daemon_home" mapstructure:"daemon_home"`
+	Name                     string        `toml:"daemon_name" mapstructure:"daemon_name"`
+	AllowDownloadBinaries    bool          `toml:"daemon_allow_download_binaries" mapstructure:"daemon_allow_download_binaries" default:"false"`
+	DownloadMustHaveChecksum bool          `toml:"daemon_download_must_have_checksum" mapstructure:"daemon_download_must_have_checksum" default:"false"`
+	RestartAfterUpgrade      bool          `toml:"daemon_restart_after_upgrade" mapstructure:"daemon_restart_after_upgrade" default:"true"`
+	RestartDelay             time.Duration `toml:"daemon_restart_delay" mapstructure:"daemon_restart_delay"`
+	ShutdownGrace            time.Duration `toml:"daemon_shutdown_grace" mapstructure:"daemon_shutdown_grace"`
+	PollInterval             time.Duration `toml:"daemon_poll_interval" mapstructure:"daemon_poll_interval" default:"300ms"`
+	UnsafeSkipBackup         bool          `toml:"unsafe_skip_backup" mapstructure:"unsafe_skip_backup" default:"false"`
+	DataBackupPath           string        `toml:"daemon_data_backup_dir" mapstructure:"daemon_data_backup_dir"`
+	PreUpgradeMaxRetries     int           `toml:"daemon_preupgrade_max_retries" mapstructure:"daemon_preupgrade_max_retries" default:"0"`
+	DisableLogs              bool          `toml:"cosmovisor_disable_logs" mapstructure:"cosmovisor_disable_logs" default:"false"`
+	ColorLogs                bool          `toml:"cosmovisor_color_logs" mapstructure:"cosmovisor_color_logs" default:"true"`
+	TimeFormatLogs           string        `toml:"cosmovisor_timeforamt_logs" mapstructure:"cosmovisor_timeforamt_logs" default:"kitchen"`
+	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
+	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -159,11 +159,11 @@ func (cfg *Config) CurrentBin() (string, error) {
 }
 
 // GetConfigFromFile will read the configuration from the file at the given path.
-// It will return an error if the file does not exist or if the configuration is invalid.
-// If ENV variables are set, they will override the values in the file.
+// If the file path is not provided, it will try to read the configuration from the ENV variables.
+// If a file path is provided and ENV variables are set, they will override the values in the file.
 func GetConfigFromFile(filePath string) (*Config, error) {
 	if filePath == "" {
-		return nil, ErrEmptyConfigENV
+		return GetConfigFromEnv()
 	}
 
 	// ensure the file exist
@@ -577,15 +577,17 @@ func (cfg Config) DetailString() string {
 }
 
 // Export exports the configuration to a file at the given path.
-func (cfg Config) Export(path string) (string, error) {
-	// if path is empty, use the default path
-	if path == "" {
-		path = cfg.DefaultCfgPath()
-	}
+func (cfg Config) Export() (string, error) {
+	// always use the default path
+	path := filepath.Clean(cfg.DefaultCfgPath())
 
-	// ensure the path has proper extension
-	if !strings.HasSuffix(path, cfgExtension) {
-		return "", fmt.Errorf("invalid file extension must have %s extension", cfgExtension)
+	// check if config file already exists ask user if they want to overwrite it
+	if _, err := os.Stat(path); err == nil {
+		// ask user if they want to overwrite the file
+		if !askForConfirmation(fmt.Sprintf("file %s already exists, do you want to overwrite it?", path)) {
+			cfg.Logger(os.Stdout).Info("file already exists, not overriding")
+			return path, nil
+		}
 	}
 
 	// create the file
@@ -606,4 +608,15 @@ func (cfg Config) Export(path string) (string, error) {
 	}
 
 	return path, nil
+}
+
+func askForConfirmation(str string) bool {
+	var response string
+	fmt.Printf("%s [y/n]: ", str)
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		return false
+	}
+
+	return strings.ToLower(response) == "y"
 }

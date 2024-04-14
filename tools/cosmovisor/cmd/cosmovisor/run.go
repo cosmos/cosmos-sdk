@@ -15,9 +15,9 @@ const (
 var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run an APP command.",
-	Long: `Run an APP command. This command is intended to be used by the cosmovisor process manager.
-It will run the configured program and monitor it for upgrades.
-Initialize the cosmovisor configuration with the 'init' command.`,
+	Long: `Run an APP command. This command is intended to be used by the cosmovisor binary.
+Provide config file path via CONFIG environment variable.
+`,
 	SilenceUsage:       true,
 	DisableFlagParsing: true,
 	RunE: func(_ *cobra.Command, args []string) error {

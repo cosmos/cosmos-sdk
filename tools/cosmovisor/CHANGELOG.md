@@ -43,9 +43,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Improvements
 
 * [#19995](https://github.com/cosmos/cosmos-sdk/pull/19995):
-    * Add `--export-config` flag to provide `config.toml` path to initialise configuration in `cosmovisor init`.
-    * Set `CONFIG` environment variable to provide `config.toml` path to load the configuration in `cosmovisor run`
-    * Add `--config` flag to provide `config.toml` path to the configuration file in `cosmovisor add-upgrade`.
+    * `init command` writes the configuration to the config file only at the default path `DAEMON_HOME/cosmovisor/config.toml`.
+    * Set `CONFIG` environment variable to provide `config.toml` path to load the configuration in `cosmovisor run`.
+    * Add `--config` flag to provide `config.toml` path to the configuration file in root command used by `add-upgrade` and `config` subcommands.
+    * `config command` now displays the configuration from the config file if it is provided. If the config file is not provided, it will display the configuration from the environment variables.
 
 ## v1.5.0 - 2023-07-17
 

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
@@ -18,17 +17,16 @@ import (
 
 func NewIntCmd() *cobra.Command {
 	initCmd := &cobra.Command{
-		Use:          "init <path to executable>",
-		Short:        "Initialize a cosmovisor daemon home directory.",
+		Use:   "init <path to executable>",
+		Short: "Initialize a cosmovisor daemon home directory.",
+		Long: `Initialize a cosmovisor daemon home directory with the provided executable 
+Configuration file uses default path (<-home->/cosmovisor/config.toml) to export the config.`,
 		Args:         cobra.ExactArgs(1),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mustNoError(viper.BindPFlags(cmd.Flags()))
 			return InitializeCosmovisor(nil, args)
 		},
 	}
-
-	initCmd.Flags().String(cosmovisor.FlagExportConfig, "", "path to export the configuration file to (default is <-home_path->/cosmovisor/config.toml")
 
 	return initCmd
 }
@@ -96,12 +94,12 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 	}
 	logger.Info(fmt.Sprintf("the current symlink points to: %q", cur))
 
-	filePath, err := cfg.Export(viper.GetString(cosmovisor.FlagExportConfig))
+	filePath, err := cfg.Export()
 	if err != nil {
 		return fmt.Errorf("failed to export configuration: %w", err)
 	}
 
-	logger.Info(fmt.Sprintf("exported configuration to: %s", filePath))
+	logger.Info(fmt.Sprintf("config file present at: %s", filePath))
 
 	return nil
 }

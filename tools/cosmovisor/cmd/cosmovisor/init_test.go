@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -114,6 +115,26 @@ func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) { //nolint:
 			s.T().Logf("done %s", msg)
 		}
 	}
+}
+
+// readStdInpFromFile reads the provided data as if it were a standard input.
+func (s *InitTestSuite) readStdInpFromFile(data []byte) {
+	// Create a temporary file and write the test input into it
+	tmpfile, err := os.CreateTemp("", "test")
+	if err != nil {
+		s.T().Fatal(err)
+	}
+
+	// write the test input into the temporary file
+	if _, err := tmpfile.Write(data); err != nil {
+		s.T().Fatal(err)
+	}
+
+	if _, err := tmpfile.Seek(0, 0); err != nil {
+		s.T().Fatal(err)
+	}
+
+	os.Stdin = tmpfile
 }
 
 var (
@@ -438,22 +459,6 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		assert.Contains(t, bufferStr, "checking on the current symlink and creating it if needed")
 	})
 
-	s.T().Run("flag export config file invalid extension", func(t *testing.T) {
-		testDir := t.TempDir()
-		env := &cosmovisorInitEnv{
-			Home: filepath.Join(testDir, "home"),
-			Name: "pineapple",
-		}
-
-		s.setEnv(t, env)
-		// setting an invalid extension for config file
-		viper.Set(cosmovisor.FlagExportConfig, filepath.Join(env.Home, cosmovisorDirName, "config.json"))
-		_, logger := s.NewCapturingLogger()
-		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
-		err := InitializeCosmovisor(logger, []string{hwExe})
-		require.ErrorContains(t, err, "invalid file extension")
-	})
-
 	// Failure cases not tested:
 	//	Cannot create genesis bin directory
 	//		I had a test for this that created the `genesis` directory with permissions 0o555.
@@ -497,7 +502,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("making sure %q is executable", genBinExe),
 			"checking on the current symlink and creating it if needed",
 			fmt.Sprintf("the current symlink points to: %q", genBinExe),
-			fmt.Sprintf("exported configuration to: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
+			fmt.Sprintf("config file present at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(s.T(), env)
@@ -550,7 +555,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("the %q file already exists", genBinDirExe),
 			fmt.Sprintf("making sure %q is executable", genBinDirExe),
 			fmt.Sprintf("the current symlink points to: %q", genBinDirExe),
-			fmt.Sprintf("exported configuration to: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
+			fmt.Sprintf("config file present at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(t, env)
@@ -583,7 +588,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("copying executable into place: %q", genBinExe),
 			fmt.Sprintf("making sure %q is executable", genBinExe),
 			fmt.Sprintf("the current symlink points to: %q", genBinExe),
-			fmt.Sprintf("exported configuration to: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
+			fmt.Sprintf("config file present at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(t, env)
@@ -598,7 +603,10 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 		}
 	})
 
-	s.T().Run("flag export config use provide path", func(t *testing.T) {
+	s.T().Run("ask to override (y/n) the existing config file", func(t *testing.T) {
+	})
+
+	s.T().Run("init command exports configs to default path", func(t *testing.T) {
 		testDir := s.T().TempDir()
 		env := &cosmovisorInitEnv{
 			Home: filepath.Join(testDir, "home"),
@@ -607,36 +615,98 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-
-		expectedPath := filepath.Join(env.Home, cfgFileWithExt)
-		// setting a path to export flag
-		viper.Set(cosmovisor.FlagExportConfig, expectedPath)
-		expectedInLog := fmt.Sprintf("exported configuration to: %s", expectedPath)
-
 		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
 		bufferStr := string(bufferBz)
-		assert.Contains(t, bufferStr, expectedInLog)
+		assert.Contains(t, bufferStr, fmt.Sprintf("config file present at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)))
 	})
+}
 
-	s.T().Run("flag export config use default path if not provided", func(t *testing.T) {
-		testDir := s.T().TempDir()
-		env := &cosmovisorInitEnv{
-			Home: filepath.Join(testDir, "home"),
-			Name: "emptygen",
-		}
+func (s *InitTestSuite) TestInitializeCosmovisorWithOverrideCfg() {
+	initEnv := s.clearEnv()
+	defer s.setEnv(nil, initEnv)
 
-		s.setEnv(t, env)
-		buffer, logger := s.NewCapturingLogger()
-		// setting empty path to export flag
-		viper.Set(cosmovisor.FlagExportConfig, "")
-		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
-		err := InitializeCosmovisor(logger, []string{hwExe})
-		require.NoError(t, err, "calling InitializeCosmovisor")
-		bufferBz := buffer.Collect()
-		bufferStr := string(bufferBz)
-		assert.Contains(t, bufferStr, fmt.Sprintf("exported configuration to: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)))
-	})
+	tmpExe := s.CreateHelloWorld(0o755)
+	testDir := s.T().TempDir()
+	homePath := filepath.Join(testDir, "backup")
+	testCases := []struct {
+		name     string
+		input    string
+		cfg      *cosmovisor.Config
+		override bool
+	}{
+		{
+			name:  "yes override",
+			input: "y\n",
+			cfg: &cosmovisor.Config{
+				Home:           homePath,
+				Name:           "old_test",
+				DataBackupPath: homePath,
+			},
+			override: true,
+		},
+		{
+			name:  "no override",
+			input: "n\n",
+			cfg: &cosmovisor.Config{
+				Home:           homePath,
+				Name:           "old_test",
+				DataBackupPath: homePath,
+			},
+			override: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			// create a root cosmovisor directory
+			require.NoError(t, os.MkdirAll(tc.cfg.Root(), 0o755), "making root dir")
+
+			// create a config file in the default location
+			file, err := os.Create(tc.cfg.DefaultCfgPath())
+			require.NoError(t, err)
+
+			// write the config to the file
+			err = toml.NewEncoder(file).Encode(tc.cfg)
+			require.NoError(t, err)
+
+			err = file.Close()
+			require.NoError(t, err)
+
+			s.readStdInpFromFile([]byte(tc.input))
+
+			_, logger := s.NewCapturingLogger()
+			logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+
+			// override the daemon name in environment file
+			// if override is true (y), then the name should be updated in the config file
+			// otherwise (n), the name should not be updated in the config file
+			s.setEnv(t, &cosmovisorInitEnv{
+				Home: tc.cfg.Home,
+				Name: "update_name",
+			})
+
+			err = InitializeCosmovisor(logger, []string{tmpExe})
+			require.NoError(t, err, "calling InitializeCosmovisor")
+
+			cfg := &cosmovisor.Config{}
+			// read the config file
+			cfgFile, err := os.Open(tc.cfg.DefaultCfgPath())
+			require.NoError(t, err)
+			defer cfgFile.Close()
+
+			err = toml.NewDecoder(cfgFile).Decode(cfg)
+			require.NoError(t, err)
+			if tc.override {
+				// check if the name is updated
+				// basically, override the existing config file
+				assert.Equal(t, "update_name", cfg.Name)
+			} else {
+				// daemon name should not be updated
+				assert.Equal(t, tc.cfg.Name, cfg.Name)
+			}
+		})
+	}
 }

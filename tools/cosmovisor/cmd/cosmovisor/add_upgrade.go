@@ -25,7 +25,6 @@ func NewAddUpgradeCmd() *cobra.Command {
 
 	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary / upgrade-info.json file")
 	addUpgrade.Flags().Int64(cosmovisor.FlagUpgradeHeight, 0, "define a height at which to upgrade the binary automatically (without governance proposal)")
-	addUpgrade.Flags().String(cosmovisor.FlagConfig, "", "path to cosmovisor config file")
 
 	return addUpgrade
 }

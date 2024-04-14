@@ -41,7 +41,7 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
 
-	if msg.EndTime.Before(msg.StartTime) {
+	if msg.EndTime.Before(msg.StartTime) || msg.EndTime.Equal(msg.StartTime) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start before end)")
 	}
 
@@ -72,12 +72,6 @@ func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *lockup
 	return cva.BaseLockup.Undelegate(ctx, msg)
 }
 
-func (cva *ContinuousLockingAccount) WithdrawReward(ctx context.Context, msg *lockuptypes.MsgWithdrawReward) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
-) {
-	return cva.BaseLockup.WithdrawReward(ctx, msg)
-}
-
 func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -95,17 +89,6 @@ func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockT
 	unlockedCoins = sdk.Coins{}
 	lockedCoins = sdk.Coins{}
 
-	// We must handle the case where the start time for a lockup account has
-	// been set into the future or when the start of the chain is not exactly
-	// known.
-	startTime, err := cva.StartTime.Get(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	endTime, err := cva.EndTime.Get(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
 	var originalVesting sdk.Coins
 	err = cva.IterateCoinEntries(ctx, cva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
@@ -119,11 +102,6 @@ func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockT
 	})
 	if err != nil {
 		return nil, nil, err
-	}
-	if startTime.After(blockTime) {
-		return unlockedCoins, originalVesting, nil
-	} else if endTime.Before(blockTime) {
-		return originalVesting, lockedCoins, nil
 	}
 
 	return unlockedCoins, lockedCoins, nil
@@ -223,7 +201,6 @@ func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 	accountstd.RegisterExecuteHandler(builder, cva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, cva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, cva.SendCoins)
-	accountstd.RegisterExecuteHandler(builder, cva.WithdrawReward)
 	accountstd.RegisterExecuteHandler(builder, cva.WithdrawUnlockedCoins)
 }
 

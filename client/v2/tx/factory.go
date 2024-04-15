@@ -13,7 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -605,7 +605,7 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 // getSimSignatureData based on the pubKey type gets the correct SignatureData type
 // to use for building a simulation tx.
 func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) offchain.SignatureData {
-	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey) // TODO: abstract out multisig pubkey
+	multisigPubKey, ok := pk.(*cryptotypes.DummyMultiSig)
 	if !ok {
 		return &offchain.SingleSignatureData{SignMode: f.txParams.signMode}
 	}

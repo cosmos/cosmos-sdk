@@ -2,6 +2,7 @@ package types
 
 import (
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
@@ -70,3 +71,24 @@ func (e EmptyPubKey) Address() Address { return nil }
 func (e EmptyPubKey) Bytes() []byte { return nil }
 
 func (e EmptyPubKey) Type() string { return "EmptyPubKey" }
+
+type DummyMultiSig struct {
+	Threshold uint32
+	PubKeys   []*types.Any
+}
+
+func (e DummyMultiSig) Reset() {}
+
+func (e DummyMultiSig) String() string { return "" }
+
+func (e DummyMultiSig) ProtoMessage() {}
+
+func (e DummyMultiSig) VerifySignature(msg, sig []byte) bool { return false }
+
+func (e DummyMultiSig) Equals(PubKey) bool { return false }
+
+func (e DummyMultiSig) Address() Address { return nil }
+
+func (e DummyMultiSig) Bytes() []byte { return nil }
+
+func (e DummyMultiSig) Type() string { return "DummyMultiSig" }

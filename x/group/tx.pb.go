@@ -7,12 +7,12 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -487,7 +487,7 @@ type MsgCreateGroupPolicy struct {
 	// metadata is any arbitrary metadata attached to the group policy.
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// decision_policy specifies the group policy's decision policy.
-	DecisionPolicy *types.Any `protobuf:"bytes,4,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
+	DecisionPolicy *any.Any `protobuf:"bytes,4,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
 }
 
 func (m *MsgCreateGroupPolicy) Reset()         { *m = MsgCreateGroupPolicy{} }
@@ -684,7 +684,7 @@ type MsgCreateGroupWithPolicy struct {
 	// and group policy admin.
 	GroupPolicyAsAdmin bool `protobuf:"varint,5,opt,name=group_policy_as_admin,json=groupPolicyAsAdmin,proto3" json:"group_policy_as_admin,omitempty"`
 	// decision_policy specifies the group policy's decision policy.
-	DecisionPolicy *types.Any `protobuf:"bytes,6,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
+	DecisionPolicy *any.Any `protobuf:"bytes,6,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
 }
 
 func (m *MsgCreateGroupWithPolicy) Reset()         { *m = MsgCreateGroupWithPolicy{} }
@@ -782,7 +782,7 @@ type MsgUpdateGroupPolicyDecisionPolicy struct {
 	// group_policy_address is the account address of group policy.
 	GroupPolicyAddress string `protobuf:"bytes,2,opt,name=group_policy_address,json=groupPolicyAddress,proto3" json:"group_policy_address,omitempty"`
 	// decision_policy is the updated group policy's decision policy.
-	DecisionPolicy *types.Any `protobuf:"bytes,3,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
+	DecisionPolicy *any.Any `protobuf:"bytes,3,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
 }
 
 func (m *MsgUpdateGroupPolicyDecisionPolicy) Reset()         { *m = MsgUpdateGroupPolicyDecisionPolicy{} }
@@ -970,7 +970,7 @@ type MsgSubmitProposal struct {
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
-	Messages []*types.Any `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
+	Messages []*any.Any `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
 	// exec defines the mode of execution of the proposal,
 	// whether it should be executed immediately on creation or not.
 	// If so, proposers signatures are considered as Yes votes.
@@ -4613,7 +4613,7 @@ func (m *MsgCreateGroupPolicy) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.DecisionPolicy == nil {
-				m.DecisionPolicy = &types.Any{}
+				m.DecisionPolicy = &any.Any{}
 			}
 			if err := m.DecisionPolicy.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5127,7 +5127,7 @@ func (m *MsgCreateGroupWithPolicy) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.DecisionPolicy == nil {
-				m.DecisionPolicy = &types.Any{}
+				m.DecisionPolicy = &any.Any{}
 			}
 			if err := m.DecisionPolicy.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5378,7 +5378,7 @@ func (m *MsgUpdateGroupPolicyDecisionPolicy) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.DecisionPolicy == nil {
-				m.DecisionPolicy = &types.Any{}
+				m.DecisionPolicy = &any.Any{}
 			}
 			if err := m.DecisionPolicy.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5805,7 +5805,7 @@ func (m *MsgSubmitProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Messages = append(m.Messages, &types.Any{})
+			m.Messages = append(m.Messages, &any.Any{})
 			if err := m.Messages[len(m.Messages)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

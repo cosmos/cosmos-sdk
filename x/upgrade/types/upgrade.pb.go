@@ -6,11 +6,11 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
@@ -52,7 +52,7 @@ type Plan struct {
 	// Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been
 	// moved to the IBC module in the sub module 02-client.
 	// If this field is not empty, an error will be thrown.
-	UpgradedClientState *types.Any `protobuf:"bytes,5,opt,name=upgraded_client_state,json=upgradedClientState,proto3" json:"upgraded_client_state,omitempty"` // Deprecated: Do not use.
+	UpgradedClientState *any.Any `protobuf:"bytes,5,opt,name=upgraded_client_state,json=upgradedClientState,proto3" json:"upgraded_client_state,omitempty"` // Deprecated: Do not use.
 }
 
 func (m *Plan) Reset()         { *m = Plan{} }
@@ -844,7 +844,7 @@ func (m *Plan) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.UpgradedClientState == nil {
-				m.UpgradedClientState = &types.Any{}
+				m.UpgradedClientState = &any.Any{}
 			}
 			if err := m.UpgradedClientState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

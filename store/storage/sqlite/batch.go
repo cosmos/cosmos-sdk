@@ -62,13 +62,13 @@ func (b *Batch) Reset() error {
 	return nil
 }
 
-func (b *Batch) Set(storeKey []byte, key, value []byte) error {
+func (b *Batch) Set(storeKey, key, value []byte) error {
 	b.size += len(key) + len(value)
 	b.ops = append(b.ops, batchOp{action: batchActionSet, storeKey: storeKey, key: key, value: value})
 	return nil
 }
 
-func (b *Batch) Delete(storeKey []byte, key []byte) error {
+func (b *Batch) Delete(storeKey, key []byte) error {
 	b.size += len(key)
 	b.ops = append(b.ops, batchOp{action: batchActionDel, storeKey: storeKey, key: key})
 	return nil

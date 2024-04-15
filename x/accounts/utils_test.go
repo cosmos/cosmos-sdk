@@ -4,9 +4,7 @@ import (
 	"context"
 	"testing"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections/colltest"
@@ -48,7 +46,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	ss, ctx := colltest.MockStore()
 	env := runtime.NewEnvironment(ss, log.NewNopLogger())
 	env.EventService = eventService{}
-	m, err := NewKeeper(nil, env, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
+	m, err := NewKeeper(nil, env, addressCodec{}, nil, nil, interfaceRegistry{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }
@@ -61,18 +59,6 @@ func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Conte
 	return []func(ctx context.Context, req, resp protoiface.MessageV1) error{func(ctx context.Context, req, resp protoiface.MessageV1) error {
 		return m(ctx, req, resp)
 	}}
-}
-
-var _ SignerProvider = (*mockSigner)(nil)
-
-type mockSigner func(msg implementation.ProtoMsg) ([]byte, error)
-
-func (m mockSigner) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
-	s, err := m(msg)
-	if err != nil {
-		return nil, nil, err
-	}
-	return [][]byte{s}, nil, nil
 }
 
 var _ MsgRouter = (*mockExec)(nil)

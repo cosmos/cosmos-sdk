@@ -1,10 +1,14 @@
-package ante
+package ante_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/auth/ante"
 	authcodec "cosmossdk.io/x/auth/codec"
 	authtypes "cosmossdk.io/x/auth/types"
 
@@ -12,8 +16,26 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type mockAccount struct {
+	ante.AccountKeeper
+}
+
+func (*mockAccount) Environment() appmodule.Environment {
+	return appmodule.Environment{
+		TransactionService: &mockTransactionService{},
+	}
+}
+
+type mockTransactionService struct {
+	transaction.Service
+}
+
+func (*mockTransactionService) ExecMode(ctx context.Context) transaction.ExecMode {
+	return transaction.ExecMode(sdk.UnwrapSDKContext(ctx).ExecMode())
+}
+
 func TestSigVerify_setPubKey(t *testing.T) {
-	svd := SigVerificationDecorator{}
+	svd := ante.NewSigVerificationDecorator(&mockAccount{}, nil, nil, nil)
 
 	alicePk := secp256k1.GenPrivKey().PubKey()
 	bobPk := secp256k1.GenPrivKey().PubKey()
@@ -28,22 +50,22 @@ func TestSigVerify_setPubKey(t *testing.T) {
 	t.Run("on not sig verify tx - skip", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{}
 		ctx = ctx.WithExecMode(sdk.ExecModeSimulate).WithIsSigverifyTx(false)
-		err := svd.setPubKey(ctx, acc, nil)
+		err := ante.SetSVDPubKey(svd, ctx, acc, nil)
 		require.NoError(t, err)
 	})
 
 	t.Run("on sim, populate with sim key, if pubkey is nil", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
 		ctx = ctx.WithExecMode(sdk.ExecModeSimulate).WithIsSigverifyTx(true)
-		err := svd.setPubKey(ctx, acc, nil)
+		err := ante.SetSVDPubKey(svd, ctx, acc, nil)
 		require.NoError(t, err)
-		require.Equal(t, acc.PubKey.GetCachedValue(), simSecp256k1Pubkey)
+		require.Equal(t, acc.PubKey.GetCachedValue(), ante.SimSecp256k1PubkeyInternal)
 	})
 
 	t.Run("on sim, populate with real pub key, if pubkey is not nil", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
 		ctx = ctx.WithExecMode(sdk.ExecModeSimulate).WithIsSigverifyTx(true)
-		err := svd.setPubKey(ctx, acc, alicePk)
+		err := ante.SetSVDPubKey(svd, ctx, acc, alicePk)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), alicePk)
 	})
@@ -51,7 +73,7 @@ func TestSigVerify_setPubKey(t *testing.T) {
 	t.Run("not on sim, populate the address", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
 		ctx = ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(true)
-		err := svd.setPubKey(ctx, acc, alicePk)
+		err := ante.SetSVDPubKey(svd, ctx, acc, alicePk)
 		require.NoError(t, err)
 		require.Equal(t, acc.PubKey.GetCachedValue(), alicePk)
 	})
@@ -59,7 +81,7 @@ func TestSigVerify_setPubKey(t *testing.T) {
 	t.Run("not on sim, fail on invalid pubkey.address", func(t *testing.T) {
 		acc := &authtypes.BaseAccount{Address: aliceAddr}
 		ctx = ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(true)
-		err := svd.setPubKey(ctx, acc, bobPk)
+		err := ante.SetSVDPubKey(svd, ctx, acc, bobPk)
 		require.ErrorContains(t, err, "cannot be claimed")
 	})
 }

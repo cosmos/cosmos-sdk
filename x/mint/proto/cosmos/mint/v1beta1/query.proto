@@ -25,6 +25,11 @@ service Query {
   rpc AnnualProvisions(QueryAnnualProvisionsRequest) returns (QueryAnnualProvisionsResponse) {
     option (google.api.http).get = "/cosmos/mint/v1beta1/annual_provisions";
   }
+
+  // EpochProvisions returns the current minting epoch provisions value.
+  rpc EpochProvisions(QueryEpochProvisionsRequest) returns (QueryEpochProvisionsResponse) {
+    option (google.api.http).get = "/cosmos/mint/v1beta1/epoch_provisions";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -64,5 +69,19 @@ message QueryAnnualProvisionsResponse {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
+  ];
+}
+
+// QueryEpochProvisionsRequest is the request type for the
+// Query/EpochProvisions RPC method.
+message QueryEpochProvisionsRequest {}
+
+// QueryEpochProvisionsResponse is the response type for the
+// Query/EpochProvisions RPC method.
+message QueryEpochProvisionsResponse {
+  // epoch_provisions is the current minting per epoch provisions value.
+  bytes epoch_provisions = 1 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
   ];
 }

@@ -49,27 +49,28 @@ type TestAccount struct {
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
 type AnteTestSuite struct {
-	anteHandler     sdk.AnteHandler
-	ctx             sdk.Context
-	clientCtx       client.Context
-	txBuilder       client.TxBuilder
-	accountKeeper   keeper.AccountKeeper
-	bankKeeper      *authtestutil.MockBankKeeper
-	txBankKeeper    *txtestutil.MockBankKeeper
-	feeGrantKeeper  *antetestutil.MockFeegrantKeeper
-	consensusKeeper *antetestutil.MockConsensusKeeper
-	encCfg          moduletestutil.TestEncodingConfig
-	env             appmodule.Environment
+	anteHandler    sdk.AnteHandler
+	ctx            sdk.Context
+	clientCtx      client.Context
+	txBuilder      client.TxBuilder
+	accountKeeper  keeper.AccountKeeper
+	bankKeeper     *authtestutil.MockBankKeeper
+	acctsModKeeper *authtestutil.MockAccountsModKeeper
+	txBankKeeper   *txtestutil.MockBankKeeper
+	feeGrantKeeper *antetestutil.MockFeegrantKeeper
+	encCfg         moduletestutil.TestEncodingConfig
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	t.Helper()
 	suite := &AnteTestSuite{}
+	// gomock initializations
 	ctrl := gomock.NewController(t)
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
 	suite.txBankKeeper = txtestutil.NewMockBankKeeper(ctrl)
 	suite.feeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
+	suite.acctsModKeeper = authtestutil.NewMockAccountsModKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
@@ -97,7 +98,13 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithRouterService(grpcQueryRouter, msgRouter))
 	suite.accountKeeper = keeper.NewAccountKeeper(
+<<<<<<< HEAD
 		suite.env, suite.encCfg.Codec, types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
+||||||| edd1c71072
+		runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
+=======
+		runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
+>>>>>>> main
 		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)

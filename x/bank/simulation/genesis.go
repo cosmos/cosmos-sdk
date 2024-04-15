@@ -59,17 +59,21 @@ func RandomGenesisSendEnabled(r *rand.Rand, bondDenom string) []types.SendEnable
 
 // RandomGenesisBalances returns a slice of account balances. Each account has
 // a balance of simState.InitialStake for simState.BondDenom.
-func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
+func RandomGenesisBalances(simState *module.SimulationState) ([]types.Balance, error) {
 	genesisBalances := []types.Balance{}
 
 	for _, acc := range simState.Accounts {
+		addr, err := simState.AddressCodec.BytesToString(acc.Address)
+		if err != nil {
+			return nil, err
+		}
 		genesisBalances = append(genesisBalances, types.Balance{
-			Address: acc.Address.String(),
+			Address: addr,
 			Coins:   sdk.NewCoins(sdk.NewCoin(simState.BondDenom, simState.InitialStake)),
 		})
 	}
 
-	return genesisBalances
+	return genesisBalances, nil
 }
 
 // RandomizedGenState generates a random GenesisState for bank
@@ -83,9 +87,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 	totalSupply := simState.InitialStake.Mul(sdkmath.NewInt((numAccs + simState.NumBonded)))
 	supply := sdk.NewCoins(sdk.NewCoin(simState.BondDenom, totalSupply))
 
+	balances, err := RandomGenesisBalances(simState)
+	if err != nil {
+		panic(err)
+	}
+
 	bankGenesis := types.GenesisState{
 		Params:      types.NewParams(defaultSendEnabledParam),
-		Balances:    RandomGenesisBalances(simState),
+		Balances:    balances,
 		Supply:      supply,
 		SendEnabled: sendEnabled,
 	}

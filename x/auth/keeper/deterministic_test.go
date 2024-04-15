@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
@@ -16,6 +17,7 @@ import (
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -33,13 +35,14 @@ type DeterministicTestSuite struct {
 
 	accountNumberLanes uint64
 
-	key           *storetypes.KVStoreKey
-	environment   appmodule.Environment
-	ctx           sdk.Context
-	queryClient   types.QueryClient
-	accountKeeper keeper.AccountKeeper
-	encCfg        moduletestutil.TestEncodingConfig
-	maccPerms     map[string][]string
+	key            *storetypes.KVStoreKey
+	environment    appmodule.Environment
+	ctx            sdk.Context
+	queryClient    types.QueryClient
+	accountKeeper  keeper.AccountKeeper
+	acctsModKeeper *authtestutil.MockAccountsModKeeper
+	encCfg         moduletestutil.TestEncodingConfig
+	maccPerms      map[string][]string
 }
 
 var (
@@ -62,6 +65,11 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	suite.acctsModKeeper = acctsModKeeper
+
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
 		"mint":                   {"minter"},
@@ -75,6 +83,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		env,
 		suite.encCfg.Codec,
 		types.ProtoBaseAccount,
+		suite.acctsModKeeper,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
@@ -295,6 +304,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			suite.environment,
 			suite.encCfg.Codec,
 			types.ProtoBaseAccount,
+			suite.acctsModKeeper,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
@@ -342,6 +352,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			suite.environment,
 			suite.encCfg.Codec,
 			types.ProtoBaseAccount,
+			suite.acctsModKeeper,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",

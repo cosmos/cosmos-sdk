@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/simulation"
 	"cosmossdk.io/x/epochs/types"
@@ -75,10 +74,6 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 // DefaultGenesis returns the epochs module's default genesis state.
 func (am AppModule) DefaultGenesis() json.RawMessage {
 	return am.cdc.MustMarshalJSON(types.DefaultGenesis())
-}
-
-// RegisterInterfaces implements InterfaceModule.RegisterInterfaces
-func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 }
 
 // ValidateGenesis performs genesis state validation for the epochs module.

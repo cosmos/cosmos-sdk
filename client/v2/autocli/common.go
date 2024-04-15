@@ -10,6 +10,8 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 type cmdType int
@@ -225,11 +227,21 @@ func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, mod
 
 // outOrStdoutFormat formats the output based on the output flag and writes it to the command's output stream.
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
+	clientCtx := client.Context{}
+	if v := cmd.Context().Value(client.ClientContextKey); v != nil {
+		clientCtx = *(v.(*client.Context))
+	}
+	flagSet := cmd.Flags()
+	if clientCtx.OutputFormat == "" || flagSet.Changed(flags.FlagOutput) {
+		output, _ := flagSet.GetString(flags.FlagOutput)
+		clientCtx = clientCtx.WithOutputFormat(output)
+	}
+
 	var err error
-	outputType := cmd.Flag(flags.FlagOutput)
+	outputType := clientCtx.OutputFormat
 	// if the output type is text, convert the json to yaml
 	// if output type is json or nil, default to json
-	if outputType != nil && outputType.Value.String() == flags.OutputFormatText {
+	if outputType == flags.OutputFormatText {
 		out, err = yaml.JSONToYAML(out)
 		if err != nil {
 			return err

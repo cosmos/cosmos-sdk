@@ -1,11 +1,11 @@
 package tx
 
 import (
-	apibase "cosmossdk.io/api/cosmos/base/v1beta1"
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/offchain"
+	txsigning "cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 type ExtendedTxBuilder interface {
@@ -17,20 +17,22 @@ type ExtendedTxBuilder interface {
 // signatures, and provide canonical bytes to sign over. The transaction must
 // also know how to encode itself.
 type TxBuilder interface {
-	GetTx() apitx.Tx
+	GetTx() typestx.Tx
+	GetSigningTxData() txsigning.TxData
+
 	SetMsgs(...sdk.Msg) error
 	SetMemo(string)
-	SetFeeAmount([]apibase.Coin)
+	SetFeeAmount([]sdk.Coin)
 	SetFeePayer(string)
 	SetGasLimit(uint64)
 	SetTimeoutHeight(uint64)
 	SetFeeGranter(string)
 	SetUnordered(bool)
 	SetSignatures(...offchain.OffchainSignature) error
-	SetAuxSignerData(apitx.AuxSignerData) error
+	SetAuxSignerData(typestx.AuxSignerData) error
 }
 
 type TxBuilderProvider interface {
 	NewTxBuilder() TxBuilder
-	WrapTxBuilder(apitx.Tx) (TxBuilder, error)
+	WrapTxBuilder(typestx.Tx) (TxBuilder, error)
 }

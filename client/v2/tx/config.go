@@ -1,8 +1,8 @@
 package tx
 
 import (
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -37,7 +37,7 @@ type TxParameters struct {
 	timeoutHeight uint64
 	chainID       string
 	memo          string
-	signMode      signingtypes.SignMode
+	signMode      apitxsigning.SignMode
 
 	AccountConfig
 	GasConfig
@@ -74,7 +74,7 @@ type ExecutionOptions struct {
 	offline            bool
 	generateOnly       bool
 	simulateAndExecute bool
-	preprocessTxHook   client.PreprocessTxFn
+	preprocessTxHook   PreprocessTxFn
 }
 
 type ExtensionOptions struct {

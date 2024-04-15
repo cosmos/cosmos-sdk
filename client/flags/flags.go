@@ -1,8 +1,8 @@
 package flags
 
 import (
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -203,19 +203,19 @@ func ParseGasSetting(gasStr string) (GasSetting, error) {
 	}
 }
 
-func ParseSignMode(signModeStr string) signing.SignMode {
-	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+func ParseSignModeStr(signModeStr string) apisigning.SignMode {
+	signMode := apisigning.SignMode_SIGN_MODE_UNSPECIFIED
 	switch signModeStr {
 	case SignModeDirect:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT
+		signMode = apisigning.SignMode_SIGN_MODE_DIRECT
 	case SignModeLegacyAminoJSON:
-		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+		signMode = apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	case SignModeDirectAux:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
+		signMode = apisigning.SignMode_SIGN_MODE_DIRECT_AUX
 	case SignModeTextual:
-		signMode = signing.SignMode_SIGN_MODE_TEXTUAL
+		signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 	case SignModeEIP191:
-		signMode = signing.SignMode_SIGN_MODE_EIP_191
+		signMode = apisigning.SignMode_SIGN_MODE_EIP_191
 	}
 
 	return signMode

@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -117,9 +118,9 @@ func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
 
 // SetSignMode sets the aux signer's sign mode. Allowed sign modes are
 // DIRECT_AUX and LEGACY_AMINO_JSON.
-func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
+func (b *AuxTxBuilder) SetSignMode(mode apitxsigning.SignMode) error {
 	switch mode {
-	case signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+	case apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX, apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 	default:
 		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s",
 			signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)

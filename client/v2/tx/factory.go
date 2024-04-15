@@ -2,17 +2,18 @@ package tx
 
 import (
 	"context"
-	apibase "cosmossdk.io/api/cosmos/base/v1beta1"
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/client/v2/offchain"
+	"cosmossdk.io/x/tx/signing"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/math"
-	authsigning "cosmossdk.io/x/auth/signing"
+
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -35,7 +36,7 @@ type Factory struct {
 	txParams         TxParameters
 }
 
-func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
+func NewFactoryCLI(clientCtx Context, flagSet *pflag.FlagSet) (Factory, error) {
 	if clientCtx.Viper == nil {
 		clientCtx = clientCtx.WithViper("")
 	}
@@ -62,7 +63,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		return Factory{}, errors.New("chain ID required but not specified")
 	}
 
-	signMode := flags.ParseSignMode(clientCtx.SignModeStr)
+	signMode := flags.ParseSignModeStr(clientCtx.SignModeStr)
 	memo := clientCtx.Viper.GetString(flags.FlagNote)
 	timeoutHeight := clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
 	unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
@@ -86,15 +87,15 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 				accountNumber: accNum,
 				sequence:      accSeq,
 				fromName:      clientCtx.FromName,
-				fromAddress:   clientCtx.FromAddress,
+				fromAddress:   sdk.MustAccAddressFromBech32(clientCtx.FromAddress),
 			},
 			GasConfig: GasConfig{
 				gas:           gasSetting.Gas,
 				gasAdjustment: gasAdj,
 			},
 			FeeConfig: FeeConfig{
-				feeGranter: clientCtx.FeeGranter,
-				feePayer:   clientCtx.FeePayer,
+				feeGranter: sdk.MustAccAddressFromBech32(clientCtx.FeeGranter),
+				feePayer:   sdk.MustAccAddressFromBech32(clientCtx.FeePayer),
 			},
 			ExecutionOptions: ExecutionOptions{
 				unordered:          unordered,
@@ -174,27 +175,25 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (TxBuilder, error) {
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
-		apiFees := make([]apibase.Coin, len(f.txParams.gasPrices))
+		fees = make([]sdk.Coin, len(f.txParams.gasPrices))
 
 		for i, gp := range f.txParams.gasPrices {
 			fee := gp.Amount.Mul(glDec)
-			apiFees[i] = apibase.Coin{Denom: gp.Denom, Amount: fee.Ceil().RoundInt().String()}
+			fees[i] = sdk.Coin{Denom: gp.Denom, Amount: fee.Ceil().RoundInt()}
 		}
 	}
 
-	// Prevent simple inclusion of a valid mnemonic in the memo field
-	if f.txParams.memo != "" && bip39.IsMnemonicValid(strings.ToLower(f.txParams.memo)) {
-		return nil, errors.New("cannot provide a valid mnemonic seed in the memo field")
+	if err := ValidateMemo(f.txParams.memo); err != nil {
+		return nil, err
 	}
 
 	txBuilder := f.txConfig.NewTxBuilder()
-
 	if err := txBuilder.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
 
 	txBuilder.SetMemo(f.txParams.memo)
-	txBuilder.SetFeeAmount(apiFees)
+	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(f.txParams.gas)
 	txBuilder.SetFeeGranter(f.txParams.feeGranter.String())
 	txBuilder.SetFeePayer(f.txParams.feePayer.String())
@@ -229,7 +228,7 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 			return err
 		}
 
-		f = f.WithGas(adjusted)
+		f.WithGas(adjusted)
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: f.Gas()})
 	}
 
@@ -254,7 +253,7 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 // BuildSimTx creates an unsigned tx with an empty single signature and returns
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
-func (f Factory) BuildSimTx(msgs ...sdk.MsgV2) ([]byte, error) {
+func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	txb, err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
@@ -267,7 +266,7 @@ func (f Factory) BuildSimTx(msgs ...sdk.MsgV2) ([]byte, error) {
 
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
-	sig := signing.SignatureV2{
+	sig := offchain.OffchainSignature{
 		PubKey:   pk,
 		Data:     f.getSimSignatureData(pk),
 		Sequence: f.Sequence(),
@@ -282,6 +281,153 @@ func (f Factory) BuildSimTx(msgs ...sdk.MsgV2) ([]byte, error) {
 	}
 
 	return encoder(txb.GetTx())
+}
+
+// Sign signs a given tx with a named key. The bytes signed over are canonical.
+// The resulting signature will be added to the transaction builder overwriting the previous
+// ones if overwrite=true (otherwise, the signature will be appended).
+// Signing a transaction with multiple signers in the DIRECT mode is not supported and will
+// return an error.
+// An error is returned upon failure.
+func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, overwriteSig bool) error {
+	if f.keybase == nil {
+		return errors.New("keybase must be set prior to signing a transaction")
+	}
+
+	var err error
+	signMode := f.txParams.signMode
+	if signMode == apitxsigning.SignMode_SIGN_MODE_UNSPECIFIED {
+		signMode = f.txConfig.SignModeHandler().DefaultMode()
+	}
+
+	pubKey, err := f.keybase.GetPubKey(name)
+	if err != nil {
+		return err
+	}
+
+	signerData := offchain.SignerData{
+		ChainID:       f.txParams.chainID,
+		AccountNumber: f.txParams.accountNumber,
+		Sequence:      f.txParams.sequence,
+		PubKey:        pubKey,
+		Address:       sdk.AccAddress(pubKey.Address()).String(),
+	}
+
+	tx := txBuilder.GetTx()
+	txWrap := TxWrapper{Tx: &tx}
+
+	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
+	// TxBuilder under the hood, and SignerInfos is needed to be generated the
+	// sign bytes. This is the reason for setting SetSignatures here, with a
+	// nil signature.
+	//
+	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
+	// also doesn't affect its generated sign bytes, so for code's simplicity
+	// sake, we put it here.
+	sigData := offchain.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: nil,
+	}
+	sig := offchain.OffchainSignature{
+		PubKey:   pubKey,
+		Data:     &sigData,
+		Sequence: f.txParams.sequence,
+	}
+
+	var prevSignatures []offchain.OffchainSignature
+	if !overwriteSig {
+		prevSignatures, err = txWrap.GetSignatures()
+		if err != nil {
+			return err
+		}
+	}
+	// Overwrite or append signer infos.
+	var sigs []offchain.OffchainSignature
+	if overwriteSig {
+		sigs = []offchain.OffchainSignature{sig}
+	} else {
+		sigs = append(sigs, prevSignatures...)
+		sigs = append(sigs, sig)
+	}
+	if err := txBuilder.SetSignatures(sigs...); err != nil {
+		return err
+	}
+
+	if err := checkMultipleSigners(txWrap); err != nil {
+		return err
+	}
+
+	bytesToSign, err := f.GetSignBytesAdapter(ctx, signerData, txBuilder)
+	if err != nil {
+		return err
+	}
+
+	// Sign those bytes
+	sigBytes, err := f.keybase.Sign(name, bytesToSign, signMode)
+	if err != nil {
+		return err
+	}
+
+	// Construct the SignatureV2 struct
+	sigData = offchain.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: sigBytes,
+	}
+	sig = offchain.OffchainSignature{
+		PubKey:   pubKey,
+		Data:     &sigData,
+		Sequence: f.txParams.sequence,
+	}
+
+	if overwriteSig {
+		err = txBuilder.SetSignatures(sig)
+	} else {
+		prevSignatures = append(prevSignatures, sig)
+		err = txBuilder.SetSignatures(prevSignatures...)
+	}
+
+	if err != nil {
+		return fmt.Errorf("unable to set signatures on payload: %w", err)
+	}
+
+	// Run optional preprocessing if specified. By default, this is unset
+	// and will return nil.
+	return f.PreprocessTx(name, txBuilder)
+}
+
+// GetSignBytesAdapter returns the sign bytes for a given transaction and sign mode.
+func (f Factory) GetSignBytesAdapter(ctx context.Context, signerData offchain.SignerData, builder TxBuilder) ([]byte, error) {
+	var pubKey *anypb.Any
+	if signerData.PubKey != nil {
+		anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		pubKey = &anypb.Any{
+			TypeUrl: anyPk.TypeUrl,
+			Value:   anyPk.Value,
+		}
+	}
+
+	txSignerData := signing.SignerData{
+		ChainID:       signerData.ChainID,
+		AccountNumber: signerData.AccountNumber,
+		Sequence:      signerData.Sequence,
+		Address:       signerData.Address,
+		PubKey:        pubKey,
+	}
+	// Generate the bytes to be signed.
+	return f.txConfig.SignModeHandler().GetSignBytes(ctx, f.SignMode(), txSignerData, builder.GetSigningTxData())
+}
+
+func ValidateMemo(memo string) error {
+	// Prevent simple inclusion of a valid mnemonic in the memo field
+	if memo != "" && bip39.IsMnemonicValid(strings.ToLower(memo)) {
+		return errors.New("cannot provide a valid mnemonic seed in the memo field")
+	}
+
+	return nil
 }
 
 // WithAccountRetriever returns a copy of the Factory with an updated AccountRetriever.
@@ -369,7 +515,7 @@ func (f Factory) WithSimulateAndExecute(sim bool) Factory {
 }
 
 // WithSignMode returns a copy of the Factory with an updated sign mode value.
-func (f Factory) WithSignMode(mode signing.SignMode) Factory {
+func (f Factory) WithSignMode(mode apitxsigning.SignMode) Factory {
 	f.txParams.signMode = mode
 	return f
 }
@@ -433,7 +579,7 @@ func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRe
 func (f Factory) TimeoutHeight() uint64                     { return f.txParams.timeoutHeight }
 func (f Factory) FromName() string                          { return f.txParams.fromName }
 func (f Factory) SimulateAndExecute() bool                  { return f.txParams.simulateAndExecute }
-func (f Factory) SignMode() signing.SignMode                { return f.txParams.signMode }
+func (f Factory) SignMode() apitxsigning.SignMode           { return f.txParams.signMode }
 
 // getSimPK gets the public key to use for building a simulation tx.
 // Note, we should only check for keys in the keybase if we are in simulate and execute mode,
@@ -443,7 +589,7 @@ func (f Factory) SignMode() signing.SignMode                { return f.txParams.
 func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 	var (
 		err error
-		pk  cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
+		pk  cryptotypes.PubKey = cryptotypes.EmptyPubKey{}
 	)
 
 	if f.txParams.simulateAndExecute && f.keybase != nil {
@@ -458,133 +604,20 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 
 // getSimSignatureData based on the pubKey type gets the correct SignatureData type
 // to use for building a simulation tx.
-func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureData {
+func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) offchain.SignatureData {
 	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey) // TODO: abstract out multisig pubkey
 	if !ok {
-		return &signing.SingleSignatureData{SignMode: f.txParams.signMode}
+		return &offchain.SingleSignatureData{SignMode: f.txParams.signMode}
 	}
 
-	multiSignatureData := make([]signing.SignatureData, 0, multisigPubKey.Threshold)
+	multiSignatureData := make([]offchain.SignatureData, 0, multisigPubKey.Threshold)
 	for i := uint32(0); i < multisigPubKey.Threshold; i++ {
-		multiSignatureData = append(multiSignatureData, &signing.SingleSignatureData{
+		multiSignatureData = append(multiSignatureData, &offchain.SingleSignatureData{
 			SignMode: f.SignMode(),
 		})
 	}
 
-	return &signing.MultiSignatureData{
+	return &offchain.MultiSignatureData{
 		Signatures: multiSignatureData,
 	}
-}
-
-// Sign signs a given tx with a named key. The bytes signed over are canconical.
-// The resulting signature will be added to the transaction builder overwriting the previous
-// ones if overwrite=true (otherwise, the signature will be appended).
-// Signing a transaction with mutltiple signers in the DIRECT mode is not supported and will
-// return an error.
-// An error is returned upon failure.
-func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, overwriteSig bool) error {
-	if f.keybase == nil {
-		return errors.New("keybase must be set prior to signing a transaction")
-	}
-
-	var err error
-	signMode := f.txParams.signMode
-	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		// use the SignModeHandler's default mode if unspecified
-		signMode, err = authsigning.APISignModeToInternal(f.txConfig.SignModeHandler().DefaultMode())
-		if err != nil {
-			return err
-		}
-	}
-
-	pubKey, err := f.keybase.GetPubKey(name)
-	if err != nil {
-		return err
-	}
-
-	signerData := authsigning.SignerData{
-		ChainID:       f.txParams.chainID,
-		AccountNumber: f.txParams.accountNumber,
-		Sequence:      f.txParams.sequence,
-		PubKey:        pubKey,
-		Address:       sdk.AccAddress(pubKey.Address()).String(),
-	}
-
-	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
-	// TxBuilder under the hood, and SignerInfos is needed to generated the
-	// sign bytes. This is the reason for setting SetSignatures here, with a
-	// nil signature.
-	//
-	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
-	// also doesn't affect its generated sign bytes, so for code's simplicity
-	// sake, we put it here.
-	sigData := signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: nil,
-	}
-	sig := signing.SignatureV2{
-		PubKey:   pubKey,
-		Data:     &sigData,
-		Sequence: f.txParams.sequence,
-	}
-
-	var prevSignatures []signing.SignatureV2
-	if !overwriteSig {
-		prevSignatures, err = txBuilder.GetTx().GetSignaturesV2()
-		if err != nil {
-			return err
-		}
-	}
-	// Overwrite or append signer infos.
-	var sigs []signing.SignatureV2
-	if overwriteSig {
-		sigs = []signing.SignatureV2{sig}
-	} else {
-		sigs = append(sigs, prevSignatures...)
-		sigs = append(sigs, sig)
-	}
-	if err := txBuilder.SetSignatures(sigs...); err != nil {
-		return err
-	}
-
-	if err := checkMultipleSigners(txBuilder.GetTx()); err != nil {
-		return err
-	}
-
-	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, f.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
-	if err != nil {
-		return err
-	}
-
-	// Sign those bytes
-	sigBytes, err := f.keybase.Sign(name, bytesToSign, signMode)
-	if err != nil {
-		return err
-	}
-
-	// Construct the SignatureV2 struct
-	sigData = signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: sigBytes,
-	}
-	sig = signing.SignatureV2{
-		PubKey:   pubKey,
-		Data:     &sigData,
-		Sequence: f.txParams.sequence,
-	}
-
-	if overwriteSig {
-		err = txBuilder.SetSignatures(sig)
-	} else {
-		prevSignatures = append(prevSignatures, sig)
-		err = txBuilder.SetSignatures(prevSignatures...)
-	}
-
-	if err != nil {
-		return fmt.Errorf("unable to set signatures on payload: %w", err)
-	}
-
-	// Run optional preprocessing if specified. By default, this is unset
-	// and will return nil.
-	return f.PreprocessTx(name, txBuilder)
 }

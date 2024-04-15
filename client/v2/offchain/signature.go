@@ -20,6 +20,17 @@ type SingleSignatureData struct {
 	Signature []byte
 }
 
+type MultiSignatureData struct {
+	// BitArray is a compact way of indicating which signers from the multisig key
+	// have signed
+	BitArray []byte
+
+	// Signatures is the nested SignatureData's for each signer
+	Signatures []SignatureData
+}
+
+func (m *MultiSignatureData) isSignatureData() {}
+
 type OffchainSignature struct {
 	// PubKey is the public key to use for verifying the signature
 	PubKey cryptotypes.PubKey

@@ -52,3 +52,21 @@ type PrivKey interface {
 type (
 	Address = cmtcrypto.Address
 )
+
+type EmptyPubKey struct{}
+
+func (e EmptyPubKey) Reset() {}
+
+func (e EmptyPubKey) String() string { return "" }
+
+func (e EmptyPubKey) ProtoMessage() {}
+
+func (e EmptyPubKey) VerifySignature(msg, sig []byte) bool { return false }
+
+func (e EmptyPubKey) Equals(PubKey) bool { return false }
+
+func (e EmptyPubKey) Address() Address { return nil }
+
+func (e EmptyPubKey) Bytes() []byte { return nil }
+
+func (e EmptyPubKey) Type() string { return "EmptyPubKey" }

@@ -28,7 +28,7 @@ const (
 	signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 )
 
-type signerData struct {
+type SignerData struct {
 	Address       string
 	ChainID       string
 	AccountNumber uint64
@@ -90,7 +90,7 @@ func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
 		return nil, err
 	}
 
-	signerData := signerData{
+	signerData := SignerData{
 		Address:       addr,
 		ChainID:       ExpectedChainID,
 		AccountNumber: ExpectedAccountNumber,
@@ -139,7 +139,7 @@ func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
 // getSignBytes gets the bytes to be signed for the given Tx and SignMode.
 func getSignBytes(ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
-	signerData signerData,
+	signerData SignerData,
 	tx *builder,
 ) ([]byte, error) {
 	txData, err := tx.GetSigningTxData()

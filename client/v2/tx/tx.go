@@ -3,12 +3,13 @@ package tx
 import (
 	"bufio"
 	"context"
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/client/v2/offchain"
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,7 +67,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.MsgV2) error {
+func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	txf, err := txf.Prepare(clientCtx)
 	if err != nil {
 		return err
@@ -122,7 +123,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.MsgV2) error
 		}
 	}
 
-	if err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
+	if err = txf.Sign(clientCtx.CmdContext, clientCtx.FromName, tx, true); err != nil {
 		return err
 	}
 
@@ -219,9 +220,9 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 
 // checkMultipleSigners checks that there can be maximum one DIRECT signer in
 // a tx.
-func checkMultipleSigners(tx sdk.Tx) error {
+func checkMultipleSigners(tx TxWrapper) error {
 	directSigners := 0
-	sigsV2, err := tx.GetSignaturesV2()
+	sigsV2, err := tx.GetSignatures()
 	if err != nil {
 		return err
 	}
@@ -236,15 +237,15 @@ func checkMultipleSigners(tx sdk.Tx) error {
 }
 
 // countDirectSigners counts the number of DIRECT signers in a signature data.
-func countDirectSigners(data signing.SignatureData) int {
-	switch data := data.(type) {
-	case *signing.SingleSignatureData:
-		if data.SignMode == signing.SignMode_SIGN_MODE_DIRECT {
+func countDirectSigners(sigData offchain.SignatureData) int {
+	switch data := sigData.(type) {
+	case *offchain.SingleSignatureData:
+		if data.SignMode == apitxsigning.SignMode_SIGN_MODE_DIRECT {
 			return 1
 		}
 
 		return 0
-	case *signing.MultiSignatureData:
+	case *offchain.MultiSignatureData:
 		directSigners := 0
 		for _, d := range data.Signatures {
 			directSigners += countDirectSigners(d)

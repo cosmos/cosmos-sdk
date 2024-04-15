@@ -3,6 +3,8 @@ package types
 import (
 	"context"
 
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,5 +17,6 @@ type BankKeeper interface {
 
 // AccountsModKeeper defines the contract for x/accounts APIs
 type AccountsModKeeper interface {
+	SendModuleMessageUntyped(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error)
 	IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool
 }

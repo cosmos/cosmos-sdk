@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
@@ -50,22 +48,15 @@ type MsgRouter interface {
 	ResponseNameByMsgName(name string) string
 }
 
-// SignerProvider defines an interface used to get the expected sender from a message.
-type SignerProvider interface {
-	// GetMsgV1Signers returns the signers of the message.
-	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error)
-}
-
 type InterfaceRegistry interface {
 	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
 	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
 }
 
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	env appmodule.Environment,
 	addressCodec address.Codec,
-	signerProvider SignerProvider,
 	execRouter MsgRouter,
 	queryRouter QueryRouter,
 	ir InterfaceRegistry,
@@ -76,7 +67,7 @@ func NewKeeper(
 		environment:      env,
 		addressCodec:     addressCodec,
 		msgRouter:        execRouter,
-		signerProvider:   signerProvider,
+		codec:            cdc,
 		queryRouter:      queryRouter,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
 		Schema:           collections.Schema{},
@@ -103,8 +94,8 @@ type Keeper struct {
 	// deps coming from the runtime
 	environment      appmodule.Environment
 	addressCodec     address.Codec
-	msgRouter        MsgRouter // todo use env
-	signerProvider   SignerProvider
+	codec            codec.Codec
+	msgRouter        MsgRouter   // todo use env
 	queryRouter      QueryRouter // todo use env
 	makeSendCoinsMsg coinsTransferMsgFunc
 
@@ -302,7 +293,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 			sender,
 			funds,
 			k.sendModuleMessage,
-			k.sendModuleMessageUntyped,
+			k.SendModuleMessageUntyped,
 			k.queryModule,
 		)
 	}
@@ -336,7 +327,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 		if err != nil {
 			return nil, err
 		}
-		resp, err := k.sendModuleMessageUntyped(ctx, sender, msg)
+		resp, err := k.SendModuleMessageUntyped(ctx, sender, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
 		}
@@ -349,9 +340,9 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 	return anyResponses, nil
 }
 
-// sendModuleMessageUntyped can be used to send a message towards a module.
+// SendModuleMessageUntyped can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
-func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// we need to fetch the response type from the request message type.
 	// this is because the response type is not known.
 	respName := k.msgRouter.ResponseNameByMsgName(implementation.MessageName(msg))
@@ -372,7 +363,7 @@ func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.signerProvider.GetMsgV1Signers(msg)
+	wantSenders, _, err := k.codec.GetMsgV1Signers(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}

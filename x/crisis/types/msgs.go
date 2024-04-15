@@ -10,7 +10,7 @@ var (
 )
 
 // NewMsgVerifyInvariant creates a new MsgVerifyInvariant object
-func NewMsgVerifyInvariant(sender string, invModeName, invRoute string) *MsgVerifyInvariant {
+func NewMsgVerifyInvariant(sender, invModeName, invRoute string) *MsgVerifyInvariant {
 	return &MsgVerifyInvariant{
 		Sender:              sender,
 		InvariantModuleName: invModeName,

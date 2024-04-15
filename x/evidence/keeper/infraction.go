@@ -79,7 +79,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		return fmt.Errorf("failed to query consensus params: %w", err)
 	}
 	if res.Params.Evidence != nil {
-		if ageDuration > res.Params.Evidence.MaxAgeDuration.AsDuration() && ageBlocks > res.Params.Evidence.MaxAgeNumBlocks {
+		if ageDuration > res.Params.Evidence.MaxAgeDuration && ageBlocks > res.Params.Evidence.MaxAgeNumBlocks {
 			logger.Info(
 				"ignored equivocation; evidence too old",
 				"validator", consAddr,

@@ -30,7 +30,7 @@ type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
 func MakeAccountsMap(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	addressCodec address.Codec,
 	env appmodule.Environment,
 	accounts []AccountCreatorFunc,

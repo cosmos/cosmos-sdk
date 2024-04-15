@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/x/evidence/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the

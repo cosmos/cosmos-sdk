@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
@@ -24,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 type msgServer struct {

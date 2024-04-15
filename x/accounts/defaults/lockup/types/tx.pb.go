@@ -6,7 +6,6 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -14,6 +13,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
@@ -360,7 +360,7 @@ var xxx_messageInfo_MsgSend proto.InternalMessageInfo
 
 // MsgExecuteMessagesResponse defines the response for lockup execute operations
 type MsgExecuteMessagesResponse struct {
-	Responses []*types1.Any `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
+	Responses []*any.Any `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
 }
 
 func (m *MsgExecuteMessagesResponse) Reset()         { *m = MsgExecuteMessagesResponse{} }
@@ -396,7 +396,7 @@ func (m *MsgExecuteMessagesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExecuteMessagesResponse proto.InternalMessageInfo
 
-func (m *MsgExecuteMessagesResponse) GetResponses() []*types1.Any {
+func (m *MsgExecuteMessagesResponse) GetResponses() []*any.Any {
 	if m != nil {
 		return m.Responses
 	}
@@ -2102,7 +2102,7 @@ func (m *MsgExecuteMessagesResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Responses = append(m.Responses, &types1.Any{})
+			m.Responses = append(m.Responses, &any.Any{})
 			if err := m.Responses[len(m.Responses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

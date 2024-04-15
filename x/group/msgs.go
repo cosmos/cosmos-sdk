@@ -89,10 +89,10 @@ func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) e
 }
 
 // NewMsgUpdateGroupPolicyDecisionPolicy creates a new MsgUpdateGroupPolicyDecisionPolicy.
-func NewMsgUpdateGroupPolicyDecisionPolicy(admin, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
+func NewMsgUpdateGroupPolicyDecisionPolicy(admin, address string, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
 	m := &MsgUpdateGroupPolicyDecisionPolicy{
-		Admin:              admin.String(),
-		GroupPolicyAddress: address.String(),
+		Admin:              admin,
+		GroupPolicyAddress: address,
 	}
 	err := m.SetDecisionPolicy(decisionPolicy)
 	if err != nil {
@@ -132,9 +132,9 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyU
 }
 
 // NewMsgCreateGroupPolicy creates a new MsgCreateGroupPolicy.
-func NewMsgCreateGroupPolicy(admin sdk.AccAddress, group uint64, metadata string, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
+func NewMsgCreateGroupPolicy(admin string, group uint64, metadata string, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
 	m := &MsgCreateGroupPolicy{
-		Admin:    admin.String(),
+		Admin:    admin,
 		GroupId:  group,
 		Metadata: metadata,
 	}

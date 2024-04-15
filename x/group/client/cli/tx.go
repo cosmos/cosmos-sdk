@@ -98,8 +98,13 @@ Where members.json contains:
 				}
 			}
 
+			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			msg := &group.MsgCreateGroup{
-				Admin:    clientCtx.GetFromAddress().String(),
+				Admin:    admin,
 				Members:  members,
 				Metadata: args[1],
 			}
@@ -174,8 +179,13 @@ Set a member's weight to "0" to delete it.
 				return errZeroGroupID
 			}
 
+			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			msg := &group.MsgUpdateGroupMembers{
-				Admin:         clientCtx.GetFromAddress().String(),
+				Admin:         admin,
 				MemberUpdates: members,
 				GroupId:       groupID,
 			}
@@ -268,8 +278,13 @@ and policy.json contains:
 				return err
 			}
 
+			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			msg, err := group.NewMsgCreateGroupWithPolicy(
-				clientCtx.GetFromAddress().String(),
+				admin,
 				members,
 				args[1],
 				args[2],
@@ -350,8 +365,13 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 				return err
 			}
 
+			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			msg, err := group.NewMsgCreateGroupPolicy(
-				clientCtx.GetFromAddress(),
+				admin,
 				groupID,
 				args[2],
 				policy,
@@ -398,9 +418,18 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
+			adminAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+			accAddr, err := clientCtx.AddressCodec.BytesToString(accountAddress)
+			if err != nil {
+				return err
+			}
+
 			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(
-				clientCtx.GetFromAddress(),
-				accountAddress,
+				adminAddr,
+				accAddr,
 				policy,
 			)
 			if err != nil {

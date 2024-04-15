@@ -68,7 +68,9 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		}
 
 		a.ModuleManager.Modules[name] = appModule
-		appModule.RegisterInterfaces(a.interfaceRegistry)
+		if mod, ok := appModule.(appmodule.HasRegisterInterfaces); ok {
+			mod.RegisterInterfaces(a.interfaceRegistry)
+		}
 
 		if mod, ok := appModule.(module.HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(a.amino)

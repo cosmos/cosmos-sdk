@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

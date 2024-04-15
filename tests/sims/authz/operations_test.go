@@ -11,7 +11,8 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	_ "cosmossdk.io/x/auth" // import as blank for app wiring
+	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
+	_ "cosmossdk.io/x/auth"     // import as blank for app wiring
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
 	"cosmossdk.io/x/authz"
@@ -39,6 +40,7 @@ import (
 )
 
 var AppConfig = configurator.NewAppConfig(
+	configurator.AccountsModule(),
 	configurator.AuthModule(),
 	configurator.BankModule(),
 	configurator.StakingModule(),
@@ -169,7 +171,7 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	a := banktypes.NewSendAuthorization(initCoins, nil)
+	a := banktypes.NewSendAuthorization(initCoins, nil, suite.accountKeeper.AddressCodec())
 	expire := time.Now().Add(30 * time.Hour)
 
 	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
@@ -200,7 +202,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	a := banktypes.NewSendAuthorization(initCoins, nil)
+	a := banktypes.NewSendAuthorization(initCoins, nil, suite.accountKeeper.AddressCodec())
 	expire := suite.ctx.HeaderInfo().Time.Add(1 * time.Hour)
 
 	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)

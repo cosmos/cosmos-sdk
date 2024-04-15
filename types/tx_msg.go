@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	fmt "fmt"
+	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	strings "strings"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -104,6 +105,12 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
+
+// TxApiDecoder unmarshals transaction bytes into API Tx type
+type TxApiDecoder func(txBytes []byte) (typestx.Tx, error)
+
+// TxApiEncoder marshals transaction to bytes
+type TxApiEncoder func(tx typestx.Tx) ([]byte, error)
 
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`.
 var MsgTypeURL = codectypes.MsgTypeURL

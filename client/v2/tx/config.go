@@ -20,10 +20,10 @@ type TxConfig interface {
 // TxEncodingConfig defines an interface that contains transaction
 // encoders and decoders
 type TxEncodingConfig interface {
-	TxEncoder() sdk.TxEncoder
-	TxDecoder() sdk.TxDecoder
-	TxJSONEncoder() sdk.TxEncoder
-	TxJSONDecoder() sdk.TxDecoder
+	TxEncoder() sdk.TxApiEncoder
+	TxDecoder() sdk.TxApiDecoder
+	TxJSONEncoder() sdk.TxApiEncoder
+	TxJSONDecoder() sdk.TxApiDecoder
 }
 
 type TxSigningConfig interface {

@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"cosmossdk.io/core/address"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
 
@@ -21,23 +22,26 @@ const (
 	GroupVote       = "group-vote"
 )
 
-func checkAccExists(acc sdk.AccAddress, g []*group.GroupMember, lastIndex int) bool {
-	s := acc.String()
+func checkAccExists(acc string, g []*group.GroupMember, lastIndex int) bool {
 	for i := 0; i < lastIndex; i++ {
-		if g[i].Member.Address == s {
+		if g[i].Member.Address == acc {
 			return true
 		}
 	}
 	return false
 }
 
-func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
+func getGroups(r *rand.Rand, accounts []simtypes.Account, addressCodec address.Codec) []*group.GroupInfo {
 	groups := make([]*group.GroupInfo, 3)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, accounts)
+		accAddr, err := addressCodec.BytesToString(acc.Address)
+		if err != nil {
+			return nil
+		}
 		groups[i] = &group.GroupInfo{
 			Id:          uint64(i + 1),
-			Admin:       acc.Address.String(),
+			Admin:       accAddr,
 			Metadata:    simtypes.RandStringOfLength(r, 10),
 			Version:     1,
 			TotalWeight: "10",
@@ -46,17 +50,25 @@ func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
 	return groups
 }
 
-func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMember {
+func getGroupMembers(r *rand.Rand, accounts []simtypes.Account, addressCodec address.Codec) []*group.GroupMember {
 	groupMembers := make([]*group.GroupMember, 3)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, accounts)
-		for checkAccExists(acc.Address, groupMembers, i) {
+		accAddr, err := addressCodec.BytesToString(acc.Address)
+		if err != nil {
+			return nil
+		}
+		for checkAccExists(accAddr, groupMembers, i) {
 			acc, _ = simtypes.RandomAcc(r, accounts)
+			accAddr, err = addressCodec.BytesToString(acc.Address)
+			if err != nil {
+				return nil
+			}
 		}
 		groupMembers[i] = &group.GroupMember{
 			GroupId: uint64(i + 1),
 			Member: &group.Member{
-				Address:  acc.Address.String(),
+				Address:  accAddr,
 				Weight:   "10",
 				Metadata: simtypes.RandStringOfLength(r, 10),
 			},
@@ -71,8 +83,11 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 	usedAccs := make(map[string]bool)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, simState.Accounts)
-
-		if usedAccs[acc.Address.String()] {
+		accAddr, err := simState.AddressCodec.BytesToString(acc.Address)
+		if err != nil {
+			return nil
+		}
+		if usedAccs[accAddr] {
 			if len(usedAccs) != len(simState.Accounts) {
 				// Go again if the account is used and there are more to take from
 				i--
@@ -80,7 +95,7 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 
 			continue
 		}
-		usedAccs[acc.Address.String()] = true
+		usedAccs[accAddr] = true
 
 		any, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second, 0))
 		if err != nil {
@@ -88,8 +103,8 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 		}
 		groupPolicies = append(groupPolicies, &group.GroupPolicyInfo{
 			GroupId:        uint64(i + 1),
-			Admin:          acc.Address.String(),
-			Address:        acc.Address.String(),
+			Admin:          accAddr,
+			Address:        accAddr,
 			Version:        1,
 			DecisionPolicy: any,
 			Metadata:       simtypes.RandStringOfLength(r, 10),
@@ -100,7 +115,15 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 
 func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies []*group.GroupPolicyInfo) []*group.Proposal {
 	proposals := make([]*group.Proposal, 3)
-	proposers := []string{simState.Accounts[0].Address.String(), simState.Accounts[1].Address.String()}
+	addr0, err := simState.AddressCodec.BytesToString(simState.Accounts[0].Address)
+	if err != nil {
+		panic(err)
+	}
+	addr1, err := simState.AddressCodec.BytesToString(simState.Accounts[1].Address)
+	if err != nil {
+		panic(err)
+	}
+	proposers := []string{addr0, addr1}
 	for i := 0; i < 3; i++ {
 		idx := r.Intn(len(groupPolicies))
 		groupPolicyAddress := groupPolicies[idx].Address
@@ -127,9 +150,15 @@ func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies 
 			SubmitTime:      submittedAt,
 			VotingPeriodEnd: timeout,
 		}
-		err := proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
+
+		toAddr, err := simState.AddressCodec.BytesToString(to.Address)
+		if err != nil {
+			panic(err)
+		}
+
+		err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 			FromAddress: groupPolicyAddress,
-			ToAddress:   to.Address.String(),
+			ToAddress:   toAddr,
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("test", 10)),
 		}})
 		if err != nil {
@@ -146,9 +175,13 @@ func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 	votes := make([]*group.Vote, 3)
 
 	for i := 0; i < 3; i++ {
+		voterAddr, err := simState.AddressCodec.BytesToString(simState.Accounts[i].Address)
+		if err != nil {
+			return nil
+		}
 		votes[i] = &group.Vote{
 			ProposalId: uint64(i + 1),
-			Voter:      simState.Accounts[i].Address.String(),
+			Voter:      voterAddr,
 			Option:     getVoteOption(i),
 			Metadata:   simtypes.RandStringOfLength(r, 50),
 			SubmitTime: time.Unix(0, 0),
@@ -180,11 +213,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	// groups
 	var groups []*group.GroupInfo
-	simState.AppParams.GetOrGenerate(GroupInfo, &groups, simState.Rand, func(r *rand.Rand) { groups = getGroups(r, simState.Accounts) })
+	simState.AppParams.GetOrGenerate(GroupInfo, &groups, simState.Rand, func(r *rand.Rand) { groups = getGroups(r, simState.Accounts, simState.AddressCodec) })
 
 	// group members
 	var members []*group.GroupMember
-	simState.AppParams.GetOrGenerate(GroupMembers, &members, simState.Rand, func(r *rand.Rand) { members = getGroupMembers(r, simState.Accounts) })
+	simState.AppParams.GetOrGenerate(GroupMembers, &members, simState.Rand, func(r *rand.Rand) { members = getGroupMembers(r, simState.Accounts, simState.AddressCodec) })
 
 	// group policies
 	var groupPolicies []*group.GroupPolicyInfo

@@ -80,14 +80,18 @@ func TestKeeper_Execute(t *testing.T) {
 			return nil
 		})
 
-		m.signerProvider = mockSigner(func(msg implementation.ProtoMsg) ([]byte, error) {
-			require.Equal(t, msg.(*bankv1beta1.MsgSend).FromAddress, string(accAddr))
-			return accAddr, nil
-		})
+		m.msgRouter = mockExec(func(ctx context.Context, msg, msgResp implementation.ProtoMsg) error {
+			concrete, ok := msg.(*bankv1beta1.MsgSend)
+			require.True(t, ok)
+			require.Equal(t, concrete.FromAddress, string(accAddr))
+			_, ok = msgResp.(*bankv1beta1.MsgSendResponse)
+			require.True(t, ok)
 
-		resp, err := m.Execute(ctx, accAddr, sender, &types.Int64Value{Value: 1000}, nil)
-		require.NoError(t, err)
-		require.True(t, implementation.Equal(&types.Empty{}, resp))
+			resp, err := m.Execute(ctx, accAddr, sender, &types.Int64Value{Value: 1000}, nil)
+			require.NoError(t, err)
+			require.True(t, implementation.Equal(&types.Empty{}, resp))
+			return nil
+		})
 	})
 }
 

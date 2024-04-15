@@ -1404,7 +1404,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 
 func TestABCI_Proposal_HappyPath(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1582,7 +1582,7 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1612,7 +1612,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 
 func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1639,7 +1639,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
@@ -1680,7 +1680,7 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
@@ -1719,7 +1719,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 
 func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}

@@ -138,7 +138,12 @@ metadata example:
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.proposalType)
+			addr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, addr, proposal.Metadata, proposal.Title, proposal.Summary, proposal.proposalType)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -203,7 +208,12 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
 			}
 
-			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
+			proposer, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, proposer)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -247,7 +257,10 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no-with-veto=0.05 --from
 			}
 
 			// Get voter address
-			from := clientCtx.GetFromAddress()
+			from, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)

@@ -43,6 +43,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19788](https://github.com/cosmos/cosmos-sdk/pull/19788) Remove `ABCIValidatorUpdate` and `ABCIValidatorUpdateZero`, use `ModuleValidatorUpdate` and `ModuleValidatorUpdateIsZero` instead.
+* [#19754](https://github.com/cosmos/cosmos-sdk/pull/19754) Update to use `[]appmodule.ValidatorUpdate` as return for `ApplyAndReturnValidatorSetUpdates`.
+* [#19414](https://github.com/cosmos/cosmos-sdk/pull/19414) `NewStakingKeeper` takes an environment variable instead of individual services.
 * [#19742](https://github.com/cosmos/cosmos-sdk/pull/19742) `NewStakeAuthorization` now takes `address.Codec` as argument.
 * [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) Update genesis api to match new `appmodule.HasGenesis` interface.
 * [#18198](https://github.com/cosmos/cosmos-sdk/pull/18198) `Validator` and `Delegator` interfaces were moved to `github.com/cosmos/cosmos-sdk/types` to avoid interface dependency on staking in other modules.
@@ -85,14 +88,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove from `types`: `GetUnbondingTypeKey`.
 * [#17063](https://github.com/cosmos/cosmos-sdk/pull/17063) Use collections for `HistoricalInfo`:
     * remove `Keeper`: `GetHistoricalInfo`, `SetHistoricalInfo`
-* [#17062](https://github.com/cosmos/cosmos-sdk/pull/17062) Use collections for `ValidatorUpdates`:
-    * remove `Keeper`: `SetValidatorUpdates`, `GetValidatorUpdates`
+* [#17062](https://github.com/cosmos/cosmos-sdk/pull/17062), [#19788](https://github.com/cosmos/cosmos-sdk/pull/19788) Remove `GetValidatorUpdates` and `ValidatorUpdates` storage.
 * [#17026](https://github.com/cosmos/cosmos-sdk/pull/17026) Use collections for `LastTotalPower`:
     * remove `Keeper`: `SetLastTotalPower`, `GetLastTotalPower`
 * [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"cosmossdk.io/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
 * [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `QueryHistoricalInfo` was adjusted to return `HistoricalRecord` and marked `Hist` as deprecated.
-* [#19414](https://github.com/cosmos/cosmos-sdk/pull/19414) Staking module takes an environment variable in `NewStakingKeeper` instead of individual services.
-* [#19754](https://github.com/cosmos/cosmos-sdk/pull/19754) update to use `[]module.ValidatorUpdate` as return for `ApplyAndReturnValidatorSetUpdates`.
 
 ### State Breaking changes
 

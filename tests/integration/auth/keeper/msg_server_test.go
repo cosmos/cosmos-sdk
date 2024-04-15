@@ -131,7 +131,7 @@ func initFixture(t *testing.T) *fixture {
 			accounts.ModuleName:  accountsModule,
 			authtypes.ModuleName: authModule,
 			banktypes.ModuleName: bankModule,
-		})
+		}, router, queryRouter)
 
 	authtypes.RegisterInterfaces(cdc.InterfaceRegistry())
 	banktypes.RegisterInterfaces(cdc.InterfaceRegistry())

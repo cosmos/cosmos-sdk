@@ -30,6 +30,7 @@ import (
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -75,6 +76,9 @@ func initFixture(tb testing.TB) *fixture {
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
+
+	msgRouter := baseapp.NewMsgServiceRouter()
+	queryRouter := baseapp.NewGRPCQueryRouter()
 
 	// gomock initializations
 	ctrl := gomock.NewController(&testing.T{})

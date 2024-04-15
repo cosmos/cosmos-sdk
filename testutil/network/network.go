@@ -25,6 +25,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/auth"           // import auth as a blank
 	_ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
 	authtypes "cosmossdk.io/x/auth/types"
@@ -168,6 +169,7 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 // MinimumAppConfig defines the minimum of modules required for a call to New to succeed
 func MinimumAppConfig() depinject.Config {
 	return configurator.NewAppConfig(
+		configurator.AccountsModule(),
 		configurator.AuthModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),

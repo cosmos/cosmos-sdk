@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
@@ -74,6 +75,7 @@ type SimApp struct {
 	UnorderedTxManager *unorderedtx.Manager
 
 	// keepers
+	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
@@ -184,6 +186,7 @@ func NewSimApp(
 		&app.txConfig,
 		&app.interfaceRegistry,
 		&app.AuthKeeper,
+		&app.AccountsKeeper,
 		&app.BankKeeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
@@ -257,7 +260,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, &app.AccountsKeeper, authsims.RandomGenesisAccounts),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 

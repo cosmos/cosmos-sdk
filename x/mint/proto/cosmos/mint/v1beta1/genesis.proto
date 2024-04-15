@@ -17,6 +17,5 @@ message GenesisState {
 
   // reduction_started_epoch is the first epoch in which the reduction of mint
   // begins.
-  int64 reduction_started_epoch = 3
-      [ (gogoproto.moretags) = "yaml:\"reduction_started_epoch\"" ];
+  int64 reduction_started_epoch = 3 [(gogoproto.moretags) = "yaml:\"reduction_started_epoch\""];
 }

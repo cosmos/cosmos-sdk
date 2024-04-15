@@ -22,6 +22,7 @@ const (
 	Query_Params_FullMethodName           = "/cosmos.mint.v1beta1.Query/Params"
 	Query_Inflation_FullMethodName        = "/cosmos.mint.v1beta1.Query/Inflation"
 	Query_AnnualProvisions_FullMethodName = "/cosmos.mint.v1beta1.Query/AnnualProvisions"
+	Query_EpochProvisions_FullMethodName  = "/cosmos.mint.v1beta1.Query/EpochProvisions"
 )
 
 // QueryClient is the client API for Query service.
@@ -34,6 +35,8 @@ type QueryClient interface {
 	Inflation(ctx context.Context, in *QueryInflationRequest, opts ...grpc.CallOption) (*QueryInflationResponse, error)
 	// AnnualProvisions current minting annual provisions value.
 	AnnualProvisions(ctx context.Context, in *QueryAnnualProvisionsRequest, opts ...grpc.CallOption) (*QueryAnnualProvisionsResponse, error)
+	// EpochProvisions returns the current minting epoch provisions value.
+	EpochProvisions(ctx context.Context, in *QueryEpochProvisionsRequest, opts ...grpc.CallOption) (*QueryEpochProvisionsResponse, error)
 }
 
 type queryClient struct {
@@ -71,6 +74,15 @@ func (c *queryClient) AnnualProvisions(ctx context.Context, in *QueryAnnualProvi
 	return out, nil
 }
 
+func (c *queryClient) EpochProvisions(ctx context.Context, in *QueryEpochProvisionsRequest, opts ...grpc.CallOption) (*QueryEpochProvisionsResponse, error) {
+	out := new(QueryEpochProvisionsResponse)
+	err := c.cc.Invoke(ctx, Query_EpochProvisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -81,6 +93,8 @@ type QueryServer interface {
 	Inflation(context.Context, *QueryInflationRequest) (*QueryInflationResponse, error)
 	// AnnualProvisions current minting annual provisions value.
 	AnnualProvisions(context.Context, *QueryAnnualProvisionsRequest) (*QueryAnnualProvisionsResponse, error)
+	// EpochProvisions returns the current minting epoch provisions value.
+	EpochProvisions(context.Context, *QueryEpochProvisionsRequest) (*QueryEpochProvisionsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -96,6 +110,9 @@ func (UnimplementedQueryServer) Inflation(context.Context, *QueryInflationReques
 }
 func (UnimplementedQueryServer) AnnualProvisions(context.Context, *QueryAnnualProvisionsRequest) (*QueryAnnualProvisionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AnnualProvisions not implemented")
+}
+func (UnimplementedQueryServer) EpochProvisions(context.Context, *QueryEpochProvisionsRequest) (*QueryEpochProvisionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EpochProvisions not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -164,6 +181,24 @@ func _Query_AnnualProvisions_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_EpochProvisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryEpochProvisionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).EpochProvisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_EpochProvisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).EpochProvisions(ctx, req.(*QueryEpochProvisionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -182,6 +217,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AnnualProvisions",
 			Handler:    _Query_AnnualProvisions_Handler,
+		},
+		{
+			MethodName: "EpochProvisions",
+			Handler:    _Query_EpochProvisions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

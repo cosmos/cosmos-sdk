@@ -26,8 +26,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (

@@ -16,8 +16,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var (
@@ -213,18 +211,6 @@ func (s queryServer) GetNodeInfo(ctx context.Context, _ *tmv1beta1.GetNodeInfoRe
 		return nil, err
 	}
 
-	nodeInfo := version.NewInfo()
-
-	deps := make([]*tmv1beta1.Module, len(nodeInfo.BuildDeps))
-
-	for i, dep := range nodeInfo.BuildDeps {
-		deps[i] = &tmv1beta1.Module{
-			Path:    dep.Path,
-			Sum:     dep.Sum,
-			Version: dep.Version,
-		}
-	}
-
 	resp := tmv1beta1.GetNodeInfoResponse{
 		DefaultNodeInfo: &tmp2p.DefaultNodeInfo{
 			ProtocolVersion: &tmp2p.ProtocolVersion{
@@ -244,14 +230,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, _ *tmv1beta1.GetNodeInfoRe
 			},
 		},
 		ApplicationVersion: &tmv1beta1.VersionInfo{
-			AppName:          nodeInfo.AppName,
-			Name:             nodeInfo.Name,
-			GitCommit:        nodeInfo.GitCommit,
-			GoVersion:        nodeInfo.GoVersion,
-			Version:          nodeInfo.Version,
-			BuildTags:        nodeInfo.BuildTags,
-			BuildDeps:        deps,
-			CosmosSdkVersion: nodeInfo.CosmosSdkVersion,
+			// TODO: get the version from the app
 		},
 	}
 	return &resp, nil

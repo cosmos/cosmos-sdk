@@ -26,7 +26,7 @@ require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
-	cosmossdk.io/math v1.3.0 // indirect
+	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.0.2 // indirect
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -152,7 +152,7 @@ require (
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

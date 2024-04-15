@@ -72,6 +72,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
+		nil,
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)

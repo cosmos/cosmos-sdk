@@ -36,7 +36,7 @@ func TestValidateBasic(t *testing.T) {
 	invalidTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	vbd := ante.NewValidateBasicDecorator()
+	vbd := ante.NewValidateBasicDecorator(suite.accountKeeper.Environment())
 	antehandler := sdk.ChainAnteDecorators(vbd)
 	_, err = antehandler(suite.ctx, invalidTx, false)
 

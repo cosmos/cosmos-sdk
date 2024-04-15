@@ -77,10 +77,10 @@ func (c Context) Logger() log.Logger                            { return c.logge
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
 func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool                               { return c.checkTx }   // Deprecated: use execMode instead
-func (c Context) IsReCheckTx() bool                             { return c.recheckTx } // Deprecated: use execMode instead
+func (c Context) IsCheckTx() bool                               { return c.checkTx }   // Deprecated: use core/transaction service instead
+func (c Context) IsReCheckTx() bool                             { return c.recheckTx } // Deprecated: use core/transaction service instead
 func (c Context) IsSigverifyTx() bool                           { return c.sigverifyTx }
-func (c Context) ExecMode() ExecMode                            { return c.execMode }
+func (c Context) ExecMode() ExecMode                            { return c.execMode } // Deprecated: use core/transaction service instead
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }

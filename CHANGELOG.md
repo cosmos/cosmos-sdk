@@ -118,6 +118,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### API Breaking Changes
 
+* (x/crisis) []() Changed `NewMsgVerifyInvariant` to accept a string instead of an `AccAddress`.
 * (x/genutil) [#19926](https://github.com/cosmos/cosmos-sdk/pull/19926) Removal of the Address.String() method and related changes:
     * Added an address codec as an argument to `CollectTxs`, `GenAppStateFromConfig`, and `AddGenesisAccount`.
     * Removed the `ValidatorAddressCodec` argument from `CollectGenTxsCmd`, now utilizing the context for this purpose.

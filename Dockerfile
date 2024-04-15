@@ -39,6 +39,7 @@ COPY x/auth/go.mod x/auth/go.sum ./x/auth/
 COPY x/authz/go.mod x/authz/go.sum ./x/authz/
 COPY x/bank/go.mod x/bank/go.sum ./x/bank/
 COPY x/mint/go.mod x/mint/go.sum ./x/mint/
+COPY x/consensus/go.mod x/consensus/go.sum ./x/consensus/
 COPY depinject/go.mod depinject/go.sum ./depinject/
 RUN go mod download
 

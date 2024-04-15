@@ -28,6 +28,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) Introduce a new message type, `MsgBurn`, to burn coins.
+* [#20014](https://github.com/cosmos/cosmos-sdk/pull/20014) Support app wiring for `SendRestrictionFn`.
 
 ### Improvements
 

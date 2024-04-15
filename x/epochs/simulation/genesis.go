@@ -14,7 +14,7 @@ import (
 
 // GenCommunityTax randomized CommunityTax
 func GenDuration(r *rand.Rand) time.Duration {
-	return time.Hour * time.Duration(r.Intn(168)) // limit 1 week
+	return time.Hour * time.Duration(r.Intn(168)+1) // between 1 hour to 1 week
 }
 
 func RandomizedEpochs(r *rand.Rand) []types.EpochInfo {

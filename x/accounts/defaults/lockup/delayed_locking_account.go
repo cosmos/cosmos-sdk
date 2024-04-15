@@ -43,12 +43,6 @@ func (dva *DelayedLockingAccount) Delegate(ctx context.Context, msg *lockuptypes
 	return dva.BaseLockup.Delegate(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
-func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
-) {
-	return dva.BaseLockup.Undelegate(ctx, msg)
-}
-
 func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -148,9 +142,9 @@ func (dva DelayedLockingAccount) RegisterInitHandler(builder *accountstd.InitBui
 
 func (dva DelayedLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, dva.Delegate)
-	accountstd.RegisterExecuteHandler(builder, dva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, dva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, dva.WithdrawUnlockedCoins)
+	dva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (dva DelayedLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

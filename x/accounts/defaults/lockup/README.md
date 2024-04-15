@@ -2,11 +2,11 @@
 
 
 * [Lockup Account Types](#lockup-account-types)
-    * [BaseLockupAccount](#baselockupaccount)
-    * [ContinuousLockupAccount](#continuouslockupaccount)
-    * [DelayedLockupAccount](#delayedlockupaccount)
-    * [PeriodicLockupAccount](#periodiclockupaccount)
-    * [PermanentLockedAccount](#permanentlockedaccount)
+    * [BaseLockup](#baselockup)
+    * [ContinuousLockup](#continuouslockup)
+    * [DelayedLockup](#delayedlockup)
+    * [PeriodicLockup](#periodiclockup)
+    * [PermanentLocked](#permanentlocked)
 * [Genesis Initialization](#genesis-initialization)
 * [Examples](#examples)
     * [Simple](#simple)
@@ -17,7 +17,7 @@ The x/accounts/defaults/lockup module provides the implementation for lockup acc
 
 ## Lockup Account Types
 
-### BaseLockupAccount
+### BaseLockup
 
 The base vesting account is used by all default lockup accounts. It contains the basic information for a vesting account. The Base vesting account keeps knowledge of the staking delegations from the account.
 
@@ -36,7 +36,7 @@ type BaseLockup struct {
 }
 ```
 
-### ContinuousLockupAccount
+### ContinuousLockup
 
 The continuous vesting account has a future start time and begins unlocking continuously until the specified end date.
 
@@ -58,7 +58,7 @@ type ContinuousLockingAccount struct {
 }
 ```
 
-### DelayedLockupAccount
+### DelayedLockup
 
 The delayed vesting account unlocks all tokens at a specific time. The account can receive coins and send coins. The account can be used to lock coins for a long period of time.
 
@@ -68,7 +68,7 @@ type DelayedLockingAccount struct {
 }
 ```
 
-### PeriodicLockupAccount
+### PeriodicLockup
 
 The periodic vesting account locks tokens for a series of periods. The account can receive coins and send coins. After all the periods, all the coins are unlocked and the account can send coins.
 
@@ -94,7 +94,7 @@ type PeriodicLockingAccount struct {
 }
 ```
 
-### PermanentLockedAccount
+### PermanentLocked
 
 The permanent vesting account permanently locks the coins in the account. The account can only receive coins and cannot send coins. The account can be used to lock coins for a long period of time.
 

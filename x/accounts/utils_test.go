@@ -4,7 +4,9 @@ import (
 	"context"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
@@ -14,8 +16,10 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +45,19 @@ func (e eventService) EventManager(ctx context.Context) event.Manager { return e
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 
-	ir := codectypes.NewInterfaceRegistry()
+	addressCodec := addressCodec{}
+	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles: gogoproto.HybridResolver,
+		SigningOptions: signing.Options{
+			FileResolver:          gogoproto.HybridResolver,
+			TypeResolver:          protoregistry.GlobalTypes,
+			AddressCodec:          addressCodec,
+			ValidatorAddressCodec: addressCodec,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	msgRouter := baseapp.NewMsgServiceRouter()
 	msgRouter.SetInterfaceRegistry(ir)
 	queryRouter := baseapp.NewGRPCQueryRouter()
@@ -63,7 +79,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 		msgRouter,
 	))
 	env.EventService = eventService{}
-	m, err := NewKeeper(nil, env, addressCodec{}, ir, accounts...)
+	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

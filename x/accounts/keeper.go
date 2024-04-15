@@ -50,6 +50,7 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		environment:      env,
+		codec:            cdc,
 		addressCodec:     addressCodec,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
 		Schema:           collections.Schema{},

@@ -36,7 +36,10 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 		if epochNumber < params.MintingRewardsDistributionStartEpoch {
 			return nil
 		} else if epochNumber == params.MintingRewardsDistributionStartEpoch {
-			k.setLastReductionEpochNum(ctx, epochNumber)
+			err := k.setLastReductionEpochNum(ctx, epochNumber)
+			if err != nil {
+				return err
+			}
 		}
 		// fetch stored minter & params
 		minter, err := k.Minter.Get(ctx)
@@ -60,7 +63,10 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 			if err != nil {
 				return err
 			}
-			k.setLastReductionEpochNum(ctx, epochNumber)
+			err = k.setLastReductionEpochNum(ctx, epochNumber)
+			if err != nil {
+				return err
+			}
 		}
 
 		// mint coins, update supply

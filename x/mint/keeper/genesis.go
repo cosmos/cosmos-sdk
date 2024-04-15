@@ -49,5 +49,5 @@ func (keeper Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, er
 		return nil, err
 	}
 
-	return types.NewGenesisState(minter, params, int64(lastHalvenEpoch)), nil
+	return types.NewGenesisState(minter, params, lastHalvenEpoch), nil
 }

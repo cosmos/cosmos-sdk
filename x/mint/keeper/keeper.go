@@ -21,7 +21,6 @@ type Keeper struct {
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	logger           log.Logger
-	hooks            types.MintHooks
 	feeCollectorName string
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -78,17 +77,6 @@ func (k Keeper) GetAuthority() string {
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return k.environment.Logger.With("module", "x/"+types.ModuleName)
-}
-
-// Set the mint hooks.
-func (k Keeper) SetHooks(h types.MintHooks) Keeper {
-	if k.hooks != nil {
-		panic("cannot set mint hooks twice")
-	}
-
-	k.hooks = h
-
-	return k
 }
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's

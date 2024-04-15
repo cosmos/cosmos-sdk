@@ -86,8 +86,6 @@ func initFixture(t *testing.T) *fixture {
 		cdc,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger()),
 		addresscodec.NewBech32Codec("cosmos"),
-		router,
-		queryRouter,
 		cdc.InterfaceRegistry(),
 		account,
 	)

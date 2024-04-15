@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -60,11 +59,6 @@ func TestKeeper_Execute(t *testing.T) {
 	})
 
 	t.Run("exec module", func(t *testing.T) {
-		m.signerProvider = mockSigner(func(msg implementation.ProtoMsg) ([]byte, error) {
-			require.Equal(t, msg.(*bankv1beta1.MsgSend).FromAddress, string(accAddr))
-			return accAddr, nil
-		})
-
 		resp, err := m.Execute(ctx, accAddr, sender, &types.Int64Value{Value: 1000}, nil)
 		require.NoError(t, err)
 		require.True(t, implementation.Equal(&types.Empty{}, resp))

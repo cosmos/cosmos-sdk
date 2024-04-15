@@ -4,9 +4,7 @@ import (
 	"context"
 	"testing"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
@@ -65,7 +63,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 		msgRouter,
 	))
 	env.EventService = eventService{}
-	m, err := NewKeeper(nil, env, addressCodec{}, nil, ir, accounts...)
+	m, err := NewKeeper(nil, env, addressCodec{}, ir, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }
@@ -87,16 +85,4 @@ type bankMsgServer struct {
 
 func (b bankMsgServer) Send(context.Context, *bankv1beta1.MsgSend) (*bankv1beta1.MsgSendResponse, error) {
 	return &bankv1beta1.MsgSendResponse{}, nil
-}
-
-var _ SignerProvider = (*mockSigner)(nil)
-
-type mockSigner func(msg implementation.ProtoMsg) ([]byte, error)
-
-func (m mockSigner) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
-	s, err := m(msg)
-	if err != nil {
-		return nil, nil, err
-	}
-	return [][]byte{s}, nil, nil
 }

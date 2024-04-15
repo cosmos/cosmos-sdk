@@ -62,7 +62,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountskeeper, err := NewKeeper(
-		in.Cdc, in.Environment, in.AddressCodec, in.Cdc,
+		in.Cdc, in.Environment, in.AddressCodec,
 		in.ExecRouter, in.QueryRouter, in.Registry, account,
 	)
 	if err != nil {

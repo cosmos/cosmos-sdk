@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/migrations/legacytx"
@@ -18,15 +20,20 @@ import (
 // If ValidateBasic passes, decorator calls next AnteHandler in chain. Note,
 // ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
 // is not dependent on application state.
-type ValidateBasicDecorator struct{}
+type ValidateBasicDecorator struct {
+	env appmodule.Environment
+}
 
-func NewValidateBasicDecorator() ValidateBasicDecorator {
-	return ValidateBasicDecorator{}
+func NewValidateBasicDecorator(env appmodule.Environment) ValidateBasicDecorator {
+	return ValidateBasicDecorator{
+		env: env,
+	}
 }
 
 func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// no need to validate basic on recheck tx, call next antehandler
-	if ctx.ExecMode() == sdk.ExecModeReCheck {
+	txService := vbd.env.TransactionService
+	if txService.ExecMode(ctx) == transaction.ExecModeReCheck {
 		return next(ctx, tx, false)
 	}
 
@@ -36,7 +43,7 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool,
 		}
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }
 
 // ValidateMemoDecorator will validate memo given the parameters passed in
@@ -69,7 +76,7 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 		}
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }
 
 // ConsumeTxSizeGasDecorator will take in parameters and consume gas proportional
@@ -101,7 +108,8 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ b
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*storetypes.Gas(len(ctx.TxBytes())), "txSize")
 
 	// simulate gas cost for signatures in simulate mode
-	if ctx.ExecMode() == sdk.ExecModeSimulate {
+	txService := cgts.ak.Environment().TransactionService
+	if txService.ExecMode(ctx) == transaction.ExecModeSimulate {
 		// in simulate mode, each element should be a nil signature
 		sigs, err := sigTx.GetSignaturesV2()
 		if err != nil {
@@ -143,7 +151,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ b
 		}
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }
 
 // isIncompleteSignature tests whether SignatureData is fully filled in for simulation purposes
@@ -206,5 +214,5 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ boo
 		)
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }

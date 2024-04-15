@@ -1,20 +1,25 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/cometbft"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,10 +27,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
+	// TODO migrate all server dependencies to server/v2
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	// end TODO
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -34,7 +41,7 @@ func initRootCmd(
 	txConfig client.TxConfig,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	appCodec codec.Codec,
-	moduleManager *module.Manager,
+	moduleManager *runtimev2.MM,
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -43,6 +50,7 @@ func initRootCmd(
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
+		startCommand(),
 		// pruning.Cmd(newApp),
 		// snapshot.Cmd(newApp),
 	)
@@ -52,7 +60,7 @@ func initRootCmd(
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		// genesisCommand(txConfig, moduleManager, appExport),
+		//genesisCommand(txConfig, moduleManager, appExport),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -60,8 +68,49 @@ func initRootCmd(
 	)
 }
 
+func startCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "start",
+		Short: "Start the application",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			sa := simapp.NewSimApp(serverCtx.Logger, serverCtx.Viper)
+			am := sa.App.AppManager
+			serverCfg := cometbft.Config{CmtConfig: serverCtx.Config, ConsensusAuthority: sa.GetConsensusAuthority()}
+
+			cometServer := cometbft.NewCometBFTServer[transaction.Tx](am, sa.GetStore(), sa.GetLogger(), serverCfg,
+				nil, //TODO
+			)
+			ctx := cmd.Context()
+			ctx, cancelFn := context.WithCancel(ctx)
+			go func() {
+				sigCh := make(chan os.Signal, 1)
+				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+				sig := <-sigCh
+				cancelFn()
+				cmd.Printf("caught %s signal\n", sig.String())
+
+				if err := cometServer.Stop(ctx); err != nil {
+					cmd.PrintErrln("failed to stop servers:", err)
+				}
+			}()
+
+			if err := cometServer.Start(ctx); err != nil {
+				return fmt.Errorf("failed to start servers: %w", err)
+			}
+			return nil
+		},
+	}
+	return cmd
+}
+
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(txConfig client.TxConfig, moduleManager *module.Manager, appExport servertypes.AppExporter, cmds ...*cobra.Command) *cobra.Command {
+func genesisCommand(
+	txConfig client.TxConfig,
+	moduleManager *module.Manager,
+	appExport servertypes.AppExporter,
+	cmds ...*cobra.Command,
+) *cobra.Command {
 	cmd := genutilcli.Commands(txConfig, moduleManager, appExport)
 
 	for _, subCmd := range cmds {
@@ -116,15 +165,6 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-// newApp creates the application
-func newApp(
-	logger log.Logger,
-	db runtimev2.Store,
-	appOpts servertypes.AppOptions,
-) runtimev2.AppI[transaction.Tx] {
-	return simapp.NewSimApp(logger, db, true, appOpts)
-}
-
 // appExport creates a new simapp (optionally at a given height) and exports state.
 func appExport(
 	logger log.Logger,
@@ -153,13 +193,13 @@ func appExport(
 
 	var simApp *simapp.SimApp
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, db, false, appOpts)
+		simApp = simapp.NewSimApp(logger, appOpts)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, db, true, appOpts)
+		simApp = simapp.NewSimApp(logger, appOpts)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

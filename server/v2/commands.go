@@ -63,3 +63,13 @@ func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIC
 
 	return cmds, nil
 }
+
+func AddCommands(rootCmd *cobra.Command, logger log.Logger, homePath string, modules ...ServerModule) error {
+	cmds, err := Commands(logger, homePath, modules...)
+	if err != nil {
+		return err
+	}
+
+	rootCmd.AddCommand(cmds.Commands...)
+	return nil
+}

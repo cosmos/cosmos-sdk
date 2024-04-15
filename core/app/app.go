@@ -30,12 +30,13 @@ type BlockRequest[T any] struct {
 }
 
 type BlockResponse struct {
-	Apphash          []byte
-	ValidatorUpdates []appmodulev2.ValidatorUpdate
-	PreBlockEvents   []event.Event
-	BeginBlockEvents []event.Event
-	TxResults        []TxResult
-	EndBlockEvents   []event.Event
+	Apphash                   []byte
+	ConsensusMessagesResponse []transaction.Type
+	ValidatorUpdates          []appmodulev2.ValidatorUpdate
+	PreBlockEvents            []event.Event
+	BeginBlockEvents          []event.Event
+	TxResults                 []TxResult
+	EndBlockEvents            []event.Event
 }
 
 type RequestInitChain struct {

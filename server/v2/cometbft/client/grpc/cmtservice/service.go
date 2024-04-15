@@ -86,7 +86,10 @@ func (s queryServer) GetLatestBlock(ctx context.Context, _ *tmv1beta1.GetLatestB
 }
 
 // GetBlockByHeight implements ServiceServer.GetBlockByHeight
-func (s queryServer) GetBlockByHeight(ctx context.Context, req *tmv1beta1.GetBlockByHeightRequest) (*tmv1beta1.GetBlockByHeightResponse, error) {
+func (s queryServer) GetBlockByHeight(
+	ctx context.Context,
+	req *tmv1beta1.GetBlockByHeightRequest,
+) (*tmv1beta1.GetBlockByHeightResponse, error) {
 	nodeStatus, err := s.client.Status(ctx)
 	if err != nil {
 		return nil, err
@@ -117,7 +120,10 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *tmv1beta1.GetBlo
 }
 
 // GetLatestValidatorSet implements ServiceServer.GetLatestValidatorSet
-func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *tmv1beta1.GetLatestValidatorSetRequest) (*tmv1beta1.GetLatestValidatorSetResponse, error) {
+func (s queryServer) GetLatestValidatorSet(
+	ctx context.Context,
+	req *tmv1beta1.GetLatestValidatorSetRequest,
+) (*tmv1beta1.GetLatestValidatorSetResponse, error) {
 	page, limit, err := ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
@@ -127,7 +133,10 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *tmv1beta1.G
 }
 
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
-func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *tmv1beta1.GetValidatorSetByHeightRequest) (*tmv1beta1.GetValidatorSetByHeightResponse, error) {
+func (s queryServer) GetValidatorSetByHeight(
+	ctx context.Context,
+	req *tmv1beta1.GetValidatorSetByHeightRequest,
+) (*tmv1beta1.GetValidatorSetByHeightResponse, error) {
 	page, limit, err := ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
@@ -156,7 +165,12 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *tmv1beta1
 	}, nil
 }
 
-func ValidatorsOutput(ctx context.Context, consAddrCdc address.Codec, client rpc.CometRPC, height *int64, page, limit int) (*tmv1beta1.GetLatestValidatorSetResponse, error) {
+func ValidatorsOutput(
+	ctx context.Context,
+	client rpc.CometRPC,
+	height *int64,
+	page, limit int,
+) (*tmv1beta1.GetLatestValidatorSetResponse, error) {
 	vs, err := client.Validators(ctx, height, &page, &limit)
 	if err != nil {
 		return nil, err
@@ -256,9 +270,8 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *tmv1beta1.ABCIQueryRequ
 
 	if path := SplitABCIQueryPath(req.Path); len(path) > 0 {
 		switch path[0] {
-		case "app", "store", "p2p", "custom":
-			// valid path
-			// TODO complete this
+		case "app", "store", "p2p", "custom": // TODO: check if we can use the ones from abci.go without having circular deps.
+			panic("not implemented")
 
 		default:
 			// Otherwise, error as to prevent either valid gRPC service requests or

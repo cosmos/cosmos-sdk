@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/store v1.1.0
-	github.com/cometbft/cometbft v0.38.6
+	github.com/cometbft/cometbft v0.38.7-0.20240412124004-1f67e396cf45
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/cosmos/cosmos-sdk v0.50.6-0.20240323125140-7397b8672fa8
@@ -168,7 +168,7 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0 // indirect
-	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect

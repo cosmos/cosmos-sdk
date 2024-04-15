@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/event"
+	epochstypes "cosmossdk.io/x/epochs/types"
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -80,9 +81,6 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 			return err
 		}
 
-		// call an hook after the minting and distribution of new coins
-		k.hooks.AfterDistributeMintedCoin(ctx)
-
 		if mintedCoin.Amount.IsInt64() {
 			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 		}
@@ -95,4 +93,32 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 		)
 	}
 	return nil
+}
+
+// ___________________________________________________________________________________________________
+
+// Hooks wrapper struct for mint keeper.
+type Hooks struct {
+	k Keeper
+}
+
+var _ epochstypes.EpochHooks = Hooks{}
+
+// Return the wrapper struct.
+func (k Keeper) Hooks() Hooks {
+	return Hooks{k}
+}
+
+// GetModuleName implements types.EpochHooks.
+func (Hooks) GetModuleName() string {
+	return types.ModuleName
+}
+
+// epochs hooks.
+func (h Hooks) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+}
+
+func (h Hooks) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }

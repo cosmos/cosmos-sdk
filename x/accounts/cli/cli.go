@@ -49,7 +49,10 @@ func GetTxInitCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			sender := clientCtx.GetFromAddress()
+			sender, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			// we need to convert the message from json to a protobuf message
 			// to know which message to use, we need to know the account type
@@ -67,7 +70,7 @@ func GetTxInitCmd() *cobra.Command {
 				return err
 			}
 			msg := v1.MsgInit{
-				Sender:      sender.String(),
+				Sender:      sender,
 				AccountType: args[0],
 				Message:     msgBytes,
 			}
@@ -89,7 +92,10 @@ func GetExecuteCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			sender := clientCtx.GetFromAddress()
+			sender, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			schema, err := getSchemaForAccount(clientCtx, args[0])
 			if err != nil {
@@ -101,7 +107,7 @@ func GetExecuteCmd() *cobra.Command {
 				return err
 			}
 			msg := v1.MsgExecute{
-				Sender:  sender.String(),
+				Sender:  sender,
 				Target:  args[0],
 				Message: msgBytes,
 			}

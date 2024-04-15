@@ -84,7 +84,7 @@ func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisAccount) error
 	_, ok := k.accounts[acc.AccountType]
 	if !ok {
 		// If the account type does not exist, return an error
-		return fmt.Errorf("account type %s not found in the registered accounts.", acc.AccountType)
+		return fmt.Errorf("account type %s not found in the registered accounts", acc.AccountType)
 	}
 
 	addrBytes, err := k.addressCodec.StringToBytes(acc.Address)

@@ -81,6 +81,10 @@ func (suite *MintTestSuite) TestGRPCParams() {
 	annualProvisions, err := suite.queryClient.AnnualProvisions(gocontext.Background(), &types.QueryAnnualProvisionsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(annualProvisions.AnnualProvisions, minter.AnnualProvisions)
+
+	epochProvisions, err := suite.queryClient.EpochProvisions(gocontext.Background(), &types.QueryEpochProvisionsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(epochProvisions.EpochProvisions, minter.EpochProvisions)
 }
 
 func TestMintTestSuite(t *testing.T) {

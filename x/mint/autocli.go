@@ -29,6 +29,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "annual-provisions",
 					Short:     "Query the current minting annual provisions value",
 				},
+				{
+					RpcMethod: "EpochProvisions",
+					Use:       "epoch-provisions",
+					Short:     "Query the current minting epoch provisions value",
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

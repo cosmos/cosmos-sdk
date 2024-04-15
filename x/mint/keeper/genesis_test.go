@@ -63,7 +63,7 @@ func (s *GenesisTestSuite) SetupTest() {
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {
 	genesisState := types.DefaultGenesisState()
-	genesisState.Minter = types.NewMinter(math.LegacyNewDecWithPrec(20, 2), math.LegacyNewDec(1))
+	genesisState.Minter = types.NewMinter(math.LegacyNewDecWithPrec(20, 2), math.LegacyNewDec(1), math.LegacyZeroDec())
 	genesisState.Params = types.NewParams(
 		"testDenom",
 		math.LegacyNewDecWithPrec(15, 2),
@@ -71,7 +71,13 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 		math.LegacyNewDecWithPrec(9, 2),
 		math.LegacyNewDecWithPrec(69, 2),
 		uint64(60*60*8766/5),
+		"year",                          // epoch identifier
+		5,                               // reduction perion in epochs
+		math.LegacyNewDecWithPrec(5, 1), // reduction factor
+		2,                               // minting reward distribution start epoch
+		math.LegacyNewDec(200),          // epoch provisions
 	)
+	genesisState.ReductionStartedEpoch = 3 // halven started epoch
 
 	err := s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
 	s.Require().NoError(err)

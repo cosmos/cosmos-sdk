@@ -21,14 +21,16 @@ type Keeper struct {
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	logger           log.Logger
+	hooks            types.MintHooks
 	feeCollectorName string
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
 
-	Schema collections.Schema
-	Params collections.Item[types.Params]
-	Minter collections.Item[types.Minter]
+	Schema             collections.Schema
+	Params             collections.Item[types.Params]
+	Minter             collections.Item[types.Minter]
+	LastReductionEpoch collections.Item[int64]
 }
 
 // NewKeeper creates a new mint Keeper instance
@@ -48,15 +50,16 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
-		cdc:              cdc,
-		environment:      env,
-		stakingKeeper:    sk,
-		bankKeeper:       bk,
-		logger:           env.Logger,
-		feeCollectorName: feeCollectorName,
-		authority:        authority,
-		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		Minter:           collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
+		cdc:                cdc,
+		environment:        env,
+		stakingKeeper:      sk,
+		bankKeeper:         bk,
+		logger:             env.Logger,
+		feeCollectorName:   feeCollectorName,
+		authority:          authority,
+		Params:             collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Minter:             collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
+		LastReductionEpoch: collections.NewItem(sb, types.LastReductionEpochKey, "last_reduction_epoch", collections.Int64Value),
 	}
 
 	schema, err := sb.Build()
@@ -75,6 +78,17 @@ func (k Keeper) GetAuthority() string {
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return k.environment.Logger.With("module", "x/"+types.ModuleName)
+}
+
+// Set the mint hooks.
+func (k Keeper) SetHooks(h types.MintHooks) Keeper {
+	if k.hooks != nil {
+		panic("cannot set mint hooks twice")
+	}
+
+	k.hooks = h
+
+	return k
 }
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
@@ -104,4 +118,12 @@ func (k Keeper) MintCoins(ctx context.Context, newCoins sdk.Coins) error {
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+}
+
+func (k Keeper) setLastReductionEpochNum(ctx context.Context, epochNum int64) error {
+	return k.LastReductionEpoch.Set(ctx, epochNum)
+}
+
+func (k Keeper) getLastReductionEpochNum(ctx context.Context) (int64, error) {
+	return k.LastReductionEpoch.Get(ctx)
 }

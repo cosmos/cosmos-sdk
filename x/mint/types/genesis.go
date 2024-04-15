@@ -19,18 +19,20 @@ func DefaultInflationCalculationFn(_ context.Context, minter Minter, params Para
 }
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(minter Minter, params Params) *GenesisState {
+func NewGenesisState(minter Minter, params Params, reductionStartedEpoch int64) *GenesisState {
 	return &GenesisState{
-		Minter: minter,
-		Params: params,
+		Minter:                minter,
+		Params:                params,
+		ReductionStartedEpoch: reductionStartedEpoch,
 	}
 }
 
 // DefaultGenesisState creates a default GenesisState object
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Minter: DefaultInitialMinter(),
-		Params: DefaultParams(),
+		Minter:                DefaultInitialMinter(),
+		Params:                DefaultParams(),
+		ReductionStartedEpoch: 0,
 	}
 }
 

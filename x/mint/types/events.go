@@ -7,4 +7,6 @@ const (
 	AttributeKeyBondedRatio      = "bonded_ratio"
 	AttributeKeyInflation        = "inflation"
 	AttributeKeyAnnualProvisions = "annual_provisions"
+	AttributeKeyEpochProvisions  = "epoch_provisions"
+	AttributeEpochNumber         = "epoch_number"
 )

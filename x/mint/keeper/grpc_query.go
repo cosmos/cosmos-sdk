@@ -45,3 +45,11 @@ func (q queryServer) AnnualProvisions(ctx context.Context, _ *types.QueryAnnualP
 
 	return &types.QueryAnnualProvisionsResponse{AnnualProvisions: minter.AnnualProvisions}, nil
 }
+
+func (q queryServer) EpochProvisions(ctx context.Context, _ *types.QueryEpochProvisionsRequest) (*types.QueryEpochProvisionsResponse, error) {
+	minter, err := q.k.Minter.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryEpochProvisionsResponse{EpochProvisions: minter.EpochProvisions}, nil
+}

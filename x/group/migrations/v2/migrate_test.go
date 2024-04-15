@@ -103,10 +103,11 @@ func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc c
 	if err != nil {
 		return nil, nil, err
 	}
+	// gomock initializations
 	ctrl := gomock.NewController(&testing.T{})
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
 
-	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr, acctsModKeeper)
+	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, acctsModKeeper, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr)
 
 	oldPolicyAccounts := make([]*authtypes.ModuleAccount, len(policies))
 	for i, policyAddr := range policies {

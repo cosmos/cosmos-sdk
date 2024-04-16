@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // BeginBlocker iterates through and handles any newly discovered evidence of

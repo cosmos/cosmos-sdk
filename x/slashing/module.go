@@ -158,7 +158,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the slashing module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper)
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions

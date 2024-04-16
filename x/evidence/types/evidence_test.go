@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -78,21 +79,21 @@ func TestEquivocationValidateBasic(t *testing.T) {
 
 func TestEvidenceAddressConversion(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
-	tmEvidence := NewMisbehavior(1, 100, time.Now(), types.MisbehaviorType_MISBEHAVIOR_TYPE_DUPLICATE_VOTE, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+	tmEvidence := NewMisbehavior(1, 100, time.Now(), consensusv1.MisbehaviorType_MISBEHAVIOR_TYPE_DUPLICATE_VOTE, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 
 	evidence := types.FromABCIEvidence(tmEvidence, address.NewBech32Codec("testcnclcons"))
 	consAddr := evidence.GetConsensusAddress(address.NewBech32Codec("testcnclcons"))
 	// Check the address is the same after conversion
-	require.Equal(t, tmEvidence.ConsensusAddress, consAddr.Bytes())
+	require.Equal(t, tmEvidence.Validator.Address, consAddr.Bytes())
 	sdk.GetConfig().SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 }
 
-func NewMisbehavior(height, tvp int64, t time.Time, tpe types.MisbehaviorType, val []byte) types.Misbehavior {
-	return types.Misbehavior{
+func NewMisbehavior(height, tvp int64, t time.Time, tpe consensusv1.MisbehaviorType, val []byte) consensusv1.Evidence {
+	return consensusv1.Evidence{
 		Height:           height,
 		Time:             t,
 		TotalVotingPower: tvp,
-		Type:             tpe,
-		ConsensusAddress: val,
+		EvidenceType:     tpe,
+		Validator:        &consensusv1.Validator{Address: val},
 	}
 }

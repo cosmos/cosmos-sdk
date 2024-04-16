@@ -3,6 +3,7 @@ package accounts
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
@@ -11,11 +12,16 @@ import (
 var _ v1.QueryServer = queryServer{}
 
 func NewQueryServer(k Keeper) v1.QueryServer {
-	return &queryServer{k}
+	return &queryServer{
+		k:           k,
+		schemaCache: make(map[string]*v1.SchemaResponse), // init schemaCache
+	}
 }
 
 type queryServer struct {
-	k Keeper
+	k           Keeper
+	schemaCache map[string]*v1.SchemaResponse
+	mu          sync.Mutex
 }
 
 func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryRequest) (*v1.AccountQueryResponse, error) {
@@ -48,13 +54,24 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 }
 
 func (q queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.SchemaResponse, error) {
-	// TODO: maybe we should cache this, considering accounts types are not
+	// Check if schema is cached
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	if schema, ok := q.schemaCache[request.AccountType]; ok {
+		return schema, nil
+	}
+
+	// If not cached, generate and cache the schema
 	// added on the fly as the chain is running.
 	schemas := v1.MakeAccountsSchemas(q.k.accounts)
 	schema, ok := schemas[request.AccountType]
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", errAccountTypeNotFound, request.AccountType)
 	}
+
+	// Cache the schema
+	q.schemaCache[request.AccountType] = schema
+
 	return schema, nil
 }
 

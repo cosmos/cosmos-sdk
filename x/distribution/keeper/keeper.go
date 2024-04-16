@@ -165,9 +165,14 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
+	addr, err := k.authKeeper.AddressCodec().BytesToString(withdrawAddr)
+	if err != nil {
+		return err
+	}
+
 	if err = k.environment.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSetWithdrawAddress,
-		event.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
+		event.NewAttribute(types.AttributeKeyWithdrawAddress, addr),
 	); err != nil {
 		return err
 	}

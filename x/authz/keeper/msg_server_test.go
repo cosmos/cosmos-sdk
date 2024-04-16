@@ -50,7 +50,7 @@ func (suite *TestSuite) TestGrant() {
 		{
 			name: "identical grantee and granter",
 			malleate: func() *authz.MsgGrant {
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: granteeStrAddr,
@@ -64,7 +64,7 @@ func (suite *TestSuite) TestGrant() {
 		{
 			name: "invalid granter",
 			malleate: func() *authz.MsgGrant {
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: "invalid",
@@ -78,7 +78,7 @@ func (suite *TestSuite) TestGrant() {
 		{
 			name: "invalid grantee",
 			malleate: func() *authz.MsgGrant {
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: granterStrAddr,
@@ -107,7 +107,7 @@ func (suite *TestSuite) TestGrant() {
 			name: "invalid grant, past time",
 			malleate: func() *authz.MsgGrant {
 				pTime := curBlockTime.Add(-time.Hour)
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneHour) // we only need the authorization
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneHour) // we only need the authorization
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: granterStrAddr,
@@ -129,7 +129,7 @@ func (suite *TestSuite) TestGrant() {
 				acc := authtypes.NewBaseAccountWithAddress(newAcc)
 				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), newAcc).Return(acc).AnyTimes()
 
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneYear)
 				suite.Require().NoError(err)
 
 				addr, err := suite.accountKeeper.AddressCodec().BytesToString(newAcc)
@@ -145,7 +145,7 @@ func (suite *TestSuite) TestGrant() {
 		{
 			name: "valid grant",
 			malleate: func() *authz.MsgGrant {
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: granterStrAddr,
@@ -157,7 +157,7 @@ func (suite *TestSuite) TestGrant() {
 		{
 			name: "valid grant, same grantee, granter pair but different msgType",
 			malleate: func() *authz.MsgGrant {
-				g, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneHour)
+				g, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &oneHour)
 				suite.Require().NoError(err)
 				_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
 					Granter: granterStrAddr,
@@ -178,7 +178,7 @@ func (suite *TestSuite) TestGrant() {
 		{
 			name: "valid grant with allow list",
 			malleate: func() *authz.MsgGrant {
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, []sdk.AccAddress{granter}), &oneYear)
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, []sdk.AccAddress{granter}, suite.accountKeeper.AddressCodec()), &oneYear)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: granterStrAddr,
@@ -190,7 +190,7 @@ func (suite *TestSuite) TestGrant() {
 		{
 			name: "valid grant with nil expiration time",
 			malleate: func() *authz.MsgGrant {
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), nil)
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), nil)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: granterStrAddr,
@@ -396,7 +396,7 @@ func (suite *TestSuite) TestPruneExpiredGrants() {
 	timeNow := suite.ctx.BlockTime()
 	expiration := timeNow.Add(time.Hour)
 	coins := sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10)))
-	grant, err := authz.NewGrant(timeNow, banktypes.NewSendAuthorization(coins, nil), &expiration)
+	grant, err := authz.NewGrant(timeNow, banktypes.NewSendAuthorization(coins, nil, suite.accountKeeper.AddressCodec()), &expiration)
 	suite.Require().NoError(err)
 
 	_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{

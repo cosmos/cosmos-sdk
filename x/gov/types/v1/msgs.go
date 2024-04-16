@@ -87,18 +87,18 @@ func NewMultipleChoiceMsgSubmitProposal(
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
-func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
-	return &MsgDeposit{proposalID, depositor.String(), amount}
+func NewMsgDeposit(depositor string, proposalID uint64, amount sdk.Coins) *MsgDeposit {
+	return &MsgDeposit{proposalID, depositor, amount}
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
-func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, metadata string) *MsgVote {
-	return &MsgVote{proposalID, voter.String(), option, metadata}
+func NewMsgVote(voter string, proposalID uint64, option VoteOption, metadata string) *MsgVote {
+	return &MsgVote{proposalID, voter, option, metadata}
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
-func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
-	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
+func NewMsgVoteWeighted(voter string, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
+	return &MsgVoteWeighted{proposalID, voter, options, metadata}
 }
 
 // NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance.

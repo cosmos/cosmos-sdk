@@ -50,8 +50,6 @@ type AppModuleBasic interface {
 	HasName
 	HasGRPCGateway
 	HasAminoCodec
-
-	appmodulev2.HasRegisterInterfaces
 }
 
 // AppModule is the form for an application module. Most of
@@ -61,7 +59,6 @@ type AppModule interface {
 	HasName
 
 	appmodulev2.AppModule
-	appmodulev2.HasRegisterInterfaces
 }
 
 // HasName allows the module to provide its own name for legacy purposes.

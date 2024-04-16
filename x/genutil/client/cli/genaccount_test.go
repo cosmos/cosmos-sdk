@@ -25,6 +25,10 @@ import (
 
 func TestAddGenesisAccountCmd(t *testing.T) {
 	_, _, addr1 := testdata.KeyTestPubAddr()
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
+
 	tests := []struct {
 		name        string
 		addr        string
@@ -41,14 +45,14 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		},
 		{
 			name:        "valid address",
-			addr:        addr1.String(),
+			addr:        addr1Str,
 			denom:       "1000atom",
 			withKeyring: false,
 			expectErr:   false,
 		},
 		{
 			name:        "multiple denoms",
-			addr:        addr1.String(),
+			addr:        addr1Str,
 			denom:       "1000atom, 2000stake",
 			withKeyring: false,
 			expectErr:   false,
@@ -75,7 +79,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			require.NoError(t, err)
 
 			serverCtx := server.NewContext(viper.New(), cfg, logger)
-			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home)
+			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).WithAddressCodec(ac)
 
 			if tc.withKeyring {
 				path := hd.CreateHDPath(118, 0, 0).String()

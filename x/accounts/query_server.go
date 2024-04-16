@@ -14,14 +14,15 @@ var _ v1.QueryServer = queryServer{}
 func NewQueryServer(k Keeper) v1.QueryServer {
 	return &queryServer{
 		k:           k,
-		schemaCache: make(map[string]*v1.SchemaResponse), // init schemaCache
+		schemaCache: make(map[string]*v1.SchemaResponse), // Initialize schemaCache
+		mu:          &sync.Mutex{},                       // Initialize mu as a pointer
 	}
 }
 
 type queryServer struct {
 	k           Keeper
 	schemaCache map[string]*v1.SchemaResponse
-	mu          sync.Mutex
+	mu          *sync.Mutex
 }
 
 func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryRequest) (*v1.AccountQueryResponse, error) {

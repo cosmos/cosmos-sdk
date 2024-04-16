@@ -276,7 +276,10 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 	// Calculate totalPercentageToBeDistributed and store values
 	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, status types.RecipientFundPercentageStatus) (stop bool, err error) {
 		if status.Received {
-			return false, nil
+			// reset status for new block
+			status.Received = false
+			err := k.RecipientFundPercentage.Set(ctx, key, status)
+			return false, err
 		}
 		addr, err := k.authKeeper.AddressCodec().BytesToString(key)
 		if err != nil {

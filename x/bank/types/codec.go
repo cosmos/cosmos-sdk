@@ -26,6 +26,8 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&MsgSend{},
 		&MsgMultiSend{},
 		&MsgUpdateParams{},
+		&MsgBurn{},
+		&MsgSetSendEnabled{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)

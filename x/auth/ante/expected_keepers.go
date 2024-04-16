@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 type HasEnvironment interface {
@@ -30,8 +29,4 @@ type AccountKeeper interface {
 // FeegrantKeeper defines the expected feegrant keeper.
 type FeegrantKeeper interface {
 	UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
-}
-
-type ConsensusKeeper interface {
-	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
 }

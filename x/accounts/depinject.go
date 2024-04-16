@@ -65,8 +65,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountskeeper, err := NewKeeper(
-		in.Cdc, in.Environment, in.AddressCodec, in.Cdc,
-		in.ExecRouter, in.QueryRouter, in.Registry, account,
+		in.Cdc, in.Environment, in.AddressCodec, in.Registry, account,
 		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
 		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
 		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),

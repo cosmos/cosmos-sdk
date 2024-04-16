@@ -54,7 +54,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	// create upgrade dir
 	upgradeLocation := cfg.UpgradeDir(upgradeName)
-	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o750); err != nil {
+	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o755); err != nil {
 		return fmt.Errorf("failed to create upgrade directory: %w", err)
 	}
 
@@ -110,7 +110,7 @@ func saveOrAbort(path string, data []byte, force bool) error {
 		return fmt.Errorf("failed to check if file exists: %w", err)
 	}
 
-	if err := os.WriteFile(path, data, 0o600); err != nil {
+	if err := os.WriteFile(path, data, 0o755); err != nil {
 		return fmt.Errorf("failed to write binary to location: %w", err)
 	}
 

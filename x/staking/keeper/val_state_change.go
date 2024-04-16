@@ -172,7 +172,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmod
 		}
 
 		if validator.Jailed {
-			return nil, fmt.Errorf("should never retrieve a jailed validator from the power store")
+			// should never retrieve a jailed validator from the power store
+			continue
 		}
 
 		// if we get to a zero-power validator (which we don't bond),

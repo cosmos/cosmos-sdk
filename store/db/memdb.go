@@ -10,6 +10,7 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/errors"
 )
 
 const (
@@ -64,7 +65,7 @@ func NewMemDB() *MemDB {
 // Get implements DB.
 func (db *MemDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
@@ -79,7 +80,7 @@ func (db *MemDB) Get(key []byte) ([]byte, error) {
 // Has implements DB.
 func (db *MemDB) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
-		return false, store.ErrKeyEmpty
+		return false, errors.ErrKeyEmpty
 	}
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
@@ -90,10 +91,10 @@ func (db *MemDB) Has(key []byte) (bool, error) {
 // Set implements DB.
 func (db *MemDB) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if value == nil {
-		return store.ErrValueNil
+		return errors.ErrValueNil
 	}
 	db.mtx.Lock()
 	defer db.mtx.Unlock()
@@ -115,7 +116,7 @@ func (db *MemDB) SetSync(key, value []byte) error {
 // Delete implements DB.
 func (db *MemDB) Delete(key []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	db.mtx.Lock()
 	defer db.mtx.Unlock()
@@ -181,7 +182,7 @@ func (db *MemDB) NewBatchWithSize(size int) store.RawBatch {
 // Takes out a read-lock on the database until the iterator is closed.
 func (db *MemDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 	return newMemDBIterator(db, start, end, false), nil
 }
@@ -190,7 +191,7 @@ func (db *MemDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 // Takes out a read-lock on the database until the iterator is closed.
 func (db *MemDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 	return newMemDBIterator(db, start, end, true), nil
 }
@@ -198,7 +199,7 @@ func (db *MemDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) 
 // IteratorNoMtx makes an iterator with no mutex.
 func (db *MemDB) IteratorNoMtx(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 	return newMemDBIteratorMtxChoice(db, start, end, false, false), nil
 }
@@ -206,7 +207,7 @@ func (db *MemDB) IteratorNoMtx(start, end []byte) (corestore.Iterator, error) {
 // ReverseIteratorNoMtx makes an iterator with no mutex.
 func (db *MemDB) ReverseIteratorNoMtx(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 	return newMemDBIteratorMtxChoice(db, start, end, true, false), nil
 }
@@ -395,13 +396,13 @@ func newMemDBBatch(db *MemDB) *memDBBatch {
 // Set implements Batch.
 func (b *memDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if value == nil {
-		return store.ErrValueNil
+		return errors.ErrValueNil
 	}
 	if b.ops == nil {
-		return store.ErrBatchClosed
+		return errors.ErrBatchClosed
 	}
 	b.size += len(key) + len(value)
 	b.ops = append(b.ops, operation{opTypeSet, key, value})
@@ -411,10 +412,10 @@ func (b *memDBBatch) Set(key, value []byte) error {
 // Delete implements Batch.
 func (b *memDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if b.ops == nil {
-		return store.ErrBatchClosed
+		return errors.ErrBatchClosed
 	}
 	b.size += len(key)
 	b.ops = append(b.ops, operation{opTypeDelete, key, nil})
@@ -424,7 +425,7 @@ func (b *memDBBatch) Delete(key []byte) error {
 // Write implements Batch.
 func (b *memDBBatch) Write() error {
 	if b.ops == nil {
-		return store.ErrBatchClosed
+		return errors.ErrBatchClosed
 	}
 	b.db.mtx.Lock()
 	defer b.db.mtx.Unlock()
@@ -459,7 +460,7 @@ func (b *memDBBatch) Close() error {
 // GetByteSize implements Batch
 func (b *memDBBatch) GetByteSize() (int, error) {
 	if b.ops == nil {
-		return 0, store.ErrBatchClosed
+		return 0, errors.ErrBatchClosed
 	}
 	return b.size, nil
 }

@@ -22,7 +22,6 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
 		consStr,
 		ctx.BlockHeight(),
-		int64(3),
 		time.Unix(2, 0),
 		false,
 		int64(10),
@@ -34,7 +33,6 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	info, err := keeper.ValidatorSigningInfo.Get(ctx, consAddr)
 	require.NoError(err)
 	require.Equal(info.StartHeight, ctx.BlockHeight())
-	require.Equal(info.IndexOffset, int64(3))
 	require.Equal(info.JailedUntil, time.Unix(2, 0).UTC())
 	require.Equal(info.MissedBlocksCounter, int64(10))
 
@@ -123,16 +121,18 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 	oldConsAddr := sdk.ConsAddress(pks[0].Address())
 	newConsAddr := sdk.ConsAddress(pks[1].Address())
 
+	consAddr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(newConsAddr)
+	s.Require().NoError(err)
+
 	newInfo := slashingtypes.NewValidatorSigningInfo(
-		newConsAddr.String(),
+		consAddr,
 		int64(4),
-		int64(3),
 		time.Unix(2, 0).UTC(),
 		false,
 		int64(10),
 	)
 
-	err := slashingKeeper.ValidatorSigningInfo.Set(ctx, oldConsAddr, newInfo)
+	err = slashingKeeper.ValidatorSigningInfo.Set(ctx, oldConsAddr, newInfo)
 	require.NoError(err)
 
 	s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), oldConsAddr).Return(oldConsAddr, nil)

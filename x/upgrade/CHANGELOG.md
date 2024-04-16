@@ -25,9 +25,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) Follow latest `cosmossdk.io/core` `PreBlock` simplification.
+
 ### State Machine Breaking
 
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) Upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
+
+### API Breaking Changes
+
+* [#19443](https://github.com/cosmos/cosmos-sdk/pull/19443) `NewKeeper` takes an `appmodule.Environment` instead of individual services.
+
+### Bug Fixes
+
+* [#19706](https://github.com/cosmos/cosmos-sdk/pull/19706) Stop treating inline JSON as a URL.
 
 ## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.1) - 2023-12-11
 
@@ -53,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#16511](https://github.com/cosmos/cosmos-sdk/pull/16511) `plan.DownloadURLWithChecksum` has been renamed to `plan.DownloadURL` and does not validate the URL anymore. Call `plan.ValidateURL` before calling `plan.DownloadURL` to validate the URL.
 * [#16511](https://github.com/cosmos/cosmos-sdk/pull/16511) `plan.DownloadUpgrade` does not validate URL anymore. Call `plan.ValidateURL` before calling `plan.DownloadUpgrade` to validate the URL.
 * [#16227](https://github.com/cosmos/cosmos-sdk/issues/16227) `NewKeeper` now takes a `KVStoreService` instead of a `StoreKey`, methods in the `Keeper` now take a `context.Context` instead of a `sdk.Context` and return an `error`. `UpgradeHandler` now receives a `context.Context`. `GetUpgradedClient`, `GetUpgradedConsensusState`, `GetUpgradePlan` now return a specific error for "not found".
+
 
 ### Bug Fixes
 

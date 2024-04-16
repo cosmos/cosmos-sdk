@@ -6,18 +6,22 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -31,13 +35,14 @@ type DeterministicTestSuite struct {
 
 	accountNumberLanes uint64
 
-	key           *storetypes.KVStoreKey
-	storeService  corestore.KVStoreService
-	ctx           sdk.Context
-	queryClient   types.QueryClient
-	accountKeeper keeper.AccountKeeper
-	encCfg        moduletestutil.TestEncodingConfig
-	maccPerms     map[string][]string
+	key            *storetypes.KVStoreKey
+	environment    appmodule.Environment
+	ctx            sdk.Context
+	queryClient    types.QueryClient
+	accountKeeper  keeper.AccountKeeper
+	acctsModKeeper *authtestutil.MockAccountsModKeeper
+	encCfg         moduletestutil.TestEncodingConfig
+	maccPerms      map[string][]string
 }
 
 var (
@@ -51,13 +56,19 @@ func TestDeterministicTestSuite(t *testing.T) {
 }
 
 func (suite *DeterministicTestSuite) SetupTest() {
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	suite.acctsModKeeper = acctsModKeeper
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -69,9 +80,10 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
+		env,
 		suite.encCfg.Codec,
-		storeService,
 		types.ProtoBaseAccount,
+		suite.acctsModKeeper,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
@@ -83,7 +95,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	suite.key = key
-	suite.storeService = storeService
+	suite.environment = env
 	suite.maccPerms = maccPerms
 	suite.accountNumberLanes = 1
 }
@@ -289,9 +301,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 		}
 
 		ak := keeper.NewAccountKeeper(
+			suite.environment,
 			suite.encCfg.Codec,
-			suite.storeService,
 			types.ProtoBaseAccount,
+			suite.acctsModKeeper,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
@@ -336,9 +349,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 		maccPerms[mName] = mPerms
 
 		ak := keeper.NewAccountKeeper(
+			suite.environment,
 			suite.encCfg.Codec,
-			suite.storeService,
 			types.ProtoBaseAccount,
+			suite.acctsModKeeper,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",

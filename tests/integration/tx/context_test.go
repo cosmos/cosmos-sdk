@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -33,6 +34,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	_, err := simtestutil.SetupAtGenesis(
 		depinject.Configs(
 			configurator.NewAppConfig(
+				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.BankModule(),

@@ -356,7 +356,7 @@ func parseOptionalHeight(heightStr string) (*int64, error) {
 	return &tmp, nil
 }
 
-func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
+func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bootstrap-state",
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
@@ -381,7 +381,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, uint64(height), nil)
+			return node.BootstrapStateWithGenProvider(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
 		},
 	}
 

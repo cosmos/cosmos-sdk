@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
 
@@ -26,7 +25,7 @@ const (
 var errZeroGroupID = errors.New("group id cannot be 0")
 
 // TxCmd returns a root CLI command handler for all x/group transaction commands.
-func TxCmd(name string, ac address.Codec) *cobra.Command {
+func TxCmd(name string) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        name,
 		Short:                      "Group transaction subcommands",
@@ -40,7 +39,7 @@ func TxCmd(name string, ac address.Codec) *cobra.Command {
 		MsgUpdateGroupMembersCmd(),
 		MsgCreateGroupWithPolicyCmd(),
 		MsgCreateGroupPolicyCmd(),
-		MsgUpdateGroupPolicyDecisionPolicyCmd(ac),
+		MsgUpdateGroupPolicyDecisionPolicyCmd(),
 		MsgSubmitProposalCmd(),
 		NewCmdDraftProposal(),
 	)
@@ -99,8 +98,13 @@ Where members.json contains:
 				}
 			}
 
+			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			msg := &group.MsgCreateGroup{
-				Admin:    clientCtx.GetFromAddress().String(),
+				Admin:    admin,
 				Members:  members,
 				Metadata: args[1],
 			}
@@ -175,8 +179,13 @@ Set a member's weight to "0" to delete it.
 				return errZeroGroupID
 			}
 
+			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			msg := &group.MsgUpdateGroupMembers{
-				Admin:         clientCtx.GetFromAddress().String(),
+				Admin:         admin,
 				MemberUpdates: members,
 				GroupId:       groupID,
 			}
@@ -269,8 +278,13 @@ and policy.json contains:
 				return err
 			}
 
+			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			msg, err := group.NewMsgCreateGroupWithPolicy(
-				clientCtx.GetFromAddress().String(),
+				admin,
 				members,
 				args[1],
 				args[2],
@@ -351,8 +365,13 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 				return err
 			}
 
+			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			msg, err := group.NewMsgCreateGroupPolicy(
-				clientCtx.GetFromAddress(),
+				admin,
 				groupID,
 				args[2],
 				policy,
@@ -373,7 +392,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 // MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
 //
 // This command is being handled better here, not converting to autocli
-func MsgUpdateGroupPolicyDecisionPolicyCmd(ac address.Codec) *cobra.Command {
+func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy-json-file]",
 		Short: "Update a group policy's decision policy",
@@ -394,14 +413,23 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd(ac address.Codec) *cobra.Command {
 				return err
 			}
 
-			accountAddress, err := ac.StringToBytes(args[1])
+			accountAddress, err := clientCtx.AddressCodec.StringToBytes(args[1])
+			if err != nil {
+				return err
+			}
+
+			adminAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+			accAddr, err := clientCtx.AddressCodec.BytesToString(accountAddress)
 			if err != nil {
 				return err
 			}
 
 			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(
-				clientCtx.GetFromAddress(),
-				accountAddress,
+				adminAddr,
+				accAddr,
 				policy,
 			)
 			if err != nil {

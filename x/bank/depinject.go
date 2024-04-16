@@ -1,12 +1,15 @@
 package bank
 
 import (
+	"fmt"
+	"sort"
+
+	"golang.org/x/exp/maps"
+
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/log"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
@@ -20,18 +23,19 @@ var _ depinject.OnePerModuleType = AppModule{}
 func (am AppModule) IsOnePerModuleType() {}
 
 func init() {
-	appconfig.RegisterModule(&modulev1.Module{},
+	appconfig.RegisterModule(
+		&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
+		appconfig.Invoke(InvokeSetSendRestrictions),
 	)
 }
 
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	StoreService store.KVStoreService
-	Logger       log.Logger
+	Config      *modulev1.Module
+	Cdc         codec.Codec
+	Environment appmodule.Environment
 
 	AccountKeeper types.AccountKeeper
 }
@@ -79,14 +83,49 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	bankKeeper := keeper.NewBaseKeeper(
+		in.Environment,
 		in.Cdc,
-		in.StoreService,
 		in.AccountKeeper,
 		blockedAddresses,
 		authStr,
-		in.Logger,
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 
 	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
+}
+
+func InvokeSetSendRestrictions(
+	config *modulev1.Module,
+	keeper keeper.BaseKeeper,
+	restrictions map[string]types.SendRestrictionFn,
+) error {
+	if config == nil {
+		return nil
+	}
+
+	modules := maps.Keys(restrictions)
+	order := config.RestrictionsOrder
+	if len(order) == 0 {
+		order = modules
+		sort.Strings(order)
+	}
+
+	if len(order) != len(modules) {
+		return fmt.Errorf("len(restrictions order: %v) != len(restriction modules: %v)", order, modules)
+	}
+
+	if len(modules) == 0 {
+		return nil
+	}
+
+	for _, module := range order {
+		restriction, ok := restrictions[module]
+		if !ok {
+			return fmt.Errorf("can't find send restriction for module %s", module)
+		}
+
+		keeper.AppendSendRestriction(restriction)
+	}
+
+	return nil
 }

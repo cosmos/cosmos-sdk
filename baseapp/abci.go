@@ -177,7 +177,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
-	defer telemetry.MeasureSince(time.Now(), req.Path)
+	defer telemetry.MeasureSince(telemetry.Now(), req.Path)
 
 	if req.Path == QueryPathBroadcastTx {
 		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil
@@ -1199,7 +1199,7 @@ func checkNegativeHeight(height int64) error {
 	return nil
 }
 
-// createQueryContext creates a new sdk.Context for a query, taking as args
+// CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
 func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
@@ -1242,7 +1242,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	if err != nil {
 		return sdk.Context{},
 			errorsmod.Wrapf(
-				sdkerrors.ErrInvalidRequest,
+				sdkerrors.ErrNotFound,
 				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
 			)
 	}
@@ -1251,14 +1251,19 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	ctx := sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.Context().BlockHeader())
+		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  height,
+		}).
+		WithBlockHeader(app.checkState.Context().BlockHeader())
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)
 		if ok {
 			cInfo, err := rms.GetCommitInfo(height)
 			if cInfo != nil && err == nil {
-				ctx = ctx.WithHeaderInfo(coreheader.Info{Time: cInfo.Timestamp})
+				ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height, Time: cInfo.Timestamp})
 			}
 		}
 	}

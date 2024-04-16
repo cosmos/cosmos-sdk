@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -79,7 +80,7 @@ type ProtoFileResolver interface {
 func NewContext(options Options) (*Context, error) {
 	protoFiles := options.FileResolver
 	if protoFiles == nil {
-		protoFiles = protoregistry.GlobalFiles
+		protoFiles = gogoproto.HybridResolver
 	}
 
 	protoTypes := options.TypeResolver
@@ -221,7 +222,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 			var fieldGetter func(protoreflect.Message, int) ([][]byte, error)
 			fieldGetter = func(msg protoreflect.Message, depth int) ([][]byte, error) {
 				if depth > c.maxRecursionDepth {
-					return nil, fmt.Errorf("maximum recursion depth exceeded")
+					return nil, errors.New("maximum recursion depth exceeded")
 				}
 				desc := msg.Descriptor()
 				signerFields, err := getSignersFieldNames(desc)

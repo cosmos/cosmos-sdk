@@ -930,19 +930,6 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 	}
-
-	// Transaction with an unregistered message
-	{
-		txBuilder := suite.txConfig.NewTxBuilder()
-		err = txBuilder.SetMsgs(&testdata.MsgCreateDog{})
-		require.NoError(t, err)
-		tx := txBuilder.GetTx()
-
-		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
-		space, code, _ := errorsmod.ABCIInfo(err, false)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)
-	}
 }
 
 func TestABCI_TxGasLimits(t *testing.T) {
@@ -1417,7 +1404,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 
 func TestABCI_Proposal_HappyPath(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1595,7 +1582,7 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1625,7 +1612,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 
 func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1652,7 +1639,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
@@ -1693,7 +1680,7 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
@@ -1732,7 +1719,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 
 func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1817,7 +1804,10 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-			err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit)
+			ctx = ctx.WithBlockHeight(req.Height).WithChainID(bapp.ChainID())
+			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
+			ctx = ctx.WithCometInfo(info)
+			err := baseapp.ValidateVoteExtensions(ctx, valStore, req.LocalLastCommit)
 			if err != nil {
 				return nil, err
 			}
@@ -2051,11 +2041,9 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	require.NoError(t, err)
 
 	wasHookCalled := false
-	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
 		wasHookCalled = true
-		return &sdk.ResponsePreBlock{
-			ConsensusParamsChanged: true,
-		}, nil
+		return nil
 	})
 	app.Seal()
 
@@ -2068,8 +2056,8 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	_, err = app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 
-	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-		return nil, errors.New("some error")
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+		return errors.New("some error")
 	})
 	app.Seal()
 
@@ -2124,7 +2112,10 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			txs := [][]byte{}
-			if err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, app.ChainID(), req.LocalLastCommit); err != nil {
+			ctx = ctx.WithBlockHeight(req.Height).WithChainID(app.ChainID())
+			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
+			ctx = ctx.WithCometInfo(info)
+			if err := baseapp.ValidateVoteExtensions(ctx, valStore, req.LocalLastCommit); err != nil {
 				return nil, err
 			}
 			// add all VE as txs (in a real scenario we would need to check signatures too)
@@ -2155,7 +2146,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 		})
 
-		app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
 			count := uint64(0)
 			pricesSum := uint64(0)
 			for _, v := range req.Txs {
@@ -2174,9 +2165,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				ctx.KVStore(capKey1).Set([]byte("avgPrice"), buf)
 			}
 
-			return &sdk.ResponsePreBlock{
-				ConsensusParamsChanged: true,
-			}, nil
+			return nil
 		})
 	}
 

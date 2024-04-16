@@ -3,11 +3,16 @@ package v2_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
+	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/orm"
@@ -17,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,16 +38,18 @@ var (
 )
 
 func TestMigrate(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, groupmodule.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, groupmodule.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(v2.ModuleName)
+	storeService := runtime.NewKVStoreService(storeKey)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
-	oldAccs, accountKeeper := createOldPolicyAccount(ctx, storeKey, cdc, policies)
-	groupPolicyTable, groupPolicySeq, err := createGroupPolicies(ctx, storeKey, cdc, policies)
+	oldAccs, accountKeeper, err := createOldPolicyAccount(ctx, storeKey, cdc, policies)
+	require.NoError(t, err)
+	groupPolicyTable, groupPolicySeq, err := createGroupPolicies(ctx, storeService, cdc, policies, codectestutil.CodecOptions{}.GetAddressCodec())
 	require.NoError(t, err)
 
-	require.NoError(t, v2.Migrate(ctx, storeKey, accountKeeper, groupPolicySeq, groupPolicyTable))
+	require.NoError(t, v2.Migrate(ctx, storeService, accountKeeper, groupPolicySeq, groupPolicyTable))
 	for i, policyAddr := range policies {
 		oldAcc := oldAccs[i]
 		newAcc := accountKeeper.GetAccount(ctx, policyAddr)
@@ -53,45 +61,69 @@ func TestMigrate(t *testing.T) {
 	}
 }
 
-func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) (orm.PrimaryKeyTable, orm.Sequence, error) {
+func createGroupPolicies(ctx sdk.Context, storeService corestore.KVStoreService, cdc codec.Codec, policies []sdk.AccAddress, addressCodec address.Codec) (orm.PrimaryKeyTable, orm.Sequence, error) {
 	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	groupPolicySeq := orm.NewSequence(v2.GroupPolicyTableSeqPrefix)
+	kvStore := storeService.OpenKVStore(ctx)
+
+	authorityStrAddr, err := addressCodec.BytesToString(authorityAddr)
+	if err != nil {
+		return orm.PrimaryKeyTable{}, orm.Sequence{}, err
+	}
 
 	for _, policyAddr := range policies {
-		groupPolicyInfo, err := group.NewGroupPolicyInfo(policyAddr, 1, authorityAddr, "", 1, group.NewPercentageDecisionPolicy("1", 1, 1), ctx.HeaderInfo().Time)
+		policyStrAddr, err := addressCodec.BytesToString(policyAddr)
 		if err != nil {
 			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
 		}
 
-		if err := groupPolicyTable.Create(ctx.KVStore(storeKey), &groupPolicyInfo); err != nil {
+		groupPolicyInfo, err := group.NewGroupPolicyInfo(policyStrAddr, 1, authorityStrAddr, "", 1, group.NewPercentageDecisionPolicy("1", 1, 1), ctx.HeaderInfo().Time)
+		if err != nil {
 			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
 		}
 
-		groupPolicySeq.NextVal(ctx.KVStore(storeKey))
+		if err := groupPolicyTable.Create(kvStore, &groupPolicyInfo); err != nil {
+			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
+		}
+
+		groupPolicySeq.NextVal(kvStore)
 	}
 
 	return *groupPolicyTable, groupPolicySeq, nil
 }
 
 // createOldPolicyAccount re-creates the group policy account using a module account
-func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper) {
-	accountKeeper := authkeeper.NewAccountKeeper(cdc, runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), authtypes.ProtoBaseAccount, nil, addresscodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authorityAddr.String())
+func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper, error) {
+	addressCodec := addresscodec.NewBech32Codec(sdk.Bech32MainPrefix)
+	authorityStrAddr, err := addressCodec.BytesToString(authorityAddr)
+	if err != nil {
+		return nil, nil, err
+	}
+	// gomock initializations
+	ctrl := gomock.NewController(&testing.T{})
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+
+	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, acctsModKeeper, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr)
 
 	oldPolicyAccounts := make([]*authtypes.ModuleAccount, len(policies))
 	for i, policyAddr := range policies {
+		policyStrAddr, err := addressCodec.BytesToString(policyAddr)
+		if err != nil {
+			return nil, nil, err
+		}
 		acc := accountKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
 			BaseAccount: &authtypes.BaseAccount{
-				Address: policyAddr.String(),
+				Address: policyStrAddr,
 			},
-			Name: policyAddr.String(),
+			Name: policyStrAddr,
 		})
 		accountKeeper.SetAccount(ctx, acc)
 		oldPolicyAccounts[i] = acc.(*authtypes.ModuleAccount)
 	}
 
-	return oldPolicyAccounts, accountKeeper
+	return oldPolicyAccounts, accountKeeper, nil
 }

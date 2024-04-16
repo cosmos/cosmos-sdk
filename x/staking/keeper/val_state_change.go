@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"sort"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -22,7 +22,7 @@ import (
 
 // BlockValidatorUpdates calculates the ValidatorUpdates for the current block
 // Called in each EndBlock
-func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
@@ -43,9 +43,9 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 		return nil, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	time := k.environment.HeaderService.GetHeaderInfo(ctx).Time
 	// Remove all mature unbonding delegations from the ubd queue.
-	matureUnbonds, err := k.DequeueAllMatureUBDQueue(ctx, sdkCtx.HeaderInfo().Time)
+	matureUnbonds, err := k.DequeueAllMatureUBDQueue(ctx, time)
 	if err != nil {
 		return nil, err
 	}
@@ -65,18 +65,18 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 			continue
 		}
 
-		sdkCtx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeCompleteUnbonding,
-				sdk.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
-				sdk.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress),
-				sdk.NewAttribute(types.AttributeKeyDelegator, dvPair.DelegatorAddress),
-			),
-		)
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+			types.EventTypeCompleteUnbonding,
+			event.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
+			event.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress),
+			event.NewAttribute(types.AttributeKeyDelegator, dvPair.DelegatorAddress),
+		); err != nil {
+			return nil, err
+		}
 	}
 
 	// Remove all mature redelegations from the red queue.
-	matureRedelegations, err := k.DequeueAllMatureRedelegationQueue(ctx, sdkCtx.HeaderInfo().Time)
+	matureRedelegations, err := k.DequeueAllMatureRedelegationQueue(ctx, time)
 	if err != nil {
 		return nil, err
 	}
@@ -105,18 +105,18 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 			continue
 		}
 
-		sdkCtx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeCompleteRedelegation,
-				sdk.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
-				sdk.NewAttribute(types.AttributeKeyDelegator, dvvTriplet.DelegatorAddress),
-				sdk.NewAttribute(types.AttributeKeySrcValidator, dvvTriplet.ValidatorSrcAddress),
-				sdk.NewAttribute(types.AttributeKeyDstValidator, dvvTriplet.ValidatorDstAddress),
-			),
-		)
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+			types.EventTypeCompleteRedelegation,
+			event.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
+			event.NewAttribute(types.AttributeKeyDelegator, dvvTriplet.DelegatorAddress),
+			event.NewAttribute(types.AttributeKeySrcValidator, dvvTriplet.ValidatorSrcAddress),
+			event.NewAttribute(types.AttributeKeyDstValidator, dvvTriplet.ValidatorDstAddress),
+		); err != nil {
+			return nil, err
+		}
 	}
 
-	err = k.PurgeAllMaturedConsKeyRotatedKeys(sdkCtx, sdkCtx.HeaderInfo().Time)
+	err = k.PurgeAllMaturedConsKeyRotatedKeys(ctx, time)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
 // are returned to CometBFT.
-func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates []abci.ValidatorUpdate, err error) {
+func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -161,6 +161,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	}
 	defer iterator.Close()
 
+	var updates []appmodule.ValidatorUpdate
 	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 		// everything that is iterated in this loop is becoming or already a
 		// part of the bonded validator set
@@ -211,8 +212,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
-			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
-
+			updates = append(updates, validator.ModuleValidatorUpdate(powerReduction))
 			if err = k.SetLastValidatorPower(ctx, valAddr, newPower); err != nil {
 				return nil, err
 			}
@@ -247,7 +247,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			return nil, err
 		}
 
-		updates = append(updates, validator.ABCIValidatorUpdateZero())
+		updates = append(updates, validator.ModuleValidatorUpdateZero())
 	}
 
 	// ApplyAndReturnValidatorSetUpdates checks if there is ConsPubKeyRotationHistory
@@ -260,10 +260,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 	for _, history := range historyObjects {
 		valAddr := history.OperatorAddress
-		if err != nil {
-			return nil, err
-		}
-
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
 			return nil, err
@@ -273,32 +269,26 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if !ok {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
 		}
-		oldCmtPk, err := cryptocodec.ToCmtProtoPublicKey(oldPk)
-		if err != nil {
-			return nil, err
-		}
 
 		newPk, ok := history.NewConsPubkey.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
-		}
-		newCmtPk, err := cryptocodec.ToCmtProtoPublicKey(newPk)
-		if err != nil {
-			return nil, err
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPk)
 		}
 
 		// a validator cannot rotate keys if it's not bonded or if it's jailed
 		// - a validator can be unbonding state but jailed status false
 		// - a validator can be jailed and status can be unbonding
 		if !(validator.Jailed || validator.Status != types.Bonded) {
-			updates = append(updates, abci.ValidatorUpdate{
-				PubKey: oldCmtPk,
-				Power:  0,
+			updates = append(updates, appmodule.ValidatorUpdate{
+				PubKey:     oldPk.Bytes(),
+				PubKeyType: oldPk.Type(),
+				Power:      0,
 			})
 
-			updates = append(updates, abci.ValidatorUpdate{
-				PubKey: newCmtPk,
-				Power:  validator.ConsensusPower(powerReduction),
+			updates = append(updates, appmodule.ValidatorUpdate{
+				PubKey:     newPk.Bytes(),
+				PubKeyType: newPk.Type(),
+				Power:      validator.ConsensusPower(powerReduction),
 			})
 
 			if err := k.updateToNewPubkey(ctx, validator, history.OldConsPubkey, history.NewConsPubkey, history.Fee); err != nil {
@@ -331,12 +321,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if err = k.LastTotalPower.Set(ctx, totalPower); err != nil {
 			return nil, err
 		}
-	}
-
-	valUpdates := types.ValidatorUpdates{Updates: updates}
-	// set the list of validator updates
-	if err = k.ValidatorUpdates.Set(ctx, valUpdates); err != nil {
-		return nil, err
 	}
 
 	return updates, err
@@ -470,10 +454,10 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 
 	validator = validator.UpdateStatus(types.Unbonding)
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
 	// set the unbonding completion time and completion height appropriately
-	validator.UnbondingTime = sdkCtx.HeaderInfo().Time.Add(params.UnbondingTime)
-	validator.UnbondingHeight = sdkCtx.HeaderInfo().Height
+	validator.UnbondingTime = headerInfo.Time.Add(params.UnbondingTime)
+	validator.UnbondingHeight = headerInfo.Height
 
 	validator.UnbondingIds = append(validator.UnbondingIds, id)
 

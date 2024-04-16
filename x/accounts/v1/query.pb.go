@@ -6,9 +6,9 @@ package v1
 import (
 	context "context"
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -33,7 +33,7 @@ type AccountQueryRequest struct {
 	// target defines the account to be queried.
 	Target string `protobuf:"bytes,1,opt,name=target,proto3" json:"target,omitempty"`
 	// request defines the query message being sent to the account.
-	Request *types.Any `protobuf:"bytes,2,opt,name=request,proto3" json:"request,omitempty"`
+	Request *any.Any `protobuf:"bytes,2,opt,name=request,proto3" json:"request,omitempty"`
 }
 
 func (m *AccountQueryRequest) Reset()         { *m = AccountQueryRequest{} }
@@ -76,7 +76,7 @@ func (m *AccountQueryRequest) GetTarget() string {
 	return ""
 }
 
-func (m *AccountQueryRequest) GetRequest() *types.Any {
+func (m *AccountQueryRequest) GetRequest() *any.Any {
 	if m != nil {
 		return m.Request
 	}
@@ -86,7 +86,7 @@ func (m *AccountQueryRequest) GetRequest() *types.Any {
 // AccountQueryResponse is the response type for the Query/AccountQuery RPC method.
 type AccountQueryResponse struct {
 	// response defines the query response of the account.
-	Response *types.Any `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	Response *any.Any `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
 }
 
 func (m *AccountQueryResponse) Reset()         { *m = AccountQueryResponse{} }
@@ -122,7 +122,7 @@ func (m *AccountQueryResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AccountQueryResponse proto.InternalMessageInfo
 
-func (m *AccountQueryResponse) GetResponse() *types.Any {
+func (m *AccountQueryResponse) GetResponse() *any.Any {
 	if m != nil {
 		return m.Response
 	}
@@ -481,110 +481,6 @@ func (m *AccountNumberResponse) GetNumber() uint64 {
 	return 0
 }
 
-// SimulateUserOperationRequest is the query request used to simulate a
-// UserOperation.
-type SimulateUserOperationRequest struct {
-	// bundler can be filled to simulate the address of the bundler.
-	Bundler string `protobuf:"bytes,1,opt,name=bundler,proto3" json:"bundler,omitempty"`
-	// user_operation defines the user operation that we want to simulate.
-	// Gas limit fields are ignored.
-	UserOperation *UserOperation `protobuf:"bytes,2,opt,name=user_operation,json=userOperation,proto3" json:"user_operation,omitempty"`
-}
-
-func (m *SimulateUserOperationRequest) Reset()         { *m = SimulateUserOperationRequest{} }
-func (m *SimulateUserOperationRequest) String() string { return proto.CompactTextString(m) }
-func (*SimulateUserOperationRequest) ProtoMessage()    {}
-func (*SimulateUserOperationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_16ad14c22e3080d2, []int{8}
-}
-func (m *SimulateUserOperationRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *SimulateUserOperationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_SimulateUserOperationRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *SimulateUserOperationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SimulateUserOperationRequest.Merge(m, src)
-}
-func (m *SimulateUserOperationRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *SimulateUserOperationRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_SimulateUserOperationRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_SimulateUserOperationRequest proto.InternalMessageInfo
-
-func (m *SimulateUserOperationRequest) GetBundler() string {
-	if m != nil {
-		return m.Bundler
-	}
-	return ""
-}
-
-func (m *SimulateUserOperationRequest) GetUserOperation() *UserOperation {
-	if m != nil {
-		return m.UserOperation
-	}
-	return nil
-}
-
-// SimulateUserOperationResponse is the query response returned by the simulation.
-// It will populate the gas limits fields.
-type SimulateUserOperationResponse struct {
-	// UserOperationResponse is the response of the simulation.
-	UserOperationResponse *UserOperationResponse `protobuf:"bytes,1,opt,name=user_operation_response,json=userOperationResponse,proto3" json:"user_operation_response,omitempty"`
-}
-
-func (m *SimulateUserOperationResponse) Reset()         { *m = SimulateUserOperationResponse{} }
-func (m *SimulateUserOperationResponse) String() string { return proto.CompactTextString(m) }
-func (*SimulateUserOperationResponse) ProtoMessage()    {}
-func (*SimulateUserOperationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_16ad14c22e3080d2, []int{9}
-}
-func (m *SimulateUserOperationResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *SimulateUserOperationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_SimulateUserOperationResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *SimulateUserOperationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SimulateUserOperationResponse.Merge(m, src)
-}
-func (m *SimulateUserOperationResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *SimulateUserOperationResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_SimulateUserOperationResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_SimulateUserOperationResponse proto.InternalMessageInfo
-
-func (m *SimulateUserOperationResponse) GetUserOperationResponse() *UserOperationResponse {
-	if m != nil {
-		return m.UserOperationResponse
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*AccountQueryRequest)(nil), "cosmos.accounts.v1.AccountQueryRequest")
 	proto.RegisterType((*AccountQueryResponse)(nil), "cosmos.accounts.v1.AccountQueryResponse")
@@ -595,52 +491,44 @@ func init() {
 	proto.RegisterType((*AccountTypeResponse)(nil), "cosmos.accounts.v1.AccountTypeResponse")
 	proto.RegisterType((*AccountNumberRequest)(nil), "cosmos.accounts.v1.AccountNumberRequest")
 	proto.RegisterType((*AccountNumberResponse)(nil), "cosmos.accounts.v1.AccountNumberResponse")
-	proto.RegisterType((*SimulateUserOperationRequest)(nil), "cosmos.accounts.v1.SimulateUserOperationRequest")
-	proto.RegisterType((*SimulateUserOperationResponse)(nil), "cosmos.accounts.v1.SimulateUserOperationResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/accounts/v1/query.proto", fileDescriptor_16ad14c22e3080d2) }
 
 var fileDescriptor_16ad14c22e3080d2 = []byte{
-	// 608 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xcf, 0x6f, 0x12, 0x41,
-	0x14, 0x66, 0x69, 0xa5, 0xfa, 0x28, 0xd5, 0x8c, 0xa5, 0xe2, 0x46, 0x37, 0xb0, 0x07, 0x4b, 0x8d,
-	0x99, 0x05, 0xf4, 0xe0, 0xcd, 0xe0, 0x89, 0xc4, 0x44, 0xc3, 0xd6, 0x5e, 0x4c, 0x0c, 0x2e, 0xcb,
-	0x94, 0x12, 0x61, 0x97, 0xce, 0xec, 0x34, 0xe5, 0xe2, 0xc1, 0x9b, 0x37, 0xff, 0xac, 0x1e, 0x7b,
-	0xf4, 0x68, 0xe0, 0x1f, 0x31, 0xcc, 0x0f, 0xd8, 0xad, 0x5b, 0x28, 0xb7, 0x79, 0xf3, 0xde, 0xfb,
-	0xbe, 0xb7, 0xef, 0x7d, 0x6f, 0x16, 0x2c, 0x3f, 0x64, 0xa3, 0x90, 0x39, 0x9e, 0xef, 0x87, 0x3c,
-	0x88, 0x98, 0x73, 0x51, 0x77, 0xce, 0x39, 0xa1, 0x13, 0x3c, 0xa6, 0x61, 0x14, 0x22, 0x24, 0xfd,
-	0x58, 0xfb, 0xf1, 0x45, 0xdd, 0x7c, 0xda, 0x0f, 0xc3, 0xfe, 0x90, 0x38, 0x22, 0xa2, 0xcb, 0x4f,
-	0x1d, 0x2f, 0x50, 0xe1, 0xe6, 0xab, 0x14, 0x38, 0x75, 0xee, 0x78, 0x5d, 0x16, 0x51, 0xcf, 0x8f,
-	0x06, 0x61, 0x20, 0xa3, 0xed, 0xaf, 0xf0, 0xb8, 0x29, 0x9d, 0xed, 0x39, 0xa5, 0x4b, 0xce, 0x39,
-	0x61, 0x11, 0x3a, 0x80, 0x5c, 0xe4, 0xd1, 0x3e, 0x89, 0x4a, 0x46, 0xd9, 0xa8, 0x3e, 0x70, 0x95,
-	0x85, 0x30, 0xec, 0x50, 0x19, 0x52, 0xca, 0x96, 0x8d, 0x6a, 0xbe, 0xb1, 0x8f, 0x65, 0x25, 0x58,
-	0x57, 0x82, 0x9b, 0xc1, 0xc4, 0xd5, 0x41, 0x76, 0x0b, 0xf6, 0x93, 0xf0, 0x6c, 0x1c, 0x06, 0x8c,
-	0xa0, 0x1a, 0xdc, 0xa7, 0xea, 0x2c, 0x18, 0x6e, 0x03, 0x5a, 0x44, 0xd9, 0x0d, 0x28, 0x1c, 0xfb,
-	0x67, 0x64, 0xe4, 0xe9, 0x12, 0x2b, 0xb0, 0xab, 0x3f, 0x2b, 0x9a, 0x8c, 0x89, 0x2a, 0x34, 0xaf,
-	0xee, 0x3e, 0x4f, 0xc6, 0xc4, 0xbe, 0xca, 0xc2, 0x9e, 0x4e, 0x52, 0xc4, 0x1f, 0x20, 0x3f, 0x08,
-	0x06, 0x51, 0x87, 0x89, 0x6b, 0xc5, 0xfd, 0x12, 0xff, 0xdf, 0x62, 0x9c, 0x4c, 0xc4, 0x2d, 0x2f,
-	0xe8, 0x0d, 0x09, 0x75, 0x61, 0x9e, 0x2e, 0x7d, 0xe8, 0x04, 0x1e, 0x91, 0x4b, 0xe2, 0xf3, 0x88,
-	0x74, 0xce, 0xa4, 0x9b, 0x95, 0xb2, 0xe5, 0xad, 0x0d, 0x11, 0x1f, 0x2a, 0x0c, 0x65, 0x33, 0xd4,
-	0x86, 0x3d, 0x31, 0xff, 0x25, 0xe8, 0xd6, 0xc6, 0xa0, 0x05, 0x81, 0xa0, 0x21, 0xcd, 0x77, 0xb0,
-	0xa3, 0xce, 0xa8, 0xb4, 0x1c, 0xa1, 0x6c, 0x99, 0x36, 0x91, 0x19, 0x1b, 0x4a, 0x56, 0xb8, 0x96,
-	0xed, 0xc7, 0x80, 0x9a, 0xcb, 0xce, 0xea, 0x19, 0x94, 0x60, 0xc7, 0xeb, 0xf5, 0x28, 0x61, 0x4c,
-	0x63, 0x29, 0xd3, 0x7e, 0xbb, 0xd0, 0x95, 0x8c, 0x57, 0xed, 0xbf, 0xc3, 0xd0, 0x6a, 0x0b, 0xc9,
-	0x7c, 0xe4, 0xa3, 0x2e, 0xa1, 0xeb, 0xb9, 0x1c, 0x28, 0xde, 0xc8, 0x50, 0x6c, 0x07, 0x90, 0x0b,
-	0xc4, 0x8d, 0xc8, 0xd8, 0x76, 0x95, 0x65, 0xff, 0x34, 0xe0, 0xd9, 0xf1, 0x60, 0xc4, 0x87, 0x5e,
-	0x44, 0x4e, 0x18, 0xa1, 0x9f, 0xc6, 0x84, 0x7a, 0xf3, 0xa5, 0x88, 0x71, 0x75, 0xb9, 0x68, 0x97,
-	0xe6, 0x52, 0x26, 0x6a, 0xc1, 0x1e, 0x67, 0x84, 0x76, 0x42, 0x9d, 0xa2, 0xf6, 0xa0, 0x92, 0x36,
-	0x9b, 0x24, 0x76, 0x81, 0xc7, 0xcd, 0x79, 0x11, 0xcf, 0x6f, 0x29, 0x42, 0x95, 0xef, 0xc1, 0x93,
-	0x24, 0x57, 0xe7, 0xc6, 0xce, 0x1c, 0xad, 0x27, 0x55, 0x09, 0x6e, 0x91, 0xa7, 0x5d, 0x37, 0x7e,
-	0x6d, 0xc3, 0x3d, 0xb1, 0x99, 0xc8, 0x87, 0xdd, 0xf8, 0xa6, 0xa2, 0xc3, 0x34, 0xec, 0x94, 0xa7,
-	0xc2, 0xac, 0xae, 0x0f, 0x54, 0x1a, 0xca, 0xa0, 0x36, 0xe4, 0xd4, 0xea, 0x54, 0x56, 0x69, 0x59,
-	0x02, 0xdb, 0xeb, 0xe5, 0x6e, 0x67, 0xd0, 0x37, 0xc8, 0xc7, 0x84, 0x86, 0x5e, 0xac, 0xa8, 0x26,
-	0xa6, 0x5c, 0xf3, 0x70, 0x6d, 0xdc, 0x82, 0xe1, 0x14, 0x0a, 0x09, 0x79, 0xa1, 0x55, 0x5f, 0x9c,
-	0xd0, 0xac, 0x79, 0x74, 0x87, 0xc8, 0x05, 0xcf, 0x0f, 0x28, 0xa6, 0xea, 0x01, 0xd5, 0x52, 0x1b,
-	0xb1, 0x42, 0xbf, 0x66, 0x7d, 0x83, 0x0c, 0xcd, 0xff, 0xfe, 0xcd, 0xd5, 0xd4, 0x32, 0xae, 0xa7,
-	0x96, 0xf1, 0x77, 0x6a, 0x19, 0xbf, 0x67, 0x56, 0xe6, 0x7a, 0x66, 0x65, 0xfe, 0xcc, 0xac, 0xcc,
-	0x17, 0x53, 0xa2, 0xb1, 0xde, 0x77, 0x3c, 0x08, 0x9d, 0xcb, 0xf8, 0xaf, 0xa5, 0x9b, 0x13, 0xef,
-	0xf5, 0xeb, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xcd, 0xc0, 0xe6, 0x63, 0xc6, 0x06, 0x00, 0x00,
+	// 497 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0xb5, 0x13, 0x48, 0x60, 0xd2, 0x14, 0x34, 0x94, 0xca, 0xf8, 0x60, 0xa5, 0x3e, 0xd0, 0xc0,
+	0x61, 0xdd, 0x06, 0x0e, 0xdc, 0x50, 0x38, 0x55, 0x42, 0x42, 0x8a, 0x81, 0x0b, 0x12, 0x0a, 0x8e,
+	0xb3, 0x4d, 0x23, 0x1a, 0x6f, 0xea, 0xb5, 0xab, 0xe6, 0x13, 0xb8, 0xf1, 0x59, 0x3d, 0xf6, 0xc8,
+	0x11, 0x25, 0x3f, 0x82, 0xba, 0x3b, 0x9b, 0x38, 0x50, 0xe2, 0xf6, 0xe6, 0xd9, 0x79, 0xf3, 0xde,
+	0xfa, 0xbd, 0xb1, 0xc1, 0x8b, 0x85, 0x9c, 0x08, 0x19, 0x44, 0x71, 0x2c, 0xf2, 0x24, 0x93, 0xc1,
+	0xf9, 0x61, 0x70, 0x96, 0xf3, 0x74, 0xc6, 0xa6, 0xa9, 0xc8, 0x04, 0xa2, 0xee, 0x33, 0xd3, 0x67,
+	0xe7, 0x87, 0xee, 0xb3, 0x91, 0x10, 0xa3, 0x53, 0x1e, 0x28, 0xc4, 0x20, 0x3f, 0x0e, 0xa2, 0x84,
+	0xe0, 0xfe, 0x57, 0x78, 0xd2, 0xd5, 0xc8, 0xde, 0x35, 0x49, 0xc8, 0xcf, 0x72, 0x2e, 0x33, 0xdc,
+	0x85, 0x5a, 0x16, 0xa5, 0x23, 0x9e, 0x39, 0x76, 0xcb, 0x6e, 0x3f, 0x0c, 0xa9, 0x42, 0x06, 0xf5,
+	0x54, 0x43, 0x9c, 0x4a, 0xcb, 0x6e, 0x37, 0x3a, 0x3b, 0x4c, 0x73, 0x33, 0xc3, 0xcd, 0xba, 0xc9,
+	0x2c, 0x34, 0x20, 0xff, 0x08, 0x76, 0xd6, 0xe9, 0xe5, 0x54, 0x24, 0x92, 0xe3, 0x01, 0x3c, 0x48,
+	0xe9, 0x59, 0x29, 0xfc, 0x8f, 0x68, 0x89, 0xf2, 0x3b, 0xd0, 0xfc, 0x18, 0x9f, 0xf0, 0x49, 0x64,
+	0xae, 0xb8, 0x07, 0x5b, 0xf4, 0x8e, 0xfd, 0x6c, 0x36, 0xe5, 0x74, 0xd1, 0x06, 0x9d, 0x7d, 0x9a,
+	0x4d, 0xb9, 0x7f, 0x59, 0x81, 0x6d, 0x33, 0x44, 0xc2, 0xef, 0xa1, 0x31, 0x4e, 0xc6, 0x59, 0x5f,
+	0xaa, 0x63, 0xd2, 0x7e, 0xc9, 0xfe, 0x35, 0x8d, 0xad, 0x0f, 0xb2, 0xa3, 0x28, 0x19, 0x9e, 0xf2,
+	0x34, 0x84, 0xeb, 0x71, 0xdd, 0xc3, 0xcf, 0xf0, 0x98, 0x5f, 0xf0, 0x38, 0xcf, 0x78, 0xff, 0x44,
+	0xb7, 0xa5, 0x53, 0x69, 0x55, 0xef, 0xc8, 0xf8, 0x88, 0x38, 0xa8, 0x96, 0xd8, 0x83, 0x6d, 0x95,
+	0xe8, 0x8a, 0xb4, 0x7a, 0x67, 0xd2, 0xa6, 0x62, 0x30, 0x94, 0xee, 0x5b, 0xa8, 0xd3, 0x33, 0x3a,
+	0xab, 0x08, 0xb5, 0x65, 0xa6, 0x44, 0xb7, 0x10, 0x4a, 0x45, 0xb5, 0x56, 0xf6, 0x33, 0xc0, 0xee,
+	0xca, 0x59, 0x93, 0x81, 0x03, 0xf5, 0x68, 0x38, 0x4c, 0xb9, 0x94, 0x86, 0x8b, 0x4a, 0xff, 0xcd,
+	0x72, 0xaf, 0x34, 0x9e, 0xec, 0xbf, 0x45, 0x68, 0x07, 0xcb, 0x95, 0xf9, 0x90, 0x4f, 0x06, 0x3c,
+	0x2d, 0xd7, 0x0a, 0xe0, 0xe9, 0x5f, 0x13, 0xa4, 0xb6, 0x0b, 0xb5, 0x44, 0x9d, 0xa8, 0x89, 0x7b,
+	0x21, 0x55, 0x9d, 0x1f, 0x55, 0xb8, 0xaf, 0xf6, 0x11, 0x63, 0xd8, 0x2a, 0xee, 0x27, 0xee, 0xdf,
+	0x64, 0xf1, 0x0d, 0x1f, 0x88, 0xdb, 0x2e, 0x07, 0x92, 0x73, 0x16, 0xf6, 0xa0, 0x46, 0x0b, 0xb3,
+	0xb7, 0x29, 0x41, 0x4d, 0xec, 0x97, 0x87, 0xec, 0x5b, 0xf8, 0x0d, 0x1a, 0x05, 0x7b, 0xf1, 0xf9,
+	0x86, 0xdb, 0x14, 0xf2, 0x72, 0xf7, 0x4b, 0x71, 0x4b, 0x85, 0x63, 0x68, 0xae, 0x99, 0x8a, 0x9b,
+	0xde, 0x78, 0x2d, 0x29, 0xf7, 0xc5, 0x2d, 0x90, 0x46, 0xe7, 0xdd, 0xeb, 0xcb, 0xb9, 0x67, 0x5f,
+	0xcd, 0x3d, 0xfb, 0xf7, 0xdc, 0xb3, 0x7f, 0x2e, 0x3c, 0xeb, 0x6a, 0xe1, 0x59, 0xbf, 0x16, 0x9e,
+	0xf5, 0xc5, 0xd5, 0x2c, 0x72, 0xf8, 0x9d, 0x8d, 0x45, 0x70, 0x51, 0xfc, 0xe3, 0x0d, 0x6a, 0xea,
+	0x2f, 0xf1, 0xea, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xea, 0x75, 0x93, 0xfa, 0x0e, 0x05, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -663,8 +551,6 @@ type QueryClient interface {
 	AccountType(ctx context.Context, in *AccountTypeRequest, opts ...grpc.CallOption) (*AccountTypeResponse, error)
 	// AccountNumber returns the account number given the account address.
 	AccountNumber(ctx context.Context, in *AccountNumberRequest, opts ...grpc.CallOption) (*AccountNumberResponse, error)
-	// SimulateUserOperation simulates a user operation.
-	SimulateUserOperation(ctx context.Context, in *SimulateUserOperationRequest, opts ...grpc.CallOption) (*SimulateUserOperationResponse, error)
 }
 
 type queryClient struct {
@@ -711,15 +597,6 @@ func (c *queryClient) AccountNumber(ctx context.Context, in *AccountNumberReques
 	return out, nil
 }
 
-func (c *queryClient) SimulateUserOperation(ctx context.Context, in *SimulateUserOperationRequest, opts ...grpc.CallOption) (*SimulateUserOperationResponse, error) {
-	out := new(SimulateUserOperationResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.accounts.v1.Query/SimulateUserOperation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// AccountQuery runs an account query.
@@ -730,8 +607,6 @@ type QueryServer interface {
 	AccountType(context.Context, *AccountTypeRequest) (*AccountTypeResponse, error)
 	// AccountNumber returns the account number given the account address.
 	AccountNumber(context.Context, *AccountNumberRequest) (*AccountNumberResponse, error)
-	// SimulateUserOperation simulates a user operation.
-	SimulateUserOperation(context.Context, *SimulateUserOperationRequest) (*SimulateUserOperationResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -749,9 +624,6 @@ func (*UnimplementedQueryServer) AccountType(ctx context.Context, req *AccountTy
 }
 func (*UnimplementedQueryServer) AccountNumber(ctx context.Context, req *AccountNumberRequest) (*AccountNumberResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccountNumber not implemented")
-}
-func (*UnimplementedQueryServer) SimulateUserOperation(ctx context.Context, req *SimulateUserOperationRequest) (*SimulateUserOperationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SimulateUserOperation not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -830,24 +702,6 @@ func _Query_AccountNumber_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_SimulateUserOperation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SimulateUserOperationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).SimulateUserOperation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.accounts.v1.Query/SimulateUserOperation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).SimulateUserOperation(ctx, req.(*SimulateUserOperationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.accounts.v1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -867,10 +721,6 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AccountNumber",
 			Handler:    _Query_AccountNumber_Handler,
-		},
-		{
-			MethodName: "SimulateUserOperation",
-			Handler:    _Query_SimulateUserOperation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1202,83 +1052,6 @@ func (m *AccountNumberResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SimulateUserOperationRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SimulateUserOperationRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *SimulateUserOperationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.UserOperation != nil {
-		{
-			size, err := m.UserOperation.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Bundler) > 0 {
-		i -= len(m.Bundler)
-		copy(dAtA[i:], m.Bundler)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Bundler)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *SimulateUserOperationResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SimulateUserOperationResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *SimulateUserOperationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.UserOperationResponse != nil {
-		{
-			size, err := m.UserOperationResponse.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1426,36 +1199,6 @@ func (m *AccountNumberResponse) Size() (n int) {
 	return n
 }
 
-func (m *SimulateUserOperationRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Bundler)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	if m.UserOperation != nil {
-		l = m.UserOperation.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *SimulateUserOperationResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.UserOperationResponse != nil {
-		l = m.UserOperationResponse.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func sovQuery(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -1553,7 +1296,7 @@ func (m *AccountQueryRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Request == nil {
-				m.Request = &types.Any{}
+				m.Request = &any.Any{}
 			}
 			if err := m.Request.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1639,7 +1382,7 @@ func (m *AccountQueryResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Response == nil {
-				m.Response = &types.Any{}
+				m.Response = &any.Any{}
 			}
 			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2310,210 +2053,6 @@ func (m *AccountNumberResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SimulateUserOperationRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SimulateUserOperationRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SimulateUserOperationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bundler", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Bundler = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserOperation", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.UserOperation == nil {
-				m.UserOperation = &UserOperation{}
-			}
-			if err := m.UserOperation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SimulateUserOperationResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SimulateUserOperationResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SimulateUserOperationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserOperationResponse", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.UserOperationResponse == nil {
-				m.UserOperationResponse = &UserOperationResponse{}
-			}
-			if err := m.UserOperationResponse.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

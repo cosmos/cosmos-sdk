@@ -34,21 +34,14 @@ func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrant
 		return nil, err
 	}
 
-	// create the account if it is not in account state
-	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
-	if granteeAcc == nil {
-		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
-		k.authKeeper.SetAccount(ctx, granteeAcc)
-	}
-
 	authorization, err := msg.GetAuthorization()
 	if err != nil {
 		return nil, err
 	}
 
 	t := authorization.MsgTypeURL()
-	if k.router.HandlerByTypeURL(t) == nil {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist.", t)
+	if err := k.environment.RouterService.MessageRouterService().CanInvoke(ctx, t); err != nil {
+		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist", t)
 	}
 
 	err = k.SaveGrant(ctx, grantee, granter, authorization, msg.Grant.Expiration)
@@ -124,8 +117,9 @@ func (k Keeper) PruneExpiredGrants(ctx context.Context, msg *authz.MsgPruneExpir
 		return nil, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	_ = sdkCtx.EventManager().EmitTypedEvent(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner})
+	if err := k.environment.EventService.EventManager(ctx).Emit(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner}); err != nil {
+		return nil, err
+	}
 
 	return &authz.MsgPruneExpiredGrantsResponse{}, nil
 }

@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/mint/simulation"
 	"cosmossdk.io/x/mint/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -21,20 +22,23 @@ import (
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, mint.AppModule{})
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
-		AppParams:    make(simtypes.AppParams),
-		Cdc:          encCfg.Codec,
-		Rand:         r,
-		NumBonded:    3,
-		BondDenom:    sdk.DefaultBondDenom,
-		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: math.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		AppParams:      make(simtypes.AppParams),
+		Cdc:            encCfg.Codec,
+		AddressCodec:   cdcOpts.GetAddressCodec(),
+		ValidatorCodec: cdcOpts.GetValidatorCodec(),
+		Rand:           r,
+		NumBonded:      3,
+		BondDenom:      sdk.DefaultBondDenom,
+		Accounts:       simtypes.RandomAccounts(r, 3),
+		InitialStake:   math.NewInt(1000),
+		GenState:       make(map[string]json.RawMessage),
 	}
 
 	simulation.RandomizedGenState(&simState)
@@ -60,7 +64,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 
 	s := rand.NewSource(1)
 	r := rand.New(s)

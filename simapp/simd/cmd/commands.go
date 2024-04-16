@@ -23,8 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,28 +33,26 @@ import (
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	interfaceRegistry codectypes.InterfaceRegistry,
-	appCodec codec.Codec,
-	basicManager module.BasicManager,
+	moduleManager *module.Manager,
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(basicManager),
-		NewTestnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
+		genutilcli.InitCmd(moduleManager),
+		NewTestnetCmd(moduleManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		pruning.Cmd(newApp),
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, newApp, func(startCmd *cobra.Command) {})
+	server.AddCommands(rootCmd, newApp, server.StartCmdOptions[servertypes.Application]{})
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		genesisCommand(txConfig, basicManager, appExport),
+		genesisCommand(txConfig, moduleManager, appExport),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -65,8 +61,8 @@ func initRootCmd(
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, appExport servertypes.AppExporter, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(txConfig, basicManager, appExport)
+func genesisCommand(txConfig client.TxConfig, moduleManager *module.Manager, appExport servertypes.AppExporter, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genutilcli.Commands(txConfig, moduleManager, appExport)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
@@ -85,7 +81,7 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		rpc.QueryEventForTxCmd(),
+		rpc.WaitTxCmd(),
 		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		server.QueryBlocksCmd(),

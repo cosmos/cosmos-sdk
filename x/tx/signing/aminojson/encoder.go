@@ -75,9 +75,30 @@ func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) er
 			_, err := io.WriteString(w, "[]")
 			return err
 		}
-		return enc.marshalList(list, w)
+		return enc.marshalList(list, nil /* no field descriptor available here */, w)
 	default:
 		return fmt.Errorf("unsupported type %T", list)
+	}
+}
+
+// cosmosInlineJSON takes bytes and inlines them into a JSON document.
+//
+// This requires the bytes contain valid JSON since otherwise the resulting document would be invalid.
+// Invalid JSON will result in an error.
+//
+// This replicates the behavior of JSON messages embedded in protobuf bytes
+// required for CosmWasm, e.g.:
+// https://github.com/CosmWasm/wasmd/blob/08567ff20e372e4f4204a91ca64a371538742bed/x/wasm/types/tx.go#L20-L22
+func cosmosInlineJSON(_ *Encoder, v protoreflect.Value, w io.Writer) error {
+	switch bz := v.Interface().(type) {
+	case []byte:
+		if !json.Valid(bz) {
+			return errors.New("invalid JSON bytes")
+		}
+		_, err := w.Write(bz)
+		return err
+	default:
+		return fmt.Errorf("unsupported type %T", bz)
 	}
 }
 
@@ -161,7 +182,7 @@ func thresholdStringEncoder(enc *Encoder, msg protoreflect.Message, w io.Writer)
 	pubkeysField := fields.ByName("public_keys")
 	pubkeys := msg.Get(pubkeysField).List()
 
-	err = enc.marshalList(pubkeys, w)
+	err = enc.marshalList(pubkeys, pubkeysField, w)
 	if err != nil {
 		return err
 	}

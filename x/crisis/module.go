@@ -4,18 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -25,67 +21,27 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.AppModuleBasic = AppModule{}
-	_ module.HasGenesis     = AppModule{}
+	_ module.HasName       = AppModule{}
+	_ module.HasAminoCodec = AppModule{}
 
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasEndBlocker         = AppModule{}
+	_ appmodule.HasServices           = AppModule{}
+	_ appmodule.HasMigrations         = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.HasGenesis            = AppModule{}
 )
 
 // Module init related flags
-const (
-	FlagSkipGenesisInvariants = "x-crisis-skip-assert-invariants"
-)
-
-// AppModuleBasic defines the basic application module used by the crisis module.
-type AppModuleBasic struct{}
-
-// Name returns the crisis module's name.
-func (AppModuleBasic) Name() string {
-	return types.ModuleName
-}
-
-// RegisterLegacyAminoCodec registers the crisis module's types on the given LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the crisis
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the crisis module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return types.ValidateGenesis(&data)
-}
-
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the crisis module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {}
-
-// RegisterInterfaces registers interfaces and implementations of the crisis
-// module.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
-}
+const FlagSkipGenesisInvariants = "x-crisis-skip-assert-invariants"
 
 // AppModule implements an application module for the crisis module.
 type AppModule struct {
-	AppModuleBasic
-
 	// NOTE: We store a reference to the keeper here so that after a module
 	// manager is created, the invariants can be properly registered and
 	// executed.
-	keeper *keeper.Keeper
-
+	keeper                *keeper.Keeper
+	cdc                   codec.Codec
 	skipGenesisInvariants bool
 }
 
@@ -93,17 +49,32 @@ type AppModule struct {
 // we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
 // - which doesn't impact the chain security unless 66+% of validators have a wrongly
 // modified genesis file.
-func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
+func NewAppModule(keeper *keeper.Keeper, cdc codec.Codec, skipGenesisInvariants bool) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		keeper:         keeper,
-
+		keeper:                keeper,
 		skipGenesisInvariants: skipGenesisInvariants,
+		cdc:                   cdc,
 	}
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
+
+// Name returns the crisis module's name.
+func (AppModule) Name() string {
+	return types.ModuleName
+}
+
+// RegisterLegacyAminoCodec registers the crisis module's types on the given LegacyAmino codec.
+func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
+
+// RegisterInterfaces registers interfaces and implementations of the crisis
+// module.
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
+}
 
 // AddModuleInitFlags implements servertypes.ModuleInitFlags interface.
 func AddModuleInitFlags(startCmd *cobra.Command) {
@@ -117,6 +88,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
+// RegisterMigrations registers the crisis module migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 
@@ -127,28 +99,45 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	return nil
 }
 
-// InitGenesis performs genesis initialization for the crisis module. It returns
-// no validator updates.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	start := time.Now()
+// DefaultGenesis returns default genesis state as raw bytes for the crisis module.
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the crisis module.
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
+	var data types.GenesisState
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(&data)
+}
+
+// InitGenesis performs genesis initialization for the crisis module.
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		return err
+	}
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 	if !am.skipGenesisInvariants {
 		am.keeper.AssertInvariants(ctx)
 	}
+	return nil
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the crisis
-// module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx)
-	return cdc.MustMarshalJSON(gs)
+// ExportGenesis returns the exported genesis state as raw bytes for the crisis  module.
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return am.cdc.MarshalJSON(gs)
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the crisis module. It returns no validator

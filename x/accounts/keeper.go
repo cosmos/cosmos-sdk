@@ -8,16 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/branch"
-	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/gas"
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
@@ -40,58 +35,23 @@ var (
 	AccountByNumber = collections.NewPrefix(2)
 )
 
-// coinsTransferMsgFunc defines a function that creates a message to send coins from one
-// address to the other, and also a message that parses such  response.
-// This in most cases will be implemented as a bank.MsgSend creator, but we keep x/accounts independent of bank.
-type coinsTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
-
-// QueryRouter represents a router which can be used to route queries to the correct module.
-// It returns the handler given the message name, if multiple handlers are returned, then
-// it is up to the caller to choose which one to call.
-type QueryRouter interface {
-	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error
-}
-
-// MsgRouter represents a router which can be used to route messages to the correct module.
-type MsgRouter interface {
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
-	ResponseNameByRequestName(name string) string
-}
-
-// SignerProvider defines an interface used to get the expected sender from a message.
-type SignerProvider interface {
-	// GetMsgV1Signers returns the signers of the message.
-	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error)
-}
-
 type InterfaceRegistry interface {
-	RegisterInterface(name string, iface any, impls ...gogoproto.Message)
-	RegisterImplementations(iface any, impls ...gogoproto.Message)
+	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
+	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
 }
 
 func NewKeeper(
-	cdc codec.BinaryCodec,
-	ss store.KVStoreService,
-	es event.Service,
-	hs header.Service,
-	bs branch.Service,
-	gs gas.Service,
+	cdc codec.Codec,
+	env appmodule.Environment,
 	addressCodec address.Codec,
-	signerProvider SignerProvider,
-	execRouter MsgRouter,
-	queryRouter QueryRouter,
 	ir InterfaceRegistry,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
-	sb := collections.NewSchemaBuilder(ss)
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
-		storeService:     ss,
-		eventService:     es,
+		environment:      env,
+		codec:            cdc,
 		addressCodec:     addressCodec,
-		branchExecutor:   bs,
-		msgRouter:        execRouter,
-		signerProvider:   signerProvider,
-		queryRouter:      queryRouter,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
@@ -105,7 +65,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, hs, gs, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}
@@ -115,13 +75,9 @@ func NewKeeper(
 
 type Keeper struct {
 	// deps coming from the runtime
-	storeService     store.KVStoreService
-	eventService     event.Service
+	environment      appmodule.Environment
 	addressCodec     address.Codec
-	branchExecutor   branch.Service
-	msgRouter        MsgRouter
-	signerProvider   SignerProvider
-	queryRouter      QueryRouter
+	codec            codec.Codec
 	makeSendCoinsMsg coinsTransferMsgFunc
 
 	accounts map[string]implementation.Implementation
@@ -142,6 +98,15 @@ type Keeper struct {
 	AccountsState collections.Map[collections.Pair[uint64, []byte], []byte]
 }
 
+// IsAccountsModuleAccount check if an address belong to a smart account.
+func (k Keeper) IsAccountsModuleAccount(
+	ctx context.Context,
+	accountAddr []byte,
+) bool {
+	hasAcc, _ := k.AccountByNumber.Has(ctx, accountAddr)
+	return hasAcc
+}
+
 // Init creates a new account of the given type.
 func (k Keeper) Init(
 	ctx context.Context,
@@ -150,44 +115,75 @@ func (k Keeper) Init(
 	initRequest implementation.ProtoMsg,
 	funds sdk.Coins,
 ) (implementation.ProtoMsg, []byte, error) {
-	impl, err := k.getImplementation(accountType)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	// get the next account number
 	num, err := k.AccountNumber.Next(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// make a new account address
+	// create address
 	accountAddr, err := k.makeAddress(num)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// send funds, if provided
-	err = k.maybeSendFunds(ctx, creator, accountAddr, funds)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to transfer funds: %w", err)
-	}
-	// make the context and init the account
-	ctx = k.makeAccountContext(ctx, num, accountAddr, creator, funds, false)
-	resp, err := impl.Init(ctx, initRequest)
+	initResp, err := k.init(ctx, accountType, creator, num, accountAddr, initRequest, funds)
 	if err != nil {
 		return nil, nil, err
+	}
+	return initResp, accountAddr, nil
+}
+
+// init initializes the account, given the type, the creator the newly created account number, its address and the
+// initialization message.
+func (k Keeper) init(
+	ctx context.Context,
+	accountType string,
+	creator []byte,
+	accountNum uint64,
+	accountAddr []byte,
+	initRequest implementation.ProtoMsg,
+	funds sdk.Coins,
+) (implementation.ProtoMsg, error) {
+	impl, ok := k.accounts[accountType]
+	if !ok {
+		return nil, fmt.Errorf("%w: not found %s", errAccountTypeNotFound, accountType)
+	}
+
+	// send funds, if provided
+	err := k.maybeSendFunds(ctx, creator, accountAddr, funds)
+	if err != nil {
+		return nil, fmt.Errorf("unable to transfer funds: %w", err)
+	}
+	// make the context and init the account
+	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, creator, funds, false)
+	resp, err := impl.Init(ctx, initRequest)
+	if err != nil {
+		return nil, err
 	}
 
 	// map account address to account type
 	if err := k.AccountsByType.Set(ctx, accountAddr, accountType); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// map account number to account address
-	if err := k.AccountByNumber.Set(ctx, accountAddr, num); err != nil {
-		return nil, nil, err
+	if err := k.AccountByNumber.Set(ctx, accountAddr, accountNum); err != nil {
+		return nil, err
 	}
-	return resp, accountAddr, nil
+	return resp, nil
+}
+
+// MigrateLegacyAccount is used to migrate a legacy account to x/accounts.
+// Concretely speaking this works like Init, but with a custom account number provided,
+// Where the creator is the account itself. This can be used by the x/auth module to
+// gradually migrate base accounts to x/accounts.
+// NOTE: this assumes the calling module checks for account overrides.
+func (k Keeper) MigrateLegacyAccount(
+	ctx context.Context,
+	addr []byte, // The current address of the account
+	accNum uint64, // The current account number
+	accType string, // The account type to migrate to
+	msg implementation.ProtoMsg, // The init msg of the account type we're migrating to
+) (implementation.ProtoMsg, error) {
+	return k.init(ctx, accType, addr, accNum, addr, msg, nil)
 }
 
 // Execute executes a state transition on the given account.
@@ -198,14 +194,8 @@ func (k Keeper) Execute(
 	execRequest implementation.ProtoMsg,
 	funds sdk.Coins,
 ) (implementation.ProtoMsg, error) {
-	// get account type
-	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
-	if err != nil {
-		return nil, err
-	}
-
 	// get account implementation
-	impl, err := k.getImplementation(accountType)
+	impl, err := k.getImplementation(ctx, accountAddr)
 	if err != nil {
 		// this means the account was initialized with an implementation
 		// that the chain does not know about, in theory should never happen,
@@ -235,14 +225,8 @@ func (k Keeper) Query(
 	accountAddr []byte,
 	queryRequest implementation.ProtoMsg,
 ) (implementation.ProtoMsg, error) {
-	// get account type
-	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
-	if err != nil {
-		return nil, err
-	}
-
 	// get account implementation
-	impl, err := k.getImplementation(accountType)
+	impl, err := k.getImplementation(ctx, accountAddr)
 	if err != nil {
 		// this means the account was initialized with an implementation
 		// that the chain does not know about, in theory should never happen,
@@ -260,7 +244,11 @@ func (k Keeper) Query(
 	return impl.Query(ctx, queryRequest)
 }
 
-func (k Keeper) getImplementation(accountType string) (implementation.Implementation, error) {
+func (k Keeper) getImplementation(ctx context.Context, addr []byte) (implementation.Implementation, error) {
+	accountType, err := k.AccountsByType.Get(ctx, addr)
+	if err != nil {
+		return implementation.Implementation{}, err
+	}
 	impl, ok := k.accounts[accountType]
 	if !ok {
 		return implementation.Implementation{}, fmt.Errorf("%w: %s", errAccountTypeNotFound, accountType)
@@ -280,13 +268,13 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 	if !isQuery {
 		return implementation.MakeAccountContext(
 			ctx,
-			k.storeService,
+			k.environment.KVStoreService,
 			accountNumber,
 			accountAddr,
 			sender,
 			funds,
 			k.sendModuleMessage,
-			k.sendModuleMessageUntyped,
+			k.SendModuleMessageUntyped,
 			k.queryModule,
 		)
 	}
@@ -295,7 +283,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 	// and does not allow to get the sender.
 	return implementation.MakeAccountContext(
 		ctx,
-		k.storeService,
+		k.environment.KVStoreService,
 		accountNumber,
 		accountAddr,
 		nil,
@@ -312,6 +300,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 
 // sendAnyMessages it a helper function that executes untyped codectypes.Any messages
 // The messages must all belong to a module.
+// nolint: unused // TODO: remove nolint when we bring back bundler payments
 func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages []*implementation.Any) ([]*implementation.Any, error) {
 	anyResponses := make([]*implementation.Any, len(anyMessages))
 	for i := range anyMessages {
@@ -319,7 +308,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 		if err != nil {
 			return nil, err
 		}
-		resp, err := k.sendModuleMessageUntyped(ctx, sender, msg)
+		resp, err := k.SendModuleMessageUntyped(ctx, sender, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
 		}
@@ -332,20 +321,14 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 	return anyResponses, nil
 }
 
-// sendModuleMessageUntyped can be used to send a message towards a module.
+// SendModuleMessageUntyped can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
-func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
-	// we need to fetch the response type from the request message type.
-	// this is because the response type is not known.
-	respName := k.msgRouter.ResponseNameByRequestName(implementation.MessageName(msg))
-	if respName == "" {
-		return nil, fmt.Errorf("could not find response type for message %T", msg)
-	}
-	// get response type
-	resp, err := implementation.FindMessageByName(respName)
+func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+	resp, err := k.environment.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
+
 	// send the message
 	return resp, k.sendModuleMessage(ctx, sender, msg, resp)
 }
@@ -355,7 +338,7 @@ func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.signerProvider.GetMsgV1Signers(msg)
+	wantSenders, _, err := k.codec.GetMsgV1Signers(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}
@@ -365,27 +348,14 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 	if !bytes.Equal(sender, wantSenders[0]) {
 		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	messageName := implementation.MessageName(msg)
-	handler := k.msgRouter.HybridHandlerByMsgName(messageName)
-	if handler == nil {
-		return fmt.Errorf("unknown message: %s", messageName)
-	}
-	return handler(ctx, msg, msgResp)
+	return k.environment.RouterService.MessageRouterService().InvokeTyped(ctx, msg, msgResp)
 }
 
 // queryModule is the entrypoint for an account to query a module.
 // It will try to find the query handler for the given query and execute it.
 // If multiple query handlers are found, it will return an error.
 func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementation.ProtoMsg) error {
-	queryName := implementation.MessageName(queryReq)
-	handlers := k.queryRouter.HybridHandlerByRequestName(queryName)
-	if len(handlers) == 0 {
-		return fmt.Errorf("unknown query: %s", queryName)
-	}
-	if len(handlers) > 1 {
-		return fmt.Errorf("multiple handlers for query: %s", queryName)
-	}
-	return handlers[0](ctx, queryReq, queryResp)
+	return k.environment.RouterService.QueryRouterService().InvokeTyped(ctx, queryReq, queryResp)
 }
 
 // maybeSendFunds will send the provided coins between the provided addresses, if amt
@@ -406,11 +376,6 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 		return err
 	}
 	return nil
-}
-
-type gogoProtoPlusV2 interface {
-	proto.Message
-	implementation.ProtoMsg
 }
 
 const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"

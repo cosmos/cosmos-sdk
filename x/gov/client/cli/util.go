@@ -201,5 +201,10 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 // See also AddGovPropFlagsToCmd.
 // Deprecated: use ReadPropCmdFlags instead, as this depends on global bech32 prefixes.
 func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
-	return ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
+	addr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+	if err != nil {
+		return nil, err
+	}
+
+	return ReadGovPropCmdFlags(addr, flagSet)
 }

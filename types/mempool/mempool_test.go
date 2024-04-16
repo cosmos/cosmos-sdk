@@ -9,9 +9,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	protov2 "google.golang.org/protobuf/proto"
 
+	_ "cosmossdk.io/api/cosmos/counter/v1"
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/signing"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -208,7 +211,7 @@ type MempoolTestSuite struct {
 
 func (s *MempoolTestSuite) resetMempool() {
 	s.iterations = 0
-	s.mempool = mempool.NewSenderNonceMempool()
+	s.mempool = mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 }
 
 func (s *MempoolTestSuite) SetupTest() {
@@ -234,7 +237,7 @@ func (s *MempoolTestSuite) TestSampleTxs() {
 }
 
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
-	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModuleBasic{})
+	cfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, counter.AppModule{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
 }
 

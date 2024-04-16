@@ -1,9 +1,14 @@
 package config
 
 import (
+	"crypto/tls"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -26,18 +31,46 @@ func DefaultConfig() *Config {
 type ClientConfig Config
 
 type Config struct {
-	ChainID               string `mapstructure:"chain-id" json:"chain-id"`
-	KeyringBackend        string `mapstructure:"keyring-backend" json:"keyring-backend"`
-	KeyringDefaultKeyName string `mapstructure:"keyring-default-keyname" json:"keyring-default-keyname"`
-	Output                string `mapstructure:"output" json:"output"`
-	Node                  string `mapstructure:"node" json:"node"`
-	BroadcastMode         string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
+	ChainID               string     `mapstructure:"chain-id" json:"chain-id"`
+	KeyringBackend        string     `mapstructure:"keyring-backend" json:"keyring-backend"`
+	KeyringDefaultKeyName string     `mapstructure:"keyring-default-keyname" json:"keyring-default-keyname"`
+	Output                string     `mapstructure:"output" json:"output"`
+	Node                  string     `mapstructure:"node" json:"node"`
+	BroadcastMode         string     `mapstructure:"broadcast-mode" json:"broadcast-mode"`
+	GRPC                  GRPCConfig `mapstructure:",squash"`
+}
+
+// GRPCConfig holds the gRPC client configuration.
+type GRPCConfig struct {
+	Address  string `mapstructure:"grpc-address"  json:"grpc-address"`
+	Insecure bool   `mapstructure:"grpc-insecure"  json:"grpc-insecure"`
 }
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client.Context
 // It uses CreateClientConfig internally with no custom template and custom config.
+// Deprecated: use CreateClientConfig instead.
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	return CreateClientConfig(ctx, "", nil)
+}
+
+// ReadDefaultValuesFromDefaultClientConfig reads default values from default client.toml file and updates them in client.Context
+// The client.toml is then discarded.
+func ReadDefaultValuesFromDefaultClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
+	prevHomeDir := ctx.HomeDir
+	dir, err := os.MkdirTemp("", "simapp")
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't create temp dir: %w", err)
+	}
+	defer os.RemoveAll(dir)
+
+	ctx.HomeDir = dir
+	ctx, err = CreateClientConfig(ctx, customClientTemplate, customConfig)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't create client config: %w", err)
+	}
+
+	ctx.HomeDir = prevHomeDir
+	return ctx, nil
 }
 
 // CreateClientConfig reads the client.toml file and returns a new populated client.Context
@@ -117,5 +150,35 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 		WithClient(client).
 		WithKeyring(keyring)
 
+	if conf.GRPC.Address != "" {
+		grpcClient, err := getGRPCClient(conf.GRPC)
+		if err != nil {
+			return ctx, fmt.Errorf("couldn't get grpc client: %w", err)
+		}
+
+		ctx = ctx.WithGRPCClient(grpcClient)
+	}
+
 	return ctx, nil
+}
+
+// getGRPCClient creates and returns a new gRPC client connection based on the GRPCConfig.
+// It determines the type of connection (secure or insecure) from the GRPCConfig and
+// uses the specified server address to establish the connection.
+func getGRPCClient(grpcConfig GRPCConfig) (*grpc.ClientConn, error) {
+	transport := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}))
+
+	if grpcConfig.Insecure {
+		transport = grpc.WithTransportCredentials(insecure.NewCredentials())
+	}
+
+	dialOptions := []grpc.DialOption{transport}
+	grpcClient, err := grpc.NewClient(grpcConfig.Address, dialOptions...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial gRPC server at %s: %w", grpcConfig.Address, err)
+	}
+
+	return grpcClient, nil
 }

@@ -7,6 +7,7 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/errors"
 )
 
 // PrefixDB wraps a namespace of another database as a logical database.
@@ -29,7 +30,7 @@ func NewPrefixDB(db store.RawDB, prefix []byte) *PrefixDB {
 // Get implements RawDB.
 func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 
 	pkey := pdb.prefixed(key)
@@ -43,7 +44,7 @@ func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 // Has implements RawDB.
 func (pdb *PrefixDB) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
-		return false, store.ErrKeyEmpty
+		return false, errors.ErrKeyEmpty
 	}
 
 	ok, err := pdb.db.Has(pdb.prefixed(key))
@@ -57,7 +58,7 @@ func (pdb *PrefixDB) Has(key []byte) (bool, error) {
 // Iterator implements RawDB.
 func (pdb *PrefixDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 
 	var pstart, pend []byte
@@ -78,7 +79,7 @@ func (pdb *PrefixDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 // ReverseIterator implements RawDB.
 func (pdb *PrefixDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, errors.ErrKeyEmpty
 	}
 
 	var pstart, pend []byte
@@ -277,10 +278,10 @@ func newPrefixBatch(prefix []byte, source store.RawBatch) prefixDBBatch {
 // Set implements RawBatch.
 func (pb prefixDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	if value == nil {
-		return store.ErrValueNil
+		return errors.ErrValueNil
 	}
 	pkey := append(cp(pb.prefix), key...)
 	return pb.source.Set(pkey, value)
@@ -289,7 +290,7 @@ func (pb prefixDBBatch) Set(key, value []byte) error {
 // Delete implements RawBatch.
 func (pb prefixDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return store.ErrKeyEmpty
+		return errors.ErrKeyEmpty
 	}
 	pkey := append(cp(pb.prefix), key...)
 	return pb.source.Delete(pkey)
@@ -313,7 +314,7 @@ func (pb prefixDBBatch) Close() error {
 // GetByteSize implements RawBatch
 func (pb prefixDBBatch) GetByteSize() (int, error) {
 	if pb.source == nil {
-		return 0, store.ErrBatchClosed
+		return 0, errors.ErrBatchClosed
 	}
 	return pb.source.GetByteSize()
 }

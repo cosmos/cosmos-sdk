@@ -33,7 +33,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#19967](https://github.com/cosmos/cosmos-sdk/pull/19967) Refactor ante handlers to use `transaction.Service` for getting exec mode.
 * [#18780](https://github.com/cosmos/cosmos-sdk/pull/18780) Move sig verification out of the for loop, into the authenticate method.
+* [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist. 
+    * When signing a transaction with an account that has not been created accountnumber 0 must be used
 
 ### CLI Breaking Changes
 
@@ -41,9 +44,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19447](https://github.com/cosmos/cosmos-sdk/pull/19447) Address and validator address codecs are now arguments of `NewTxConfig`. `NewDefaultSigningOptions` has been replaced with `NewSigningOptions` which takes address and validator address codecs as arguments.
 * [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
 * [#19161](https://github.com/cosmos/cosmos-sdk/pull/19161) Remove `simulate` from `SetGasMeter`
 * [#19363](https://github.com/cosmos/cosmos-sdk/pull/19363) Remove `IterateAccounts` and `GetAllAccounts` methods from the AccountKeeper interface and Keeper.
+* [#19290](https://github.com/cosmos/cosmos-sdk/issues/19290) Pass `appmodule.Environment` to NewKeeper instead of passing individual services. 
+* [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating vesting accounts on a running chain. 
+<!-- TODO add a link to lockup accounts docs -->
 
 ### Consensus Breaking Changes
 
@@ -55,4 +62,3 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19148](https://github.com/cosmos/cosmos-sdk/pull/19148) Checks the consumed gas for verifying a multisig pubKey signature during simulation.
 * [#19239](https://github.com/cosmos/cosmos-sdk/pull/19239) Sets from flag in multi-sign command to avoid no key name provided error.
 * [#19099](https://github.com/cosmos/cosmos-sdk/pull/19099) `verifyIsOnCurve` now checks if we are simulating to avoid malformed public key error.
-

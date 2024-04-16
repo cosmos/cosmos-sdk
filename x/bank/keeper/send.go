@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -56,10 +55,9 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	cdc          codec.BinaryCodec
-	ak           types.AccountKeeper
-	storeService store.KVStoreService
-	logger       log.Logger
+	cdc         codec.BinaryCodec
+	ak          types.AccountKeeper
+	environment appmodule.Environment
 
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
@@ -72,25 +70,23 @@ type BaseSendKeeper struct {
 }
 
 func NewBaseSendKeeper(
+	env appmodule.Environment,
 	cdc codec.BinaryCodec,
-	storeService store.KVStoreService,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
-	logger log.Logger,
 ) BaseSendKeeper {
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseSendKeeper{
-		BaseViewKeeper:  NewBaseViewKeeper(cdc, storeService, ak, logger),
+		BaseViewKeeper:  NewBaseViewKeeper(env, cdc, ak),
 		cdc:             cdc,
 		ak:              ak,
-		storeService:    storeService,
+		environment:     env,
 		blockedAddrs:    blockedAddrs,
 		authority:       authority,
-		logger:          logger,
 		sendRestriction: newSendRestriction(),
 	}
 }
@@ -157,8 +153,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	var outAddress sdk.AccAddress
 	for _, out := range outputs {
 		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
@@ -175,22 +169,12 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		sdkCtx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-			),
-		)
-
-		// Create account if recipient does not exist.
-		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
-		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, outAddress)
-		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
+		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+			types.EventTypeTransfer,
+			event.NewAttribute(types.AttributeKeyRecipient, out.Address),
+			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
+		); err != nil {
+			return err
 		}
 	}
 
@@ -216,16 +200,6 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	// Create account if recipient does not exist.
-	//
-	// NOTE: This should ultimately be removed in favor a more flexible approach
-	// such as delegated fee messages.
-	accExists := k.ak.HasAccount(ctx, toAddr)
-	if !accExists {
-		defer telemetry.IncrCounter(1, "new", "account")
-		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
-	}
-
 	fromAddrString, err := k.ak.AddressCodec().BytesToString(fromAddr)
 	if err != nil {
 		return err
@@ -235,17 +209,12 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddrString),
-			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
-		),
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeTransfer,
+		event.NewAttribute(types.AttributeKeyRecipient, toAddrString),
+		event.NewAttribute(types.AttributeKeySender, fromAddrString),
+		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 	)
-
-	return nil
 }
 
 // subUnlockedCoins removes the unlocked amt coins of the given account. An error is
@@ -290,12 +259,12 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 	if err != nil {
 		return err
 	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinSpentEvent(addrStr, amt),
-	)
 
-	return nil
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinSpent,
+		event.NewAttribute(types.AttributeKeySpender, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	)
 }
 
 // addCoins increase the addr balance by the given amt. Fails if the provided
@@ -320,13 +289,11 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		return err
 	}
 
-	// emit coin received event
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinReceivedEvent(addrStr, amt),
+	return k.environment.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinReceived,
+		event.NewAttribute(types.AttributeKeyReceiver, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 	)
-
-	return nil
 }
 
 // setBalance sets the coin balance for an account by address.

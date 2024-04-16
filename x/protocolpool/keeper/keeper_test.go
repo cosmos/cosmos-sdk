@@ -7,7 +7,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -17,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,6 +35,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx           sdk.Context
+	environment   appmodule.Environment
 	poolKeeper    poolkeeper.Keeper
 	authKeeper    *pooltestutil.MockAccountKeeper
 	bankKeeper    *pooltestutil.MockBankKeeper
@@ -44,9 +48,10 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	environment := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -63,16 +68,20 @@ func (s *KeeperTestSuite) SetupTest() {
 	stakingKeeper.EXPECT().BondDenom(ctx).Return("stake", nil).AnyTimes()
 	s.stakingKeeper = stakingKeeper
 
+	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
+	s.Require().NoError(err)
+
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		environment,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		authtypes.NewModuleAddress(types.GovModuleName).String(),
+		authority,
 	)
 	s.ctx = ctx
 	s.poolKeeper = poolKeeper
+	s.environment = environment
 
 	types.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/core/genesis"
 	bankexported "cosmossdk.io/x/bank/exported"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -15,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -42,7 +41,7 @@ func SetGenTxsInAppGenesisState(
 // balance in the set of genesis accounts.
 func ValidateAccountInGenesis(
 	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
-	addr sdk.Address, coins sdk.Coins, cdc codec.JSONCodec,
+	addr string, coins sdk.Coins, cdc codec.JSONCodec,
 ) error {
 	var stakingData stakingtypes.GenesisState
 	cdc.MustUnmarshalJSON(appGenesisState[stakingtypes.ModuleName], &stakingData)
@@ -57,7 +56,7 @@ func ValidateAccountInGenesis(
 			accAddress := bal.GetAddress()
 			accCoins := bal.GetCoins()
 			// ensure that account is in genesis
-			if strings.EqualFold(accAddress, addr.String()) {
+			if strings.EqualFold(accAddress, addr) {
 				// ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(
@@ -94,7 +93,7 @@ func DeliverGenTxs(
 	ctx context.Context, genTxs []json.RawMessage,
 	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
-) ([]abci.ValidatorUpdate, error) {
+) ([]module.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {

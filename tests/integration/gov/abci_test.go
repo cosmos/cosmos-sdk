@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/gov"
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
@@ -26,12 +25,14 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 	suite := createTestSuite(t)
 	ctx := suite.app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
+	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
 
 	// manually set proposal in store
 	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
-	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addr0Str, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.Proposals.Set(ctx, proposal.Id, proposal)
@@ -41,7 +42,7 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 	err = suite.GovKeeper.InactiveProposalsQueue.Set(ctx, collections.Join(endTime, proposal.Id), proposal.Id)
 	require.NoError(t, err)
 
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 
 	_, err = suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
@@ -52,12 +53,13 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 	suite := createTestSuite(t)
 	ctx := suite.app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
-
+	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
 	// manually set proposal in store
 	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
-	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addr0Str, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 	proposal.Status = v1.StatusVotingPeriod
 	proposal.VotingEndTime = &endTime
@@ -69,7 +71,7 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 	err = suite.GovKeeper.ActiveProposalsQueue.Set(ctx, collections.Join(endTime, proposal.Id), proposal.Id)
 	require.NoError(t, err)
 
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 
 	p, err := suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
@@ -109,7 +111,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod)
 	ctx = ctx.WithHeaderInfo(newHeader)
 
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 }
 
@@ -159,12 +161,12 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithHeaderInfo(newHeader)
 
-	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
+	require.NoError(t, suite.GovKeeper.EndBlocker(ctx))
 
 	newHeader = ctx.HeaderInfo()
 	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(5) * time.Second)
 	ctx = ctx.WithHeaderInfo(newHeader)
-	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
+	require.NoError(t, suite.GovKeeper.EndBlocker(ctx))
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
@@ -195,7 +197,9 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithHeaderInfo(newHeader)
 
-	newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)})
+	addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+	require.NoError(t, err)
+	newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)})
 
 	res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
 	require.NoError(t, err)
@@ -246,7 +250,7 @@ func TestProposalDepositRefundFailEndBlocker(t *testing.T) {
 	newHeader.Time = proposal.VotingEndTime.Add(time.Duration(100) * time.Second)
 	ctx = ctx.WithHeaderInfo(newHeader)
 
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err) // no error, means does not halt the chain
 
 	events := ctx.EventManager().Events()
@@ -294,7 +298,9 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
 			ctx = ctx.WithHeaderInfo(newHeader)
 
-			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+			addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+			require.NoError(t, err)
+			newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, proposalCoins)
 
 			res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
 			require.NoError(t, err)
@@ -314,7 +320,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 
 			if tc.proposalType != v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
@@ -360,6 +366,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
+			acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+			suite.AccountKeeper.SetAccount(ctx, acc)
 
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err := suite.StakingKeeper.EndBlocker(ctx)
@@ -372,7 +380,9 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NoError(t, err)
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10*depositMultiplier))}
-			newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
+			addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+			require.NoError(t, err)
+			newDepositMsg := v1.NewMsgDeposit(addr0Str, proposal.Id, proposalCoins)
 
 			res, err := govMsgSvr.Deposit(ctx, newDepositMsg)
 			require.NoError(t, err)
@@ -393,7 +403,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithHeaderInfo(newHeader)
 
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -421,6 +431,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	toAddrStr, err := ac.BytesToString(addrs[0])
 	require.NoError(t, err)
 
+	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+	suite.AccountKeeper.SetAccount(ctx, acc)
+
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	_, err = suite.StakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
@@ -429,7 +442,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
-	newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
+	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+	newDepositMsg := v1.NewMsgDeposit(addr0Str, proposal.Id, proposalCoins)
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 	res, err := govMsgSvr.Deposit(ctx, newDepositMsg)
@@ -445,7 +460,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ctx = ctx.WithHeaderInfo(newHeader)
 
 	// validate that the proposal fails/has been rejected
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 	// check proposal events
 	events := ctx.EventManager().Events()
@@ -499,6 +514,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 
+			acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
+			suite.AccountKeeper.SetAccount(ctx, acc)
 			// Create a validator so that able to vote on proposal.
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err = suite.StakingKeeper.EndBlocker(ctx)
@@ -525,7 +542,9 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
 			ctx = ctx.WithHeaderInfo(newHeader)
 
-			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+			addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+			require.NoError(t, err)
+			newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, proposalCoins)
 
 			res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
 			require.NoError(t, err)
@@ -546,7 +565,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here the expedited proposal is converted to regular after expiry.
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 			if tc.expeditedPasses {
 				proposal, err = suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
@@ -595,7 +614,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here we validate the converted regular proposal
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)

@@ -12,13 +12,14 @@ import (
 	"cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/group/simulation"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestDecodeStore(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 	cdc := encodingConfig.Codec
 	dec := simulation.NewDecodeStore(cdc)
 
@@ -27,14 +28,18 @@ func TestDecodeStore(t *testing.T) {
 	require.NoError(t, err)
 
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+	require.NoError(t, err)
 	member := group.GroupMember{GroupId: 1, Member: &group.Member{
-		Address: addr.String(),
+		Address: addrStr,
 	}}
 	memberBz, err := cdc.Marshal(&member)
 	require.NoError(t, err)
 
 	_, _, accAddr := testdata.KeyTestPubAddr()
-	acc := group.GroupPolicyInfo{Address: accAddr.String()}
+	accStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(accAddr)
+	require.NoError(t, err)
+	acc := group.GroupPolicyInfo{Address: accStrAddr}
 	accBz, err := cdc.Marshal(&acc)
 	require.NoError(t, err)
 
@@ -42,7 +47,7 @@ func TestDecodeStore(t *testing.T) {
 	proposalBz, err := cdc.Marshal(&proposal)
 	require.NoError(t, err)
 
-	vote := group.Vote{Voter: addr.String(), ProposalId: 1}
+	vote := group.Vote{Voter: addrStr, ProposalId: 1}
 	voteBz, err := cdc.Marshal(&vote)
 	require.NoError(t, err)
 

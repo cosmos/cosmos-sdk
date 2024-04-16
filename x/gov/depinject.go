@@ -2,23 +2,22 @@ package gov
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
-	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
+	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/keeper"
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -37,11 +36,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config           *modulev1.Module
-	Cdc              codec.Codec
-	StoreService     store.KVStoreService
-	ModuleKey        depinject.OwnModuleKey
-	MsgServiceRouter baseapp.MessageRouter
+	Config                *modulev1.Module
+	Cdc                   codec.Codec
+	Environment           appmodule.Environment
+	ModuleKey             depinject.OwnModuleKey
+	LegacyProposalHandler []govclient.ProposalHandler `optional:"true"`
 
 	AccountKeeper govtypes.AccountKeeper
 	BankKeeper    govtypes.BankKeeper
@@ -58,7 +57,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	defaultConfig := govtypes.DefaultConfig()
+	defaultConfig := keeper.DefaultConfig()
 	if in.Config.MaxTitleLen != 0 {
 		defaultConfig.MaxTitleLen = in.Config.MaxTitleLen
 	}
@@ -68,25 +67,31 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	if in.Config.MaxSummaryLen != 0 {
 		defaultConfig.MaxSummaryLen = in.Config.MaxSummaryLen
 	}
+	if in.LegacyProposalHandler == nil {
+		in.LegacyProposalHandler = []govclient.ProposalHandler{}
+	}
 
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
+	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.StoreService,
+		in.Environment,
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
 		in.PoolKeeper,
-		in.MsgServiceRouter,
 		defaultConfig,
-		authority.String(),
+		authorityAddr,
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.PoolKeeper)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.PoolKeeper, in.LegacyProposalHandler...)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
 	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}

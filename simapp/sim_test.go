@@ -26,6 +26,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -86,12 +87,13 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -134,12 +136,13 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -175,8 +178,7 @@ func TestAppImportExport(t *testing.T) {
 
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
-	_, err = newApp.ModuleManager.InitGenesis(ctxB, app.AppCodec(), genesisState)
-
+	_, err = newApp.ModuleManager.InitGenesis(ctxB, genesisState)
 	if err != nil {
 		if strings.Contains(err.Error(), "validator set is empty after InitGenesis") {
 			logger.Info("Skipping simulation as all validators have been unbonded")
@@ -195,7 +197,7 @@ func TestAppImportExport(t *testing.T) {
 		stakingtypes.StoreKey: {
 			stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
 			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
-			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
+			stakingtypes.UnbondingTypeKey,
 		},
 		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
 		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
@@ -256,12 +258,13 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -308,12 +311,13 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		newApp.BaseApp,
-		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 	require.NoError(t, err)
 }
@@ -387,12 +391,13 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				app.BaseApp,
-				simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+				simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				simtestutil.SimulationOperations(app, app.AppCodec(), config),
 				BlockedAddresses(),
 				config,
 				app.AppCodec(),
+				codectestutil.CodecOptions{}.GetAddressCodec(),
 			)
 			require.NoError(t, err)
 

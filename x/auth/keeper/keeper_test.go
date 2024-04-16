@@ -3,17 +3,21 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -38,19 +42,26 @@ type KeeperTestSuite struct {
 
 	ctx sdk.Context
 
-	queryClient   types.QueryClient
-	accountKeeper keeper.AccountKeeper
-	msgServer     types.MsgServer
-	encCfg        moduletestutil.TestEncodingConfig
+	queryClient    types.QueryClient
+	accountKeeper  keeper.AccountKeeper
+	acctsModKeeper *authtestutil.MockAccountsModKeeper
+	msgServer      types.MsgServer
+	encCfg         moduletestutil.TestEncodingConfig
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	suite.acctsModKeeper = acctsModKeeper
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -62,9 +73,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
+		env,
 		suite.encCfg.Codec,
-		storeService,
 		types.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",

@@ -689,7 +689,7 @@ func BenchmarkIntSize(b *testing.B) {
 }
 
 func BenchmarkIntOverflowCheckTime(b *testing.B) {
-	var ints = []*big.Int{}
+	ints := []*big.Int{}
 
 	for _, st := range sizeTests {
 		ii, _ := math.NewIntFromString(st.s)
@@ -699,7 +699,7 @@ func BenchmarkIntOverflowCheckTime(b *testing.B) {
 
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		for j, _ := range sizeTests {
+		for j := range sizeTests {
 			got := math.NewIntFromBigIntMut(ints[j])
 			sink = got
 		}

@@ -12,6 +12,7 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/storage"
 )
 
@@ -137,7 +138,7 @@ func (db *Database) setPruneHeight(pruneVersion uint64) error {
 	return db.storage.Set([]byte(pruneHeightKey), ts[:], &pebble.WriteOptions{Sync: db.sync})
 }
 
-func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
+func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	val, err := db.Get(storeKey, version, key)
 	if err != nil {
 		return false, err
@@ -146,14 +147,14 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 	return val != nil, nil
 }
 
-func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
+func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]byte, error) {
 	if targetVersion < db.earliestVersion {
-		return nil, store.ErrVersionPruned{EarliestVersion: db.earliestVersion}
+		return nil, storeerrors.ErrVersionPruned{EarliestVersion: db.earliestVersion}
 	}
 
 	prefixedVal, err := getMVCCSlice(db.storage, storeKey, key, targetVersion)
 	if err != nil {
-		if errors.Is(err, store.ErrRecordNotFound) {
+		if errors.Is(err, storeerrors.ErrRecordNotFound) {
 			return nil, nil
 		}
 
@@ -195,7 +196,10 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 //
 // See: https://github.com/cockroachdb/cockroach/blob/33623e3ee420174a4fd3226d1284b03f0e3caaac/pkg/storage/mvcc.go#L3182
 func (db *Database) Prune(version uint64) error {
-	itr := db.storage.NewIter(&pebble.IterOptions{LowerBound: []byte("s/k:")})
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: []byte("s/k:")})
+	if err != nil {
+		return err
+	}
 	defer itr.Close()
 
 	batch := db.storage.NewBatch()
@@ -263,13 +267,13 @@ func (db *Database) Prune(version uint64) error {
 	return db.setPruneHeight(version)
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (db *Database) Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
-		return nil, store.ErrStartAfterEnd
+		return nil, storeerrors.ErrStartAfterEnd
 	}
 
 	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), 0)
@@ -279,18 +283,21 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 		upperBound = MVCCEncode(prependStoreKey(storeKey, end), 0)
 	}
 
-	itr := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
+	if err != nil {
+		return nil, err
+	}
 
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
+		return nil, storeerrors.ErrKeyEmpty
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
-		return nil, store.ErrStartAfterEnd
+		return nil, storeerrors.ErrStartAfterEnd
 	}
 
 	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), 0)
@@ -300,16 +307,19 @@ func (db *Database) ReverseIterator(storeKey string, version uint64, start, end 
 		upperBound = MVCCEncode(prependStoreKey(storeKey, end), 0)
 	}
 
-	itr := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
+	if err != nil {
+		return nil, err
+	}
 
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, true), nil
 }
 
-func storePrefix(storeKey string) []byte {
-	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
+func storePrefix(storeKey []byte) []byte {
+	return append([]byte(StorePrefixTpl), storeKey...)
 }
 
-func prependStoreKey(storeKey string, key []byte) []byte {
+func prependStoreKey(storeKey, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 
@@ -352,20 +362,24 @@ func valTombstoned(value []byte) bool {
 	return true
 }
 
-func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) ([]byte, error) {
+func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, error) {
 	// end domain is exclusive, so we need to increment the version by 1
 	if version < math.MaxUint64 {
 		version++
 	}
 
-	itr := db.NewIter(&pebble.IterOptions{
+	itr, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: MVCCEncode(prependStoreKey(storeKey, key), 0),
 		UpperBound: MVCCEncode(prependStoreKey(storeKey, key), version),
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	defer itr.Close()
 
 	if !itr.Last() {
-		return nil, store.ErrRecordNotFound
+		return nil, storeerrors.ErrRecordNotFound
 	}
 
 	_, vBz, ok := SplitMVCCKey(itr.Key())

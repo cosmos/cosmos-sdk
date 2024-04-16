@@ -1,10 +1,11 @@
 package v2
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/orm"
@@ -24,13 +25,13 @@ const (
 // Migrate migrates the x/group module state from the consensus version 1 to version 2.
 // Specifically, it changes the group policy account from module account to base account.
 func Migrate(
-	ctx sdk.Context,
-	storeKey storetypes.StoreKey,
+	ctx context.Context,
+	storeService store.KVStoreService,
 	accountKeeper group.AccountKeeper,
 	groupPolicySeq orm.Sequence,
 	groupPolicyTable orm.PrimaryKeyTable,
 ) error {
-	store := ctx.KVStore(storeKey)
+	store := storeService.OpenKVStore(ctx)
 	curAccVal := groupPolicySeq.CurVal(store)
 	groupPolicyAccountDerivationKey := make(map[string][]byte, 0)
 	policyKey := []byte{GroupPolicyTablePrefix}
@@ -38,7 +39,11 @@ func Migrate(
 		derivationKey := make([]byte, 8)
 		binary.BigEndian.PutUint64(derivationKey, i)
 		groupPolicyAcc := sdk.AccAddress(address.Module(group.ModuleName, policyKey, derivationKey))
-		groupPolicyAccountDerivationKey[groupPolicyAcc.String()] = derivationKey
+		groupPolicyAddr, err := accountKeeper.AddressCodec().BytesToString(groupPolicyAcc)
+		if err != nil {
+			return err
+		}
+		groupPolicyAccountDerivationKey[groupPolicyAddr] = derivationKey
 	}
 
 	// get all group policies

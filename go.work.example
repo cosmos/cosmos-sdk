@@ -1,6 +1,6 @@
-go 1.21
+go 1.22
 
-toolchain go1.21.0
+toolchain go1.22
 
 use (
 	.
@@ -38,4 +38,6 @@ use (
 	./x/staking
 	./x/tx
 	./x/upgrade
+	./x/epochs
+	./x/accounts/defaults/lockup
 )

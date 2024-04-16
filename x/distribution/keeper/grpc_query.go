@@ -86,9 +86,14 @@ func (k Querier) ValidatorDistributionInfo(ctx context.Context, req *types.Query
 		return nil, err
 	}
 
+	operatorAddr, err := k.authKeeper.AddressCodec().BytesToString(delAdr)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.QueryValidatorDistributionInfoResponse{
 		Commission:      validatorCommission.Commission,
-		OperatorAddress: delAdr.String(),
+		OperatorAddress: operatorAddr,
 		SelfBondRewards: rewards,
 	}, nil
 }
@@ -330,7 +335,6 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 			return false
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +361,12 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 		return nil, err
 	}
 
-	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr.String()}, nil
+	addr, err := k.authKeeper.AddressCodec().BytesToString(withdrawAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: addr}, nil
 }
 
 // Deprecated: DO NOT USE

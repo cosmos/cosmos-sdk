@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -48,7 +49,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -67,8 +68,9 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	msr := suite.baseApp.MsgServiceRouter()
 	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(nil, msr))
 
-	suite.keeper = keeper.NewKeeper(storeService, suite.encCfg.Codec, msr, suite.accountKeeper)
+	suite.keeper = keeper.NewKeeper(env, suite.encCfg.Codec, suite.accountKeeper)
 }
 
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
@@ -79,18 +81,20 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	grant := &bank.SendAuthorization{SpendLimit: coins}
 	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, &expires)
 	suite.Require().NoError(err)
-	genesis := suite.keeper.ExportGenesis(suite.ctx)
-
-	// TODO, recheck!
+	genesis, err := suite.keeper.ExportGenesis(suite.ctx)
+	suite.Require().NoError(err)
 	// Clear keeper
 	err = suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
 	suite.Require().NoError(err)
-	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
+	newGenesis, err := suite.keeper.ExportGenesis(suite.ctx)
+	suite.Require().NoError(err)
 	suite.Require().NotEqual(genesis, newGenesis)
 	suite.Require().Empty(newGenesis)
 
-	suite.keeper.InitGenesis(suite.ctx, genesis)
-	newGenesis = suite.keeper.ExportGenesis(suite.ctx)
+	err = suite.keeper.InitGenesis(suite.ctx, genesis)
+	suite.Require().NoError(err)
+	newGenesis, err = suite.keeper.ExportGenesis(suite.ctx)
+	suite.Require().NoError(err)
 	suite.Require().Equal(genesis, newGenesis)
 }
 

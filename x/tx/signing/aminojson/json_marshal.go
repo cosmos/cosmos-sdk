@@ -7,6 +7,7 @@ import (
 	"io"
 	"sort"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -28,6 +29,9 @@ type EncoderOptions struct {
 	Indent string
 	// DoNotSortFields when set turns off sorting of field names.
 	DoNotSortFields bool
+	// EnumAsString when set will encode enums as strings instead of integers.
+	// Caution: Enabling this option produce different sign bytes.
+	EnumAsString bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver signing.TypeResolver
 	// FileResolver is used to resolve protobuf file descriptors TypeURL when TypeResolver fails.
@@ -45,13 +49,14 @@ type Encoder struct {
 	typeResolver              protoregistry.MessageTypeResolver
 	doNotSortFields           bool
 	indent                    string
+	enumsAsString             bool
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
 // rules.
 func NewEncoder(options EncoderOptions) Encoder {
 	if options.FileResolver == nil {
-		options.FileResolver = protoregistry.GlobalFiles
+		options.FileResolver = gogoproto.HybridResolver
 	}
 	if options.TypeResolver == nil {
 		options.TypeResolver = protoregistry.GlobalTypes
@@ -68,6 +73,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 		},
 		aminoFieldEncoders: map[string]FieldEncoder{
 			"legacy_coins": nullSliceAsEmptyEncoder,
+			"inline_json":  cosmosInlineJSON,
 		},
 		protoTypeEncoders: map[string]MessageEncoder{
 			"google.protobuf.Timestamp": marshalTimestamp,
@@ -78,6 +84,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 		typeResolver:    options.TypeResolver,
 		doNotSortFields: options.DoNotSortFields,
 		indent:          options.Indent,
+		enumsAsString:   options.EnumAsString,
 	}
 	return enc
 }
@@ -157,6 +164,9 @@ func (enc Encoder) DefineTypeEncoding(typeURL string, encoder MessageEncoder) En
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := enc.beginMarshal(message.ProtoReflect(), buf, false)
+	if err != nil {
+		return nil, err
+	}
 
 	if enc.indent != "" {
 		indentBuf := &bytes.Buffer{}
@@ -164,10 +174,10 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 			return nil, err
 		}
 
-		return indentBuf.Bytes(), err
+		return indentBuf.Bytes(), nil
 	}
 
-	return buf.Bytes(), err
+	return buf.Bytes(), nil
 }
 
 func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny bool) error {
@@ -189,7 +199,7 @@ func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAn
 		}
 	}
 
-	err := enc.marshal(protoreflect.ValueOfMessage(msg), writer)
+	err := enc.marshal(protoreflect.ValueOfMessage(msg), nil /* no field descriptor needed here */, writer)
 	if err != nil {
 		return err
 	}
@@ -204,7 +214,7 @@ func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAn
 	return nil
 }
 
-func (enc Encoder) marshal(value protoreflect.Value, writer io.Writer) error {
+func (enc Encoder) marshal(value protoreflect.Value, fd protoreflect.FieldDescriptor, writer io.Writer) error {
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
 		err := enc.marshalMessage(val, writer)
@@ -218,9 +228,20 @@ func (enc Encoder) marshal(value protoreflect.Value, writer io.Writer) error {
 			_, err := io.WriteString(writer, "null")
 			return err
 		}
-		return enc.marshalList(val, writer)
+		return enc.marshalList(val, fd, writer)
 
-	case string, bool, int32, uint32, []byte, protoreflect.EnumNumber:
+	case string, bool, int32, uint32, []byte:
+		return jsonMarshal(writer, val)
+
+	case protoreflect.EnumNumber:
+		if enc.enumsAsString && fd != nil {
+			desc := fd.Enum().Values().ByNumber(val)
+			if desc != nil {
+				_, err := io.WriteString(writer, fmt.Sprintf(`"%s"`, desc.Name()))
+				return err
+			}
+		}
+
 		return jsonMarshal(writer, val)
 
 	case uint64, int64:
@@ -342,7 +363,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 				return err
 			}
 		} else {
-			err = enc.marshal(v, writer)
+			err = enc.marshal(v, f, writer)
 			if err != nil {
 				return err
 			}
@@ -371,7 +392,7 @@ func jsonMarshal(w io.Writer, v interface{}) error {
 	return err
 }
 
-func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
+func (enc Encoder) marshalList(list protoreflect.List, fd protoreflect.FieldDescriptor, writer io.Writer) error {
 	n := list.Len()
 
 	_, err := io.WriteString(writer, "[")
@@ -389,7 +410,7 @@ func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 		}
 		first = false
 
-		err = enc.marshal(list.Get(i), writer)
+		err = enc.marshal(list.Get(i), fd, writer)
 		if err != nil {
 			return err
 		}

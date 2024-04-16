@@ -25,11 +25,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Api Breaking Changes
+
+* [#20016](https://github.com/cosmos/cosmos-sdk/pull/20016) `NewMsgSubmitEvidence` now takes a string as argument instead of an `AccAddress`.
+* [#19482](https://github.com/cosmos/cosmos-sdk/pull/19482) `appmodule.Environment` is passed to `NewKeeper` instead of individual services
+* [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) `NewAppModule` now takes in a `codec.Codec` as its first argument
+
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.1.0) - 2023-11-07
 
 ### Features
 
-* (x/evidence) [14724](https://github.com/cosmos/cosmos-sdk/pull/14724) The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module.
+* [14724](https://github.com/cosmos/cosmos-sdk/pull/14724) The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module.
 * (keeper) [#15420](https://github.com/cosmos/cosmos-sdk/pull/15420) Move `BeginBlocker` to the keeper folder & make HandleEquivocation private
 
 ### API Breaking Changes

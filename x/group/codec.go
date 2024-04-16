@@ -1,9 +1,10 @@
 package group
 
 import (
+	"cosmossdk.io/core/registry"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -33,8 +34,8 @@ func RegisterLegacyAminoCodec(cdc *codectypes.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry.
-func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	registrar.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateGroup{},
 		&MsgUpdateGroupMembers{},
 		&MsgUpdateGroupAdmin{},
@@ -51,9 +52,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgLeaveGroup{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
 
-	registry.RegisterInterface(
+	registrar.RegisterInterface(
 		"cosmos.group.v1.DecisionPolicy",
 		(*DecisionPolicy)(nil),
 		&ThresholdDecisionPolicy{},

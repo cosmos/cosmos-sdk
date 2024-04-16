@@ -13,13 +13,13 @@ import (
 )
 
 // Commands adds core sdk's sub-commands into genesis command.
-func Commands(txConfig client.TxConfig, moduleBasics module.BasicManager, appExport servertypes.AppExporter) *cobra.Command {
-	return CommandsWithCustomMigrationMap(txConfig, moduleBasics, appExport, MigrationMap)
+func Commands(txConfig client.TxConfig, mm *module.Manager, appExport servertypes.AppExporter) *cobra.Command {
+	return CommandsWithCustomMigrationMap(txConfig, mm, appExport, MigrationMap)
 }
 
 // CommandsWithCustomMigrationMap adds core sdk's sub-commands into genesis command with custom migration map.
 // This custom migration map can be used by the application to add its own migration map.
-func CommandsWithCustomMigrationMap(txConfig client.TxConfig, moduleBasics module.BasicManager, appExport servertypes.AppExporter, migrationMap genutiltypes.MigrationMap) *cobra.Command {
+func CommandsWithCustomMigrationMap(txConfig client.TxConfig, mm *module.Manager, appExport servertypes.AppExporter, migrationMap genutiltypes.MigrationMap) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "genesis",
 		Short:                      "Application's genesis-related subcommands",
@@ -27,13 +27,13 @@ func CommandsWithCustomMigrationMap(txConfig client.TxConfig, moduleBasics modul
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	gentxModule := moduleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
+	gentxModule := mm.Modules[genutiltypes.ModuleName].(genutil.AppModule)
 
 	cmd.AddCommand(
-		GenTxCmd(moduleBasics, txConfig, banktypes.GenesisBalancesIterator{}, txConfig.SigningContext().ValidatorAddressCodec()),
+		GenTxCmd(mm, txConfig, banktypes.GenesisBalancesIterator{}, txConfig.SigningContext().ValidatorAddressCodec()),
 		MigrateGenesisCmd(migrationMap),
-		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, gentxModule.GenTxValidator, txConfig.SigningContext().ValidatorAddressCodec()),
-		ValidateGenesisCmd(moduleBasics),
+		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, gentxModule.GenTxValidator()),
+		ValidateGenesisCmd(mm),
 		AddGenesisAccountCmd(txConfig.SigningContext().AddressCodec()),
 		ExportCmd(appExport),
 	)

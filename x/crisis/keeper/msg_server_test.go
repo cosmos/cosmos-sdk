@@ -10,6 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -37,8 +38,10 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
-	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", sdk.AccAddress([]byte("addr1_______________")).String(), addresscodec.NewBech32Codec("cosmos"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, crisis.AppModule{})
+	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString([]byte("addr1_______________"))
+	s.Require().NoError(err)
+	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", addr, addresscodec.NewBech32Codec("cosmos"))
 
 	s.ctx = testCtx.Ctx
 	s.keeper = keeper
@@ -51,11 +54,13 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 	err := s.keeper.ConstantFee.Set(s.ctx, constantFee)
 	s.Require().NoError(err)
 
-	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, crisis.AppModule{})
 	kr := keyring.NewInMemory(encCfg.Codec)
 	testutil.CreateKeyringAccounts(s.T(), kr, 1)
 
 	sender := testutil.CreateKeyringAccounts(s.T(), kr, 1)[0]
+	senderAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(sender.Address)
+	s.Require().NoError(err)
 
 	s.supplyKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 	s.keeper.RegisterRoute("bank", "total-supply", func(sdk.Context) (string, bool) { return "", false })
@@ -89,7 +94,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 		{
 			name: "unregistered invariant route",
 			input: &types.MsgVerifyInvariant{
-				Sender:              sender.Address.String(),
+				Sender:              senderAddr,
 				InvariantModuleName: "module",
 				InvariantRoute:      "invalidroute",
 			},
@@ -99,7 +104,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 		{
 			name: "valid invariant",
 			input: &types.MsgVerifyInvariant{
-				Sender:              sender.Address.String(),
+				Sender:              senderAddr,
 				InvariantModuleName: "bank",
 				InvariantRoute:      "total-supply",
 			},

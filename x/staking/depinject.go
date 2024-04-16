@@ -7,8 +7,8 @@ import (
 	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -39,12 +38,12 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config                *modulev1.Module
-	ValidatorAddressCodec runtime.ValidatorAddressCodec
-	ConsensusAddressCodec runtime.ConsensusAddressCodec
+	ValidatorAddressCodec address.ValidatorAddressCodec
+	ConsensusAddressCodec address.ConsensusAddressCodec
 	AccountKeeper         types.AccountKeeper
 	BankKeeper            types.BankKeeper
 	Cdc                   codec.Codec
-	StoreService          store.KVStoreService
+	Environment           appmodule.Environment
 }
 
 // Dependency Injection Outputs
@@ -69,7 +68,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.StoreService,
+		in.Environment,
 		in.AccountKeeper,
 		in.BankKeeper,
 		as,

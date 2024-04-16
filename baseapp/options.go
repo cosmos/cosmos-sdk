@@ -107,6 +107,11 @@ func SetChainID(chainID string) func(*BaseApp) {
 	return func(app *BaseApp) { app.chainID = chainID }
 }
 
+// SetStoreLoader allows customization of the rootMultiStore initialization.
+func SetStoreLoader(loader StoreLoader) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetStoreLoader(loader) }
+}
+
 // SetOptimisticExecution enables optimistic execution.
 func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp) {
 	return func(app *BaseApp) {
@@ -268,7 +273,7 @@ func (app *BaseApp) SetFauxMerkleMode() {
 	app.fauxMerkleMode = true
 }
 
-// SetNotSigverify during simulation testing, transaction signature verification needs to be ignored.
+// SetNotSigverifyTx during simulation testing, transaction signature verification needs to be ignored.
 func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
@@ -379,4 +384,14 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 // SetStreamingManager sets the streaming manager for the BaseApp.
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 	app.streamingManager = manager
+}
+
+// SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
+func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
+	app.msgServiceRouter = msgServiceRouter
+}
+
+// SetGRPCQueryRouter sets the GRPCQueryRouter of the BaseApp.
+func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
+	app.grpcQueryRouter = grpcQueryRouter
 }

@@ -6,14 +6,17 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (suite *KeeperTestSuite) TestUnclaimedBudget() {
-	startTime := suite.ctx.BlockTime().Add(-70 * time.Second)
+	startTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(-70 * time.Second)
 	period := time.Duration(60) * time.Second
 	zeroCoin := sdk.NewCoin("foo", math.ZeroInt())
 	nextClaimFrom := startTime.Add(period)
+	recipientStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipientAddr)
+	suite.Require().NoError(err)
 	testCases := []struct {
 		name           string
 		preRun         func()
@@ -34,7 +37,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 		{
 			name: "no budget proposal found",
 			req: &types.QueryUnclaimedBudgetRequest{
-				Address: recipientAddr.String(),
+				Address: recipientStrAddr,
 			},
 			expErr:    true,
 			expErrMsg: "no budget proposal found for address",
@@ -44,7 +47,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			preRun: func() {
 				// Prepare a valid budget proposal
 				budget := types.Budget{
-					RecipientAddress: recipientAddr.String(),
+					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					StartTime:        &startTime,
 					Tranches:         2,
@@ -54,7 +57,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				suite.Require().NoError(err)
 			},
 			req: &types.QueryUnclaimedBudgetRequest{
-				Address: recipientAddr.String(),
+				Address: recipientStrAddr,
 			},
 			expErr:         false,
 			unclaimedFunds: &fooCoin,
@@ -72,7 +75,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			preRun: func() {
 				// Prepare a valid budget proposal
 				budget := types.Budget{
-					RecipientAddress: recipientAddr.String(),
+					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					StartTime:        &startTime,
 					Tranches:         2,
@@ -83,7 +86,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 
 				// Claim the funds once
 				msg := &types.MsgClaimBudget{
-					RecipientAddress: recipientAddr.String(),
+					RecipientAddress: recipientStrAddr,
 				}
 				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
 				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
@@ -91,7 +94,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			},
 
 			req: &types.QueryUnclaimedBudgetRequest{
-				Address: recipientAddr.String(),
+				Address: recipientStrAddr,
 			},
 			expErr:         false,
 			unclaimedFunds: &fooCoin2,

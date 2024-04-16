@@ -23,14 +23,15 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	consStr2, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(consAddr2)
 	require.NoError(err)
 
-	info1 := types.NewValidatorSigningInfo(consStr1, int64(4), int64(3),
+	info1 := types.NewValidatorSigningInfo(consStr1, int64(4),
 		time.Now().UTC().Add(100000000000), false, int64(10))
-	info2 := types.NewValidatorSigningInfo(consStr2, int64(5), int64(4),
+	info2 := types.NewValidatorSigningInfo(consStr2, int64(5),
 		time.Now().UTC().Add(10000000000), false, int64(10))
 
 	s.Require().NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr1, info1))
 	s.Require().NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr2, info2))
-	genesisState := keeper.ExportGenesis(ctx)
+	genesisState, err := keeper.ExportGenesis(ctx)
+	require.NoError(err)
 
 	require.Equal(genesisState.Params, testutil.TestParams())
 	require.Len(genesisState.SigningInfos, 2)
@@ -50,7 +51,8 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 
 	// Initialize genesis with genesis state before tombstone
 	s.stakingKeeper.EXPECT().IterateValidators(ctx, gomock.Any()).Return(nil)
-	keeper.InitGenesis(ctx, s.stakingKeeper, genesisState)
+	err = keeper.InitGenesis(ctx, s.stakingKeeper, genesisState)
+	s.Require().NoError(err)
 
 	// Validator isTombstoned should return false as GenesisState is initialized
 	ok = keeper.IsTombstoned(ctx, consAddr1)

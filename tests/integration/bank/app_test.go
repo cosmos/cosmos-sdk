@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/auth"
 	_ "cosmossdk.io/x/auth/tx/config"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -25,6 +26,8 @@ import (
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	cdctestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -65,34 +68,6 @@ var (
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
 
 	sendMsg1 = types.NewMsgSend(addr1.String(), addr2.String(), coins)
-
-	multiSendMsg1 = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{types.NewOutput(addr2, coins)},
-	}
-	multiSendMsg2 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(addr2, halfCoins),
-			types.NewOutput(addr3, halfCoins),
-		},
-	}
-	multiSendMsg3 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr2, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(addr1, coins),
-		},
-	}
-	multiSendMsg4 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(moduleAccAddr, coins),
-		},
-	}
-	invalidMultiSendMsg = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins), types.NewInput(addr2, coins)},
-		Outputs: []types.Output{},
-	}
 )
 
 type suite struct {
@@ -100,6 +75,7 @@ type suite struct {
 	AccountKeeper      types.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
 	App                *runtime.App
+	TxConfig           client.TxConfig
 }
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
@@ -117,6 +93,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
+				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.TxModule(),
@@ -128,7 +105,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper)
+		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
 
 	res.App = app
 
@@ -173,7 +150,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	require.NoError(t, err)
 	sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-	txConfig := moduletestutil.MakeTestTxConfig()
+	txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
@@ -188,9 +165,17 @@ func TestSendNotEnoughBalance(t *testing.T) {
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {
+	addr1Str, err := cdctestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
+	require.NoError(t, err)
 	acc := &authtypes.BaseAccount{
-		Address: addr1.String(),
+		Address: addr1Str,
 	}
+
+	addr2Str, err := cdctestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr2)
+	require.NoError(t, err)
+
+	moduleStrAddr, err := cdctestutil.CodecOptions{}.GetAddressCodec().BytesToString(moduleAccAddr)
+	require.NoError(t, err)
 
 	genAccs := []authtypes.GenesisAccount{acc}
 	s := createTestSuite(t, genAccs)
@@ -198,7 +183,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	ctx := baseApp.NewContext(false)
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err = baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = baseApp.Commit()
 	require.NoError(t, err)
@@ -209,8 +194,11 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			desc:       "make a valid tx",
-			msgs:       []sdk.Msg{multiSendMsg1},
+			desc: "make a valid tx",
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{types.NewOutput(addr2Str, coins)},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -222,8 +210,11 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			},
 		},
 		{
-			desc:       "wrong accNum should pass Simulate, but not Deliver",
-			msgs:       []sdk.Msg{multiSendMsg1, multiSendMsg2},
+			desc: "wrong accNum should pass Simulate, but not Deliver",
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{types.NewOutput(addr2Str, coins)},
+			}},
 			accNums:    []uint64{1}, // wrong account number
 			accSeqs:    []uint64{1},
 			expSimPass: true, // doesn't check signature
@@ -231,8 +222,13 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			privKeys:   []cryptotypes.PrivKey{priv1},
 		},
 		{
-			desc:       "wrong accSeq should not pass Simulate",
-			msgs:       []sdk.Msg{multiSendMsg4},
+			desc: "wrong accSeq should not pass Simulate",
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs: []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{
+					types.NewOutput(moduleStrAddr, coins),
+				},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0}, // wrong account sequence
 			expSimPass: false,
@@ -240,8 +236,11 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			privKeys:   []cryptotypes.PrivKey{priv1},
 		},
 		{
-			desc:       "multiple inputs not allowed",
-			msgs:       []sdk.Msg{invalidMultiSendMsg},
+			desc: "multiple inputs not allowed",
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins), types.NewInput(addr2Str, coins)},
+				Outputs: []types.Output{},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: false,
@@ -251,29 +250,37 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Logf("testing %s", tc.desc)
-		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
-		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
-		if tc.expPass {
-			require.NoError(t, err)
-		} else {
-			require.Error(t, err)
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			header := header.Info{Height: baseApp.LastBlockHeight() + 1}
+			txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
+			_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+			if tc.expPass {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+			}
 
-		for _, eb := range tc.expectedBalances {
-			checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
-		}
+			for _, eb := range tc.expectedBalances {
+				checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
+			}
+		})
 	}
 }
 
 func TestMsgMultiSendMultipleOut(t *testing.T) {
+	ac := cdctestutil.CodecOptions{}.GetAddressCodec()
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
 	acc1 := &authtypes.BaseAccount{
-		Address: addr1.String(),
+		Address: addr1Str,
 	}
+	addr2Str, err := ac.BytesToString(addr2)
+	require.NoError(t, err)
 	acc2 := &authtypes.BaseAccount{
-		Address: addr2.String(),
+		Address: addr2Str,
 	}
+	addr3Str, err := ac.BytesToString(addr3)
+	require.NoError(t, err)
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
 	s := createTestSuite(t, genAccs)
@@ -282,14 +289,20 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err = baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = baseApp.Commit()
 	require.NoError(t, err)
 
 	testCases := []appTestCase{
 		{
-			msgs:       []sdk.Msg{multiSendMsg2},
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs: []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{
+					types.NewOutput(addr2Str, halfCoins),
+					types.NewOutput(addr3Str, halfCoins),
+				},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -305,7 +318,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
+		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -316,9 +329,15 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 }
 
 func TestMsgMultiSendDependent(t *testing.T) {
+	ac := cdctestutil.CodecOptions{}.GetAddressCodec()
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
+	addr2Str, err := ac.BytesToString(addr2)
+	require.NoError(t, err)
+
 	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
 	acc2 := authtypes.NewBaseAccountWithAddress(addr2)
-	err := acc2.SetAccountNumber(1)
+	err = acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
@@ -334,7 +353,10 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:       []sdk.Msg{multiSendMsg1},
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{types.NewOutput(addr2Str, coins)},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -346,7 +368,12 @@ func TestMsgMultiSendDependent(t *testing.T) {
 			},
 		},
 		{
-			msgs:       []sdk.Msg{multiSendMsg3},
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs: []types.Input{types.NewInput(addr2Str, coins)},
+				Outputs: []types.Output{
+					types.NewOutput(addr1Str, coins),
+				},
+			}},
 			accNums:    []uint64{1},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -360,7 +387,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
+		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -438,8 +465,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(tt *testing.T) {
 			header := header.Info{Height: s.App.LastBlockHeight() + 1}
-			txGen := moduletestutil.MakeTestTxConfig()
-			_, _, err = simtestutil.SignCheckDeliver(tt, txGen, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
+			_, _, err = simtestutil.SignCheckDeliver(tt, s.TxConfig, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
 			if len(tc.expInError) > 0 {
 				require.Error(tt, err)
 				for _, exp := range tc.expInError {

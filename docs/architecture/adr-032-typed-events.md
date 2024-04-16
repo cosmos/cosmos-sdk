@@ -261,7 +261,7 @@ func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) 
 }
 
 // PublishChainTxEvents events using cmtclient. Waits on context shutdown signals to exit.
-func PublishChainTxEvents(ctx context.Context, client cmtclient.EventsClient, bus pubsub.Bus, mb module.BasicManager) (err error) {
+func PublishChainTxEvents(ctx context.Context, client cmtclient.EventsClient, bus pubsub.Bus) (err error) {
     // Subscribe to transaction events
     txch, err := client.Subscribe(ctx, "txevents", "tm.event='Tx'", 100)
     if err != nil {
@@ -289,12 +289,12 @@ func PublishChainTxEvents(ctx context.Context, client cmtclient.EventsClient, bu
                     if !evt.Result.IsOK() {
                         continue
                     }
-                    // range over events, parse them using the basic manager and
+                    // range over events and parse them
                     // send them to the pubsub bus
                     for _, abciEv := range events {
                         typedEvent, err := sdk.ParseTypedEvent(abciEv)
                         if err != nil {
-                            return er
+                            return err
                         }
                         if err := bus.Publish(typedEvent); err != nil {
                             bus.Close()

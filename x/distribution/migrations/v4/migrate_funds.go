@@ -2,6 +2,7 @@ package v4
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/x/distribution/types"
@@ -26,7 +27,7 @@ func MigrateFunds(ctx context.Context, bankKeeper types.BankKeeper, feePool type
 	// check the migrated balance from pool module account is same as fee pool balance
 	balances := bankKeeper.GetAllBalances(ctx, poolMacc.GetAddress())
 	if !balances.Equal(poolBal) {
-		return types.FeePool{}, fmt.Errorf("pool module account balance is not same as FeePool balance after migration")
+		return types.FeePool{}, errors.New("pool module account balance is not same as FeePool balance after migration")
 	}
 
 	return types.FeePool{DecimalPool: remainder}, nil

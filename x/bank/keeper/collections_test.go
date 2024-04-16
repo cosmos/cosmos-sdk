@@ -18,6 +18,7 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,22 +29,27 @@ func TestBankStateCompatibility(t *testing.T) {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
-	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addr, err := ac.BytesToString(accAddrs[4])
+	require.NoError(t, err)
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(banktypes.GovModuleName))
+	require.NoError(t, err)
+
 	k := keeper.NewBaseKeeper(
+		env,
 		encCfg.Codec,
-		storeService,
 		authKeeper,
-		map[string]bool{accAddrs[4].String(): true},
-		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
-		log.NewNopLogger(),
+		map[string]bool{addr: true},
+		authority,
 	)
 
 	// test we can decode balances without problems
@@ -56,7 +62,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	)
 	require.NoError(t, err)
 	// we set the index key to the old value.
-	require.NoError(t, storeService.OpenKVStore(ctx).Set(rawKey, bankDenomAddressLegacyIndexValue))
+	require.NoError(t, env.KVStoreService.OpenKVStore(ctx).Set(rawKey, bankDenomAddressLegacyIndexValue))
 
 	// test walking is ok
 	err = k.Balances.Indexes.Denom.Walk(ctx, nil, func(indexingKey string, indexedKey sdk.AccAddress) (stop bool, err error) {
@@ -79,7 +85,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	err = k.Balances.Indexes.Denom.Reference(ctx, collections.Join(sdk.AccAddress("test"), "atom"), math.ZeroInt(), nil)
 	require.NoError(t, err)
 
-	newRawValue, err := storeService.OpenKVStore(ctx).Get(rawKey)
+	newRawValue, err := env.KVStoreService.OpenKVStore(ctx).Get(rawKey)
 	require.NoError(t, err)
 	require.Equal(t, []byte{}, newRawValue)
 }

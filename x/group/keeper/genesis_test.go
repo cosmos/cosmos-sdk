@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -21,7 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -30,10 +33,11 @@ import (
 type GenesisTestSuite struct {
 	suite.Suite
 
-	ctx    context.Context
-	sdkCtx sdk.Context
-	keeper keeper.Keeper
-	cdc    *codec.ProtoCodec
+	ctx          context.Context
+	sdkCtx       sdk.Context
+	keeper       keeper.Keeper
+	cdc          *codec.ProtoCodec
+	addressCodec coreaddress.Codec
 }
 
 func TestGenesisTestSuite(t *testing.T) {
@@ -49,8 +53,9 @@ var (
 
 func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(group.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
@@ -70,8 +75,10 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.sdkCtx = testCtx.Ctx
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	s.ctx = s.sdkCtx
+	s.addressCodec = address.NewBech32Codec("cosmos")
 
-	s.keeper = keeper.NewKeeper(key, s.cdc, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(bApp.GRPCQueryRouter(), bApp.MsgServiceRouter()))
+	s.keeper = keeper.NewKeeper(env, s.cdc, accountKeeper, group.DefaultConfig())
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {
@@ -82,14 +89,19 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	submittedAt := time.Now().UTC()
 	timeout := submittedAt.Add(time.Second * 1).UTC()
 
+	accStrAddr, err := s.addressCodec.BytesToString(accAddr)
+	s.Require().NoError(err)
+	memberStrAddr, err := s.addressCodec.BytesToString(memberAddr)
+	s.Require().NoError(err)
+
 	groupPolicy := &group.GroupPolicyInfo{
-		Address:  accAddr.String(),
+		Address:  accStrAddr,
 		GroupId:  1,
-		Admin:    accAddr.String(),
+		Admin:    accStrAddr,
 		Version:  1,
 		Metadata: "policy metadata",
 	}
-	err := groupPolicy.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
+	err = groupPolicy.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
 		Threshold: "1",
 		Windows: &group.DecisionPolicyWindows{
 			VotingPeriod: time.Second,
@@ -99,12 +111,12 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	proposal := &group.Proposal{
 		Id:                 1,
-		GroupPolicyAddress: accAddr.String(),
+		GroupPolicyAddress: accStrAddr,
 		Metadata:           "proposal metadata",
 		GroupVersion:       1,
 		GroupPolicyVersion: 1,
 		Proposers: []string{
-			memberAddr.String(),
+			memberStrAddr,
 		},
 		SubmitTime: submittedAt,
 		Status:     group.PROPOSAL_STATUS_ACCEPTED,
@@ -118,21 +130,21 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		ExecutorResult:  group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
-		FromAddress: accAddr.String(),
-		ToAddress:   memberAddr.String(),
+		FromAddress: accStrAddr,
+		ToAddress:   memberStrAddr,
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}})
 	s.Require().NoError(err)
 
 	genesisState := &group.GenesisState{
 		GroupSeq:       2,
-		Groups:         []*group.GroupInfo{{Id: 1, Admin: accAddr.String(), Metadata: "1", Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accAddr.String(), Metadata: "2", Version: 2, TotalWeight: "2"}},
-		GroupMembers:   []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: "member metadata"}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: "member metadata"}}},
+		Groups:         []*group.GroupInfo{{Id: 1, Admin: accStrAddr, Metadata: "1", Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accStrAddr, Metadata: "2", Version: 2, TotalWeight: "2"}},
+		GroupMembers:   []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberStrAddr, Weight: "1", Metadata: "member metadata"}}, {GroupId: 2, Member: &group.Member{Address: memberStrAddr, Weight: "2", Metadata: "member metadata"}}},
 		GroupPolicySeq: 1,
 		GroupPolicies:  []*group.GroupPolicyInfo{groupPolicy},
 		ProposalSeq:    1,
 		Proposals:      []*group.Proposal{proposal},
-		Votes:          []*group.Vote{{ProposalId: proposal.Id, Voter: memberAddr.String(), SubmitTime: submittedAt, Option: group.VOTE_OPTION_YES}},
+		Votes:          []*group.Vote{{ProposalId: proposal.Id, Voter: memberStrAddr, SubmitTime: submittedAt, Option: group.VOTE_OPTION_YES}},
 	}
 	genesisBytes, err := cdc.MarshalJSON(genesisState)
 	s.Require().NoError(err)
@@ -141,7 +153,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		group.ModuleName: genesisBytes,
 	}
 
-	s.keeper.InitGenesis(sdkCtx, cdc, genesisData[group.ModuleName])
+	err = s.keeper.InitGenesis(sdkCtx, cdc, genesisData[group.ModuleName])
+	s.Require().NoError(err)
 
 	for i, g := range genesisState.Groups {
 		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{
@@ -181,7 +194,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		s.Require().Equal(votesRes.Votes[0], genesisState.Votes[0])
 	}
 
-	exported := s.keeper.ExportGenesis(sdkCtx, cdc)
+	exported, err := s.keeper.ExportGenesis(sdkCtx, cdc)
+	s.Require().NoError(err)
 	bz, err := cdc.MarshalJSON(exported)
 	s.Require().NoError(err)
 

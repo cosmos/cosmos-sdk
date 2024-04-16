@@ -11,9 +11,10 @@ import (
 	"sort"
 	"sync"
 
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
+	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
 
@@ -72,7 +73,7 @@ const (
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
 
-var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
+var ErrOptsZeroSnapshotInterval = errors.New("snapshot-interval must not be 0")
 
 // NewManager creates a new manager.
 func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger log.Logger) *Manager {
@@ -117,10 +118,10 @@ func (m *Manager) begin(op operation) error {
 // beginLocked begins an operation while already holding the mutex.
 func (m *Manager) beginLocked(op operation) error {
 	if op == opNone {
-		return errorsmod.Wrap(store.ErrLogic, "can't begin a none operation")
+		return errorsmod.Wrap(storeerrors.ErrLogic, "can't begin a none operation")
 	}
 	if m.operation != opNone {
-		return errorsmod.Wrapf(store.ErrConflict, "a %v operation is in progress", m.operation)
+		return errorsmod.Wrapf(storeerrors.ErrConflict, "a %v operation is in progress", m.operation)
 	}
 	m.operation = op
 	return nil
@@ -166,7 +167,7 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
-		return nil, errorsmod.Wrap(store.ErrLogic, "Snapshot Manager is nil")
+		return nil, errorsmod.Wrap(storeerrors.ErrLogic, "Snapshot Manager is nil")
 	}
 
 	err := m.begin(opSnapshot)
@@ -180,7 +181,7 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 		return nil, errorsmod.Wrap(err, "failed to examine latest snapshot")
 	}
 	if latest != nil && latest.Height >= height {
-		return nil, errorsmod.Wrapf(store.ErrConflict,
+		return nil, errorsmod.Wrapf(storeerrors.ErrConflict,
 			"a more recent snapshot already exists at height %v", latest.Height)
 	}
 
@@ -233,6 +234,37 @@ func (m *Manager) createSnapshot(height uint64, ch chan<- io.ReadCloser) {
 	}
 }
 
+// CreateMigration creates a migration snapshot and writes it to the given writer.
+// It is used to migrate the state from the original store to the store/v2.
+func (m *Manager) CreateMigration(height uint64, protoWriter WriteCloser) error {
+	if m == nil {
+		return errorsmod.Wrap(storeerrors.ErrLogic, "Snapshot Manager is nil")
+	}
+
+	err := m.begin(opSnapshot)
+	if err != nil {
+		return err
+	}
+	// m.end() will be called by the migration manager with EndMigration().
+
+	go func() {
+		if err := m.commitSnapshotter.Snapshot(height, protoWriter); err != nil {
+			protoWriter.CloseWithError(err)
+			return
+		}
+		_ = protoWriter.Close() // always return nil
+	}()
+
+	return nil
+}
+
+// EndMigration ends the migration operation.
+// It will replace the current commitSnapshotter with the new one.
+func (m *Manager) EndMigration(commitSnapshotter CommitSnapshotter) {
+	defer m.end()
+	m.commitSnapshotter = commitSnapshotter
+}
+
 // List lists snapshots, mirroring ABCI ListSnapshots. It can be concurrent with other operations.
 func (m *Manager) List() ([]*types.Snapshot, error) {
 	return m.store.List()
@@ -282,7 +314,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		return errorsmod.Wrapf(types.ErrUnknownFormat, "snapshot format %v", snapshot.Format)
 	}
 	if snapshot.Height == 0 {
-		return errorsmod.Wrap(store.ErrLogic, "cannot restore snapshot at height 0")
+		return errorsmod.Wrap(storeerrors.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if snapshot.Height > uint64(math.MaxInt64) {
 		return errorsmod.Wrapf(types.ErrInvalidMetadata,
@@ -367,7 +399,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	}
 
 	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
-	chStorage := make(chan *store.KVPair, defaultStorageChannelBufferSize)
+	chStorage := make(chan *corestore.StateChanges, defaultStorageChannelBufferSize)
 	defer close(chStorage)
 
 	storageErrs := make(chan error, 1)
@@ -391,11 +423,11 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		}
 		metadata := nextItem.GetExtension()
 		if metadata == nil {
-			return errorsmod.Wrapf(store.ErrLogic, "unknown snapshot item %T", nextItem.Item)
+			return errorsmod.Wrapf(storeerrors.ErrLogic, "unknown snapshot item %T", nextItem.Item)
 		}
 		extension, ok := m.extensions[metadata.Name]
 		if !ok {
-			return errorsmod.Wrapf(store.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
+			return errorsmod.Wrapf(storeerrors.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
 		}
 		if !IsFormatSupported(extension, metadata.Format) {
 			return errorsmod.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
@@ -424,11 +456,11 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	if m.operation != opRestore {
-		return false, errorsmod.Wrap(store.ErrLogic, "no restore operation in progress")
+		return false, errorsmod.Wrap(storeerrors.ErrLogic, "no restore operation in progress")
 	}
 
 	if int(m.restoreChunkIndex) >= len(m.restoreSnapshot.Metadata.ChunkHashes) {
-		return false, errorsmod.Wrap(store.ErrLogic, "received unexpected chunk")
+		return false, errorsmod.Wrap(storeerrors.ErrLogic, "received unexpected chunk")
 	}
 
 	// Check if any errors have occurred yet.
@@ -438,7 +470,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		if done.err != nil {
 			return false, done.err
 		}
-		return false, errorsmod.Wrap(store.ErrLogic, "restore ended unexpectedly")
+		return false, errorsmod.Wrap(storeerrors.ErrLogic, "restore ended unexpectedly")
 	default:
 	}
 
@@ -474,7 +506,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 			return false, done.err
 		}
 		if !done.complete {
-			return false, errorsmod.Wrap(store.ErrLogic, "restore ended prematurely")
+			return false, errorsmod.Wrap(storeerrors.ErrLogic, "restore ended prematurely")
 		}
 
 		return true, nil
@@ -575,7 +607,4 @@ func (m *Manager) snapshot(height int64) {
 }
 
 // Close the snapshot database.
-func (m *Manager) Close() error {
-	m.logger.Info("snapshotManager Close Database")
-	return m.store.db.Close()
-}
+func (m *Manager) Close() error { return nil }

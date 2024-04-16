@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -13,6 +14,7 @@ import (
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authsims "cosmossdk.io/x/auth/simulation"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	_ "cosmossdk.io/x/auth/tx/config"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
@@ -23,6 +25,7 @@ import (
 	_ "cosmossdk.io/x/staking"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -32,7 +35,7 @@ import (
 )
 
 var (
-	denomRegex   = sdk.DefaultCoinDenomRegex()
+	denomRegex   = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
 	addr1        = sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
 	coin1        = sdk.NewCoin("denom", math.NewInt(10))
 	metadataAtom = banktypes.Metadata{
@@ -63,7 +66,8 @@ type deterministicFixture struct {
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	t.Helper()
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{})
+	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -76,10 +80,15 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		minttypes.ModuleName: {authtypes.Minter},
 	}
 
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+
 	accountKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -90,21 +99,24 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := keeper.NewBaseKeeper(
+
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
-		log.NewNopLogger(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
-		authtypes.ModuleName: authModule,
-		banktypes.ModuleName: bankModule,
-	})
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName: authModule,
+			banktypes.ModuleName: bankModule,
+		})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
@@ -145,24 +157,34 @@ func TestGRPCQueryBalance(t *testing.T) {
 		coin := getCoin(rt)
 		fundAccount(f, addr, coin)
 
-		req := banktypes.NewQueryBalanceRequest(addr, coin.GetDenom())
+		addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+		assert.NilError(t, err)
+
+		req := banktypes.NewQueryBalanceRequest(addrStr, coin.GetDenom())
 
 		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Balance, 0, true)
 	})
 
+	addr1Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
+	assert.NilError(t, err)
+
 	fundAccount(f, addr1, coin1)
-	req := banktypes.NewQueryBalanceRequest(addr1, coin1.GetDenom())
+	req := banktypes.NewQueryBalanceRequest(addr1Str, coin1.GetDenom())
 	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Balance, 1087, false)
 }
 
 func TestGRPCQueryAllBalances(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
 
 	rapid.Check(t, func(rt *rapid.T) {
 		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
 		numCoins := rapid.IntRange(1, 10).Draw(rt, "num-count")
 		coins := make(sdk.Coins, 0, numCoins)
+
+		addrStr, err := addressCodec.BytesToString(addr)
+		assert.NilError(t, err)
 
 		for i := 0; i < numCoins; i++ {
 			coin := getCoin(rt)
@@ -173,7 +195,7 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 
 		fundAccount(f, addr, coins...)
 
-		req := banktypes.NewQueryAllBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"), false)
+		req := banktypes.NewQueryAllBalancesRequest(addrStr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"), false)
 		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.AllBalances, 0, true)
 	})
 
@@ -183,7 +205,10 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 	)
 
 	fundAccount(f, addr1, coins...)
-	req := banktypes.NewQueryAllBalancesRequest(addr1, nil, false)
+	addr1Str, err := addressCodec.BytesToString(addr1)
+	assert.NilError(t, err)
+
+	req := banktypes.NewQueryAllBalancesRequest(addr1Str, nil, false)
 
 	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.AllBalances, 357, false)
 }
@@ -194,6 +219,8 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
+		addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+		assert.NilError(t, err)
 
 		// Denoms must be unique, otherwise sdk.NewCoins will panic.
 		denoms := rapid.SliceOfNDistinct(rapid.StringMatching(denomRegex), 1, 10, rapid.ID[string]).Draw(rt, "denoms")
@@ -208,10 +235,10 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
 
-		err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, coins)
+		err = banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, coins)
 		assert.NilError(t, err)
 
-		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(len(denoms))).Draw(rt, "pagination"))
+		req := banktypes.NewQuerySpendableBalancesRequest(addrStr, testdata.PaginationGenerator(rt, uint64(len(denoms))).Draw(rt, "pagination"))
 		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 0, true)
 	})
 
@@ -223,8 +250,11 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr1, coins)
 	assert.NilError(t, err)
 
-	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 2032, false)
+	addr1Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
+	assert.NilError(t, err)
+
+	req := banktypes.NewQuerySpendableBalancesRequest(addr1Str, nil)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 1777, false)
 }
 
 func TestGRPCQueryTotalSupply(t *testing.T) {

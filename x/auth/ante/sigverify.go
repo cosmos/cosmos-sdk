@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -9,8 +10,10 @@ import (
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	authsigning "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -24,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -46,6 +50,11 @@ func init() {
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 
+type AccountAbstractionKeeper interface {
+	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
+	AuthenticateAccount(ctx context.Context, addr []byte, msg *aa_interface_v1.MsgAuthenticate) error
+}
+
 // SigVerificationDecorator verifies all signatures for a tx and returns an
 // error if any are invalid.
 // It will populate an account's public key if that is not present only if
@@ -61,12 +70,14 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
+	aaKeeper        AccountAbstractionKeeper
 	signModeHandler *txsigning.HandlerMap
 	sigGasConsumer  SignatureVerificationGasConsumer
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper) SigVerificationDecorator {
 	return SigVerificationDecorator{
+		aaKeeper:        aaKeeper,
 		ak:              ak,
 		signModeHandler: signModeHandler,
 		sigGasConsumer:  sigGasConsumer,
@@ -139,7 +150,7 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 	return nil
 }
 
-func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -176,7 +187,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	for i := range signers {
-		err = svd.authenticate(ctx, sigTx, signers[i], signatures[i], pubKeys[i])
+		err = svd.authenticate(ctx, sigTx, signers[i], signatures[i], pubKeys[i], i)
 		if err != nil {
 			return ctx, err
 		}
@@ -205,31 +216,52 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	ctx.EventManager().EmitEvents(events)
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx, false)
 }
 
 // authenticate the authentication of the TX for a specific tx signer.
-func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey) error {
-	acc, err := GetSignerAcc(ctx, svd.ak, signer)
-	if err != nil {
-		return err
+func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey, signerIndex int) error {
+	// first we check if it's an AA
+	if svd.aaKeeper != nil {
+		isAa, err := svd.aaKeeper.IsAbstractedAccount(ctx, signer)
+		if err != nil {
+			return err
+		}
+		if isAa {
+			return svd.authenticateAbstractedAccount(ctx, tx, signer, signerIndex)
+		}
+	}
+
+	// not an AA, proceed with standard auth flow.
+
+	// newlyCreated is a flag that indicates if the account was newly created.
+	// This is only the case when the user is sending their first tx.
+	newlyCreated := false
+	acc := GetSignerAcc(ctx, svd.ak, signer)
+	if acc == nil {
+		// If the account is nil, we assume this is the account's first tx. In this case, the account needs to be
+		// created, but the sign doc should use account number 0. This is because the account number is
+		// not known until the account is created when the tx was signed, the account number was unknown
+		// and 0 was set.
+		acc = svd.ak.NewAccountWithAddress(ctx, txPubKey.Address().Bytes())
+		newlyCreated = true
 	}
 
 	// the account is without a pubkey, let's attempt to check if in the
 	// tx we were correctly provided a valid pubkey.
 	if acc.GetPubKey() == nil {
-		err = svd.setPubKey(ctx.IsSigverifyTx(), ctx.ExecMode() == sdk.ExecModeSimulate, acc, txPubKey)
+		err := svd.setPubKey(ctx, acc, txPubKey)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = svd.consumeSignatureGas(ctx, acc.GetPubKey(), sig)
+	err := svd.consumeSignatureGas(ctx, acc.GetPubKey(), sig)
 	if err != nil {
 		return err
 	}
 
-	err = svd.verifySig(ctx, tx, acc, sig)
+	err = svd.verifySig(ctx, tx, acc, sig, newlyCreated)
 	if err != nil {
 		return err
 	}
@@ -249,7 +281,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 	pubKey cryptotypes.PubKey,
 	signature signing.SignatureV2,
 ) error {
-	if ctx.ExecMode() == sdk.ExecModeSimulate && pubKey == nil {
+	if svd.ak.Environment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate && pubKey == nil {
 		pubKey = simSecp256k1Pubkey
 	}
 
@@ -268,7 +300,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 }
 
 // verifySig will verify the signature of the provided signer account.
-func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
+func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2, newlyCreated bool) error {
 	if sig.Sequence != acc.GetSequence() {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
@@ -279,7 +311,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	// we're in simulation mode, or in ReCheckTx, or context is not
 	// on sig verify tx, then we do not need to verify the signatures
 	// in the tx.
-	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
+	if svd.ak.Environment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
 		return nil
 	}
 
@@ -293,8 +325,17 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
+	// if we are not in genesis use the account number from the account
 	if !genesis {
 		accNum = acc.GetAccountNumber()
+	}
+
+	// if the account number is 0 and the account is signing, the sign doc will not have an account number
+	if acc.GetSequence() == 0 && newlyCreated {
+		// If the account sequence is 0, and we're in genesis, then we're
+		// dealing with an account that has been generated but never used.
+		// in this case, we should not verify signatures.
+		accNum = 0
 	}
 
 	anyPk, _ := codectypes.NewAnyWithValue(pubKey)
@@ -332,18 +373,19 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 
 // setPubKey will attempt to set the pubkey for the account given the list of available public keys.
 // This must be called only in case the account has not a pubkey set yet.
-func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
 	// if we're not in sig verify then we can just skip.
-	if !isSigVerifyTx {
+	if !ctx.IsSigverifyTx() {
 		return nil
 	}
+
 	// if the pubkey is nil then we don't have any pubkey to set
-	// for this account, which alwo means we cannot do signature
+	// for this account, which also means we cannot do signature
 	// verification.
 	if txPubKey == nil {
 		// if we're not in simulation mode, and we do not have a valid pubkey
 		// for this signer, then we simply error.
-		if !simulate {
+		if svd.ak.Environment().TransactionService.ExecMode(ctx) != transaction.ExecModeSimulate {
 			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", acc.GetAddress().String())
 		}
 		// if we're in simulation mode, then we can populate the pubkey with the
@@ -352,9 +394,9 @@ func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc 
 		return acc.SetPubKey(txPubKey)
 	}
 
-	// NOTE(tip): this is a way to claim the account, in a context in which the
-	// account was created in an implicit way.
-	// TODO(tip): considering moving account initialization logic: https://github.com/cosmos/cosmos-sdk/issues/19092
+	// this code path is taken when a user has received tokens but not submitted their first transaction
+	// if the address does not match the pubkey, then we error.
+	// TODO: in the future the relationship between address and pubkey should be more flexible.
 	if !acc.GetAddress().Equals(sdk.AccAddress(txPubKey.Address().Bytes())) {
 		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", acc.GetAddress(), txPubKey.Address())
 	}
@@ -383,6 +425,27 @@ func (svd SigVerificationDecorator) increaseSequence(tx authsigning.Tx, acc sdk.
 	return acc.SetSequence(acc.GetSequence() + 1)
 }
 
+// authenticateAbstractedAccount computes an AA authentication instruction and invokes the auth flow on the AA.
+func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx sdk.Context, authTx authsigning.Tx, signer []byte, index int) error {
+	// the bundler is the AA itself.
+	selfBundler, err := svd.ak.AddressCodec().BytesToString(signer)
+	if err != nil {
+		return err
+	}
+
+	infoTx := authTx.(interface {
+		GetRawTx() *tx.TxRaw
+		GetProtoTx() *tx.Tx
+	})
+
+	return svd.aaKeeper.AuthenticateAccount(ctx, signer, &aa_interface_v1.MsgAuthenticate{
+		Bundler:     selfBundler,
+		RawTx:       infoTx.GetRawTx(),
+		Tx:          infoTx.GetProtoTx(),
+		SignerIndex: uint32(index),
+	})
+}
+
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params
 // otherwise it calls next AnteHandler
 // Use this decorator to set parameterized limit on number of signatures in tx
@@ -397,7 +460,7 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
-func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
@@ -417,7 +480,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx, false)
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
@@ -515,12 +578,8 @@ func multisignatureSimulationVerificationGas(
 
 // GetSignerAcc returns an account for a given address that is expected to sign
 // a transaction.
-func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (sdk.AccountI, error) {
-	if acc := ak.GetAccount(ctx, addr); acc != nil {
-		return acc, nil
-	}
-
-	return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) sdk.AccountI {
+	return ak.GetAccount(ctx, addr)
 }
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.

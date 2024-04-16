@@ -27,15 +27,28 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#19537](https://github.com/cosmos/cosmos-sdk/pull/19537) Changing `MinCommissionRate` in `MsgUpdateParams` now updates the minimum commission rate for all validators.
+
 ### Improvements
+
+* [#19779](https://github.com/cosmos/cosmos-sdk/pull/19779) Allows for setting `unbonding_time` to zero.
 
 * [#19277](https://github.com/cosmos/cosmos-sdk/pull/19277) Hooks calls on `SetUnbondingDelegationEntry`, `SetRedelegationEntry`, `Slash` and `RemoveValidator` returns errors instead of logging just like other hooks calls.
 * [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `IterateBondedValidatorsByPower`, `GetDelegatorBonded`, `Delegate`, `Unbond`, `Slash`, `Jail`, `SlashRedelegation`, `ApplyAndReturnValidatorSetUpdates` methods no longer panics on any kind of errors but instead returns appropriate errors.
 * [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
 
+### Bug Fixes
+
+* [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
+
 ### API Breaking Changes
 
-* [#18198](https://github.com/cosmos/cosmos-sdk/pull/18198): `Validator` and `Delegator` interfaces were moved to `github.com/cosmos/cosmos-sdk/types` to avoid interface dependency on staking in other modules. 
+* [#19788](https://github.com/cosmos/cosmos-sdk/pull/19788) Remove `ABCIValidatorUpdate` and `ABCIValidatorUpdateZero`, use `ModuleValidatorUpdate` and `ModuleValidatorUpdateIsZero` instead.
+* [#19754](https://github.com/cosmos/cosmos-sdk/pull/19754) Update to use `[]appmodule.ValidatorUpdate` as return for `ApplyAndReturnValidatorSetUpdates`.
+* [#19414](https://github.com/cosmos/cosmos-sdk/pull/19414) `NewStakingKeeper` takes an environment variable instead of individual services.
+* [#19742](https://github.com/cosmos/cosmos-sdk/pull/19742) `NewStakeAuthorization` now takes `address.Codec` as argument.
+* [#19735](https://github.com/cosmos/cosmos-sdk/pull/19735) Update genesis api to match new `appmodule.HasGenesis` interface.
+* [#18198](https://github.com/cosmos/cosmos-sdk/pull/18198) `Validator` and `Delegator` interfaces were moved to `github.com/cosmos/cosmos-sdk/types` to avoid interface dependency on staking in other modules.
 * [#17778](https://github.com/cosmos/cosmos-sdk/pull/17778) Use collections for `Params`
     * remove from `Keeper`: `GetParams`, `SetParams`
 * [#17486](https://github.com/cosmos/cosmos-sdk/pull/17486) Use collections for `RedelegationQueueKey`:
@@ -75,8 +88,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove from `types`: `GetUnbondingTypeKey`.
 * [#17063](https://github.com/cosmos/cosmos-sdk/pull/17063) Use collections for `HistoricalInfo`:
     * remove `Keeper`: `GetHistoricalInfo`, `SetHistoricalInfo`
-* [#17062](https://github.com/cosmos/cosmos-sdk/pull/17062) Use collections for `ValidatorUpdates`:
-    * remove `Keeper`: `SetValidatorUpdates`, `GetValidatorUpdates`
+* [#17062](https://github.com/cosmos/cosmos-sdk/pull/17062), [#19788](https://github.com/cosmos/cosmos-sdk/pull/19788) Remove `GetValidatorUpdates` and `ValidatorUpdates` storage.
 * [#17026](https://github.com/cosmos/cosmos-sdk/pull/17026) Use collections for `LastTotalPower`:
     * remove `Keeper`: `SetLastTotalPower`, `GetLastTotalPower`
 * [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"cosmossdk.io/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
@@ -84,7 +96,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Breaking changes
 
+* [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In a undelegation or redelegation if the shares being left delegated correspond to less than 1 token (in base denom) the entire delegation gets removed.
 * [#18142](https://github.com/cosmos/cosmos-sdk/pull/18142) Introduce `key_rotation_fee` param to calculate fees while rotating the keys
 * [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC.
-
-### Bug Fixes
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.

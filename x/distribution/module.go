@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
@@ -17,7 +18,6 @@ import (
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -27,69 +27,23 @@ import (
 const ConsensusVersion = 4
 
 var (
-	_ module.AppModuleBasic      = AppModule{}
+	_ module.HasName             = AppModule{}
+	_ module.HasAminoCodec       = AppModule{}
+	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasGenesis          = AppModule{}
 	_ module.HasInvariants       = AppModule{}
 
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasMigrations   = AppModule{}
+	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasBeginBlocker       = AppModule{}
+	_ appmodule.HasServices           = AppModule{}
+	_ appmodule.HasMigrations         = AppModule{}
+	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.HasGenesis            = AppModule{}
 )
-
-// AppModuleBasic defines the basic application module used by the distribution module.
-type AppModuleBasic struct {
-	cdc codec.Codec
-}
-
-// Name returns the distribution module's name.
-func (AppModuleBasic) Name() string {
-	return types.ModuleName
-}
-
-// RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the distribution
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the distribution module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return types.ValidateGenesis(&data)
-}
-
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the distribution module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
-}
-
-// GetTxCmd returns the root tx command for the distribution module.
-func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
-}
-
-// RegisterInterfaces implements InterfaceModule
-func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
-}
 
 // AppModule implements an application module for the distribution module.
 type AppModule struct {
-	AppModuleBasic
-
+	cdc           codec.Codec
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
@@ -103,17 +57,44 @@ func NewAppModule(
 	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, poolKeeper types.PoolKeeper,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
-		stakingKeeper:  stakingKeeper,
-		poolKeeper:     poolKeeper,
+		cdc:           cdc,
+		keeper:        keeper,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
+		stakingKeeper: stakingKeeper,
+		poolKeeper:    poolKeeper,
 	}
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
+
+// Name returns the distribution module's name.
+func (AppModule) Name() string {
+	return types.ModuleName
+}
+
+// RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
+func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
+
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the distribution module.
+func (AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
+}
+
+// GetTxCmd returns the root tx command for the distribution module.
+func (AppModule) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
+}
+
+// RegisterInterfaces implements InterfaceModule
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	types.RegisterInterfaces(registrar)
+}
 
 // RegisterInvariants registers the distribution module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
@@ -128,6 +109,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
+// RegisterMigrations registers the distribution module's migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -145,27 +127,46 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	return nil
 }
 
-// InitGenesis performs genesis initialization for the distribution module. It returns
-// no validator updates.
-func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+// DefaultGenesis returns default genesis state as raw bytes for the distribution module.
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the distribution module.
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
+	var data types.GenesisState
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(&data)
+}
+
+// InitGenesis performs genesis initialization for the distribution module.
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
 	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.keeper.InitGenesis(ctx, genesisState)
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		return err
+	}
+	return am.keeper.InitGenesis(ctx, genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the distribution
 // module.
-func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx)
-	return cdc.MustMarshalJSON(gs)
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return am.cdc.MarshalJSON(gs)
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
+// ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the distribution module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
+	c := sdk.UnwrapSDKContext(ctx) // TODO: remove and use context.Context after including the comet service
 	return am.keeper.BeginBlocker(c)
 }
 

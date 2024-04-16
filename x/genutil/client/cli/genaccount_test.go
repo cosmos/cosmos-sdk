@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -24,6 +25,10 @@ import (
 
 func TestAddGenesisAccountCmd(t *testing.T) {
 	_, _, addr1 := testdata.KeyTestPubAddr()
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
+
 	tests := []struct {
 		name        string
 		addr        string
@@ -40,14 +45,14 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		},
 		{
 			name:        "valid address",
-			addr:        addr1.String(),
+			addr:        addr1Str,
 			denom:       "1000atom",
 			withKeyring: false,
 			expectErr:   false,
 		},
 		{
 			name:        "multiple denoms",
-			addr:        addr1.String(),
+			addr:        addr1Str,
 			denom:       "1000atom, 2000stake",
 			withKeyring: false,
 			expectErr:   false,
@@ -69,12 +74,12 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
-			appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
+			appCodec := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}).Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
 			serverCtx := server.NewContext(viper.New(), cfg, logger)
-			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home)
+			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).WithAddressCodec(ac)
 
 			if tc.withKeyring {
 				path := hd.CreateHDPath(118, 0, 0).String()

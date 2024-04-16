@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 
 	corestore "cosmossdk.io/core/store"
 )
@@ -22,7 +21,7 @@ type iterator struct {
 	err        error
 }
 
-func newIterator(db *Database, storeKey string, targetVersion uint64, start, end []byte, reverse bool) (*iterator, error) {
+func newIterator(db *Database, storeKey []byte, targetVersion uint64, start, end []byte, reverse bool) (*iterator, error) {
 	if targetVersion < db.earliestVersion {
 		return &iterator{
 			start: start,

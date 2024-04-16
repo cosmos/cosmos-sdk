@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -26,13 +27,19 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	AccountKeeper types.AccountKeeper
-	StakingKeeper types.StakingKeeper
-	DeliverTx     genesis.TxHandler
-	Config        client.TxConfig
+	AccountKeeper  types.AccountKeeper
+	StakingKeeper  types.StakingKeeper
+	DeliverTx      genesis.TxHandler
+	Config         client.TxConfig
+	Cdc            codec.Codec
+	GenTxValidator types.MessageValidator `optional:"true"`
 }
 
 func ProvideModule(in ModuleInputs) appmodule.AppModule {
-	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
+	if in.GenTxValidator == nil {
+		in.GenTxValidator = types.DefaultMessageValidator
+	}
+
+	m := NewAppModule(in.Cdc, in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config, in.GenTxValidator)
 	return m
 }

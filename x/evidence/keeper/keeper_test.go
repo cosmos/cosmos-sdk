@@ -10,7 +10,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
@@ -20,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -72,6 +75,9 @@ type KeeperTestSuite struct {
 
 	ctx sdk.Context
 
+	addressCodec     coreaddress.Codec
+	consAddressCodec coreaddress.ConsensusAddressCodec
+
 	evidenceKeeper keeper.Keeper
 	bankKeeper     *evidencetestutil.MockBankKeeper
 	accountKeeper  *evidencetestutil.MockAccountKeeper
@@ -83,12 +89,14 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, evidence.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
 	suite.ctx = testCtx.Ctx
+	suite.addressCodec = address.NewBech32Codec("cosmos")
+	suite.consAddressCodec = address.NewBech32Codec("cosmosvalcons")
 
 	ctrl := gomock.NewController(suite.T())
 
@@ -99,7 +107,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	evidenceKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		stakingKeeper,
 		slashingKeeper,
 		address.NewBech32Codec("cosmos"),
@@ -114,7 +122,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	evidenceKeeper.SetRouter(router)
 
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, evidence.AppModule{})
 
 	suite.accountKeeper = accountKeeper
 
@@ -124,7 +132,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.evidenceKeeper = *evidenceKeeper
 
 	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
-		suite.evidenceKeeper.Logger(testCtx.Ctx))
+		suite.evidenceKeeper.Logger())
 
 	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }
@@ -135,11 +143,14 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 	for i := 0; i < numEvidence; i++ {
 		pk := ed25519.GenPrivKey()
 
+		consAddr, err := suite.consAddressCodec.BytesToString(pk.PubKey().Address())
+		suite.Require().NoError(err)
+
 		evidence[i] = &types.Equivocation{
 			Height:           11,
 			Power:            100,
 			Time:             time.Now().UTC(),
-			ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
+			ConsensusAddress: consAddr,
 		}
 
 		suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, evidence[i]))
@@ -151,12 +162,14 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
+	consAddr, err := suite.consAddressCodec.BytesToString(pk.PubKey().Address())
+	suite.Require().NoError(err)
 
 	e := &types.Equivocation{
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
-		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
+		ConsensusAddress: consAddr,
 	}
 
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
@@ -169,12 +182,14 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
+	consAddr, err := suite.consAddressCodec.BytesToString(pk.PubKey().Address())
+	suite.Require().NoError(err)
 
 	e := &types.Equivocation{
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
-		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
+		ConsensusAddress: consAddr,
 	}
 
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
@@ -188,14 +203,16 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
+	consAddr, err := suite.consAddressCodec.BytesToString(pk.PubKey().Address())
+	suite.Require().NoError(err)
 	e := &types.Equivocation{
 		Height:           0,
 		Power:            100,
 		Time:             time.Now().UTC(),
-		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
+		ConsensusAddress: consAddr,
 	}
 
-	err := suite.evidenceKeeper.SubmitEvidence(ctx, e)
+	err = suite.evidenceKeeper.SubmitEvidence(ctx, e)
 	suite.ErrorIs(err, types.ErrInvalidEvidence)
 
 	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())

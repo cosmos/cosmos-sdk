@@ -258,6 +258,9 @@ func initTestnetFiles(
 			nodeConfig.P2P.AddrBookStrict = false
 			nodeConfig.P2P.PexReactor = false
 			nodeConfig.P2P.AllowDuplicateIP = true
+			simappConfig.API.Address = fmt.Sprintf("tcp://127.0.0.1:%d", apiPort+portOffset)
+			simappConfig.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset)
+			simappConfig.GRPCWeb.Enable = true
 		}
 
 		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)
@@ -266,11 +269,7 @@ func initTestnetFiles(
 
 		nodeConfig.SetRoot(nodeDir)
 		nodeConfig.Moniker = nodeDirName
-		nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://%s:26657", args.listenIPAddress)
-
-		simappConfig.API.Address = fmt.Sprintf("tcp://127.0.0.1:%d", apiPort+portOffset)
-		simappConfig.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset)
-		simappConfig.GRPCWeb.Enable = true
+		nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://%s:%d", args.listenIPAddress, rpcPort+portOffset)
 
 		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
 			_ = os.RemoveAll(args.outputDir)

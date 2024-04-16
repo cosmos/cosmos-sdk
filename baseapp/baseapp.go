@@ -39,6 +39,21 @@ type (
 	// an older version of the software. In particular, if a module changed the substore key name
 	// (or removed a substore) between two versions of the software.
 	StoreLoader func(ms sdk.CommitMultiStore) error
+
+	// MigrateModuleFn gets called when there is a change in the app version. It is
+	// triggered in the Commit stage after all state transitions have occurred.
+	MigrateModuleFn func(ctx sdk.Context, fromVersion, toVersion uint64) error
+
+	// MigrateStoreFn gets called when there is a change in the app version. It is
+	// triggered in the Commit stage after all state transitions have occurred.
+	MigrateStoreFn func(fromVersion, toVersion uint64) (StoreMigrations, error)
+
+	// StoreMigrations is a type that contains the added and removed stores for a
+	// migration.
+	StoreMigrations struct {
+		Added   map[string]*storetypes.KVStoreKey
+		Deleted map[string]*storetypes.KVStoreKey
+	}
 )
 
 // BaseApp reflects the ABCI application implementation.
@@ -57,6 +72,7 @@ type BaseApp struct { // nolint: maligned
 	snapshotData
 	abciData
 	moduleRouter
+	migrator
 
 	// volatile states:
 	//
@@ -133,6 +149,11 @@ type appStore struct {
 	interBlockCache sdk.MultiStorePersistentCache
 
 	fauxMerkleMode bool // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+}
+
+type migrator struct {
+	moduleMigrator MigrateModuleFn
+	storeMigrator  MigrateStoreFn
 }
 
 type moduleRouter struct {

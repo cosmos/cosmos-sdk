@@ -343,6 +343,36 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// The write to the DeliverTx state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
 	app.deliverState.ms.Write()
+
+	// Check if there has been an app version change. If so and there is a migrator
+	// set, begin to run migrations. This needs to be done before the commit so
+	// that the migrations are part of the app hash
+	if header.Version.App < app.appVersion &&
+		app.migrator.storeMigrator != nil &&
+		app.migrator.moduleMigrator != nil {
+
+		// first update the stores themselves by adding and removing them as necessary
+		storeMigrations, err := app.migrator.storeMigrator(header.Version.App, app.appVersion)
+		if err != nil {
+			panic(fmt.Sprintf("failed to get store migrations: %v", err))
+		}
+		app.MountKVStores(storeMigrations.Added)
+		err = app.cms.LoadLatestVersionAndUpgrade(storeMigrations.ToStoreUpgrades())
+		if err != nil {
+			panic(fmt.Sprintf("failed to upgrade stores: %v", err))
+		}
+
+		// create a new cached branch of the store to apply migrations to
+		app.setDeliverState(header)
+		err = app.migrator.moduleMigrator(app.deliverState.ctx, header.Version.App, app.appVersion)
+		if err != nil {
+			panic(fmt.Sprintf("failed to migrate modules: %v", err))
+		}
+
+		// write the new state to the branch
+		app.deliverState.ms.Write()
+	}
+
 	commitID := app.cms.Commit()
 
 	res := abci.ResponseCommit{

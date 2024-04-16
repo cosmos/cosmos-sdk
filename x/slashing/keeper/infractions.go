@@ -26,7 +26,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 
 func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
 	logger := k.Logger(ctx)
-	height := k.environment.HeaderService.GetHeaderInfo(ctx).Height
+	height := k.HeaderService.GetHeaderInfo(ctx).Height
 
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
@@ -115,7 +115,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	}
 
 	if missed {
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeLiveness,
 			event.NewAttribute(types.AttributeKeyAddress, consStr),
 			event.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
@@ -162,7 +162,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 				return err
 			}
 
-			if err := k.environment.EventService.EventManager(ctx).EmitKV(
+			if err := k.EventService.EventManager(ctx).EmitKV(
 				types.EventTypeSlash,
 				event.NewAttribute(types.AttributeKeyAddress, consStr),
 				event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
@@ -181,7 +181,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 			if err != nil {
 				return err
 			}
-			signInfo.JailedUntil = k.environment.HeaderService.GetHeaderInfo(ctx).Time.Add(downtimeJailDur)
+			signInfo.JailedUntil = k.HeaderService.GetHeaderInfo(ctx).Time.Add(downtimeJailDur)
 
 			// We need to reset the counter & bitmap so that the validator won't be
 			// immediately slashed for downtime upon re-bonding.

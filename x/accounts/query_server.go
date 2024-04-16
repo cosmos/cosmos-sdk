@@ -25,6 +25,9 @@ type queryServer struct {
 }
 
 func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryRequest) (*v1.AccountQueryResponse, error) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
 	// get target addr
 	targetAddr, err := q.k.addressCodec.StringToBytes(request.Target)
 	if err != nil {
@@ -76,6 +79,9 @@ func (q queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.S
 }
 
 func (q queryServer) AccountType(ctx context.Context, request *v1.AccountTypeRequest) (*v1.AccountTypeResponse, error) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
 	addr, err := q.k.addressCodec.StringToBytes(request.Address)
 	if err != nil {
 		return nil, err
@@ -90,6 +96,9 @@ func (q queryServer) AccountType(ctx context.Context, request *v1.AccountTypeReq
 }
 
 func (q queryServer) AccountNumber(ctx context.Context, request *v1.AccountNumberRequest) (*v1.AccountNumberResponse, error) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
 	addr, err := q.k.addressCodec.StringToBytes(request.Address)
 	if err != nil {
 		return nil, err

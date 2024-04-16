@@ -57,9 +57,6 @@ func TestImportAccountError(t *testing.T) {
 		return "test", acc, err
 	})
 
-	// Set up a mock query router
-	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error { return nil })
-
 	// Define a mock GenesisAccount with a non-existent account type
 	acc := &v1.GenesisAccount{
 		Address:       "test-address",

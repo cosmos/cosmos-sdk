@@ -121,15 +121,18 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 	oldConsAddr := sdk.ConsAddress(pks[0].Address())
 	newConsAddr := sdk.ConsAddress(pks[1].Address())
 
+	consAddr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(newConsAddr)
+	s.Require().NoError(err)
+
 	newInfo := slashingtypes.NewValidatorSigningInfo(
-		newConsAddr.String(),
+		consAddr,
 		int64(4),
 		time.Unix(2, 0).UTC(),
 		false,
 		int64(10),
 	)
 
-	err := slashingKeeper.ValidatorSigningInfo.Set(ctx, oldConsAddr, newInfo)
+	err = slashingKeeper.ValidatorSigningInfo.Set(ctx, oldConsAddr, newInfo)
 	require.NoError(err)
 
 	s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), oldConsAddr).Return(oldConsAddr, nil)

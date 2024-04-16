@@ -8,11 +8,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 func TestEquivocation_Valid(t *testing.T) {
@@ -91,7 +91,7 @@ func TestEvidenceAddressConversion(t *testing.T) {
 func NewMisbehavior(height, tvp int64, t time.Time, tpe consensusv1.MisbehaviorType, val []byte) consensusv1.Evidence {
 	return consensusv1.Evidence{
 		Height:           height,
-		Time:             t,
+		Time:             &t,
 		TotalVotingPower: tvp,
 		EvidenceType:     tpe,
 		Validator:        &consensusv1.Validator{Address: val},

@@ -131,8 +131,8 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest
 			})
 		}
 		res.CometInfo.LastCommit.Round = ci.LastCommit.Round
-
 		for _, evi := range ci.Evidence {
+			evi := evi
 			res.CometInfo.Evidence = append(res.CometInfo.Evidence, &types.Evidence{
 				EvidenceType: types.MisbehaviorType(evi.Type),
 				Validator: &types.Validator{

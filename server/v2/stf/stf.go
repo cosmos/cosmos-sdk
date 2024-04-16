@@ -302,7 +302,11 @@ func (s STF[T]) preBlock(ctx context.Context, state store.WriterMap, txs []T) ([
 	return pbCtx.events, nil
 }
 
-func (s STF[T]) runConsensusMessages(ctx context.Context, state store.WriterMap, messages []transaction.Type) ([]transaction.Type, error) {
+func (s STF[T]) runConsensusMessages(
+	ctx context.Context,
+	state store.WriterMap,
+	messages []transaction.Type,
+) ([]transaction.Type, error) {
 	cmCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
 
 	responses := make([]transaction.Type, len(messages))
@@ -451,9 +455,14 @@ func (s STF[T]) Message(ctx context.Context, msg transaction.Type) (response tra
 	return s.handleMsg(ctx, msg)
 }
 
-// TODO: this is made to support genesis, if genesis was just the execution of messages instead
+// RunWithCtx is made to support genesis, if genesis was just the execution of messages instead
 // of being something custom then we would not need this. PLEASE DO NOT USE.
-func (s STF[T]) RunWithCtx(ctx context.Context, state store.ReaderMap, closure func(ctx context.Context) error) (store.WriterMap, error) {
+// TODO: Remove
+func (s STF[T]) RunWithCtx(
+	ctx context.Context,
+	state store.ReaderMap,
+	closure func(ctx context.Context) error,
+) (store.WriterMap, error) {
 	branchedState := s.branch(state)
 	stfCtx := s.makeContext(ctx, nil, branchedState, gas.NoGasLimit, corecontext.ExecModeFinalize)
 	return branchedState, closure(stfCtx)

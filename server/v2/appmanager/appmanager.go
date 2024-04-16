@@ -32,12 +32,30 @@ func (a AppManager[T]) InitGenesis(
 	consensusMessages []transaction.Type,
 	initGenesisJSON []byte,
 ) (corestore.WriterMap, error) {
+	v, zeroState, err := a.db.StateLatest()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get latest state: %w", err)
+	}
+	if v != 0 {
+		return nil, fmt.Errorf("cannot init genesis on non-zero state")
+	}
+	//v0State, err := a.db.StateAt(0)
+	//if err != nil {
+	//	return nil, fmt.Errorf("unable to get genesis state: %w", err)
+	//}
+
+	zeroState, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
+		return a.importState(ctx, bytes.NewBuffer(initGenesisJSON))
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to import genesis state: %w", err)
+	}
 	// run block 0
 	// TODO: in an ideal world, genesis state is simply an initial state being applied
 	// unaware of what that state means in relation to every other, so here we can
 	// chain genesis
 	block0 := &appmanager.BlockRequest[T]{
-		Height:            uint64(headerInfo.Height),
+		Height:            uint64(0),
 		Time:              headerInfo.Time,
 		Hash:              headerInfo.Hash,
 		ChainId:           headerInfo.ChainID,
@@ -46,14 +64,10 @@ func (a AppManager[T]) InitGenesis(
 		ConsensusMessages: consensusMessages,
 	}
 
-	_, genesisState, err := a.DeliverBlock(ctx, block0)
+	_, genesisState, err := a.stf.DeliverBlock(ctx, block0, zeroState)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to deliver block 0: %w", err)
 	}
-
-	genesisState, err = a.stf.RunWithCtx(ctx, genesisState, func(ctx context.Context) error {
-		return a.importState(ctx, bytes.NewBuffer(initGenesisJSON))
-	})
 
 	return genesisState, err
 }

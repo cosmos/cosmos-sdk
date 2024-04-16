@@ -2,11 +2,12 @@ package cometbft
 
 import (
 	"context"
-	"cosmossdk.io/core/transaction"
 	"fmt"
 	"math"
 	"strings"
 	"time"
+
+	"cosmossdk.io/core/transaction"
 
 	sdkabci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -16,15 +17,15 @@ import (
 	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
+
+	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 func queryResponse(res transaction.Type) (*abci.ResponseQuery, error) {
@@ -206,15 +207,15 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence
-func ToSDKEvidence(ev []abci.Misbehavior) []*consensusv1.Evidence {
-	evidence := make([]*consensusv1.Evidence, len(ev))
+func ToSDKEvidence(ev []abci.Misbehavior) []*consensus.Evidence {
+	evidence := make([]*consensus.Evidence, len(ev))
 	for i, e := range ev {
-		evidence[i] = &consensusv1.Evidence{
-			EvidenceType:     consensusv1.MisbehaviorType(e.Type),
+		evidence[i] = &consensus.Evidence{
+			EvidenceType:     consensus.MisbehaviorType(e.Type),
 			Height:           e.Height,
-			Time:             &timestamppb.Timestamp{Seconds: int64(e.Time.Second())}, // safe?
+			Time:             &e.Time,
 			TotalVotingPower: e.TotalVotingPower,
-			Validator: &consensusv1.Validator{
+			Validator: &consensus.Validator{
 				Address: e.Validator.Address,
 				Power:   e.Validator.Power,
 			},
@@ -224,18 +225,18 @@ func ToSDKEvidence(ev []abci.Misbehavior) []*consensusv1.Evidence {
 }
 
 // ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
-func ToSDKCommitInfo(commit abci.CommitInfo) *consensusv1.CommitInfo {
-	ci := consensusv1.CommitInfo{
+func ToSDKCommitInfo(commit abci.CommitInfo) *consensus.CommitInfo {
+	ci := consensus.CommitInfo{
 		Round: commit.Round,
 	}
 
 	for _, v := range commit.Votes {
-		ci.Votes = append(ci.Votes, &consensusv1.VoteInfo{
-			Validator: &consensusv1.Validator{
+		ci.Votes = append(ci.Votes, &consensus.VoteInfo{
+			Validator: &consensus.Validator{
 				Address: v.Validator.Address,
 				Power:   v.Validator.Power,
 			},
-			BlockIdFlag: consensusv1.BlockIDFlag(v.BlockIdFlag),
+			BlockIdFlag: consensus.BlockIDFlag(v.BlockIdFlag),
 		})
 	}
 	return &ci
@@ -309,16 +310,16 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	cs := &cmtproto.ConsensusParams{}
 	latestVersion, err := c.store.GetLatestVersion()
 
-	res, err := c.app.Query(ctx, latestVersion, &consensusv1.QueryParamsRequest{})
+	res, err := c.app.Query(ctx, latestVersion, &consensus.QueryParamsRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	if r, ok := res.(*consensusv1.QueryParamsResponse); !ok {
+	if r, ok := res.(*consensus.QueryParamsResponse); !ok {
 		return nil, fmt.Errorf("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
-		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds)
+		evidenceMaxDuration := r.Params.Evidence.MaxAgeDuration
 		cs = &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxBytes: r.Params.Block.MaxBytes,

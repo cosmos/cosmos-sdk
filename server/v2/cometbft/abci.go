@@ -2,19 +2,21 @@ package cometbft
 
 import (
 	"context"
-	staking "cosmossdk.io/x/staking/types"
 	"errors"
 	"fmt"
+	"sync/atomic"
+
+	staking "cosmossdk.io/x/staking/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"sync/atomic"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	coreappmgr "cosmossdk.io/core/app"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -379,14 +381,22 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// for passing consensus info as a consensus message
-	cometInfo := &consensusv1.ConsensusMsgCometInfoRequest{
-		Info: &consensusv1.CometInfo{
+	cometInfo := &consensustypes.ConsensusMsgCometInfoRequest{
+		Info: &consensustypes.CometInfo{
 			Evidence:        ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
 			LastCommit:      ToSDKCommitInfo(req.DecidedLastCommit),
 		},
 	}
+
+	// TODO remove this once we have a better way to pass consensus info
+	ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
+		Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
+		ValidatorsHash:  req.NextValidatorsHash,
+		ProposerAddress: req.ProposerAddress,
+		LastCommit:      sdktypes.ToSDKCommitInfo(req.DecidedLastCommit),
+	})
 
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never

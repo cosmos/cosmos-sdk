@@ -8,9 +8,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// Delay, in blocks, between when validator updates are returned to the
-// consensus-engine and when they are applied. For example, if
-// ValidatorUpdateDelay is set to X, and if a validator set update is
+// ValidatorUpdateDelay is the Delay, in blocks, between when validator updates are returned to the
+// consensus-engine and when they are applied. For example, if set to X, and if a validator set update is
 // returned with new validators at the end of block 10, then the new
 // validators are expected to sign blocks beginning at block 11+X.
 //

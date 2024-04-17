@@ -329,8 +329,7 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 		return nil, err
 	}
 
-	// send the message
-	return resp, k.sendModuleMessage(ctx, sender, msg, resp)
+	return resp, err
 }
 
 // sendModuleMessage can be used to send a message towards a module. It expects the

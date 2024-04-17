@@ -323,19 +323,20 @@ func TestStore_Save(t *testing.T) {
 	go func() {
 		_, err := store.Save(7, 1, ch)
 		require.NoError(t, err)
-		// this wil signal to the parent goroutine that this goroutine is finished and it can exit/finish the test
-		// this will prevent case in which test finished but non-terminated goroutine tries to call Log API and cause
-		// a panic: "Log in goroutine after TestStore_Save has completed"
+		// This will signal to the parent goroutine that this goroutine has finished, and it can now exit or complete
+		// the test. This approach prevents scenarios where the test finishes, but a non-terminated goroutine tries to
+		// call the Log API, which causes a panic: 'Log in goroutine after TestStore_Save has completed.'
 		wait <- true
 	}()
-	// the method store.Save should return error when another goroutines already call it with the same height (7), but
-	// to be sure that this method is called secondly not first, we wait the first method in the goroutine to read from
-	// the channel "ch" (the method store.Save read from the 'ch' and block if there is nothing in the channel). After
-	// that we can continue and expect an error becasue we are sure that the first method is in progress
+	// The method store.Save should return an error when another goroutine has already called it with the same height (7).
+	// To ensure that this method is called second, not first, we wait for the first method in the goroutine to read from
+	// the channel "ch". The method store.Save reads from 'ch' and will block if the channel is empty. Once it starts reading,
+	// we can proceed and expect an error because we are sure that the first method is already in progress.
 	ch <- &ReadCloserMock{}
 	_, err = store.Save(7, 2, makeChunks(nil))
-	// by closing the channel we allow the method store.Save, called in the goroutine, to finish. If we don't do
-	// this the goroutine will remain blocked until the main goroutine tha start all the tests finished
+	
+	// By closing the channel, we allow the method store.Save, which is called in the goroutine, to finish. If we do not close the channel,
+	// the goroutine will remain blocked until the main goroutine that started all the tests finishes.
 	close(ch)
 	require.Error(t, err)
 	<-wait // wait until the goroutine is terminated

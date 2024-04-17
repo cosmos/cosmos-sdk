@@ -110,6 +110,7 @@ func saveOrAbort(path string, data []byte, force bool) error {
 		return fmt.Errorf("failed to check if file exists: %w", err)
 	}
 
+	//nolint:gosec // We need broader permissions to make it executable
 	if err := os.WriteFile(path, data, 0o755); err != nil {
 		return fmt.Errorf("failed to write binary to location: %w", err)
 	}

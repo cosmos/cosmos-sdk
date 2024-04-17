@@ -23,7 +23,7 @@ import (
 func (k Keeper) PreBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
-	blockHeight := k.environment.HeaderService.GetHeaderInfo(ctx).Height
+	blockHeight := k.HeaderService.HeaderInfo(ctx).Height
 	plan, err := k.GetUpgradePlan(ctx)
 	if err != nil && !errors.Is(err, types.ErrNoUpgradePlanFound) {
 		return err
@@ -61,14 +61,12 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 		return nil
 	}
 
-	logger := k.Logger(ctx)
-
 	// To make sure clear upgrade is executed at the same block
 	if plan.ShouldExecute(blockHeight) {
 		// If skip upgrade has been set for current height, we clear the upgrade plan
 		if k.IsSkipHeight(blockHeight) {
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
-			logger.Info(skipUpgradeMsg)
+			k.Logger.Info(skipUpgradeMsg)
 
 			// Clear the upgrade plan at current height
 			if err := k.ClearUpgradePlan(ctx); err != nil {
@@ -87,14 +85,14 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 			}
 
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
-			logger.Error(upgradeMsg)
+			k.Logger.Error(upgradeMsg)
 
 			// Returning an error will end up in a panic
 			return errors.New(upgradeMsg)
 		}
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
-		logger.Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
+		k.Logger.Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
 		sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 		if err := k.ApplyUpgrade(sdkCtx, plan); err != nil {
 			return err
@@ -106,7 +104,7 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 	// set the handler already
 	if k.HasHandler(plan.Name) {
 		downgradeMsg := fmt.Sprintf("BINARY UPDATED BEFORE TRIGGER! UPGRADE \"%s\" - in binary but not executed on chain. Downgrade your binary", plan.Name)
-		logger.Error(downgradeMsg)
+		k.Logger.Error(downgradeMsg)
 
 		// Returning an error will end up in a panic
 		return errors.New(downgradeMsg)

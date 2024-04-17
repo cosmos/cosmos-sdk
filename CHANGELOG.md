@@ -35,6 +35,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.47.12-ics-lsm
+
+This is a special cosmos-sdk release with support for both ICS and LSM.
+
+### Bugfixes
+
+* (crypto) [#20073](https://github.com/cosmos/cosmos-sdk/pull/20073) Add secp256r1 parsing support (backport from main)
+
+
 ## v0.47.11-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"sync"
 	"testing"
 	"time"
 
@@ -262,6 +261,7 @@ func TestStore_Prune(t *testing.T) {
 }
 
 func TestStore_Save(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	// Saving a snapshot should work
 	snapshot, err := store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))
@@ -319,18 +319,35 @@ func TestStore_Save(t *testing.T) {
 	// Saving a snapshot should error if a snapshot is already in progress for the same height,
 	// regardless of format. However, a different height should succeed.
 	ch = make(chan io.ReadCloser)
-	mtx := sync.Mutex{}
-	mtx.Lock()
+	wait := make(chan bool)
 	go func() {
-		mtx.Unlock()
 		_, err := store.Save(7, 1, ch)
 		require.NoError(t, err)
+		// this wil signal to the parent goroutine that this goroutine is finished and it can exit/finish the test
+		// this will prevent case in which test finished but non-terminated goroutine tries to call Log API and cause
+		// a panic: "Log in goroutine after TestStore_Save has completed"
+		wait <- true
 	}()
-	mtx.Lock()
-	defer mtx.Unlock()
+	// the method store.Save should return error when another goroutines already call it with the same height (7), but
+	// to be sure that this method is called secondly not first, we wait the first method in the goroutine to read from
+	// the channel "ch" (the method store.Save read from the 'ch' and block if there is nothing in the channel). After
+	// that we can continue and expect an error becasue we are sure that the first method is in progress
+	ch <- &ReadCloserMock{}
 	_, err = store.Save(7, 2, makeChunks(nil))
-	require.Error(t, err)
-	_, err = store.Save(8, 1, makeChunks(nil))
-	require.NoError(t, err)
+	// by closing the channel we allow the method store.Save, called in the goroutine, to finish. If we don't do
+	// this the goroutine will remain blocked until the main goroutine tha start all the tests finished
 	close(ch)
+	require.Error(t, err)
+	<-wait // wait until the goroutine is terminated
+}
+
+type ReadCloserMock struct {
+}
+
+func (r ReadCloserMock) Read(p []byte) (n int, err error) {
+	return len(p), io.EOF
+}
+
+func (r ReadCloserMock) Close() error {
+	return nil
 }

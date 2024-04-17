@@ -10,7 +10,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-sdk v0.50.6-0.20240403102038-f63e5fdf7c96
 	github.com/manifoldco/promptui v0.9.0
-	github.com/pelletier/go-toml/v2 v2.2.0
+	github.com/pelletier/go-toml/v2 v2.2.1
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0

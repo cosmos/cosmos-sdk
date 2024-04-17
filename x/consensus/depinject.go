@@ -41,7 +41,7 @@ type ModuleOutputs struct {
 	Authority     Authority
 	Keeper        keeper.Keeper
 	Module        appmodule.AppModule
-	BaseAppOption runtime.BaseAppOption
+	BaseAppOption runtime.BaseAppOption // This is only useful for chains using baseapp.
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {

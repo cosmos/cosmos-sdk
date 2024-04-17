@@ -160,7 +160,7 @@ Core API has been introduced for modules since v0.47. With the deprecation of `s
 
 Additionally, the `appmodule.Environment` struct is introduced to fetch different services from the application.
 This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
-It needs to be passed into a module at instantiation (or depinject will inject the correct environement). 
+It needs to be passed into a module at instantiation (or depinject will inject the correct environment). 
 
 `x/circuit` is used as an example:
 

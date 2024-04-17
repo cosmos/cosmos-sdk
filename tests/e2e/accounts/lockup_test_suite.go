@@ -82,6 +82,15 @@ func (s *E2ETestSuite) TestContinuousLockingAccount() {
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
+	t.Run("error - execute message, wrong sender", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    addr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
 	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
@@ -207,6 +216,15 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
+	t.Run("error - execute message, wrong sender", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    addr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
 	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
@@ -342,6 +360,15 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
+	t.Run("error - execute message, wrong sender", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    addr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
 	// No token being unlocked yet
 	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
@@ -477,6 +504,15 @@ func (s *E2ETestSuite) TestPermanentLockingAccount() {
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
+	t.Run("error - execute message, wrong sender", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    addr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
 	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,

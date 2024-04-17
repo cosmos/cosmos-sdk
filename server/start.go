@@ -84,6 +84,7 @@ const (
 	flagGRPCWebAddress = "grpc-web.address"
 )
 
+// [AGORIC] Valid values for FlagAbciClientType
 const (
 	abciClientTypeCommitting = "committing"
 	abciClientTypeLocal      = "local"
@@ -149,18 +150,9 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				})
 			}
 
-			abciClientType, err := cmd.Flags().GetString(FlagAbciClientType)
-			if err != nil {
-				return err
-			}
-			clientCreator, err := getAbciClientCreator(abciClientType)
-			if err != nil {
-				return err
-			}
-
 			// amino is needed here for backwards compatibility of REST routes
 			err = wrapCPUProfile(serverCtx, func() error {
-				return startInProcess(serverCtx, clientCtx, appCreator, clientCreator)
+				return startInProcess(serverCtx, clientCtx, appCreator)
 			})
 			errCode, ok := err.(ErrorCode)
 			if !ok {
@@ -273,7 +265,7 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 type abciClientCreator func(abcitypes.Application) proxy.ClientCreator
 
-func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator, clientCreator abciClientCreator) error {
+func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -305,6 +297,14 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+
+	// [AGORIC] allow the ABCI client type to be configurable.
+	abciClientType := config.ABCIClientType
+	ctx.Logger.Info(fmt.Sprintf("ABCI client type: %s", abciClientType))
+	clientCreator, err := getAbciClientCreator(abciClientType)
+	if err != nil {
+		return err
+	}
 
 	var (
 		tmNode   *node.Node
@@ -520,6 +520,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	return WaitForQuitSignals()
 }
 
+// getAbciClientCreator dispatches the client type to the right cometbft constructor.
+// [AGORIC] Allows us to disable committingClient.
 func getAbciClientCreator(abciClientType string) (abciClientCreator, error) {
 	switch abciClientType {
 	case abciClientTypeCommitting:

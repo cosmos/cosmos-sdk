@@ -38,7 +38,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(options.AccountKeeper.Environment()),
-		ante.NewTxTimeoutHeightDecorator(),
+		ante.NewTxTimeoutHeightDecorator(options.AccountKeeper.Environment()),
 		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, options.TxManager, options.AccountKeeper.Environment()),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),

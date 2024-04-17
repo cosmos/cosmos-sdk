@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	accountsmodulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -14,6 +15,7 @@ import (
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
@@ -28,6 +30,7 @@ import (
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
@@ -40,6 +43,8 @@ import (
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/distribution" // import for side-effects
 	distrtypes "cosmossdk.io/x/distribution/types"
+	_ "cosmossdk.io/x/epochs" // import for side-effects
+	epochstypes "cosmossdk.io/x/epochs/types"
 	_ "cosmossdk.io/x/evidence" // import for side-effects
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
@@ -116,6 +121,7 @@ var (
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
 						authz.ModuleName,
+						epochstypes.ModuleName,
 					},
 					EndBlockers: []string{
 						govtypes.ModuleName,
@@ -134,6 +140,7 @@ var (
 					// properly initialized with tokens from genesis accounts.
 					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 					InitGenesis: []string{
+						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
 						distrtypes.ModuleName,
@@ -151,6 +158,7 @@ var (
 						vestingtypes.ModuleName,
 						circuittypes.ModuleName,
 						pooltypes.ModuleName,
+						epochstypes.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
@@ -193,8 +201,10 @@ var (
 				Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
 			},
 			{
-				Name:   "tx",
-				Config: appconfig.WrapAny(&txconfigv1.Config{}),
+				Name: "tx",
+				Config: appconfig.WrapAny(&txconfigv1.Config{
+					SkipAnteHandler: true, // SimApp is using non default AnteHandler such as circuit and unorderedtx decorators
+				}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,
@@ -250,6 +260,14 @@ var (
 			{
 				Name:   pooltypes.ModuleName,
 				Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+			},
+			{
+				Name:   accounts.ModuleName,
+				Config: appconfig.WrapAny(&accountsmodulev1.Module{}),
+			},
+			{
+				Name:   epochstypes.ModuleName,
+				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
 		},
 	})

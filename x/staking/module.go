@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	consensusVersion uint64 = 5
+	consensusVersion uint64 = 6
 )
 
 var (
@@ -125,6 +125,9 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	if err := mr.Register(types.ModuleName, 4, m.Migrate4to5); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err)
 	}
+	if err := mr.Register(types.ModuleName, 5, m.Migrate5to6); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 5 to 6: %v", types.ModuleName, err)
+	}
 
 	return nil
 }
@@ -145,7 +148,7 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs genesis initialization for the staking module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]appmodule.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
 	return am.keeper.InitGenesis(ctx, &genesisState)
@@ -173,6 +176,6 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 }
 
 // EndBlock returns the end blocker for the staking module.
-func (am AppModule) EndBlock(ctx context.Context) ([]module.ValidatorUpdate, error) {
+func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 	return am.keeper.EndBlocker(ctx)
 }

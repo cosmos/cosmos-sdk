@@ -126,7 +126,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f.Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")
 	f.String(FlagNote, "", "Note to add a description to the transaction (previously --memo)")
 	f.String(FlagFees, "", "Fees to pay along with transaction; eg: 10uatom")
-	f.String(FlagGasPrices, "", "Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)")
+	f.String(FlagGasPrices, "", "Determine the transaction fee by multiplying max gas units by gas prices (e.g. 0.1uatom), rounding up to nearest denom unit")
 	f.String(FlagNode, "tcp://localhost:26657", "<host>:<port> to CometBFT rpc interface for this chain")
 	f.Bool(FlagUseLedger, false, "Use a connected Ledger device")
 	f.Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")

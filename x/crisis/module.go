@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -13,7 +12,6 @@ import (
 	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -118,12 +116,10 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 
 // InitGenesis performs genesis initialization for the crisis module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	start := time.Now()
 	var genesisState types.GenesisState
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 	if !am.skipGenesisInvariants {

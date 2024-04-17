@@ -49,7 +49,7 @@ func (r RejectExtensionOptionsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 		return ctx, err
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }
 
 func checkExtOpts(tx sdk.Tx, checker ExtensionOptionChecker) error {

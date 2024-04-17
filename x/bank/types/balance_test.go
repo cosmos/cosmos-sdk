@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	bank "cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -147,15 +148,19 @@ func TestSanitizeBalances(t *testing.T) {
 	coins := sdk.Coins{coin}
 	addrs, _ := makeRandomAddressesAndPublicKeys(20)
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	var balances []bank.Balance
 	for _, addr := range addrs {
+		addrStr, err := ac.BytesToString(addr)
+		require.NoError(t, err)
 		balances = append(balances, bank.Balance{
-			Address: addr.String(),
+			Address: addrStr,
 			Coins:   coins,
 		})
 	}
 	// 2. Sort the values.
-	sorted := bank.SanitizeGenesisBalances(balances)
+	sorted, err := bank.SanitizeGenesisBalances(balances, ac)
+	require.NoError(t, err)
 
 	// 3. Compare and ensure that all the values are sorted in ascending order.
 	// Invariant after sorting:
@@ -180,9 +185,12 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 	addrs, _ := makeRandomAddressesAndPublicKeys(13)
 
 	var balances []bank.Balance
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	for _, addr := range addrs {
+		addrStr, err := ac.BytesToString(addr)
+		require.NoError(t, err)
 		balances = append(balances, bank.Balance{
-			Address: addr.String(),
+			Address: addrStr,
 			Coins:   coins,
 		})
 	}
@@ -190,7 +198,7 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 	// 2. Add duplicate
 	dupIdx := 3
 	balances = append(balances, balances[dupIdx])
-	addr, _ := sdk.AccAddressFromBech32(balances[dupIdx].Address)
+	addr, _ := ac.StringToBytes(balances[dupIdx].Address)
 	expectedError := fmt.Sprintf("genesis state has a duplicate account: %q aka %x", balances[dupIdx].Address, addr)
 
 	// 3. Add more balances
@@ -198,15 +206,18 @@ func TestSanitizeBalancesDuplicates(t *testing.T) {
 	coins2 := sdk.Coins{coin2, coin}
 	addrs2, _ := makeRandomAddressesAndPublicKeys(31)
 	for _, addr := range addrs2 {
+		addrStr, err := ac.BytesToString(addr)
+		require.NoError(t, err)
 		balances = append(balances, bank.Balance{
-			Address: addr.String(),
+			Address: addrStr,
 			Coins:   coins2,
 		})
 	}
 
 	// 4. Execute SanitizeGenesisBalances and expect an error
 	require.PanicsWithValue(t, expectedError, func() {
-		bank.SanitizeGenesisBalances(balances)
+		_, err := bank.SanitizeGenesisBalances(balances, ac)
+		require.NoError(t, err)
 	}, "SanitizeGenesisBalances should panic with duplicate accounts")
 }
 
@@ -238,15 +249,20 @@ func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
 	addrs, _ := makeRandomAddressesAndPublicKeys(nAddresses)
 
 	b.ResetTimer()
+	var err error
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	for i := 0; i < b.N; i++ {
 		var balances []bank.Balance
 		for _, addr := range addrs {
+			addrStr, err := ac.BytesToString(addr)
+			require.NoError(b, err)
 			balances = append(balances, bank.Balance{
-				Address: addr.String(),
+				Address: addrStr,
 				Coins:   coins,
 			})
 		}
-		sink = bank.SanitizeGenesisBalances(balances)
+		sink, err = bank.SanitizeGenesisBalances(balances, ac)
+		require.NoError(b, err)
 	}
 	if sink == nil {
 		b.Fatal("Benchmark did not run")

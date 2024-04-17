@@ -406,6 +406,8 @@ enum Infraction {
 // ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
 // TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
 message ValidatorUpdates {
+  option deprecated = true;
+
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 

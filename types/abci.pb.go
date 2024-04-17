@@ -5,11 +5,11 @@ package types
 
 import (
 	fmt "fmt"
-	types1 "github.com/cometbft/cometbft/abci/types"
-	types2 "github.com/cometbft/cometbft/proto/tendermint/types"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	types "github.com/cometbft/cometbft/abci/types"
+	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -53,7 +53,7 @@ type TxResponse struct {
 	// Amount of gas consumed by transaction.
 	GasUsed int64 `protobuf:"varint,10,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
 	// The request transaction bytes.
-	Tx *types.Any `protobuf:"bytes,11,opt,name=tx,proto3" json:"tx,omitempty"`
+	Tx *any.Any `protobuf:"bytes,11,opt,name=tx,proto3" json:"tx,omitempty"`
 	// Time of the previous block. For heights > 1, it's the weighted median of
 	// the timestamps of the valid votes in the block.LastCommit. For height == 1,
 	// it's genesis time.
@@ -64,7 +64,7 @@ type TxResponse struct {
 	// additional metadata, emitted only by processing the messages.
 	//
 	// Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
-	Events []types1.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
+	Events []types.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
 }
 
 func (m *TxResponse) Reset()      { *m = TxResponse{} }
@@ -332,11 +332,11 @@ type Result struct {
 	Log string `protobuf:"bytes,2,opt,name=log,proto3" json:"log,omitempty"`
 	// Events contains a slice of Event objects that were emitted during message
 	// or handler execution.
-	Events []types1.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
+	Events []types.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
 	// msg_responses contains the Msg handler responses type packed in Anys.
 	//
 	// Since: cosmos-sdk 0.46
-	MsgResponses []*types.Any `protobuf:"bytes,4,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
+	MsgResponses []*any.Any `protobuf:"bytes,4,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
 }
 
 func (m *Result) Reset()      { *m = Result{} }
@@ -480,7 +480,7 @@ type TxMsgData struct {
 	// msg_responses contains the Msg handler responses packed into Anys.
 	//
 	// Since: cosmos-sdk 0.46
-	MsgResponses []*types.Any `protobuf:"bytes,2,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
+	MsgResponses []*any.Any `protobuf:"bytes,2,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
 }
 
 func (m *TxMsgData) Reset()      { *m = TxMsgData{} }
@@ -523,7 +523,7 @@ func (m *TxMsgData) GetData() []*MsgData {
 	return nil
 }
 
-func (m *TxMsgData) GetMsgResponses() []*types.Any {
+func (m *TxMsgData) GetMsgResponses() []*any.Any {
 	if m != nil {
 		return m.MsgResponses
 	}
@@ -633,7 +633,7 @@ type SearchBlocksResult struct {
 	// Max count blocks per page
 	Limit int64 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
 	// List of blocks in current page
-	Blocks []*types2.Block `protobuf:"bytes,6,rep,name=blocks,proto3" json:"blocks,omitempty"`
+	Blocks []*types1.Block `protobuf:"bytes,6,rep,name=blocks,proto3" json:"blocks,omitempty"`
 }
 
 func (m *SearchBlocksResult) Reset()      { *m = SearchBlocksResult{} }
@@ -703,7 +703,7 @@ func (m *SearchBlocksResult) GetLimit() int64 {
 	return 0
 }
 
-func (m *SearchBlocksResult) GetBlocks() []*types2.Block {
+func (m *SearchBlocksResult) GetBlocks() []*types1.Block {
 	if m != nil {
 		return m.Blocks
 	}
@@ -1751,7 +1751,7 @@ func (this *TxMsgData) String() string {
 	repeatedStringForData += "}"
 	repeatedStringForMsgResponses := "[]*Any{"
 	for _, f := range this.MsgResponses {
-		repeatedStringForMsgResponses += strings.Replace(fmt.Sprintf("%v", f), "Any", "types.Any", 1) + ","
+		repeatedStringForMsgResponses += strings.Replace(fmt.Sprintf("%v", f), "Any", "any.Any", 1) + ","
 	}
 	repeatedStringForMsgResponses += "}"
 	s := strings.Join([]string{`&TxMsgData{`,
@@ -1787,7 +1787,7 @@ func (this *SearchBlocksResult) String() string {
 	}
 	repeatedStringForBlocks := "[]*Block{"
 	for _, f := range this.Blocks {
-		repeatedStringForBlocks += strings.Replace(fmt.Sprintf("%v", f), "Block", "types2.Block", 1) + ","
+		repeatedStringForBlocks += strings.Replace(fmt.Sprintf("%v", f), "Block", "types1.Block", 1) + ","
 	}
 	repeatedStringForBlocks += "}"
 	s := strings.Join([]string{`&SearchBlocksResult{`,
@@ -2138,7 +2138,7 @@ func (m *TxResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Tx == nil {
-				m.Tx = &types.Any{}
+				m.Tx = &any.Any{}
 			}
 			if err := m.Tx.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2205,7 +2205,7 @@ func (m *TxResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Events = append(m.Events, types1.Event{})
+			m.Events = append(m.Events, types.Event{})
 			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2808,7 +2808,7 @@ func (m *Result) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Events = append(m.Events, types1.Event{})
+			m.Events = append(m.Events, types.Event{})
 			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2842,7 +2842,7 @@ func (m *Result) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MsgResponses = append(m.MsgResponses, &types.Any{})
+			m.MsgResponses = append(m.MsgResponses, &any.Any{})
 			if err := m.MsgResponses[len(m.MsgResponses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3195,7 +3195,7 @@ func (m *TxMsgData) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MsgResponses = append(m.MsgResponses, &types.Any{})
+			m.MsgResponses = append(m.MsgResponses, &any.Any{})
 			if err := m.MsgResponses[len(m.MsgResponses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3553,7 +3553,7 @@ func (m *SearchBlocksResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Blocks = append(m.Blocks, &types2.Block{})
+			m.Blocks = append(m.Blocks, &types1.Block{})
 			if err := m.Blocks[len(m.Blocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

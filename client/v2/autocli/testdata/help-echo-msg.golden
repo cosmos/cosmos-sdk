@@ -15,7 +15,7 @@ Flags:
       --from string              Name or address of private key with which to sign
       --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --gas-prices string        Determine the transaction fee by multiplying max gas units by gas prices (e.g. 0.1uatom), rounding up to nearest denom unit
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
   -h, --help                     help for send
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) (default "os")

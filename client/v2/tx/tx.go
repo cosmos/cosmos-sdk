@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	tx2 "cosmossdk.io/client/v2/internal/tx"
 	"cosmossdk.io/client/v2/offchain"
 	"errors"
 	"fmt"
@@ -19,7 +20,7 @@ import (
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxCLI(clientCtx Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTxCLI(clientCtx tx2.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf, err := NewFactoryCLI(clientCtx, flagSet)
 	if err != nil {
 		return err
@@ -30,7 +31,7 @@ func GenerateOrBroadcastTxCLI(clientCtx Context, flagSet *pflag.FlagSet, msgs ..
 
 // GenerateOrBroadcastTxWithFactory will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxWithFactory(clientCtx Context, txf Factory, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTxWithFactory(clientCtx tx2.Context, txf Factory, msgs ...sdk.Msg) error {
 	// Validate all msgs before generating or broadcasting the tx.
 	// We were calling ValidateBasic separately in each CLI handler before.
 	// Right now, we're factorizing that call inside this function.
@@ -66,7 +67,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx Context, txf Factory, msgs ...sd
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx Context, txf Factory, msgs ...sdk.Msg) error {
+func BroadcastTx(clientCtx tx2.Context, txf Factory, msgs ...sdk.Msg) error {
 	txf, err := txf.Prepare(clientCtx)
 	if err != nil {
 		return err
@@ -162,9 +163,9 @@ func CalculateGas(
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(clientCtx Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
+func makeAuxSignerData(clientCtx tx2.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
-	fromAddress, name, _, err := GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
+	fromAddress, name, _, err := tx2.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}

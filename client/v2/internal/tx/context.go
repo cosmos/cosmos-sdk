@@ -3,6 +3,7 @@ package tx
 import (
 	"bufio"
 	"context"
+	"cosmossdk.io/client/v2/tx"
 	"cosmossdk.io/core/address"
 	"encoding/json"
 	"fmt"
@@ -22,7 +23,7 @@ import (
 )
 
 // PreprocessTxFn defines a hook by which chains can preprocess transactions before broadcasting
-type PreprocessTxFn func(chainID string, key keyring.KeyType, tx TxBuilder) error
+type PreprocessTxFn func(chainID string, key keyring.KeyType, tx tx.TxBuilder) error
 
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
@@ -55,8 +56,8 @@ type Context struct {
 	GenerateOnly      bool
 	Offline           bool
 	SkipConfirm       bool
-	TxConfig          TxConfig
-	AccountRetriever  AccountRetriever
+	TxConfig          tx.TxConfig
+	AccountRetriever  tx.AccountRetriever
 	NodeURI           string
 	FeePayer          string
 	FeeGranter        string
@@ -257,13 +258,13 @@ func (ctx Context) WithSkipConfirmation(skip bool) Context {
 }
 
 // WithTxConfig returns the context with an updated TxConfig
-func (ctx Context) WithTxConfig(generator TxConfig) Context {
+func (ctx Context) WithTxConfig(generator tx.TxConfig) Context {
 	ctx.TxConfig = generator
 	return ctx
 }
 
 // WithAccountRetriever returns the context with an updated AccountRetriever
-func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
+func (ctx Context) WithAccountRetriever(retriever tx.AccountRetriever) Context {
 	ctx.AccountRetriever = retriever
 	return ctx
 }

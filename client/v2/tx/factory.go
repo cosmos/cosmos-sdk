@@ -4,6 +4,7 @@ import (
 	"context"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/client/v2/internal/tx"
 	"cosmossdk.io/client/v2/offchain"
 	"cosmossdk.io/math"
 	//"cosmossdk.io/x/tx/signing"
@@ -33,7 +34,7 @@ type Factory struct {
 	txParams         TxParameters
 }
 
-func NewFactoryCLI(clientCtx Context, flagSet *pflag.FlagSet) (Factory, error) {
+func NewFactoryCLI(clientCtx tx.Context, flagSet *pflag.FlagSet) (Factory, error) {
 	if clientCtx.Viper == nil {
 		clientCtx = clientCtx.WithViper("")
 	}
@@ -114,7 +115,7 @@ func NewFactoryCLI(clientCtx Context, flagSet *pflag.FlagSet) (Factory, error) {
 // they will be queried for and set on the provided Factory.
 // A new Factory with the updated fields will be returned.
 // Note: When in offline mode, the Prepare does nothing and returns the original factory.
-func (f Factory) Prepare(clientCtx Context) (Factory, error) {
+func (f Factory) Prepare(clientCtx tx.Context) (Factory, error) {
 	if f.txParams.ExecutionOptions.offline {
 		return f, nil
 	}
@@ -207,7 +208,7 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (TxBuilder, error) {
 // specified by ctx.Output. If simulation was requested, the gas will be
 // simulated and also printed to the same writer before the transaction is
 // printed.
-func (f Factory) PrintUnsignedTx(clientCtx Context, msgs ...sdk.Msg) error {
+func (f Factory) PrintUnsignedTx(clientCtx tx.Context, msgs ...sdk.Msg) error {
 	if f.SimulateAndExecute() {
 		if clientCtx.Offline {
 			return errors.New("cannot estimate gas in offline mode")
@@ -524,7 +525,7 @@ func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
 
 // WithPreprocessTxHook returns a copy of the Factory with an updated preprocess tx function,
 // allows for preprocessing of transaction data using the TxBuilder.
-func (f Factory) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Factory {
+func (f Factory) WithPreprocessTxHook(preprocessFn tx.PreprocessTxFn) Factory {
 	f.txParams.preprocessTxHook = preprocessFn
 	return f
 }

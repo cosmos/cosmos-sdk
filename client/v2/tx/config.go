@@ -2,6 +2,7 @@ package tx
 
 import (
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/client/v2/internal/tx"
 	"cosmossdk.io/client/v2/offchain"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -74,7 +75,7 @@ type ExecutionOptions struct {
 	offline            bool
 	generateOnly       bool
 	simulateAndExecute bool
-	preprocessTxHook   PreprocessTxFn
+	preprocessTxHook   tx.PreprocessTxFn
 }
 
 type ExtensionOptions struct {

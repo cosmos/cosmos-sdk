@@ -249,11 +249,14 @@ func TestAfterEpochEnd(t *testing.T) {
 			ctx := app.BaseApp.NewContext(false)
 
 			// Pre-set parameters and minter.
-			mintKeeper.Params.Set(ctx, mintParams)
-			mintKeeper.LastReductionEpoch.Set(ctx, tc.preExistingEpochNum)
-			mintKeeper.Minter.Set(ctx, types.Minter{
+			err = mintKeeper.Params.Set(ctx, mintParams)
+			require.NoError(t, err)
+			err = mintKeeper.LastReductionEpoch.Set(ctx, tc.preExistingEpochNum)
+			require.NoError(t, err)
+			err = mintKeeper.Minter.Set(ctx, types.Minter{
 				EpochProvisions: defaultGenesisEpochProvisionsDec,
 			})
+			require.NoError(t, err)
 
 			if tc.expectedError {
 				require.Error(t, mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))

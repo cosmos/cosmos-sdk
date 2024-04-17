@@ -3,7 +3,7 @@ module cosmossdk.io/simapp
 go 1.22
 
 require (
-	cosmossdk.io/api v0.7.3
+	cosmossdk.io/api v0.7.4
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
@@ -29,7 +29,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/tx v0.13.1
+	cosmossdk.io/x/tx v0.13.2
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240404155709-f101432c6697
 	github.com/cosmos/cosmos-db v1.0.2
@@ -168,7 +168,7 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/pelletier/go-toml/v2 v2.2.0 // indirect
+	github.com/pelletier/go-toml/v2 v2.2.1 // indirect
 	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -208,7 +208,7 @@ require (
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

@@ -60,7 +60,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/storage v1.36.0 // indirect
-	cosmossdk.io/api v0.7.3 // indirect
+	cosmossdk.io/api v0.7.4 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7 // indirect
@@ -82,7 +82,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91 // indirect
-	cosmossdk.io/x/tx v0.13.1 // indirect
+	cosmossdk.io/x/tx v0.13.2 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -193,7 +193,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/pelletier/go-toml/v2 v2.2.0 // indirect
+	github.com/pelletier/go-toml/v2 v2.2.1 // indirect
 	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -236,7 +236,7 @@ require (
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

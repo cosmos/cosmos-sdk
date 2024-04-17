@@ -220,8 +220,18 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 	skey := grantStoreKey(grantee, granter, msgType)
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
+		granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+		if err != nil {
+			return errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
+				"could not convert granter address to string")
+		}
+		granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+		if err != nil {
+			return errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
+				"could not convert grantee address to string")
+		}
 		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
-			"failed to delete grant with given granter: %s, grantee: %s & msgType: %s ", granter.String(), grantee.String(), msgType)
+			"failed to delete grant with given granter: %s, grantee: %s & msgType: %s ", granterAddr, granteeAddr, msgType)
 	}
 
 	if grant.Expiration != nil {

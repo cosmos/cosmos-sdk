@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/auth"
 	_ "cosmossdk.io/x/auth/tx/config"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -92,6 +93,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
+				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.TxModule(),

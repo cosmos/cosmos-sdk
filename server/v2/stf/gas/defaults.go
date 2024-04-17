@@ -15,8 +15,8 @@ func DefaultWrapWithGasMeter(meter coregas.Meter, state store.WriterMap) store.W
 	return NewMeteredWriterMap(DefaultConfig, meter, state)
 }
 
-// DefaultGetMeter returns the default gas meter. In case it is coregas.NoGasLimit a NoOpMeter is returned.
-func DefaultGetMeter(gasLimit uint64) coregas.Meter {
+// DefaultGasMeter returns the default gas meter. In case it is coregas.NoGasLimit a NoOpMeter is returned.
+func DefaultGasMeter(gasLimit uint64) coregas.Meter {
 	if gasLimit == coregas.NoGasLimit {
 		return NoOpMeter{}
 	}

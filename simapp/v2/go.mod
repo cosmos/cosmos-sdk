@@ -11,7 +11,9 @@ require (
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0 // indirect
+	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
+	cosmossdk.io/store/v2 v2.0.0
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -158,6 +160,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mdp/qrterminal/v3 v3.2.0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -207,7 +210,7 @@ require (
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
@@ -279,6 +282,7 @@ replace (
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
+	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store
 )

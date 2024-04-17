@@ -3,8 +3,8 @@ package simapp
 import (
 	"context"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -20,10 +20,10 @@ import (
 // v0.50.x to v0.51.x.
 const UpgradeName = "v050-to-v051"
 
-func (app SimApp) RegisterUpgradeHandlers() {
+func (app *SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
-		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodulev2.VersionMap) (appmodulev2.VersionMap, error) {
+		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
 			return app.ModuleManager().RunMigrations(ctx, fromVM)
 		},
 	)
@@ -34,7 +34,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := corestore.StoreUpgrades{
+		storeUpgrades := store.StoreUpgrades{
 			Added: []string{
 				accounts.ModuleName,
 				protocolpooltypes.ModuleName,

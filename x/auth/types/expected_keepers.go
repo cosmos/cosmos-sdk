@@ -12,3 +12,8 @@ type BankKeeper interface {
 	SendCoins(ctx context.Context, from, to sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
+
+// AccountsModKeeper defines the contract for x/accounts APIs
+type AccountsModKeeper interface {
+	IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool
+}

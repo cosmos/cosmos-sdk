@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"cosmossdk.io/runtime/v2"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -22,14 +23,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
 		autoCliOpts   autocli.AppOptions
-		moduleManager *module.Manager
+		moduleManager *runtime.MM
 		clientCtx     client.Context
 	)
 

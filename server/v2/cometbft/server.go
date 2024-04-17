@@ -21,10 +21,11 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	cmttypes "github.com/cometbft/cometbft/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (
@@ -39,6 +40,8 @@ const (
 	FlagHaltTime      = "halt-time"
 	FlagTrace         = "trace"
 )
+
+var _ serverv2.ServerModule = (*CometBFTServer[transaction.Tx])(nil)
 
 type CometBFTServer[T transaction.Tx] struct {
 	Node   *node.Node
@@ -58,38 +61,43 @@ type App[T transaction.Tx] interface {
 }
 
 func NewCometBFTServer[T transaction.Tx](
-	app App[T],
+	app *appmanager.AppManager[T],
+	store types.Store,
+	logger log.Logger,
 	cfg Config,
 	txCodec transaction.Codec[T],
 ) *CometBFTServer[T] {
-	logger := app.GetLogger().With("module", "cometbft-server")
+	logger = logger.With("module", "cometbft-server")
 
 	// create noop mempool
 	mempool := mempool.NoOpMempool[T]{}
 
 	// create consensus
-	consensus := NewConsensus[T](app.GetApp(), mempool, app.GetStore(), cfg, txCodec)
+	consensus := NewConsensus[T](app, mempool, store, cfg, txCodec, logger)
 
 	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
 	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
 	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
 	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
 
-	ss, ok := app.GetStore().GetStateStorage().(snapshots.StorageSnapshotter)
-	if !ok {
-		panic("snapshots are not supported for this store")
-	}
-	sc, ok := app.GetStore().GetStateCommitment().(snapshots.CommitSnapshotter)
-	if !ok {
-		panic("snapshots are not supported for this store")
-	}
+	// TODO: set these; what is the appropriate presence of the Store interface here?
+	var ss snapshots.StorageSnapshotter
+	var sc snapshots.CommitSnapshotter
+	//ss, ok := app.GetStore().GetStateStorage().(snapshots.StorageSnapshotter)
+	//if !ok {
+	//	panic("snapshots are not supported for this store")
+	//}
+	//sc, ok := app.GetStore().GetStateCommitment().(snapshots.CommitSnapshotter)
+	//if !ok {
+	//	panic("snapshots are not supported for this store")
+	//}
 
-	store, err := GetSnapshotStore(nil)
+	snapshotStore, err := GetSnapshotStore(cfg.CmtConfig.RootDir)
 	if err != nil {
 		panic(err)
 	}
 
-	sm := snapshots.NewManager(store, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
+	sm := snapshots.NewManager(snapshotStore, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
 	consensus.SetSnapshotManager(sm)
 
 	return &CometBFTServer[T]{
@@ -97,7 +105,6 @@ func NewCometBFTServer[T transaction.Tx](
 		App:    consensus,
 		config: cfg,
 	}
-
 }
 
 func (s *CometBFTServer[T]) Name() string {

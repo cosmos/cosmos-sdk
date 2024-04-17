@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -14,6 +15,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -73,6 +75,10 @@ func initFixture(tb testing.TB) *fixture {
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
 
+	// gomock initializations
+	ctrl := gomock.NewController(&testing.T{})
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
@@ -81,6 +87,7 @@ func initFixture(tb testing.TB) *fixture {
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authority.String(),
+		acctsModKeeper,
 	)
 
 	blockedAddresses := map[string]bool{

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/transaction"
@@ -15,7 +15,7 @@ var _ transaction.Tx = Tx{}
 
 type Tx struct {
 	Sender   []byte
-	Msg      proto.Message
+	Msg      transaction.Type
 	GasLimit uint64
 }
 
@@ -48,7 +48,8 @@ type encodedTx struct {
 }
 
 func (t Tx) Bytes() []byte {
-	msg, err := anypb.New(t.Msg)
+	v2Msg := protoadapt.MessageV2Of(t.Msg)
+	msg, err := anypb.New(v2Msg)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +74,7 @@ func (t *Tx) Decode(b []byte) {
 	if err != nil {
 		panic(err)
 	}
-	t.Msg = msg
+	t.Msg = protoadapt.MessageV1Of(msg)
 	t.Sender = rawTx.Sender
 	t.GasLimit = rawTx.GasLimit
 }

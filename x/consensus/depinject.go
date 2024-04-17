@@ -33,12 +33,15 @@ type ModuleInputs struct {
 	Environment appmodule.Environment
 }
 
+type Authority string
+
 type ModuleOutputs struct {
 	depinject.Out
 
+	Authority     Authority
 	Keeper        keeper.Keeper
 	Module        appmodule.AppModule
-	BaseAppOption runtime.BaseAppOption
+	BaseAppOption runtime.BaseAppOption // This is only useful for chains using baseapp.
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -58,5 +61,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		Keeper:        k,
 		Module:        m,
 		BaseAppOption: baseappOpt,
+		Authority:     Authority(authority.String()),
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	rootstore "cosmossdk.io/store/v2/root"
 
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -21,7 +22,8 @@ type branchFunc func(state store.ReaderMap) store.WriterMap
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.
 type AppBuilder struct {
-	app *App
+	app          *App
+	storeOptions *rootstore.FactoryOptions
 
 	// the following fields are used to overwrite the default
 	branch      branchFunc
@@ -58,7 +60,7 @@ func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
+func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -73,8 +75,6 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 		a.txValidator = a.app.moduleManager.TxValidators()
 	}
 
-	a.app.db = db
-
 	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
 		return nil, err
 	}
@@ -83,22 +83,37 @@ func (a *AppBuilder) Build(db Store, opts ...AppBuilderOption) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to build STF message handler: %w", err)
 	}
+	stfQueryHandler, err := a.app.queryRouterBuilder.Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build query handler: %w", err)
+	}
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	_ = stfMsgHandler
+	// TODO how to set?
+	// no-op postTxExec
+	postTxExec := func(ctx context.Context, tx transaction.Tx, success bool) error {
+		return nil
+	}
 
 	a.app.stf = stf.NewSTF[transaction.Tx](
-		nil, // stfMsgHandler, // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
-		nil, // stfMsgHandler  // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
+		stfMsgHandler,
+		stfQueryHandler,
 		a.app.moduleManager.PreBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,
 		a.txValidator,
 		valUpdate,
-		nil, // stfMsgHandler, // re-enable in https://github.com/cosmos/cosmos-sdk/pull/19639
+		postTxExec,
 		a.branch,
 	)
+
+	rs, err := rootstore.CreateRootStore(a.storeOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create root store: %w", err)
+	}
+	a.app.db = rs
+
 	appManagerBuilder := appmanager.Builder[transaction.Tx]{
 		STF:                a.app.stf,
 		DB:                 a.app.db,

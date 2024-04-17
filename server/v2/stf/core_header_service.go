@@ -9,9 +9,9 @@ import (
 var _ header.Service = (*HeaderService)(nil)
 
 type HeaderService struct {
-	Info header.Info
+	getHeader func() (header.Info, error)
 }
 
 func (h HeaderService) GetHeaderInfo(ctx context.Context) header.Info {
-	return h.Info
+	return ctx.(*executionContext).headerInfo
 }

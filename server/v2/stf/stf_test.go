@@ -51,7 +51,7 @@ func TestSTF(t *testing.T) {
 			return nil
 		},
 		branch:           branch.DefaultNewWriterMap,
-		getGasMeter:      gas.DefaultGetMeter,
+		getGasMeter:      gas.DefaultGasMeter,
 		wrapWithGasMeter: gas.DefaultWrapWithGasMeter,
 	}
 
@@ -89,7 +89,7 @@ func TestSTF(t *testing.T) {
 		// this handler will propagate the storage error back, we expect
 		// out of gas immediately at tx validation level.
 		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error {
-			w, err := ctx.(*executionContext).State.GetWriter(actorName)
+			w, err := ctx.(*executionContext).state.GetWriter(actorName)
 			require.NoError(t, err)
 			err = w.Set([]byte("gas_failure"), []byte{})
 			require.Error(t, err)
@@ -101,7 +101,7 @@ func TestSTF(t *testing.T) {
 		}, state)
 		require.NoError(t, err)
 		stateNotHas(t, newState, "gas_failure") // assert during out of gas no state changes leaked.
-		require.ErrorIs(t, result.TxResults[0].Error, coregas.ErrOutOfGas)
+		require.ErrorIs(t, result.TxResults[0].Error, coregas.ErrOutOfGas, result.TxResults[0].Error)
 	})
 
 	t.Run("fail exec tx", func(t *testing.T) {
@@ -178,7 +178,7 @@ var actorName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) {
 	t.Helper()
-	state, err := ctx.(*executionContext).State.GetWriter(actorName)
+	state, err := ctx.(*executionContext).state.GetWriter(actorName)
 	require.NoError(t, err)
 	require.NoError(t, state.Set([]byte(v), []byte(v)))
 }

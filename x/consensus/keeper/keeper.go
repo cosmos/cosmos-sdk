@@ -94,6 +94,10 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 // SetParams sets the consensus parameters on init of a chain. This is a consensus message. It can only be called by the consensus server
 // This is used in the consensus message handler set in module.go.
 func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*types.ConsensusMsgParamsResponse, error) {
+	if req.Signer != "consensus" {
+		return nil, fmt.Errorf("invalid signer; expected %s, got %s", "consensus", req.Signer)
+	}
+
 	consensusParams, err := req.ToProtoConsensusParams()
 	if err != nil {
 		return nil, err
@@ -153,6 +157,10 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest
 
 // SetCometInfo is called by the framework to set the value at genesis.
 func (k *Keeper) SetCometInfo(ctx context.Context, req *types.ConsensusMsgCometInfoRequest) (*types.ConsensusMsgCometInfoResponse, error) {
+	if req.Signer != "consensus" { //TODO move this to core when upstreamed from server/v2
+		return nil, fmt.Errorf("invalid signer; expected %s, got %s", "consensus", req.Signer)
+	}
+
 	err := k.cometInfo.Set(ctx, *req.CometInfo)
 
 	return &types.ConsensusMsgCometInfoResponse{}, err

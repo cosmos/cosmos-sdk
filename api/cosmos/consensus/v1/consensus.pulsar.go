@@ -17,6 +17,7 @@ import (
 
 var (
 	md_ConsensusMsgParams           protoreflect.MessageDescriptor
+	fd_ConsensusMsgParams_signer    protoreflect.FieldDescriptor
 	fd_ConsensusMsgParams_version   protoreflect.FieldDescriptor
 	fd_ConsensusMsgParams_block     protoreflect.FieldDescriptor
 	fd_ConsensusMsgParams_evidence  protoreflect.FieldDescriptor
@@ -27,6 +28,7 @@ var (
 func init() {
 	file_cosmos_consensus_v1_consensus_proto_init()
 	md_ConsensusMsgParams = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("ConsensusMsgParams")
+	fd_ConsensusMsgParams_signer = md_ConsensusMsgParams.Fields().ByName("signer")
 	fd_ConsensusMsgParams_version = md_ConsensusMsgParams.Fields().ByName("version")
 	fd_ConsensusMsgParams_block = md_ConsensusMsgParams.Fields().ByName("block")
 	fd_ConsensusMsgParams_evidence = md_ConsensusMsgParams.Fields().ByName("evidence")
@@ -99,6 +101,12 @@ func (x *fastReflection_ConsensusMsgParams) Interface() protoreflect.ProtoMessag
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_ConsensusMsgParams) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Signer != "" {
+		value := protoreflect.ValueOfString(x.Signer)
+		if !f(fd_ConsensusMsgParams_signer, value) {
+			return
+		}
+	}
 	if x.Version != nil {
 		value := protoreflect.ValueOfMessage(x.Version.ProtoReflect())
 		if !f(fd_ConsensusMsgParams_version, value) {
@@ -144,6 +152,8 @@ func (x *fastReflection_ConsensusMsgParams) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_ConsensusMsgParams) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgParams.signer":
+		return x.Signer != ""
 	case "cosmos.consensus.v1.ConsensusMsgParams.version":
 		return x.Version != nil
 	case "cosmos.consensus.v1.ConsensusMsgParams.block":
@@ -170,6 +180,8 @@ func (x *fastReflection_ConsensusMsgParams) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_ConsensusMsgParams) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgParams.signer":
+		x.Signer = ""
 	case "cosmos.consensus.v1.ConsensusMsgParams.version":
 		x.Version = nil
 	case "cosmos.consensus.v1.ConsensusMsgParams.block":
@@ -196,6 +208,9 @@ func (x *fastReflection_ConsensusMsgParams) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_ConsensusMsgParams) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgParams.signer":
+		value := x.Signer
+		return protoreflect.ValueOfString(value)
 	case "cosmos.consensus.v1.ConsensusMsgParams.version":
 		value := x.Version
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -231,6 +246,8 @@ func (x *fastReflection_ConsensusMsgParams) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_ConsensusMsgParams) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgParams.signer":
+		x.Signer = value.Interface().(string)
 	case "cosmos.consensus.v1.ConsensusMsgParams.version":
 		x.Version = value.Message().Interface().(*types.VersionParams)
 	case "cosmos.consensus.v1.ConsensusMsgParams.block":
@@ -286,6 +303,8 @@ func (x *fastReflection_ConsensusMsgParams) Mutable(fd protoreflect.FieldDescrip
 			x.Abci = new(types.ABCIParams)
 		}
 		return protoreflect.ValueOfMessage(x.Abci.ProtoReflect())
+	case "cosmos.consensus.v1.ConsensusMsgParams.signer":
+		panic(fmt.Errorf("field signer of message cosmos.consensus.v1.ConsensusMsgParams is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
@@ -299,6 +318,8 @@ func (x *fastReflection_ConsensusMsgParams) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_ConsensusMsgParams) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgParams.signer":
+		return protoreflect.ValueOfString("")
 	case "cosmos.consensus.v1.ConsensusMsgParams.version":
 		m := new(types.VersionParams)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -383,6 +404,10 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		l = len(x.Signer)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.Version != nil {
 			l = options.Size(x.Version)
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -444,7 +469,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x2a
+			dAtA[i] = 0x32
 		}
 		if x.Validator != nil {
 			encoded, err := options.Marshal(x.Validator)
@@ -458,7 +483,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x22
+			dAtA[i] = 0x2a
 		}
 		if x.Evidence != nil {
 			encoded, err := options.Marshal(x.Evidence)
@@ -472,7 +497,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x22
 		}
 		if x.Block != nil {
 			encoded, err := options.Marshal(x.Block)
@@ -486,7 +511,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x1a
 		}
 		if x.Version != nil {
 			encoded, err := options.Marshal(x.Version)
@@ -499,6 +524,13 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			i -= len(encoded)
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Signer) > 0 {
+			i -= len(x.Signer)
+			copy(dAtA[i:], x.Signer)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signer)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -553,6 +585,38 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Signer = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
 				}
 				var msglen int
@@ -587,7 +651,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 2:
+			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Block", wireType)
 				}
@@ -623,7 +687,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 3:
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Evidence", wireType)
 				}
@@ -659,7 +723,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 4:
+			case 5:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Validator", wireType)
 				}
@@ -695,7 +759,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 5:
+			case 6:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Abci", wireType)
 				}
@@ -1124,12 +1188,14 @@ func (x *fastReflection_ConsensusMsgParamsResponse) ProtoMethods() *protoiface.M
 
 var (
 	md_ConsensusMsgCometInfoRequest            protoreflect.MessageDescriptor
+	fd_ConsensusMsgCometInfoRequest_signer     protoreflect.FieldDescriptor
 	fd_ConsensusMsgCometInfoRequest_comet_info protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_consensus_v1_consensus_proto_init()
 	md_ConsensusMsgCometInfoRequest = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("ConsensusMsgCometInfoRequest")
+	fd_ConsensusMsgCometInfoRequest_signer = md_ConsensusMsgCometInfoRequest.Fields().ByName("signer")
 	fd_ConsensusMsgCometInfoRequest_comet_info = md_ConsensusMsgCometInfoRequest.Fields().ByName("comet_info")
 }
 
@@ -1198,6 +1264,12 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Interface() protoreflect.P
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_ConsensusMsgCometInfoRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Signer != "" {
+		value := protoreflect.ValueOfString(x.Signer)
+		if !f(fd_ConsensusMsgCometInfoRequest_signer, value) {
+			return
+		}
+	}
 	if x.CometInfo != nil {
 		value := protoreflect.ValueOfMessage(x.CometInfo.ProtoReflect())
 		if !f(fd_ConsensusMsgCometInfoRequest_comet_info, value) {
@@ -1219,6 +1291,8 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Range(f func(protoreflect.
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_ConsensusMsgCometInfoRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+		return x.Signer != ""
 	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
 		return x.CometInfo != nil
 	default:
@@ -1237,6 +1311,8 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Has(fd protoreflect.FieldD
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_ConsensusMsgCometInfoRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+		x.Signer = ""
 	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
 		x.CometInfo = nil
 	default:
@@ -1255,6 +1331,9 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Clear(fd protoreflect.Fiel
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_ConsensusMsgCometInfoRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+		value := x.Signer
+		return protoreflect.ValueOfString(value)
 	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
 		value := x.CometInfo
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -1278,6 +1357,8 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Get(descriptor protoreflec
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_ConsensusMsgCometInfoRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+		x.Signer = value.Interface().(string)
 	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
 		x.CometInfo = value.Message().Interface().(*CometInfo)
 	default:
@@ -1305,6 +1386,8 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Mutable(fd protoreflect.Fi
 			x.CometInfo = new(CometInfo)
 		}
 		return protoreflect.ValueOfMessage(x.CometInfo.ProtoReflect())
+	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+		panic(fmt.Errorf("field signer of message cosmos.consensus.v1.ConsensusMsgCometInfoRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoRequest"))
@@ -1318,6 +1401,8 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Mutable(fd protoreflect.Fi
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_ConsensusMsgCometInfoRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+		return protoreflect.ValueOfString("")
 	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
 		m := new(CometInfo)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -1390,6 +1475,10 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) ProtoMethods() *protoiface
 		var n int
 		var l int
 		_ = l
+		l = len(x.Signer)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.CometInfo != nil {
 			l = options.Size(x.CometInfo)
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -1434,6 +1523,13 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) ProtoMethods() *protoiface
 			i -= len(encoded)
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Signer) > 0 {
+			i -= len(x.Signer)
+			copy(dAtA[i:], x.Signer)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signer)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1487,6 +1583,38 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) ProtoMethods() *protoiface
 			}
 			switch fieldNum {
 			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Signer = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CometInfo", wireType)
 				}
@@ -5693,14 +5821,15 @@ type ConsensusMsgParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
 	// params defines the x/consensus parameters to be passed from comet.
 	//
 	// NOTE: All parameters must be supplied.
-	Version   *types.VersionParams   `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
-	Block     *types.BlockParams     `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
-	Evidence  *types.EvidenceParams  `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
-	Validator *types.ValidatorParams `protobuf:"bytes,4,opt,name=validator,proto3" json:"validator,omitempty"`
-	Abci      *types.ABCIParams      `protobuf:"bytes,5,opt,name=abci,proto3" json:"abci,omitempty"`
+	Version   *types.VersionParams   `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	Block     *types.BlockParams     `protobuf:"bytes,3,opt,name=block,proto3" json:"block,omitempty"`
+	Evidence  *types.EvidenceParams  `protobuf:"bytes,4,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	Validator *types.ValidatorParams `protobuf:"bytes,5,opt,name=validator,proto3" json:"validator,omitempty"`
+	Abci      *types.ABCIParams      `protobuf:"bytes,6,opt,name=abci,proto3" json:"abci,omitempty"`
 }
 
 func (x *ConsensusMsgParams) Reset() {
@@ -5721,6 +5850,13 @@ func (*ConsensusMsgParams) ProtoMessage() {}
 // Deprecated: Use ConsensusMsgParams.ProtoReflect.Descriptor instead.
 func (*ConsensusMsgParams) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_consensus_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *ConsensusMsgParams) GetSigner() string {
+	if x != nil {
+		return x.Signer
+	}
+	return ""
 }
 
 func (x *ConsensusMsgParams) GetVersion() *types.VersionParams {
@@ -5792,7 +5928,8 @@ type ConsensusMsgCometInfoRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	CometInfo *CometInfo `protobuf:"bytes,1,opt,name=comet_info,json=cometInfo,proto3" json:"comet_info,omitempty"`
+	Signer    string     `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	CometInfo *CometInfo `protobuf:"bytes,2,opt,name=comet_info,json=cometInfo,proto3" json:"comet_info,omitempty"`
 }
 
 func (x *ConsensusMsgCometInfoRequest) Reset() {
@@ -5813,6 +5950,13 @@ func (*ConsensusMsgCometInfoRequest) ProtoMessage() {}
 // Deprecated: Use ConsensusMsgCometInfoRequest.ProtoReflect.Descriptor instead.
 func (*ConsensusMsgCometInfoRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_consensus_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ConsensusMsgCometInfoRequest) GetSigner() string {
+	if x != nil {
+		return x.Signer
+	}
+	return ""
 }
 
 func (x *ConsensusMsgCometInfoRequest) GetCometInfo() *CometInfo {
@@ -6187,31 +6331,34 @@ var file_cosmos_consensus_v1_consensus_proto_rawDesc = []byte{
 	0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
 	0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
 	0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x22, 0xb5, 0x02, 0x0a, 0x12, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73,
-	0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x39, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69,
-	0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65,
-	0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x56, 0x65, 0x72, 0x73,
-	0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69,
-	0x6f, 0x6e, 0x12, 0x33, 0x0a, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x1d, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74,
-	0x79, 0x70, 0x65, 0x73, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x52, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x3c, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65,
-	0x6e, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74, 0x65, 0x6e, 0x64,
-	0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x45, 0x76, 0x69,
-	0x64, 0x65, 0x6e, 0x63, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x08, 0x65, 0x76, 0x69,
-	0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x3f, 0x0a, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65,
-	0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x09, 0x76, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x30, 0x0a, 0x04, 0x61, 0x62, 0x63, 0x69, 0x18, 0x05,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e,
-	0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x41, 0x42, 0x43, 0x49, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x52, 0x04, 0x61, 0x62, 0x63, 0x69, 0x22, 0x1c, 0x0a, 0x1a, 0x43, 0x6f, 0x6e, 0x73,
-	0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5d, 0x0a, 0x1c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
-	0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3d, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x5f,
-	0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73,
+	0x22, 0xcd, 0x02, 0x0a, 0x12, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73,
+	0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65,
+	0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12,
+	0x39, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1f, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79,
+	0x70, 0x65, 0x73, 0x2e, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x33, 0x0a, 0x05, 0x62, 0x6c,
+	0x6f, 0x63, 0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x74, 0x65, 0x6e, 0x64,
+	0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x42, 0x6c, 0x6f,
+	0x63, 0x6b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x12,
+	0x3c, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x20, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74,
+	0x79, 0x70, 0x65, 0x73, 0x2e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x52, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x3f, 0x0a,
+	0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x21, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79,
+	0x70, 0x65, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x30,
+	0x0a, 0x04, 0x61, 0x62, 0x63, 0x69, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x74,
+	0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
+	0x41, 0x42, 0x43, 0x49, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x04, 0x61, 0x62, 0x63, 0x69,
+	0x22, 0x1c, 0x0a, 0x1a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x75,
+	0x0a, 0x1c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x43, 0x6f,
+	0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16,
+	0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
+	0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x3d, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x5f,
+	0x69, 0x6e, 0x66, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31,
 	0x2e, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x09, 0x63, 0x6f, 0x6d, 0x65,
 	0x74, 0x49, 0x6e, 0x66, 0x6f, 0x22, 0x1f, 0x0a, 0x1d, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,

@@ -265,7 +265,12 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 		AppHash: nil,
 	}
 
-	genesisState, err := c.app.InitGenesis(ctx, genesisHeaderInfo, consMessages, req.AppStateBytes)
+	genesisState, err := c.app.InitGenesis(
+		ctx,
+		genesisHeaderInfo,
+		consMessages,
+		req.AppStateBytes,
+		c.txCodec)
 	if err != nil {
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}

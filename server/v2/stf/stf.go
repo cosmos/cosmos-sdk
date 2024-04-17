@@ -150,6 +150,7 @@ func (s STF[T]) deliverTx(
 	defer func() {
 		if r := recover(); r != nil {
 			recoveryError = fmt.Errorf("panic during transaction execution: %s", r)
+			fmt.Println(recoveryError)
 		}
 	}()
 	// handle error from GetGasLimit

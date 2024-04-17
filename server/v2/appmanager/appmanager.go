@@ -3,6 +3,7 @@ package appmanager
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -23,6 +24,8 @@ type AppManager[T transaction.Tx] struct {
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
 	importState func(ctx context.Context, src io.Reader) error
 
+	initGenesis func(ctx context.Context, state io.Reader, txHandler func(tx json.RawMessage) error) error
+
 	stf *stf.STF[T]
 }
 
@@ -31,6 +34,7 @@ func (a AppManager[T]) InitGenesis(
 	headerInfo header.Info,
 	consensusMessages []transaction.Type,
 	initGenesisJSON []byte,
+	txDecoder transaction.Codec[T],
 ) (corestore.WriterMap, error) {
 	v, zeroState, err := a.db.StateLatest()
 	if err != nil {
@@ -39,13 +43,17 @@ func (a AppManager[T]) InitGenesis(
 	if v != 0 {
 		return nil, fmt.Errorf("cannot init genesis on non-zero state")
 	}
-	//v0State, err := a.db.StateAt(0)
-	//if err != nil {
-	//	return nil, fmt.Errorf("unable to get genesis state: %w", err)
-	//}
 
+	var genTxs []T
 	zeroState, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
-		return a.importState(ctx, bytes.NewBuffer(initGenesisJSON))
+		return a.initGenesis(ctx, bytes.NewBuffer(initGenesisJSON), func(jsonTx json.RawMessage) error {
+			genTx, err := txDecoder.DecodeJSON(jsonTx)
+			if err != nil {
+				return fmt.Errorf("failed to decode genesis transaction: %w", err)
+			}
+			genTxs = append(genTxs, genTx)
+			return nil
+		})
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to import genesis state: %w", err)
@@ -60,7 +68,7 @@ func (a AppManager[T]) InitGenesis(
 		Hash:              headerInfo.Hash,
 		ChainId:           headerInfo.ChainID,
 		AppHash:           headerInfo.AppHash,
-		Txs:               nil,
+		Txs:               genTxs,
 		ConsensusMessages: consensusMessages,
 	}
 

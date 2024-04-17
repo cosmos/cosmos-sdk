@@ -114,6 +114,7 @@ func init() {
 			ProvideGenesisTxHandler,
 			ProvideAppVersionModifier,
 		),
+		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 
@@ -166,7 +167,7 @@ type AppInputs struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       *codec.LegacyAmino
 	Logger            log.Logger
-	StoreOptions      *rootstorev2.FactoryOptions
+	StoreOptions      *rootstorev2.FactoryOptions `optional:"true"`
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -178,11 +179,13 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
-	// registerStoreKey could instead set this on StoreOptions directly
-	inputs.AppBuilder.storeOptions = inputs.StoreOptions
-	for _, sk := range inputs.AppBuilder.app.storeKeys {
-		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk.String())
+	if inputs.StoreOptions != nil {
+		// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
+		// registerStoreKey could instead set this on StoreOptions directly
+		inputs.AppBuilder.storeOptions = inputs.StoreOptions
+		for _, sk := range inputs.AppBuilder.app.storeKeys {
+			inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk.String())
+		}
 	}
 }
 

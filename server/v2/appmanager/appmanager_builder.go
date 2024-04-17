@@ -2,10 +2,12 @@ package appmanager
 
 import (
 	"context"
+	"encoding/json"
+	"io"
+
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
 	"cosmossdk.io/server/v2/stf"
-	"io"
 )
 
 type Builder[T transaction.Tx] struct {
@@ -15,7 +17,7 @@ type Builder[T transaction.Tx] struct {
 	QueryGasLimit,
 	SimulationGasLimit uint64
 
-	ImportState func(ctx context.Context, src io.Reader) error
+	InitGenesis func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error
 }
 
 func (b Builder[T]) Build() (*AppManager[T], error) {
@@ -27,7 +29,8 @@ func (b Builder[T]) Build() (*AppManager[T], error) {
 		},
 		db:          b.DB,
 		exportState: nil,
-		importState: b.ImportState,
+		importState: nil,
+		initGenesis: b.InitGenesis,
 		stf:         b.STF,
 	}, nil
 }

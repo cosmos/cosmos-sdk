@@ -2,11 +2,12 @@ package runtime
 
 import (
 	"context"
-	"cosmossdk.io/core/genesis"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
+
+	"cosmossdk.io/core/genesis"
 
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/exp/maps"
@@ -27,6 +28,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 type MM struct {
@@ -142,7 +144,7 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 }
 
 // InitGenesisJSON performs init genesis functionality for modules from genesis data in JSON format
-func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.RawMessage) error {
+func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.RawMessage, txHandler func(json.RawMessage) error) error {
 	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
 	var seenValUpdates bool
 	for _, moduleName := range m.config.InitGenesis {
@@ -151,6 +153,21 @@ func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.Ra
 		}
 
 		mod := m.modules[moduleName]
+
+		// skip genutil as it's a special module that handles gentxs
+		// TODO: should this be an empty extension interface on genutil for server v2?
+		if moduleName == "genutil" {
+			var genesisState types.GenesisState
+			err := m.cdc.UnmarshalJSON(genesisData[moduleName], &genesisState)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal %s genesis state: %w", moduleName, err)
+			}
+			for _, jsonTx := range genesisState.GenTxs {
+				txHandler(jsonTx)
+			}
+			continue
+		}
+
 		// we might get an adapted module, a native core API module or a legacy module
 		if module, ok := mod.(appmodule.HasGenesisAuto); ok {
 			m.logger.Debug("running initialization for module", "module", moduleName)

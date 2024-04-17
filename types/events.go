@@ -24,10 +24,15 @@ import (
 // EventManager implements a simple wrapper around a slice of Event objects that
 // can be emitted from.
 type EventManager struct {
-	events  Events
+	events Events
+	// history holds the events from all transactions delivered in a block
+	// [AGORIC] Used to communicate the history through the context.
 	history []abci.Event
 }
 
+// NewEventManagerWithHistory returns a new event manager with empty events,
+// but seeded with the provided history of earlier events in the block.
+// [AGORIC] This should be used to create the EventManager for use in EndBlockers.
 func NewEventManagerWithHistory(history []abci.Event) *EventManager {
 	return &EventManager{
 		events:  EmptyEvents(),
@@ -39,8 +44,8 @@ func NewEventManager() *EventManager {
 	return NewEventManagerWithHistory([]abci.Event{})
 }
 
-// GetEventHistory returns a deep copy of the ABCI events that have been
-// committed to thus far.
+// GetABCIEventHistory returns a deep copy of the ABCI events history.
+// [AGORIC] This should only be called in EndBlock processing.
 func (em *EventManager) GetABCIEventHistory() []abci.Event {
 	history := make([]abci.Event, len(em.history))
 	for i, event := range em.history {

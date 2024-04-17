@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -29,6 +28,7 @@ const (
 	runTxModeDeliver                   // Deliver a transaction
 )
 
+// [AGORIC] Context keys for including TX hash and msg index.
 const (
 	TxHashContextKey   = sdk.ContextKey("tx-hash")
 	TxMsgIdxContextKey = sdk.ContextKey("tx-msg-idx")
@@ -435,7 +435,7 @@ func (app *BaseApp) setCheckState(header tmproto.Header) {
 	app.checkState = &state{
 		ms:           ms,
 		ctx:          sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
-		eventHistory: []abci.Event{},
+		eventHistory: []abci.Event{}, // [AGORIC]: start with an empty history.
 	}
 }
 
@@ -448,7 +448,7 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	app.deliverState = &state{
 		ms:           ms,
 		ctx:          sdk.NewContext(ms, header, false, app.logger),
-		eventHistory: []abci.Event{},
+		eventHistory: []abci.Event{}, // [AGORIC]: start with an empty history.
 	}
 }
 
@@ -607,11 +607,13 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+	// [AGORIC] Add Tx hash to the context if absent.
 	txHash, ok := ctx.Context().Value(TxHashContextKey).(string)
 	if !ok {
 		txHash = fmt.Sprintf("%X", tmhash.Sum(txBytes))
-		ctx = ctx.WithContext(context.WithValue(ctx.Context(), TxHashContextKey, txHash))
+		ctx = ctx.WithValue(TxHashContextKey, txHash)
 	}
+
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
@@ -767,9 +769,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
-			if app.deliverState != nil && mode == runTxModeDeliver {
-				app.deliverState.eventHistory = append(app.deliverState.eventHistory, result.Events...)
-			}
 		}
 	}
 
@@ -784,7 +783,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
-	historicalEvents := ctx.EventManager().GetABCIEventHistory()
 	var msgResponses []*codectypes.Any
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
@@ -800,8 +798,9 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			err          error
 		)
 
-		msgCtx := ctx.WithEventManager(sdk.NewEventManagerWithHistory(historicalEvents))
-		msgCtx = msgCtx.WithContext(context.WithValue(msgCtx.Context(), TxMsgIdxContextKey, i))
+		// [AGORIC] Propagate the message index in the context.
+		msgCtx := ctx.WithValue(TxMsgIdxContextKey, i)
+
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(msgCtx, msg)
@@ -838,7 +837,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
-		historicalEvents = append(historicalEvents, msgEvents.ToABCIEvents()...)
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
 		// (which should represent 99% of the Msgs now, since everyone should

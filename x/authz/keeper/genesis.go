@@ -11,7 +11,7 @@ import (
 
 // InitGenesis initializes new authz genesis
 func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) error {
-	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	now := k.HeaderService.HeaderInfo(ctx).Time
 	for _, entry := range data.Authorization {
 		// ignore expired authorizations
 		if entry.Expiration != nil && entry.Expiration.Before(now) {

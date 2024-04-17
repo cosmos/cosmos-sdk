@@ -767,9 +767,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
-			if app.deliverState != nil && mode == runTxModeDeliver {
-				app.deliverState.eventHistory = append(app.deliverState.eventHistory, result.Events...)
-			}
 		}
 	}
 
@@ -784,7 +781,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
-	historicalEvents := ctx.EventManager().GetABCIEventHistory()
 	var msgResponses []*codectypes.Any
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
@@ -800,8 +796,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			err          error
 		)
 
-		msgCtx := ctx.WithEventManager(sdk.NewEventManagerWithHistory(historicalEvents))
-		msgCtx = msgCtx.WithContext(context.WithValue(msgCtx.Context(), TxMsgIdxContextKey, i))
+		msgCtx := ctx.WithContext(context.WithValue(ctx.Context(), TxMsgIdxContextKey, i))
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(msgCtx, msg)
@@ -838,7 +833,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
-		historicalEvents = append(historicalEvents, msgEvents.ToABCIEvents()...)
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
 		// (which should represent 99% of the Msgs now, since everyone should

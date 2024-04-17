@@ -37,12 +37,12 @@ func TestInitApp(t *testing.T) {
 	appState, err := AppGenState(nil, genutiltypes.AppGenesis{}, nil)
 	require.NoError(t, err)
 
-	req := abci.RequestInitChain{
+	req := abci.InitChainRequest{
 		AppStateBytes: appState,
 	}
 	res, err := app.InitChain(&req)
 	require.NoError(t, err)
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Hash:   res.AppHash,
 		Height: 1,
 	})
@@ -72,7 +72,7 @@ func TestDeliverTx(t *testing.T) {
 	tx := NewTx(key, value, randomAccounts[0].Address)
 	txBytes := tx.GetSignBytes()
 
-	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Hash:   []byte("apphash"),
 		Height: 1,
 		Txs:    [][]byte{txBytes},

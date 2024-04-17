@@ -804,7 +804,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		DiscardABCIResponses: config.Storage.DiscardABCIResponses,
 	})
 
-	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider)
+	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider, "")
 	if err != nil {
 		return nil, err
 	}
@@ -820,12 +820,12 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	_, context := getCtx(ctx, true)
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
-	_, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID)
+	_, _, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID)
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
 		return nil, fmt.Errorf("error starting proxy app connections: %v", err)
 	}
-	res, err := proxyApp.Query().Info(context, proxy.RequestInfo)
+	res, err := proxyApp.Query().Info(context, proxy.InfoRequest)
 	if err != nil {
 		return nil, fmt.Errorf("error calling Info: %v", err)
 	}

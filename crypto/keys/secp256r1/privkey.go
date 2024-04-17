@@ -64,12 +64,12 @@ func (sk ecdsaSK) Marshal() ([]byte, error) {
 // MarshalJSON implements customProtobufType.
 func (sk ecdsaSK) MarshalJSON() ([]byte, error) {
 	b64 := base64.StdEncoding.EncodeToString(sk.PrivKey.Bytes())
-	return []byte(b64), nil
+	return []byte("\"" + b64 + "\""), nil
 }
 
 // UnmarshalJSON implements customProtobufType.
 func (sk *ecdsaSK) UnmarshalJSON(data []byte) error {
-	bz, err := base64.StdEncoding.DecodeString(string(data))
+	bz, err := base64.StdEncoding.DecodeString(string(data[1 : len(data)-1]))
 	if err != nil {
 		return err
 	}

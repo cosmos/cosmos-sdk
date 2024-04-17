@@ -984,7 +984,9 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []proto
 			err          error
 		)
 
-		msgCtx := ctx.WithContext(context.WithValue(ctx.Context(), TxMsgIdxContextKey, i))
+		// [AGORIC] Propagate the message index in the context.
+		msgCtx := ctx.WithValue(TxMsgIdxContextKey, i)
+
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(msgCtx, msg)

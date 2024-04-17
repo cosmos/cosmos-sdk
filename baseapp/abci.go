@@ -311,6 +311,8 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+	// [AGORIC] Remember event history for successful deliveries.
+	// deliverTxWithoutEventHistory is the upstream cosmos-sdk DeliverTx.
 	res = app.deliverTxWithoutEventHistory(req)
 	// When successful, remember event history.
 	if res.Code == sdkerrors.SuccessABCICode {

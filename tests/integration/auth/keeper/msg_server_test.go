@@ -18,10 +18,8 @@ import (
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authsims "cosmossdk.io/x/auth/simulation"
-
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
-	"cosmossdk.io/x/bank/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -108,7 +106,7 @@ func initFixture(t *testing.T) *fixture {
 	blockedAddresses := map[string]bool{
 		authKeeper.GetAuthority(): false,
 	}
-	bankKeeper := keeper.NewBaseKeeper(
+	bankKeeper := bankkeeper.NewBaseKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authKeeper,

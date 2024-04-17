@@ -53,11 +53,11 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 // BaseSendKeeper only allows transfers between accounts without the possibility of
 // creating coins. It implements the SendKeeper interface.
 type BaseSendKeeper struct {
+	appmodule.Environment
 	BaseViewKeeper
 
-	cdc         codec.BinaryCodec
-	ak          types.AccountKeeper
-	environment appmodule.Environment
+	cdc codec.BinaryCodec
+	ak  types.AccountKeeper
 
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
@@ -81,10 +81,10 @@ func NewBaseSendKeeper(
 	}
 
 	return BaseSendKeeper{
+		Environment:     env,
 		BaseViewKeeper:  NewBaseViewKeeper(env, cdc, ak),
 		cdc:             cdc,
 		ak:              ak,
-		environment:     env,
 		blockedAddrs:    blockedAddrs,
 		authority:       authority,
 		sendRestriction: newSendRestriction(),
@@ -169,7 +169,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeTransfer,
 			event.NewAttribute(types.AttributeKeyRecipient, out.Address),
 			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
@@ -209,7 +209,7 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeTransfer,
 		event.NewAttribute(types.AttributeKeyRecipient, toAddrString),
 		event.NewAttribute(types.AttributeKeySender, fromAddrString),
@@ -260,7 +260,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinSpent,
 		event.NewAttribute(types.AttributeKeySpender, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
@@ -289,7 +289,7 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinReceived,
 		event.NewAttribute(types.AttributeKeyReceiver, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),

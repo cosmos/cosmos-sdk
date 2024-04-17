@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -54,9 +53,6 @@ type AccountKeeperI interface {
 
 	// AddressCodec returns the account address codec.
 	AddressCodec() address.Codec
-
-	// Environment returns the module's environment.
-	Environment() appmodule.Environment
 }
 
 func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
@@ -84,10 +80,11 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
+	appmodule.Environment
+
 	addressCodec      address.Codec
 	AccountsModKeeper types.AccountsModKeeper
 
-	environment  appmodule.Environment
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
@@ -127,9 +124,9 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	ak := AccountKeeper{
+		Environment:       env,
 		addressCodec:      ac,
 		bech32Prefix:      bech32Prefix,
-		environment:       env,
 		proto:             proto,
 		cdc:               cdc,
 		AccountsModKeeper: accountsModKeeper,
@@ -152,15 +149,14 @@ func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
 
+func (ak AccountKeeper) GetEnvironment() appmodule.Environment {
+	return ak.Environment
+}
+
 // AddressCodec returns the x/auth account address codec.
 // x/auth is tied to bech32 encoded user accounts
 func (ak AccountKeeper) AddressCodec() address.Codec {
 	return ak.addressCodec
-}
-
-// Logger returns a module-specific logger.
-func (ak AccountKeeper) Logger(ctx context.Context) log.Logger {
-	return ak.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // GetPubKey Returns the PubKey of the account at address
@@ -294,7 +290,7 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 			}
 		}
 
-		if err := ak.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+		if err := ak.BranchService.Execute(ctx, func(ctx context.Context) error {
 			result, err := ak.AccountsModKeeper.SendModuleMessageUntyped(ctx, signer, msg)
 			if err != nil {
 				// If an error occurs during message execution, append error response
@@ -317,9 +313,4 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 	}
 
 	return msgResponses, nil
-}
-
-// Environment returns the module's environment.
-func (ak AccountKeeper) Environment() appmodule.Environment {
-	return ak.environment
 }

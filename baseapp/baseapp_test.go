@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 )
 
 var (
@@ -111,7 +112,7 @@ func TestLoadVersion(t *testing.T) {
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 
-	testLoadVersionHelper(t, app, int64(2), commitID2)
+	baseapptestutil.TestLoadVersionHelper(t, app, int64(2), commitID2)
 
 	// Reload with LoadVersion, see if you can commit the same block and get
 	// the same result.
@@ -119,14 +120,14 @@ func TestLoadVersion(t *testing.T) {
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 
-	testLoadVersionHelper(t, app, int64(1), commitID1)
+	baseapptestutil.TestLoadVersionHelper(t, app, int64(1), commitID1)
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
 
-	testLoadVersionHelper(t, app, int64(2), commitID2)
+	baseapptestutil.TestLoadVersionHelper(t, app, int64(2), commitID2)
 }
 
 func TestSetLoader(t *testing.T) {
@@ -270,7 +271,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	// require we can load the latest version
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
-	testLoadVersionHelper(t, app, int64(1), commitID1)
+	baseapptestutil.TestLoadVersionHelper(t, app, int64(1), commitID1)
 
 	// require error when loading an invalid version
 	err = app.LoadVersion(2)
@@ -349,10 +350,10 @@ func (c ctxType) GetCtx(t *testing.T, bapp *baseapp.BaseApp) sdk.Context {
 		require.NoError(t, err)
 		return ctx
 	} else if c == CheckTxCtx {
-		return getCheckStateCtx(bapp)
+		return baseapptestutil.GetCheckStateCtx(bapp)
 	}
 	// TODO: Not supported yet
-	return getFinalizeBlockStateCtx(bapp)
+	return baseapptestutil.GetFinalizeBlockStateCtx(bapp)
 }
 
 func TestQueryGasLimit(t *testing.T) {
@@ -441,5 +442,5 @@ func TestLoadVersionPruning(t *testing.T) {
 
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
-	testLoadVersionHelper(t, app, int64(7), lastCommitID)
+	baseapptestutil.TestLoadVersionHelper(t, app, int64(7), lastCommitID)
 }

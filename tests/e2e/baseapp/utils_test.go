@@ -6,7 +6,6 @@ package baseapp_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"testing"
@@ -24,27 +23,18 @@ import (
 
 	"net/url"
 
-	"reflect"
-	"unsafe"
+	
 
 	"bytes"
 	"encoding/binary"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appconfig"
+	
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/signing"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -52,7 +42,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
@@ -155,42 +144,7 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 	return counter, failOnAnte
 }
 
-type ParamStore struct {
-	Db *dbm.MemDB
-}
 
-var _ baseapp.ParamStore = (*ParamStore)(nil)
-
-func (ps ParamStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
-	bz, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
-
-	return ps.Db.Set(ParamStoreKey, bz)
-}
-
-func (ps ParamStore) Has(_ context.Context) (bool, error) {
-	return ps.Db.Has(ParamStoreKey)
-}
-
-func (ps ParamStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
-	bz, err := ps.Db.Get(ParamStoreKey)
-	if err != nil {
-		return cmtproto.ConsensusParams{}, err
-	}
-
-	if len(bz) == 0 {
-		return cmtproto.ConsensusParams{}, errors.New("params not found")
-	}
-
-	var params cmtproto.ConsensusParams
-	if err := json.Unmarshal(bz, &params); err != nil {
-		return cmtproto.ConsensusParams{}, err
-	}
-
-	return params, nil
-}
 
 type MsgKeyValueImpl struct{}
 
@@ -215,20 +169,6 @@ func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte 
 	setTxSignature(t, builder, 1)
 
 	return builder.GetTx()
-}
-
-func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
-	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("checkState")
-	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
-}
-
-func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
-	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("finalizeBlockState")
-	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
 }
 
 func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
@@ -392,26 +332,4 @@ func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 	err := builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	return builder.GetTx()
-}
-
-func makeMinimalConfig() depinject.Config {
-	var (
-		mempoolOpt            = baseapp.SetMempool(mempool.NewSenderNonceMempool())
-		addressCodec          = func() address.Codec { return addresscodec.NewBech32Codec("cosmos") }
-		validatorAddressCodec = func() address.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") }
-		consensusAddressCodec = func() address.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") }
-	)
-
-	return depinject.Configs(
-		depinject.Supply(mempoolOpt, addressCodec, validatorAddressCodec, consensusAddressCodec),
-		appconfig.Compose(&appv1alpha1.Config{
-			Modules: []*appv1alpha1.ModuleConfig{
-				{
-					Name: "runtime",
-					Config: appconfig.WrapAny(&runtimev1alpha1.Module{
-						AppName: "BaseAppApp",
-					}),
-				},
-			},
-		}))
 }

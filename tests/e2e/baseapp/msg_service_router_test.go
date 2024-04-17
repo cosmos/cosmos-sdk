@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 )
 
 func TestMsgService(t *testing.T) {
@@ -34,7 +35,7 @@ func TestMsgService(t *testing.T) {
 	)
 	err := depinject.Inject(
 		depinject.Configs(
-			makeMinimalConfig(),
+			baseapptestutil.MakeMinimalConfig(),
 			depinject.Supply(log.NewNopLogger()),
 		), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)

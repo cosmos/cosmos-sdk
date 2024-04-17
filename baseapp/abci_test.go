@@ -21,6 +21,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,10 +90,10 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, apphash, initChainRes.AppHash)
 
 	// assert that chainID is set correctly in InitChain
-	chainID := getFinalizeBlockStateCtx(app).ChainID()
+	chainID := baseapptestutil.GetFinalizeBlockStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
 
-	chainID = getCheckStateCtx(app).ChainID()
+	chainID = baseapptestutil.GetCheckStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -258,7 +260,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	})
 
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(mock.NewMockParamStore(dbm.NewMemDB()))
 	_, err := app.InitChain(
 		&abci.RequestInitChain{
 			InitialHeight: 1,
@@ -336,7 +338,7 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	})
 
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(mock.NewMockParamStore(dbm.NewMemDB()))
 	_, err := app.InitChain(
 		&abci.RequestInitChain{
 			InitialHeight: 1,
@@ -388,7 +390,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 	}
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(mock.NewMockParamStore(dbm.NewMemDB()))
 	_, err := app.InitChain(&abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
@@ -417,7 +419,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 	}
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(mock.NewMockParamStore(dbm.NewMemDB()))
 	_, err := app.InitChain(&abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
@@ -528,7 +530,7 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 
-		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		tc.bapp.SetParamStore(mock.NewMockParamStore(dbm.NewMemDB()))
 		_, err := tc.bapp.InitChain(&abci.RequestInitChain{
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Evidence: &cmtproto.EvidenceParams{

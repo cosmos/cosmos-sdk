@@ -356,7 +356,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 
 			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
-			ctx := getFinalizeBlockStateCtx(suite.baseApp)
+			ctx := baseapptestutil.GetFinalizeBlockStateCtx(suite.baseApp)
 
 			// check for failed transactions
 			if tc.fail && (j+1) > tc.failAfterDeliver {
@@ -467,7 +467,7 @@ func TestABCI_CheckTx(t *testing.T) {
 		require.Empty(t, r.GetEvents())
 	}
 
-	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	checkStateStore := baseapptestutil.GetCheckStateCtx(suite.baseApp).KVStore(capKey1)
 	storedCounter := getIntFromStore(t, checkStateStore, counterKey)
 
 	// ensure AnteHandler ran
@@ -480,13 +480,13 @@ func TestABCI_CheckTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.NotNil(t, getCheckStateCtx(suite.baseApp).BlockGasMeter(), "block gas meter should have been set to checkState")
-	require.NotEmpty(t, getCheckStateCtx(suite.baseApp).HeaderHash())
+	require.NotNil(t, baseapptestutil.GetCheckStateCtx(suite.baseApp).BlockGasMeter(), "block gas meter should have been set to checkState")
+	require.NotEmpty(t, baseapptestutil.GetCheckStateCtx(suite.baseApp).HeaderHash())
 
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
 
-	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	checkStateStore = baseapptestutil.GetCheckStateCtx(suite.baseApp).KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
 }
@@ -570,7 +570,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
+	store := baseapptestutil.GetFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter := getIntFromStore(t, store, anteKey)
@@ -604,7 +604,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	store = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
+	store = baseapptestutil.GetFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter = getIntFromStore(t, store, anteKey)
@@ -1708,7 +1708,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	// The average price will be nil during the first block, given that we don't have
 	// any vote extensions on block 1 in PrepareProposal
-	avgPrice := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
+	avgPrice := baseapptestutil.GetFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.Nil(t, avgPrice)
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
@@ -1754,7 +1754,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check if the average price was available in FinalizeBlock's context
-	avgPrice = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
+	avgPrice = baseapptestutil.GetFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.NotNil(t, avgPrice)
 	require.GreaterOrEqual(t, binary.BigEndian.Uint64(avgPrice), uint64(10000000))
 	require.Less(t, binary.BigEndian.Uint64(avgPrice), uint64(11000000))

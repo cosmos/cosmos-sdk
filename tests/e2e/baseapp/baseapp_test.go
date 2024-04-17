@@ -31,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 )
 
 var (
@@ -76,7 +77,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
 	app.MsgServiceRouter().SetInterfaceRegistry(cdc.InterfaceRegistry())
 	app.MountStores(capKey1, capKey2)
-	app.SetParamStore(ParamStore{Db: dbm.NewMemDB()})
+	app.SetParamStore(mock.NewMockParamStore(dbm.NewMemDB()))
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
 
@@ -370,7 +371,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	ctx := getFinalizeBlockStateCtx(suite.baseApp)
+	ctx := baseapptestutil.GetFinalizeBlockStateCtx(suite.baseApp)
 	store := ctx.KVStore(capKey1)
 	require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
 
@@ -387,7 +388,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = getFinalizeBlockStateCtx(suite.baseApp)
+	ctx = baseapptestutil.GetFinalizeBlockStateCtx(suite.baseApp)
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
@@ -404,7 +405,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = getFinalizeBlockStateCtx(suite.baseApp)
+	ctx = baseapptestutil.GetFinalizeBlockStateCtx(suite.baseApp)
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
@@ -471,7 +472,7 @@ func TestSetMinGasPrices(t *testing.T) {
 	minGasPrices := sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5000)}
 	suite := NewBaseAppSuite(t, baseapp.SetMinGasPrices(minGasPrices.String()))
 
-	ctx := getCheckStateCtx(suite.baseApp)
+	ctx := baseapptestutil.GetCheckStateCtx(suite.baseApp)
 	require.Equal(t, minGasPrices, ctx.MinGasPrices())
 }
 

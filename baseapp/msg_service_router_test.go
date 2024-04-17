@@ -12,6 +12,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 )
 
 func TestRegisterMsgService(t *testing.T) {
@@ -22,7 +23,7 @@ func TestRegisterMsgService(t *testing.T) {
 	)
 	err := depinject.Inject(
 		depinject.Configs(
-			makeMinimalConfig(),
+			baseapptestutil.MakeMinimalConfig(),
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
@@ -54,7 +55,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	)
 	err := depinject.Inject(
 		depinject.Configs(
-			makeMinimalConfig(),
+			baseapptestutil.MakeMinimalConfig(),
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
@@ -87,7 +88,7 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 	)
 	err := depinject.Inject(
 		depinject.Configs(
-			makeMinimalConfig(),
+			baseapptestutil.MakeMinimalConfig(),
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)

@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
+	
 )
 
 func TestGRPCQueryRouter(t *testing.T) {
@@ -102,7 +104,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	var appBuilder *runtime.AppBuilder
 	err := depinject.Inject(
 		depinject.Configs(
-			makeMinimalConfig(),
+			baseapptestutil.MakeMinimalConfig(),
 			depinject.Supply(log.NewTestLogger(t)),
 		),
 		&appBuilder)

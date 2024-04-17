@@ -154,7 +154,7 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	// eventually do the reverse, write ante handler as TxValidator
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
-		ante.NewValidateBasicDecorator(),
+		ante.NewValidateBasicDecorator(am.accountKeeper.Environment()),
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),

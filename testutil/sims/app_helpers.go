@@ -76,7 +76,7 @@ type GenesisAccount struct {
 // AtGenesis defines if the app started should already have produced block or not.
 type StartupConfig struct {
 	ValidatorSet    func() (*cmttypes.ValidatorSet, error)
-	BaseAppOption   runtime.BaseAppOption // TODO find alternative to this
+	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
 	DB              dbm.DB

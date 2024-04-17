@@ -51,7 +51,7 @@ func TestSTF(t *testing.T) {
 			return nil
 		},
 		branch:           branch.DefaultNewWriterMap,
-		getGasMeter:      gas.DefaultGetMeter,
+		getGasMeter:      gas.DefaultGasMeter,
 		wrapWithGasMeter: gas.DefaultWrapWithGasMeter,
 	}
 

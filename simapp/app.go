@@ -309,7 +309,7 @@ func NewSimApp(
 	}
 	app.AccountsKeeper = accountsKeeper
 
-	app.AuthKeeper = authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), logger), appCodec, authtypes.ProtoBaseAccount, maccPerms, signingCtx.AddressCodec(), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.AuthKeeper = authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), logger), appCodec, authtypes.ProtoBaseAccount, maccPerms, signingCtx.AddressCodec(), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AccountsKeeper)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), logger),

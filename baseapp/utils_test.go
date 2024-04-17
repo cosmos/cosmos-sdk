@@ -24,16 +24,12 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	_ "cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/signing"
-	_ "cosmossdk.io/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -166,30 +162,6 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 	}
 }
 
-func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
-	t.Helper()
-	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
-		store := ctx.KVStore(capKey)
-		counter, failOnAnte := parseTxMemo(t, tx)
-
-		if failOnAnte {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
-		}
-
-		_, err := incrementingCounter(t, store, storeKey, counter)
-		if err != nil {
-			return ctx, err
-		}
-
-		ctx.EventManager().EmitEvents(
-			counterEvent("ante_handler", counter),
-		)
-
-		ctx = ctx.WithPriority(testTxPriority)
-		return ctx, nil
-	}
-}
-
 func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
 	t.Helper()
 	storedCounter := getIntFromStore(t, store, counterKey)
@@ -293,24 +265,6 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 	return counter, failOnAnte
 }
 
-func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
-	t.Helper()
-	_, _, addr := testdata.KeyTestPubAddr()
-	msgs := make([]sdk.Msg, 0, len(msgCounters))
-	for _, c := range msgCounters {
-		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addr.String()}
-		msgs = append(msgs, msg)
-	}
-
-	builder := cfg.NewTxBuilder()
-	err := builder.SetMsgs(msgs...)
-	require.NoError(t, err)
-	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
-	setTxSignature(t, builder, uint64(counter))
-
-	return builder.GetTx()
-}
-
 func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 	t.Helper()
 	bz := store.Get(key)
@@ -322,56 +276,4 @@ func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 	require.NoError(t, err)
 
 	return i
-}
-
-func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.Tx {
-	t.Helper()
-	builder := cfg.NewTxBuilder()
-	err := builder.SetMsgs(tx.GetMsgs()...)
-	require.NoError(t, err)
-	memo := tx.GetMemo()
-	vals, err := url.ParseQuery(memo)
-	require.NoError(t, err)
-
-	vals.Set("failOnAnte", strconv.FormatBool(failOnAnte))
-	memo = vals.Encode()
-	builder.SetMemo(memo)
-	setTxSignature(t, builder, 1)
-
-	return builder.GetTx()
-}
-
-func setFailOnHandler(t *testing.T, cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx {
-	t.Helper()
-	builder := cfg.NewTxBuilder()
-	builder.SetMemo(tx.GetMemo())
-
-	msgs := tx.GetMsgs()
-	for i, msg := range msgs {
-		msgs[i] = &baseapptestutil.MsgCounter{
-			Counter:       msg.(*baseapptestutil.MsgCounter).Counter,
-			FailOnHandler: fail,
-			Signer:        sdk.AccAddress("addr").String(),
-		}
-	}
-
-	err := builder.SetMsgs(msgs...)
-	require.NoError(t, err)
-	return builder.GetTx()
-}
-
-// wonkyMsg is to be used to run a MsgCounter2 message when the MsgCounter2 handler is not registered.
-func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
-	t.Helper()
-	builder := cfg.NewTxBuilder()
-	builder.SetMemo(tx.GetMemo())
-
-	msgs := tx.GetMsgs()
-	msgs = append(msgs, &baseapptestutil.MsgCounter2{
-		Signer: sdk.AccAddress("wonky").String(),
-	})
-
-	err := builder.SetMsgs(msgs...)
-	require.NoError(t, err)
-	return builder.GetTx()
 }

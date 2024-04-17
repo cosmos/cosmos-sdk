@@ -460,35 +460,27 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
-func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	if err := vscd.ValidateTx(ctx, tx); err != nil {
-		return ctx, err
-	}
-
-	return next(ctx, tx, false)
-}
-
-func (vscd ValidateSigCountDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx) // TODO: what do we do with this.
+func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}
 
 	params := vscd.ak.GetParams(ctx)
 	pubKeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	sigCount := 0
 	for _, pk := range pubKeys {
 		sigCount += CountSubKeys(pk)
 		if uint64(sigCount) > params.TxSigLimit {
-			return errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
 	}
 
-	return nil
+	return next(ctx, tx, false)
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas

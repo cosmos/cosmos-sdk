@@ -13,8 +13,6 @@ import (
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	txsigning "cosmossdk.io/x/tx/signing"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -49,7 +47,7 @@ func (b *builder) GetTx() *apitx.Tx {
 }
 
 // GetSigningTxData returns the necessary data to generate sign bytes.
-func (b *builder) GetSigningTxData() (txsigning.TxData, error) {
+func (b *builder) GetSigningTxData() (TxData, error) {
 	body := b.tx.Body
 	authInfo := b.tx.AuthInfo
 
@@ -118,13 +116,13 @@ func (b *builder) GetSigningTxData() (txsigning.TxData, error) {
 	}
 	authInfoBz, err := protov2.Marshal(b.tx.AuthInfo)
 	if err != nil {
-		return txsigning.TxData{}, err
+		return TxData{}, err
 	}
 	bodyBz, err := protov2.Marshal(b.tx.Body)
 	if err != nil {
-		return txsigning.TxData{}, err
+		return TxData{}, err
 	}
-	txData := txsigning.TxData{
+	txData := TxData{
 		AuthInfo:      txAuthInfo,
 		AuthInfoBytes: authInfoBz,
 		Body:          txBody,

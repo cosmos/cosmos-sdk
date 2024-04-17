@@ -1,11 +1,12 @@
 package tx_test
 
 import (
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/client/v2/tx"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -52,7 +53,7 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"cannot set SIGN_MODE_DIRECT",
 			func() error {
-				return b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+				return b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT)
 			},
 			true, "AuxTxBuilder can only sign with SIGN_MODE_DIRECT_AUX or SIGN_MODE_LEGACY_AMINO_JSON",
 		},
@@ -104,7 +105,7 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
+				require.NoError(t, b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
 				return err
@@ -116,7 +117,7 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
+				require.NoError(t, b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
 				require.NoError(t, err)
@@ -132,7 +133,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
 				b.SetAddress(addr1.String())
-				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
+				require.NoError(t, b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
 				require.NoError(t, err)
@@ -153,7 +154,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
 				b.SetAddress(addr1.String())
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
+				err := b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX)
 				require.NoError(t, err)
 
 				_, err = b.GetSignBytes()
@@ -175,7 +176,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
 				b.SetAddress(addr1.String())
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+				err := b.SetSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
 
 				_, err = b.GetSignBytes()
@@ -194,7 +195,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
 				b.SetAddress(addr1.String())
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+				err := b.SetSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
 
 				_, err = b.GetSignBytes()

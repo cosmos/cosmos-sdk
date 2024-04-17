@@ -2,7 +2,6 @@ package tx
 
 import (
 	"cosmossdk.io/client/v2/offchain"
-	txsigning "cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -18,7 +17,7 @@ type ExtendedTxBuilder interface {
 // also know how to encode itself.
 type TxBuilder interface {
 	GetTx() typestx.Tx
-	GetSigningTxData() txsigning.TxData
+	GetSigningTxData() offchain.TxData
 
 	SetMsgs(...sdk.Msg) error
 	SetMemo(string)

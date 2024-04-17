@@ -3,12 +3,11 @@ package tx
 import (
 	"context"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
+	"cosmossdk.io/client/v2/offchain"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -126,7 +125,7 @@ func (b *AuxTxBuilder) SetSignMode(mode apitxsigning.SignMode) error {
 			signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	b.auxSignerData.Mode = mode
+	b.auxSignerData.Mode = signing.SignMode(mode)
 	return nil
 }
 
@@ -223,14 +222,14 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 			signBz, err = handler.GetSignBytes(
 				context.Background(),
-				txsigning.SignerData{
+				offchain.SignerData{
 					Address:       b.auxSignerData.Address,
 					ChainID:       b.auxSignerData.SignDoc.ChainId,
 					AccountNumber: b.auxSignerData.SignDoc.AccountNumber,
 					Sequence:      b.auxSignerData.SignDoc.Sequence,
 					PubKey:        nil,
 				},
-				txsigning.TxData{
+				offchain.TxData{
 					Body: auxBody,
 					AuthInfo: &apitx.AuthInfo{
 						SignerInfos: nil,

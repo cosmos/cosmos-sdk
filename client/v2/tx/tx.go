@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/client/v2/offchain"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -20,7 +19,7 @@ import (
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTxCLI(clientCtx Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf, err := NewFactoryCLI(clientCtx, flagSet)
 	if err != nil {
 		return err
@@ -31,7 +30,7 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 
 // GenerateOrBroadcastTxWithFactory will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTxWithFactory(clientCtx Context, txf Factory, msgs ...sdk.Msg) error {
 	// Validate all msgs before generating or broadcasting the tx.
 	// We were calling ValidateBasic separately in each CLI handler before.
 	// Right now, we're factorizing that call inside this function.
@@ -67,7 +66,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+func BroadcastTx(clientCtx Context, txf Factory, msgs ...sdk.Msg) error {
 	txf, err := txf.Prepare(clientCtx)
 	if err != nil {
 		return err
@@ -144,7 +143,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
-	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...sdk.MsgV2,
+	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...sdk.Msg,
 ) (*tx.SimulateResponse, uint64, error) {
 	txBytes, err := txf.BuildSimTx(msgs...)
 	if err != nil {
@@ -163,9 +162,9 @@ func CalculateGas(
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
+func makeAuxSignerData(clientCtx Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
-	fromAddress, name, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
+	fromAddress, name, _, err := GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}

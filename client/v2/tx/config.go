@@ -2,7 +2,7 @@ package tx
 
 import (
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/client/v2/offchain"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -27,8 +27,8 @@ type TxEncodingConfig interface {
 }
 
 type TxSigningConfig interface {
-	SignModeHandler() *txsigning.HandlerMap
-	SigningContext() *txsigning.Context
+	SignModeHandler() *offchain.HandlerMap
+	SigningContext() *offchain.SignContext
 	MarshalSignatureJSON([]signingtypes.SignatureV2) ([]byte, error)
 	UnmarshalSignatureJSON([]byte) ([]signingtypes.SignatureV2, error)
 }

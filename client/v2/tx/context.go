@@ -3,13 +3,13 @@ package tx
 import (
 	"bufio"
 	"context"
-	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
@@ -56,7 +56,7 @@ type Context struct {
 	Offline           bool
 	SkipConfirm       bool
 	TxConfig          TxConfig
-	AccountRetriever  client.AccountRetriever
+	AccountRetriever  AccountRetriever
 	NodeURI           string
 	FeePayer          string
 	FeeGranter        string
@@ -263,7 +263,7 @@ func (ctx Context) WithTxConfig(generator TxConfig) Context {
 }
 
 // WithAccountRetriever returns the context with an updated AccountRetriever
-func (ctx Context) WithAccountRetriever(retriever client.AccountRetriever) Context {
+func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 	ctx.AccountRetriever = retriever
 	return ctx
 }

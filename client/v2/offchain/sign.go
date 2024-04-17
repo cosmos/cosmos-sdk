@@ -2,18 +2,13 @@ package offchain
 
 import (
 	"context"
-
-	"google.golang.org/protobuf/types/known/anypb"
-
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/internal/offchain"
-	txsigning "cosmossdk.io/x/tx/signing"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/client/V2/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -28,6 +23,26 @@ const (
 	signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 )
 
+// TxData is the data about a transaction that is necessary to generate sign bytes.
+type TxData struct {
+	// Body is the TxBody that will be part of the transaction.
+	Body *apitx.TxBody
+
+	// AuthInfo is the AuthInfo that will be part of the transaction.
+	AuthInfo *apitx.AuthInfo
+
+	// BodyBytes is the marshaled body bytes that will be part of TxRaw.
+	BodyBytes []byte
+
+	// AuthInfoBytes is the marshaled AuthInfo bytes that will be part of TxRaw.
+	AuthInfoBytes []byte
+
+	// BodyHasUnknownNonCriticals should be set to true if the transaction has been
+	// decoded and found to have unknown non-critical fields. This is only needed
+	// for amino JSON signing.
+	BodyHasUnknownNonCriticals bool
+}
+
 type SignerData struct {
 	Address       string
 	ChainID       string
@@ -37,7 +52,7 @@ type SignerData struct {
 }
 
 // Sign signs given bytes using the specified encoder and SignMode.
-func Sign(ctx client.Context, rawBytes []byte, fromName, indent, encoding, output string, emitUnpopulated bool) (string, error) {
+func Sign(ctx tx.Context, rawBytes []byte, fromName, indent, encoding, output string, emitUnpopulated bool) (string, error) {
 	encoder, err := getEncoder(encoding)
 	if err != nil {
 		return "", err
@@ -62,7 +77,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, indent, encoding, outpu
 }
 
 // sign signs a digest with provided key and SignMode.
-func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
+func sign(ctx tx.Context, fromName, digest string) (*apitx.Tx, error) {
 	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring)
 	if err != nil {
 		return nil, err
@@ -138,7 +153,7 @@ func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
 
 // getSignBytes gets the bytes to be signed for the given Tx and SignMode.
 func getSignBytes(ctx context.Context,
-	handlerMap *txsigning.HandlerMap,
+	handlerMap *HandlerMap,
 	signerData SignerData,
 	tx *builder,
 ) ([]byte, error) {
@@ -147,20 +162,12 @@ func getSignBytes(ctx context.Context,
 		return nil, err
 	}
 
-	anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
-	if err != nil {
-		return nil, err
-	}
-
-	txSignerData := txsigning.SignerData{
+	txSignerData := SignerData{
 		ChainID:       signerData.ChainID,
 		AccountNumber: signerData.AccountNumber,
 		Sequence:      signerData.Sequence,
 		Address:       signerData.Address,
-		PubKey: &anypb.Any{
-			TypeUrl: anyPk.TypeUrl,
-			Value:   anyPk.Value,
-		},
+		PubKey:        signerData.PubKey,
 	}
 
 	return handlerMap.GetSignBytes(ctx, signMode, txSignerData, txData)

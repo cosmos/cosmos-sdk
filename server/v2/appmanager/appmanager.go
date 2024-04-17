@@ -22,7 +22,7 @@ type AppManager[T transaction.Tx] struct {
 	db store.Store
 
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
-	importState func(ctx context.Context, src io.Reader) error
+	importState func(ctx context.Context, src map[string]io.Reader) error
 
 	initGenesis func(ctx context.Context, state io.Reader, txHandler func(tx json.RawMessage) error) error
 

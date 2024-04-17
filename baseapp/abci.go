@@ -309,6 +309,15 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+	res = app.deliverTxWithoutEventHistory(req)
+	// When successful, remember event history.
+	if res.Code == sdkerrors.SuccessABCICode {
+		app.deliverState.eventHistory = append(app.deliverState.eventHistory, res.Events...)
+	}
+	return res
+}
+
+func (app *BaseApp) deliverTxWithoutEventHistory(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -333,14 +342,12 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
 	}
 
-	events := sdk.MarkEventsToIndex(result.Events, app.indexEvents)
-	app.deliverState.eventHistory = append(app.deliverState.eventHistory, events...)
 	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    events,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
 

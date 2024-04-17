@@ -522,6 +522,75 @@ func TestSimulateTx(t *testing.T) {
 	}
 }
 
+func TestEventHistory(t *testing.T) {
+	// generates events in the ante
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+
+	deliverKey := []byte("deliver-key")
+	routerOpt := func(bapp *BaseApp) {
+		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		bapp.Router().AddRoute(r)
+	}
+
+	// expand setupBaseApp() here so we can override the EndBlocker before app is sealed
+	app := newBaseApp(t.Name(), anteOpt, routerOpt)
+	require.Equal(t, t.Name(), app.Name())
+
+	app.MountStores(capKey1, capKey2)
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+
+	var history []abci.Event
+	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+		history = ctx.EventManager().GetABCIEventHistory()
+		return abci.ResponseEndBlock{}
+	})
+
+	// stores are mounted (seals the app)
+	err := app.LoadLatestVersion()
+	require.Nil(t, err)
+
+	app.InitChain(abci.RequestInitChain{})
+
+	// Create same codec used in txDecoder
+	cdc := codec.NewLegacyAmino()
+	registerTestCodec(cdc)
+
+	header := tmproto.Header{Height: int64(1)}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	require.Zero(t, len(app.deliverState.eventHistory))
+
+	counter := int64(0)
+	tx := newTxCounter(counter, counter)
+	txBytes, err := cdc.Marshal(tx)
+	require.NoError(t, err)
+
+	// simulation returns events, but none in deliverState history
+	_, simResult, err := app.Simulate(txBytes)
+	require.NoError(t, err)
+	require.NotNil(t, simResult)
+	require.Zero(t, len(app.deliverState.eventHistory))
+	expectedEvents := simResult.Events
+	require.NotZero(t, len(expectedEvents))
+
+	// delivery results should be reflected in deliverState history
+	deliverResult := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.True(t, deliverResult.IsOK(), fmt.Sprintf("%v", deliverResult))
+	require.NotZero(t, len(app.deliverState.eventHistory))
+	// simResult events are not indexed, but should otherwise be the same as deliverResult events
+	for i, _ := range simResult.Events {
+		simResult.Events[i].Attributes[0].Index = true
+	}
+	require.Equal(t, expectedEvents, deliverResult.Events)
+	require.Equal(t, expectedEvents, app.deliverState.eventHistory)
+
+	// the deliverState event history should be passed to the end blocker in the context, then cleared
+	app.EndBlock(abci.RequestEndBlock{})
+	require.Zero(t, len(app.deliverState.eventHistory))
+	require.Equal(t, expectedEvents, history)
+}
+
 func TestRunInvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {

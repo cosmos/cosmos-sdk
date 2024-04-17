@@ -371,12 +371,14 @@ func sendMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, err
 func (bva *BaseLockup) TrackDelegation(
 	ctx context.Context, balance, lockedCoins, amount sdk.Coins,
 ) error {
-	if amount.IsZero() {
-		return sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
-	}
-
 	for _, coin := range amount {
 		baseAmt := balance.AmountOf(coin.Denom)
+		// return error if the delegation amount is zero or if the base coins does not
+		// exceed the desired delegation amount.
+		if coin.IsZero() || baseAmt.LT(coin.Amount) {
+			return sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
+		}
+
 		lockedAmt := lockedCoins.AmountOf(coin.Denom)
 		delLockingAmt, err := bva.DelegatedLocking.Get(ctx, coin.Denom)
 		if err != nil {
@@ -385,12 +387,6 @@ func (bva *BaseLockup) TrackDelegation(
 		delFreeAmt, err := bva.DelegatedFree.Get(ctx, coin.Denom)
 		if err != nil {
 			return err
-		}
-
-		// return error if the delegation amount is zero or if the base coins does not
-		// exceed the desired delegation amount.
-		if baseAmt.LT(coin.Amount) {
-			return sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
 		}
 
 		// compute x and y per the specification, where:
@@ -434,12 +430,12 @@ func (bva *BaseLockup) TrackDelegation(
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
 func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) error {
-	// return error if the undelegation amount is zero
-	if amount.IsZero() {
-		return sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins")
-	}
-
 	for _, coin := range amount {
+		// return error if the undelegation amount is zero
+		if coin.IsZero() {
+			return sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins")
+		}
+
 		delFreeAmt, err := bva.DelegatedFree.Get(ctx, coin.Denom)
 		if err != nil {
 			return err

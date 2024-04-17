@@ -48,7 +48,6 @@ var _ types.QueryServer = Keeper{}
 
 // Params queries params of consensus module
 func (k Keeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	fmt.Println("Params", req)
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

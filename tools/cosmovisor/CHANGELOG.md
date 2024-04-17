@@ -35,6 +35,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+* [#20062](https://github.com/cosmos/cosmos-sdk/pull/20062) Fixed cosmovisor add-upgrade permissions
+
 
 ## v1.5.0 - 2023-07-17
 

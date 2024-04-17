@@ -117,7 +117,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/bank) [#20028](https://github.com/cosmos/cosmos-sdk/pull/20028) Align query with multi denoms for send-enabled.
 * (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
 * (baseapp) [#19616](https://github.com/cosmos/cosmos-sdk/pull/19616) Don't share gas meter in tx execution.
-* (cosmovisor) [#20062](https://github.com/cosmos/cosmos-sdk/pull/20062) Fixed cosmovisor add-upgrade permissions
 
 ### API Breaking Changes
 

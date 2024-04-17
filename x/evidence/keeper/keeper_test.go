@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.evidenceKeeper = *evidenceKeeper
 
 	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
-		suite.evidenceKeeper.Logger())
+		suite.evidenceKeeper.Logger)
 
 	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }

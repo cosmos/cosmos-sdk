@@ -3,7 +3,7 @@ module cosmossdk.io/x/tx
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3
+	cosmossdk.io/api v0.7.4
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0

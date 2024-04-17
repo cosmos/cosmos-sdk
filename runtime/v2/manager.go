@@ -24,7 +24,6 @@ import (
 	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
@@ -186,12 +185,12 @@ func (m *MM) InitGenesis(ctx context.Context, genesisData map[string]json.RawMes
 }
 
 // ExportGenesis performs export genesis functionality for modules
-func (m *MM) ExportGenesis(ctx sdk.Context) (map[string]json.RawMessage, error) {
+func (m *MM) ExportGenesis(ctx context.Context) (map[string]json.RawMessage, error) {
 	return m.ExportGenesisForModules(ctx, []string{})
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules
-func (m *MM) ExportGenesisForModules(ctx sdk.Context, modulesToExport []string) (map[string]json.RawMessage, error) {
+func (m *MM) ExportGenesisForModules(ctx context.Context, modulesToExport []string) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.config.ExportGenesis
 	}
@@ -211,7 +210,6 @@ func (m *MM) ExportGenesisForModules(ctx sdk.Context, modulesToExport []string) 
 		if module, ok := mod.(appmodulev2.HasGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
 			go func(module appmodulev2.HasGenesis, ch chan genesisResult) {
-				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				jm, err := module.ExportGenesis(ctx)
 				if err != nil {
 					ch <- genesisResult{nil, err}
@@ -222,7 +220,6 @@ func (m *MM) ExportGenesisForModules(ctx sdk.Context, modulesToExport []string) 
 		} else if module, ok := mod.(sdkmodule.HasABCIGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
 			go func(module sdkmodule.HasABCIGenesis, ch chan genesisResult) {
-				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				jm, err := module.ExportGenesis(ctx)
 				if err != nil {
 					ch <- genesisResult{nil, err}

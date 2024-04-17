@@ -732,10 +732,10 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 // child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	// [AGORIC] Reset the EventManager, preserving any existing event history.
-	eventHistory := []abci.Event{}
-	if oldEm := ctx.EventManager(); oldEm != nil {
-		eventHistory = oldEm.GetABCIEventHistory()
+	// Reset the EventManager, preserving any existing event history.
+	em := ctx.EventManager()
+	if em == nil {
+		em = sdk.NewEventManager()
 	}
 	em := sdk.NewEventManagerWithHistory(eventHistory)
 

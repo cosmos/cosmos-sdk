@@ -30,7 +30,7 @@ require (
 	gotest.tools/v3 v3.5.1
 )
 
-require cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240410205532-4be248eef6da // indirect
+require cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20240130113600-88ef6483f90f.1 // indirect
@@ -172,8 +172,8 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
 	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth

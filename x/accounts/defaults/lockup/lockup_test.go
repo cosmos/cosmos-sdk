@@ -131,7 +131,7 @@ func TestTrackingDelegation(t *testing.T) {
 		},
 		{
 			"zero amount",
-			sdk.NewCoins(sdk.NewCoin("test", math.ZeroInt())),
+			sdk.Coins{sdk.NewCoin("test", math.ZeroInt())},
 			nil,
 			nil,
 			nil,
@@ -196,7 +196,7 @@ func TestTrackingUnDelegation(t *testing.T) {
 		},
 		{
 			"zero amount",
-			sdk.NewCoins(sdk.NewCoin("test", math.NewInt(0))),
+			sdk.Coins{sdk.NewCoin("test", math.NewInt(0))},
 			nil,
 			nil,
 			sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins"),

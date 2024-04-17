@@ -37,7 +37,7 @@ require (
 
 require (
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240410205532-4be248eef6da
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/auth v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91

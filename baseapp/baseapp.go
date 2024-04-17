@@ -32,6 +32,7 @@ type (
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
+// [AGORIC] Context keys for including TX hash and msg index.
 const (
 	TxHashContextKey   = sdk.ContextKey("tx-hash")
 	TxMsgIdxContextKey = sdk.ContextKey("tx-msg-idx")
@@ -470,7 +471,7 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 	app.checkState = &state{
 		ms:           ms,
 		ctx:          sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
-		eventHistory: []abci.Event{},
+		eventHistory: []abci.Event{}, // [AGORIC]: start with an empty history.
 	}
 }
 
@@ -483,7 +484,7 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	app.deliverState = &state{
 		ms:           ms,
 		ctx:          sdk.NewContext(ms, header, false, app.logger),
-		eventHistory: []abci.Event{},
+		eventHistory: []abci.Event{}, // [AGORIC]: start with an empty history.
 	}
 	app.msgServiceRouter.SetCircuit(cb)
 }
@@ -680,11 +681,13 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+	// [AGORIC] Add Tx hash to the context if absent.
 	txHash, ok := ctx.Context().Value(TxHashContextKey).(string)
 	if !ok {
 		txHash = fmt.Sprintf("%X", tmhash.Sum(txBytes))
-		ctx = ctx.WithContext(context.WithValue(ctx.Context(), TxHashContextKey, txHash))
+		ctx = ctx.WithValue(TxHashContextKey, txHash)
 	}
+
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
@@ -981,7 +984,9 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []proto
 			err          error
 		)
 
-		msgCtx := ctx.WithContext(context.WithValue(ctx.Context(), TxMsgIdxContextKey, i))
+		// [AGORIC] Propagate the message index in the context.
+		msgCtx := ctx.WithValue(TxMsgIdxContextKey, i)
+
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(msgCtx, msg)

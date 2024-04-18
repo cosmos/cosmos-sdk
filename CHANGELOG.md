@@ -37,11 +37,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.47.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.11) - 2024-04-18
+
 ### Bug Fixes
 
 * (crypto) [#20027](https://github.com/cosmos/cosmos-sdk/pull/20027) secp256r1 keys now implement gogoproto's customtype interface.
-* (x/gov) [#19725](https://github.com/cosmos/cosmos-sdk/pull/19725) Fetch a failed proposal tally from proposal.FinalTallyResult in the gprc query.
-* (crypto) [#19691](https://github.com/cosmos/cosmos-sdk/pull/19746) Fix tx sign doesn't throw an error when incorrect Ledger is used.
+* (x/gov) [#19725](https://github.com/cosmos/cosmos-sdk/pull/19725) Fetch a failed proposal tally from `proposal.FinalTallyResult` in the gprc query.
+* (crypto) [#19691](https://github.com/cosmos/cosmos-sdk/pull/19746) Throw an error when signing with incorrect Ledger.
 
 ## [v0.47.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.10) - 2024-02-27
 

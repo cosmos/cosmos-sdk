@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -204,7 +205,7 @@ func TestPaginate(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
+	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
 	idx, err := NewIndex(tb, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
 		return []interface{}{val.(*testdata.TableModel).Metadata}, nil

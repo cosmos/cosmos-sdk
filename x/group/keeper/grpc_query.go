@@ -54,7 +54,7 @@ func (k Keeper) GroupPolicyInfo(ctx context.Context, request *group.QueryGroupPo
 // getGroupPolicyInfo gets the group policy info of the given account address.
 func (k Keeper) getGroupPolicyInfo(ctx context.Context, accountAddress string) (group.GroupPolicyInfo, error) {
 	var obj group.GroupPolicyInfo
-	return obj, k.groupPolicyTable.GetOne(k.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}), &obj)
+	return obj, k.groupPolicyTable.GetOne(k.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}, k.accKeeper.AddressCodec()), &obj)
 }
 
 // GroupMembers queries all members of a group.
@@ -311,7 +311,7 @@ func (k Keeper) GroupsByMember(ctx context.Context, request *group.QueryGroupsBy
 // getVote gets the vote info for the given proposal id and voter address.
 func (k Keeper) getVote(ctx context.Context, proposalID uint64, voter string) (group.Vote, error) {
 	var v group.Vote
-	return v, k.voteTable.GetOne(k.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter}), &v)
+	return v, k.voteTable.GetOne(k.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter}, k.accKeeper.AddressCodec()), &v)
 }
 
 // getVotesByProposal returns an iterator for the given proposal id and page request.

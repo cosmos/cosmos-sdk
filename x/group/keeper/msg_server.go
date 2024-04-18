@@ -134,7 +134,7 @@ func (k Keeper) UpdateGroupMembers(ctx context.Context, msg *group.MsgUpdateGrou
 			// Checking if the group member is already part of the group
 			var found bool
 			var prevGroupMember group.GroupMember
-			switch err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&groupMember), &prevGroupMember); {
+			switch err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&groupMember, k.accKeeper.AddressCodec()), &prevGroupMember); {
 			case err == nil:
 				found = true
 			case sdkerrors.ErrNotFound.Is(err):
@@ -578,7 +578,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, msg *group.MsgSubmitProposal
 
 	// Only members of the group can submit a new proposal.
 	for _, proposer := range msg.Proposers {
-		if !k.groupMemberTable.Has(kvStore, orm.PrimaryKey(&group.GroupMember{GroupId: groupInfo.Id, Member: &group.Member{Address: proposer}})) {
+		if !k.groupMemberTable.Has(kvStore, orm.PrimaryKey(&group.GroupMember{GroupId: groupInfo.Id, Member: &group.Member{Address: proposer}}, k.accKeeper.AddressCodec())) {
 			return nil, errorsmod.Wrapf(errors.ErrUnauthorized, "not in group: %s", proposer)
 		}
 	}
@@ -748,7 +748,7 @@ func (k Keeper) Vote(ctx context.Context, msg *group.MsgVote) (*group.MsgVoteRes
 
 	// Count and store votes.
 	voter := group.GroupMember{GroupId: groupInfo.Id, Member: &group.Member{Address: msg.Voter}}
-	if err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&voter), &voter); err != nil {
+	if err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&voter, k.accKeeper.AddressCodec()), &voter); err != nil {
 		return nil, errorsmod.Wrapf(err, "voter address: %s", msg.Voter)
 	}
 	newVote := group.Vote{
@@ -981,7 +981,7 @@ func (k Keeper) getGroupMember(ctx context.Context, member *group.GroupMember) (
 	kvStore := k.KVStoreService.OpenKVStore(ctx)
 	var groupMember group.GroupMember
 	switch err := k.groupMemberTable.GetOne(kvStore,
-		orm.PrimaryKey(member), &groupMember); {
+		orm.PrimaryKey(member, k.accKeeper.AddressCodec()), &groupMember); {
 	case err == nil:
 		break
 	case sdkerrors.ErrNotFound.Is(err):

@@ -33,6 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#19967](https://github.com/cosmos/cosmos-sdk/pull/19967) Refactor ante handlers to use `transaction.Service` for getting exec mode.
 * [#18780](https://github.com/cosmos/cosmos-sdk/pull/18780) Move sig verification out of the for loop, into the authenticate method.
 * [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist. 
     * When signing a transaction with an account that has not been created accountnumber 0 must be used

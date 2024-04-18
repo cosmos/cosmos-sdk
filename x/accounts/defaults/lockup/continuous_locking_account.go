@@ -8,7 +8,7 @@ import (
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -45,7 +45,7 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start before end)")
 	}
 
-	hs := cva.headerService.GetHeaderInfo(ctx)
+	hs := cva.headerService.HeaderInfo(ctx)
 
 	start := msg.StartTime
 	if msg.StartTime.IsZero() {
@@ -197,7 +197,7 @@ func (cva ContinuousLockingAccount) QueryLockupAccountInfo(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	hs := cva.headerService.GetHeaderInfo(ctx)
+	hs := cva.headerService.HeaderInfo(ctx)
 	unlockedCoins, lockedCoins, err := cva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err

@@ -9,7 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,9 +17,7 @@ import (
 )
 
 // Compile-time type assertions
-var (
-	_ accountstd.Interface = (*PeriodicLockingAccount)(nil)
-)
+var _ accountstd.Interface = (*PeriodicLockingAccount)(nil)
 
 // NewPeriodicLockingAccount creates a new PeriodicLockingAccount object.
 func NewPeriodicLockingAccount(d accountstd.Dependencies) (*PeriodicLockingAccount, error) {
@@ -46,7 +44,7 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
 	}
 
-	hs := pva.headerService.GetHeaderInfo(ctx)
+	hs := pva.headerService.HeaderInfo(ctx)
 
 	if msg.StartTime.Before(hs.Time) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("start time %s should be after block time")
@@ -292,7 +290,7 @@ func (pva PeriodicLockingAccount) QueryLockupAccountInfo(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	hs := pva.headerService.GetHeaderInfo(ctx)
+	hs := pva.headerService.HeaderInfo(ctx)
 	unlockedCoins, lockedCoins, err := pva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err

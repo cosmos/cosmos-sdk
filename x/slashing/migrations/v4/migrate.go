@@ -6,6 +6,7 @@ import (
 	"github.com/bits-and-blooms/bitset"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/slashing/types"
@@ -17,12 +18,15 @@ import (
 // Migrate migrates state to consensus version 4. Specifically, the migration
 // deletes all existing validator bitmap entries and replaces them with a real
 // "chunked" bitmap.
-func Migrate(ctx context.Context, cdc codec.BinaryCodec, store storetypes.KVStore, params types.Params) error {
+func Migrate(ctx context.Context, cdc codec.BinaryCodec, store storetypes.KVStore, params types.Params, addressCodec address.ValidatorAddressCodec) error {
 	// Get all the missed blocks for each validator, based on the existing signing
 	// info.
 	var missedBlocks []types.ValidatorMissedBlocks
 	iterateValidatorSigningInfos(ctx, cdc, store, func(addr sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
-		bechAddr := addr.String()
+		bechAddr, err := addressCodec.BytesToString(addr)
+		if err != nil {
+			return true
+		}
 		localMissedBlocks := GetValidatorMissedBlocks(ctx, cdc, store, addr, params)
 
 		missedBlocks = append(missedBlocks, types.ValidatorMissedBlocks{

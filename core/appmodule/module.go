@@ -29,6 +29,9 @@ type HasEndBlocker = appmodule.HasEndBlocker
 // HasRegisterInterfaces is the interface for modules to register their msg types.
 type HasRegisterInterfaces = appmodule.HasRegisterInterfaces
 
+// ValidatorUpdate defines a validator update.
+type ValidatorUpdate = appmodule.ValidatorUpdate
+
 // HasServices is the extension interface that modules should implement to register
 // implementations of services defined in .proto files.
 type HasServices interface {

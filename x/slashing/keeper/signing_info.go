@@ -28,7 +28,11 @@ func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAd
 func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTime time.Time) error {
 	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
-		return errorsmod.Wrap(err, fmt.Sprintf("cannot jail validator with consensus address %s that does not have any signing information", consAddr.String()))
+		addr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
+		if err != nil {
+			return types.ErrNoSigningInfoFound.Wrapf("could not convert consensus address to string. Error: %s", err.Error())
+		}
+		return errorsmod.Wrap(err, fmt.Sprintf("cannot jail validator with consensus address %s that does not have any signing information", addr))
 	}
 
 	signInfo.JailedUntil = jailTime
@@ -39,7 +43,11 @@ func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTim
 func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
 	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
-		return types.ErrNoSigningInfoFound.Wrap(fmt.Sprintf("cannot tombstone validator with consensus address %s that does not have any signing information", consAddr.String()))
+		addr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
+		if err != nil {
+			return types.ErrNoSigningInfoFound.Wrapf("could not convert consensus address to string. Error: %s", err.Error())
+		}
+		return types.ErrNoSigningInfoFound.Wrap(fmt.Sprintf("cannot tombstone validator with consensus address %s that does not have any signing information", addr))
 	}
 
 	if signInfo.Tombstoned {
@@ -182,13 +190,7 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 	}
 
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())
-	return k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
-		err := k.ValidatorMissedBlockBitmap.Remove(ctx, key)
-		if err != nil {
-			return true, err
-		}
-		return false, nil
-	})
+	return k.ValidatorMissedBlockBitmap.Clear(ctx, rng)
 }
 
 // IterateMissedBlockBitmap iterates over a validator's signed blocks window

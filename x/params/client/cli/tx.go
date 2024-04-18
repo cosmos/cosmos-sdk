@@ -67,7 +67,11 @@ Where proposal.json contains:
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
+			from, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			content := paramproposal.NewParameterChangeProposal(
 				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
 			)

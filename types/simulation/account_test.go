@@ -62,7 +62,8 @@ func TestRandomFees(t *testing.T) {
 		wantErr        bool
 	}{
 		{"0 coins", sdk.Coins{}, true, false},
-		{"0 coins", sdk.NewCoins(sdk.NewInt64Coin("aaa", 10), sdk.NewInt64Coin("bbb", 5)), false, false},
+		{"2 coins", sdk.NewCoins(sdk.NewInt64Coin("aaa", 10), sdk.NewInt64Coin("bbb", 5)), false, false},
+		{"1 coin with 0 amount", sdk.Coins{sdk.NewInt64Coin("ccc", 0)}, true, true},
 	}
 	for _, tt := range tests {
 		tt := tt

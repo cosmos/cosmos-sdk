@@ -25,7 +25,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	ctx context.Context, valAddr sdk.ValAddress,
 	oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin,
 ) error {
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	height := uint64(headerInfo.Height)
 	history := types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr.Bytes(),
@@ -202,9 +202,7 @@ func (k Keeper) deleteConsKeyIndexKey(ctx context.Context, valAddr sdk.ValAddres
 		StartInclusive(collections.Join(valAddr.Bytes(), time.Time{})).
 		EndInclusive(collections.Join(valAddr.Bytes(), ts))
 
-	return k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
-		return false, k.ValidatorConsensusKeyRotationRecordIndexKey.Remove(ctx, key)
-	})
+	return k.ValidatorConsensusKeyRotationRecordIndexKey.Clear(ctx, rng)
 }
 
 // getAndRemoveAllMaturedRotatedKeys returns all matured valaddresses.
@@ -213,12 +211,21 @@ func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx context.Context, matureTim
 
 	// get an iterator for all timeslices from time 0 until the current HeaderInfo time
 	rng := new(collections.Range[time.Time]).EndInclusive(matureTime)
+	keysToRemove := []time.Time{}
 	err := k.ValidatorConsensusKeyRotationRecordQueue.Walk(ctx, rng, func(key time.Time, value types.ValAddrsOfRotatedConsKeys) (stop bool, err error) {
 		valAddrs = append(valAddrs, value.Addresses...)
-		return false, k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key)
+		keysToRemove = append(keysToRemove, key)
+		return false, nil
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// remove all the keys from the list
+	for _, key := range keysToRemove {
+		if err := k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key); err != nil {
+			return nil, err
+		}
 	}
 
 	return valAddrs, nil
@@ -226,7 +233,7 @@ func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx context.Context, matureTim
 
 // GetBlockConsPubKeyRotationHistory returns the rotation history for the current height.
 func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.ConsPubKeyRotationHistory, error) {
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 
 	iterator, err := k.RotationHistory.Indexes.Block.MatchExact(ctx, uint64(headerInfo.Height))
 	if err != nil {

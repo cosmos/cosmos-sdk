@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
 
@@ -56,9 +55,10 @@ func (b BalancesIndexes) IndexesList() []collections.Index[collections.Pair[sdk.
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	cdc         codec.BinaryCodec
-	environment appmodule.Environment
-	ak          types.AccountKeeper
+	appmodule.Environment
+
+	cdc codec.BinaryCodec
+	ak  types.AccountKeeper
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -72,8 +72,8 @@ type BaseViewKeeper struct {
 func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := BaseViewKeeper{
+		Environment:   env,
 		cdc:           cdc,
-		environment:   env,
 		ak:            ak,
 		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
 		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
@@ -93,11 +93,6 @@ func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak type
 // HasBalance returns whether or not an account has at least amt balance.
 func (k BaseViewKeeper) HasBalance(ctx context.Context, addr sdk.AccAddress, amt sdk.Coin) bool {
 	return k.GetBalance(ctx, addr, amt.Denom).IsGTE(amt)
-}
-
-// Logger returns a module-specific logger.
-func (k BaseViewKeeper) Logger() log.Logger {
-	return k.environment.Logger
 }
 
 // GetAllBalances returns all the account balances for the given account address.
@@ -184,7 +179,7 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 	if acc != nil {
 		vacc, ok := acc.(types.VestingAccount)
 		if ok {
-			return vacc.LockedCoins(k.environment.HeaderService.GetHeaderInfo(ctx).Time)
+			return vacc.LockedCoins(k.HeaderService.HeaderInfo(ctx).Time)
 		}
 	}
 

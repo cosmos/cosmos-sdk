@@ -47,10 +47,10 @@ type HasEndBlocker interface {
 	EndBlock(context.Context) error
 }
 
-// HasTxValidation is the extension interface that modules should implement to run
+// HasTxValidator is the extension interface that modules should implement to run
 // custom logic for validating transactions.
 // It was previously known as AnteHandler/Decorator.
-type HasTxValidation[T transaction.Tx] interface {
+type HasTxValidator[T transaction.Tx] interface {
 	AppModule
 
 	// TxValidator is a method that will be run on each transaction.

@@ -1,7 +1,6 @@
 package accounts
 
 import (
-	"context"
 	"testing"
 
 	"github.com/cosmos/gogoproto/types"
@@ -16,9 +15,6 @@ import (
 
 func TestQueryServer(t *testing.T) {
 	k, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
-		return nil
-	})
 
 	ms := NewMsgServer(k)
 	qs := NewQueryServer(k)

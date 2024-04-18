@@ -45,6 +45,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support
 
+## `v0.46.16-alpha.agoric.2.3` - 2024-04-17
+
+### Improvements
+
+* (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Unit tests and documentation for event history.
+* (server) [#416](https://github.com/agoric-labs/cosmos-sdk/pull/416) Config entry to select ABCI client type.
+
+### Bug Fixes
+
+* (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Avoid duplicates in event history.
+
 ## `v0.46.16-alpha.agoric.2.2` - 2024-04-12
 
 ### Improvements

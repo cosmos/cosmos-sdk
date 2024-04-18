@@ -203,9 +203,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if app.endBlocker != nil {
-		// Propagate the event history.
-		em := sdk.NewEventManagerWithHistory(app.deliverState.eventHistory)
-		res = app.endBlocker(app.deliverState.ctx.WithEventManager(em), req)
+		// [AGORIC] Propagate the event history.
+		enhancedEm := sdk.NewEventManagerWithHistory(app.deliverState.eventHistory)
+		enhancedCtx := app.deliverState.ctx.WithEventManager(enhancedEm)
+
+		res = app.endBlocker(enhancedCtx, req)
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
@@ -266,6 +268,17 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+	// [AGORIC] Remember event history for successful deliveries.
+	// deliverTxWithoutEventHistory is the upstream cosmos-sdk DeliverTx.
+	res = app.deliverTxWithoutEventHistory(req)
+	// When successful, remember event history.
+	if res.Code == sdkerrors.SuccessABCICode {
+		app.deliverState.eventHistory = append(app.deliverState.eventHistory, res.Events...)
+	}
+	return res
+}
+
+func (app *BaseApp) deliverTxWithoutEventHistory(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -290,14 +303,12 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
 	}
 
-	events := sdk.MarkEventsToIndex(result.Events, app.indexEvents)
-	app.deliverState.eventHistory = append(app.deliverState.eventHistory, events...)
 	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    events,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
 

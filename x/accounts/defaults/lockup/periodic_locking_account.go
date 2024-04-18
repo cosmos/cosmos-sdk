@@ -128,12 +128,6 @@ func (pva *PeriodicLockingAccount) Delegate(ctx context.Context, msg *lockuptype
 	return pva.BaseLockup.Delegate(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
-) {
-	return pva.BaseLockup.Undelegate(ctx, msg)
-}
-
 func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -347,9 +341,9 @@ func (pva PeriodicLockingAccount) RegisterInitHandler(builder *accountstd.InitBu
 
 func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.Delegate)
-	accountstd.RegisterExecuteHandler(builder, pva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, pva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, pva.WithdrawUnlockedCoins)
+	pva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

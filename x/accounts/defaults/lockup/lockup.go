@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
+	distrtypes "cosmossdk.io/x/distribution/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -226,6 +227,33 @@ func (bva *BaseLockup) Undelegate(
 
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+}
+
+func (bva *BaseLockup) WithdrawReward(
+	ctx context.Context, msg *lockuptypes.MsgWithdrawReward,
+) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	err := bva.checkSender(ctx, msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	whoami := accountstd.Whoami(ctx)
+	delegatorAddress, err := bva.addressCodec.BytesToString(whoami)
+	if err != nil {
+		return nil, err
+	}
+
+	msgWithdraw := &distrtypes.MsgWithdrawDelegatorReward{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+	}
+	responses, err := sendMessage(ctx, msgWithdraw)
 	if err != nil {
 		return nil, err
 	}
@@ -670,4 +698,9 @@ func (bva BaseLockup) QueryLockupAccountBaseInfo(ctx context.Context, _ *lockupt
 		DelegatedFree:    delegatedFree,
 		EndTime:          &endTime,
 	}, nil
+}
+
+func (bva BaseLockup) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	accountstd.RegisterExecuteHandler(builder, bva.Undelegate)
+	accountstd.RegisterExecuteHandler(builder, bva.WithdrawReward)
 }

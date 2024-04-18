@@ -15,7 +15,7 @@ func (k Keeper) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.
 	var genesisState group.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	store := k.environment.KVStoreService.OpenKVStore(ctx)
+	store := k.KVStoreService.OpenKVStore(ctx)
 
 	if err := k.groupTable.Import(store, genesisState.Groups, genesisState.GroupSeq); err != nil {
 		return errors.Wrap(err, "groups")
@@ -50,7 +50,7 @@ func (k Keeper) ExportGenesis(ctx context.Context, _ codec.JSONCodec) (*group.Ge
 
 	var groups []*group.GroupInfo
 
-	store := k.environment.KVStoreService.OpenKVStore(ctx)
+	store := k.KVStoreService.OpenKVStore(ctx)
 
 	groupSeq, err := k.groupTable.Export(store, &groups)
 	if err != nil {

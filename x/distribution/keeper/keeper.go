@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,7 +20,8 @@ import (
 
 // Keeper of the distribution store
 type Keeper struct {
-	environment   appmodule.Environment
+	appmodule.Environment
+
 	cdc           codec.BinaryCodec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
@@ -69,7 +69,7 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
-		environment:      env,
+		Environment:      env,
 		cdc:              cdc,
 		authKeeper:       ak,
 		bankKeeper:       bk,
@@ -145,11 +145,6 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	return k.environment.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
-}
-
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
 func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr sdk.AccAddress) error {
 	if k.bankKeeper.BlockedAddr(withdrawAddr) {
@@ -170,7 +165,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		return err
 	}
 
-	if err = k.environment.EventService.EventManager(ctx).EmitKV(
+	if err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSetWithdrawAddress,
 		event.NewAttribute(types.AttributeKeyWithdrawAddress, addr),
 	); err != nil {
@@ -255,7 +250,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 		}
 	}
 
-	err = k.environment.EventService.EventManager(ctx).EmitKV(
+	err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeWithdrawCommission,
 		event.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
 	)

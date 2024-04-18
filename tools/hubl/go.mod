@@ -3,14 +3,14 @@ module cosmossdk.io/tools/hubl
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3
+	cosmossdk.io/api v0.7.4
 	cosmossdk.io/client/v2 v2.0.0-beta.1.0.20240118210941-3897926e722e
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/errors v1.0.1
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-sdk v0.50.6-0.20240403102038-f63e5fdf7c96
 	github.com/manifoldco/promptui v0.9.0
-	github.com/pelletier/go-toml/v2 v2.2.0
+	github.com/pelletier/go-toml/v2 v2.2.1
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
@@ -22,7 +22,7 @@ require (
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/store v1.1.0 // indirect
-	cosmossdk.io/x/tx v0.13.1 // indirect
+	cosmossdk.io/x/tx v0.13.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

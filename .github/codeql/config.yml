@@ -5,5 +5,5 @@ queries:
  - uses: github/codeql/go/ql/src/experimental/Unsafe/WrongUsageOfUnsafe.ql@main
  - uses: github/codeql/go/ql/src/experimental/CWE-369/DivideByZero.ql@main
 paths-ignore:
-  - api/
+  - api/**
   - '**/*_test.go'

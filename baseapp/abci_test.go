@@ -589,7 +589,7 @@ func TestABCI_CheckTx(t *testing.T) {
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
-		r, err := suite.baseApp.CheckTx(&abci.CheckTxRequest{Tx: txBytes})
+		r, err := suite.baseApp.CheckTx(&abci.CheckTxRequest{Tx: txBytes, Type: abci.CHECK_TX_TYPE_CHECK})
 		require.NoError(t, err)
 		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 		require.Empty(t, r.GetEvents())

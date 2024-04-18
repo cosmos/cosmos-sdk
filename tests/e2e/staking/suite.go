@@ -128,7 +128,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 	require.NoError(s.network.WaitForNextBlock())
 
 	// Create a HTTP rpc client.
-	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+	rpcClient, err := http.New(val.GetRPCAddress())
 	require.NoError(err)
 
 	// Loop until we find a block result with the correct validator updates.

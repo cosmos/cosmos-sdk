@@ -95,7 +95,7 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				app.FinalizeBlock(&abci.RequestFinalizeBlock{
+				_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
 					Height: i,
 				})
 				app.Commit()
@@ -182,13 +182,13 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
 	assert.NilError(t, err)
 
-	app.InitChain(&abci.RequestInitChain{
+	_, err = app.InitChain(&abci.InitChainRequest{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   appGenesis.AppState,
-	},
-	)
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	})
+	assert.NilError(t, err)
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	app.Commit()

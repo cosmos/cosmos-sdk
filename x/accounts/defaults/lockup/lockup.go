@@ -409,6 +409,17 @@ func sendMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, err
 	return []*codectypes.Any{respAny}, nil
 }
 
+func getStakingDenom(ctx context.Context) (string, error) {
+	// Query account balance for the sent denom
+	paramsQueryReq := &stakingtypes.QueryParamsRequest{}
+	resp, err := accountstd.QueryModule[stakingtypes.QueryParamsResponse](ctx, paramsQueryReq)
+	if err != nil {
+		return "", err
+	}
+
+	return resp.Params.BondDenom, nil
+}
+
 // TrackDelegation tracks a delegation amount for any given lockup account type
 // given the amount of coins currently being locked and the current account balance
 // of the delegation denominations.
@@ -418,48 +429,52 @@ func sendMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, err
 func (bva *BaseLockup) TrackDelegation(
 	ctx context.Context, balance, lockedCoins, amount sdk.Coins,
 ) error {
-	for _, coin := range amount {
-		baseAmt := balance.AmountOf(coin.Denom)
-		lockedAmt := lockedCoins.AmountOf(coin.Denom)
-		delLockingAmt, err := bva.DelegatedLocking.Get(ctx, coin.Denom)
+	bondDenom, err := getStakingDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	delAmt := amount.AmountOf(bondDenom)
+	baseAmt := balance.AmountOf(bondDenom)
+	lockedAmt := lockedCoins.AmountOf(bondDenom)
+	delLockingAmt, err := bva.DelegatedLocking.Get(ctx, bondDenom)
+	if err != nil {
+		return err
+	}
+	delFreeAmt, err := bva.DelegatedFree.Get(ctx, bondDenom)
+	if err != nil {
+		return err
+	}
+
+	// return error if the delegation amount is zero or if the base coins does not
+	// exceed the desired delegation amount.
+	if delAmt.IsZero() || baseAmt.LT(delAmt) {
+		return sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
+	}
+
+	// compute x and y per the specification, where:
+	// X := min(max(V - DV, 0), D)
+	// Y := D - X
+	x := math.MinInt(math.MaxInt(lockedAmt.Sub(delLockingAmt), math.ZeroInt()), delAmt)
+	y := delAmt.Sub(x)
+
+	delLockingCoin := sdk.NewCoin(bondDenom, delLockingAmt)
+	delFreeCoin := sdk.NewCoin(bondDenom, delFreeAmt)
+	if !x.IsZero() {
+		xCoin := sdk.NewCoin(bondDenom, x)
+		newDelLocking := delLockingCoin.Add(xCoin)
+		err = bva.DelegatedLocking.Set(ctx, newDelLocking.Denom, newDelLocking.Amount)
 		if err != nil {
 			return err
 		}
-		delFreeAmt, err := bva.DelegatedFree.Get(ctx, coin.Denom)
+	}
+
+	if !y.IsZero() {
+		yCoin := sdk.NewCoin(bondDenom, y)
+		newDelFree := delFreeCoin.Add(yCoin)
+		err = bva.DelegatedFree.Set(ctx, newDelFree.Denom, newDelFree.Amount)
 		if err != nil {
 			return err
-		}
-
-		// return error if the delegation amount is zero or if the base coins does not
-		// exceed the desired delegation amount.
-		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
-			return sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
-		}
-
-		// compute x and y per the specification, where:
-		// X := min(max(V - DV, 0), D)
-		// Y := D - X
-		x := math.MinInt(math.MaxInt(lockedAmt.Sub(delLockingAmt), math.ZeroInt()), coin.Amount)
-		y := coin.Amount.Sub(x)
-
-		delLockingCoin := sdk.NewCoin(coin.Denom, delLockingAmt)
-		delFreeCoin := sdk.NewCoin(coin.Denom, delFreeAmt)
-		if !x.IsZero() {
-			xCoin := sdk.NewCoin(coin.Denom, x)
-			newDelLocking := delLockingCoin.Add(xCoin)
-			err = bva.DelegatedLocking.Set(ctx, newDelLocking.Denom, newDelLocking.Amount)
-			if err != nil {
-				return err
-			}
-		}
-
-		if !y.IsZero() {
-			yCoin := sdk.NewCoin(coin.Denom, y)
-			newDelFree := delFreeCoin.Add(yCoin)
-			err = bva.DelegatedFree.Set(ctx, newDelFree.Denom, newDelFree.Amount)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -477,44 +492,47 @@ func (bva *BaseLockup) TrackDelegation(
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
 func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) error {
-	for _, coin := range amount {
-		// return error if the undelegation amount is zero
-		if coin.Amount.IsZero() {
-			return sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins")
-		}
-		delFreeAmt, err := bva.DelegatedFree.Get(ctx, coin.Denom)
+	bondDenom, err := getStakingDenom(ctx)
+	if err != nil {
+		return err
+	}
+	delAmt := amount.AmountOf(bondDenom)
+	// return error if the undelegation amount is zero
+	if delAmt.IsZero() {
+		return sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins")
+	}
+	delFreeAmt, err := bva.DelegatedFree.Get(ctx, bondDenom)
+	if err != nil {
+		return err
+	}
+	delLockingAmt, err := bva.DelegatedLocking.Get(ctx, bondDenom)
+	if err != nil {
+		return err
+	}
+
+	// compute x and y per the specification, where:
+	// X := min(DF, D)
+	// Y := min(DV, D - X)
+	x := math.MinInt(delFreeAmt, delAmt)
+	y := math.MinInt(delLockingAmt, delAmt.Sub(x))
+
+	delLockingCoin := sdk.NewCoin(bondDenom, delLockingAmt)
+	delFreeCoin := sdk.NewCoin(bondDenom, delFreeAmt)
+	if !x.IsZero() {
+		xCoin := sdk.NewCoin(bondDenom, x)
+		newDelFree := delFreeCoin.Sub(xCoin)
+		err = bva.DelegatedFree.Set(ctx, newDelFree.Denom, newDelFree.Amount)
 		if err != nil {
 			return err
 		}
-		delLockingAmt, err := bva.DelegatedLocking.Get(ctx, coin.Denom)
+	}
+
+	if !y.IsZero() {
+		yCoin := sdk.NewCoin(bondDenom, y)
+		newDelLocking := delLockingCoin.Sub(yCoin)
+		err = bva.DelegatedLocking.Set(ctx, newDelLocking.Denom, newDelLocking.Amount)
 		if err != nil {
 			return err
-		}
-
-		// compute x and y per the specification, where:
-		// X := min(DF, D)
-		// Y := min(DV, D - X)
-		x := math.MinInt(delFreeAmt, coin.Amount)
-		y := math.MinInt(delLockingAmt, coin.Amount.Sub(x))
-
-		delLockingCoin := sdk.NewCoin(coin.Denom, delLockingAmt)
-		delFreeCoin := sdk.NewCoin(coin.Denom, delFreeAmt)
-		if !x.IsZero() {
-			xCoin := sdk.NewCoin(coin.Denom, x)
-			newDelFree := delFreeCoin.Sub(xCoin)
-			err = bva.DelegatedFree.Set(ctx, newDelFree.Denom, newDelFree.Amount)
-			if err != nil {
-				return err
-			}
-		}
-
-		if !y.IsZero() {
-			yCoin := sdk.NewCoin(coin.Denom, y)
-			newDelLocking := delLockingCoin.Sub(yCoin)
-			err = bva.DelegatedLocking.Set(ctx, newDelLocking.Denom, newDelLocking.Amount)
-			if err != nil {
-				return err
-			}
 		}
 	}
 

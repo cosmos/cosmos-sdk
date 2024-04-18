@@ -26,10 +26,10 @@ func TestCosmosInlineJSON(t *testing.T) {
 			wantErr:    false,
 			wantOutput: `[1,2,3]`,
 		},
-		"supported type - valid JSON is not normalized": {
+		"supported type - valid JSON is normalized": {
 			value:      protoreflect.ValueOfBytes([]byte(`[1, 2, 3]`)),
 			wantErr:    false,
-			wantOutput: `[1, 2, 3]`,
+			wantOutput: `[1,2,3]`,
 		},
 		"supported type - valid JSON array (empty)": {
 			value:      protoreflect.ValueOfBytes([]byte(`[]`)),
@@ -89,6 +89,86 @@ func TestCosmosInlineJSON(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, tc.wantOutput, buf.String())
+		})
+	}
+}
+
+func TestSortedJsonStringify(t *testing.T) {
+	tests := map[string]struct {
+		input      []byte
+		wantOutput string
+	}{
+		"leaves true unchanged": {
+			input:      []byte(`true`),
+			wantOutput: "true",
+		},
+		"leaves false unchanged": {
+			input:      []byte(`false`),
+			wantOutput: "false",
+		},
+		"leaves string unchanged": {
+			input:      []byte(`"aabbccdd"`),
+			wantOutput: `"aabbccdd"`,
+		},
+		"leaves number unchanged": {
+			input:      []byte(`75`),
+			wantOutput: "75",
+		},
+		"leaves nil unchanged": {
+			input:      []byte(`null`),
+			wantOutput: "null",
+		},
+		"leaves simple array unchanged": {
+			input:      []byte(`[5, 6, 7, 1]`),
+			wantOutput: "[5,6,7,1]",
+		},
+		"leaves complex array unchanged": {
+			input:      []byte(`[5, ["a", "b"], true, null, 1]`),
+			wantOutput: `[5,["a","b"],true,null,1]`,
+		},
+		"sorts empty object": {
+			input:      []byte(`{}`),
+			wantOutput: `{}`,
+		},
+		"sorts single key object": {
+			input:      []byte(`{"a": 3}`),
+			wantOutput: `{"a":3}`,
+		},
+		"sorts multiple keys object": {
+			input:      []byte(`{"a": 3, "b": 2, "c": 1}`),
+			wantOutput: `{"a":3,"b":2,"c":1}`,
+		},
+		"sorts unsorted object": {
+			input:      []byte(`{"b": 2, "a": 3, "c": 1}`),
+			wantOutput: `{"a":3,"b":2,"c":1}`,
+		},
+		"sorts unsorted complex object": {
+			input:      []byte(`{"aaa": true, "aa": true, "a": true}`),
+			wantOutput: `{"a":true,"aa":true,"aaa":true}`,
+		},
+		"sorts nested objects": {
+			input:      []byte(`{"x": {"y": {"z": null}}}`),
+			wantOutput: `{"x":{"y":{"z":null}}}`,
+		},
+		"sorts deeply nested unsorted objects": {
+			input:      []byte(`{"b": {"z": true, "x": true, "y": true}, "a": true, "c": true}`),
+			wantOutput: `{"a":true,"b":{"x":true,"y":true,"z":true},"c":true}`,
+		},
+		"sorts objects in array sorted": {
+			input:      []byte(`[1, 2, {"x": {"y": {"z": null}}}, 4]`),
+			wantOutput: `[1,2,{"x":{"y":{"z":null}}},4]`,
+		},
+		"sorts objects in array unsorted": {
+			input:      []byte(`[1, 2, {"b": {"z": true, "x": true, "y": true}, "a": true, "c": true}, 4]`),
+			wantOutput: `[1,2,{"a":true,"b":{"x":true,"y":true,"z":true},"c":true},4]`,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := sortedJsonStringify(tc.input)
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantOutput, string(got))
 		})
 	}
 }

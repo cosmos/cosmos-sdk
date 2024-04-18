@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -45,7 +46,7 @@ func TestNewTable(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			table, err := newTable([2]byte{0x1}, tc.model, cdc)
+			table, err := newTable([2]byte{0x1}, tc.model, cdc, address.NewBech32Codec("cosmos"))
 			if tc.expectErr {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)
@@ -105,7 +106,7 @@ func TestCreate(t *testing.T) {
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
-			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
 			require.NoError(t, err)
 
 			err = myTable.Create(store, spec.rowID, spec.src)
@@ -163,7 +164,7 @@ func TestUpdate(t *testing.T) {
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
-			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
 			require.NoError(t, err)
 
 			initValue := testdata.TableModel{
@@ -213,7 +214,7 @@ func TestDelete(t *testing.T) {
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
-			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
 			require.NoError(t, err)
 
 			initValue := testdata.TableModel{

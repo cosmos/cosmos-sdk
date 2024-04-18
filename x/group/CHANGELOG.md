@@ -32,7 +32,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* []() Removes the use of `MustAccAddressFromBech32`:
+* [#20082](https://github.com/cosmos/cosmos-sdk/pull/20082) Removes the use of `MustAccAddressFromBech32`:
     * `PrimaryKeyFields` function from interface `PrimaryKeyed` now takes an address codec as argument.
     * `PrimaryKey`, `NewAutoUInt64Table` and `NewPrimaryKeyTable` now take an address codec as argument.
 * [#19916](https://github.com/cosmos/cosmos-sdk/pull/19916) Removes the use of Address String methods:

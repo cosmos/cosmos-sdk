@@ -25,8 +25,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 }
 
 func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
-	logger := k.Logger(ctx)
-	height := k.environment.HeaderService.GetHeaderInfo(ctx).Height
+	height := k.HeaderService.HeaderInfo(ctx).Height
 
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
@@ -115,7 +114,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	}
 
 	if missed {
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeLiveness,
 			event.NewAttribute(types.AttributeKeyAddress, consStr),
 			event.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
@@ -124,7 +123,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 			return err
 		}
 
-		logger.Debug(
+		k.Logger.Debug(
 			"absent validator",
 			"height", height,
 			"validator", consStr,
@@ -162,7 +161,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 				return err
 			}
 
-			if err := k.environment.EventService.EventManager(ctx).EmitKV(
+			if err := k.EventService.EventManager(ctx).EmitKV(
 				types.EventTypeSlash,
 				event.NewAttribute(types.AttributeKeyAddress, consStr),
 				event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
@@ -181,7 +180,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 			if err != nil {
 				return err
 			}
-			signInfo.JailedUntil = k.environment.HeaderService.GetHeaderInfo(ctx).Time.Add(downtimeJailDur)
+			signInfo.JailedUntil = k.HeaderService.HeaderInfo(ctx).Time.Add(downtimeJailDur)
 
 			// We need to reset the counter & bitmap so that the validator won't be
 			// immediately slashed for downtime upon re-bonding.
@@ -193,7 +192,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 				return err
 			}
 
-			logger.Info(
+			k.Logger.Info(
 				"slashing and jailing validator due to liveness fault",
 				"height", height,
 				"validator", consStr,
@@ -204,7 +203,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 			)
 		} else {
 			// validator was (a) not found or (b) already jailed so we do not slash
-			logger.Info(
+			k.Logger.Info(
 				"validator would have been slashed for downtime, but was either not found in store or already jailed",
 				"validator", consStr,
 			)

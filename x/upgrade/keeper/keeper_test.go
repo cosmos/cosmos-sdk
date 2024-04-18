@@ -72,7 +72,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.encodedAuthority = authority
 	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority)
 
-	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
 

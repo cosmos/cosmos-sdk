@@ -22,6 +22,8 @@ For new features:
 
 - New features should be landed on `Agoric` first, then cherry-picked to a release branch as needed.
 - Create a new development branch off of `Agoric`.
+- Make changes, indicating code specific to our fork by ensuring the presence of a preceding or same-line
+  comment including "[AGORIC]" (e.g., `// [AGORIC] Propagate the event history.`).
 - Test, review, merge PR with `automerge` label for mergify.io
     - Don't forget to update `CHANGELOG-Agoric.md` with the change and a link to its PR.
 

@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (server) [#409](https://github.com/agoric-labs/cosmos-sdk/pull/409) Flag to select ABCI client type.
+* (server) [#416](https://github.com/agoric-labs/cosmos-sdk/pull/416) Config entry to select ABCI client type.
 * (deps) [#412](https://github.com/agoric-labs/cosmos-sdk/pull/412) Bump iavl to v0.19.7
 * (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Unit tests and documentation for event history.
 

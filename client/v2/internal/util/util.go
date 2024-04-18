@@ -36,15 +36,15 @@ func ResolveMessageType(resolver protoregistry.MessageTypeResolver, descriptor p
 // IsSupportedVersion is used to determine in which version of a module / sdk a rpc was introduced.
 // It returns false if the rpc has comment for an higher version than the current one.
 func IsSupportedVersion(methodDesc protoreflect.MethodDescriptor) bool {
-	return IsSupportedVersionWithCustomBuildInfo(methodDesc, buildInfo)
+	return isSupportedVersion(methodDesc, buildInfo)
 }
 
-// IsSupportedVersionWithBuildInfo is used to determine in which version of a module / sdk a rpc was introduced.
+// isSupportedVersion is used to determine in which version of a module / sdk a rpc was introduced.
 // It returns false if the rpc has comment for an higher version than the current one.
 // It takes a buildInfo as argument to be able to test it.
-func IsSupportedVersionWithCustomBuildInfo(methodDesc protoreflect.MethodDescriptor, buildInfo *debug.BuildInfo) bool {
+func isSupportedVersion(methodDesc protoreflect.MethodDescriptor, buildInfo *debug.BuildInfo) bool {
 	hasVersion := proto.HasExtension(methodDesc.Options(), cosmos_proto.E_MethodAddedIn)
-	if !hasVersion || buildInfo == nil {
+	if !hasVersion || buildInfo == nil || len(buildInfo.Deps) == 0 {
 		return true
 	}
 

@@ -49,7 +49,7 @@ func TestIsSupportedVersion(t *testing.T) {
 			}
 
 			methodDesc := desc.(protoreflect.MethodDescriptor)
-			isSupported := isSupportedVersion(methodDesc, mockBuildInfo)
+			isSupported := IsSupportedVersionWithCustomBuildInfo(methodDesc, mockBuildInfo)
 			if isSupported != tc.expected {
 				t.Errorf("expected %v, got %v for %s", tc.expected, isSupported, methodDesc.FullName())
 			}

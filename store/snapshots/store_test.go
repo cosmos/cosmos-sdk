@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -318,28 +320,29 @@ func TestStore_Save(t *testing.T) {
 
 	// Saving a snapshot should error if a snapshot is already in progress for the same height,
 	// regardless of format. However, a different height should succeed.
-	ch = make(chan io.ReadCloser)
-	wait := make(chan bool)
-	go func() {
-		_, err := store.Save(7, 1, ch)
-		require.NoError(t, err)
-		// This will signal to the parent goroutine that this goroutine has finished, and it can now exit or complete
-		// the test. This approach prevents scenarios where the test finishes, but a non-terminated goroutine tries to
-		// call the Log API, which causes a panic: 'Log in goroutine after TestStore_Save has completed.'
-		wait <- true
-	}()
-	// The method store.Save should return an error when another goroutine has already called it with the same height (7).
-	// To ensure that this method is called second, not first, we wait for the first method in the goroutine to read from
-	// the channel "ch". The method store.Save reads from 'ch' and will block if the channel is empty. Once it starts reading,
-	// we can proceed and expect an error because we are sure that the first method is already in progress.
-	ch <- &ReadCloserMock{}
-	_, err = store.Save(7, 2, makeChunks(nil))
-	
-	// By closing the channel, we allow the method store.Save, which is called in the goroutine, to finish. If we do not close the channel,
-	// the goroutine will remain blocked until the main goroutine that started all the tests finishes.
-	close(ch)
-	require.Error(t, err)
-	<-wait // wait until the goroutine is terminated
+	var (
+		wgStart, wgDone sync.WaitGroup
+		errCount        atomic.Uint32
+	)
+	const n = 3
+	wgStart.Add(n)
+	wgDone.Add(n)
+	for i := 0; i < n; i++ {
+		ch = make(chan io.ReadCloser, 1)
+		ch <- &ReadCloserMock{} // does not block on a buffered channel
+		close(ch)
+		go func() {
+			wgStart.Done()
+			wgStart.Wait() // wait for all routines started
+			_, err = store.Save(7, 1, ch)
+			if err != nil {
+				errCount.Add(1)
+			}
+			wgDone.Done()
+		}()
+	}
+	wgDone.Wait() // wait for all routines completed
+	assert.Equal(t, uint32(n-1), errCount.Load())
 }
 
 type ReadCloserMock struct {

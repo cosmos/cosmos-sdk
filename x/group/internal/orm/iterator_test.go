@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -13,6 +12,7 @@ import (
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"

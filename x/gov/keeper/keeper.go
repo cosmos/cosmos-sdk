@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -19,6 +18,8 @@ import (
 
 // Keeper defines the governance module Keeper
 type Keeper struct {
+	appmodule.Environment
+
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 	poolKeeper types.PoolKeeper
@@ -30,9 +31,6 @@ type Keeper struct {
 
 	// The codec for binary encoding/decoding.
 	cdc codec.Codec
-
-	// Module environment
-	environment appmodule.Environment
 
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
@@ -111,7 +109,7 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := &Keeper{
-		environment:            env,
+		Environment:            env,
 		authKeeper:             authKeeper,
 		bankKeeper:             bankKeeper,
 		sk:                     sk,
@@ -166,11 +164,6 @@ func (k *Keeper) SetLegacyRouter(router v1beta1.Router) {
 	// could create invalid or non-deterministic behavior.
 	router.Seal()
 	k.legacyRouter = router
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger() log.Logger {
-	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // LegacyRouter returns the gov keeper's legacy router

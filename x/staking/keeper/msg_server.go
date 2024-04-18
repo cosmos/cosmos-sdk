@@ -69,7 +69,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	}
 
 	res := consensusv1.QueryParamsResponse{}
-	if err := k.environment.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
 	}
 	if res.Params.Validator != nil {
@@ -115,7 +115,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, k.environment.HeaderService.GetHeaderInfo(ctx).Time,
+		msg.Commission.MaxChangeRate, k.HeaderService.HeaderInfo(ctx).Time,
 	)
 
 	validator, err = validator.SetInitialCommission(commission)
@@ -153,7 +153,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCreateValidator,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
@@ -242,7 +242,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeEditValidator,
 		event.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
 		event.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
@@ -305,7 +305,7 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 		}()
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeDelegate,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
@@ -378,7 +378,7 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 		}()
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeRedelegate,
 		event.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
 		event.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
@@ -448,7 +448,7 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 		}()
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeUnbond,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
@@ -547,7 +547,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("amount is greater than the unbonding delegation entry balance")
 	}
 
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	if unbondEntry.CompletionTime.Before(headerInfo.Time) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
 	}
@@ -579,7 +579,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCancelUnbondingDelegation,
 		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
@@ -631,7 +631,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 					val.Commission.CommissionRates.MaxRate = minRate
 				}
 
-				val.Commission.UpdateTime = k.environment.HeaderService.GetHeaderInfo(ctx).Time
+				val.Commission.UpdateTime = k.HeaderService.HeaderInfo(ctx).Time
 				if err := k.SetValidator(ctx, val); err != nil {
 					return nil, fmt.Errorf("failed to set validator after MinCommissionRate param change: %w", err)
 				}

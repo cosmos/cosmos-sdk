@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
@@ -20,7 +19,8 @@ import (
 )
 
 type Keeper struct {
-	environment   appmodule.Environment
+	appmodule.Environment
+
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
@@ -55,7 +55,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	keeper := Keeper{
-		environment:               env,
+		Environment:               env,
 		authKeeper:                ak,
 		bankKeeper:                bk,
 		stakingKeeper:             sk,
@@ -80,11 +80,6 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 // GetAuthority returns the x/protocolpool module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	return k.environment.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 }
 
 // FundCommunityPool allows an account to directly fund the community fund pool.
@@ -126,7 +121,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 		}
 		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipientAddr)
 	}
-	if cf.Expiry != nil && cf.Expiry.Before(k.environment.HeaderService.GetHeaderInfo(ctx).Time) {
+	if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
 		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipientAddr)
 	}
 
@@ -193,7 +188,7 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 	if err != nil {
 		return err
 	}
-	hasPermission, err := k.hasPermission(ctx, authAddr)
+	hasPermission, err := k.hasPermission(authAddr)
 	if err != nil {
 		return err
 	}
@@ -249,7 +244,7 @@ func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, perce
 	return nil
 }
 
-func (k Keeper) hasPermission(ctx context.Context, addr []byte) (bool, error) {
+func (k Keeper) hasPermission(addr []byte) (bool, error) {
 	authority := k.GetAuthority()
 	authAcc, err := k.authKeeper.AddressCodec().StringToBytes(authority)
 	if err != nil {
@@ -368,7 +363,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 		}
 	}
 
-	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 	startTime := budget.StartTime
 
 	// Check if the start time is reached
@@ -416,7 +411,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	nextClaimFrom := budget.NextClaimFrom.Add(*budget.Period)
 	budget.NextClaimFrom = &nextClaimFrom
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
+	k.Logger.Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
 	// Save the updated budget in the state
 	if err := k.BudgetProposal.Set(ctx, recipient, budget); err != nil {
@@ -435,7 +430,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 		return nil, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
-	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 	if bp.StartTime.IsZero() || bp.StartTime == nil {
 		bp.StartTime = &currentTime
 	}
@@ -478,7 +473,7 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	}
 
 	// Validate expiry
-	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 	if msg.Expiry != nil && msg.Expiry.Compare(currentTime) == -1 {
 		return fmt.Errorf("expiry time cannot be less than the current block time")
 	}

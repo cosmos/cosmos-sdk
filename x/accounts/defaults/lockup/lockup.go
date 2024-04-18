@@ -135,7 +135,7 @@ func (bva *BaseLockup) Delegate(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 
 	balance, err := bva.getBalance(ctx, delegatorAddress, msg.Amount.Denom)
 	if err != nil {
@@ -209,7 +209,7 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Amount.Denoms()...)
 	if err != nil {
@@ -247,7 +247,7 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Denoms...)
 	if err != nil {
 		return nil, err

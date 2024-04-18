@@ -43,7 +43,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240417065730-32803329c3e5 // indirect
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
-	github.com/cometbft/cometbft/api v1.0.0-alpha.2 // indirect
+	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240417065730-32803329c3e5 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.2 // indirect
 	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect

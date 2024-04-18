@@ -332,8 +332,8 @@ github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240417065730-32803329c3e5 h1:uzH
 github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240417065730-32803329c3e5/go.mod h1:H8KRRTpWUy1LpOhnTmcu4HRg/y3kfUJ3N3JiMinOqKQ=
 github.com/cometbft/cometbft-db v0.12.0 h1:v77/z0VyfSU7k682IzZeZPFZrQAKiQwkqGN0QzAjMi0=
 github.com/cometbft/cometbft-db v0.12.0/go.mod h1:aX2NbCrjNVd2ZajYxt1BsiFf/Z+TQ2MN0VxdicheYuw=
-github.com/cometbft/cometbft/api v1.0.0-alpha.2 h1:pw6k48EnA/FjxBP2/gCyDGnSdCNjB5yPFd2du/9rNoE=
-github.com/cometbft/cometbft/api v1.0.0-alpha.2/go.mod h1:H52lgJKkSPeVpTcKr9a4nrSpyr6s1B352SWa6ajNHv0=
+github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240417065730-32803329c3e5 h1:xcqC2JUuFLmPBfmpyiuUrmjV2Ckk3+EF63Cm7zoa7F0=
+github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240417065730-32803329c3e5/go.mod h1:NDFKiBBD8HJC6QQLAoUI99YhsiRZtg2+FJWfk6A6m6o=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=

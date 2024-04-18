@@ -164,7 +164,7 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.33.0-20240312114316-c0d3497e35d6.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.33.0-20240130113600-88ef6483f90f.1 // indirect
-	github.com/cometbft/cometbft/api v1.0.0-alpha.2 // indirect
+	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240417065730-32803329c3e5 // indirect
 	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect

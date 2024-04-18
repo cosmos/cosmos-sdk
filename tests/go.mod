@@ -44,7 +44,7 @@ require (
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
-	github.com/cometbft/cometbft/api v1.0.0-alpha.2
+	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240417065730-32803329c3e5
 	github.com/google/go-cmp v0.6.0
 	github.com/jhump/protoreflect v1.15.6
 )

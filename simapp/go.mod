@@ -45,7 +45,7 @@ require (
 	google.golang.org/protobuf v1.35.1
 )
 
-require github.com/cometbft/cometbft/api v1.0.0-alpha.2
+require github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240417065730-32803329c3e5
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.33.0-20240312114316-c0d3497e35d6.1 // indirect

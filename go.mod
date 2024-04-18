@@ -19,7 +19,7 @@ require (
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240417065730-32803329c3e5
-	github.com/cometbft/cometbft/api v1.0.0-alpha.2
+	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240417065730-32803329c3e5
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

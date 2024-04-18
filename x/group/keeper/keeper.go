@@ -113,7 +113,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	}
 	k.config = config
 
-	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
+	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -130,7 +130,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	k.groupTable = *groupTable
 
 	// Group Member Table
-	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
+	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -156,7 +156,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 
 	// Group Policy Table
 	k.groupPolicySeq = orm.NewSequence(GroupPolicyTableSeqPrefix)
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
+	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -180,7 +180,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	k.groupPolicyTable = *groupPolicyTable
 
 	// Proposal Table
-	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc)
+	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -205,7 +205,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	k.proposalTable = *proposalTable
 
 	// Vote Table
-	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc)
+	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}

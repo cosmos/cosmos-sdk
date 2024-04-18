@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/group/simulation"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -22,6 +23,7 @@ func TestDecodeStore(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 	cdc := encodingConfig.Codec
 	dec := simulation.NewDecodeStore(cdc)
+	ac := address.NewBech32Codec("cosmos")
 
 	g := group.GroupInfo{Id: 1}
 	groupBz, err := cdc.Marshal(&g)
@@ -53,11 +55,11 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: append([]byte{keeper.GroupTablePrefix}, orm.PrimaryKey(&g)...), Value: groupBz},
-			{Key: append([]byte{keeper.GroupMemberTablePrefix}, orm.PrimaryKey(&member)...), Value: memberBz},
-			{Key: append([]byte{keeper.GroupPolicyTablePrefix}, orm.PrimaryKey(&acc)...), Value: accBz},
-			{Key: append([]byte{keeper.ProposalTablePrefix}, orm.PrimaryKey(&proposal)...), Value: proposalBz},
-			{Key: append([]byte{keeper.VoteTablePrefix}, orm.PrimaryKey(&vote)...), Value: voteBz},
+			{Key: append([]byte{keeper.GroupTablePrefix}, orm.PrimaryKey(&g, ac)...), Value: groupBz},
+			{Key: append([]byte{keeper.GroupMemberTablePrefix}, orm.PrimaryKey(&member, ac)...), Value: memberBz},
+			{Key: append([]byte{keeper.GroupPolicyTablePrefix}, orm.PrimaryKey(&acc, ac)...), Value: accBz},
+			{Key: append([]byte{keeper.ProposalTablePrefix}, orm.PrimaryKey(&proposal, ac)...), Value: proposalBz},
+			{Key: append([]byte{keeper.VoteTablePrefix}, orm.PrimaryKey(&vote, ac)...), Value: voteBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

@@ -99,9 +99,9 @@ func (m *StoreKVPair) GetValue() []byte {
 // BlockMetadata contains all the abci event data of a block
 // the file streamer dump them into files together with the state changes.
 type BlockMetadata struct {
-	ResponseCommit        *types.ResponseCommit        `protobuf:"bytes,6,opt,name=response_commit,json=responseCommit,proto3" json:"response_commit,omitempty"`
-	RequestFinalizeBlock  *types.RequestFinalizeBlock  `protobuf:"bytes,7,opt,name=request_finalize_block,json=requestFinalizeBlock,proto3" json:"request_finalize_block,omitempty"`
-	ResponseFinalizeBlock *types.ResponseFinalizeBlock `protobuf:"bytes,8,opt,name=response_finalize_block,json=responseFinalizeBlock,proto3" json:"response_finalize_block,omitempty"`
+	ResponseCommit        *types.CommitResponse        `protobuf:"bytes,6,opt,name=response_commit,json=responseCommit,proto3" json:"response_commit,omitempty"`
+	RequestFinalizeBlock  *types.FinalizeBlockRequest  `protobuf:"bytes,7,opt,name=request_finalize_block,json=requestFinalizeBlock,proto3" json:"request_finalize_block,omitempty"`
+	ResponseFinalizeBlock *types.FinalizeBlockResponse `protobuf:"bytes,8,opt,name=response_finalize_block,json=responseFinalizeBlock,proto3" json:"response_finalize_block,omitempty"`
 }
 
 func (m *BlockMetadata) Reset()         { *m = BlockMetadata{} }
@@ -137,21 +137,21 @@ func (m *BlockMetadata) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BlockMetadata proto.InternalMessageInfo
 
-func (m *BlockMetadata) GetResponseCommit() *types.ResponseCommit {
+func (m *BlockMetadata) GetResponseCommit() *types.CommitResponse {
 	if m != nil {
 		return m.ResponseCommit
 	}
 	return nil
 }
 
-func (m *BlockMetadata) GetRequestFinalizeBlock() *types.RequestFinalizeBlock {
+func (m *BlockMetadata) GetRequestFinalizeBlock() *types.FinalizeBlockRequest {
 	if m != nil {
 		return m.RequestFinalizeBlock
 	}
 	return nil
 }
 
-func (m *BlockMetadata) GetResponseFinalizeBlock() *types.ResponseFinalizeBlock {
+func (m *BlockMetadata) GetResponseFinalizeBlock() *types.FinalizeBlockResponse {
 	if m != nil {
 		return m.ResponseFinalizeBlock
 	}
@@ -599,7 +599,7 @@ func (m *BlockMetadata) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.ResponseCommit == nil {
-				m.ResponseCommit = &types.ResponseCommit{}
+				m.ResponseCommit = &types.CommitResponse{}
 			}
 			if err := m.ResponseCommit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -635,7 +635,7 @@ func (m *BlockMetadata) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.RequestFinalizeBlock == nil {
-				m.RequestFinalizeBlock = &types.RequestFinalizeBlock{}
+				m.RequestFinalizeBlock = &types.FinalizeBlockRequest{}
 			}
 			if err := m.RequestFinalizeBlock.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -671,7 +671,7 @@ func (m *BlockMetadata) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.ResponseFinalizeBlock == nil {
-				m.ResponseFinalizeBlock = &types.ResponseFinalizeBlock{}
+				m.ResponseFinalizeBlock = &types.FinalizeBlockResponse{}
 			}
 			if err := m.ResponseFinalizeBlock.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

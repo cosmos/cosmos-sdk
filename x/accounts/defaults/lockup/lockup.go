@@ -102,18 +102,23 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupA
 		if err != nil {
 			return nil, err
 		}
+	}
 
-		// Set initial value for all locked token
-		err = bva.DelegatedFree.Set(ctx, coin.Denom, math.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
+	bondDenom, err := getStakingDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-		// Set initial value for all locked token
-		err = bva.DelegatedLocking.Set(ctx, coin.Denom, math.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
+	// Set initial value for all locked token
+	err = bva.DelegatedFree.Set(ctx, bondDenom, math.ZeroInt())
+	if err != nil {
+		return nil, err
+	}
+
+	// Set initial value for all locked token
+	err = bva.DelegatedLocking.Set(ctx, bondDenom, math.ZeroInt())
+	if err != nil {
+		return nil, err
 	}
 
 	err = bva.EndTime.Set(ctx, msg.EndTime)

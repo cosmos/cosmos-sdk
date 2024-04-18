@@ -106,6 +106,10 @@ func NewKeeper(
 	if config.MaxSummaryLen == 0 {
 		config.MaxSummaryLen = defaultConfig.MaxSummaryLen
 	}
+	// If MaxVoteOptionsLen not set by app developer, set to default value.
+	if config.MaxVoteOptionsLen == 0 {
+		config.MaxVoteOptionsLen = defaultConfig.MaxVoteOptionsLen
+	}
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := &Keeper{
@@ -227,6 +231,15 @@ func (k Keeper) assertSummaryLength(summary string) error {
 
 	if uint64(len(summary)) > k.config.MaxSummaryLen {
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
+	}
+	return nil
+}
+
+// assertVoteOptionsLen returns an error if given vote options length
+// is greater than a pre-defined MaxVoteOptionsLen.
+func (k Keeper) assertVoteOptionsLen(options v1.WeightedVoteOptions) error {
+	if uint64(len(options)) > k.config.MaxVoteOptionsLen {
+		return types.ErrTooManyVoteOptions.Wrapf("got %d options, maximum allowed is %d", len(options), k.config.MaxVoteOptionsLen)
 	}
 	return nil
 }

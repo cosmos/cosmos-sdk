@@ -51,10 +51,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	authorityAddr, err := in.AddressCodec.BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	circuitkeeper := keeper.NewKeeper(
 		in.Environment,
 		in.Cdc,
-		authority.String(),
+		authorityAddr,
 		in.AddressCodec,
 	)
 	m := NewAppModule(in.Cdc, circuitkeeper)

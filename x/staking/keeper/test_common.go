@@ -12,7 +12,7 @@ import (
 
 // ValidatorByPowerIndexExists does a certain by-power index record exist
 func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []byte) bool {
-	store := keeper.environment.KVStoreService.OpenKVStore(ctx)
+	store := keeper.KVStoreService.OpenKVStore(ctx)
 	has, err := store.Has(power)
 	if err != nil {
 		panic(err)
@@ -28,7 +28,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	}
 
 	// Remove any existing power key for validator.
-	store := keeper.environment.KVStoreService.OpenKVStore(ctx)
+	store := keeper.KVStoreService.OpenKVStore(ctx)
 	deleted := false
 
 	iterator, err := store.Iterator(types.ValidatorsByPowerIndexKey, storetypes.PrefixEndBytes(types.ValidatorsByPowerIndexKey))

@@ -4,9 +4,10 @@ import (
 	"runtime/debug"
 	"testing"
 
-	_ "cosmossdk.io/client/v2/internal/testpb"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+
+	_ "cosmossdk.io/client/v2/internal/testpb"
 )
 
 func TestIsSupportedVersion(t *testing.T) {

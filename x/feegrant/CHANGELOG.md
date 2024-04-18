@@ -25,7 +25,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/feegrant/v0.1.1) - 2024-04-12
+## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/feegrant/v0.1.1) - 2024-04-18
 
 ### Improvements
 

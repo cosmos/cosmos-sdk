@@ -3,7 +3,7 @@ module cosmossdk.io/x/evidence
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3
+	cosmossdk.io/api v0.7.4
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/store v1.1.0
 	github.com/cometbft/cometbft v0.38.6
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
-	github.com/cosmos/cosmos-sdk v0.50.6-0.20240415102531-741b01c2d298
+	github.com/cosmos/cosmos-sdk v0.50.6-0.20240418185403-97a42f05e849
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4

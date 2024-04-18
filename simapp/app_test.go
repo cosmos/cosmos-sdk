@@ -70,7 +70,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	// finalize block so we have CheckTx state set
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	_, err := app.InitChain(&abci.RequestInitChain{})
+	_, err := app.InitChain(&abci.InitChainRequest{})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)

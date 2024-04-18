@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -94,7 +93,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", filepath.Join(cfg.UpgradeInfoFilePath(), upgradetypes.UpgradeInfoFilename), upgradeName, upgradeHeight))
+		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", cfg.UpgradeInfoFilePath(), upgradeName, upgradeHeight))
 	}
 
 	return nil

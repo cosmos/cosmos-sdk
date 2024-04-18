@@ -75,7 +75,7 @@ func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint
 
 // GetRedelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID
 func (k Keeper) GetRedelegationByUnbondingID(ctx context.Context, id uint64) (red types.Redelegation, err error) {
-	store := k.environment.KVStoreService.OpenKVStore(ctx)
+	store := k.KVStoreService.OpenKVStore(ctx)
 
 	redKey, err := k.UnbondingIndex.Get(ctx, id)
 	if err != nil {
@@ -109,7 +109,7 @@ func (k Keeper) GetRedelegationByUnbondingID(ctx context.Context, id uint64) (re
 
 // GetValidatorByUnbondingID returns the validator that is unbonding with a certain unbonding op ID
 func (k Keeper) GetValidatorByUnbondingID(ctx context.Context, id uint64) (val types.Validator, err error) {
-	store := k.environment.KVStoreService.OpenKVStore(ctx)
+	store := k.KVStoreService.OpenKVStore(ctx)
 
 	valKey, err := k.UnbondingIndex.Get(ctx, id)
 	if err != nil {
@@ -283,7 +283,7 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx context.Context, id uint
 	ubd.Entries[i].UnbondingOnHoldRefCount--
 
 	// Check if entry is matured.
-	if !ubd.Entries[i].OnHold() && ubd.Entries[i].IsMature(k.environment.HeaderService.GetHeaderInfo(ctx).Time) {
+	if !ubd.Entries[i].OnHold() && ubd.Entries[i].IsMature(k.HeaderService.HeaderInfo(ctx).Time) {
 		// If matured, complete it.
 		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 		if err != nil {
@@ -344,7 +344,7 @@ func (k Keeper) redelegationEntryCanComplete(ctx context.Context, id uint64) err
 	}
 	red.Entries[i].UnbondingOnHoldRefCount--
 
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	if !red.Entries[i].OnHold() && red.Entries[i].IsMature(headerInfo.Time) {
 		// If matured, complete it.
 		// Remove entry

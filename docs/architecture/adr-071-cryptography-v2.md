@@ -158,7 +158,7 @@ Since the underlying representation of a `CryptoProvider` is a protobuf message,
 The storing and retrieval is handled by a `SecureStorage` implementation which will be presented in the next section.
 
 ```go
-type ProviderMetadata interface {
+type ProviderMetadata struct {
   key string
   value string
 }

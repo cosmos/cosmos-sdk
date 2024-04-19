@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"
 )
 
 type E2EBenchmarkSuite struct {
@@ -145,7 +146,7 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 	assert.NilError(tb, val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &tr))
 	assert.Equal(tb, uint32(0), tr.Code)
 
-	resp, err := cli.GetTxResponse(s.network, val.GetClientCtx(), tr.TxHash)
+	resp, err := e2etestutil.GetTxResponse(s.network, val.GetClientCtx(), tr.TxHash)
 	assert.NilError(tb, err)
 	s.txHeight = resp.Height
 	return s

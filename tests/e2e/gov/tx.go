@@ -20,6 +20,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"
 )
 
 type E2ETestSuite struct {
@@ -51,13 +52,13 @@ func (s *E2ETestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// vote for proposal
 	out, err = govclitestutil.MsgVote(val.GetClientCtx(), val.GetAddress().String(), "1", "yes")
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal with a small deposit
 	minimumAcceptedDep := v1.DefaultMinDepositTokens.ToLegacyDec().Mul(v1.DefaultMinDepositRatio).Ceil().TruncateInt()
@@ -67,7 +68,7 @@ func (s *E2ETestSuite) SetupSuite() {
 
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal3 with deposit
 	out, err = govclitestutil.MsgSubmitLegacyProposal(val.GetClientCtx(), val.GetAddress().String(),
@@ -75,7 +76,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal4 with deposit to check the cancel proposal cli tx
 	out, err = govclitestutil.MsgSubmitLegacyProposal(val.GetClientCtx(), val.GetAddress().String(),
@@ -83,13 +84,13 @@ func (s *E2ETestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// vote for proposal3 as val
 	out, err = govclitestutil.MsgVote(val.GetClientCtx(), val.GetAddress().String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -177,7 +178,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -273,7 +274,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -370,7 +371,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}

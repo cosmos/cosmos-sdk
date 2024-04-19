@@ -1,4 +1,4 @@
-package cli
+package utils
 
 import (
 	"fmt"
@@ -9,8 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 )
-
+// Can move to e2e
 // CheckTxCode verifies that the transaction result returns a specific code
 // Takes a network, wait for two blocks and fetch the transaction from its hash
 func CheckTxCode(network network.NetworkI, clientCtx client.Context, txHash string, expectedCode uint32) error {
@@ -22,7 +23,7 @@ func CheckTxCode(network network.NetworkI, clientCtx client.Context, txHash stri
 	}
 
 	cmd := authcli.QueryTxCmd()
-	out, err := ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	if err != nil {
 		return err
 	}
@@ -50,7 +51,7 @@ func GetTxResponse(network network.NetworkI, clientCtx client.Context, txHash st
 	}
 
 	cmd := authcli.QueryTxCmd()
-	out, err := ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	if err != nil {
 		return sdk.TxResponse{}, err
 	}

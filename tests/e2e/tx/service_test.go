@@ -32,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"
 )
 
 var bankMsgSendEventAction = fmt.Sprintf("message.action='%s'", sdk.MsgTypeURL(&banktypes.MsgSend{}))
@@ -109,7 +110,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out1.Bytes(), &tr))
 	s.Require().Equal(uint32(0), tr.Code)
 
-	resp, err := cli.GetTxResponse(s.network, val.GetClientCtx(), tr.TxHash)
+	resp, err := e2etestutil.GetTxResponse(s.network, val.GetClientCtx(), tr.TxHash)
 	s.Require().NoError(err)
 	s.txHeight = resp.Height
 }

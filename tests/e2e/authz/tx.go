@@ -28,6 +28,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"
 )
 
 type E2ETestSuite struct {
@@ -84,7 +85,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 	var response sdk.TxResponse
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, 0))
 
 	// Create new account in the keyring.
 	s.grantee[2] = s.createAccount("grantee3")
@@ -128,7 +129,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, 0))
 }
 
 func (s *E2ETestSuite) createAccount(uid string) sdk.AccAddress {
@@ -217,7 +218,7 @@ func (s *E2ETestSuite) TestExecAuthorizationWithExpiration() {
 	s.Require().NoError(err)
 	var response sdk.TxResponse
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, response.TxHash, authz.ErrNoAuthorizationFound.ABCICode()))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, clientCtx, response.TxHash, authz.ErrNoAuthorizationFound.ABCICode()))
 }
 
 func (s *E2ETestSuite) TestNewExecGenericAuthorized() {
@@ -317,7 +318,7 @@ func (s *E2ETestSuite) TestNewExecGenericAuthorized() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -433,7 +434,7 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 			default:
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -632,7 +633,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -699,7 +700,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -854,7 +855,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -922,7 +923,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
+				s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), response.TxHash, tc.expectedCode))
 			}
 		})
 	}

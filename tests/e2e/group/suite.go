@@ -21,6 +21,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"
 )
 
 type E2ETestSuite struct {
@@ -111,7 +112,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err, out.String())
 	txResp := sdk.TxResponse{}
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
 	s.group = &group.GroupInfo{Id: 1, Admin: val.GetAddress().String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
 
@@ -145,7 +146,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
 	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.GetAPIAddress()))
 	s.Require().NoError(err)
@@ -169,7 +170,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
 	msg := &group.MsgVote{
 		ProposalId: uint64(1),
@@ -181,7 +182,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	out, err = clitestutil.SubmitTestTx(val.GetClientCtx(), msg, val.GetAddress(), clitestutil.TestTxConfig{})
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
 	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/proposal/1", val.GetAPIAddress()))
 	s.Require().NoError(err)
@@ -258,7 +259,7 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	txResp := sdk.TxResponse{}
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
+	s.Require().NoError(e2etestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
 	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", val.GetAPIAddress(), groupID))
 	s.Require().NoError(err)

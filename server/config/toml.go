@@ -85,7 +85,9 @@ iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}
 
 # ABCIClientType selects the type of ABCI client.
-# Default is "committing".
+# Valid settings are "committing" (default) or "local".
+# The committing client allows greater query parallelism,
+# but the local client is more defensive.
 abci-client-type = "{{ .BaseConfig.ABCIClientType }}"
 
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.

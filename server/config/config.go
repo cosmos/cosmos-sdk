@@ -104,6 +104,9 @@ type BaseConfig struct {
 	IAVLLazyLoading bool `mapstructure:"iavl-lazy-loading"`
 
 	// ABCIClientType selects the type of ABCI client.
+	// Valid settings are "committing" (default) or "local".
+	// The committing client allows greater query parallelism,
+	// but the local client is more defensive.
 	ABCIClientType string `mapstructure:"abci-client-type"`
 
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.

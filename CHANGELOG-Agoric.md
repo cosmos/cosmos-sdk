@@ -45,6 +45,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support
 
+## `v0.46.16-alpha.agoric.2.4` - 2024-04-19
+
+### Improvements
+
+* (server) [#419](https://github.com/agoric-labs/cosmos-sdk/pull/419) More unit tests for flag vs toml precedence for ABCI client type.
+
 ## `v0.46.16-alpha.agoric.2.3` - 2024-04-17
 
 ### Improvements

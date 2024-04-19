@@ -9,14 +9,8 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/x/tx v0.13.2
 	github.com/cockroachdb/errors v1.11.1
-<<<<<<< HEAD
-	github.com/cosmos/cosmos-proto v1.0.0-beta.4
-	github.com/cosmos/cosmos-sdk v0.50.6-0.20240323125140-7397b8672fa8
-=======
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.51.0
-	github.com/manifoldco/promptui v0.9.0 // indirect
->>>>>>> b491335e7 (feat(client/v2): implement version filtering using annotation (#20083))
+	github.com/cosmos/cosmos-sdk v0.50.6-0.20240323125140-7397b8672fa8
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.63.2

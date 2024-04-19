@@ -106,7 +106,7 @@ func NewKeeper(
 	if config.MaxSummaryLen == 0 {
 		config.MaxSummaryLen = defaultConfig.MaxSummaryLen
 	}
-	// If MaxVoteOptionsLen not set by app developer, set to default value.
+	// If MaxVoteOptionsLen not set by app developer, set to default value, meaning all supported options are allowed
 	if config.MaxVoteOptionsLen == 0 {
 		config.MaxVoteOptionsLen = defaultConfig.MaxVoteOptionsLen
 	}
@@ -237,9 +237,11 @@ func (k Keeper) assertSummaryLength(summary string) error {
 
 // assertVoteOptionsLen returns an error if given vote options length
 // is greater than a pre-defined MaxVoteOptionsLen.
+// It's only being checked when config.MaxVoteOptionsLen > 0 (param enabled)
 func (k Keeper) assertVoteOptionsLen(options v1.WeightedVoteOptions) error {
-	if uint64(len(options)) > k.config.MaxVoteOptionsLen {
-		return types.ErrTooManyVoteOptions.Wrapf("got %d options, maximum allowed is %d", len(options), k.config.MaxVoteOptionsLen)
+	maxVoteOptionsLen := k.config.MaxVoteOptionsLen
+	if maxVoteOptionsLen > 0 && uint64(len(options)) > maxVoteOptionsLen {
+		return types.ErrTooManyVoteOptions.Wrapf("got %d weighted vote options, maximum allowed is %d", len(options), k.config.MaxVoteOptionsLen)
 	}
 	return nil
 }

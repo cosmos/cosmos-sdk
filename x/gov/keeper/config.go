@@ -26,7 +26,9 @@ type Config struct {
 	MaxMetadataLen uint64
 	// MaxSummaryLen defines the amount of characters that can be used for proposal summary
 	MaxSummaryLen uint64
-	// MaxVoteOptionsLen defines the maximum number of vote options a proposal can have
+	// MaxVoteOptionsLen defines the maximum number of vote options a proposal can have.
+	// This only applies to WeightedVoteOption messages and not to the VoteOption messages
+	// 0 means this param is disabled, hence all supported options are allowed
 	MaxVoteOptionsLen uint64
 	// CalculateVoteResultsAndVotingPowerFn is a function signature for calculating vote results and voting power
 	// Keeping it nil will use the default implementation
@@ -39,7 +41,7 @@ func DefaultConfig() Config {
 		MaxTitleLen:                          255,
 		MaxMetadataLen:                       255,
 		MaxSummaryLen:                        10200,
-		MaxVoteOptionsLen:                    0, // means all supported options
+		MaxVoteOptionsLen:                    0, // 0 means this param is disabled, hence all supported options are allowed
 		CalculateVoteResultsAndVotingPowerFn: nil,
 	}
 }

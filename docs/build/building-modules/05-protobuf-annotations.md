@@ -68,16 +68,16 @@ Implement interface is used to provide information to client tooling like [teles
 option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.AccountI";
 ```
 
-## Method,Field,Message Added Since
+## Method,Field,Message Added In
 
-`method_added_since`, `field_added_since` and `message_added_since` are annotations to denotate to clients that a field has been supported in a later version. This is useful when new methods or fields are added in later versions and that the client needs to be aware of what it can call.
+`method_added_in`, `field_added_in` and `message_added_in` are annotations to denotate to clients that a field has been supported in a later version. This is useful when new methods or fields are added in later versions and that the client needs to be aware of what it can call.
 
 The annotation should be worded as follow:
 
 ```proto
-option (cosmos_proto.method_added_since) = "cosmos-sdk v0.50.1";
-option (cosmos_proto.method_added_since) = "x/epochs v1.0.0";
-option (cosmos_proto.method_added_since) = "simapp v24.0.0";
+option (cosmos_proto.method_added_in) = "cosmos-sdk v0.50.1";
+option (cosmos_proto.method_added_in) = "x/epochs v1.0.0";
+option (cosmos_proto.method_added_in) = "simapp v24.0.0";
 ```
 
 ## Amino

@@ -166,7 +166,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	return govKeeper, m, encCfg, ctx
 }
 
-// setupGovKeeperWithMaxVoteOptionsLen creates a govKeeper with a defeine maxVoteOptionsLen, as well as all its dependencies.
+// setupGovKeeperWithMaxVoteOptionsLen creates a govKeeper with a defined maxVoteOptionsLen, as well as all its dependencies.
 func setupGovKeeperWithMaxVoteOptionsLen(t *testing.T, maxVoteOptionsLen uint64, expectations ...func(sdk.Context, mocks)) (
 	*keeper.Keeper,
 	mocks,

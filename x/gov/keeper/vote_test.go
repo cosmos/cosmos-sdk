@@ -167,7 +167,7 @@ func TestVotes_MultipleChoiceProposal(t *testing.T) {
 	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionThree), ""))
 }
 
-func TestVotes_MaxVoteOptionsLen(t *testing.T) {
+func TestVotes_CustomMaxVoteOptionsLen(t *testing.T) {
 	maxVoteOptionsLen := 3
 	govKeeper, mocks, _, ctx := setupGovKeeperWithMaxVoteOptionsLen(t, uint64(maxVoteOptionsLen))
 	authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper

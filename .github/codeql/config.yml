@@ -7,3 +7,4 @@ queries:
 paths-ignore:
   - api
   - '**/*_test.go'
+  - '**/*.pulsar.go'

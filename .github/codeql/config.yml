@@ -1,10 +1,9 @@
 packs:
   - +crypto-com/cosmos-sdk-codeql
 queries:
- - uses: +security-and-quality
- - uses: +github/codeql/go/ql/src/experimental/InconsistentCode/DeferInLoop.ql@main
- - uses: +github/codeql/go/ql/src/experimental/Unsafe/WrongUsageOfUnsafe.ql@main
- - uses: +github/codeql/go/ql/src/experimental/CWE-369/DivideByZero.ql@main
+  - uses: +security-and-quality
+  - uses: +security-experimental
+  - uses: +security-extended
 paths-ignore:
   - api
   - '**/*_test.go'

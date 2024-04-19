@@ -14,6 +14,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
+// Can move to tests/integration
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper keeper.AccountKeeper
 	app, err := simtestutil.SetupAtGenesis(

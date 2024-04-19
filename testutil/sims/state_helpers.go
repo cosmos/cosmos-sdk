@@ -14,7 +14,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
+	// authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -28,6 +28,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
+
+//Move to x/simulation
 
 // Simulation parameter constants
 const (

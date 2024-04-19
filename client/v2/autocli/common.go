@@ -32,11 +32,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		short = fmt.Sprintf("Execute the %s RPC method", descriptor.Name())
 	}
 
-	long := options.Long
-	if long == "" {
-		long = util.DescriptorDocs(descriptor)
-	}
-
 	inputDesc := descriptor.Input()
 	inputType := util.ResolveMessageType(b.TypeResolver, inputDesc)
 
@@ -48,7 +43,7 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	cmd := &cobra.Command{
 		SilenceUsage: false,
 		Use:          use,
-		Long:         long,
+		Long:         options.Long,
 		Short:        short,
 		Example:      options.Example,
 		Aliases:      options.Alias,

@@ -85,7 +85,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			continue
 		}
 
-		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
+		if !util.IsSupportedVersion(methodDescriptor) {
 			continue
 		}
 

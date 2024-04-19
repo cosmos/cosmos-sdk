@@ -4,6 +4,7 @@ syntax = "proto3";
 package cosmos.gov.v1;
 
 import "cosmos/gov/v1/gov.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/x/gov/types/v1";
 

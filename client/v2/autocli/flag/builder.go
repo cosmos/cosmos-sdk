@@ -307,10 +307,6 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 	}
 
 	usage := opts.Usage
-	if usage == "" {
-		usage = util.DescriptorDocs(field)
-	}
-
 	shorthand := opts.Shorthand
 	defaultValue := opts.DefaultValue
 

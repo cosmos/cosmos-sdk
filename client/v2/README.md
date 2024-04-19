@@ -114,7 +114,7 @@ err := autoCliOpts.EnhanceRootCommand(rootCmd)
 ## Signing
 
 `autocli` supports signing transactions with the keyring.
-The [`cosmos.msg.v1.signer` protobuf annotation](https://github.com/cosmos/cosmos-sdk/blob/9dd34510e27376005e7e7ff3628eab9dbc8ad6dc/docs/build/building-modules/05-protobuf-annotations.md#L9) defines the signer field of the message.
+The [`cosmos.msg.v1.signer` protobuf annotation](https://docs.cosmos.network/main/build/building-modules/protobuf-annotations) defines the signer field of the message.
 This field is automatically filled when using the `--from` flag or defining the signer as a positional argument.
 
 :::warning
@@ -193,6 +193,19 @@ https://github.com/cosmos/cosmos-sdk/blob/fa4d87ef7e6d87aaccc94c337ffd2fe90fcb7a
 ```
 
 If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetTxCmd()` are defined).
+
+### Skip a command
+
+AutoCLI automatically skips unsupported commands when [`cosmos_proto.method_added_in` protobuf annotation](https://docs.cosmos.network/main/build/building-modules/protobuf-annotations) is present.
+
+Additionally, a command can be manually skipped using the `autocliv1.RpcCommandOptions`:
+
+```go
+*autocliv1.RpcCommandOptions{
+  RpcMethod: "Params", // The name of the gRPC service
+  Skip: true,
+}
+```
 
 ### Use AutoCLI for non module commands
 

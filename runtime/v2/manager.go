@@ -141,49 +141,6 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-func (m *MM) InitGenesis(ctx context.Context, genesisData map[string]json.RawMessage) ([]appmodulev2.ValidatorUpdate, error) {
-	var validatorUpdates []appmodulev2.ValidatorUpdate
-	m.logger.Info("initializing blockchain state from genesis.json")
-
-	for _, moduleName := range m.config.InitGenesis {
-		if genesisData[moduleName] == nil {
-			continue
-		}
-
-		mod := m.modules[moduleName]
-		if module, ok := mod.(appmodulev2.HasGenesis); ok {
-			m.logger.Debug("running initialization for module", "module", moduleName)
-			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return nil, err
-			}
-		} else if module, ok := mod.(sdkmodule.HasABCIGenesis); ok {
-			m.logger.Debug("running initialization for module", "module", moduleName)
-			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
-			if err != nil {
-				return nil, err
-			}
-
-			// use these validator updates if provided, the module manager assumes
-			// only one module will update the validator set
-			if len(moduleValUpdates) > 0 {
-				if len(validatorUpdates) > 0 {
-					return nil, errors.New("validator InitGenesis updates already set by a previous module")
-				}
-				validatorUpdates = moduleValUpdates
-			}
-		}
-	}
-
-	// a chain must initialize with a non-empty validator set
-	if len(validatorUpdates) == 0 {
-		return nil, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
-	}
-
-	// Not convert to abci response
-	// Return appmodule.ValidatorUpdates instead
-	return validatorUpdates, nil
-}
-
 // ExportGenesis performs export genesis functionality for modules
 func (m *MM) ExportGenesis(ctx context.Context) (map[string]json.RawMessage, error) {
 	return m.ExportGenesisForModules(ctx, []string{})

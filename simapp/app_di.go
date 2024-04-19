@@ -317,6 +317,7 @@ func (app *SimApp) setCustomAnteHandler() {
 				SignModeHandler: app.txConfig.SignModeHandler(),
 				FeegrantKeeper:  app.FeeGrantKeeper,
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+				Environment:     app.AuthKeeper.Environment,
 			},
 			&app.CircuitBreakerKeeper,
 			app.UnorderedTxManager,

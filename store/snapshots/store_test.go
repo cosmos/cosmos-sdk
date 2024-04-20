@@ -343,6 +343,8 @@ func TestStore_Save(t *testing.T) {
 	}
 	wgDone.Wait() // wait for all routines completed
 	assert.Equal(t, uint32(n-1), errCount.Load())
+	_, err = store.Save(8, 1, makeChunks(nil))
+	require.NoError(t, err)
 }
 
 type ReadCloserMock struct {

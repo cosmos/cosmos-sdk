@@ -4,6 +4,7 @@ package textualpb
 import (
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	v1beta11 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	errors "errors"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -137,7 +138,7 @@ func (x *fastReflection_TextualData) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.SignerData != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: TextualData"))
+			panic(errors.New("proto3 declared messages do not support extensions: TextualData"))
 		}
 		panic(fmt.Errorf("message TextualData does not contain field %s", fd.FullName()))
 	}
@@ -159,7 +160,7 @@ func (x *fastReflection_TextualData) Clear(fd protoreflect.FieldDescriptor) {
 		x.SignerData = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: TextualData"))
+			panic(errors.New("proto3 declared messages do not support extensions: TextualData"))
 		}
 		panic(fmt.Errorf("message TextualData does not contain field %s", fd.FullName()))
 	}
@@ -184,7 +185,7 @@ func (x *fastReflection_TextualData) Get(descriptor protoreflect.FieldDescriptor
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: TextualData"))
+			panic(errors.New("proto3 declared messages do not support extensions: TextualData"))
 		}
 		panic(fmt.Errorf("message TextualData does not contain field %s", descriptor.FullName()))
 	}
@@ -210,7 +211,7 @@ func (x *fastReflection_TextualData) Set(fd protoreflect.FieldDescriptor, value 
 		x.SignerData = value.Message().Interface().(*SignerData)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: TextualData"))
+			panic(errors.New("proto3 declared messages do not support extensions: TextualData"))
 		}
 		panic(fmt.Errorf("message TextualData does not contain field %s", fd.FullName()))
 	}
@@ -234,12 +235,12 @@ func (x *fastReflection_TextualData) Mutable(fd protoreflect.FieldDescriptor) pr
 		}
 		return protoreflect.ValueOfMessage(x.SignerData.ProtoReflect())
 	case "TextualData.body_bytes":
-		panic(fmt.Errorf("field body_bytes of message TextualData is not mutable"))
+		panic(errors.New("field body_bytes of message TextualData is not mutable"))
 	case "TextualData.auth_info_bytes":
-		panic(fmt.Errorf("field auth_info_bytes of message TextualData is not mutable"))
+		panic(errors.New("field auth_info_bytes of message TextualData is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: TextualData"))
+			panic(errors.New("proto3 declared messages do not support extensions: TextualData"))
 		}
 		panic(fmt.Errorf("message TextualData does not contain field %s", fd.FullName()))
 	}
@@ -259,7 +260,7 @@ func (x *fastReflection_TextualData) NewField(fd protoreflect.FieldDescriptor) p
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: TextualData"))
+			panic(errors.New("proto3 declared messages do not support extensions: TextualData"))
 		}
 		panic(fmt.Errorf("message TextualData does not contain field %s", fd.FullName()))
 	}

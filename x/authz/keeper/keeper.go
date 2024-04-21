@@ -34,6 +34,7 @@ type Keeper struct {
 	cdc          codec.Codec
 	router       baseapp.MessageRouter
 	authKeeper   authz.AccountKeeper
+	bankKeeper   authz.BankKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
@@ -44,6 +45,13 @@ func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, rout
 		router:       router,
 		authKeeper:   ak,
 	}
+}
+
+// Super ugly hack to not be breaking in v0.50 and v0.47
+// DO NOT USE.
+func (k Keeper) SetBankKeeper(bk authz.BankKeeper) Keeper {
+	k.bankKeeper = bk
+	return k
 }
 
 // Logger returns a module-specific logger.

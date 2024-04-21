@@ -117,7 +117,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/bank) [#20028](https://github.com/cosmos/cosmos-sdk/pull/20028) Align query with multi denoms for send-enabled.
 * (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
 * (baseapp) [#19616](https://github.com/cosmos/cosmos-sdk/pull/19616) Don't share gas meter in tx execution.
-* (baseapp) [#](https://github.com/cosmos/cosmos-sdk/pull/) Allow height overwrite BlockHeight in header.
+* (baseapp) [#20107](https://github.com/cosmos/cosmos-sdk/pull/20107) Allow height overwrite BlockHeight in header.
 
 ### API Breaking Changes
 

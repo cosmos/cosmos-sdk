@@ -42,6 +42,18 @@ func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
 
 func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
 
+var _ AuthKeeper = (*mockAuthKeepr)(nil)
+
+type mockAuthKeepr struct{}
+
+func (m mockAuthKeepr) NextAccountNumber(ctx context.Context) uint64 {
+	return 1
+}
+
+func (m mockAuthKeepr) CurrentAccountNumber(ctx context.Context) (uint64, error) {
+	return 0, nil
+}
+
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 
@@ -79,7 +91,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 		msgRouter,
 	))
 	env.EventService = eventService{}
-	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
+	m, err := NewKeeper(codec.NewProtoCodec(ir), mockAuthKeepr{}, env, addressCodec, ir, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

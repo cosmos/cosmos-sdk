@@ -12,7 +12,7 @@ func (k Keeper) ExportState(ctx context.Context) (*v1.GenesisState, error) {
 	genState := &v1.GenesisState{}
 
 	// get account number
-	accountNumber, err := k.AccountNumber.Peek(ctx)
+	accountNumber, err := k.authKeeper.CurrentAccountNumber(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +64,11 @@ func (k Keeper) exportAccount(ctx context.Context, addr []byte, accType string, 
 }
 
 func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) error {
-	err := k.AccountNumber.Set(ctx, genState.AccountNumber)
-	if err != nil {
-		return err
-	}
+	_ = k.authKeeper.NextAccountNumber(ctx)
 
 	// import accounts
 	for _, acc := range genState.Accounts {
-		err = k.importAccount(ctx, acc)
+		err := k.importAccount(ctx, acc)
 		if err != nil {
 			return fmt.Errorf("%w: %s", err, acc.Address)
 		}

@@ -32,6 +32,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Cdc          codec.Codec
+	AuthKeeper   AuthKeeper
 	Environment  appmodule.Environment
 	AddressCodec address.Codec
 	Registry     cdctypes.InterfaceRegistry
@@ -62,7 +63,7 @@ func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ s
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
-	accountskeeper, err := NewKeeper(in.Cdc, in.Environment, in.AddressCodec, in.Registry, account)
+	accountskeeper, err := NewKeeper(in.Cdc, in.AuthKeeper, in.Environment, in.AddressCodec, in.Registry, account)
 	if err != nil {
 		panic(err)
 	}

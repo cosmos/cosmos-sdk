@@ -42,6 +42,7 @@ type InterfaceRegistry interface {
 
 func NewKeeper(
 	cdc codec.Codec,
+	authKeeper AuthKeeper,
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	ir InterfaceRegistry,
@@ -53,8 +54,8 @@ func NewKeeper(
 		codec:            cdc,
 		addressCodec:     addressCodec,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
+		authKeeper:       authKeeper,
 		Schema:           collections.Schema{},
-		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
 		AccountByNumber:  collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
 		AccountsState:    collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.BytesValue),
@@ -80,12 +81,12 @@ type Keeper struct {
 	codec            codec.Codec
 	makeSendCoinsMsg coinsTransferMsgFunc
 
+	authKeeper AuthKeeper
+
 	accounts map[string]implementation.Implementation
 
 	// Schema is the schema for the module.
 	Schema collections.Schema
-	// AccountNumber is the last global account number.
-	AccountNumber collections.Sequence
 	// AccountsByType maps account address to their implementation.
 	AccountsByType collections.Map[[]byte, string]
 	// AccountByNumber maps account number to their address.
@@ -116,10 +117,8 @@ func (k Keeper) Init(
 	funds sdk.Coins,
 ) (implementation.ProtoMsg, []byte, error) {
 	// get the next account number
-	num, err := k.AccountNumber.Next(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
+	num := k.authKeeper.NextAccountNumber(ctx)
+
 	// create address
 	accountAddr, err := k.makeAddress(num)
 	if err != nil {

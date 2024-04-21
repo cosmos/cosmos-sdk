@@ -23,7 +23,7 @@ func TestKeeper_Init(t *testing.T) {
 		require.NotNil(t, addr)
 
 		// ensure acc number was increased.
-		num, err := m.AccountNumber.Peek(ctx)
+		num, err := m.authKeeper.CurrentAccountNumber(ctx)
 		require.NoError(t, err)
 		require.Equal(t, uint64(1), num)
 

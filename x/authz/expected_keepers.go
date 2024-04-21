@@ -14,6 +14,12 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
+<<<<<<< HEAD
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+=======
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
+	BlockedAddr(addr sdk.AccAddress) bool
+>>>>>>> fcb9d84ed (fix(x/authz,x/feegrant): check blocked address (#20102))
 }

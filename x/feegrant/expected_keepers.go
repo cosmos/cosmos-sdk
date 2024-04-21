@@ -17,6 +17,12 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected supply Keeper (noalias)
 type BankKeeper interface {
+<<<<<<< HEAD
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+=======
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	BlockedAddr(addr sdk.AccAddress) bool
+>>>>>>> fcb9d84ed (fix(x/authz,x/feegrant): check blocked address (#20102))
 }

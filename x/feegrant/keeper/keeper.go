@@ -18,9 +18,16 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
+<<<<<<< HEAD
 	cdc        codec.BinaryCodec
 	storeKey   storetypes.StoreKey
 	authKeeper feegrant.AccountKeeper
+=======
+	cdc          codec.BinaryCodec
+	storeService store.KVStoreService
+	authKeeper   feegrant.AccountKeeper
+	bankKeeper   feegrant.BankKeeper
+>>>>>>> fcb9d84ed (fix(x/authz,x/feegrant): check blocked address (#20102))
 }
 
 var _ ante.FeegrantKeeper = &Keeper{}
@@ -34,6 +41,13 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak feegrant.
 	}
 }
 
+// Super ugly hack to not be breaking in v0.50 and v0.47
+// DO NOT USE.
+func (k Keeper) SetBankKeeper(bk feegrant.BankKeeper) Keeper {
+	k.bankKeeper = bk
+	return k
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", feegrant.ModuleName))
@@ -44,6 +58,10 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
+		if k.bankKeeper.BlockedAddr(grantee) {
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", grantee)
+		}
+
 		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
 		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}

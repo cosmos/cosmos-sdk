@@ -120,8 +120,13 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
+<<<<<<< HEAD
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
+=======
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
+		keeper:         keeper.SetBankKeeper(bk),
+>>>>>>> fcb9d84ed (fix(x/authz,x/feegrant): check blocked address (#20102))
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		registry:       registry,

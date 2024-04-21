@@ -5,8 +5,10 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/defaults/lockup/types"
+	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +56,9 @@ func (bva *BaseLockup) ClawbackFunds(
 	}
 
 	for _, denom := range msg.Denoms {
+		var clawbackAmt math.Int
 		lockedAmt := lockedCoins.AmountOf(denom)
+		clawbackAmt = lockedAmt
 
 		// in case of bond denom token, check for scenario when the locked token is being bonded
 		// causing the insufficient amount of token to clawback
@@ -69,20 +73,32 @@ func (bva *BaseLockup) ClawbackFunds(
 				return nil, err
 			}
 
-			if spendable.AmountOf(denom).LT(lockedAmt) {
+			spendableAmt := spendable.AmountOf(denom)
+
+			if spendableAmt.LT(lockedAmt) {
 				// in case there is not enough token to clawback, proceed to unbond token
 				err := bva.forceUnbondLockingDelegations(ctx, fromAddress, paramResp.Params.BondDenom)
 				if err != nil {
 					return nil, err
 				}
-				continue
+
+				deptAmt, err := lockedAmt.SafeSub(spendableAmt)
+				if err != nil {
+					return nil, err
+				}
+
+				// clawback the available amount first
+				clawbackAmt = spendableAmt
+
+				// track the remain amount
+				bva.ClawbackDept.Set(ctx, denom, deptAmt)
 			}
 
 		}
-		clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, lockedAmt))
+		clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, clawbackAmt))
 
 		// clear the lock token tracking
-		err = bva.OriginalLocking.Remove(ctx, denom)
+		err = bva.OriginalLocking.Set(ctx, denom, math.ZeroInt())
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +108,11 @@ func (bva *BaseLockup) ClawbackFunds(
 	}
 
 	// send back to admin
-	msgSend := makeMsgSend(fromAddress, string(adminAddr), clawbackTokens)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.Admin,
+		Amount:      clawbackTokens,
+	}
 	_, err = sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
@@ -119,34 +139,25 @@ func (bva BaseLockup) forceUnbondLockingDelegations(
 	for _, resp := range delResps.DelegationResponses {
 		del := resp.Delegation
 
-		// unbond
-		unbondAmt, err := bva.sk.Unbond(ctx, sdk.AccAddress(del.DelegatorAddress), sdk.ValAddress(del.ValidatorAddress), del.Shares)
+		val, err := getVal(ctx, del.DelegatorAddress, del.ValidatorAddress)
 		if err != nil {
 			return err
 		}
 
-		unbondCoins := sdk.Coins{sdk.NewCoin(bondDenom, unbondAmt)}
+		delAmt := val.TokensFromShares(del.Shares)
+		delCoin := sdk.NewCoin(bondDenom, delAmt.TruncateInt())
 
-		err = bva.TrackUndelegation(ctx, unbondCoins)
+		err = bva.TrackUndelegation(ctx, sdk.Coins{delCoin})
 		if err != nil {
 			return err
 		}
 
-		isBonded, err := isBonded(ctx, del.DelegatorAddress, del.ValidatorAddress)
-		if err != nil {
-			return err
+		msgUndelegate := &stakingtypes.MsgUndelegate{
+			DelegatorAddress: delegator,
+			ValidatorAddress: del.ValidatorAddress,
+			Amount:           delCoin,
 		}
-
-		// transfer the validator tokens to the not bonded pool
-		if isBonded {
-			// doing stakingKeeper.bondedTokensToNotBonded
-			err = bva.bk.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, unbondCoins)
-			if err != nil {
-				return err
-			}
-		}
-
-		err = bva.bk.UndelegateCoinsFromModuleToAccount(ctx, stakingtypes.NotBondedPoolName, sdk.AccAddress(del.DelegatorAddress), unbondCoins)
+		_, err = sendMessage(ctx, msgUndelegate)
 		if err != nil {
 			return err
 		}
@@ -155,7 +166,7 @@ func (bva BaseLockup) forceUnbondLockingDelegations(
 	return nil
 }
 
-func isBonded(ctx context.Context, delAddr, valAddr string) (bool, error) {
+func getVal(ctx context.Context, delAddr, valAddr string) (stakingtypes.Validator, error) {
 	// Query account balance for the sent denom
 	req := &stakingtypes.QueryDelegatorValidatorRequest{
 		DelegatorAddr: delAddr,
@@ -163,8 +174,8 @@ func isBonded(ctx context.Context, delAddr, valAddr string) (bool, error) {
 	}
 	resp, err := accountstd.QueryModule[stakingtypes.QueryDelegatorValidatorResponse](ctx, req)
 	if err != nil {
-		return false, err
+		return stakingtypes.Validator{}, err
 	}
 
-	return resp.Validator.IsBonded(), nil
+	return resp.Validator, nil
 }

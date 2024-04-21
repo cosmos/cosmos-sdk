@@ -12,7 +12,7 @@ require (
 	github.com/cometbft/cometbft v0.38.6
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.50.6-0.20240323125140-7397b8672fa8
+	github.com/cosmos/cosmos-sdk v0.50.6-0.20240418185403-97a42f05e849
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -190,6 +190,3 @@ require (
 // Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
-
-// TODO(@julienrbrt): to remove in https://github.com/cosmos/cosmos-sdk/pull/19998
-replace github.com/cosmos/cosmos-sdk => ../../.

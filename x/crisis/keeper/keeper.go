@@ -21,6 +21,7 @@ type Keeper struct {
 	invCheckPeriod uint
 	storeService   storetypes.KVStoreService
 	cdc            codec.BinaryCodec
+	addressCodec   address.Codec
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -29,8 +30,6 @@ type Keeper struct {
 	supplyKeeper types.SupplyKeeper
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
-
-	addressCodec address.Codec
 
 	Schema      collections.Schema
 	ConstantFee collections.Item[sdk.Coin]
@@ -51,8 +50,7 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		addressCodec:     ac,
-
-		ConstantFee: collections.NewItem(sb, types.ConstantFeeKey, "constant_fee", codec.CollValue[sdk.Coin](cdc)),
+		ConstantFee:      collections.NewItem(sb, types.ConstantFeeKey, "constant_fee", codec.CollValue[sdk.Coin](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {

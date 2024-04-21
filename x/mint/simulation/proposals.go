@@ -32,9 +32,14 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 }
 
 // SimulateMsgUpdateParams returns a random MsgUpdateParams
-func SimulateMsgUpdateParams(r *rand.Rand, _ []simtypes.Account, _ coreaddress.Codec) (sdk.Msg, error) {
+func SimulateMsgUpdateParams(r *rand.Rand, _ []simtypes.Account, ac coreaddress.Codec) (sdk.Msg, error) {
 	// use the default gov module account address as authority
 	var authority sdk.AccAddress = address.Module("gov")
+
+	authorityAddr, err := ac.BytesToString(authority)
+	if err != nil {
+		return nil, err
+	}
 
 	params := types.DefaultParams()
 	params.BlocksPerYear = uint64(simtypes.RandIntBetween(r, 1, 1000000))
@@ -45,7 +50,7 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ []simtypes.Account, _ coreaddress.C
 	params.MintDenom = simtypes.RandStringOfLength(r, 10)
 
 	return &types.MsgUpdateParams{
-		Authority: authority.String(),
+		Authority: authorityAddr,
 		Params:    params,
 	}, nil
 }

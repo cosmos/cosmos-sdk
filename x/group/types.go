@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/math"
@@ -290,8 +291,8 @@ func (g GroupPolicyInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
 }
 
-func (g GroupInfo) PrimaryKeyFields() []interface{} {
-	return []interface{}{g.Id}
+func (g GroupInfo) PrimaryKeyFields(_ address.Codec) ([]interface{}, error) {
+	return []interface{}{g.Id}, nil
 }
 
 // ValidateBasic does basic validation on group info.
@@ -314,14 +315,17 @@ func (g GroupInfo) ValidateBasic() error {
 	return nil
 }
 
-func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(g.Address)
+func (g GroupPolicyInfo) PrimaryKeyFields(addressCodec address.Codec) ([]interface{}, error) {
+	addr, err := addressCodec.StringToBytes(g.Address)
+	if err != nil {
+		return nil, err
+	}
 
-	return []interface{}{addr.Bytes()}
+	return []interface{}{addr}, nil
 }
 
-func (g Proposal) PrimaryKeyFields() []interface{} {
-	return []interface{}{g.Id}
+func (g Proposal) PrimaryKeyFields(_ address.Codec) ([]interface{}, error) {
+	return []interface{}{g.Id}, nil
 }
 
 // ValidateBasic does basic validation on group policy info.
@@ -352,10 +356,13 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 	return nil
 }
 
-func (g GroupMember) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(g.Member.Address)
+func (g GroupMember) PrimaryKeyFields(addressCodec address.Codec) ([]interface{}, error) {
+	addr, err := addressCodec.StringToBytes(g.Member.Address)
+	if err != nil {
+		return nil, err
+	}
 
-	return []interface{}{g.GroupId, addr.Bytes()}
+	return []interface{}{g.GroupId, addr}, nil
 }
 
 // ValidateBasic does basic validation on group member.
@@ -421,10 +428,13 @@ func (g Proposal) ValidateBasic() error {
 	return nil
 }
 
-func (v Vote) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(v.Voter)
+func (v Vote) PrimaryKeyFields(addressCodec address.Codec) ([]interface{}, error) {
+	addr, err := addressCodec.StringToBytes(v.Voter)
+	if err != nil {
+		return nil, err
+	}
 
-	return []interface{}{v.ProposalId, addr.Bytes()}
+	return []interface{}{v.ProposalId, addr}, nil
 }
 
 var _ orm.Validateable = Vote{}

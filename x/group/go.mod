@@ -1,6 +1,6 @@
 module cosmossdk.io/x/group
 
-go 1.21
+go 1.21.0
 
 require (
 	cosmossdk.io/api v0.7.4
@@ -20,7 +20,7 @@ require (
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cometbft/cometbft v0.38.7-0.20240412124004-1f67e396cf45
 	github.com/cosmos/cosmos-db v1.0.2
-	github.com/cosmos/cosmos-proto v1.0.0-beta.4
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/golang/mock v1.6.0

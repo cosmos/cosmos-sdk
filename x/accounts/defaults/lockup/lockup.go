@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/address"
@@ -15,9 +17,8 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/defaults/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/gogoproto/proto"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -155,7 +156,7 @@ func (bva *BaseLockup) Delegate(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 
 	balance, err := bva.getBalance(ctx, delegatorAddress, msg.Amount.Denom)
 	if err != nil {
@@ -229,7 +230,7 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Amount.Denoms()...)
 	if err != nil {
@@ -267,7 +268,7 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Denoms...)
 	if err != nil {
 		return nil, err

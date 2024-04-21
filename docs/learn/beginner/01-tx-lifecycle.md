@@ -55,9 +55,9 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 
 ## Addition to Mempool
 
-Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v0.38/spec/p2p/legacy-docs/messages/),
-`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
-[**Mempool**](https://docs.cometbft.com/v0.37/spec/p2p/legacy-docs/messages/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#checktx)
+`abci.CheckTxRequest` to the application layer to check for validity, and receives an `abci.CheckTxResponse`. If the `Tx` passes the checks, it is held in the node's
+[**Mempool**](https://docs.cometbft.com/v1.0/explanation/core/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
 
@@ -149,7 +149,7 @@ Consensus, the process through which validator nodes come to agreement on which 
 accept, happens in **rounds**. Each round begins with a proposer creating a block of the most
 recent transactions and ends with **validators**, special full-nodes with voting power responsible
 for consensus, agreeing to accept the block or go with a `nil` block instead. Validator nodes
-execute the consensus algorithm, such as [CometBFT](https://docs.cometbft.com/v0.37/spec/consensus/),
+execute the consensus algorithm adopted in [CometBFT](https://docs.cometbft.com/v1.0/spec/consensus/),
 confirming the transactions using ABCI requests to the application, in order to come to this agreement.
 
 The first step of consensus is the **block proposal**. One proposer amongst the validators is chosen

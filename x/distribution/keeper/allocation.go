@@ -104,7 +104,7 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 	}
 
 	// update current commission
-	if err = k.environment.EventService.EventManager(ctx).EmitKV(
+	if err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCommission,
 		event.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
 		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
@@ -136,7 +136,7 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 	}
 
 	// update outstanding rewards
-	if err = k.environment.EventService.EventManager(ctx).EmitKV(
+	if err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeRewards,
 		event.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
 		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),

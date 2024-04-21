@@ -8,7 +8,7 @@ import (
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	types "cosmossdk.io/x/staking/types"
+	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -35,8 +35,6 @@ import (
 //	Infraction was committed at the current height or at a past height,
 //	but not at a height in the future
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
-	logger := k.Logger()
-
 	if slashFactor.IsNegative() {
 		return math.NewInt(0), fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor)
 	}
@@ -59,7 +57,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 			return math.NewInt(0), err
 		}
 
-		logger.Error(
+		k.Logger.Error(
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", conStr,
 		)
@@ -88,7 +86,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	// redelegations, as that stake has since unbonded
 	remainingSlashAmount := slashAmount
 
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	height := headerInfo.Height
 	switch {
 	case infractionHeight > height:
@@ -100,7 +98,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	case infractionHeight == height:
 		// Special-case slash at current height for efficiency - we don't need to
 		// look through unbonding delegations or redelegations.
-		logger.Info(
+		k.Logger.Info(
 			"slashing at current height; not scanning unbonding delegations & redelegations",
 			"height", infractionHeight,
 		)
@@ -152,7 +150,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		// Nothing to burn, we can end this route immediately! We also don't
 		// need to call the k.Hooks().BeforeValidatorSlashed hook as we won't
 		// be slashing at all.
-		logger.Info(
+		k.Logger.Info(
 			"no validator slashing because slash amount is zero",
 			"validator", validator.GetOperator(),
 			"slash_factor", slashFactor.String(),
@@ -195,7 +193,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		return math.NewInt(0), fmt.Errorf("invalid validator status")
 	}
 
-	logger.Info(
+	k.Logger.Info(
 		"validator slashed by slash factor",
 		"validator", validator.GetOperator(),
 		"slash_factor", slashFactor.String(),
@@ -219,7 +217,7 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		return err
 	}
 
-	k.Logger().Info("validator jailed", "validator", consAddr)
+	k.Logger.Info("validator jailed", "validator", consAddr)
 	return nil
 }
 
@@ -233,7 +231,7 @@ func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		return err
 	}
 
-	k.Logger().Info("validator un-jailed", "validator", consAddr)
+	k.Logger.Info("validator un-jailed", "validator", consAddr)
 	return nil
 }
 
@@ -245,7 +243,7 @@ func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
-	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	now := k.HeaderService.HeaderInfo(ctx).Time
 	totalSlashAmount = math.ZeroInt()
 	burnedAmount := math.ZeroInt()
 
@@ -301,7 +299,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
-	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	now := k.HeaderService.HeaderInfo(ctx).Time
 	totalSlashAmount = math.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := math.ZeroInt(), math.ZeroInt()
 

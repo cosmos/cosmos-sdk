@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
-	context "context"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -46,9 +46,11 @@ func initFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(mockStoreKey), log.NewNopLogger())
-	k := keeper.NewKeeper(env, encCfg.Codec, authtypes.NewModuleAddress("gov").String(), ac)
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+	k := keeper.NewKeeper(env, encCfg.Codec, authority, ac)
 
-	bz, err := ac.StringToBytes(authtypes.NewModuleAddress("gov").String())
+	bz, err := ac.StringToBytes(authority)
 	require.NoError(t, err)
 
 	return &fixture{

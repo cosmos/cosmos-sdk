@@ -110,10 +110,10 @@ func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDepen
 	}
 
 	// test header service
-	chainID := a.hs.GetHeaderInfo(ctx).ChainID
+	chainID := a.hs.HeaderInfo(ctx).ChainID
 
 	// test gas meter
-	gm := a.gs.GetGasMeter(ctx)
+	gm := a.gs.GasMeter(ctx)
 	gasBefore := gm.Limit() - gm.Remaining()
 	gm.Consume(10, "test")
 	gasAfter := gm.Limit() - gm.Remaining()

@@ -46,7 +46,7 @@ var (
 type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
 
 // newBaseLockup creates a new BaseLockup object.
-func newBaseLockup(d accountstd.Dependencies, sk types.StakingKeeper, bk types.BankKeeper) *BaseLockup {
+func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 	BaseLockup := &BaseLockup{
 		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		Admin:            collections.NewItem(d.SchemaBuilder, AdminPrefix, "admin", collections.BytesValue),
@@ -57,8 +57,6 @@ func newBaseLockup(d accountstd.Dependencies, sk types.StakingKeeper, bk types.B
 		addressCodec:     d.AddressCodec,
 		headerService:    d.Environment.HeaderService,
 		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
-		sk:               sk,
-		bk:               bk,
 	}
 
 	return BaseLockup
@@ -78,11 +76,6 @@ type BaseLockup struct {
 	headerService    header.Service
 	// lockup end time.
 	EndTime collections.Item[time.Time]
-
-	// staking keeper and bank staking for unbond token without waiting for unbonding period
-	// when admin request clawback the fund
-	sk types.StakingKeeper
-	bk types.BankKeeper
 }
 
 func (bva *BaseLockup) Init(ctx context.Context, msg *types.MsgInitLockupAccount) (

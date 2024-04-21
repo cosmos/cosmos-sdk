@@ -20,18 +20,16 @@ import (
 var _ accountstd.Interface = (*PeriodicLockingAccount)(nil)
 
 // NewPeriodicLockingAccount creates a new PeriodicLockingAccount object.
-func NewPeriodicLockingAccount(sk types.StakingKeeper, bk types.BankKeeper) accountstd.AccountCreatorFunc {
-	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
-		baseLockup := newBaseLockup(d, sk, bk)
+func NewPeriodicLockingAccount(d accountstd.Dependencies) (*PeriodicLockingAccount, error) {
+	baseLockup := newBaseLockup(d)
 
-		periodicsVestingAccount := PeriodicLockingAccount{
-			BaseLockup:     baseLockup,
-			StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
-			LockingPeriods: collections.NewVec(d.SchemaBuilder, LockingPeriodsPrefix, "locking_periods", codec.CollValue[types.Period](d.LegacyStateCodec)),
-		}
-
-		return PERIODIC_LOCKING_ACCOUNT, &periodicsVestingAccount, nil
+	periodicsVestingAccount := PeriodicLockingAccount{
+		BaseLockup:     baseLockup,
+		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		LockingPeriods: collections.NewVec(d.SchemaBuilder, LockingPeriodsPrefix, "locking_periods", codec.CollValue[types.Period](d.LegacyStateCodec)),
 	}
+
+	return &periodicsVestingAccount, nil
 }
 
 type PeriodicLockingAccount struct {

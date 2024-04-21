@@ -18,13 +18,11 @@ var (
 )
 
 // NewDelayedLockingAccount creates a new DelayedLockingAccount object.
-func NewDelayedLockingAccount(sk types.StakingKeeper, bk types.BankKeeper) accountstd.AccountCreatorFunc {
-	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
-		baseLockup := newBaseLockup(d, sk, bk)
-		return DELAYED_LOCKING_ACCOUNT, &DelayedLockingAccount{
-			baseLockup,
-		}, nil
-	}
+func NewDelayedLockingAccount(d accountstd.Dependencies) (*DelayedLockingAccount, error) {
+	baseLockup := newBaseLockup(d)
+	return &DelayedLockingAccount{
+		baseLockup,
+	}, nil
 }
 
 type DelayedLockingAccount struct {

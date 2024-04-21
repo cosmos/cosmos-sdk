@@ -39,7 +39,7 @@ func (bva *BaseLockup) ClawbackFunds(
 
 	clawbackTokens := sdk.Coins{}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Denoms...)
 	if err != nil {

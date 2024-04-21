@@ -20,17 +20,15 @@ var (
 )
 
 // NewContinuousLockingAccount creates a new ContinuousLockingAccount object.
-func NewContinuousLockingAccount(sk types.StakingKeeper, bk types.BankKeeper) accountstd.AccountCreatorFunc {
-	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
-		baseLockup := newBaseLockup(d, sk, bk)
+func NewContinuousLockingAccount(d accountstd.Dependencies) (*ContinuousLockingAccount, error) {
+	baseLockup := newBaseLockup(d)
 
-		ContinuousLockingAccount := ContinuousLockingAccount{
-			BaseLockup: baseLockup,
-			StartTime:  collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
-		}
-
-		return CONTINUOUS_LOCKING_ACCOUNT, &ContinuousLockingAccount, nil
+	ContinuousLockingAccount := ContinuousLockingAccount{
+		BaseLockup: baseLockup,
+		StartTime:  collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 	}
+
+	return &ContinuousLockingAccount, nil
 }
 
 type ContinuousLockingAccount struct {

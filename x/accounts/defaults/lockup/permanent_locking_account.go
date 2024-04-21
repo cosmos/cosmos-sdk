@@ -17,12 +17,10 @@ var (
 )
 
 // NewPermanentLockingAccount creates a new PermanentLockingAccount object.
-func NewPermanentLockingAccount(sk types.StakingKeeper, bk types.BankKeeper) accountstd.AccountCreatorFunc {
-	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
-		baseLockup := newBaseLockup(d, sk, bk)
+func NewPermanentLockingAccount(d accountstd.Dependencies) (*PermanentLockingAccount, error) {
+	baseLockup := newBaseLockup(d)
 
-		return PERMANENT_LOCKING_ACCOUNT, &PermanentLockingAccount{baseLockup}, nil
-	}
+	return &PermanentLockingAccount{baseLockup}, nil
 }
 
 type PermanentLockingAccount struct {

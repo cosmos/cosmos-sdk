@@ -41,7 +41,7 @@ func SetGenTxsInAppGenesisState(
 // balance in the set of genesis accounts.
 func ValidateAccountInGenesis(
 	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
-	addr sdk.Address, coins sdk.Coins, cdc codec.JSONCodec,
+	addr string, coins sdk.Coins, cdc codec.JSONCodec,
 ) error {
 	var stakingData stakingtypes.GenesisState
 	cdc.MustUnmarshalJSON(appGenesisState[stakingtypes.ModuleName], &stakingData)
@@ -56,7 +56,7 @@ func ValidateAccountInGenesis(
 			accAddress := bal.GetAddress()
 			accCoins := bal.GetCoins()
 			// ensure that account is in genesis
-			if strings.EqualFold(accAddress, addr.String()) {
+			if strings.EqualFold(accAddress, addr) {
 				// ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(

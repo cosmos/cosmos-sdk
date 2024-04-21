@@ -1,4 +1,4 @@
-package api_test
+package network_test
 
 import (
 	"bufio"
@@ -25,11 +25,26 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/staking"
 
+	"context"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
+	_ "cosmossdk.io/x/accounts"
+
+	"cosmossdk.io/simapp/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+
+	"github.com/cosmos/cosmos-sdk/server"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 )
 
 // https://github.com/improbable-eng/grpc-web/blob/master/go/grpcweb/wrapper_test.go used as a reference
@@ -37,7 +52,7 @@ import (
 
 const grpcWebContentType = "application/grpc-web"
 
-type GRPCWebTestSuite struct {
+type NetworkTestSuite struct {
 	suite.Suite
 
 	cfg      network.Config
@@ -45,7 +60,7 @@ type GRPCWebTestSuite struct {
 	protoCdc *codec.ProtoCodec
 }
 
-func (s *GRPCWebTestSuite) SetupSuite() {
+func (s *NetworkTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
@@ -63,12 +78,16 @@ func (s *GRPCWebTestSuite) SetupSuite() {
 	s.protoCdc = codec.NewProtoCodec(s.cfg.InterfaceRegistry)
 }
 
-func (s *GRPCWebTestSuite) TearDownSuite() {
+func (s *NetworkTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
-func (s *GRPCWebTestSuite) Test_Latest_Validators() {
+func TestNetworkTestSuite(t *testing.T) {
+	suite.Run(t, new(NetworkTestSuite))
+}
+
+func (s *NetworkTestSuite) Test_Latest_Validators() {
 	val := s.network.GetValidators()[0]
 	for _, contentType := range []string{grpcWebContentType} {
 		headers, trailers, responses, err := s.makeGrpcRequest(
@@ -89,7 +108,7 @@ func (s *GRPCWebTestSuite) Test_Latest_Validators() {
 	}
 }
 
-func (s *GRPCWebTestSuite) Test_Total_Supply() {
+func (s *NetworkTestSuite) Test_Total_Supply() {
 	for _, contentType := range []string{grpcWebContentType} {
 		headers, trailers, responses, err := s.makeGrpcRequest(
 			"/cosmos.bank.v1beta1.Query/TotalSupply",
@@ -105,11 +124,11 @@ func (s *GRPCWebTestSuite) Test_Total_Supply() {
 	}
 }
 
-func (s *GRPCWebTestSuite) assertContentTypeSet(headers http.Header, contentType string) {
+func (s *NetworkTestSuite) assertContentTypeSet(headers http.Header, contentType string) {
 	s.Require().Equal(contentType, headers.Get("content-type"), `Expected there to be content-type=%v`, contentType)
 }
 
-func (s *GRPCWebTestSuite) assertTrailerGrpcCode(trailers Trailer, code codes.Code, desc string) {
+func (s *NetworkTestSuite) assertTrailerGrpcCode(trailers Trailer, code codes.Code, desc string) {
 	s.Require().NotEmpty(trailers.Get("grpc-status"), "grpc-status must not be empty in trailers")
 	statusCode, err := strconv.Atoi(trailers.Get("grpc-status"))
 	s.Require().NoError(err, "no error parsing grpc-status")
@@ -126,7 +145,7 @@ func serializeProtoMessages(messages []proto.Message) [][]byte {
 	return out
 }
 
-func (s *GRPCWebTestSuite) makeRequest(
+func (s *NetworkTestSuite) makeRequest(
 	verb, method string, headers http.Header, body io.Reader, isText bool,
 ) (*http.Response, error) {
 	val := s.network.GetValidators()[0]
@@ -189,7 +208,7 @@ func decodeMultipleBase64Chunks(b []byte) ([]byte, error) {
 	return output[:outputEnd], nil
 }
 
-func (s *GRPCWebTestSuite) makeGrpcRequest(
+func (s *NetworkTestSuite) makeGrpcRequest(
 	method string, reqHeaders http.Header, requestMessages [][]byte, isText bool,
 ) (headers http.Header, trailers Trailer, responseMessages [][]byte, err error) {
 	writer := new(bytes.Buffer)
@@ -320,6 +339,81 @@ func (t trailer) Get(key string) string {
 	return v[0]
 }
 
-func TestGRPCWebTestSuite(t *testing.T) {
-	suite.Run(t, new(GRPCWebTestSuite))
+func (s *NetworkTestSuite) TestCLIQueryConn() {
+	s.T().Skip("data race in comet is causing this to fail")
+	var header metadata.MD
+
+	testClient := testdata.NewQueryClient(s.network.GetValidators()[0].GetClientCtx())
+	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"}, grpc.Header(&header))
+	s.NoError(err)
+
+	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
+	height, err := strconv.Atoi(blockHeight[0])
+	s.Require().NoError(err)
+	s.Require().GreaterOrEqual(height, 1) // at least the 1st block
+
+	s.Equal("hello", res.Message)
+}
+
+func (s *NetworkTestSuite) TestQueryABCIHeight() {
+	testCases := []struct {
+		name      string
+		reqHeight int64
+		ctxHeight int64
+		expHeight int64
+	}{
+		{
+			name:      "non zero request height",
+			reqHeight: 3,
+			ctxHeight: 1, // query at height 1 or 2 would cause an error
+			expHeight: 3,
+		},
+		{
+			name:      "empty request height - use context height",
+			reqHeight: 0,
+			ctxHeight: 3,
+			expHeight: 3,
+		},
+		{
+			name:      "empty request height and context height - use latest height",
+			reqHeight: 0,
+			ctxHeight: 0,
+			expHeight: 4,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			_, err := s.network.WaitForHeight(tc.expHeight)
+			s.Require().NoError(err)
+
+			val := s.network.GetValidators()[0]
+
+			clientCtx := val.GetClientCtx()
+			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
+
+			req := abci.RequestQuery{
+				Path:   "store/bank/key",
+				Height: tc.reqHeight,
+				Data:   address.MustLengthPrefix(val.GetAddress()),
+				Prove:  true,
+			}
+
+			res, err := clientCtx.QueryABCI(req)
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.expHeight, res.Height)
+		})
+	}
+}
+
+func (s *NetworkTestSuite) TestStatusCommand(t *testing.T) {
+	val0 := s.network.GetValidators()[0]
+	cmd := server.StatusCommand()
+
+	out, err := clitestutil.ExecTestCLICmd(val0.GetClientCtx(), cmd, []string{})
+	require.NoError(t, err)
+
+	// Make sure the output has the validator moniker.
+	require.Contains(t, out.String(), fmt.Sprintf("\"moniker\":\"%s\"", val0.GetMoniker()))
 }

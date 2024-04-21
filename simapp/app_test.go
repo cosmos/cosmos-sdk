@@ -34,10 +34,10 @@ import (
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/upgrade"
 
+	"cosmossdk.io/simapp/network"
+	simtestutil "cosmossdk.io/simapp/sims"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"

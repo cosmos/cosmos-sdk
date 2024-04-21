@@ -11,7 +11,7 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	// authtx "cosmossdk.io/x/auth/tx"
+	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -48,7 +48,6 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 	return db, dir, logger, false, nil
 }
-
 
 // Can move to simapp
 // SimulationOperations retrieves the simulation params from the provided file path

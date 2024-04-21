@@ -19,13 +19,14 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 
+	"cosmossdk.io/simapp/network"
+	"cosmossdk.io/simapp/sims"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -41,7 +42,7 @@ type SetupOptions struct {
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	db := dbm.NewMemDB()
 
-	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions := make(sims.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 
@@ -73,7 +74,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 
 	app := NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
 	genesisState := app.DefaultGenesis()
-	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState, err = sims.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
 
 	if !isCheckTx {
@@ -84,7 +85,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 		// Initialize the chain
 		_, err = app.InitChain(&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simtestutil.DefaultConsensusParams,
+			ConsensusParams: sims.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		})
 		require.NoError(t, err)
@@ -126,7 +127,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 	t.Helper()
 
 	app, genesisState := setup(true, 5)
-	genesisState, err := simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, genAccs, balances...)
+	genesisState, err := sims.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, genAccs, balances...)
 	require.NoError(t, err)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -135,7 +136,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 	// init chain will set the validator set and initialize the genesis accounts
 	_, err = app.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
-		ConsensusParams: simtestutil.DefaultConsensusParams,
+		ConsensusParams: sims.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
 	},
 	)
@@ -176,7 +177,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	}
 
 	genesisState := app.DefaultGenesis()
-	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
+	genesisState, err = sims.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
 	require.NoError(t, err)
 
 	return genesisState
@@ -224,12 +225,12 @@ func NewTestNetworkFixture() network.TestFixture {
 	}
 	defer os.RemoveAll(dir)
 
-	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
+	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, sims.NewAppOptionsWithFlagHome(dir))
 
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
-			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+			sims.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 			bam.SetChainID(val.GetCtx().Viper.GetString(flags.FlagChainID)),

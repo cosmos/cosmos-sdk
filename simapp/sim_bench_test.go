@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/simapp/sims"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
@@ -33,7 +33,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
 
-	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "goleveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
+	db, dir, logger, skip, err := sims.SetupSimulation(config, "goleveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	if err != nil {
 		b.Fatalf("simulation setup failed: %s", err.Error())
 	}
@@ -67,9 +67,9 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b,
 		os.Stdout,
 		app.BaseApp,
-		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		sims.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		sims.SimulationOperations(app, app.AppCodec(), config),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
@@ -77,7 +77,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = simtestutil.CheckExportSimulation(app, config, simParams); err != nil {
+	if err = sims.CheckExportSimulation(app, config, simParams); err != nil {
 		b.Fatal(err)
 	}
 
@@ -86,6 +86,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		simtestutil.PrintStats(db)
+		sims.PrintStats(db)
 	}
 }

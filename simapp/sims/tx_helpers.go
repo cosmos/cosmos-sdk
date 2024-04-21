@@ -11,7 +11,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/errors"
-	// authsign "cosmossdk.io/x/auth/signing"
+	authsign "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -46,7 +46,7 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 	}
 
 	tx := txConfig.NewTxBuilder()
-	err := tx.SetMsgs(msgs...)
+	err = tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}

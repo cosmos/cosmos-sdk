@@ -7,9 +7,7 @@ import (
 	"io"
 	"os"
 	"testing"
-	"time"
 
-	abci_server "github.com/cometbft/cometbft/abci/server"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
@@ -22,10 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
-	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -200,37 +195,6 @@ func TestEmptyState(t *testing.T) {
 	require.Contains(t, out, "consensus")
 	require.Contains(t, out, "app_hash")
 	require.Contains(t, out, "app_state")
-}
-
-func TestStartStandAlone(t *testing.T) {
-	home := t.TempDir()
-	logger := log.NewNopLogger()
-	interfaceRegistry := types.NewInterfaceRegistry()
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	err := genutiltest.ExecInitCmd(testMbm, home, marshaler)
-	require.NoError(t, err)
-
-	app, err := mock.NewApp(home, logger)
-	require.NoError(t, err)
-
-	svrAddr, _, closeFn, err := network.FreeTCPAddr()
-	require.NoError(t, err)
-	require.NoError(t, closeFn())
-
-	cmtApp := server.NewCometABCIWrapper(app)
-	svr, err := abci_server.NewServer(svrAddr, "socket", cmtApp)
-	require.NoError(t, err, "error creating listener")
-
-	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "abci-server")})
-	err = svr.Start()
-	require.NoError(t, err)
-
-	timer := time.NewTimer(time.Duration(2) * time.Second)
-	for range timer.C {
-		err = svr.Stop()
-		require.NoError(t, err)
-		break
-	}
 }
 
 func TestInitNodeValidatorFiles(t *testing.T) {

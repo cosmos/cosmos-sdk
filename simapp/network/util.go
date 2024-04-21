@@ -19,7 +19,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
-	// authtypes "cosmossdk.io/x/auth/types"
+	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/server"

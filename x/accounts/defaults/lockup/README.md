@@ -19,7 +19,7 @@ The x/accounts/defaults/lockup module provides the implementation for lockup acc
 
 ### BaseLockup
 
-The base vesting account is used by all default lockup accounts. It contains the basic information for a vesting account. The Base vesting account keeps knowledge of the staking delegations from the account.
+The base lockup account is used by all default lockup accounts. It contains the basic information for a lockup account. The Base lockup account keeps knowledge of the staking delegations from the account.
 
 ```go
 type BaseLockup struct {
@@ -38,7 +38,7 @@ type BaseLockup struct {
 
 ### ContinuousLockup
 
-The continuous vesting account has a future start time and begins unlocking continuously until the specified end date.
+The continuous lockup account has a future start time and begins unlocking continuously until the specified end date.
 
 To determine the amount of coins that are vested for a given block time `T`, the
 following is performed:
@@ -49,7 +49,7 @@ following is performed:
 4. Compute `V := OV - V'`
 
 Thus, the total amount of _vested_ coins is `V'` and the remaining amount, `V`,
-is _vesting_.
+is _lockup_.
 
 ```go
 type ContinuousLockingAccount struct {
@@ -60,7 +60,7 @@ type ContinuousLockingAccount struct {
 
 ### DelayedLockup
 
-The delayed vesting account unlocks all tokens at a specific time. The account can receive coins and send coins. The account can be used to lock coins for a long period of time.
+The delayed lockup account unlocks all tokens at a specific time. The account can receive coins and send coins. The account can be used to lock coins for a long period of time.
 
 ```go
 type DelayedLockingAccount struct {
@@ -70,9 +70,9 @@ type DelayedLockingAccount struct {
 
 ### PeriodicLockup
 
-The periodic vesting account locks tokens for a series of periods. The account can receive coins and send coins. After all the periods, all the coins are unlocked and the account can send coins.
+The periodic lockup account locks tokens for a series of periods. The account can receive coins and send coins. After all the periods, all the coins are unlocked and the account can send coins.
 
-Periodic vesting accounts require calculating the coins released during each period for a given block time `T`. Note that multiple periods could have passed when calling `GetVestedCoins`, so we must iterate over each period until the end of that period is after `T`.
+Periodic lockup accounts require calculating the coins released during each period for a given block time `T`. Note that multiple periods could have passed when calling `GetVestedCoins`, so we must iterate over each period until the end of that period is after `T`.
 
 1. Set `CT := StartTime`
 2. Set `V' := 0`
@@ -96,7 +96,7 @@ type PeriodicLockingAccount struct {
 
 ### PermanentLocked
 
-The permanent vesting account permanently locks the coins in the account. The account can only receive coins and cannot send coins. The account can be used to lock coins for a long period of time.
+The permanent lockup account permanently locks the coins in the account. The account can only receive coins and cannot send coins. The account can be used to lock coins for a long period of time.
 
 ```go
 type PermanentLockingAccount struct {
@@ -112,7 +112,7 @@ type PermanentLockingAccount struct {
 
 ### Simple
 
-Given a continuous vesting account with 10 vesting coins.
+Given a continuous lockup account with 10 vested coins.
 
 ```text
 OV = 10
@@ -210,8 +210,8 @@ It can still, however, delegate.
 
 ### Periodic Lockup
 
-A vesting account is created where 100 tokens will be released over 1 year, with
-1/4 of tokens vesting each quarter. The vesting schedule would be as follows:
+A lockup account is created where 100 tokens will be released over 1 year, with
+1/4 of tokens vesting each quarter. The lockup schedule would be as follows:
 
 ```yaml
 Periods:
@@ -243,7 +243,7 @@ V' = 0
     V' = 25
     ```
 
-3. During vesting period 2, 5 coins are transferred and 5 coins are delegated
+3. During lockup period 2, 5 coins are transferred and 5 coins are delegated
 
     ```text
     DV = 5

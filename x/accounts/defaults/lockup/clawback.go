@@ -82,7 +82,7 @@ func (bva *BaseLockup) ClawbackFunds(
 					return nil, err
 				}
 
-				deptAmt, err := lockedAmt.SafeSub(spendableAmt)
+				debtAmt, err := lockedAmt.SafeSub(spendableAmt)
 				if err != nil {
 					return nil, err
 				}
@@ -91,7 +91,7 @@ func (bva *BaseLockup) ClawbackFunds(
 				clawbackAmt = spendableAmt
 
 				// track the remain amount
-				bva.ClawbackDept.Set(ctx, denom, deptAmt)
+				bva.ClawbackDebt.Set(ctx, denom, debtAmt)
 			}
 
 		}

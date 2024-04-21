@@ -105,7 +105,7 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *types.MsgInitPe
 		}
 
 		// Set initial value for all locked token
-		err = pva.ClawbackDept.Set(ctx, coin.Denom, math.ZeroInt())
+		err = pva.ClawbackDebt.Set(ctx, coin.Denom, math.ZeroInt())
 		if err != nil {
 			return nil, err
 		}

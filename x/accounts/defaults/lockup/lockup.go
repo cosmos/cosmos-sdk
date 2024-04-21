@@ -33,7 +33,7 @@ var (
 	OwnerPrefix            = collections.NewPrefix(6)
 	WithdrawedCoinsPrefix  = collections.NewPrefix(7)
 	AdminPrefix            = collections.NewPrefix(8)
-	ClawbackDeptPrefix     = collections.NewPrefix(9)
+	ClawbackDebtPrefix     = collections.NewPrefix(9)
 )
 
 var (
@@ -50,7 +50,7 @@ func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 	BaseLockup := &BaseLockup{
 		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		Admin:            collections.NewItem(d.SchemaBuilder, AdminPrefix, "admin", collections.BytesValue),
-		ClawbackDept:     collections.NewMap(d.SchemaBuilder, ClawbackDeptPrefix, "clawback_dept", collections.StringKey, sdk.IntValue),
+		ClawbackDebt:     collections.NewMap(d.SchemaBuilder, ClawbackDebtPrefix, "clawback_debt", collections.StringKey, sdk.IntValue),
 		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
 		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
@@ -69,7 +69,7 @@ type BaseLockup struct {
 	// Admin is the address who have ability to request lockup account
 	// to return the funds
 	Admin            collections.Item[[]byte]
-	ClawbackDept     collections.Map[string, math.Int]
+	ClawbackDebt     collections.Map[string, math.Int]
 	OriginalLocking  collections.Map[string, math.Int]
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedLocking collections.Map[string, math.Int]
@@ -128,7 +128,7 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *types.MsgInitLockupAccount
 		}
 
 		// Set initial value for all locked token
-		err = bva.ClawbackDept.Set(ctx, coin.Denom, math.ZeroInt())
+		err = bva.ClawbackDebt.Set(ctx, coin.Denom, math.ZeroInt())
 		if err != nil {
 			return nil, err
 		}
@@ -505,14 +505,14 @@ func (bva BaseLockup) getSpenableToken(ctx context.Context, balance, lockedCoin 
 		spendable = sdk.Coins{sdk.NewCoin(lockedCoin.Denom, math.ZeroInt())}
 	}
 
-	clawbackDeptAmt, err := bva.ClawbackDept.Get(ctx, lockedCoin.Denom)
+	clawbackDebtAmt, err := bva.ClawbackDebt.Get(ctx, lockedCoin.Denom)
 	if err != nil {
 		return nil, false, err
 	}
 
-	if !clawbackDeptAmt.IsZero() {
+	if !clawbackDebtAmt.IsZero() {
 		// if the lockup account is owing the admin, prevent it from sending that amount
-		_, hasNeg = spendable.SafeSub(sdk.NewCoin(lockedCoin.Denom, clawbackDeptAmt))
+		_, hasNeg = spendable.SafeSub(sdk.NewCoin(lockedCoin.Denom, clawbackDebtAmt))
 		if hasNeg {
 			// if negative return coin with zero amount
 			spendable = sdk.Coins{sdk.NewCoin(lockedCoin.Denom, math.ZeroInt())}

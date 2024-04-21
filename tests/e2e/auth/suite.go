@@ -17,10 +17,12 @@ import (
 	authcli "cosmossdk.io/x/auth/client/cli"
 	authclitestutil "cosmossdk.io/x/auth/client/testutil"
 	authtestutil "cosmossdk.io/x/auth/testutil"
+
 	banktypes "cosmossdk.io/x/bank/types"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
 
+	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -30,7 +32,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -1047,6 +1048,7 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 		}
 		return clientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	}, 3)
+	fmt.Println("RetryForBlocks err", err)
 	s.Require().NoError(err)
 	s.Require().True(sendTokens.Amount.Equal(balRes.Balances.AmountOf(s.cfg.BondDenom)))
 
@@ -1811,3 +1813,38 @@ func (s *E2ETestSuite) deepContains(events []abci.Event, value string) bool {
 	}
 	return false
 }
+
+// func (s *E2ETestSuite) TestAccountRetriever(t *testing.T) {
+// 	// cfg, err := network.DefaultConfigWithAppConfig(authtestutil.AppConfig)
+// 	// require.NoError(t, err)
+// 	// cfg.NumValidators = 1
+
+// 	// network, err := network.New(t, t.TempDir(), cfg)
+// 	// require.NoError(t, err)
+// 	// defer network.Cleanup()
+
+// 	_, err := s.network.WaitForHeight(3)
+// 	require.NoError(t, err)
+
+// 	val := s.network.GetValidators()[0]
+// 	clientCtx := val.GetClientCtx()
+// 	ar := authtypes.AccountRetriever{}
+
+// 	clientCtx = clientCtx.WithHeight(2)
+
+// 	acc, err := ar.GetAccount(clientCtx, val.GetAddress())
+// 	require.NoError(t, err)
+// 	require.NotNil(t, acc)
+
+// 	acc, height, err := ar.GetAccountWithHeight(clientCtx, val.GetAddress())
+// 	require.NoError(t, err)
+// 	require.NotNil(t, acc)
+// 	require.Equal(t, height, int64(2))
+
+// 	require.NoError(t, ar.EnsureExists(clientCtx, val.GetAddress()))
+
+// 	accNum, accSeq, err := ar.GetAccountNumberSequence(clientCtx, val.GetAddress())
+// 	require.NoError(t, err)
+// 	require.Equal(t, accNum, uint64(0))
+// 	require.Equal(t, accSeq, uint64(1))
+// }

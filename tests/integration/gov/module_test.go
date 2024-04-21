@@ -15,12 +15,12 @@ import (
 	_ "cosmossdk.io/x/protocolpool"
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"cosmossdk.io/simapp/sims"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
-	app, err := simtestutil.SetupAtGenesis(
+	app, err := sims.SetupAtGenesis(
 		depinject.Configs(
 			configurator.NewAppConfig(
 				configurator.AccountsModule(),

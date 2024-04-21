@@ -11,15 +11,15 @@ import (
 	authclient "cosmossdk.io/x/auth/client"
 	banktypes "cosmossdk.io/x/bank/types"
 
+	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"
 )
 
 type E2EBenchmarkSuite struct {

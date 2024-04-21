@@ -34,6 +34,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	"cosmossdk.io/simapp/sims"
 )
 
 type suite struct {
@@ -61,12 +62,12 @@ func TestImportExportQueues(t *testing.T) {
 	var err error
 
 	s1 := suite{}
-	s1.app, err = simtestutil.SetupWithConfiguration(
+	s1.app, err = sims.SetupWithConfiguration(
 		depinject.Configs(
 			appConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		simtestutil.DefaultStartUpConfig(),
+		sims.DefaultStartUpConfig(),
 		&s1.AccountKeeper, &s1.BankKeeper, &s1.GovKeeper, &s1.StakingKeeper, &s1.cdc, &s1.appBuilder,
 	)
 	assert.NilError(t, err)
@@ -123,9 +124,9 @@ func TestImportExportQueues(t *testing.T) {
 
 	s2 := suite{}
 	db := dbm.NewMemDB()
-	conf2 := simtestutil.DefaultStartUpConfig()
+	conf2 := sims.DefaultStartUpConfig()
 	conf2.DB = db
-	s2.app, err = simtestutil.SetupWithConfiguration(
+	s2.app, err = sims.SetupWithConfiguration(
 		depinject.Configs(
 			appConfig,
 			depinject.Supply(log.NewNopLogger()),
@@ -142,7 +143,7 @@ func TestImportExportQueues(t *testing.T) {
 	_, err = s2.app.InitChain(
 		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simtestutil.DefaultConsensusParams,
+			ConsensusParams: sims.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)

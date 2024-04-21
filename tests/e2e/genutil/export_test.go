@@ -20,7 +20,9 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/x/staking"
 
+	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -29,6 +31,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	"time"
+
+	abci_server "github.com/cometbft/cometbft/abci/server"
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
+	"github.com/cosmos/cosmos-sdk/server/mock"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
 func TestExportCmd_ConsensusParams(t *testing.T) {
@@ -220,4 +236,38 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 
 func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0o700)
+}
+
+func TestStartStandAlone(t *testing.T) {
+	home := t.TempDir()
+	logger := log.NewNopLogger()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	err := genutiltest.ExecInitCmd(module.NewManager(
+		staking.NewAppModule(codec.NewProtoCodec(interfaceRegistry), nil, nil, nil),
+		genutil.NewAppModule(codec.NewProtoCodec(interfaceRegistry), nil, nil, nil, nil, nil),
+	), home, marshaler)
+	require.NoError(t, err)
+
+	app, err := mock.NewApp(home, logger)
+	require.NoError(t, err)
+
+	svrAddr, _, closeFn, err := network.FreeTCPAddr()
+	require.NoError(t, err)
+	require.NoError(t, closeFn())
+
+	cmtApp := server.NewCometABCIWrapper(app)
+	svr, err := abci_server.NewServer(svrAddr, "socket", cmtApp)
+	require.NoError(t, err, "error creating listener")
+
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "abci-server")})
+	err = svr.Start()
+	require.NoError(t, err)
+
+	timer := time.NewTimer(time.Duration(2) * time.Second)
+	for range timer.C {
+		err = svr.Stop()
+		require.NoError(t, err)
+		break
+	}
 }

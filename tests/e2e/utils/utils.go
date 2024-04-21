@@ -5,12 +5,13 @@ import (
 
 	authcli "cosmossdk.io/x/auth/client/cli"
 
+	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
 // Can move to e2e
 // CheckTxCode verifies that the transaction result returns a specific code
 // Takes a network, wait for two blocks and fetch the transaction from its hash

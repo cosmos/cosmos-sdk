@@ -18,6 +18,7 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 
+	"cosmossdk.io/simapp/sims"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +36,7 @@ func TestBeginBlocker(t *testing.T) {
 		slashingKeeper    slashingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(
+	app, err := sims.Setup(
 		depinject.Configs(
 			AppConfig,
 			depinject.Supply(log.NewNopLogger()),

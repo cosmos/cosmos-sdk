@@ -21,6 +21,7 @@ import (
 	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"cosmossdk.io/simapp/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,7 +35,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 	f := initFixture(t)
 
 	// enable vote extensions
-	cp := simtestutil.DefaultConsensusParams
+	cp := sims.DefaultConsensusParams
 	cp.Abci = &cmtproto.ABCIParams{VoteExtensionsEnableHeight: 1}
 	f.sdkCtx = f.sdkCtx.WithConsensusParams(*cp).WithHeaderInfo(header.Info{Height: 2, ChainID: chainID})
 

@@ -641,6 +641,14 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 	if err != nil {
 		return nil, nil, err
 	}
+	ledgerPubKey := priv.PubKey()
+	pubKey, err := k.GetPubKey()
+	if err != nil {
+		return nil, nil, err
+	}
+	if !pubKey.Equals(ledgerPubKey) {
+		return nil, nil, fmt.Errorf("the public key that the user attempted to sign with does not match the public key on the ledger device. %v does not match %v", pubKey.String(), ledgerPubKey.String())
+	}
 
 	if !priv.PubKey().VerifySignature(msg, sig) {
 		return nil, nil, errors.New("Ledger generated an invalid signature. Perhaps you have multiple ledgers and need to try another one")

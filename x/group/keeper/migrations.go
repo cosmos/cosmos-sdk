@@ -20,7 +20,7 @@ func NewMigrator(keeper Keeper) Migrator {
 func (m Migrator) Migrate1to2(ctx context.Context) error {
 	return v2.Migrate(
 		ctx,
-		m.keeper.environment.KVStoreService,
+		m.keeper.KVStoreService,
 		m.keeper.accKeeper,
 		m.keeper.groupPolicySeq,
 		m.keeper.groupPolicyTable,

@@ -3,9 +3,9 @@ module cosmossdk.io/depinject
 go 1.20
 
 require (
-	cosmossdk.io/api v0.7.3
+	cosmossdk.io/api v0.7.4
 	github.com/cockroachdb/errors v1.11.1
-	github.com/cosmos/cosmos-proto v1.0.0-beta.4
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
 	google.golang.org/protobuf v1.33.0

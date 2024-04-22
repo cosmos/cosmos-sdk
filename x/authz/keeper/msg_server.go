@@ -40,7 +40,7 @@ func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrant
 	}
 
 	t := authorization.MsgTypeURL()
-	if err := k.environment.RouterService.MessageRouterService().CanInvoke(ctx, t); err != nil {
+	if err := k.RouterService.MessageRouterService().CanInvoke(ctx, t); err != nil {
 		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist", t)
 	}
 
@@ -117,7 +117,7 @@ func (k Keeper) PruneExpiredGrants(ctx context.Context, msg *authz.MsgPruneExpir
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).Emit(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner}); err != nil {
+	if err := k.EventService.EventManager(ctx).Emit(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner}); err != nil {
 		return nil, err
 	}
 

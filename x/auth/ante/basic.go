@@ -137,7 +137,7 @@ func (cgts ConsumeTxSizeGasDecorator) ValidateTx(ctx context.Context, tx sdk.Tx)
 	}
 
 	// simulate gas cost for signatures in simulate mode
-	txService := cgts.ak.Environment().TransactionService
+	txService := cgts.ak.GetEnvironment().TransactionService
 	if txService.ExecMode(ctx) == transaction.ExecModeSimulate {
 		// in simulate mode, each element should be a nil signature
 		sigs, err := sigTx.GetSignaturesV2()

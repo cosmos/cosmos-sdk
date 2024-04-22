@@ -155,7 +155,7 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 		panic(fmt.Sprintf("fraction must be >=0 and <=1, current fraction: %v", fraction))
 	}
 
-	headerinfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerinfo := k.HeaderService.HeaderInfo(ctx)
 	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
 		return err

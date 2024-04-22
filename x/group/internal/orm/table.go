@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/types"
@@ -37,10 +38,11 @@ type table struct {
 	afterSet    []AfterSetInterceptor
 	afterDelete []AfterDeleteInterceptor
 	cdc         codec.Codec
+	ac          address.Codec
 }
 
 // newTable creates a new table
-func newTable(prefix [2]byte, model proto.Message, cdc codec.Codec) (*table, error) {
+func newTable(prefix [2]byte, model proto.Message, cdc codec.Codec, addressCodec address.Codec) (*table, error) {
 	if model == nil {
 		return nil, errors.ErrORMInvalidArgument.Wrap("Model must not be nil")
 	}
@@ -52,6 +54,7 @@ func newTable(prefix [2]byte, model proto.Message, cdc codec.Codec) (*table, err
 		prefix: prefix,
 		model:  tp,
 		cdc:    cdc,
+		ac:     addressCodec,
 	}, nil
 }
 
@@ -299,7 +302,7 @@ func (a table) Import(store storetypes.KVStore, data interface{}, _ uint64) erro
 		if !ok {
 			return errorsmod.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
 		}
-		err := a.Create(store, PrimaryKey(obj), obj)
+		err := a.Create(store, PrimaryKey(obj, a.ac), obj)
 		if err != nil {
 			return err
 		}

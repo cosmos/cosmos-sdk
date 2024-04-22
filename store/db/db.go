@@ -10,9 +10,9 @@ type RawDBType string
 
 const (
 	DBTypeGoLevelDB RawDBType = "goleveldb"
-	DBTypeRocksDB             = "rocksdb"
-	DBTypePebbleDB            = "pebbledb"
-	DBTypePrefixDB            = "prefixdb"
+	DBTypeRocksDB   RawDBType = "rocksdb"
+	DBTypePebbleDB  RawDBType = "pebbledb"
+	DBTypePrefixDB  RawDBType = "prefixdb"
 
 	DBFileSuffix string = ".db"
 )

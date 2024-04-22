@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 const (
@@ -103,12 +104,12 @@ func SimulateMsgSend(
 			Receiver: receiverStr,
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
-			simulation.DefaultGenTxGas,
+			helper.DefaultGenTxGas,
 			chainID,
 			[]uint64{senderAcc.GetAccountNumber()},
 			[]uint64{senderAcc.GetSequence()},

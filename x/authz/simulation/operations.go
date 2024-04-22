@@ -17,6 +17,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 // authz message types
@@ -135,12 +136,12 @@ func SimulateMsgGrant(
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
-			simulation.DefaultGenTxGas,
+			helper.DefaultGenTxGas,
 			chainID,
 			[]uint64{granterAcc.GetAccountNumber()},
 			[]uint64{granterAcc.GetSequence()},
@@ -223,12 +224,12 @@ func SimulateMsgRevoke(
 		}
 		msg := authz.NewMsgRevoke(granterStrAddr, granteeStrAddr, a.MsgTypeURL())
 		account := ak.GetAccount(ctx, granterAddr)
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
-			simulation.DefaultGenTxGas,
+			helper.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -331,12 +332,12 @@ func SimulateMsgExec(
 		}
 
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{&msgExec},
 			fees,
-			simulation.DefaultGenTxGas,
+			helper.DefaultGenTxGas,
 			chainID,
 			[]uint64{granteeAcc.GetAccountNumber()},
 			[]uint64{granteeAcc.GetSequence()},

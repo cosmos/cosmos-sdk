@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 // Simulation operation weights constants
@@ -170,12 +171,12 @@ func sendMsgSend(
 			return err
 		}
 	}
-	tx, err := simulation.GenSignedMockTx(
+	tx, err := helper.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		simulation.DefaultGenTxGas,
+		helper.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -405,12 +406,12 @@ func sendMsgMultiSend(
 			return err
 		}
 	}
-	tx, err := simulation.GenSignedMockTx(
+	tx, err := helper.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		simulation.DefaultGenTxGas,
+		helper.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,

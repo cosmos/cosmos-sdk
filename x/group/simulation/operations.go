@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 var initialGroupID = uint64(100000000000000)
@@ -245,7 +246,7 @@ func SimulateMsgCreateGroup(
 		}
 		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: simtypes.RandStringOfLength(r, 10)}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -315,7 +316,7 @@ func SimulateMsgCreateGroupWithPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to set decision policy"), nil, err
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -385,7 +386,7 @@ func SimulateMsgCreateGroupPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupPolicy, err.Error()), nil, err
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -472,7 +473,7 @@ func SimulateMsgSubmitProposal(
 			Summary:            "Summary of the proposal",
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -545,7 +546,7 @@ func SimulateMsgUpdateGroupAdmin(
 			NewAdmin: newAdminAddr,
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -605,7 +606,7 @@ func SimulateMsgUpdateGroupMetadata(
 			Metadata: simtypes.RandStringOfLength(r, 10),
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -695,7 +696,7 @@ func SimulateMsgUpdateGroupMembers(
 			MemberUpdates: members,
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -768,7 +769,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(
 			NewAdmin:           newAdminAddr,
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -842,7 +843,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -901,7 +902,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(
 			Metadata:           simtypes.RandStringOfLength(r, 10),
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -1013,7 +1014,7 @@ func SimulateMsgWithdrawProposal(
 			Address:    proposerAddr,
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -1125,7 +1126,7 @@ func SimulateMsgVote(
 			Option:     group.VOTE_OPTION_YES,
 			Metadata:   simtypes.RandStringOfLength(r, 10),
 		}
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -1209,7 +1210,7 @@ func SimulateMsgExec(
 			ProposalId: uint64(proposalID),
 			Executor:   accAddr,
 		}
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
@@ -1280,7 +1281,7 @@ func SimulateMsgLeaveGroup(
 			GroupId: groupInfo.Id,
 		}
 
-		tx, err := simulation.GenSignedMockTx(
+		tx, err := helper.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},

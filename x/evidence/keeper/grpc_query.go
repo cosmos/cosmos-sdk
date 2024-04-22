@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

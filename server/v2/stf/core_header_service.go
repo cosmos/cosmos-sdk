@@ -12,6 +12,6 @@ type HeaderService struct {
 	getHeader func() (header.Info, error)
 }
 
-func (h HeaderService) GetHeaderInfo(ctx context.Context) header.Info {
+func (h HeaderService) HeaderInfo(ctx context.Context) header.Info {
 	return ctx.(*executionContext).headerInfo
 }

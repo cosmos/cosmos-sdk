@@ -26,6 +26,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -92,6 +93,7 @@ func TestFullAppSimulation(t *testing.T) {
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -140,6 +142,7 @@ func TestAppImportExport(t *testing.T) {
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -261,6 +264,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -313,6 +317,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 	require.NoError(t, err)
 }
@@ -392,6 +397,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				BlockedAddresses(),
 				config,
 				app.AppCodec(),
+				codectestutil.CodecOptions{}.GetAddressCodec(),
 			)
 			require.NoError(t, err)
 

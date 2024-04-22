@@ -3,7 +3,9 @@ package integration_test
 import (
 	"fmt"
 	"io"
+	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 
 	"cosmossdk.io/core/appmodule"
@@ -12,6 +14,7 @@ import (
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authsims "cosmossdk.io/x/auth/simulation"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	mintkeeper "cosmossdk.io/x/mint/keeper"
@@ -42,19 +45,23 @@ func Example() {
 	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, true, logger)
 
+	// gomock initializations
+	ctrl := gomock.NewController(&testing.T{})
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encodingCfg.Codec,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
-		nil,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -134,19 +141,23 @@ func Example_oneModule() {
 	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, true, logger)
 
+	// gomock initializations
+	ctrl := gomock.NewController(&testing.T{})
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encodingCfg.Codec,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
-		nil,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(

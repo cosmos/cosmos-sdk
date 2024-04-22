@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	context "context"
+	"context"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -15,12 +15,11 @@ import (
 
 // Keeper defines the circuit module's keeper.
 type Keeper struct {
-	cdc codec.BinaryCodec
-	env appmodule.Environment
+	appmodule.Environment
 
-	authority []byte
-
+	cdc          codec.BinaryCodec
 	addressCodec address.Codec
+	authority    []byte
 
 	Schema collections.Schema
 	// Permissions contains the permissions for each account
@@ -39,9 +38,9 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, authority strin
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := Keeper{
+		Environment:  env,
 		cdc:          cdc,
 		authority:    auth,
-		env:          env,
 		addressCodec: addressCodec,
 		Permissions: collections.NewMap(
 			sb,

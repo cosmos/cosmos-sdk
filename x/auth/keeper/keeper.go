@@ -10,10 +10,10 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -53,9 +53,6 @@ type AccountKeeperI interface {
 
 	// AddressCodec returns the account address codec.
 	AddressCodec() address.Codec
-
-	// Environment returns the module's environment.
-	Environment() appmodule.Environment
 }
 
 func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
@@ -83,10 +80,11 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
+	appmodule.Environment
+
 	addressCodec      address.Codec
 	AccountsModKeeper types.AccountsModKeeper
 
-	environment  appmodule.Environment
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
@@ -115,8 +113,8 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI,
-	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, accountsModKeeper types.AccountsModKeeper,
+	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI, accountsModKeeper types.AccountsModKeeper,
+	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -126,17 +124,17 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	ak := AccountKeeper{
+		Environment:       env,
 		addressCodec:      ac,
 		bech32Prefix:      bech32Prefix,
-		environment:       env,
 		proto:             proto,
 		cdc:               cdc,
+		AccountsModKeeper: accountsModKeeper,
 		permAddrs:         permAddrs,
 		authority:         authority,
 		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
-		AccountsModKeeper: accountsModKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -151,15 +149,14 @@ func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
 
+func (ak AccountKeeper) GetEnvironment() appmodule.Environment {
+	return ak.Environment
+}
+
 // AddressCodec returns the x/auth account address codec.
 // x/auth is tied to bech32 encoded user accounts
 func (ak AccountKeeper) AddressCodec() address.Codec {
 	return ak.addressCodec
-}
-
-// Logger returns a module-specific logger.
-func (ak AccountKeeper) Logger(ctx context.Context) log.Logger {
-	return ak.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // GetPubKey Returns the PubKey of the account at address
@@ -281,7 +278,39 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	return params
 }
 
-// Environment returns the module's environment.
-func (ak AccountKeeper) Environment() appmodule.Environment {
-	return ak.environment
+func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*types.NonAtomicExecResult, error) {
+	msgResponses := make([]*types.NonAtomicExecResult, 0, len(msgs))
+
+	for _, msg := range msgs {
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := m.ValidateBasic(); err != nil {
+				value := &types.NonAtomicExecResult{Error: err.Error()}
+				msgResponses = append(msgResponses, value)
+				continue
+			}
+		}
+
+		if err := ak.BranchService.Execute(ctx, func(ctx context.Context) error {
+			result, err := ak.AccountsModKeeper.SendModuleMessageUntyped(ctx, signer, msg)
+			if err != nil {
+				// If an error occurs during message execution, append error response
+				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
+				msgResponses = append(msgResponses, response)
+			} else {
+				resp, err := codectypes.NewAnyWithValue(result)
+				if err != nil {
+					response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
+					msgResponses = append(msgResponses, response)
+				}
+				response := &types.NonAtomicExecResult{Resp: resp, Error: ""}
+				msgResponses = append(msgResponses, response)
+			}
+
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	return msgResponses, nil
 }

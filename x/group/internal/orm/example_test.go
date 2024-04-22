@@ -2,6 +2,7 @@ package orm
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
@@ -27,8 +28,9 @@ var (
 func NewTestKeeper(cdc codec.Codec) TestKeeper {
 	k := TestKeeper{}
 	var err error
+	ac := address.NewBech32Codec("cosmos")
 
-	k.autoUInt64Table, err = NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
+	k.autoUInt64Table, err = NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, ac)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -39,7 +41,7 @@ func NewTestKeeper(cdc codec.Codec) TestKeeper {
 		panic(err.Error())
 	}
 
-	k.primaryKeyTable, err = NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
+	k.primaryKeyTable, err = NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc, ac)
 	if err != nil {
 		panic(err.Error())
 	}

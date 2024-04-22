@@ -10,10 +10,11 @@ import (
 
 // Keeper of the nft store
 type Keeper struct {
+	appmodule.Environment
+
 	cdc codec.BinaryCodec
 	bk  nft.BankKeeper
 	ac  address.Codec
-	env appmodule.Environment
 }
 
 // NewKeeper creates a new nft Keeper instance
@@ -26,9 +27,9 @@ func NewKeeper(env appmodule.Environment,
 	}
 
 	return Keeper{
-		cdc: cdc,
-		env: env,
-		bk:  bk,
-		ac:  ak.AddressCodec(),
+		Environment: env,
+		cdc:         cdc,
+		bk:          bk,
+		ac:          ak.AddressCodec(),
 	}
 }

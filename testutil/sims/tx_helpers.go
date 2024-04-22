@@ -79,10 +79,10 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 			panic(err)
 		}
 		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-		err = tx.SetSignatures(sigs...)
-		if err != nil {
-			panic(err)
-		}
+	}
+	err = tx.SetSignatures(sigs...)
+	if err != nil {
+		panic(err)
 	}
 
 	return tx.GetTx(), nil

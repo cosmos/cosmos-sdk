@@ -9,6 +9,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/simapp/sims"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
@@ -16,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"cosmossdk.io/simapp/sims"
 )
 
 const (

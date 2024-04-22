@@ -29,8 +29,6 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
 
-//Move to x/simulation
-
 // Simulation parameter constants
 const (
 	StakePerAccount           = "stake_per_account"

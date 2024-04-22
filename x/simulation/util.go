@@ -1,23 +1,20 @@
 package simulation
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 	"testing"
 
-	"context"
-
+	authsign "cosmossdk.io/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	authsign "cosmossdk.io/x/auth/signing"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -114,7 +111,7 @@ func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMs
 		txCtx.TxGen,
 		[]sdk.Msg{txCtx.Msg},
 		fees,
-		10000000, //Default gen tx gas
+		DefaultGenTxGas, //Default gen tx gas
 		txCtx.Context.ChainID(),
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},

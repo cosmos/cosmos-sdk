@@ -1,18 +1,12 @@
 package integration
 
 import (
-	
 	dbm "github.com/cosmos/cosmos-db"
 
-	
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	// authtx "cosmossdk.io/x/auth/tx"
-	// authtypes "cosmossdk.io/x/auth/types"
-
-	
 )
 
 // CreateMultiStore is a helper for setting up multiple stores for provided modules.

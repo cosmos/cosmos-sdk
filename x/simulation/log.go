@@ -49,7 +49,7 @@ func (lw *StandardLogWriter) PrintLogs() {
 func createLogFile() *os.File {
 	var f *os.File
 
-	fileName := fmt.Sprintf("%s.log", time.Now().Format("2006-01-02_15:04:05"))
+	fileName := fmt.Sprintf("%d.log", time.Now().UnixMilli())
 	folderPath := path.Join(os.ExpandEnv("$HOME"), ".simapp", "simulations")
 	filePath := path.Join(folderPath, fileName)
 

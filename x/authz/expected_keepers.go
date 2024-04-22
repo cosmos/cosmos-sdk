@@ -1,7 +1,7 @@
 package authz
 
 import (
-	context "context"
+	"context"
 
 	"cosmossdk.io/core/address"
 

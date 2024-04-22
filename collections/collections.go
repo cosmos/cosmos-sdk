@@ -3,7 +3,7 @@ package collections
 import (
 	"context"
 	"errors"
-	io "io"
+	"io"
 	"math"
 
 	"cosmossdk.io/collections/codec"

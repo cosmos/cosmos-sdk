@@ -1,7 +1,7 @@
 package ormfield
 
 import (
-	io "io"
+	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

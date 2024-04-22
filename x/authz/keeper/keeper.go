@@ -24,18 +24,11 @@ import (
 const gasCostPerIteration = uint64(20)
 
 type Keeper struct {
-<<<<<<< HEAD
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	router     *baseapp.MsgServiceRouter
 	authKeeper authz.AccountKeeper
-=======
-	storeService corestoretypes.KVStoreService
-	cdc          codec.Codec
-	router       baseapp.MessageRouter
-	authKeeper   authz.AccountKeeper
-	bankKeeper   authz.BankKeeper
->>>>>>> fcb9d84ed (fix(x/authz,x/feegrant): check blocked address (#20102))
+	bankKeeper authz.BankKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper

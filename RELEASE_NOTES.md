@@ -8,7 +8,8 @@ For this month patch release of the v0.47.x line, a few bug were fixed in the SD
 Notably:
 
 * `secp256r1` keys now implement gogoproto's customtype interface.
-* Throw an error when signing with incorrect Ledger.
+* CLI now throws an error when signing with an incorrect Ledger.
+* Fixing [GHSA-4j93-fm92-rp4m](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-4j93-fm92-rp4m) in `x/feegrant` and `x/authz` modules. The upgrade instuctions were provided in the [v0.47.9 release notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.9).
 
 Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.11/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.10...v0.47.11) from last release.
 

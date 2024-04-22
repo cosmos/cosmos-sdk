@@ -112,13 +112,8 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper, bk authz.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-<<<<<<< HEAD
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         keeper,
-=======
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
-		keeper:         keeper.SetBankKeeper(bk), // Super ugly hack to not be api breaking in v0.50 and v0.47
->>>>>>> fcb9d84ed (fix(x/authz,x/feegrant): check blocked address (#20102))
+		keeper:         keeper.SetBankKeeper(bk), // Super ugly hack to not be api breaking in v0.50 and v0.47,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		registry:       registry,

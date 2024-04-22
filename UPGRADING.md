@@ -154,6 +154,34 @@ The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Modul
 
 #### `**all**`
 
+##### Core API
+
+Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
+
+Additionally, the `appmodule.Environment` struct is introduced to fetch different services from the application.
+This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
+It needs to be passed into a module at instantiation (or depinject will inject the correct environment). 
+
+`x/circuit` is used as an example:
+
+```go
+app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[circuittypes.StoreKey]), logger.With(log.ModuleKey, "x/circuit")), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
+```
+
+If your module requires a message server or query server, it should be passed in the environment as well.
+
+```diff
+-govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AuthKeeper, app.BankKeeper,app.StakingKeeper, app.PoolKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
++govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger.With(log.ModuleKey, "x/circuit"), runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+```
+
+The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
+
+```diff
+-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
++func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
+```
+
 ##### Simulation
 
 `MsgSimulatorFn` has been updated to return an error. Its context argument has been removed, and an address.Codec has
@@ -162,34 +190,6 @@ been added to avoid the use of the Accounts.String() method.
 ```diff
 -type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
 +type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
-```
-
-##### Core API
-
-Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
-
-Additionally, the `appmodule.Environment` interface is introduced to fetch different services from the application.
-This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
-It needs to be passed into a module at instantiation. 
-
-`x/circuit` is used as an example:
-
-```go
-app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey])), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
-```
-
-If your module requires a message server or query server, it should be passed in the environment as well.
-
-```diff
--govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AuthKeeper, app.BankKeeper,app.StakingKeeper, app.PoolKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-+govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-```
-
-The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
-
-```diff
--func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-+func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 ```
 
 ##### Dependency Injection

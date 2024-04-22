@@ -114,7 +114,7 @@ err := autoCliOpts.EnhanceRootCommand(rootCmd)
 ## Signing
 
 `autocli` supports signing transactions with the keyring.
-The [`cosmos.msg.v1.signer` protobuf annotation](https://github.com/cosmos/cosmos-sdk/blob/9dd34510e27376005e7e7ff3628eab9dbc8ad6dc/docs/build/building-modules/05-protobuf-annotations.md#L9) defines the signer field of the message.
+The [`cosmos.msg.v1.signer` protobuf annotation](https://docs.cosmos.network/main/build/building-modules/protobuf-annotations) defines the signer field of the message.
 This field is automatically filled when using the `--from` flag or defining the signer as a positional argument.
 
 :::warning
@@ -199,6 +199,19 @@ https://github.com/cosmos/cosmos-sdk/blob/fa4d87ef7e6d87aaccc94c337ffd2fe90fcb7a
 
 If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetQueryCmd()` are defined).
 
+### Skip a command
+
+AutoCLI automatically skips unsupported commands when [`cosmos_proto.method_added_in` protobuf annotation](https://docs.cosmos.network/main/build/building-modules/protobuf-annotations) is present.
+
+Additionally, a command can be manually skipped using the `autocliv1.RpcCommandOptions`:
+
+```go
+*autocliv1.RpcCommandOptions{
+  RpcMethod: "Params", // The name of the gRPC service
+  Skip: true,
+}
+```
+
 ### Use AutoCLI for non module commands
 
 It is possible to use `AutoCLI` for non module commands. The trick is still to implement the `appmodule.Module` interface and append it to the `appOptions.ModuleOptions` map.
@@ -220,14 +233,16 @@ For more information on `hubl`, including how to configure a new chain and query
 # Off-Chain
 
 Off-chain functionalities allow you to sign and verify files with two commands:
-+ `sign-file` for signing a file.
-+ `verify-file` for verifying a previously signed file.
+
+* `sign-file` for signing a file.
+* `verify-file` for verifying a previously signed file.
 
 Signing a file will result in a Tx with a `MsgSignArbitraryData` as described in the [Off-chain CIP](https://github.com/cosmos/cips/blob/main/cips/cip-X.md).
 
 ## Sign a file
 
 To sign a file `sign-file` command offers some helpful flags:
+
 ```text
       --encoding string          Choose an encoding method for the file content to be added as msg data (no-encoding|base64|hex) (default "no-encoding")
       --indent string            Choose an indent for the tx (default "  ")
@@ -237,8 +252,10 @@ To sign a file `sign-file` command offers some helpful flags:
 ```
 
 The `encoding` flag lets you choose how the contents of the file should be encoded. For example:
-+ `simd off-chain sign-file alice myFile.json`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json`
+
+  * ```json
       {
         "@type":  "/offchain.MsgSignArbitraryData",
         "appDomain":  "simd",
@@ -246,8 +263,10 @@ The `encoding` flag lets you choose how the contents of the file should be encod
         "data":  "Hello World!\n"
       }
      ```
-+ `simd off-chain sign-file alice myFile.json --encoding base64`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json --encoding base64`
+
+  * ```json
       {
         "@type":  "/offchain.MsgSignArbitraryData",
         "appDomain":  "simd",
@@ -255,8 +274,10 @@ The `encoding` flag lets you choose how the contents of the file should be encod
         "data":  "SGVsbG8gV29ybGQhCg=="
       }
      ```
-+ `simd off-chain sign-file alice myFile.json --encoding hex`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json --encoding hex`
+
+  * ```json
         {
           "@type":  "/offchain.MsgSignArbitraryData",
           "appDomain":  "simd",

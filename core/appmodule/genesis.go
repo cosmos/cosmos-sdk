@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	appmodule "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/appmodule/v2"
 )
 
 // HasGenesis defines a custom genesis handling API implementation.

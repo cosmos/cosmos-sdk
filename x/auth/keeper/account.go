@@ -32,7 +32,7 @@ func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) sdk.Ac
 // HasAccount implements AccountKeeperI.
 func (ak AccountKeeper) HasAccount(ctx context.Context, addr sdk.AccAddress) bool {
 	has, _ := ak.Accounts.Has(ctx, addr)
-	return has
+	return has || ak.AccountsModKeeper.IsAccountsModuleAccount(ctx, addr)
 }
 
 // GetAccount implements AccountKeeperI.

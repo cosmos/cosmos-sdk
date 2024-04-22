@@ -2,7 +2,7 @@
 
 ## What is ABCI?
 
-ABCI, Application Blockchain Interface is the interface between CometBFT and the application. More information about ABCI can be found in the specs [here](https://docs.cometbft.com/v0.38/spec/abci/). Within the release of ABCI 2.0 for the 0.38 CometBFT release there were additional methods introduced.
+ABCI, Application Blockchain Interface is the interface between CometBFT and the application. More information about ABCI can be found in the specs [here](https://docs.cometbft.com/v1.0/spec/abci/). Within the release of ABCI 2.0 for the 0.38 CometBFT release there were additional methods introduced.
 
 The 5 methods introduced during ABCI 2.0 (compared to ABCI v0) are:
 
@@ -41,7 +41,7 @@ If vote extensions are enabled, `ExtendVote` will be called on every validator a
 
 `VerifyVoteExtensions` is performed on every validator multiple times in order to verify other validators' vote extensions. This check is submitted to validate the integrity and validity of the vote extensions preventing malicious or invalid vote extensions.
 
-Additionally, applications must keep the vote extension data concise as it can degrade the performance of their chain, see testing results [here](https://docs.cometbft.com/v0.38/qa/cometbft-qa-38#vote-extensions-testbed).
+Additionally, applications must keep the vote extension data concise as it can degrade the performance of their chain, see testing results [here](https://docs.cometbft.com/v1.0/references/qa/cometbft-qa-38#vote-extensions-testbed).
 
 `VerifyVoteExtensions` MUST be deterministic.
 

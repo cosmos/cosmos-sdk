@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.47.13-ics-lsm
+
+This is a special cosmos-sdk release with support for both ICS and LSM.
+
+- Apply fixes from [v0.47.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.11).
+
 ## v0.47.12-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.

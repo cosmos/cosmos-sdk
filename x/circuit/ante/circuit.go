@@ -25,7 +25,7 @@ func NewCircuitBreakerDecorator(ck CircuitBreaker) CircuitBreakerDecorator {
 }
 
 // If you copy this as reference and your app has the authz module enabled, you must either:
-// - recessively check for nested authz.Exec messages in this function.
+// - recursively check for nested authz.Exec messages in this function.
 // - or error early if a nested authz grant is found.
 // The circuit AnteHandler handles this with baseapp's service router: https://github.com/cosmos/cosmos-sdk/issues/18632.
 func (cbd CircuitBreakerDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {

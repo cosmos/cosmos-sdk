@@ -26,6 +26,7 @@ type KeeperTestSuite struct {
 	atom           sdk.Coins
 	feegrantKeeper keeper.Keeper
 	accountKeeper  *feegranttestutil.MockAccountKeeper
+	bankKeeper     *feegranttestutil.MockBankKeeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -41,12 +42,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
+	for i := 0; i < len(suite.addrs); i++ {
+		suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[i])).AnyTimes()
+	}
+	suite.bankKeeper = feegranttestutil.NewMockBankKeeper(ctrl)
+	suite.bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper)
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper).SetBankKeeper(suite.bankKeeper)
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(555)))

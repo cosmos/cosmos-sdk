@@ -22,8 +22,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/slashing"
-	simtestutil "cosmossdk.io/simapp/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 func TestSlashRedelegation(t *testing.T) {

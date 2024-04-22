@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/x/auth/testutil"
 	"cosmossdk.io/x/auth/types"
 
-	simtestutil "cosmossdk.io/simapp/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 // Can move to tests/integration

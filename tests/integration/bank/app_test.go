@@ -25,7 +25,6 @@ import (
 	_ "cosmossdk.io/x/protocolpool"
 	_ "cosmossdk.io/x/staking"
 
-	simtestutil "cosmossdk.io/simapp/sims"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cdctestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -36,6 +35,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 type (

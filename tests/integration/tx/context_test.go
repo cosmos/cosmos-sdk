@@ -14,7 +14,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "cosmossdk.io/simapp/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 func ProvideCustomGetSigners() signing.CustomGetSigner {

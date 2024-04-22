@@ -1,4 +1,4 @@
-package sims_test
+package helper_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/simapp/sims"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
@@ -54,7 +54,7 @@ func TestGetSimulationLog(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.store, func(t *testing.T) {
-			require.Equal(t, tt.expectedLog, sims.GetSimulationLog(tt.store, decoders, tt.kvPairs, tt.kvPairs), tt.store)
+			require.Equal(t, tt.expectedLog, helper.GetSimulationLog(tt.store, decoders, tt.kvPairs, tt.kvPairs), tt.store)
 		})
 	}
 }
@@ -104,7 +104,7 @@ func TestDiffKVStores(t *testing.T) {
 func checkDiffResults(t *testing.T, store1, store2 storetypes.KVStore, noDiff bool, skipPrefixes [][]byte) {
 	t.Helper()
 
-	kvAs1, kvBs1 := sims.DiffKVStores(store1, store2, skipPrefixes)
+	kvAs1, kvBs1 := helper.DiffKVStores(store1, store2, skipPrefixes)
 
 	if noDiff {
 		assert.Assert(t, len(kvAs1) == 0)

@@ -32,11 +32,11 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "cosmossdk.io/simapp/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"   // import as blank for app wiring
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 var AppConfig = configurator.NewAppConfig(

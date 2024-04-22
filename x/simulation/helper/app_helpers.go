@@ -1,4 +1,4 @@
-package sims
+package helper
 
 import (
 	"encoding/json"

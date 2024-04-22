@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"cosmossdk.io/simapp/sims"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 var (
@@ -47,9 +47,9 @@ func TestSlashingMsgs(t *testing.T) {
 	acc1 := &authtypes.BaseAccount{
 		Address: addrStr,
 	}
-	accs := []sims.GenesisAccount{{GenesisAccount: acc1, Coins: sdk.Coins{genCoin}}}
+	accs := []helper.GenesisAccount{{GenesisAccount: acc1, Coins: sdk.Coins{genCoin}}}
 
-	startupCfg := sims.DefaultStartUpConfig()
+	startupCfg := helper.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = accs
 
 	var (
@@ -59,7 +59,7 @@ func TestSlashingMsgs(t *testing.T) {
 		txConfig       client.TxConfig
 	)
 
-	app, err := sims.SetupWithConfiguration(
+	app, err := helper.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
 				configurator.AccountsModule(),
@@ -93,7 +93,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	headerInfo := header.Info{Height: app.LastBlockHeight() + 1}
-	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	_, _, err = helper.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
@@ -112,7 +112,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	// unjail should fail with unknown validator
 	headerInfo = header.Info{Height: app.LastBlockHeight() + 1}
-	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
+	_, _, err = helper.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
 }

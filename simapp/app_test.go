@@ -35,13 +35,13 @@ import (
 	"cosmossdk.io/x/upgrade"
 
 	"cosmossdk.io/simapp/network"
-	simtestutil "cosmossdk.io/simapp/sims"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

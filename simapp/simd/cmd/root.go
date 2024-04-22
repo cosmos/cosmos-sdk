@@ -21,9 +21,9 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
-	simtestutil "cosmossdk.io/simapp/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the

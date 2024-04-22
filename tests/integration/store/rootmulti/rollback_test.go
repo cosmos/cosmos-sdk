@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
-	simtestutil "cosmossdk.io/simapp/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 func TestRollback(t *testing.T) {

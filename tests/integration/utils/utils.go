@@ -21,12 +21,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "cosmossdk.io/simapp/sims"
+	testutil "github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	testutil "github.com/cosmos/cosmos-sdk/testutil/integration"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 const appName = "integration-app"

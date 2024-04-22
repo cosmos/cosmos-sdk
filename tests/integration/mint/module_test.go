@@ -10,14 +10,13 @@ import (
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint/types"
-
-	"cosmossdk.io/simapp/sims"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
 
-	app, err := sims.SetupAtGenesis(
+	app, err := helper.SetupAtGenesis(
 		depinject.Configs(
 			AppConfig,
 			depinject.Supply(log.NewNopLogger()),

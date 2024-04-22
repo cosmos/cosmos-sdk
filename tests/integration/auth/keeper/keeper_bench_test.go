@@ -10,8 +10,8 @@ import (
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/testutil"
 
-	simtestutil "cosmossdk.io/simapp/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {

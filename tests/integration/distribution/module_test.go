@@ -11,7 +11,7 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/types"
 
-	simtestutil "cosmossdk.io/simapp/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

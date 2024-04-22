@@ -18,10 +18,10 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 
-	"cosmossdk.io/simapp/sims"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 // TestBeginBlocker is a unit test function that tests the behavior of the BeginBlocker function.
@@ -36,7 +36,7 @@ func TestBeginBlocker(t *testing.T) {
 		slashingKeeper    slashingkeeper.Keeper
 	)
 
-	app, err := sims.Setup(
+	app, err := helper.Setup(
 		depinject.Configs(
 			AppConfig,
 			depinject.Supply(log.NewNopLogger()),

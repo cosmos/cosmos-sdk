@@ -1,12 +1,18 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	queryv1 "cosmossdk.io/api/cosmos/query/v1"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/math"
 
@@ -92,6 +98,42 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 	keeper.SetLastTotalPower(ctx, expTotalPower)
 	resTotalPower := keeper.GetLastTotalPower(ctx)
 	require.True(expTotalPower.Equal(resTotalPower))
+}
+
+func (s *KeeperTestSuite) TestModuleQuerySafe() {
+	protoFiles, err := gogoproto.MergedRegistry()
+	if err != nil {
+		panic(err)
+	}
+
+	allowList := []string{}
+	protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
+		for i := 0; i < fd.Services().Len(); i++ {
+			// Get the service descriptor
+			sd := fd.Services().Get(i)
+
+			// Skip services that are annotated with the "cosmos.msg.v1.service" option.
+			if ext := proto.GetExtension(sd.Options(), msgv1.E_Service); ext != nil && ext.(bool) {
+				continue
+			}
+
+			for j := 0; j < sd.Methods().Len(); j++ {
+				// Get the method descriptor
+				md := sd.Methods().Get(j)
+
+				// Skip methods that are not annotated with the "cosmos.query.v1.module_query_safe" option.
+				if ext := proto.GetExtension(md.Options(), queryv1.E_ModuleQuerySafe); ext == nil || !ext.(bool) {
+					continue
+				}
+
+				// Add the method to the whitelist
+				allowList = append(allowList, fmt.Sprintf("/%s/%s", sd.FullName(), md.Name()))
+			}
+		}
+		return true
+	})
+
+	s.Require().Contains(allowList, "/cosmos.staking.v1beta1.Query/Validator")
 }
 
 func TestKeeperTestSuite(t *testing.T) {

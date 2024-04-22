@@ -68,33 +68,34 @@ func (bva *BaseLockup) ClawbackFunds(
 				return nil, err
 			}
 
-			spendable, _, err := bva.getSpenableToken(ctx, *balance, sdk.NewCoin(denom, lockedAmt))
-			if err != nil {
-				return nil, err
-			}
+			balanceAmt := balance.Amount
 
-			spendableAmt := spendable.AmountOf(denom)
-
-			if spendableAmt.LT(lockedAmt) {
+			// check if balance is sufficient
+			if balanceAmt.LT(lockedAmt) {
 				// in case there is not enough token to clawback, proceed to unbond token
 				err := bva.forceUnbondLockingDelegations(ctx, fromAddress, paramResp.Params.BondDenom)
 				if err != nil {
 					return nil, err
 				}
 
-				debtAmt, err := lockedAmt.SafeSub(spendableAmt)
+				debtAmt, err := lockedAmt.SafeSub(balanceAmt)
 				if err != nil {
 					return nil, err
 				}
 
 				// clawback the available amount first
-				clawbackAmt = spendableAmt
+				clawbackAmt = balanceAmt
 
 				// track the remain amount
 				bva.ClawbackDebt.Set(ctx, denom, debtAmt)
 			}
 
 		}
+
+		if clawbackAmt.IsZero() {
+			continue
+		}
+
 		clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, clawbackAmt))
 
 		// clear the lock token tracking

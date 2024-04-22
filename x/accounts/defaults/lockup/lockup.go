@@ -390,6 +390,19 @@ func (bva *BaseLockup) TrackDelegation(
 			return err
 		}
 
+		clawbackDebtAmt, err := bva.ClawbackDebt.Get(ctx, coin.Denom)
+		if err != nil {
+			return err
+		}
+
+		// prevent lockup delegate clawback debt token
+		if !clawbackDebtAmt.IsZero() {
+			baseAmt, err = baseAmt.SafeSub(clawbackDebtAmt)
+			if err != nil {
+				return err
+			}
+		}
+
 		// return error if the delegation amount is zero or if the base coins does not
 		// exceed the desired delegation amount.
 		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
@@ -492,36 +505,6 @@ func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sd
 	return resp.Balance, nil
 }
 
-func (bva BaseLockup) getSpenableToken(ctx context.Context, balance, lockedCoin sdk.Coin) (sdk.Coins, bool, error) {
-	// get lockedCoin from that are not bonded for the sent denom
-	notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, lockedCoin, lockedCoin.Denom)
-	if err != nil {
-		return nil, false, err
-	}
-
-	spendable, hasNeg := sdk.Coins{balance}.SafeSub(notBondedLockedCoin)
-	if hasNeg {
-		// if negative return coin with zero amount
-		spendable = sdk.Coins{sdk.NewCoin(lockedCoin.Denom, math.ZeroInt())}
-	}
-
-	clawbackDebtAmt, err := bva.ClawbackDebt.Get(ctx, lockedCoin.Denom)
-	if err != nil {
-		return nil, false, err
-	}
-
-	if !clawbackDebtAmt.IsZero() {
-		// if the lockup account is owing the admin, prevent it from sending that amount
-		_, hasNeg = spendable.SafeSub(sdk.NewCoin(lockedCoin.Denom, clawbackDebtAmt))
-		if hasNeg {
-			// if negative return coin with zero amount
-			spendable = sdk.Coins{sdk.NewCoin(lockedCoin.Denom, math.ZeroInt())}
-		}
-	}
-
-	return spendable, hasNeg, nil
-}
-
 func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, amount, lockedCoins sdk.Coins) error {
 	// Check if any sent tokens is exceeds lockup account balances
 	for _, coin := range amount {
@@ -531,13 +514,30 @@ func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, am
 		}
 		lockedAmt := lockedCoins.AmountOf(coin.Denom)
 
-		spendable, hasNeg, err := bva.getSpenableToken(ctx, *balance, sdk.NewCoin(coin.Denom, lockedAmt))
+		// get lockedCoin from that are not bonded for the sent denom
+		notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, sdk.NewCoin(coin.Denom, lockedAmt), coin.Denom)
 		if err != nil {
 			return err
 		}
+
+		spendable, hasNeg := sdk.Coins{*balance}.SafeSub(notBondedLockedCoin)
 		if hasNeg {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
 				"locked amount exceeds account balance funds")
+		}
+
+		clawbackDebtAmt, err := bva.ClawbackDebt.Get(ctx, coin.Denom)
+		if err != nil {
+			return err
+		}
+
+		if !clawbackDebtAmt.IsZero() {
+			// if the lockup account is owing the admin, prevent it from sending that amount
+			spendable, hasNeg = spendable.SafeSub(sdk.NewCoin(coin.Denom, clawbackDebtAmt))
+			if hasNeg {
+				return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
+					"clawback debt amount exceeds account balance funds")
+			}
 		}
 
 		if _, hasNeg := spendable.SafeSub(coin); hasNeg {

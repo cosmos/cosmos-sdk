@@ -65,7 +65,7 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgRevokeAllowance,
-			SimulateMsgRevokeAllowance(pCdc, txConfig, ak, bk, k, ac),
+			SimulateMsgRevokeAllowance(pCdc, txConfig, ak, bk, k),
 		),
 	}
 }
@@ -141,7 +141,6 @@ func SimulateMsgRevokeAllowance(
 	ak feegrant.AccountKeeper,
 	bk feegrant.BankKeeper,
 	k keeper.Keeper,
-	ac address.Codec,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -151,11 +150,11 @@ func SimulateMsgRevokeAllowance(
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
 		err := k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
-			granter, err := ac.StringToBytes(grant.Granter)
+			granter, err := ak.AddressCodec().StringToBytes(grant.Granter)
 			if err != nil {
 				panic(err)
 			}
-			grantee, err := ac.StringToBytes(grant.Grantee)
+			grantee, err := ak.AddressCodec().StringToBytes(grant.Grantee)
 			if err != nil {
 				panic(err)
 			}

@@ -1,7 +1,7 @@
 package types // noalias
 
 import (
-	context "context"
+	"context"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"

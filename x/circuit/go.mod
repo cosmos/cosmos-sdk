@@ -3,7 +3,7 @@ module cosmossdk.io/x/circuit
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3
+	cosmossdk.io/api v0.7.4
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/store v1.1.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cometbft/cometbft v0.38.6
-	github.com/cosmos/cosmos-sdk v0.50.6-0.20240323125140-7397b8672fa8
+	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0

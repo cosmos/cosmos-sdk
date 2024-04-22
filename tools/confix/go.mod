@@ -3,7 +3,7 @@ module cosmossdk.io/tools/confix
 go 1.21
 
 require (
-	github.com/cosmos/cosmos-sdk v0.50.6-0.20240323125140-7397b8672fa8
+	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/creachadair/atomicfile v0.3.1
 	github.com/creachadair/tomledit v0.0.24
 	github.com/pelletier/go-toml/v2 v2.1.0
@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.7.3 // indirect
+	cosmossdk.io/api v0.7.4 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect

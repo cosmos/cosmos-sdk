@@ -9,7 +9,7 @@ For this month patch release of the v0.50.x line, a few features and improvement
 Notably, we added and fixed the following:
 
 * Add start customizability to start command options. Customize how an application starts with the new `StartCommandHandler` field in `server.StartCmdOptions` struct.
-* <tbd>
+* Fixing [GHSA-4j93-fm92-rp4m](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-4j93-fm92-rp4m) in `x/feegrant` and `x/authz` modules. The upgrade instuctions were provided in the [v0.50.4 release notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.4).
 
 ## 📝 Changelog
 

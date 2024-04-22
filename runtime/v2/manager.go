@@ -25,7 +25,6 @@ import (
 	"cosmossdk.io/server/v2/stf"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -142,12 +141,16 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 }
 
 // ExportGenesis performs export genesis functionality for modules
-func (m *MM) ExportGenesis(ctx context.Context) (map[string]json.RawMessage, error) {
-	return m.ExportGenesisForModules(ctx, []string{})
+func (m *MM) ExportGenesis(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
+	if len(modulesToExport) == 0 {
+		modulesToExport = m.config.ExportGenesis
+	}
+
+	return m.ExportGenesisForModules(ctx, modulesToExport...)
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules
-func (m *MM) ExportGenesisForModules(ctx context.Context, modulesToExport []string) (map[string]json.RawMessage, error) {
+func (m *MM) ExportGenesisForModules(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.config.ExportGenesis
 	}

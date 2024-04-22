@@ -99,7 +99,10 @@ func (bva *BaseLockup) ClawbackFunds(
 				clawbackAmt = balanceAmt
 
 				// track the remain amount
-				bva.ClawbackDebt.Set(ctx, denom, debtAmt)
+				err = bva.ClawbackDebt.Set(ctx, denom, debtAmt)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 		}

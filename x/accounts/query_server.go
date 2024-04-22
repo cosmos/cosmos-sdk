@@ -9,23 +9,29 @@ import (
 	v1 "cosmossdk.io/x/accounts/v1"
 )
 
-var _ v1.QueryServer = queryServer{}
+var _ v1.QueryServer = &queryServer{}
 
+// NewQueryServer initializes a new instance of QueryServer.
+// It precalculates and stores schemas for efficient schema retrieval.
 func NewQueryServer(k Keeper) v1.QueryServer {
+	// Pre-calculate schemas for efficient retrieval.
+	schemas := v1.MakeAccountsSchemas(k.accounts)
 	return &queryServer{
 		k:           k,
-		schemaCache: make(map[string]*v1.SchemaResponse), // Initialize schemaCache
-		mu:          &sync.Mutex{},                       // Initialize mu as a pointer
+		schemaCache: make(map[string]*v1.SchemaResponse, len(schemas)), // Initialize with precomputed length
+		schemas:     schemas,                                           // Store precalculated schemas.
+		mu:          &sync.Mutex{},                                     // Initialize mutex.
 	}
 }
 
 type queryServer struct {
 	k           Keeper
 	schemaCache map[string]*v1.SchemaResponse
+	schemas     map[string]*v1.SchemaResponse // Stores precalculated schemas.
 	mu          *sync.Mutex
 }
 
-func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryRequest) (*v1.AccountQueryResponse, error) {
+func (q *queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryRequest) (*v1.AccountQueryResponse, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 
@@ -57,29 +63,30 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 	}, nil
 }
 
-func (q queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.SchemaResponse, error) {
-	// Check if schema is cached
+// Schema retrieves the schema for a given account type.
+// It checks the cache first and computes the schema if not found.
+func (q *queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.SchemaResponse, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
+
+	// Check if the schema is cached.
 	if schema, ok := q.schemaCache[request.AccountType]; ok {
 		return schema, nil
 	}
 
-	// If not cached, generate and cache the schema
-	// added on the fly as the chain is running.
-	schemas := v1.MakeAccountsSchemas(q.k.accounts)
-	schema, ok := schemas[request.AccountType]
+	// Fetch schema from precalculated schemas.
+	schema, ok := q.schemas[request.AccountType]
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", errAccountTypeNotFound, request.AccountType)
 	}
 
-	// Cache the schema
+	// Cache the schema for future use.
 	q.schemaCache[request.AccountType] = schema
 
 	return schema, nil
 }
 
-func (q queryServer) AccountType(ctx context.Context, request *v1.AccountTypeRequest) (*v1.AccountTypeResponse, error) {
+func (q *queryServer) AccountType(ctx context.Context, request *v1.AccountTypeRequest) (*v1.AccountTypeResponse, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 
@@ -96,7 +103,7 @@ func (q queryServer) AccountType(ctx context.Context, request *v1.AccountTypeReq
 	}, nil
 }
 
-func (q queryServer) AccountNumber(ctx context.Context, request *v1.AccountNumberRequest) (*v1.AccountNumberResponse, error) {
+func (q *queryServer) AccountNumber(ctx context.Context, request *v1.AccountNumberRequest) (*v1.AccountNumberResponse, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 

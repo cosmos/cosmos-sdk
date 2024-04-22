@@ -1,10 +1,12 @@
 package address
 
 import (
-	"github.com/cosmos/cosmos-sdk/internal/conv"
+	"testing"
+
 	"github.com/hashicorp/golang-lru/simplelru"
 	"gotest.tools/v3/assert"
-	"testing"
+
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
 
 func TestNewBech32Codec(t *testing.T) {

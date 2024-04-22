@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -136,12 +135,12 @@ func SimulateMsgGrant(
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			simulation.DefaultGenTxGas,
 			chainID,
 			[]uint64{granterAcc.GetAccountNumber()},
 			[]uint64{granterAcc.GetSequence()},
@@ -224,12 +223,12 @@ func SimulateMsgRevoke(
 		}
 		msg := authz.NewMsgRevoke(granterStrAddr, granteeStrAddr, a.MsgTypeURL())
 		account := ak.GetAccount(ctx, granterAddr)
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			simulation.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -332,12 +331,12 @@ func SimulateMsgExec(
 		}
 
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{&msgExec},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			simulation.DefaultGenTxGas,
 			chainID,
 			[]uint64{granteeAcc.GetAccountNumber()},
 			[]uint64{granteeAcc.GetSequence()},

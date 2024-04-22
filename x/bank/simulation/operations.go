@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -171,12 +170,12 @@ func sendMsgSend(
 			return err
 		}
 	}
-	tx, err := simtestutil.GenSignedMockTx(
+	tx, err := simulation.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		simtestutil.DefaultGenTxGas,
+		simulation.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -406,12 +405,12 @@ func sendMsgMultiSend(
 			return err
 		}
 	}
-	tx, err := simtestutil.GenSignedMockTx(
+	tx, err := simulation.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		simtestutil.DefaultGenTxGas,
+		simulation.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,

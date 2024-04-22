@@ -24,6 +24,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"cosmossdk.io/simapp/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,7 +47,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(
+	app, err := sims.Setup(
 		depinject.Configs(
 			grouptestutil.AppConfig,
 			depinject.Supply(log.NewNopLogger()),

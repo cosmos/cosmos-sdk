@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -266,12 +265,12 @@ func simulateMsgSubmitProposal(
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-			simtestutil.DefaultGenTxGas,
+			simulation.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},

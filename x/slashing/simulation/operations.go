@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -117,12 +116,12 @@ func SimulateMsgUnjail(
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			simulation.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},

@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -246,12 +245,12 @@ func SimulateMsgCreateGroup(
 		}
 		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: simtypes.RandStringOfLength(r, 10)}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -316,12 +315,12 @@ func SimulateMsgCreateGroupWithPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to set decision policy"), nil, err
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -386,12 +385,12 @@ func SimulateMsgCreateGroupPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupPolicy, err.Error()), nil, err
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -473,12 +472,12 @@ func SimulateMsgSubmitProposal(
 			Summary:            "Summary of the proposal",
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -546,12 +545,12 @@ func SimulateMsgUpdateGroupAdmin(
 			NewAdmin: newAdminAddr,
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -606,12 +605,12 @@ func SimulateMsgUpdateGroupMetadata(
 			Metadata: simtypes.RandStringOfLength(r, 10),
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -696,12 +695,12 @@ func SimulateMsgUpdateGroupMembers(
 			MemberUpdates: members,
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -769,12 +768,12 @@ func SimulateMsgUpdateGroupPolicyAdmin(
 			NewAdmin:           newAdminAddr,
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -843,12 +842,12 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -902,12 +901,12 @@ func SimulateMsgUpdateGroupPolicyMetadata(
 			Metadata:           simtypes.RandStringOfLength(r, 10),
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -1014,12 +1013,12 @@ func SimulateMsgWithdrawProposal(
 			Address:    proposerAddr,
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{proposerAcc.GetAccountNumber()},
 			[]uint64{proposerAcc.GetSequence()},
@@ -1126,12 +1125,12 @@ func SimulateMsgVote(
 			Option:     group.VOTE_OPTION_YES,
 			Metadata:   simtypes.RandStringOfLength(r, 10),
 		}
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -1210,12 +1209,12 @@ func SimulateMsgExec(
 			ProposalId: uint64(proposalID),
 			Executor:   accAddr,
 		}
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -1281,12 +1280,12 @@ func SimulateMsgLeaveGroup(
 			GroupId: groupInfo.Id,
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			10000000,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},

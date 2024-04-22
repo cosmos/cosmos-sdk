@@ -21,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+const DefaultGenTxGas = 10000000
+
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
 	tb.Helper()
 	testingMode = false

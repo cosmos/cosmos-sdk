@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -104,12 +103,12 @@ func SimulateMsgSend(
 			Receiver: receiverStr,
 		}
 
-		tx, err := simtestutil.GenSignedMockTx(
+		tx, err := simulation.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			simulation.DefaultGenTxGas,
 			chainID,
 			[]uint64{senderAcc.GetAccountNumber()},
 			[]uint64{senderAcc.GetSequence()},

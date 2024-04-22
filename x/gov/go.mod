@@ -2,8 +2,6 @@ module cosmossdk.io/x/gov
 
 go 1.21.0
 
-toolchain go1.22.2
-
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect

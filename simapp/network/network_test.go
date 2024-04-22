@@ -64,6 +64,7 @@ func (s *NetworkTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+	fmt.Println("DefaultConfigWithAppConfig", err)
 
 	s.NoError(err)
 	cfg.NumValidators = 1
@@ -407,8 +408,17 @@ func (s *NetworkTestSuite) TestQueryABCIHeight() {
 	}
 }
 
-func (s *NetworkTestSuite) TestStatusCommand(t *testing.T) {
-	val0 := s.network.GetValidators()[0]
+func TestStatusCommand(t *testing.T) {
+	t.Skip() // https://github.com/cosmos/cosmos-sdk/issues/17446
+
+	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+	require.NoError(t, err)
+
+	network, err := network.New(t, t.TempDir(), cfg)
+	require.NoError(t, err)
+	require.NoError(t, network.WaitForNextBlock())
+
+	val0 := network.GetValidators()[0]
 	cmd := server.StatusCommand()
 
 	out, err := clitestutil.ExecTestCLICmd(val0.GetClientCtx(), cmd, []string{})

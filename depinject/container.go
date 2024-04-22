@@ -395,6 +395,7 @@ func (c *container) resolve(in providerInput, moduleKey *moduleKey, caller Locat
 	}
 
 	vr, err := c.getResolver(in.Type, moduleKey)
+	fmt.Println("getResolver", vr, err, in.Type, moduleKey, in.Optional)
 	if err != nil {
 		return reflect.Value{}, err
 	}

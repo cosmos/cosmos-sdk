@@ -35,13 +35,13 @@ func (a AppManager[T]) InitGenesis(
 	consensusMessages []transaction.Type,
 	initGenesisJSON []byte,
 	txDecoder transaction.Codec[T],
-) (corestore.WriterMap, error) {
+) (*appmanager.BlockResponse, corestore.WriterMap, error) {
 	v, zeroState, err := a.db.StateLatest()
 	if err != nil {
-		return nil, fmt.Errorf("unable to get latest state: %w", err)
+		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
 	}
 	if v != 0 {
-		return nil, fmt.Errorf("cannot init genesis on non-zero state")
+		return nil, nil, fmt.Errorf("cannot init genesis on non-zero state")
 	}
 
 	var genTxs []T
@@ -56,7 +56,7 @@ func (a AppManager[T]) InitGenesis(
 		})
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to import genesis state: %w", err)
+		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
 	}
 	// run block 0
 	// TODO: in an ideal world, genesis state is simply an initial state being applied
@@ -72,12 +72,12 @@ func (a AppManager[T]) InitGenesis(
 		ConsensusMessages: consensusMessages,
 	}
 
-	_, genesisState, err := a.stf.DeliverBlock(ctx, block0, zeroState)
+	blockresponse, genesisState, err := a.stf.DeliverBlock(ctx, block0, zeroState)
 	if err != nil {
-		return nil, fmt.Errorf("failed to deliver block 0: %w", err)
+		return blockresponse, nil, fmt.Errorf("failed to deliver block 0: %w", err)
 	}
 
-	return genesisState, err
+	return blockresponse, genesisState, err
 }
 
 func (a AppManager[T]) DeliverBlock(

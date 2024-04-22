@@ -79,10 +79,30 @@ func (t *Tx) Decode(b []byte) {
 	t.GasLimit = rawTx.GasLimit
 }
 
+func (t *Tx) DecodeJSON(b []byte) {
+	rawTx := new(encodedTx)
+	err := json.Unmarshal(b, rawTx)
+	if err != nil {
+		panic(err)
+	}
+	msg, err := rawTx.Msg.UnmarshalNew()
+	if err != nil {
+		panic(err)
+	}
+	t.Msg = protoadapt.MessageV1Of(msg)
+	t.Sender = rawTx.Sender
+	t.GasLimit = rawTx.GasLimit
+}
+
 type TxCodec struct{}
 
 func (TxCodec) Decode(bytes []byte) (Tx, error) {
 	t := new(Tx)
 	t.Decode(bytes)
+	return *t, nil
+}
+func (TxCodec) DecodeJSON(bytes []byte) (Tx, error) {
+	t := new(Tx)
+	t.DecodeJSON(bytes)
 	return *t, nil
 }

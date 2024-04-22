@@ -11,7 +11,7 @@ import (
 
 	sdkabci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
@@ -100,8 +100,8 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 
 	for i := range updates {
 		valsetUpdates[i] = abci.ValidatorUpdate{
-			PubKey: cmtcrypto.PublicKey{
-				Sum: &cmtcrypto.PublicKey_Ed25519{ // by default we set ed25519
+			PubKey: cmtprotocrypto.PublicKey{
+				Sum: &cmtprotocrypto.PublicKey_Ed25519{ // by default we set ed25519
 					Ed25519: updates[i].PubKey,
 				},
 			},
@@ -109,8 +109,8 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 		}
 
 		if updates[i].PubKeyType == "secp256k1" {
-			valsetUpdates[i].PubKey = cmtcrypto.PublicKey{
-				Sum: &cmtcrypto.PublicKey_Secp256K1{
+			valsetUpdates[i].PubKey = cmtprotocrypto.PublicKey{
+				Sum: &cmtprotocrypto.PublicKey_Secp256K1{
 					Secp256K1: updates[i].PubKey,
 				},
 			}

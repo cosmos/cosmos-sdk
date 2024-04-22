@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -19,6 +18,8 @@ import (
 
 // Keeper defines the governance module Keeper
 type Keeper struct {
+	appmodule.Environment
+
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 	poolKeeper types.PoolKeeper
@@ -30,9 +31,6 @@ type Keeper struct {
 
 	// The codec for binary encoding/decoding.
 	cdc codec.Codec
-
-	// Module environment
-	environment appmodule.Environment
 
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
@@ -108,10 +106,14 @@ func NewKeeper(
 	if config.MaxSummaryLen == 0 {
 		config.MaxSummaryLen = defaultConfig.MaxSummaryLen
 	}
+	// If MaxVoteOptionsLen not set by app developer, set to default value, meaning all supported options are allowed
+	if config.MaxVoteOptionsLen == 0 {
+		config.MaxVoteOptionsLen = defaultConfig.MaxVoteOptionsLen
+	}
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := &Keeper{
-		environment:            env,
+		Environment:            env,
 		authKeeper:             authKeeper,
 		bankKeeper:             bankKeeper,
 		sk:                     sk,
@@ -166,11 +168,6 @@ func (k *Keeper) SetLegacyRouter(router v1beta1.Router) {
 	// could create invalid or non-deterministic behavior.
 	router.Seal()
 	k.legacyRouter = router
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger() log.Logger {
-	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // LegacyRouter returns the gov keeper's legacy router
@@ -234,6 +231,17 @@ func (k Keeper) assertSummaryLength(summary string) error {
 
 	if uint64(len(summary)) > k.config.MaxSummaryLen {
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
+	}
+	return nil
+}
+
+// assertVoteOptionsLen returns an error if given vote options length
+// is greater than a pre-defined MaxVoteOptionsLen.
+// It's only being checked when config.MaxVoteOptionsLen > 0 (param enabled)
+func (k Keeper) assertVoteOptionsLen(options v1.WeightedVoteOptions) error {
+	maxVoteOptionsLen := k.config.MaxVoteOptionsLen
+	if maxVoteOptionsLen > 0 && uint64(len(options)) > maxVoteOptionsLen {
+		return types.ErrTooManyVoteOptions.Wrapf("got %d weighted vote options, maximum allowed is %d", len(options), k.config.MaxVoteOptionsLen)
 	}
 	return nil
 }

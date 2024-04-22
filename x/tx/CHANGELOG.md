@@ -33,6 +33,12 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+## [v0.13.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.3) - 2024-04-22
+
+### Improvements
+
+* [#20049](https://github.com/cosmos/cosmos-sdk/pull/20049) Sort JSON attributes for `inline_json` encoder.
+
 ## [v0.13.2](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.2) - 2024-04-12
 
 ### Features

@@ -172,7 +172,7 @@ type CalculateVoteResultsAndVotingPowerFn func(
 	keeper Keeper,
 	proposalID uint64,
 	validators map[string]v1.ValidatorGovInfo,
-) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error)
+) (totalVoterPower math.Dec, results map[v1.VoteOption]math.Dec, err error)
 ```
 
 ## Consequences

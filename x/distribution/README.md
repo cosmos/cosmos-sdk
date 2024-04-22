@@ -139,7 +139,7 @@ Once those rewards are big enough, they are sent as `sdk.Coins` to the community
 type DecCoins []DecCoin
 
 type DecCoin struct {
-    Amount math.LegacyDec
+    Amount math.Dec
     Denom  string
 }
 ```

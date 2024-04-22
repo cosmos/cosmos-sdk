@@ -18,10 +18,8 @@ import (
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authsims "cosmossdk.io/x/auth/simulation"
-	"cosmossdk.io/x/auth/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
-	"cosmossdk.io/x/bank/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -108,7 +106,7 @@ func initFixture(t *testing.T) *fixture {
 	blockedAddresses := map[string]bool{
 		authKeeper.GetAuthority(): false,
 	}
-	bankKeeper := keeper.NewBaseKeeper(
+	bankKeeper := bankkeeper.NewBaseKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authKeeper,
@@ -186,13 +184,13 @@ func TestAsyncExec(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		req       *types.MsgNonAtomicExec
+		req       *authtypes.MsgNonAtomicExec
 		expectErr bool
 		expErrMsg string
 	}{
 		{
 			name: "empty signer address",
-			req: &types.MsgNonAtomicExec{
+			req: &authtypes.MsgNonAtomicExec{
 				Signer: "",
 				Msgs:   []*codectypes.Any{},
 			},
@@ -201,7 +199,7 @@ func TestAsyncExec(t *testing.T) {
 		},
 		{
 			name: "invalid signer address",
-			req: &types.MsgNonAtomicExec{
+			req: &authtypes.MsgNonAtomicExec{
 				Signer: "invalid",
 				Msgs:   []*codectypes.Any{},
 			},
@@ -210,7 +208,7 @@ func TestAsyncExec(t *testing.T) {
 		},
 		{
 			name: "empty msgs",
-			req: &types.MsgNonAtomicExec{
+			req: &authtypes.MsgNonAtomicExec{
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{},
 			},
@@ -219,7 +217,7 @@ func TestAsyncExec(t *testing.T) {
 		},
 		{
 			name: "valid msg",
-			req: &types.MsgNonAtomicExec{
+			req: &authtypes.MsgNonAtomicExec{
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{msgAny},
 			},
@@ -227,7 +225,7 @@ func TestAsyncExec(t *testing.T) {
 		},
 		{
 			name: "multiple messages being executed",
-			req: &types.MsgNonAtomicExec{
+			req: &authtypes.MsgNonAtomicExec{
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{msgAny, msgAny},
 			},
@@ -235,7 +233,7 @@ func TestAsyncExec(t *testing.T) {
 		},
 		{
 			name: "multiple messages with different signers",
-			req: &types.MsgNonAtomicExec{
+			req: &authtypes.MsgNonAtomicExec{
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{msgAny, msgAny2},
 			},
@@ -244,7 +242,7 @@ func TestAsyncExec(t *testing.T) {
 		},
 		{
 			name: "multi msg with one failing being executed",
-			req: &types.MsgNonAtomicExec{
+			req: &authtypes.MsgNonAtomicExec{
 				Signer: addrs[0].String(),
 				Msgs:   []*codectypes.Any{msgAny, failingMsgAny},
 			},

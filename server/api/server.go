@@ -113,7 +113,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	s.listener = listener
 	s.mtx.Unlock()
 
-	// register grpc-gateway routes (after grpc-web server as the first match is used)
+	// register grpc-gateway routes
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 
 	errCh := make(chan error)

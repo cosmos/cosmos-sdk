@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#20087](https://github.com/cosmos/cosmos-sdk/pull/20087) add `MaxVoteOptionsLen`
 * [#19592](https://github.com/cosmos/cosmos-sdk/pull/19592) Add custom tally function.
 * [#19304](https://github.com/cosmos/cosmos-sdk/pull/19304) Add `MsgSudoExec` for allowing executing any message as a sudo.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Add message based params configuration.

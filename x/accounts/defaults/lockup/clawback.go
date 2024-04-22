@@ -85,7 +85,7 @@ func (bva *BaseLockup) ClawbackFunds(
 			// check if balance is sufficient
 			if balanceAmt.LT(lockedAmt) {
 				// in case there is not enough token to clawback, proceed to unbond token
-				err := bva.forceUnbondLockingDelegations(ctx, fromAddress, paramResp.Params.BondDenom)
+				err := bva.forceUnbondDelegations(ctx, fromAddress, paramResp.Params.BondDenom)
 				if err != nil {
 					return nil, err
 				}
@@ -135,7 +135,7 @@ func (bva *BaseLockup) ClawbackFunds(
 }
 
 // forceUnbondAllDelegations unbonds all the delegations from the  given account address
-func (bva BaseLockup) forceUnbondLockingDelegations(
+func (bva BaseLockup) forceUnbondDelegations(
 	ctx context.Context,
 	delegator string,
 	bondDenom string,

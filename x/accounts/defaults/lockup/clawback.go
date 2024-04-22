@@ -79,6 +79,12 @@ func (bva *BaseLockup) ClawbackFunds(
 			// handle the debt if the balance is sufficient
 			if !clawbackDebtAmt.IsZero() && balanceAmt.GT(clawbackDebtAmt) {
 				clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, clawbackDebtAmt))
+
+				// clear the debt tracking
+				err = bva.ClawbackDebt.Set(ctx, denom, math.ZeroInt())
+				if err != nil {
+					return nil, err
+				}
 				continue
 			}
 

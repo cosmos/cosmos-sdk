@@ -1,7 +1,7 @@
 package multisig
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 

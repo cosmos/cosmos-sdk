@@ -70,6 +70,18 @@ func (bva *BaseLockup) ClawbackFunds(
 
 			balanceAmt := balance.Amount
 
+			clawbackDebtAmt, err := bva.OriginalLocking.Get(ctx, denom)
+			if err != nil {
+				return nil, err
+			}
+
+			// if clawback debt exist which mean the clawback process for this denom had been triggered
+			// handle the debt if the balance is sufficient
+			if !clawbackDebtAmt.IsZero() && balanceAmt.GT(clawbackDebtAmt) {
+				clawbackTokens = append(clawbackTokens, sdk.NewCoin(denom, clawbackDebtAmt))
+				continue
+			}
+
 			// check if balance is sufficient
 			if balanceAmt.LT(lockedAmt) {
 				// in case there is not enough token to clawback, proceed to unbond token

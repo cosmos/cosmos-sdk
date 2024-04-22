@@ -290,25 +290,17 @@ func (bva *BaseLockup) SendCoins(
 
 	responses := []*codectypes.Any{}
 
-	err = bva.branchService.Execute(ctx, func(ctx context.Context) error {
-		msgSend := &banktypes.MsgSend{
-			FromAddress: fromAddress,
-			ToAddress:   msg.ToAddress,
-			Amount:      msg.Amount,
-		}
-		resp, err := sendMessage(ctx, msgSend)
-		if err != nil {
-			return err
-		}
-
-		responses = append(responses, resp...)
-
-		return nil
-	})
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.ToAddress,
+		Amount:      msg.Amount,
+	}
+	resp, err := sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
 	}
 
+	responses = append(responses, resp...)
 	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
 }
 

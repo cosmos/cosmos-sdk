@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					Tranches:         2,
+					TranchesLeft:     2,
 					Period:           &period,
 					LastClaimedAt:    &startTime,
 					BudgetPerTranche: &fooCoin2,
@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
-					Tranches:         1,
+					TranchesLeft:     1,
 					Period:           &period,
 					BudgetPerTranche: &fooCoin2,
 				}
@@ -212,7 +212,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
-					Tranches:         2,
+					TranchesLeft:     2,
 					Period:           &period,
 					BudgetPerTranche: &fooCoin2,
 				}
@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
-					Tranches:         2,
+					TranchesLeft:     2,
 					Period:           &period,
 					BudgetPerTranche: &fooCoin2,
 				}
@@ -259,7 +259,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTimeBeforeMonth,
-					Tranches:         2,
+					TranchesLeft:     2,
 					Period:           &oneMonthPeriod,
 					BudgetPerTranche: &fooCoin2,
 				}
@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
-					Tranches:         2,
+					TranchesLeft:     2,
 					Period:           &period,
 					BudgetPerTranche: &fooCoin2,
 				}

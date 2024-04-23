@@ -351,7 +351,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 	}
 
 	// check if the distribution is completed
-	if budget.Tranches == 0 && budget.ClaimedAmount != nil {
+	if budget.TranchesLeft == 0 && budget.ClaimedAmount != nil {
 		// check that claimed amount is equal to total budget
 		if budget.ClaimedAmount.Equal(budget.TotalBudget) {
 			// remove the entry of budget ended recipient
@@ -372,7 +372,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 		}
 	}
 
-	if budget.Tranches != 0 && budget.ClaimedAmount == nil {
+	if budget.TranchesLeft != 0 && budget.ClaimedAmount == nil {
 		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
 		budget.ClaimedAmount = &zeroCoin
 	}
@@ -399,10 +399,10 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	fmt.Printf("budget.BudgetPerTranche: %v\n", budget.BudgetPerTranche)
 
 	// update the budget's remaining tranches
-	if budget.Tranches > uint64(periodsPassed) {
-		budget.Tranches -= uint64(periodsPassed)
+	if budget.TranchesLeft > uint64(periodsPassed) {
+		budget.TranchesLeft -= uint64(periodsPassed)
 	} else {
-		budget.Tranches = 0
+		budget.TranchesLeft = 0
 	}
 
 	// update the ClaimedAmount
@@ -457,7 +457,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 		RecipientAddress: bp.RecipientAddress,
 		TotalBudget:      bp.TotalBudget,
 		LastClaimedAt:    bp.StartTime,
-		Tranches:         bp.Tranches,
+		TranchesLeft:     bp.Tranches,
 		Period:           bp.Period,
 		BudgetPerTranche: &budgetPerTranche,
 	}

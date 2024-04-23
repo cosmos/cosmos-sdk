@@ -53,7 +53,7 @@ func validateBudget(bp Budget) error {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
 
-	if bp.Tranches == 0 {
+	if bp.TranchesLeft == 0 {
 		return fmt.Errorf("invalid budget proposal: tranches must be greater than zero")
 	}
 

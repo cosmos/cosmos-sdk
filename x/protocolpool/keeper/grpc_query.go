@@ -67,6 +67,6 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		UnclaimedAmount: &unclaimedBudget,
 		NextClaimFrom:   &nextClaimFrom,
 		Period:          budget.Period,
-		TranchesLeft:    budget.Tranches,
+		TranchesLeft:    budget.TranchesLeft,
 	}, nil
 }

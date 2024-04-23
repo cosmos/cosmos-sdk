@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
-					Tranches:         2,
+					TranchesLeft:     2,
 					Period:           &period,
 					BudgetPerTranche: &fooCoin2,
 				}
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
-					Tranches:         2,
+					TranchesLeft:     2,
 					Period:           &period,
 					BudgetPerTranche: &fooCoin2,
 				}

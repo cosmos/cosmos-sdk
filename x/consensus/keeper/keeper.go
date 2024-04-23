@@ -69,7 +69,6 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	// TODO: this requires a state migration.
 	consensusParams, err := msg.ToProtoConsensusParams()
 	if err != nil {
 		return nil, err

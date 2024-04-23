@@ -24,10 +24,12 @@ message Budget {
   uint64 tranches = 5;
   // tranches_left is the number of tranches left for the amount to be distributed.
   uint64 tranches_left = 6;
+  // budget_per_tranche is the amount allocated per tranche.
+  cosmos.base.v1beta1.Coin budget_per_tranche = 7;
   // Period is the time interval(number of seconds) at which funds distribution should be performed.
   // For example, if a period is set to 3600, it represents an action that
   // should occur every hour (3600 seconds).
-  google.protobuf.Duration period = 7 [(gogoproto.stdduration) = true];
+  google.protobuf.Duration period = 8 [(gogoproto.stdduration) = true];
 }
 
 // ContinuousFund defines the fields of continuous fund proposal.

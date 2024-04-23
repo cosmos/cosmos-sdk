@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/collections/indexes"
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
@@ -68,7 +67,8 @@ func NewRotationHistoryIndexes(sb *collections.SchemaBuilder) rotationHistoryInd
 
 // Keeper of the x/staking store
 type Keeper struct {
-	environment           appmodule.Environment
+	appmodule.Environment
+
 	cdc                   codec.BinaryCodec
 	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
@@ -159,7 +159,7 @@ func NewKeeper(
 	}
 
 	k := &Keeper{
-		environment:           env,
+		Environment:           env,
 		cdc:                   cdc,
 		authKeeper:            ak,
 		bankKeeper:            bk,
@@ -309,11 +309,6 @@ func NewKeeper(
 	}
 	k.Schema = schema
 	return k
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger() log.Logger {
-	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // Hooks gets the hooks for staking *Keeper {

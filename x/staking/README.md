@@ -292,7 +292,7 @@ A `ConsPubKeyRotationHistory` object is created every time a consensus pubkey ro
 
 An entry is added in `OldToNewConsKeyMap` collection for every rotation (Note: this is to handle the evidences when submitted with old cons key).
 
-An entry is added in `NewToOldConsKeyMap` collection for every rotation, this entry is to block the rotation if the validator is rotating to the cons key which is invovled in the history.
+An entry is added in `NewToOldConsKeyMap` collection for every rotation, this entry is to block the rotation if the validator is rotating to the cons key which is involved in the history.
 
 To prevent the spam: 
 

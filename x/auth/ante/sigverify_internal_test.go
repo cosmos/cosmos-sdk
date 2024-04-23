@@ -20,7 +20,7 @@ type mockAccount struct {
 	ante.AccountKeeper
 }
 
-func (*mockAccount) Environment() appmodule.Environment {
+func (*mockAccount) GetEnvironment() appmodule.Environment {
 	return appmodule.Environment{
 		TransactionService: &mockTransactionService{},
 	}

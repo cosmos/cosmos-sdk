@@ -47,7 +47,7 @@ func (k Keeper) Tally(ctx context.Context, p group.Proposal, groupID uint64) (gr
 		err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&group.GroupMember{
 			GroupId: groupID,
 			Member:  &group.Member{Address: vote.Voter},
-		}), &member)
+		}, k.accKeeper.AddressCodec()), &member)
 
 		switch {
 		case sdkerrors.ErrNotFound.Is(err):

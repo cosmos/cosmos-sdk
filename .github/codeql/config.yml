@@ -1,7 +1,6 @@
 packs:
   - crypto-com/cosmos-sdk-codeql
 queries:
-  - uses: security-and-quality
   - uses: security-experimental
 paths-ignore:
   - api

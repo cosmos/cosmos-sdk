@@ -40,7 +40,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/tests/integration/utils"
 )
 
 var (
@@ -49,7 +48,7 @@ var (
 )
 
 type fixture struct {
-	app *utils.App
+	app *integration.App
 
 	sdkCtx sdk.Context
 	cdc    codec.Codec
@@ -148,7 +147,7 @@ func initFixture(t *testing.T) *fixture {
 		},
 	})
 
-	integrationApp := utils.NewIntegrationApp(ctx, logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{

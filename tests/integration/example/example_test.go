@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/tests/integration/utils"
 )
 
 // Example shows how to use the integration test framework to test the integration of SDK modules.
@@ -70,7 +69,7 @@ func Example() {
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil)
 
 	// create the application and register all the modules from the previous step
-	integrationApp := utils.NewIntegrationApp(
+	integrationApp := integration.NewIntegrationApp(
 		newCtx,
 		logger,
 		keys,
@@ -161,7 +160,7 @@ func Example_oneModule() {
 	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
 
 	// create the application and register all the modules from the previous step
-	integrationApp := utils.NewIntegrationApp(
+	integrationApp := integration.NewIntegrationApp(
 		newCtx,
 		logger,
 		keys,

@@ -19,5 +19,5 @@ message GenesisState {
   // begins.
   //
   // Since: cosmos-sdk 0.51
-  int64 reduction_started_epoch = 3 [(gogoproto.moretags) = "yaml:\"reduction_started_epoch\""];
+  int64 reduction_started_epoch = 3;
 }

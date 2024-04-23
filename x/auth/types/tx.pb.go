@@ -7,12 +7,12 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -133,8 +133,8 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 // MsgNonAtomicExec defines the Msg/NonAtomicExec request type.
 type MsgNonAtomicExec struct {
-	Signer string       `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
-	Msgs   []*types.Any `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
+	Signer string     `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	Msgs   []*any.Any `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
 }
 
 func (m *MsgNonAtomicExec) Reset()         { *m = MsgNonAtomicExec{} }
@@ -177,7 +177,7 @@ func (m *MsgNonAtomicExec) GetSigner() string {
 	return ""
 }
 
-func (m *MsgNonAtomicExec) GetMsgs() []*types.Any {
+func (m *MsgNonAtomicExec) GetMsgs() []*any.Any {
 	if m != nil {
 		return m.Msgs
 	}
@@ -187,8 +187,8 @@ func (m *MsgNonAtomicExec) GetMsgs() []*types.Any {
 // NonAtomicExecResult defines the response structure for executing a
 // MsgNonAtomicExec.
 type NonAtomicExecResult struct {
-	Error string     `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	Resp  *types.Any `protobuf:"bytes,2,opt,name=resp,proto3" json:"resp,omitempty"`
+	Error string   `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Resp  *any.Any `protobuf:"bytes,2,opt,name=resp,proto3" json:"resp,omitempty"`
 }
 
 func (m *NonAtomicExecResult) Reset()         { *m = NonAtomicExecResult{} }
@@ -231,7 +231,7 @@ func (m *NonAtomicExecResult) GetError() string {
 	return ""
 }
 
-func (m *NonAtomicExecResult) GetResp() *types.Any {
+func (m *NonAtomicExecResult) GetResp() *any.Any {
 	if m != nil {
 		return m.Resp
 	}
@@ -989,7 +989,7 @@ func (m *MsgNonAtomicExec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Msgs = append(m.Msgs, &types.Any{})
+			m.Msgs = append(m.Msgs, &any.Any{})
 			if err := m.Msgs[len(m.Msgs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1106,7 +1106,7 @@ func (m *NonAtomicExecResult) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Resp == nil {
-				m.Resp = &types.Any{}
+				m.Resp = &any.Any{}
 			}
 			if err := m.Resp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

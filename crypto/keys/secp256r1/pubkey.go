@@ -6,7 +6,7 @@ import (
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/gogoproto/proto"
 
-	ecdsa "github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -73,12 +73,13 @@ func (pk ecdsaPK) Marshal() ([]byte, error) {
 // MarshalJSON implements customProtobufType.
 func (pk ecdsaPK) MarshalJSON() ([]byte, error) {
 	b64 := base64.StdEncoding.EncodeToString(pk.PubKey.Bytes())
-	return []byte(b64), nil
+	return []byte("\"" + b64 + "\""), nil
 }
 
 // UnmarshalJSON implements customProtobufType.
 func (pk *ecdsaPK) UnmarshalJSON(data []byte) error {
-	bz, err := base64.StdEncoding.DecodeString(string(data))
+	// the string is quoted so we need to remove them
+	bz, err := base64.StdEncoding.DecodeString(string(data[1 : len(data)-1]))
 	if err != nil {
 		return err
 	}

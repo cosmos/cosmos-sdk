@@ -129,7 +129,7 @@ func (m *AccountQueryResponse) GetResponse() *any.Any {
 	return nil
 }
 
-// SchemaResponse is the response type for the Query/Schema RPC method.
+// SchemaRequest is the request type for the Query/Schema RPC method.
 type SchemaRequest struct {
 	// account_type defines the account type to query the schema for.
 	AccountType string `protobuf:"bytes,1,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`

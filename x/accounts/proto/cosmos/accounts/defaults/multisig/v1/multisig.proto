@@ -10,13 +10,13 @@ option go_package = "cosmossdk.io/x/accounts/defaults/multisig/v1";
 
 // MsgInit is used to initialize a multisig account.
 message MsgInit {
-  // pub_key defines the pubkey bytes of the multisig members. If the signing algo is "default"
-  // then these are addresses and not pubkeys.
-  repeated bytes pub_keys = 1;
+  repeated Member members = 1;
+  Config          Config  = 2;
+}
 
-  repeated uint64 weights = 2;
-
-  Config Config = 3;
+message Member {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 weight  = 2;
 }
 
 // when aggregating on-chain I can only use the address
@@ -57,12 +57,10 @@ message MsgCreateProposal {
 // MsgUpdateConfigRequest is used to change the config or members.
 message MsgUpdateConfigRequest {
   // only the members that are changing are required, if their weight is 0, they are removed.
-  repeated bytes update_pub_keys = 1;
-
-  repeated uint64 update_weights = 2;
+  repeated Member update_members = 1;
 
   // not all fields from Config can be changed
-  Config Config = 3;
+  Config Config = 2;
 }
 
 // MsgSwapPubKeyResponse is the response for the MsgSwapPubKey message.
@@ -82,12 +80,9 @@ message QueryConfig {}
 
 // QuerySequenceResponse returns the sequence of the account.
 message QueryConfigResponse {
-  // pub_key defines the pubkey bytes of the multisig members.
-  repeated bytes pub_keys = 1;
+  repeated Member members = 1;
 
-  repeated uint64 weights = 2;
-
-  Config Config = 3;
+  Config Config = 2;
 }
 
 message QueryProposal {

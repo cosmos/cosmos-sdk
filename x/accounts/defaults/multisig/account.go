@@ -60,13 +60,18 @@ func NewAccount(name string, handlerMap *signing.HandlerMap) accountstd.AccountC
 }
 
 func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitResponse, error) {
-	if len(msg.PubKeys) != len(msg.Weights) {
-		return nil, errors.New("the number of public keys and weights must be equal")
-	}
-
 	// set members
-	for i := range msg.PubKeys {
-		if err := a.Members.Set(ctx, msg.PubKeys[i], msg.Weights[i]); err != nil {
+	for i := range msg.Members {
+		addrBz, err := a.addrCodec.StringToBytes(msg.Members[i].Address)
+		if err != nil {
+			return nil, err
+		}
+
+		if msg.Members[i].Weight == 0 {
+			return nil, errors.New("member weight must be greater than zero")
+		}
+
+		if err := a.Members.Set(ctx, addrBz, msg.Members[i].Weight); err != nil {
 			return nil, err
 		}
 	}

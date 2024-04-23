@@ -27,11 +27,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgInit is used to initialize a multisig account.
 type MsgInit struct {
-	// pub_key defines the pubkey bytes of the multisig members. If the signing algo is "default"
-	// then these are addresses and not pubkeys.
-	PubKeys [][]byte `protobuf:"bytes,1,rep,name=pub_keys,json=pubKeys,proto3" json:"pub_keys,omitempty"`
-	Weights []uint64 `protobuf:"varint,2,rep,packed,name=weights,proto3" json:"weights,omitempty"`
-	Config  *Config  `protobuf:"bytes,3,opt,name=Config,proto3" json:"Config,omitempty"`
+	Members []*Member `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
+	Config  *Config   `protobuf:"bytes,2,opt,name=Config,proto3" json:"Config,omitempty"`
 }
 
 func (m *MsgInit) Reset()         { *m = MsgInit{} }
@@ -67,16 +64,9 @@ func (m *MsgInit) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgInit proto.InternalMessageInfo
 
-func (m *MsgInit) GetPubKeys() [][]byte {
+func (m *MsgInit) GetMembers() []*Member {
 	if m != nil {
-		return m.PubKeys
-	}
-	return nil
-}
-
-func (m *MsgInit) GetWeights() []uint64 {
-	if m != nil {
-		return m.Weights
+		return m.Members
 	}
 	return nil
 }
@@ -86,6 +76,58 @@ func (m *MsgInit) GetConfig() *Config {
 		return m.Config
 	}
 	return nil
+}
+
+type Member struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Weight  uint64 `protobuf:"varint,2,opt,name=weight,proto3" json:"weight,omitempty"`
+}
+
+func (m *Member) Reset()         { *m = Member{} }
+func (m *Member) String() string { return proto.CompactTextString(m) }
+func (*Member) ProtoMessage()    {}
+func (*Member) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6da8796717704d7, []int{1}
+}
+func (m *Member) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Member) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Member.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Member) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Member.Merge(m, src)
+}
+func (m *Member) XXX_Size() int {
+	return m.Size()
+}
+func (m *Member) XXX_DiscardUnknown() {
+	xxx_messageInfo_Member.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Member proto.InternalMessageInfo
+
+func (m *Member) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *Member) GetWeight() uint64 {
+	if m != nil {
+		return m.Weight
+	}
+	return 0
 }
 
 type Config struct {
@@ -103,7 +145,7 @@ func (m *Config) Reset()         { *m = Config{} }
 func (m *Config) String() string { return proto.CompactTextString(m) }
 func (*Config) ProtoMessage()    {}
 func (*Config) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{1}
+	return fileDescriptor_e6da8796717704d7, []int{2}
 }
 func (m *Config) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -179,7 +221,7 @@ func (m *Proposal) Reset()         { *m = Proposal{} }
 func (m *Proposal) String() string { return proto.CompactTextString(m) }
 func (*Proposal) ProtoMessage()    {}
 func (*Proposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{2}
+	return fileDescriptor_e6da8796717704d7, []int{3}
 }
 func (m *Proposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -245,7 +287,7 @@ func (m *MsgInitResponse) Reset()         { *m = MsgInitResponse{} }
 func (m *MsgInitResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgInitResponse) ProtoMessage()    {}
 func (*MsgInitResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{3}
+	return fileDescriptor_e6da8796717704d7, []int{4}
 }
 func (m *MsgInitResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -282,7 +324,7 @@ func (m *MsgCreateProposal) Reset()         { *m = MsgCreateProposal{} }
 func (m *MsgCreateProposal) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateProposal) ProtoMessage()    {}
 func (*MsgCreateProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{4}
+	return fileDescriptor_e6da8796717704d7, []int{5}
 }
 func (m *MsgCreateProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -321,17 +363,16 @@ func (m *MsgCreateProposal) GetProposal() *Proposal {
 // MsgUpdateConfigRequest is used to change the config or members.
 type MsgUpdateConfigRequest struct {
 	// only the members that are changing are required, if their weight is 0, they are removed.
-	UpdatePubKeys [][]byte `protobuf:"bytes,1,rep,name=update_pub_keys,json=updatePubKeys,proto3" json:"update_pub_keys,omitempty"`
-	UpdateWeights []uint64 `protobuf:"varint,2,rep,packed,name=update_weights,json=updateWeights,proto3" json:"update_weights,omitempty"`
+	UpdateMembers []*Member `protobuf:"bytes,1,rep,name=update_members,json=updateMembers,proto3" json:"update_members,omitempty"`
 	// not all fields from Config can be changed
-	Config *Config `protobuf:"bytes,3,opt,name=Config,proto3" json:"Config,omitempty"`
+	Config *Config `protobuf:"bytes,2,opt,name=Config,proto3" json:"Config,omitempty"`
 }
 
 func (m *MsgUpdateConfigRequest) Reset()         { *m = MsgUpdateConfigRequest{} }
 func (m *MsgUpdateConfigRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateConfigRequest) ProtoMessage()    {}
 func (*MsgUpdateConfigRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{5}
+	return fileDescriptor_e6da8796717704d7, []int{6}
 }
 func (m *MsgUpdateConfigRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -360,16 +401,9 @@ func (m *MsgUpdateConfigRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateConfigRequest proto.InternalMessageInfo
 
-func (m *MsgUpdateConfigRequest) GetUpdatePubKeys() [][]byte {
+func (m *MsgUpdateConfigRequest) GetUpdateMembers() []*Member {
 	if m != nil {
-		return m.UpdatePubKeys
-	}
-	return nil
-}
-
-func (m *MsgUpdateConfigRequest) GetUpdateWeights() []uint64 {
-	if m != nil {
-		return m.UpdateWeights
+		return m.UpdateMembers
 	}
 	return nil
 }
@@ -390,7 +424,7 @@ func (m *MsgUpdateConfigResponse) Reset()         { *m = MsgUpdateConfigResponse
 func (m *MsgUpdateConfigResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateConfigResponse) ProtoMessage()    {}
 func (*MsgUpdateConfigResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{6}
+	return fileDescriptor_e6da8796717704d7, []int{7}
 }
 func (m *MsgUpdateConfigResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -427,7 +461,7 @@ func (m *QuerySequence) Reset()         { *m = QuerySequence{} }
 func (m *QuerySequence) String() string { return proto.CompactTextString(m) }
 func (*QuerySequence) ProtoMessage()    {}
 func (*QuerySequence) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{7}
+	return fileDescriptor_e6da8796717704d7, []int{8}
 }
 func (m *QuerySequence) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -466,7 +500,7 @@ func (m *QuerySequenceResponse) Reset()         { *m = QuerySequenceResponse{} }
 func (m *QuerySequenceResponse) String() string { return proto.CompactTextString(m) }
 func (*QuerySequenceResponse) ProtoMessage()    {}
 func (*QuerySequenceResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{8}
+	return fileDescriptor_e6da8796717704d7, []int{9}
 }
 func (m *QuerySequenceResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -509,7 +543,7 @@ func (m *QueryConfig) Reset()         { *m = QueryConfig{} }
 func (m *QueryConfig) String() string { return proto.CompactTextString(m) }
 func (*QueryConfig) ProtoMessage()    {}
 func (*QueryConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{9}
+	return fileDescriptor_e6da8796717704d7, []int{10}
 }
 func (m *QueryConfig) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -540,17 +574,15 @@ var xxx_messageInfo_QueryConfig proto.InternalMessageInfo
 
 // QuerySequenceResponse returns the sequence of the account.
 type QueryConfigResponse struct {
-	// pub_key defines the pubkey bytes of the multisig members.
-	PubKeys [][]byte `protobuf:"bytes,1,rep,name=pub_keys,json=pubKeys,proto3" json:"pub_keys,omitempty"`
-	Weights []uint64 `protobuf:"varint,2,rep,packed,name=weights,proto3" json:"weights,omitempty"`
-	Config  *Config  `protobuf:"bytes,3,opt,name=Config,proto3" json:"Config,omitempty"`
+	Members []*Member `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
+	Config  *Config   `protobuf:"bytes,2,opt,name=Config,proto3" json:"Config,omitempty"`
 }
 
 func (m *QueryConfigResponse) Reset()         { *m = QueryConfigResponse{} }
 func (m *QueryConfigResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryConfigResponse) ProtoMessage()    {}
 func (*QueryConfigResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{10}
+	return fileDescriptor_e6da8796717704d7, []int{11}
 }
 func (m *QueryConfigResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -579,16 +611,9 @@ func (m *QueryConfigResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryConfigResponse proto.InternalMessageInfo
 
-func (m *QueryConfigResponse) GetPubKeys() [][]byte {
+func (m *QueryConfigResponse) GetMembers() []*Member {
 	if m != nil {
-		return m.PubKeys
-	}
-	return nil
-}
-
-func (m *QueryConfigResponse) GetWeights() []uint64 {
-	if m != nil {
-		return m.Weights
+		return m.Members
 	}
 	return nil
 }
@@ -608,7 +633,7 @@ func (m *QueryProposal) Reset()         { *m = QueryProposal{} }
 func (m *QueryProposal) String() string { return proto.CompactTextString(m) }
 func (*QueryProposal) ProtoMessage()    {}
 func (*QueryProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{11}
+	return fileDescriptor_e6da8796717704d7, []int{12}
 }
 func (m *QueryProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -652,7 +677,7 @@ func (m *QueryProposalResponse) Reset()         { *m = QueryProposalResponse{} }
 func (m *QueryProposalResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryProposalResponse) ProtoMessage()    {}
 func (*QueryProposalResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{12}
+	return fileDescriptor_e6da8796717704d7, []int{13}
 }
 func (m *QueryProposalResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -697,7 +722,7 @@ func (m *MsgVote) Reset()         { *m = MsgVote{} }
 func (m *MsgVote) String() string { return proto.CompactTextString(m) }
 func (*MsgVote) ProtoMessage()    {}
 func (*MsgVote) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{13}
+	return fileDescriptor_e6da8796717704d7, []int{14}
 }
 func (m *MsgVote) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -747,7 +772,7 @@ func (m *MsgVoteResponse) Reset()         { *m = MsgVoteResponse{} }
 func (m *MsgVoteResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgVoteResponse) ProtoMessage()    {}
 func (*MsgVoteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{14}
+	return fileDescriptor_e6da8796717704d7, []int{15}
 }
 func (m *MsgVoteResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -784,7 +809,7 @@ func (m *MsgExecuteProposal) Reset()         { *m = MsgExecuteProposal{} }
 func (m *MsgExecuteProposal) String() string { return proto.CompactTextString(m) }
 func (*MsgExecuteProposal) ProtoMessage()    {}
 func (*MsgExecuteProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{15}
+	return fileDescriptor_e6da8796717704d7, []int{16}
 }
 func (m *MsgExecuteProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -827,7 +852,7 @@ func (m *MsgExecuteProposalResponse) Reset()         { *m = MsgExecuteProposalRe
 func (m *MsgExecuteProposalResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgExecuteProposalResponse) ProtoMessage()    {}
 func (*MsgExecuteProposalResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6da8796717704d7, []int{16}
+	return fileDescriptor_e6da8796717704d7, []int{17}
 }
 func (m *MsgExecuteProposalResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -858,6 +883,7 @@ var xxx_messageInfo_MsgExecuteProposalResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgInit)(nil), "cosmos.accounts.defaults.multisig.v1.MsgInit")
+	proto.RegisterType((*Member)(nil), "cosmos.accounts.defaults.multisig.v1.Member")
 	proto.RegisterType((*Config)(nil), "cosmos.accounts.defaults.multisig.v1.Config")
 	proto.RegisterType((*Proposal)(nil), "cosmos.accounts.defaults.multisig.v1.Proposal")
 	proto.RegisterType((*MsgInitResponse)(nil), "cosmos.accounts.defaults.multisig.v1.MsgInitResponse")
@@ -881,48 +907,49 @@ func init() {
 }
 
 var fileDescriptor_e6da8796717704d7 = []byte{
-	// 654 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x54, 0x4d, 0x6f, 0xd3, 0x40,
-	0x10, 0xed, 0xd6, 0x69, 0x9b, 0x4e, 0x9a, 0x46, 0x5d, 0x4a, 0xeb, 0x44, 0x55, 0x88, 0xcc, 0x57,
-	0x0e, 0x95, 0xdd, 0x0f, 0x71, 0x45, 0x82, 0x02, 0x52, 0x41, 0x91, 0x8a, 0x11, 0x20, 0x71, 0xb1,
-	0x9c, 0x78, 0xeb, 0x5a, 0xb5, 0xbd, 0xae, 0x77, 0x37, 0xd4, 0x77, 0xc4, 0xb9, 0x3f, 0x82, 0x2b,
-	0xff, 0x83, 0x63, 0x8f, 0x1c, 0x51, 0xfb, 0x47, 0x50, 0xd6, 0xbb, 0x86, 0x52, 0x09, 0x72, 0xa8,
-	0xc4, 0x6d, 0xdf, 0xf3, 0xbc, 0xd9, 0x37, 0x3b, 0x33, 0x86, 0xdd, 0x11, 0x65, 0x09, 0x65, 0x8e,
-	0x3f, 0x1a, 0x51, 0x91, 0x72, 0xe6, 0x04, 0xe4, 0xd0, 0x17, 0x31, 0x67, 0x4e, 0x22, 0x62, 0x1e,
-	0xb1, 0x28, 0x74, 0xc6, 0xdb, 0xd5, 0xd9, 0xce, 0x72, 0xca, 0x29, 0xbe, 0x57, 0x8a, 0x6c, 0x2d,
-	0xb2, 0xb5, 0xc8, 0xae, 0x02, 0xc7, 0xdb, 0x9d, 0x76, 0x48, 0x69, 0x18, 0x13, 0x47, 0x6a, 0x86,
-	0xe2, 0xd0, 0xf1, 0xd3, 0xa2, 0x4c, 0xd0, 0x59, 0x57, 0xb7, 0x26, 0xac, 0x4c, 0xcf, 0x54, 0xe6,
-	0x4e, 0xbb, 0xfc, 0xe0, 0x49, 0xe4, 0xa8, 0x6b, 0x24, 0xb0, 0x3e, 0x21, 0x58, 0x18, 0xb0, 0x70,
-	0x3f, 0x8d, 0x38, 0x6e, 0x43, 0x3d, 0x13, 0x43, 0xef, 0x98, 0x14, 0xcc, 0x44, 0x3d, 0xa3, 0xbf,
-	0xe4, 0x2e, 0x64, 0x62, 0xf8, 0x8a, 0x14, 0x0c, 0x9b, 0xb0, 0xf0, 0x91, 0x44, 0xe1, 0x11, 0x67,
-	0xe6, 0x6c, 0xcf, 0xe8, 0xd7, 0x5c, 0x0d, 0xf1, 0x33, 0x98, 0xdf, 0xa3, 0xe9, 0x61, 0x14, 0x9a,
-	0x46, 0x0f, 0xf5, 0x1b, 0x3b, 0x9b, 0xf6, 0x34, 0x65, 0xd8, 0xa5, 0xc6, 0x55, 0x5a, 0xeb, 0x0b,
-	0xd2, 0x69, 0xf0, 0x06, 0x2c, 0xf2, 0xa3, 0x9c, 0xb0, 0x23, 0x1a, 0x07, 0x26, 0xea, 0xa1, 0xbe,
-	0xe1, 0xfe, 0x22, 0xf0, 0x1a, 0xcc, 0x9f, 0x08, 0x9a, 0x8b, 0xc4, 0x9c, 0x95, 0x9f, 0x14, 0xc2,
-	0x77, 0xa1, 0x39, 0xa6, 0x3c, 0x4a, 0x43, 0x2f, 0x23, 0x79, 0x44, 0x03, 0xe9, 0xc6, 0x70, 0x97,
-	0x4a, 0xf2, 0x40, 0x72, 0x13, 0x71, 0x4e, 0xc6, 0x94, 0x13, 0xb3, 0xd6, 0x43, 0xfd, 0xba, 0xab,
-	0x10, 0x7e, 0x08, 0x2d, 0xe2, 0xe7, 0x71, 0xe1, 0x91, 0x53, 0x32, 0x12, 0x3c, 0xa2, 0xa9, 0x39,
-	0x27, 0x03, 0x96, 0x25, 0xfd, 0x5c, 0xb3, 0xd6, 0x67, 0x04, 0xf5, 0x83, 0x9c, 0x66, 0x94, 0xf9,
-	0x31, 0x5e, 0x85, 0x39, 0x1e, 0xf1, 0x98, 0x48, 0x93, 0x8b, 0x6e, 0x09, 0x26, 0x2f, 0xc5, 0x44,
-	0x92, 0xf8, 0x79, 0x21, 0x1d, 0x2e, 0xba, 0x1a, 0xe2, 0x2d, 0xa8, 0x27, 0x84, 0x31, 0x3f, 0x24,
-	0xcc, 0x34, 0x7a, 0x46, 0xbf, 0xb1, 0xb3, 0x6a, 0x97, 0xcd, 0xb4, 0x75, 0x33, 0xed, 0x27, 0x69,
-	0xe1, 0x56, 0x51, 0x93, 0x5c, 0xa5, 0x23, 0x6d, 0x58, 0x43, 0x6b, 0x05, 0x5a, 0xaa, 0x6b, 0x2e,
-	0x61, 0x19, 0x4d, 0x19, 0xb1, 0x3c, 0x58, 0x19, 0xb0, 0x70, 0x2f, 0x27, 0x3e, 0x27, 0x95, 0xc7,
-	0x97, 0x50, 0xcf, 0xd4, 0x59, 0xda, 0x6c, 0xec, 0xd8, 0xd3, 0xf5, 0x47, 0x67, 0x70, 0x2b, 0xbd,
-	0xf5, 0x15, 0xc1, 0xda, 0x80, 0x85, 0x6f, 0xb3, 0xc0, 0xe7, 0x44, 0xf5, 0x8f, 0x9c, 0x08, 0xc2,
-	0x38, 0x7e, 0x00, 0x2d, 0x21, 0x69, 0xef, 0x8f, 0x01, 0x6a, 0x96, 0xf4, 0x81, 0x1a, 0xa3, 0xfb,
-	0xb0, 0xac, 0xe2, 0xae, 0x4e, 0x93, 0x0a, 0x7b, 0x7f, 0xa3, 0x33, 0xd5, 0x86, 0xf5, 0x6b, 0x76,
-	0xd5, 0x5b, 0xb5, 0xa0, 0xf9, 0x5a, 0x90, 0xbc, 0x78, 0x33, 0xf1, 0x9f, 0x8e, 0x88, 0xb5, 0x0b,
-	0xb7, 0xaf, 0x10, 0x3a, 0x12, 0x77, 0xa0, 0xce, 0x14, 0x27, 0x1f, 0xb0, 0xe6, 0x56, 0xd8, 0x6a,
-	0x42, 0x43, 0x8a, 0xd4, 0x7d, 0x67, 0x08, 0x6e, 0xfd, 0x86, 0xab, 0x14, 0xff, 0x71, 0xad, 0xb6,
-	0x54, 0x9d, 0xd5, 0x3c, 0xdc, 0x81, 0x86, 0xee, 0xa7, 0x17, 0x05, 0xaa, 0x22, 0xd0, 0xd4, 0x7e,
-	0x60, 0x8d, 0xd4, 0x43, 0x54, 0xfd, 0xd7, 0x55, 0xdc, 0xe4, 0x24, 0x3d, 0x96, 0xff, 0x9c, 0x77,
-	0x93, 0xd5, 0xfb, 0x97, 0x21, 0x8c, 0xa1, 0x26, 0x37, 0x76, 0x56, 0x2e, 0x80, 0x3c, 0xab, 0xe9,
-	0x9f, 0xe8, 0xab, 0x8e, 0x3e, 0x02, 0x3c, 0x60, 0x61, 0xb9, 0xa9, 0x64, 0xfa, 0x72, 0x37, 0xa0,
-	0x73, 0x5d, 0xa6, 0x93, 0x3e, 0x7d, 0xf1, 0xed, 0xa2, 0x8b, 0xce, 0x2f, 0xba, 0xe8, 0xc7, 0x45,
-	0x17, 0x9d, 0x5d, 0x76, 0x67, 0xce, 0x2f, 0xbb, 0x33, 0xdf, 0x2f, 0xbb, 0x33, 0x1f, 0x36, 0xcb,
-	0xd2, 0x59, 0x70, 0x6c, 0x47, 0xd4, 0x39, 0xfd, 0xfb, 0x8f, 0x7e, 0x38, 0x2f, 0xf7, 0x7b, 0xf7,
-	0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0x38, 0xd2, 0x2c, 0xf8, 0x17, 0x06, 0x00, 0x00,
+	// 670 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0xcd, 0x6e, 0xd3, 0x4c,
+	0x14, 0xad, 0x9b, 0x34, 0x49, 0x6f, 0xbe, 0xb4, 0xea, 0x7c, 0xa5, 0x75, 0xa3, 0x2a, 0x54, 0x06,
+	0x89, 0x2e, 0x8a, 0xdd, 0x1f, 0xb1, 0x45, 0x6a, 0x0b, 0x95, 0x8a, 0x14, 0xa9, 0xb8, 0xc0, 0x82,
+	0x4d, 0xe4, 0xc6, 0xb7, 0xae, 0x85, 0xed, 0x49, 0x67, 0xc6, 0xa1, 0x79, 0x01, 0xd6, 0xec, 0x78,
+	0x00, 0x78, 0x03, 0x78, 0x08, 0x96, 0x15, 0x2b, 0x96, 0xa8, 0x79, 0x11, 0xe4, 0xf9, 0x31, 0xa0,
+	0x4a, 0x10, 0x89, 0x2e, 0xd8, 0xcd, 0xb9, 0x73, 0xcf, 0x99, 0x73, 0x67, 0xee, 0xb5, 0x61, 0xa7,
+	0x4f, 0x79, 0x4a, 0xb9, 0x17, 0xf4, 0xfb, 0x34, 0xcf, 0x04, 0xf7, 0x42, 0x3c, 0x0d, 0xf2, 0x44,
+	0x70, 0x2f, 0xcd, 0x13, 0x11, 0xf3, 0x38, 0xf2, 0x86, 0x5b, 0xe5, 0xda, 0x1d, 0x30, 0x2a, 0x28,
+	0xb9, 0xab, 0x48, 0xae, 0x21, 0xb9, 0x86, 0xe4, 0x96, 0x89, 0xc3, 0xad, 0xf6, 0x4a, 0x44, 0x69,
+	0x94, 0xa0, 0x27, 0x39, 0x27, 0xf9, 0xa9, 0x17, 0x64, 0x23, 0x25, 0xd0, 0x5e, 0xd6, 0xa7, 0xa6,
+	0x5c, 0xc9, 0x73, 0xad, 0xdc, 0x5e, 0x51, 0x1b, 0x3d, 0x89, 0x3c, 0x7d, 0x8c, 0x04, 0xce, 0x3b,
+	0x0b, 0xea, 0x5d, 0x1e, 0x1d, 0x66, 0xb1, 0x20, 0x07, 0x50, 0x4f, 0x31, 0x3d, 0x41, 0xc6, 0x6d,
+	0x6b, 0xad, 0xb2, 0xde, 0xdc, 0xde, 0x70, 0x27, 0xb1, 0xe4, 0x76, 0x25, 0xc9, 0x37, 0x64, 0xf2,
+	0x08, 0x6a, 0xfb, 0x34, 0x3b, 0x8d, 0x23, 0x7b, 0x7a, 0xcd, 0x9a, 0x5c, 0x46, 0x71, 0x7c, 0xcd,
+	0x75, 0x9e, 0x41, 0x4d, 0x09, 0x93, 0x6d, 0xa8, 0x07, 0x61, 0xc8, 0x90, 0x17, 0xbe, 0xac, 0xf5,
+	0xd9, 0x3d, 0xfb, 0xcb, 0xa7, 0xfb, 0x8b, 0x5a, 0x73, 0x57, 0xed, 0x1c, 0x0b, 0x16, 0x67, 0x91,
+	0x6f, 0x12, 0xc9, 0x12, 0xd4, 0x5e, 0x63, 0x1c, 0x9d, 0x09, 0xe9, 0xa1, 0xea, 0x6b, 0xe4, 0x7c,
+	0xb0, 0x8c, 0x39, 0xb2, 0x0a, 0xb3, 0xe2, 0x8c, 0x21, 0x3f, 0xa3, 0x49, 0x28, 0x85, 0x2b, 0xfe,
+	0x8f, 0x40, 0x21, 0x70, 0x9e, 0x53, 0x96, 0xa7, 0x52, 0xa0, 0xe2, 0x6b, 0x44, 0xee, 0x40, 0x6b,
+	0x48, 0x45, 0x9c, 0x45, 0xbd, 0x01, 0xb2, 0x98, 0x86, 0x76, 0x45, 0x6e, 0xff, 0xa7, 0x82, 0x47,
+	0x32, 0x56, 0x90, 0x19, 0x0e, 0xa9, 0x40, 0xbb, 0xba, 0x66, 0xad, 0x37, 0x7c, 0x8d, 0xc8, 0x3d,
+	0x98, 0xc7, 0x80, 0x25, 0xa3, 0x1e, 0x5e, 0x60, 0x3f, 0x17, 0x31, 0xcd, 0xec, 0x19, 0x99, 0x30,
+	0x27, 0xc3, 0x8f, 0x4d, 0xd4, 0x79, 0x63, 0x41, 0xe3, 0x88, 0xd1, 0x01, 0xe5, 0x41, 0x42, 0x16,
+	0x61, 0x46, 0xc4, 0x22, 0x41, 0x55, 0xbd, 0xaf, 0x00, 0xb1, 0xa1, 0xce, 0xf3, 0x34, 0x0d, 0xd8,
+	0x48, 0x3a, 0x9c, 0xf5, 0x0d, 0x24, 0x9b, 0xd0, 0x48, 0x91, 0xf3, 0x20, 0x42, 0x6e, 0x57, 0xe4,
+	0x43, 0x2e, 0xba, 0xaa, 0x6b, 0x5c, 0xd3, 0x35, 0xee, 0x6e, 0x36, 0xf2, 0xcb, 0xac, 0x42, 0x4b,
+	0x39, 0x32, 0x86, 0x0d, 0x74, 0x16, 0x60, 0x5e, 0xb7, 0x87, 0x8f, 0x7c, 0x40, 0x33, 0x8e, 0x4e,
+	0x0f, 0x16, 0xba, 0x3c, 0xda, 0x67, 0x18, 0x08, 0x2c, 0x3d, 0x3e, 0x81, 0xc6, 0x40, 0xaf, 0xa5,
+	0xcd, 0xe6, 0xb6, 0x3b, 0xd9, 0xab, 0x1b, 0x05, 0xbf, 0xe4, 0x3b, 0x1f, 0x2d, 0x58, 0xea, 0xf2,
+	0xe8, 0xf9, 0x20, 0x0c, 0x04, 0xea, 0xae, 0xc0, 0xf3, 0x1c, 0xb9, 0x20, 0xc7, 0x30, 0x97, 0xcb,
+	0x70, 0xef, 0x6f, 0x3a, 0xb5, 0xa5, 0x34, 0xba, 0x37, 0xda, 0xaf, 0x2b, 0xb0, 0x7c, 0xcd, 0xb4,
+	0xbe, 0xb1, 0x79, 0x68, 0x3d, 0xcd, 0x91, 0x8d, 0x8e, 0x8b, 0x2a, 0xb2, 0x3e, 0x3a, 0x3b, 0x70,
+	0xeb, 0x97, 0x80, 0xc9, 0x24, 0x6d, 0x68, 0x70, 0x1d, 0x93, 0xd7, 0x58, 0xf5, 0x4b, 0xec, 0xb4,
+	0xa0, 0x29, 0x49, 0xfa, 0xbc, 0xf7, 0x16, 0xfc, 0xff, 0x13, 0x2e, 0x25, 0xfe, 0xad, 0x29, 0xde,
+	0xd4, 0xa5, 0x97, 0x8d, 0x72, 0x1b, 0x9a, 0xe6, 0xa1, 0x7b, 0x71, 0xa8, 0x8b, 0x04, 0x13, 0x3a,
+	0x0c, 0x9d, 0xbe, 0xbe, 0x9b, 0xb2, 0x31, 0x4c, 0x61, 0x37, 0xd9, 0x62, 0x0f, 0xe5, 0x57, 0xef,
+	0x45, 0x31, 0x93, 0x7f, 0x32, 0x44, 0x08, 0x54, 0xe5, 0x28, 0x4f, 0xcb, 0xc9, 0x90, 0x6b, 0x3d,
+	0x16, 0x05, 0xbf, 0x7c, 0xe4, 0x07, 0x40, 0xba, 0x3c, 0x52, 0x23, 0x8c, 0x93, 0x97, 0xbb, 0x0a,
+	0xed, 0xeb, 0x34, 0x23, 0xba, 0x77, 0xf0, 0xf9, 0xaa, 0x63, 0x5d, 0x5e, 0x75, 0xac, 0x6f, 0x57,
+	0x1d, 0xeb, 0xed, 0xb8, 0x33, 0x75, 0x39, 0xee, 0x4c, 0x7d, 0x1d, 0x77, 0xa6, 0x5e, 0x6e, 0xa8,
+	0xd2, 0x79, 0xf8, 0xca, 0x8d, 0xa9, 0x77, 0xf1, 0xfb, 0x5f, 0xcd, 0x49, 0x4d, 0x0e, 0xfe, 0xce,
+	0xf7, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe0, 0x4f, 0xb9, 0x2d, 0x99, 0x06, 0x00, 0x00,
 }
 
 func (m *MsgInit) Marshal() (dAtA []byte, err error) {
@@ -955,34 +982,56 @@ func (m *MsgInit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintMultisig(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Weights) > 0 {
-		dAtA3 := make([]byte, len(m.Weights)*10)
-		var j2 int
-		for _, num := range m.Weights {
-			for num >= 1<<7 {
-				dAtA3[j2] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j2++
-			}
-			dAtA3[j2] = uint8(num)
-			j2++
-		}
-		i -= j2
-		copy(dAtA[i:], dAtA3[:j2])
-		i = encodeVarintMultisig(dAtA, i, uint64(j2))
-		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.PubKeys) > 0 {
-		for iNdEx := len(m.PubKeys) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.PubKeys[iNdEx])
-			copy(dAtA[i:], m.PubKeys[iNdEx])
-			i = encodeVarintMultisig(dAtA, i, uint64(len(m.PubKeys[iNdEx])))
+	if len(m.Members) > 0 {
+		for iNdEx := len(m.Members) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Members[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintMultisig(dAtA, i, uint64(size))
+			}
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Member) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Member) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Member) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Weight != 0 {
+		i = encodeVarintMultisig(dAtA, i, uint64(m.Weight))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintMultisig(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1194,31 +1243,18 @@ func (m *MsgUpdateConfigRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 			i = encodeVarintMultisig(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.UpdateWeights) > 0 {
-		dAtA7 := make([]byte, len(m.UpdateWeights)*10)
-		var j6 int
-		for _, num := range m.UpdateWeights {
-			for num >= 1<<7 {
-				dAtA7[j6] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j6++
-			}
-			dAtA7[j6] = uint8(num)
-			j6++
-		}
-		i -= j6
-		copy(dAtA[i:], dAtA7[:j6])
-		i = encodeVarintMultisig(dAtA, i, uint64(j6))
-		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.UpdatePubKeys) > 0 {
-		for iNdEx := len(m.UpdatePubKeys) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.UpdatePubKeys[iNdEx])
-			copy(dAtA[i:], m.UpdatePubKeys[iNdEx])
-			i = encodeVarintMultisig(dAtA, i, uint64(len(m.UpdatePubKeys[iNdEx])))
+	if len(m.UpdateMembers) > 0 {
+		for iNdEx := len(m.UpdateMembers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UpdateMembers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintMultisig(dAtA, i, uint64(size))
+			}
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1353,31 +1389,18 @@ func (m *QueryConfigResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintMultisig(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Weights) > 0 {
-		dAtA10 := make([]byte, len(m.Weights)*10)
-		var j9 int
-		for _, num := range m.Weights {
-			for num >= 1<<7 {
-				dAtA10[j9] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j9++
-			}
-			dAtA10[j9] = uint8(num)
-			j9++
-		}
-		i -= j9
-		copy(dAtA[i:], dAtA10[:j9])
-		i = encodeVarintMultisig(dAtA, i, uint64(j9))
-		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.PubKeys) > 0 {
-		for iNdEx := len(m.PubKeys) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.PubKeys[iNdEx])
-			copy(dAtA[i:], m.PubKeys[iNdEx])
-			i = encodeVarintMultisig(dAtA, i, uint64(len(m.PubKeys[iNdEx])))
+	if len(m.Members) > 0 {
+		for iNdEx := len(m.Members) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Members[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintMultisig(dAtA, i, uint64(size))
+			}
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1577,22 +1600,31 @@ func (m *MsgInit) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.PubKeys) > 0 {
-		for _, b := range m.PubKeys {
-			l = len(b)
+	if len(m.Members) > 0 {
+		for _, e := range m.Members {
+			l = e.Size()
 			n += 1 + l + sovMultisig(uint64(l))
 		}
-	}
-	if len(m.Weights) > 0 {
-		l = 0
-		for _, e := range m.Weights {
-			l += sovMultisig(uint64(e))
-		}
-		n += 1 + sovMultisig(uint64(l)) + l
 	}
 	if m.Config != nil {
 		l = m.Config.Size()
 		n += 1 + l + sovMultisig(uint64(l))
+	}
+	return n
+}
+
+func (m *Member) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovMultisig(uint64(l))
+	}
+	if m.Weight != 0 {
+		n += 1 + sovMultisig(uint64(m.Weight))
 	}
 	return n
 }
@@ -1675,18 +1707,11 @@ func (m *MsgUpdateConfigRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.UpdatePubKeys) > 0 {
-		for _, b := range m.UpdatePubKeys {
-			l = len(b)
+	if len(m.UpdateMembers) > 0 {
+		for _, e := range m.UpdateMembers {
+			l = e.Size()
 			n += 1 + l + sovMultisig(uint64(l))
 		}
-	}
-	if len(m.UpdateWeights) > 0 {
-		l = 0
-		for _, e := range m.UpdateWeights {
-			l += sovMultisig(uint64(e))
-		}
-		n += 1 + sovMultisig(uint64(l)) + l
 	}
 	if m.Config != nil {
 		l = m.Config.Size()
@@ -1740,18 +1765,11 @@ func (m *QueryConfigResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.PubKeys) > 0 {
-		for _, b := range m.PubKeys {
-			l = len(b)
+	if len(m.Members) > 0 {
+		for _, e := range m.Members {
+			l = e.Size()
 			n += 1 + l + sovMultisig(uint64(l))
 		}
-	}
-	if len(m.Weights) > 0 {
-		l = 0
-		for _, e := range m.Weights {
-			l += sovMultisig(uint64(e))
-		}
-		n += 1 + sovMultisig(uint64(l)) + l
 	}
 	if m.Config != nil {
 		l = m.Config.Size()
@@ -1867,9 +1885,9 @@ func (m *MsgInit) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PubKeys", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Members", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowMultisig
@@ -1879,101 +1897,27 @@ func (m *MsgInit) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthMultisig
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthMultisig
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PubKeys = append(m.PubKeys, make([]byte, postIndex-iNdEx))
-			copy(m.PubKeys[len(m.PubKeys)-1], dAtA[iNdEx:postIndex])
+			m.Members = append(m.Members, &Member{})
+			if err := m.Members[len(m.Members)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
-			if wireType == 0 {
-				var v uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowMultisig
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.Weights = append(m.Weights, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowMultisig
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthMultisig
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthMultisig
-				}
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				var elementCount int
-				var count int
-				for _, integer := range dAtA[iNdEx:postIndex] {
-					if integer < 128 {
-						count++
-					}
-				}
-				elementCount = count
-				if elementCount != 0 && len(m.Weights) == 0 {
-					m.Weights = make([]uint64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowMultisig
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.Weights = append(m.Weights, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field Weights", wireType)
-			}
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
 			}
@@ -2009,6 +1953,107 @@ func (m *MsgInit) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMultisig(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMultisig
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Member) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMultisig
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Member: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Member: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMultisig
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMultisig
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMultisig
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Weight", wireType)
+			}
+			m.Weight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMultisig
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Weight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMultisig(dAtA[iNdEx:])
@@ -2512,9 +2557,9 @@ func (m *MsgUpdateConfigRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpdatePubKeys", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdateMembers", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowMultisig
@@ -2524,101 +2569,27 @@ func (m *MsgUpdateConfigRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthMultisig
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthMultisig
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.UpdatePubKeys = append(m.UpdatePubKeys, make([]byte, postIndex-iNdEx))
-			copy(m.UpdatePubKeys[len(m.UpdatePubKeys)-1], dAtA[iNdEx:postIndex])
+			m.UpdateMembers = append(m.UpdateMembers, &Member{})
+			if err := m.UpdateMembers[len(m.UpdateMembers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
-			if wireType == 0 {
-				var v uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowMultisig
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.UpdateWeights = append(m.UpdateWeights, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowMultisig
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthMultisig
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthMultisig
-				}
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				var elementCount int
-				var count int
-				for _, integer := range dAtA[iNdEx:postIndex] {
-					if integer < 128 {
-						count++
-					}
-				}
-				elementCount = count
-				if elementCount != 0 && len(m.UpdateWeights) == 0 {
-					m.UpdateWeights = make([]uint64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowMultisig
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.UpdateWeights = append(m.UpdateWeights, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpdateWeights", wireType)
-			}
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
 			}
@@ -2925,9 +2896,9 @@ func (m *QueryConfigResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PubKeys", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Members", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowMultisig
@@ -2937,101 +2908,27 @@ func (m *QueryConfigResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthMultisig
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthMultisig
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PubKeys = append(m.PubKeys, make([]byte, postIndex-iNdEx))
-			copy(m.PubKeys[len(m.PubKeys)-1], dAtA[iNdEx:postIndex])
+			m.Members = append(m.Members, &Member{})
+			if err := m.Members[len(m.Members)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
-			if wireType == 0 {
-				var v uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowMultisig
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.Weights = append(m.Weights, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowMultisig
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthMultisig
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthMultisig
-				}
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				var elementCount int
-				var count int
-				for _, integer := range dAtA[iNdEx:postIndex] {
-					if integer < 128 {
-						count++
-					}
-				}
-				elementCount = count
-				if elementCount != 0 && len(m.Weights) == 0 {
-					m.Weights = make([]uint64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowMultisig
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.Weights = append(m.Weights, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field Weights", wireType)
-			}
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
 			}

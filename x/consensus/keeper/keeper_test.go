@@ -5,6 +5,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
@@ -98,7 +99,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Block:     defaultConsensusParams.Block,
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
-					Abci: &cmtproto.ABCIParams{
+					Abci: &cmtproto.ABCIParams{ //nolint: staticcheck // needs update in a follow up pr
 						VoteExtensionsEnableHeight: 1234,
 					},
 				}
@@ -111,8 +112,8 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 					Version:   defaultConsensusParams.Version,
-					Abci: &cmtproto.ABCIParams{
-						VoteExtensionsEnableHeight: 1234,
+					Feature: &cmtproto.FeatureParams{
+						VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1234},
 					},
 				},
 			},

@@ -5,8 +5,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 var _ sdk.Msg = &MsgUpdateParams{}
@@ -33,8 +32,8 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 	}
 
 	if msg.Abci != nil {
-		cp.Abci = &cmtproto.ABCIParams{
-			VoteExtensionsEnableHeight: msg.Abci.VoteExtensionsEnableHeight,
+		cp.Feature = &cmtproto.FeatureParams{
+			VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: msg.Abci.VoteExtensionsEnableHeight},
 		}
 	}
 

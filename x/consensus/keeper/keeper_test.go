@@ -5,6 +5,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/suite"
 
 	storetypes "cosmossdk.io/store/types"
@@ -101,10 +102,10 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			func() {
 				input := &types.MsgUpdateParams{
 					Authority: s.consensusParamsKeeper.GetAuthority(),
-					Block:     modifiedConsensusParams.Block,
-					Validator: modifiedConsensusParams.Validator,
-					Evidence:  modifiedConsensusParams.Evidence,
-					Abci: &cmtproto.ABCIParams{
+					Block:     defaultConsensusParams.Block,
+					Validator: defaultConsensusParams.Validator,
+					Evidence:  defaultConsensusParams.Evidence,
+					Abci: &cmtproto.ABCIParams{ //nolint: staticcheck // needs update in a follow up pr
 						VoteExtensionsEnableHeight: 1234,
 					},
 				}
@@ -113,12 +114,12 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			},
 			types.QueryParamsResponse{
 				Params: &cmtproto.ConsensusParams{
-					Block:     modifiedConsensusParams.Block,
-					Validator: modifiedConsensusParams.Validator,
-					Evidence:  modifiedConsensusParams.Evidence,
-					Version:   modifiedConsensusParams.Version,
-					Abci: &cmtproto.ABCIParams{
-						VoteExtensionsEnableHeight: 1234,
+					Block:     defaultConsensusParams.Block,
+					Validator: defaultConsensusParams.Validator,
+					Evidence:  defaultConsensusParams.Evidence,
+					Version:   defaultConsensusParams.Version,
+					Feature: &cmtproto.FeatureParams{
+						VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1234},
 					},
 				},
 			},

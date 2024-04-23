@@ -23,6 +23,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -319,8 +320,8 @@ func TestABCI_ExtendVote(t *testing.T) {
 		&abci.InitChainRequest{
 			InitialHeight: 1,
 			ConsensusParams: &cmtproto.ConsensusParams{
-				Abci: &cmtproto.ABCIParams{
-					VoteExtensionsEnableHeight: 200,
+				Feature: &cmtproto.FeatureParams{
+					VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 200},
 				},
 			},
 		},
@@ -397,8 +398,8 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 		&abci.InitChainRequest{
 			InitialHeight: 1,
 			ConsensusParams: &cmtproto.ConsensusParams{
-				Abci: &cmtproto.ABCIParams{
-					VoteExtensionsEnableHeight: 200,
+				Feature: &cmtproto.FeatureParams{
+					VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 200},
 				},
 			},
 		},
@@ -1823,8 +1824,8 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		InitialHeight: 1,
 		ConsensusParams: &cmtproto.ConsensusParams{
-			Abci: &cmtproto.ABCIParams{
-				VoteExtensionsEnableHeight: 2,
+			Feature: &cmtproto.FeatureParams{
+				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
 			},
 		},
 	})
@@ -2178,8 +2179,8 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{
-			Abci: &cmtproto.ABCIParams{
-				VoteExtensionsEnableHeight: 1,
+			Feature: &cmtproto.FeatureParams{
+				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1},
 			},
 		},
 	})

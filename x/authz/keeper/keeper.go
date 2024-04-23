@@ -266,6 +266,7 @@ func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) err
 
 	for ; iterator.Valid(); iterator.Next() {
 		// Directly delete the grant without deserializing, as we're deleting all grants for the msgType.
+		// TODO: need to test this function
 		store.Delete(iterator.Key())
 	}
 

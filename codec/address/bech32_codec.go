@@ -20,8 +20,8 @@ import (
 const (
 	// TODO: ideally sdk.GetBech32PrefixValAddr("") should be used but currently there's a cyclical import.
 	// 	Once globals are deleted the cyclical import won't happen.
-	prefixValAddr  = "valoper"
-	prefixConsAddr = "valcons"
+	suffixValAddr  = "valoper"
+	suffixConsAddr = "valcons"
 )
 
 // cache variables
@@ -59,8 +59,8 @@ type Bech32Codec struct {
 
 type cachedBech32Codec struct {
 	codec Bech32Codec
-	cache *simplelru.LRU
 	mu    *sync.Mutex
+	cache *simplelru.LRU
 }
 
 var (
@@ -76,10 +76,10 @@ func NewBech32Codec(prefix string) address.Codec {
 
 	lru := accAddrCache
 	mu := &accAddrMu
-	if strings.Contains(prefix, prefixValAddr) {
+	if strings.HasSuffix(prefix, suffixValAddr) {
 		lru = valAddrCache
 		mu = &valAddrMu
-	} else if strings.Contains(prefix, prefixConsAddr) {
+	} else if strings.HasSuffix(prefix, suffixConsAddr) {
 		lru = consAddrCache
 		mu = &consAddrMu
 	}

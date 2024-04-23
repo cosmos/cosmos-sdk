@@ -1,7 +1,10 @@
 package address
 
 import (
+	"cosmossdk.io/core/address"
+	"encoding/binary"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/golang-lru/simplelru"
 	"gotest.tools/v3/assert"
@@ -59,5 +62,51 @@ func TestNewBech32Codec(t *testing.T) {
 			assert.Assert(t, ok)
 			assert.DeepEqual(t, accAddr, cachedStrAddr)
 		})
+	}
+}
+
+func TestBech32CodecRace(t *testing.T) {
+	ac := NewBech32Codec("cosmos")
+
+	workers := 4
+	done := make(chan bool, workers)
+	cancel := make(chan bool)
+
+	for i := byte(1); i <= 2; i++ { // works which will loop in first 100 addresses
+		go addressStringCaller(t, ac, i, 100, cancel, done)
+	}
+
+	for i := byte(1); i <= 2; i++ { // works which will generate 1e6 new addresses
+		go addressStringCaller(t, ac, i, 1000000, cancel, done)
+	}
+
+	<-time.After(time.Millisecond * 30)
+	close(cancel)
+
+	// cleanup
+	for i := 0; i < 4; i++ {
+		<-done
+	}
+}
+
+// generates AccAddress with `prefix` and calls String method
+func addressStringCaller(t *testing.T, ac address.Codec, prefix byte, max uint32, cancel chan bool, done chan<- bool) {
+	bz := make([]byte, 5) // prefix + 4 bytes for uint
+	bz[0] = prefix
+	for i := uint32(0); ; i++ {
+		if i >= max {
+			i = 0
+		}
+		select {
+		case <-cancel:
+			done <- true
+			return
+		default:
+			binary.BigEndian.PutUint32(bz[1:], i)
+			str, err := ac.BytesToString(bz)
+			assert.NilError(t, err)
+			assert.Assert(t, str != "")
+		}
+
 	}
 }

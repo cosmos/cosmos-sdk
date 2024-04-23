@@ -15,6 +15,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 	period := time.Duration(60) * time.Second
 	zeroCoin := sdk.NewCoin("foo", math.ZeroInt())
 	nextClaimFrom := startTime.Add(period)
+	secondClaimFrom := nextClaimFrom.Add(period)
 	recipientStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipientAddr)
 	suite.Require().NoError(err)
 	testCases := []struct {
@@ -49,7 +50,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					StartTime:        &startTime,
+					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
 				}
@@ -65,7 +66,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				TotalBudget:     &fooCoin,
 				ClaimedAmount:   &zeroCoin,
 				UnclaimedAmount: &fooCoin,
-				NextClaimFrom:   &startTime,
+				NextClaimFrom:   &nextClaimFrom,
 				Period:          &period,
 				TranchesLeft:    2,
 			},
@@ -77,7 +78,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					StartTime:        &startTime,
+					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
 				}
@@ -102,7 +103,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				TotalBudget:     &fooCoin,
 				ClaimedAmount:   &fooCoin2,
 				UnclaimedAmount: &fooCoin2,
-				NextClaimFrom:   &nextClaimFrom,
+				NextClaimFrom:   &secondClaimFrom,
 				Period:          &period,
 				TranchesLeft:    1,
 			},

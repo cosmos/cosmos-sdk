@@ -167,16 +167,16 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			expErr:           true,
 			expErrMsg:        "no budget found for recipient",
 		},
-		"claiming before start time": {
+		"claiming before last claimed at": {
 			preRun: func() {
-				startTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(3600 * time.Second)
-				// Prepare the budget proposal with a future start time
+				startTime := startTime.Add(3600 * time.Second)
+				// Prepare the budget proposal with a future last claimed at time
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					StartTime:        &startTime,
 					Tranches:         2,
 					Period:           &period,
+					LastClaimedAt:    &startTime,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					StartTime:        &startTime,
+					LastClaimedAt:    &startTime,
 					Tranches:         1,
 					Period:           &period,
 				}
@@ -209,7 +209,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					StartTime:        &startTime,
+					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
 				}
@@ -226,7 +226,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					StartTime:        &startTime,
+					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
 				}
@@ -254,7 +254,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					StartTime:        &startTimeBeforeMonth,
+					LastClaimedAt:    &startTimeBeforeMonth,
 					Tranches:         2,
 					Period:           &oneMonthPeriod,
 				}
@@ -285,7 +285,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
 					TotalBudget:      &fooCoin,
-					StartTime:        &startTime,
+					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
 				}

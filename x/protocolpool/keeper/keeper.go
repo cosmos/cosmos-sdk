@@ -369,15 +369,12 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 	}
 
 	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
-	startTime := budget.StartTime
 
-	// Check if the start time is reached
-	if currentTime.Before(*startTime) {
-		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
-	}
-
-	if budget.NextClaimFrom == nil || budget.NextClaimFrom.IsZero() {
-		budget.NextClaimFrom = budget.StartTime
+	// Check if the distribution time has not reached
+	if budget.LastClaimedAt != nil {
+		if currentTime.Before(*budget.LastClaimedAt) {
+			return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
+		}
 	}
 
 	if budget.TranchesLeft == 0 && budget.ClaimedAmount == nil {
@@ -391,7 +388,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 
 func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAddress, budget types.Budget, currentTime time.Time) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
-	timeElapsed := currentTime.Sub(*budget.NextClaimFrom)
+	timeElapsed := currentTime.Sub(*budget.LastClaimedAt)
 
 	// Check the time elapsed has passed period length
 	if timeElapsed < *budget.Period {
@@ -413,8 +410,8 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	budget.ClaimedAmount = &claimedAmount
 
 	// Update the last claim time for the budget
-	nextClaimFrom := budget.NextClaimFrom.Add(*budget.Period)
-	budget.NextClaimFrom = &nextClaimFrom
+	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period)
+	budget.LastClaimedAt = &nextClaimFrom
 
 	k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
@@ -456,7 +453,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 	updatedBudget := types.Budget{
 		RecipientAddress: bp.RecipientAddress,
 		TotalBudget:      bp.TotalBudget,
-		StartTime:        bp.StartTime,
+		LastClaimedAt:    bp.StartTime,
 		Tranches:         bp.Tranches,
 		Period:           bp.Period,
 	}

@@ -27,11 +27,16 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 	}
 	for _, budget := range data.Budget {
 		// Validate StartTime
-		if budget.StartTime == nil || budget.StartTime.IsZero() {
-			budget.StartTime = &currentTime
+		if budget.LastClaimedAt == nil || budget.LastClaimedAt.IsZero() {
+			budget.LastClaimedAt = &currentTime
 		}
+		// ignore budgets with period < 0
+		if budget.Period != nil && budget.Period.Seconds() <= 0 {
+			continue
+		}
+
 		// ignore budget with start time < currentTime
-		if budget.StartTime.Before(currentTime) {
+		if budget.LastClaimedAt.Before(currentTime) {
 			continue
 		}
 
@@ -79,8 +84,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 			RecipientAddress: recipient,
 			TotalBudget:      value.TotalBudget,
 			ClaimedAmount:    value.ClaimedAmount,
-			StartTime:        value.StartTime,
-			NextClaimFrom:    value.NextClaimFrom,
+			LastClaimedAt:    value.LastClaimedAt,
 			Tranches:         value.Tranches,
 			TranchesLeft:     value.TranchesLeft,
 			Period:           value.Period,

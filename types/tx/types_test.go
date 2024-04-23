@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing"
 	"encoding/hex"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -12,7 +11,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	types2 "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/require"
-
 	"testing"
 )
 
@@ -185,19 +183,20 @@ func TestTx_GetSigners(t *testing.T) {
 		Signatures: [][]byte{[]byte("signature")},
 	}
 
+	addrCdc := address.NewBech32Codec("cosmos")
 	options := codectypes.InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: signing.Options{
-			AddressCodec:          address.NewBech32Codec("cosmos"),
+			AddressCodec:          addrCdc,
 			ValidatorAddressCodec: dummyAddressCodec{},
 		},
 	}
 	ir, err := codectypes.NewInterfaceRegistryWithOptions(options)
 	cdc := codec.NewProtoCodec(ir)
-	actual, _, err := transaction.GetSigners(cdc)
+	b, _, err := transaction.GetSigners(cdc)
 
-	fmt.Println(string(actual[0]))
-	expect := [][]byte{[]byte("signature")}
+	expect := "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs"
+	actual, err := addrCdc.BytesToString(b[0])
 	require.Equal(t, expect, actual)
 	require.Nil(t, err)
 }

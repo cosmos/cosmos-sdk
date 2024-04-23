@@ -348,7 +348,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		apiAddr := ""
 		cmtCfg.RPC.ListenAddress = ""
 		appCfg.GRPC.Enable = false
-		appCfg.GRPCWeb.Enable = false
 		apiListenAddr := ""
 		if i == 0 {
 			if cfg.APIAddress != "" {
@@ -388,7 +387,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%s", port)
 			}
 			appCfg.GRPC.Enable = true
-			appCfg.GRPCWeb.Enable = true
 		}
 
 		logger := log.NewNopLogger()

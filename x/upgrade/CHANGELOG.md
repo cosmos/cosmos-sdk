@@ -29,13 +29,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) Follow latest `cosmossdk.io/core` `PreBlock` simplification.
 
+### API Breaking Changes
+
+* [#19443](https://github.com/cosmos/cosmos-sdk/pull/19443) `NewKeeper` takes an `appmodule.Environment` instead of individual services.
+
 ### State Machine Breaking
 
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) Upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
 
-### API Breaking Changes
+## [v0.1.2](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.2) - 2024-04-22
 
-* [#19443](https://github.com/cosmos/cosmos-sdk/pull/19443) `NewKeeper` takes an `appmodule.Environment` instead of individual services.
+### Improvements
+
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Upgrade SDK version due to Prometheus breaking change.
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Bump `cosmossdk.io/store` to v1.1.0.
 
 ### Bug Fixes
 

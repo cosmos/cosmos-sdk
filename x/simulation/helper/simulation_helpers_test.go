@@ -9,10 +9,10 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"

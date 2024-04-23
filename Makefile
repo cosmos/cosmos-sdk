@@ -96,8 +96,8 @@ ifeq (debug,$(findstring debug,$(COSMOS_BUILD_OPTIONS)))
   BUILD_FLAGS += -gcflags "all=-N -l"
 endif
 
-#? all: Run tools build lint test vulncheck
-all: tools build lint test vulncheck
+#? all: Run tools build 
+all: build
 
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile

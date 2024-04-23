@@ -1,17 +1,20 @@
 package tx
 
 import (
+	"encoding/hex"
+	"testing"
+
+	"github.com/cosmos/gogoproto/proto"
+	types2 "github.com/cosmos/gogoproto/types/any"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing"
-	"encoding/hex"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/gogoproto/proto"
-	types2 "github.com/cosmos/gogoproto/types/any"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestTx_GetMsgs(t *testing.T) {

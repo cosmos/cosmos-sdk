@@ -75,9 +75,7 @@ func initFixture(t *testing.T) *fixture {
 	newCtx := sdk.NewContext(cms, true, logger)
 
 	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
 	queryRouter := baseapp.NewGRPCQueryRouter()
-	queryRouter.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))

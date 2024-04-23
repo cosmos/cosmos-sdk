@@ -61,6 +61,10 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 
 Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
 
+##### GRPC-WEB
+
+Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start).
+
 ##### AnteHandlers
 
 The `GasConsumptionDecorator` and `IncreaseSequenceDecorator` have been merged with the SigVerificationDecorator, so you'll

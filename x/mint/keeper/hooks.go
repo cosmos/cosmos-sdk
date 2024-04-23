@@ -78,8 +78,8 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 			return err
 		}
 
-		headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
-		k.Logger(ctx).Info("AfterEpochEnd, minted coins", types.ModuleName, "mintedCoins", mintedCoins, "height", headerInfo.Height)
+		headerInfo := k.Environment.HeaderService.HeaderInfo(ctx)
+		k.logger.Info("AfterEpochEnd, minted coins", types.ModuleName, "mintedCoins", mintedCoins, "height", headerInfo.Height)
 
 		// send the minted coins to the fee collector account
 		err = k.AddCollectedFees(ctx, mintedCoins)
@@ -91,7 +91,7 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 		}
 
-		return k.environment.EventService.EventManager(ctx).EmitKV(
+		return k.Environment.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeMint,
 			event.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochNumber)),
 			event.NewAttribute(types.AttributeKeyEpochProvisions, minter.EpochProvisions.String()),

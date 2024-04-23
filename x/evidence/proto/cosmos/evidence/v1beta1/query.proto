@@ -26,10 +26,8 @@ message QueryEvidenceRequest {
   // Deprecated: Use hash, a HEX encoded string, instead.
   bytes evidence_hash = 1 [deprecated = true];
 
-  // hash defines the evidence hash of the requested evidence.
-  //
-  // Since: cosmos-sdk 0.47
-  string hash = 2;
+  // hash defines the evidence hash of the requested evidence.  string hash = 2 [(cosmos_proto.field_added_in) =
+  // "cosmos-sdk 0.47"];
 }
 
 // QueryEvidenceResponse is the response type for the Query/Evidence RPC method.

@@ -1,6 +1,6 @@
 module github.com/cosmos-sdk/tests/starship/tests
 
-go 1.22.2
+go 1.21.0
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

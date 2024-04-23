@@ -3,7 +3,6 @@ packs:
 queries:
   - uses: security-and-quality
   - uses: security-experimental
-  - uses: security-extended
 paths-ignore:
   - api
   - '**/*_test.go'

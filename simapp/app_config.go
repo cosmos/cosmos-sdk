@@ -130,6 +130,7 @@ var (
 						group.ModuleName,
 						pooltypes.ModuleName,
 					},
+					// The following is mostly only needed when ModuleName != StoreKey name.
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
 							ModuleName: authtypes.ModuleName,

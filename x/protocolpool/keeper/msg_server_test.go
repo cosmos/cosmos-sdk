@@ -177,6 +177,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Tranches:         2,
 					Period:           &period,
 					LastClaimedAt:    &startTime,
+					BudgetPerTranche: &fooCoin2,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -195,6 +196,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					LastClaimedAt:    &startTime,
 					Tranches:         1,
 					Period:           &period,
+					BudgetPerTranche: &fooCoin2,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -212,6 +214,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
+					BudgetPerTranche: &fooCoin2,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -229,6 +232,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
+					BudgetPerTranche: &fooCoin2,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -257,6 +261,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					LastClaimedAt:    &startTimeBeforeMonth,
 					Tranches:         2,
 					Period:           &oneMonthPeriod,
+					BudgetPerTranche: &fooCoin2,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -288,6 +293,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
+					BudgetPerTranche: &fooCoin2,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)

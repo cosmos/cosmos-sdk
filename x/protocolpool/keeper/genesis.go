@@ -86,7 +86,6 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 			ClaimedAmount:    value.ClaimedAmount,
 			LastClaimedAt:    value.LastClaimedAt,
 			Tranches:         value.Tranches,
-			TranchesLeft:     value.TranchesLeft,
 			Period:           value.Period,
 		})
 		return false, nil

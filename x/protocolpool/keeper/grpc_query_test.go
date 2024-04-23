@@ -53,6 +53,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
+					BudgetPerTranche: &fooCoin2,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -81,6 +82,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 					LastClaimedAt:    &startTime,
 					Tranches:         2,
 					Period:           &period,
+					BudgetPerTranche: &fooCoin2,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)

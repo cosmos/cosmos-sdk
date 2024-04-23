@@ -59,10 +59,6 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		unclaimedBudget = budget.TotalBudget.Sub(*budget.ClaimedAmount)
 	}
 
-	if budget.TranchesLeft == 0 {
-		budget.TranchesLeft = budget.Tranches
-	}
-
 	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period)
 
 	return &types.QueryUnclaimedBudgetResponse{
@@ -71,6 +67,6 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		UnclaimedAmount: &unclaimedBudget,
 		NextClaimFrom:   &nextClaimFrom,
 		Period:          budget.Period,
-		TranchesLeft:    budget.TranchesLeft,
+		TranchesLeft:    budget.Tranches,
 	}, nil
 }

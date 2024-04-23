@@ -20,8 +20,6 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
-var ErrEmptyConfigENV = errors.New("config env variable not set or empty")
-
 // environment variable names
 const (
 	EnvHome                     = "DAEMON_HOME"

@@ -13,7 +13,7 @@ var configCmd = &cobra.Command{
 otherwise it will display the config from the environment variables.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := cosmovisor.GetConfigFromFile(cmd.Flag(cosmovisor.FlagConfig).Value.String())
+		cfg, err := cosmovisor.GetConfigFromFile(cmd.Flag(cosmovisor.FlagCosmovisorConfig).Value.String())
 		if err != nil {
 			return err
 		}

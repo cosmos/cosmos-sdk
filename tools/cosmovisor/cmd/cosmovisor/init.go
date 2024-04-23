@@ -19,8 +19,8 @@ func NewIntCmd() *cobra.Command {
 	initCmd := &cobra.Command{
 		Use:   "init <path to executable>",
 		Short: "Initialize a cosmovisor daemon home directory.",
-		Long: `Initialize a cosmovisor daemon home directory with the provided executable 
-Configuration file uses default path (<-home->/cosmovisor/config.toml) to export the config.`,
+		Long: `Initialize a cosmovisor daemon home directory with the provided executable.
+Configuration file is initialized at the default path (<-home->/cosmovisor/config.toml).`,
 		Args:         cobra.ExactArgs(1),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

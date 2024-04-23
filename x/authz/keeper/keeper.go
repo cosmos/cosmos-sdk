@@ -256,6 +256,24 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 	})
 }
 
+// DeleteAllGrants revokes all authorizations granted to the grantee by the granter.
+func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) error {
+	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
+
+	granterStoreKey := granterStoreKey(granter)
+	iterator := storetypes.KVStorePrefixIterator(store, granterStoreKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		// Directly delete the grant without deserializing, as we're deleting all grants for the msgType.
+		store.Delete(iterator.Key())
+	}
+
+	return k.EventService.EventManager((ctx)).Emit(&authz.EventRevokeAll{
+		Granter: granter.String(),
+	})
+}
+
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
 func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccAddress) ([]authz.Authorization, error) {
 	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))

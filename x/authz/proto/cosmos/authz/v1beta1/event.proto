@@ -29,6 +29,16 @@ message EventRevoke {
   string grantee = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
+// EventRevokeAll is emitted on Msg/RevokeAll
+//
+// Since: cosmos-sdk 0.50
+message EventRevokeAll {
+  // Msg type URL for which all authorizations are revoked
+  string msg_type_url = 2;
+  // Granter account address
+  string granter = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
 // EventPruneExpiredGrants is emitted on Msg/PruneExpiredGrants
 //
 // Since: x/authz 1.0.0

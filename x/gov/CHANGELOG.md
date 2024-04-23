@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#20087](https://github.com/cosmos/cosmos-sdk/pull/20087) add `MaxVoteOptionsLen`
 * [#19592](https://github.com/cosmos/cosmos-sdk/pull/19592) Add custom tally function.
 * [#19304](https://github.com/cosmos/cosmos-sdk/pull/19304) Add `MsgSudoExec` for allowing executing any message as a sudo.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Add message based params configuration.
@@ -34,7 +35,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals.
 * [#18620](https://github.com/cosmos/cosmos-sdk/pull/18620) Add optimistic proposals.
 * [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
-* [#19853](https://github.com/cosmos/cosmos-sdk/pull/19853) Emit `depositor` in `EventTypeProposalDeposit` and `proposal_type` in `EventTypeSubmitProposal`
 
 ### Improvements
 
@@ -73,7 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a `ProposalType` parameter instead.
 * [#17496](https://github.com/cosmos/cosmos-sdk/pull/17496) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Move `QueryProposalVotesParams` and `QueryVoteParams` from the `types/v1` package to `utils` and remove unused `querier.go` file.
-* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 
 ### Deprecated
 

@@ -78,7 +78,7 @@ Example of how to define `gen` files can be found [here](https://docs.buf.build/
 
 #### `buf.gen.swagger.yaml`
 
-`buf.gen.swagger.yaml` generates the swagger documentation for the query and messages of the chain. This will only define the REST API end points that were defined in the query and msg servers. You can find examples of this [here](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/bank/v1beta1/query.proto#L19)
+`buf.gen.swagger.yaml` generates the swagger documentation for the query and messages of the chain. This will only define the REST API end points that were defined in the query and msg servers. You can find examples of this [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/proto/cosmos/bank/v1beta1/query.proto)
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.swagger.yaml#L1-L6

@@ -675,7 +675,7 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
 
-// Make sure that that the retrieving the delegations doesn't affect the state
+// Make sure that the retrieving the delegations doesn't affect the state
 func (s *KeeperTestSuite) TestGetRedelegationsFromSrcValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()

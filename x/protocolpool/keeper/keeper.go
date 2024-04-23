@@ -403,7 +403,11 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	amount = sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
 
 	// update the budget's remaining tranches
-	budget.TranchesLeft -= uint64(periodsPassed)
+	if budget.TranchesLeft > uint64(periodsPassed) {
+		budget.TranchesLeft -= uint64(periodsPassed)
+	} else {
+		budget.TranchesLeft = 0
+	}
 
 	// update the ClaimedAmount
 	claimedAmount := budget.ClaimedAmount.Add(amount)

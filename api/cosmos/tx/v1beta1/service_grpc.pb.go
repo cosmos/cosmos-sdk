@@ -43,24 +43,14 @@ type ServiceClient interface {
 	// GetTxsEvent fetches txs by event.
 	GetTxsEvent(ctx context.Context, in *GetTxsEventRequest, opts ...grpc.CallOption) (*GetTxsEventResponse, error)
 	// GetBlockWithTxs fetches a block with decoded txs.
-	//
-	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxsRequest, opts ...grpc.CallOption) (*GetBlockWithTxsResponse, error)
 	// TxDecode decodes the transaction.
-	//
-	// Since: cosmos-sdk 0.47
 	TxDecode(ctx context.Context, in *TxDecodeRequest, opts ...grpc.CallOption) (*TxDecodeResponse, error)
 	// TxEncode encodes the transaction.
-	//
-	// Since: cosmos-sdk 0.47
 	TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error)
 	// TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
-	//
-	// Since: cosmos-sdk 0.47
 	TxEncodeAmino(ctx context.Context, in *TxEncodeAminoRequest, opts ...grpc.CallOption) (*TxEncodeAminoResponse, error)
 	// TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
-	//
-	// Since: cosmos-sdk 0.47
 	TxDecodeAmino(ctx context.Context, in *TxDecodeAminoRequest, opts ...grpc.CallOption) (*TxDecodeAminoResponse, error)
 }
 
@@ -166,24 +156,14 @@ type ServiceServer interface {
 	// GetTxsEvent fetches txs by event.
 	GetTxsEvent(context.Context, *GetTxsEventRequest) (*GetTxsEventResponse, error)
 	// GetBlockWithTxs fetches a block with decoded txs.
-	//
-	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(context.Context, *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error)
 	// TxDecode decodes the transaction.
-	//
-	// Since: cosmos-sdk 0.47
 	TxDecode(context.Context, *TxDecodeRequest) (*TxDecodeResponse, error)
 	// TxEncode encodes the transaction.
-	//
-	// Since: cosmos-sdk 0.47
 	TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error)
 	// TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
-	//
-	// Since: cosmos-sdk 0.47
 	TxEncodeAmino(context.Context, *TxEncodeAminoRequest) (*TxEncodeAminoResponse, error)
 	// TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
-	//
-	// Since: cosmos-sdk 0.47
 	TxDecodeAmino(context.Context, *TxDecodeAminoRequest) (*TxDecodeAminoResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }

@@ -2,6 +2,7 @@ package lockup
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -18,15 +19,25 @@ var (
 )
 
 // NewDelayedLockingAccount creates a new DelayedLockingAccount object.
-func NewDelayedLockingAccount(d accountstd.Dependencies) (*DelayedLockingAccount, error) {
-	baseLockup := newBaseLockup(d)
-	return &DelayedLockingAccount{
-		baseLockup,
-	}, nil
+func NewDelayedLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		if clawbackEnable {
+			baseClawback := newBaseClawback(d)
+
+			return types.DELAYED_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_PREFIX, DelayedLockingAccount{
+				BaseAccount: baseClawback,
+			}, nil
+		}
+
+		baseLockup := newBaseLockup(d)
+		return types.DELAYED_LOCKING_ACCOUNT, DelayedLockingAccount{
+			BaseAccount: baseLockup,
+		}, nil
+	}
 }
 
 type DelayedLockingAccount struct {
-	*BaseLockup
+	types.BaseAccount
 }
 
 func (dva DelayedLockingAccount) Init(ctx context.Context, msg *types.MsgInitLockupAccount) (*types.MsgInitLockupAccountResponse, error) {
@@ -34,47 +45,59 @@ func (dva DelayedLockingAccount) Init(ctx context.Context, msg *types.MsgInitLoc
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
 
-	return dva.BaseLockup.Init(ctx, msg)
+	return dva.BaseAccount.Init(ctx, msg, nil)
 }
 
 func (dva *DelayedLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return dva.BaseLockup.Delegate(ctx, msg, dva.GetLockedCoinsWithDenoms)
+	baseLockup, ok := dva.BaseAccount.(*BaseLockup)
+	if !ok {
+		return nil, fmt.Errorf("clawback account type is not delegate enable")
+	}
+	return baseLockup.Delegate(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
 func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return dva.BaseLockup.Undelegate(ctx, msg)
+	baseLockup, ok := dva.BaseAccount.(*BaseLockup)
+	if !ok {
+		return nil, fmt.Errorf("clawback account type is not delegate enable")
+	}
+	return baseLockup.Undelegate(ctx, msg)
 }
 
 func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return dva.BaseLockup.SendCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
+	return dva.BaseAccount.SendCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
 func (dva *DelayedLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *types.MsgWithdraw) (
 	*types.MsgWithdrawResponse, error,
 ) {
-	return dva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
+	return dva.BaseAccount.WithdrawUnlockedCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
 func (dva *DelayedLockingAccount) ClawbackFunds(ctx context.Context, msg *types.MsgClawback) (
 	*types.MsgClawbackResponse, error,
 ) {
-	return dva.BaseLockup.ClawbackFunds(ctx, msg, dva.GetLockedCoinsWithDenoms)
+	baseClawback, ok := dva.BaseAccount.(*BaseClawback)
+	if !ok {
+		return nil, fmt.Errorf("clawback is not enable for this account type")
+	}
+	return baseClawback.ClawbackFunds(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
 // GetLockCoinsInfo returns the total number of unlocked and locked coins.
 func (dva DelayedLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (sdk.Coins, sdk.Coins, error) {
-	endTime, err := dva.EndTime.Get(ctx)
+	endTime, err := dva.GetEndTime().Get(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	originalLocking := sdk.Coins{}
-	err = dva.IterateCoinEntries(ctx, dva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
+	err = IterateCoinEntries(ctx, dva.GetOriginalFunds(), func(key string, value math.Int) (stop bool, err error) {
 		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
 		return false, nil
 	})
@@ -100,11 +123,11 @@ func (dva DelayedLockingAccount) GetLockedCoins(ctx context.Context, blockTime t
 
 // GetLockCoinInfoWithDenom returns the number of unlocked and locked coin for a specific denom.
 func (dva DelayedLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, blockTime time.Time, denom string) (*sdk.Coin, *sdk.Coin, error) {
-	endTime, err := dva.EndTime.Get(ctx)
+	endTime, err := dva.GetEndTime().Get(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	originalLockingAmt, err := dva.OriginalLocking.Get(ctx, denom)
+	originalLockingAmt, err := dva.GetOriginalFunds().Get(ctx, denom)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -133,11 +156,11 @@ func (dva DelayedLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, b
 func (dva DelayedLockingAccount) QueryVestingAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
 	*types.QueryLockupAccountInfoResponse, error,
 ) {
-	resp, err := dva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
+	resp, err := dva.BaseAccount.QueryAccountBaseInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	hs := dva.headerService.HeaderInfo(ctx)
+	hs := dva.GetHeaderService().HeaderInfo(ctx)
 	unlockedCoins, lockedCoins, err := dva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err

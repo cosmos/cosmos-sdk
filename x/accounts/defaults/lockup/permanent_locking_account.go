@@ -2,6 +2,7 @@ package lockup
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -17,22 +18,33 @@ var (
 )
 
 // NewPermanentLockingAccount creates a new PermanentLockingAccount object.
-func NewPermanentLockingAccount(d accountstd.Dependencies) (*PermanentLockingAccount, error) {
-	baseLockup := newBaseLockup(d)
+func NewPermanentLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		if clawbackEnable {
+			baseClawback := newBaseClawback(d)
 
-	return &PermanentLockingAccount{baseLockup}, nil
+			return types.PERMANENT_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_PREFIX, PermanentLockingAccount{
+				BaseAccount: baseClawback,
+			}, nil
+		}
+
+		baseLockup := newBaseLockup(d)
+		return types.PERMANENT_LOCKING_ACCOUNT, PermanentLockingAccount{
+			BaseAccount: baseLockup,
+		}, nil
+	}
 }
 
 type PermanentLockingAccount struct {
-	*BaseLockup
+	types.BaseAccount
 }
 
 func (plva PermanentLockingAccount) Init(ctx context.Context, msg *types.MsgInitLockupAccount) (*types.MsgInitLockupAccountResponse, error) {
-	resp, err := plva.BaseLockup.Init(ctx, msg)
+	resp, err := plva.BaseAccount.Init(ctx, msg, nil)
 	if err != nil {
 		return nil, err
 	}
-	err = plva.EndTime.Set(ctx, time.Time{})
+	err = plva.GetEndTime().Set(ctx, time.Time{})
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +57,7 @@ func (plva PermanentLockingAccount) Init(ctx context.Context, msg *types.MsgInit
 func (plva PermanentLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, blockTime time.Time, denoms ...string) (sdk.Coins, error) {
 	vestingCoins := sdk.Coins{}
 	for _, denom := range denoms {
-		originalVestingAmt, err := plva.OriginalLocking.Get(ctx, denom)
+		originalVestingAmt, err := plva.GetOriginalFunds().Get(ctx, denom)
 		if err != nil {
 			return nil, err
 		}
@@ -57,36 +69,48 @@ func (plva PermanentLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context
 func (plva *PermanentLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseLockup.Delegate(ctx, msg, plva.GetLockedCoinsWithDenoms)
+	baseLockup, ok := plva.BaseAccount.(*BaseLockup)
+	if !ok {
+		return nil, fmt.Errorf("clawback account type is not delegate enable")
+	}
+	return baseLockup.Delegate(ctx, msg, plva.GetLockedCoinsWithDenoms)
 }
 
 func (plva *PermanentLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseLockup.Undelegate(ctx, msg)
+	baseLockup, ok := plva.BaseAccount.(*BaseLockup)
+	if !ok {
+		return nil, fmt.Errorf("clawback account type is not delegate enable")
+	}
+	return baseLockup.Undelegate(ctx, msg)
 }
 
 func (plva *PermanentLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseLockup.SendCoins(ctx, msg, plva.GetLockedCoinsWithDenoms)
+	return plva.BaseAccount.SendCoins(ctx, msg, plva.GetLockedCoinsWithDenoms)
 }
 
 func (plva *PermanentLockingAccount) ClawbackFunds(ctx context.Context, msg *types.MsgClawback) (
 	*types.MsgClawbackResponse, error,
 ) {
-	return plva.BaseLockup.ClawbackFunds(ctx, msg, plva.GetLockedCoinsWithDenoms)
+	baseClawback, ok := plva.BaseAccount.(*BaseClawback)
+	if !ok {
+		return nil, fmt.Errorf("clawback is not enable for this account type")
+	}
+	return baseClawback.ClawbackFunds(ctx, msg, plva.GetLockedCoinsWithDenoms)
 }
 
 func (plva PermanentLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
 	*types.QueryLockupAccountInfoResponse, error,
 ) {
-	resp, err := plva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
+	resp, err := plva.BaseAccount.QueryAccountBaseInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	originalLocking := sdk.Coins{}
-	err = plva.IterateCoinEntries(ctx, plva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
+	err = IterateCoinEntries(ctx, plva.GetOriginalFunds(), func(key string, value math.Int) (stop bool, err error) {
 		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
 		return false, nil
 	})

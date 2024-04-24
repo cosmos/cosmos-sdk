@@ -2,6 +2,7 @@ package lockup
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -20,19 +21,27 @@ var (
 )
 
 // NewContinuousLockingAccount creates a new ContinuousLockingAccount object.
-func NewContinuousLockingAccount(d accountstd.Dependencies) (*ContinuousLockingAccount, error) {
-	baseLockup := newBaseLockup(d)
+func NewContinuousLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		if clawbackEnable {
+			baseClawback := newBaseClawback(d)
 
-	ContinuousLockingAccount := ContinuousLockingAccount{
-		BaseLockup: baseLockup,
-		StartTime:  collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+			return types.CONTINUOUS_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_PREFIX, ContinuousLockingAccount{
+				BaseAccount: baseClawback,
+				StartTime:   collections.NewItem(d.SchemaBuilder, types.StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+			}, nil
+		}
+
+		baseLockup := newBaseLockup(d)
+		return types.CONTINUOUS_LOCKING_ACCOUNT, ContinuousLockingAccount{
+			BaseAccount: baseLockup,
+			StartTime:   collections.NewItem(d.SchemaBuilder, types.StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		}, nil
 	}
-
-	return &ContinuousLockingAccount, nil
 }
 
 type ContinuousLockingAccount struct {
-	*BaseLockup
+	types.BaseAccount
 	StartTime collections.Item[time.Time]
 }
 
@@ -45,7 +54,7 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *types.MsgInit
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start before end)")
 	}
 
-	hs := cva.headerService.HeaderInfo(ctx)
+	hs := cva.GetHeaderService().HeaderInfo(ctx)
 
 	start := msg.StartTime
 	if msg.StartTime.IsZero() {
@@ -57,37 +66,49 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *types.MsgInit
 		return nil, err
 	}
 
-	return cva.BaseLockup.Init(ctx, msg)
+	return cva.BaseAccount.Init(ctx, msg, nil)
 }
 
 func (cva *ContinuousLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return cva.BaseLockup.Delegate(ctx, msg, cva.GetLockedCoinsWithDenoms)
+	baseLockup, ok := cva.BaseAccount.(*BaseLockup)
+	if !ok {
+		return nil, fmt.Errorf("clawback account type is not delegate enable")
+	}
+	return baseLockup.Delegate(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
 func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return cva.BaseLockup.Undelegate(ctx, msg)
+	baseLockup, ok := cva.BaseAccount.(*BaseLockup)
+	if !ok {
+		return nil, fmt.Errorf("clawback account type is not delegate enable")
+	}
+	return baseLockup.Undelegate(ctx, msg)
 }
 
 func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return cva.BaseLockup.SendCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
+	return cva.BaseAccount.SendCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
 func (cva *ContinuousLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *types.MsgWithdraw) (
 	*types.MsgWithdrawResponse, error,
 ) {
-	return cva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
+	return cva.BaseAccount.WithdrawUnlockedCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
 func (cva *ContinuousLockingAccount) ClawbackFunds(ctx context.Context, msg *types.MsgClawback) (
 	*types.MsgClawbackResponse, error,
 ) {
-	return cva.BaseLockup.ClawbackFunds(ctx, msg, cva.GetLockedCoinsWithDenoms)
+	baseClawback, ok := cva.BaseAccount.(*BaseClawback)
+	if !ok {
+		return nil, fmt.Errorf("clawback is not enable for this account type")
+	}
+	return baseClawback.ClawbackFunds(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
 // GetLockCoinsInfo returns the total number of unlocked and locked coins.
@@ -102,12 +123,12 @@ func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockT
 	if err != nil {
 		return nil, nil, err
 	}
-	endTime, err := cva.EndTime.Get(ctx)
+	endTime, err := cva.GetEndTime().Get(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	var originalVesting sdk.Coins
-	err = cva.IterateCoinEntries(ctx, cva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
+	err = IterateCoinEntries(ctx, cva.GetOriginalFunds(), func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		vestedCoin, vestingCoin, err := cva.GetLockCoinInfoWithDenom(ctx, blockTime, key)
 		if err != nil {
@@ -139,12 +160,12 @@ func (cva ContinuousLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context
 	if err != nil {
 		return nil, nil, err
 	}
-	endTime, err := cva.EndTime.Get(ctx)
+	endTime, err := cva.GetEndTime().Get(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	originalLockingAmt, err := cva.OriginalLocking.Get(ctx, denom)
+	originalLockingAmt, err := cva.GetOriginalFunds().Get(ctx, denom)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -195,7 +216,7 @@ func (cva ContinuousLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context
 func (cva ContinuousLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
 	*types.QueryLockupAccountInfoResponse, error,
 ) {
-	resp, err := cva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
+	resp, err := cva.BaseAccount.QueryAccountBaseInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +224,7 @@ func (cva ContinuousLockingAccount) QueryLockupAccountInfo(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	hs := cva.headerService.HeaderInfo(ctx)
+	hs := cva.GetHeaderService().HeaderInfo(ctx)
 	unlockedCoins, lockedCoins, err := cva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
@@ -228,5 +249,5 @@ func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 }
 
 func (cva ContinuousLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, cva.QueryLockupAccountInfo)
+	accountstd.RegisterQueryHandler(builder, cva.QueryAccountBaseInfo)
 }

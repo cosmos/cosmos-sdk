@@ -2,6 +2,7 @@ package lockup
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -20,35 +21,33 @@ import (
 var _ accountstd.Interface = (*PeriodicLockingAccount)(nil)
 
 // NewPeriodicLockingAccount creates a new PeriodicLockingAccount object.
-func NewPeriodicLockingAccount(d accountstd.Dependencies) (*PeriodicLockingAccount, error) {
-	baseLockup := newBaseLockup(d)
+func NewPeriodicLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		if clawbackEnable {
+			baseClawback := newBaseClawback(d)
 
-	periodicsVestingAccount := PeriodicLockingAccount{
-		BaseLockup:     baseLockup,
-		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
-		LockingPeriods: collections.NewVec(d.SchemaBuilder, LockingPeriodsPrefix, "locking_periods", codec.CollValue[types.Period](d.LegacyStateCodec)),
+			return types.PERIODIC_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_PREFIX, PeriodicLockingAccount{
+				BaseAccount:    baseClawback,
+				StartTime:      collections.NewItem(d.SchemaBuilder, types.StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+				LockingPeriods: collections.NewVec(d.SchemaBuilder, types.LockingPeriodsPrefix, "locking_periods", codec.CollValue[types.Period](d.LegacyStateCodec))}, nil
+		}
+
+		baseLockup := newBaseLockup(d)
+		return types.PERIODIC_LOCKING_ACCOUNT, PeriodicLockingAccount{
+			BaseAccount:    baseLockup,
+			StartTime:      collections.NewItem(d.SchemaBuilder, types.StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+			LockingPeriods: collections.NewVec(d.SchemaBuilder, types.LockingPeriodsPrefix, "locking_periods", codec.CollValue[types.Period](d.LegacyStateCodec))}, nil
 	}
-
-	return &periodicsVestingAccount, nil
 }
 
 type PeriodicLockingAccount struct {
-	*BaseLockup
+	types.BaseAccount
 	StartTime      collections.Item[time.Time]
 	LockingPeriods collections.Vec[types.Period]
 }
 
 func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *types.MsgInitPeriodicLockingAccount) (*types.MsgInitPeriodicLockingAccountResponse, error) {
-	owner, err := pva.addressCodec.StringToBytes(msg.Owner)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
-	}
-	admin, err := pva.addressCodec.StringToBytes(msg.Admin)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'admin' address: %s", err)
-	}
-
-	hs := pva.headerService.HeaderInfo(ctx)
+	hs := pva.GetHeaderService().HeaderInfo(ctx)
 
 	if msg.StartTime.Before(hs.Time) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("start time %s should be after block time")
@@ -68,7 +67,7 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *types.MsgInitPe
 		totalCoins = totalCoins.Add(period.Amount...)
 		// Calculate end time
 		endTime = endTime.Add(period.Length)
-		err = pva.LockingPeriods.Push(ctx, period)
+		err := pva.LockingPeriods.Push(ctx, period)
 		if err != nil {
 			return nil, err
 		}
@@ -80,50 +79,17 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *types.MsgInitPe
 	}
 
 	sortedAmt := totalCoins.Sort()
-	for _, coin := range sortedAmt {
-		err := pva.OriginalLocking.Set(ctx, coin.Denom, coin.Amount)
-		if err != nil {
-			return nil, err
-		}
 
-		// Set initial value for all locked token
-		err = pva.WithdrawedCoins.Set(ctx, coin.Denom, math.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
-
-		// Set initial value for all locked token
-		err = pva.DelegatedFree.Set(ctx, coin.Denom, math.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
-
-		// Set initial value for all locked token
-		err = pva.DelegatedLocking.Set(ctx, coin.Denom, math.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
-
-		// Set initial value for all locked token
-		err = pva.ClawbackDebt.Set(ctx, coin.Denom, math.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
+	// TODO: maybe add periods in MsgInitLockupAccount so periodic account can use it
+	msgInit := &types.MsgInitLockupAccount{
+		Owner:     msg.Owner,
+		EndTime:   endTime,
+		StartTime: msg.StartTime,
+		Admin:     msg.Admin,
 	}
 
-	err = pva.StartTime.Set(ctx, msg.StartTime)
-	if err != nil {
-		return nil, err
-	}
-	err = pva.EndTime.Set(ctx, endTime)
-	if err != nil {
-		return nil, err
-	}
-	err = pva.Owner.Set(ctx, owner)
-	if err != nil {
-		return nil, err
-	}
-	err = pva.Admin.Set(ctx, admin)
+	pva.BaseAccount.Init(ctx, msgInit, sortedAmt)
+	err := pva.StartTime.Set(ctx, msg.StartTime)
 	if err != nil {
 		return nil, err
 	}
@@ -134,31 +100,43 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *types.MsgInitPe
 func (pva *PeriodicLockingAccount) Delegate(ctx context.Context, msg *types.MsgDelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return pva.BaseLockup.Delegate(ctx, msg, pva.GetLockedCoinsWithDenoms)
+	baseLockup, ok := pva.BaseAccount.(*BaseLockup)
+	if !ok {
+		return nil, fmt.Errorf("clawback account type is not delegate enable")
+	}
+	return baseLockup.Delegate(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
 func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return pva.BaseLockup.Undelegate(ctx, msg)
+	baseLockup, ok := pva.BaseAccount.(*BaseLockup)
+	if !ok {
+		return nil, fmt.Errorf("clawback account type is not delegate enable")
+	}
+	return baseLockup.Undelegate(ctx, msg)
 }
 
 func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {
-	return pva.BaseLockup.SendCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
+	return pva.BaseAccount.SendCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
 func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *types.MsgWithdraw) (
 	*types.MsgWithdrawResponse, error,
 ) {
-	return pva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
+	return pva.BaseAccount.WithdrawUnlockedCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
 func (pva *PeriodicLockingAccount) ClawbackFunds(ctx context.Context, msg *types.MsgClawback) (
 	*types.MsgClawbackResponse, error,
 ) {
-	return pva.BaseLockup.ClawbackFunds(ctx, msg, pva.GetLockedCoinsWithDenoms)
+	baseClawback, ok := pva.BaseAccount.(*BaseClawback)
+	if !ok {
+		return nil, fmt.Errorf("clawback is not enable for this account type")
+	}
+	return baseClawback.ClawbackFunds(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
 // IteratePeriods iterates over all the Period entries.
@@ -188,12 +166,12 @@ func (pva PeriodicLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTim
 	if err != nil {
 		return nil, nil, err
 	}
-	endTime, err := pva.EndTime.Get(ctx)
+	endTime, err := pva.GetEndTime().Get(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	originalLocking := sdk.Coins{}
-	err = pva.IterateCoinEntries(ctx, pva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
+	err = IterateCoinEntries(ctx, pva.GetOriginalFunds(), func(key string, value math.Int) (stop bool, err error) {
 		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
 		return false, nil
 	})
@@ -255,11 +233,11 @@ func (pva PeriodicLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, 
 	if err != nil {
 		return nil, nil, err
 	}
-	endTime, err := pva.EndTime.Get(ctx)
+	endTime, err := pva.GetEndTime().Get(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	originalLockingAmt, err := pva.OriginalLocking.Get(ctx, denom)
+	originalLockingAmt, err := pva.GetOriginalFunds().Get(ctx, denom)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -320,7 +298,7 @@ func (pva PeriodicLockingAccount) GetLockedCoinsWithDenoms(ctx context.Context, 
 func (pva PeriodicLockingAccount) QueryLockupAccountInfo(ctx context.Context, req *types.QueryLockupAccountInfoRequest) (
 	*types.QueryLockupAccountInfoResponse, error,
 ) {
-	resp, err := pva.BaseLockup.QueryLockupAccountBaseInfo(ctx, req)
+	resp, err := pva.BaseAccount.QueryAccountBaseInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -328,7 +306,7 @@ func (pva PeriodicLockingAccount) QueryLockupAccountInfo(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	hs := pva.headerService.HeaderInfo(ctx)
+	hs := pva.GetHeaderService().HeaderInfo(ctx)
 	unlockedCoins, lockedCoins, err := pva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err

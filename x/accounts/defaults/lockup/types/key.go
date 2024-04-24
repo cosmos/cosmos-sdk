@@ -19,8 +19,9 @@ var (
 )
 
 var (
-	CONTINUOUS_LOCKING_ACCOUNT = "continuous-locking-account"
-	DELAYED_LOCKING_ACCOUNT    = "delayed-locking-account"
-	PERIODIC_LOCKING_ACCOUNT   = "periodic-locking-account"
-	PERMANENT_LOCKING_ACCOUNT  = "permanent-locking-account"
+	CONTINUOUS_LOCKING_ACCOUNT = "continuous"
+	DELAYED_LOCKING_ACCOUNT    = "delayed"
+	PERIODIC_LOCKING_ACCOUNT   = "periodic"
+	PERMANENT_LOCKING_ACCOUNT  = "permanent"
+	CLAWBACK_ENABLE_PREFIX     = "-clawback-enable"
 )

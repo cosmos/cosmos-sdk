@@ -274,11 +274,13 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 
 	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
 
-	_, err = genesisState.GetStateChanges() // TODO set the state changes in the store
+	stateChanges, err := genesisState.GetStateChanges()
 	if err != nil {
 		return nil, err
 	}
-	stateRoot, err := c.store.Commit(nil)
+	stateRoot, err := c.store.Commit(&store.Changeset{
+		Changes: stateChanges,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}

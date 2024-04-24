@@ -294,10 +294,16 @@ func NewSimApp(
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
 		// Lockup account
-		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
-		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
-		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
-		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
+		lockup.NewContinuousLockingAccount(false),
+		lockup.NewPeriodicLockingAccount(false),
+		lockup.NewDelayedLockingAccount(false),
+		lockup.NewPermanentLockingAccount(false),
+
+		// Lockup account clawback enable
+		lockup.NewContinuousLockingAccount(true),
+		lockup.NewPeriodicLockingAccount(true),
+		lockup.NewDelayedLockingAccount(true),
+		lockup.NewPermanentLockingAccount(true),
 		// PRODUCTION: add
 		baseaccount.NewAccount("base", txConfig.SignModeHandler()),
 	)

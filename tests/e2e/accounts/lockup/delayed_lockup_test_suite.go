@@ -91,6 +91,11 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 		)
 		require.NoError(t, err)
 		require.NotNil(t, del)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(100)))
 	})
 	t.Run("ok - execute withdraw reward message", func(t *testing.T) {
 		msg := &types.MsgWithdrawReward{
@@ -119,6 +124,11 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 		)
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 	})
 
 	// Update context time

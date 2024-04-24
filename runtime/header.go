@@ -12,6 +12,6 @@ var _ header.Service = (*HeaderService)(nil)
 
 type HeaderService struct{}
 
-func (h HeaderService) GetHeaderInfo(ctx context.Context) header.Info {
+func (h HeaderService) HeaderInfo(ctx context.Context) header.Info {
 	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
 }

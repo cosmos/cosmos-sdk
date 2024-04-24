@@ -533,10 +533,6 @@ func startAPIServer(
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
-	if !cfg.Telemetry.Enabled {
-		return nil, nil
-	}
-
 	return telemetry.New(cfg.Telemetry)
 }
 

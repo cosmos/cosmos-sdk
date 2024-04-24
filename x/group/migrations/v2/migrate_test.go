@@ -31,11 +31,19 @@ import (
 
 var (
 	policies      = []sdk.AccAddress{policyAddr1, policyAddr2, policyAddr3}
-	policyAddr1   = sdk.MustAccAddressFromBech32("cosmos1q32tjg5qm3n9fj8wjgpd7gl98prefntrckjkyvh8tntp7q33zj0s5tkjrk")
-	policyAddr2   = sdk.MustAccAddressFromBech32("cosmos1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfwkgpd")
-	policyAddr3   = sdk.MustAccAddressFromBech32("cosmos1dlszg2sst9r69my4f84l3mj66zxcf3umcgujys30t84srg95dgvsmn3jeu")
+	policyAddr1   = mustAccAddressFromBech32("cosmos1q32tjg5qm3n9fj8wjgpd7gl98prefntrckjkyvh8tntp7q33zj0s5tkjrk")
+	policyAddr2   = mustAccAddressFromBech32("cosmos1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfwkgpd")
+	policyAddr3   = mustAccAddressFromBech32("cosmos1dlszg2sst9r69my4f84l3mj66zxcf3umcgujys30t84srg95dgvsmn3jeu")
 	authorityAddr = sdk.AccAddress("authority")
 )
+
+func mustAccAddressFromBech32(address string) sdk.AccAddress {
+	addr, err := addresscodec.NewBech32Codec("cosmos").StringToBytes(address)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
 
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, groupmodule.AppModule{}).Codec
@@ -62,7 +70,7 @@ func TestMigrate(t *testing.T) {
 }
 
 func createGroupPolicies(ctx sdk.Context, storeService corestore.KVStoreService, cdc codec.Codec, policies []sdk.AccAddress, addressCodec address.Codec) (orm.PrimaryKeyTable, orm.Sequence, error) {
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
+	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc, addressCodec)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -103,10 +111,11 @@ func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc c
 	if err != nil {
 		return nil, nil, err
 	}
+	// gomock initializations
 	ctrl := gomock.NewController(&testing.T{})
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
 
-	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr, acctsModKeeper)
+	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, acctsModKeeper, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr)
 
 	oldPolicyAccounts := make([]*authtypes.ModuleAccount, len(policies))
 	for i, policyAddr := range policies {

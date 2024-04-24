@@ -260,7 +260,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, &app.AccountsKeeper, authsims.RandomGenesisAccounts),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
@@ -306,7 +306,7 @@ func NewSimApp(
 	return app
 }
 
-// overwritte default ante handlers with custom ante handlers
+// overwrite default ante handlers with custom ante handlers
 // set SkipAnteHandler to true in app config and set custom ante handler on baseapp
 func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(

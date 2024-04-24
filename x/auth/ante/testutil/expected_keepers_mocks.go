@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	address "cosmossdk.io/core/address"
+	appmodule "cosmossdk.io/core/appmodule"
 	types "cosmossdk.io/x/auth/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -63,6 +64,20 @@ func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types0.AccAddre
 func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
+}
+
+// GetEnvironment mocks base method.
+func (m *MockAccountKeeper) GetEnvironment() appmodule.Environment {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironment")
+	ret0, _ := ret[0].(appmodule.Environment)
+	return ret0
+}
+
+// GetEnvironment indicates an expected call of GetEnvironment.
+func (mr *MockAccountKeeperMockRecorder) GetEnvironment() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironment", reflect.TypeOf((*MockAccountKeeper)(nil).GetEnvironment))
 }
 
 // GetModuleAddress mocks base method.

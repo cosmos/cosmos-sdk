@@ -1,7 +1,7 @@
 package nft
 
 import (
-	_ "cosmossdk.io/x/accounts"
+	_ "cosmossdk.io/x/accounts"       // import as blank for app wiring
 	_ "cosmossdk.io/x/auth"           // import as blank for app wiring
 	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
 	_ "cosmossdk.io/x/bank"           // import as blank for app wiring

@@ -13,15 +13,15 @@ func NewGasMeterService() gas.Service {
 type gasService struct{}
 
 // GetGasConfig implements gas.Service.
-func (g gasService) GetGasConfig(ctx context.Context) gas.GasConfig {
+func (g gasService) GasConfig(ctx context.Context) gas.GasConfig {
 	panic("unimplemented")
 }
 
-func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
+func (g gasService) GasMeter(ctx context.Context) gas.Meter {
 	return ctx.(*executionContext).meter
 }
 
-func (g gasService) GetBlockGasMeter(ctx context.Context) gas.Meter {
+func (g gasService) BlockGasMeter(ctx context.Context) gas.Meter {
 	panic("stf has no block gas meter")
 }
 

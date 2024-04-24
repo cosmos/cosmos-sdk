@@ -29488,7 +29488,7 @@ paths:
         - Query
   /cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}:
     get:
-      summary: Allowance returns granted allwance to the grantee by the granter.
+      summary: Allowance returns granted allowance to the grantee by the granter.
       operationId: Allowance
       responses:
         '200':

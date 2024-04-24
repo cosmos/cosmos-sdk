@@ -34,9 +34,10 @@ type ModuleInputs struct {
 	Cdc          codec.Codec
 	Environment  appmodule.Environment
 	AddressCodec address.Codec
-	ExecRouter   MsgRouter
-	QueryRouter  QueryRouter
 	Registry     cdctypes.InterfaceRegistry
+
+	// TODO: Add a way to inject custom accounts.
+	// Currently only the base account is supported.
 }
 
 type ModuleOutputs struct {
@@ -61,10 +62,7 @@ func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ s
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
-	accountskeeper, err := NewKeeper(
-		in.Cdc, in.Environment, in.AddressCodec, in.Cdc,
-		in.ExecRouter, in.QueryRouter, in.Registry, account,
-	)
+	accountskeeper, err := NewKeeper(in.Cdc, in.Environment, in.AddressCodec, in.Registry, account)
 	if err != nil {
 		panic(err)
 	}

@@ -183,6 +183,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/g
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
+The maximum number of weighted vote options can be limited by the developer via a config parameter, named `MaxVoteOptionsLen`, which gets passed into the gov keeper.
+
 ### Quorum
 
 Quorum is defined as the minimum percentage of voting power that needs to be

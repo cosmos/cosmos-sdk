@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -72,6 +73,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
+		codectestutil.CodecOptions{}.GetAddressCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked

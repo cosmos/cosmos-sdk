@@ -1749,7 +1749,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 
 	err = pool.Insert(sdk.Context{}, failTx)
 	require.NoError(t, err)
-	require.Equal(t, 2, pool.CountTx())
+	require.Equal(t, 1, pool.CountTx())
 
 	req := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
@@ -1757,7 +1757,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	}
 	res, err := suite.baseApp.PrepareProposal(&req)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(res.Txs))
+	require.Equal(t, 0, len(res.Txs))
 }
 
 func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {

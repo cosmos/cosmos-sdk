@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -60,13 +61,23 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			return nil, nil
 		}, func(ctx context.Context, req, resp ProtoMsg) error {
 			_, ok := req.(*banktypes.QueryBalanceRequest)
-			require.True(t, ok)
+			if !ok {
+				_, ok = req.(*stakingtypes.QueryParamsRequest)
+				require.True(t, ok)
+				gogoproto.Merge(resp.(gogoproto.Message), &stakingtypes.QueryParamsResponse{
+					Params: stakingtypes.Params{
+						BondDenom: "test",
+					},
+				})
+				return nil
+			}
 			gogoproto.Merge(resp.(gogoproto.Message), &banktypes.QueryBalanceResponse{
 				Balance: &sdk.Coin{
 					Denom:  "test",
 					Amount: math.NewInt(5),
 				},
 			})
+
 			return nil
 		},
 	)

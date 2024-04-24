@@ -12,6 +12,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
+NUM_CPUS = $(shell if [[ "$$(uname)" == "Darwin" ]]; then sysctl -n hw.logicalcpu; else nproc; fi)
 
 # process build tags
 build_tags = netgo
@@ -294,11 +295,11 @@ test-sim-custom-genesis-fast:
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=`sysctl -n hw.logicalcpu` -SimAppPkg=. -ExitOnFail 50 5 TestAppImportExport
+	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=$(NUM_CPUS) -SimAppPkg=. -ExitOnFail 50 5 TestAppImportExport
 
 test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=`sysctl -n hw.logicalcpu` -SimAppPkg=. -ExitOnFail 50 5 TestAppSimulationAfterImport
+	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=$(NUM_CPUS) -SimAppPkg=. -ExitOnFail 50 5 TestAppSimulationAfterImport
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
@@ -307,11 +308,11 @@ test-sim-custom-genesis-multi-seed: runsim
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=`sysctl -n hw.logicalcpu` -SimAppPkg=. -ExitOnFail 500 50 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=$(NUM_CPUS) -SimAppPkg=. -ExitOnFail 500 50 TestFullAppSimulation
 
 test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=`sysctl -n hw.logicalcpu` -SimAppPkg=. -ExitOnFail 50 10 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=$(NUM_CPUS) -SimAppPkg=. -ExitOnFail 50 10 TestFullAppSimulation
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."

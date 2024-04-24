@@ -92,27 +92,53 @@ func (s *TestSuite) TestKeeper() {
 	require := s.Require()
 
 	granterAddr := addrs[0]
-	granteeAddr := addrs[1]
+	grantee1Addr := addrs[1]
+	grantee2Addr := addrs[2]
+	grantee3Addr := addrs[3]
+	grantees := []sdk.AccAddress{grantee1Addr, grantee2Addr, grantee3Addr}
 
 	s.T().Log("verify that no authorization returns nil")
 	authorizations, err := s.authzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
 	require.NoError(err)
 	require.Len(authorizations, 0)
 
-	s.T().Log("verify save, get and delete")
+	s.T().Log("verify save, get and delete work for grants")
 	sendAutz := &banktypes.SendAuthorization{SpendLimit: coins100}
 	expire := now.AddDate(1, 0, 0)
-	err = s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAutz, &expire)
+	for _, grantee := range grantees {
+		err = s.authzKeeper.SaveGrant(ctx, grantee, granterAddr, sendAutz, &expire)
+		require.NoError(err)
+	}
+
+	for _, grantee := range grantees {
+		authorizations, err = s.authzKeeper.GetAuthorizations(ctx, grantee, granterAddr)
+		require.NoError(err)
+		require.Len(authorizations, 1)
+	}
+
+	err = s.authzKeeper.DeleteGrant(ctx, grantee1Addr, granterAddr, sendAutz.MsgTypeURL())
 	require.NoError(err)
 
-	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, grantee1Addr, granterAddr)
+	require.NoError(err)
+	require.Len(authorizations, 0)
+	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, grantee2Addr, granterAddr)
+	require.NoError(err)
+	require.Len(authorizations, 1)
+	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, grantee3Addr, granterAddr)
 	require.NoError(err)
 	require.Len(authorizations, 1)
 
-	err = s.authzKeeper.DeleteGrant(ctx, granteeAddr, granterAddr, sendAutz.MsgTypeURL())
+	err = s.authzKeeper.DeleteAllGrants(ctx, granterAddr)
 	require.NoError(err)
 
-	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, grantee1Addr, granterAddr)
+	require.NoError(err)
+	require.Len(authorizations, 0)
+	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, grantee2Addr, granterAddr)
+	require.NoError(err)
+	require.Len(authorizations, 0)
+	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, grantee3Addr, granterAddr)
 	require.NoError(err)
 	require.Len(authorizations, 0)
 

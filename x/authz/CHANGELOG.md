@@ -28,7 +28,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [#18737](https://github.com/cosmos/cosmos-sdk/pull/18737) Added a limit of 200 grants pruned per `BeginBlock` and the `PruneExpiredGrants` message that prunes 75 expired grants on every run.
-* [#20161](https://github.com/cosmos/cosmos-sdk/pull/20161) Added `RevokeAll` methodto to revoke all grants at once.
+* [#20161](https://github.com/cosmos/cosmos-sdk/pull/20161) Added `RevokeAll` method to revoke all grants at once.
 
 ### API Breaking Changes
 

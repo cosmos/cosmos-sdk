@@ -258,19 +258,21 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 
 // DeleteAllGrants revokes all authorizations granted to the grantee by the granter.
 func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) error {
-	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
-
-	granterStoreKey := granterStoreKey(granter)
-	iterator := storetypes.KVStorePrefixIterator(store, granterStoreKey)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		// Directly delete the grant without deserializing, as we're deleting all grants for the msgType.
-		// TODO: need to test this function
-		store.Delete(iterator.Key())
+	count := 0
+	err := k.IterateGranterGrants(ctx, granter, func(grantee sdk.AccAddress, msgType string) (stop bool, err error) {
+		count++
+		if err := k.DeleteGrant(ctx, grantee, granter, msgType); err != nil {
+			return false, err
+		}
+		return false, nil
+	})
+	if err != nil {
+		return err
 	}
-
-	return k.EventService.EventManager((ctx)).Emit(&authz.EventRevokeAll{
+	if count == 0 {
+		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "no grants found for granter %s", granter)
+	}
+	return k.EventService.EventManager(ctx).Emit(&authz.EventRevokeAll{
 		Granter: granter.String(),
 	})
 }
@@ -334,6 +336,29 @@ func (k Keeper) IterateGrants(ctx context.Context,
 		granterAddr, granteeAddr, _ := parseGrantStoreKey(iter.Key())
 		k.cdc.MustUnmarshal(iter.Value(), &grant)
 		ok, err := handler(granterAddr, granteeAddr, grant)
+		if err != nil {
+			return err
+		}
+		if ok {
+			break
+		}
+	}
+	return nil
+}
+
+func (k Keeper) IterateGranterGrants(ctx context.Context, granter sdk.AccAddress,
+	handler func(granteeAddr sdk.AccAddress, msgType string) (stop bool, err error),
+) error {
+	// no-op if handler is nil
+	if handler == nil {
+		return nil
+	}
+	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
+	iter := storetypes.KVStorePrefixIterator(store, granterStoreKey(granter))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, granteeAddr, msgType := parseGrantStoreKey(iter.Key())
+		ok, err := handler(granteeAddr, msgType)
 		if err != nil {
 			return err
 		}

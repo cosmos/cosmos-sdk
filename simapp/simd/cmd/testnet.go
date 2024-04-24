@@ -265,7 +265,6 @@ func initTestnetFiles(
 			nodeConfig.P2P.AllowDuplicateIP = true
 			appConfig.API.Address = fmt.Sprintf("tcp://127.0.0.1:%d", apiPort+portOffset)
 			appConfig.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset)
-			appConfig.GRPCWeb.Enable = true
 		}
 
 		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)

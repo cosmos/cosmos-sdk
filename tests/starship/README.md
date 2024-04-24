@@ -19,7 +19,7 @@ Perfect for running internal devnets, and writing e2e tests. Starship helps take
 
 ### Setup dependencies
 
-Checkout the [docs](https://starship.cosmology.tech/get-started/step-1) or just run:
+Checkout the [docs](https://docs.cosmology.zone/starship/get-started/step-1) or just run:
 ```bash
 make setup-deps
 ```
@@ -27,8 +27,8 @@ make setup-deps
 ### Connect to kubernetes cluster
 
 Connect to a k8s cluster. Follow one of the 2 steps based on your operating system
-* [2.1.1](https://starship.cosmology.tech/get-started/step-2#211-setup-with-kind-cluster): Spin up using kind cluster, for linux
-* [2.1.2](https://starship.cosmology.tech/get-started/step-2#212-setup-with-docker-desktop): Using docker-desktop, for mac
+* [2.1.1](https://docs.cosmology.zone/starship/get-started/step-2#211-setup-with-kind-cluster): Spin up using kind cluster, for linux
+* [2.1.2](https://docs.cosmology.zone/starship/get-started/step-2#212-setup-with-docker-desktop): Using docker-desktop, for mac
 
 Run following to check the connection
 ```bash

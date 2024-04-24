@@ -288,8 +288,6 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	responses := []*codectypes.Any{}
-
 	msgSend := &banktypes.MsgSend{
 		FromAddress: fromAddress,
 		ToAddress:   msg.ToAddress,
@@ -300,8 +298,7 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	responses = append(responses, resp...)
-	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
 // WithdrawUnlockedCoins allow owner to withdraw the unlocked token for a specific denoms to an

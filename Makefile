@@ -13,6 +13,7 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 NUM_CPUS = $(shell if [[ "$$(uname)" == "Darwin" ]]; then sysctl -n hw.logicalcpu; else nproc; fi)
+SIM_SEED ?= 1
 
 # process build tags
 build_tags = netgo
@@ -296,6 +297,11 @@ test-sim-custom-genesis-fast:
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
 	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=$(NUM_CPUS) -SimAppPkg=. -ExitOnFail 50 5 TestAppImportExport
+
+test-sim-import-export-matrix:
+	@echo "Running application import/export simulation. This may take several minutes..."
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
+        -NumBlocks=50 -BlockSize=5 -Commit=true -Period=0 -Seed=$(SIM_SEED) -v -timeout 20m -EnableStreaming=true
 
 test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."

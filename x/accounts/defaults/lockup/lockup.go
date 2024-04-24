@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -56,7 +55,6 @@ func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 		WithdrawedCoins:  collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
 		addressCodec:     d.AddressCodec,
 		headerService:    d.Environment.HeaderService,
-		branchService:    d.Environment.BranchService,
 		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 	}
 
@@ -70,7 +68,6 @@ type BaseLockup struct {
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedLocking collections.Map[string, math.Int]
 	WithdrawedCoins  collections.Map[string, math.Int]
-	branchService    branch.Service
 	addressCodec     address.Codec
 	headerService    header.Service
 	// lockup end time.
@@ -156,38 +153,27 @@ func (bva *BaseLockup) Delegate(
 		return nil, err
 	}
 
-	responses := []*codectypes.Any{}
-
-	err = bva.branchService.Execute(ctx, func(ctx context.Context) error {
-		err = bva.TrackDelegation(
-			ctx,
-			sdk.Coins{*balance},
-			lockedCoins,
-			sdk.Coins{msg.Amount},
-		)
-		if err != nil {
-			return err
-		}
-
-		msgDelegate := &stakingtypes.MsgDelegate{
-			DelegatorAddress: delegatorAddress,
-			ValidatorAddress: msg.ValidatorAddress,
-			Amount:           msg.Amount,
-		}
-		resp, err := sendMessage(ctx, msgDelegate)
-		if err != nil {
-			return err
-		}
-
-		responses = append(responses, resp...)
-
-		return nil
-	})
+	err = bva.TrackDelegation(
+		ctx,
+		sdk.Coins{*balance},
+		lockedCoins,
+		sdk.Coins{msg.Amount},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+	msgDelegate := &stakingtypes.MsgDelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+		Amount:           msg.Amount,
+	}
+	resp, err := sendMessage(ctx, msgDelegate)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
 func (bva *BaseLockup) Undelegate(
@@ -205,33 +191,22 @@ func (bva *BaseLockup) Undelegate(
 		return nil, err
 	}
 
-	responses := []*codectypes.Any{}
-
-	err = bva.branchService.Execute(ctx, func(ctx context.Context) error {
-		err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount})
-		if err != nil {
-			return err
-		}
-
-		msgUndelegate := &stakingtypes.MsgUndelegate{
-			DelegatorAddress: delegatorAddress,
-			ValidatorAddress: msg.ValidatorAddress,
-			Amount:           msg.Amount,
-		}
-		resp, err := sendMessage(ctx, msgUndelegate)
-		if err != nil {
-			return err
-		}
-
-		responses = append(responses, resp...)
-
-		return nil
-	})
+	err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
 
-	return &lockuptypes.MsgExecuteMessagesResponse{Responses: responses}, nil
+	msgUndelegate := &stakingtypes.MsgUndelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+		Amount:           msg.Amount,
+	}
+	resp, err := sendMessage(ctx, msgUndelegate)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
 func (bva *BaseLockup) WithdrawReward(
@@ -326,71 +301,64 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 
 	amount := sdk.Coins{}
 
-	err = bva.branchService.Execute(ctx, func(ctx context.Context) error {
-		for _, denom := range msg.Denoms {
-			balance, err := bva.getBalance(ctx, fromAddress, denom)
-			if err != nil {
-				return err
-			}
-			lockedAmt := lockedCoins.AmountOf(denom)
-
-			// get lockedCoin from that are not bonded for the sent denom
-			notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, sdk.NewCoin(denom, lockedAmt), denom)
-			if err != nil {
-				return err
-			}
-
-			spendable, err := balance.SafeSub(notBondedLockedCoin)
-			if err != nil {
-				return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
-					"locked amount exceeds account balance funds: %s > %s", notBondedLockedCoin, balance)
-			}
-
-			withdrawedAmt, err := bva.WithdrawedCoins.Get(ctx, denom)
-			if err != nil {
-				return err
-			}
-			originalLockingAmt, err := bva.OriginalLocking.Get(ctx, denom)
-			if err != nil {
-				return err
-			}
-
-			// withdrawable amount is equal to original locking amount subtract already withdrawed amount
-			withdrawableAmt, err := originalLockingAmt.SafeSub(withdrawedAmt)
-			if err != nil {
-				return err
-			}
-
-			withdrawAmt := math.MinInt(withdrawableAmt, spendable.Amount)
-			// if zero amount go to the next iteration
-			if withdrawAmt.IsZero() {
-				continue
-			}
-			amount = append(amount, sdk.NewCoin(denom, withdrawAmt))
-
-			// update the withdrawed amount
-			err = bva.WithdrawedCoins.Set(ctx, denom, withdrawedAmt.Add(withdrawAmt))
-			if err != nil {
-				return err
-			}
-		}
-		if len(amount) == 0 {
-			return fmt.Errorf("no tokens available for withdrawing")
-		}
-
-		msgSend := &banktypes.MsgSend{
-			FromAddress: fromAddress,
-			ToAddress:   msg.ToAddress,
-			Amount:      amount,
-		}
-
-		_, err = sendMessage(ctx, msgSend)
+	for _, denom := range msg.Denoms {
+		balance, err := bva.getBalance(ctx, fromAddress, denom)
 		if err != nil {
-			return err
+			return nil, err
+		}
+		lockedAmt := lockedCoins.AmountOf(denom)
+
+		// get lockedCoin from that are not bonded for the sent denom
+		notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, sdk.NewCoin(denom, lockedAmt), denom)
+		if err != nil {
+			return nil, err
 		}
 
-		return nil
-	})
+		spendable, err := balance.SafeSub(notBondedLockedCoin)
+		if err != nil {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
+				"locked amount exceeds account balance funds: %s > %s", notBondedLockedCoin, balance)
+		}
+
+		withdrawedAmt, err := bva.WithdrawedCoins.Get(ctx, denom)
+		if err != nil {
+			return nil, err
+		}
+		originalLockingAmt, err := bva.OriginalLocking.Get(ctx, denom)
+		if err != nil {
+			return nil, err
+		}
+
+		// withdrawable amount is equal to original locking amount subtract already withdrawed amount
+		withdrawableAmt, err := originalLockingAmt.SafeSub(withdrawedAmt)
+		if err != nil {
+			return nil, err
+		}
+
+		withdrawAmt := math.MinInt(withdrawableAmt, spendable.Amount)
+		// if zero amount go to the next iteration
+		if withdrawAmt.IsZero() {
+			continue
+		}
+		amount = append(amount, sdk.NewCoin(denom, withdrawAmt))
+
+		// update the withdrawed amount
+		err = bva.WithdrawedCoins.Set(ctx, denom, withdrawedAmt.Add(withdrawAmt))
+		if err != nil {
+			return nil, err
+		}
+	}
+	if len(amount) == 0 {
+		return nil, fmt.Errorf("no tokens available for withdrawing")
+	}
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.ToAddress,
+		Amount:      amount,
+	}
+
+	_, err = sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
 	}

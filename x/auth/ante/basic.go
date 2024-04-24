@@ -131,8 +131,8 @@ func (cgts ConsumeTxSizeGasDecorator) ValidateTx(ctx context.Context, tx sdk.Tx)
 	}
 	params := cgts.ak.GetParams(ctx)
 
-	gasService := cgts.ak.Environment().GasService
-	if err := gasService.GetGasMeter(ctx).Consume(params.TxSizeCostPerByte*storetypes.Gas(len(tx.Bytes())), "txSize"); err != nil {
+	gasService := cgts.ak.GetEnvironment().GasService
+	if err := gasService.GasMeter(ctx).Consume(params.TxSizeCostPerByte*storetypes.Gas(len(tx.Bytes())), "txSize"); err != nil {
 		return err
 	}
 
@@ -176,7 +176,7 @@ func (cgts ConsumeTxSizeGasDecorator) ValidateTx(ctx context.Context, tx sdk.Tx)
 				cost *= params.TxSigLimit
 			}
 
-			if err := gasService.GetGasMeter(ctx).Consume(params.TxSizeCostPerByte*cost, "txSize"); err != nil {
+			if err := gasService.GasMeter(ctx).Consume(params.TxSizeCostPerByte*cost, "txSize"); err != nil {
 				return err
 			}
 		}
@@ -252,7 +252,7 @@ func (txh TxTimeoutHeightDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) e
 	}
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
-	headerInfo := txh.env.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := txh.env.HeaderService.HeaderInfo(ctx)
 
 	if timeoutHeight > 0 && uint64(headerInfo.Height) > timeoutHeight {
 		return errorsmod.Wrapf(

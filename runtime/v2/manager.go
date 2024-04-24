@@ -164,29 +164,30 @@ func (m *MM) ExportGenesisForModules(ctx context.Context, modulesToExport ...str
 		err error
 	}
 
+	type ModuleI interface {
+		ExportGenesis(ctx context.Context) (json.RawMessage, error)
+	}
+
 	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
-		if module, ok := mod.(appmodulev2.HasGenesis); ok {
-			channels[moduleName] = make(chan genesisResult)
-			go func(module appmodulev2.HasGenesis, ch chan genesisResult) {
-				jm, err := module.ExportGenesis(ctx)
-				if err != nil {
-					ch <- genesisResult{nil, err}
-					return
-				}
-				ch <- genesisResult{jm, nil}
-			}(module, channels[moduleName])
-		} else if module, ok := mod.(sdkmodule.HasABCIGenesis); ok {
-			channels[moduleName] = make(chan genesisResult)
-			go func(module sdkmodule.HasABCIGenesis, ch chan genesisResult) {
-				jm, err := module.ExportGenesis(ctx)
-				if err != nil {
-					ch <- genesisResult{nil, err}
-				}
-				ch <- genesisResult{jm, nil}
-			}(module, channels[moduleName])
+		var moduleI ModuleI
+
+		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
+			moduleI = module.(ModuleI)
+		} else if module, hasABCIGenesis := mod.(appmodulev2.HasGenesis); hasABCIGenesis {
+			moduleI = module.(ModuleI)
 		}
+
+		channels[moduleName] = make(chan genesisResult)
+		go func(moduleI ModuleI, ch chan genesisResult) {
+			jm, err := moduleI.ExportGenesis(ctx)
+			if err != nil {
+				ch <- genesisResult{nil, err}
+				return
+			}
+			ch <- genesisResult{jm, nil}
+		}(moduleI, channels[moduleName])
 	}
 
 	genesisData := make(map[string]json.RawMessage)

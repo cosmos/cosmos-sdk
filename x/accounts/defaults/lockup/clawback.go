@@ -11,9 +11,65 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"bytes"
+	"context"
+	"fmt"
+	"time"
+
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/math"
+	"cosmossdk.io/x/accounts/accountstd"
+	"cosmossdk.io/x/accounts/defaults/lockup/types"
+
+	banktypes "cosmossdk.io/x/bank/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
+
+// newBaseLockup creates a new BaseLockup object.
+func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
+	BaseLockup := &BaseLockup{
+		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
+		Admin:            collections.NewItem(d.SchemaBuilder, AdminPrefix, "admin", collections.BytesValue),
+		ClawbackDebt:     collections.NewMap(d.SchemaBuilder, ClawbackDebtPrefix, "clawback_debt", collections.StringKey, sdk.IntValue),
+		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
+		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
+		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
+		WithdrawedCoins:  collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
+		addressCodec:     d.AddressCodec,
+		headerService:    d.Environment.HeaderService,
+		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+	}
+
+	return BaseLockup
+}
+
+type BaseLockup struct {
+	// Owner is the address of the account owner.
+	Owner collections.Item[[]byte]
+	// Admin is the address who have ability to request lockup account
+	// to return the funds
+	Admin            collections.Item[[]byte]
+	ClawbackDebt     collections.Map[string, math.Int]
+	OriginalLocking  collections.Map[string, math.Int]
+	DelegatedFree    collections.Map[string, math.Int]
+	DelegatedLocking collections.Map[string, math.Int]
+	WithdrawedCoins  collections.Map[string, math.Int]
+	addressCodec     address.Codec
+	headerService    header.Service
+	// lockup end time.
+	EndTime collections.Item[time.Time]
+}
 
 func (bva *BaseLockup) ClawbackFunds(
 	ctx context.Context, msg *types.MsgClawback, getLockedCoinsFunc getLockedCoinsFunc,

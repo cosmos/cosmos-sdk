@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
 	"cosmossdk.io/x/accounts/defaults/lockup"
 	"cosmossdk.io/x/tx/signing"
@@ -66,10 +65,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountskeeper, err := NewKeeper(
 		in.Cdc, in.Environment, in.AddressCodec, in.Registry, account,
-		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
-		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
-		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
-		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
+		lockup.NewContinuousLockingAccount(false),
+		lockup.NewPeriodicLockingAccount(false),
+		lockup.NewDelayedLockingAccount(false),
+		lockup.NewPermanentLockingAccount(false),
+		// clawback enable
+		lockup.NewContinuousLockingAccount(true),
+		lockup.NewPeriodicLockingAccount(true),
+		lockup.NewDelayedLockingAccount(true),
+		lockup.NewPermanentLockingAccount(true),
 	)
 	if err != nil {
 		panic(err)

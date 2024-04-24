@@ -212,7 +212,11 @@ func (bva *BaseClawback) SendCoins(
 		return nil, err
 	}
 
-	msgSend := makeMsgSend(fromAddress, msg.ToAddress, msg.Amount)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.ToAddress,
+		Amount:      msg.Amount,
+	}
 	responses, err := sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
@@ -290,7 +294,11 @@ func (bva *BaseClawback) WithdrawUnlockedCoins(
 		return nil, fmt.Errorf("no tokens available for withdrawing")
 	}
 
-	msgSend := makeMsgSend(fromAddress, msg.ToAddress, amount)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.ToAddress,
+		Amount:      amount,
+	}
 	_, err = sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err

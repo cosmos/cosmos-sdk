@@ -23,7 +23,7 @@ func setup(t *testing.T, ctx context.Context, ss store.KVStoreService) *BaseLock
 	_, err := baseLockup.Init(ctx, &lockuptypes.MsgInitLockupAccount{
 		Owner:   owner,
 		EndTime: time.Now().Add(time.Minute),
-	})
+	}, nil)
 	require.NoError(t, err)
 
 	return baseLockup
@@ -52,7 +52,7 @@ func TestInitLockupAccount(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		_, err := baseLockup.Init(ctx, &test.msg)
+		_, err := baseLockup.Init(ctx, &test.msg, nil)
 		if test.expErr != nil {
 			require.Equal(t, test.expErr, err)
 			continue
@@ -271,6 +271,6 @@ func TestQueryLockupAccountBaseInfo(t *testing.T) {
 
 	baseLockup := setup(t, ctx, ss)
 
-	_, err := baseLockup.QueryLockupAccountBaseInfo(ctx, &lockuptypes.QueryLockupAccountInfoRequest{})
+	_, err := baseLockup.QueryAccountBaseInfo(ctx, &lockuptypes.QueryLockupAccountInfoRequest{})
 	require.NoError(t, err)
 }

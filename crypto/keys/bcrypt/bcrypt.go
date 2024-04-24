@@ -47,7 +47,7 @@ func (ih InvalidHashPrefixError) Error() string {
 	return fmt.Sprintf("crypto/bcrypt: bcrypt hashes must start with '$', but hashedSecret started with '%c'", byte(ih))
 }
 
-type InvalidCostError int
+type InvalidCostError uint32
 
 func (ic InvalidCostError) Error() string {
 	return fmt.Sprintf("crypto/bcrypt: cost %d is outside allowed range (%d,%d)", int(ic), MinCost, MaxCost)

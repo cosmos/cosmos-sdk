@@ -142,6 +142,10 @@ func (s *TestSuite) TestKeeper() {
 	require.NoError(err)
 	require.Len(authorizations, 0)
 
+	// test delete all grants for granter with no grants, should error
+	err = s.authzKeeper.DeleteAllGrants(ctx, granterAddr)
+	require.Error(err)
+
 	s.T().Log("verify granting same authorization overwrite existing authorization")
 	err = s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAutz, &expire)
 	require.NoError(err)
@@ -184,6 +188,39 @@ func (s *TestSuite) TestKeeperIter() {
 	_ = s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
 		s.Require().Equal(granteeAddr, grantee)
 		s.Require().Contains([]sdk.AccAddress{granterAddr, granter2Addr}, granter)
+		return true, nil
+	})
+}
+
+func (s *TestSuite) TestKeeperGranterGrantsIter() {
+	ctx, addrs := s.ctx, s.addrs
+
+	granterAddr := addrs[0]
+	granter2Addr := addrs[1]
+	granteeAddr := addrs[2]
+	grantee2Addr := addrs[3]
+	grantee3Addr := addrs[4]
+	e := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil, s.accountKeeper.AddressCodec())
+
+	err := s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
+	s.Require().NoError(err)
+
+	err = s.authzKeeper.SaveGrant(ctx, grantee2Addr, granterAddr, sendAuthz, &e)
+	s.Require().NoError(err)
+
+	err = s.authzKeeper.SaveGrant(ctx, grantee3Addr, granter2Addr, sendAuthz, &e)
+	s.Require().NoError(err)
+
+	_ = s.authzKeeper.IterateGranterGrants(ctx, granterAddr, func(grantee sdk.AccAddress, msgType string) (bool, error) {
+		s.Require().Contains([]sdk.AccAddress{granteeAddr, grantee2Addr}, grantee)
+		s.Require().NotContains([]sdk.AccAddress{grantee3Addr}, grantee)
+		return true, nil
+	})
+
+	_ = s.authzKeeper.IterateGranterGrants(ctx, granter2Addr, func(grantee sdk.AccAddress, msgType string) (bool, error) {
+		s.Require().Equal(grantee3Addr, grantee)
+		s.Require().NotContains([]sdk.AccAddress{granteeAddr, grantee2Addr}, grantee)
 		return true, nil
 	})
 }

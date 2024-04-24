@@ -258,11 +258,22 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 
 // DeleteAllGrants revokes all authorizations granted to the grantee by the granter.
 func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) error {
-	return k.IterateGranterGrants(ctx, granter, func(grantee sdk.AccAddress, msgType string) (stop bool, err error) {
+	count := 0
+	err := k.IterateGranterGrants(ctx, granter, func(grantee sdk.AccAddress, msgType string) (stop bool, err error) {
+		count++
 		if err := k.DeleteGrant(ctx, grantee, granter, msgType); err != nil {
 			return false, err
 		}
 		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "no grants found for granter %s", granter)
+	}
+	return k.EventService.EventManager(ctx).Emit(&authz.EventRevokeAll{
+		Granter: granter.String(),
 	})
 }
 

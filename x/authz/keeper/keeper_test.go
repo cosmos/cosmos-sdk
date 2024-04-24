@@ -116,6 +116,7 @@ func (s *TestSuite) TestKeeper() {
 		require.Len(authorizations, 1)
 	}
 
+	// Delete a single grant
 	err = s.authzKeeper.DeleteGrant(ctx, grantee1Addr, granterAddr, sendAutz.MsgTypeURL())
 	require.NoError(err)
 
@@ -129,6 +130,7 @@ func (s *TestSuite) TestKeeper() {
 	require.NoError(err)
 	require.Len(authorizations, 1)
 
+	// Delete all grants for a granter
 	err = s.authzKeeper.DeleteAllGrants(ctx, granterAddr)
 	require.NoError(err)
 
@@ -142,7 +144,7 @@ func (s *TestSuite) TestKeeper() {
 	require.NoError(err)
 	require.Len(authorizations, 0)
 
-	// test delete all grants for granter with no grants, should error
+	// Delete all grants for a granter with no grants, should error
 	err = s.authzKeeper.DeleteAllGrants(ctx, granterAddr)
 	require.Error(err)
 

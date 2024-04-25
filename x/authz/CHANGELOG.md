@@ -47,4 +47,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* [#19874](https://github.com/cosmos/cosmos-sdk/pull/19923) Now when querying transaction events (cosmos.tx.v1beta1.Service/GetTxsEvent) the response will contains only UTF-8 characters
+* [#19874](https://github.com/cosmos/cosmos-sdk/pull/19923) Now when querying transaction events (cosmos.tx.v1beta1.Service/GetTxsEvent) the response will contain only UTF-8 characters

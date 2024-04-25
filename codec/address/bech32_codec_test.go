@@ -1,13 +1,14 @@
 package address
 
 import (
-	"cosmossdk.io/core/address"
 	"encoding/binary"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/golang-lru/simplelru"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
@@ -91,6 +92,8 @@ func TestBech32CodecRace(t *testing.T) {
 
 // generates AccAddress with `prefix` and calls String method
 func addressStringCaller(t *testing.T, ac address.Codec, prefix byte, max uint32, cancel chan bool, done chan<- bool) {
+	t.Helper()
+
 	bz := make([]byte, 5) // prefix + 4 bytes for uint
 	bz[0] = prefix
 	for i := uint32(0); ; i++ {

@@ -182,6 +182,7 @@ replace (
 	cosmossdk.io/core => ./core
 	cosmossdk.io/depinject => ./depinject
 	cosmossdk.io/x/accounts => ./x/accounts
+	cosmossdk.io/x/accounts/defaults/lockup => ./x/accounts/defaults/lockup
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking

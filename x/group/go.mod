@@ -176,6 +176,7 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/accounts => ../accounts
+	cosmossdk.io/x/accounts/defaults/lockup => ../accounts/defaults/lockup
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/authz => ../authz
 	cosmossdk.io/x/bank => ../bank

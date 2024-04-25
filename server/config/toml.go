@@ -183,17 +183,6 @@ max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
 ###############################################################################
-###                        gRPC Web Configuration                           ###
-###############################################################################
-
-[grpc-web]
-
-# GRPCWebEnable defines if the gRPC-web should be enabled.
-# NOTE: gRPC must also be enabled, otherwise, this configuration is a no-op.
-# NOTE: gRPC-Web uses the same address as the API server.
-enable = {{ .GRPCWeb.Enable }}
-
-###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################
 

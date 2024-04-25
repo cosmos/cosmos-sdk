@@ -121,7 +121,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-// TestSimulateMsgSend tests the normal scenario of a valid message of type TypeMsgMultiSend.
+// TestSimulateMsgMultiSend tests the normal scenario of a valid message of type TypeMsgMultiSend.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	// setup 3 accounts

@@ -95,7 +95,7 @@ type proposal struct {
 	Summary         string            `json:"summary"`
 	ProposalTypeStr string            `json:"proposal_type,omitempty"`
 
-	proposalType govv1.ProposalType `json:"-"`
+	proposalType govv1.ProposalType
 }
 
 // parseSubmitProposal reads and parses the proposal.

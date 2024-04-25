@@ -1,6 +1,7 @@
 package lockup
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -40,8 +41,12 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
 				Length: time.Minute,
 			},
+			{
+				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
+				Length: time.Minute,
+			},
 		},
-	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1500))})
 	require.NoError(t, err)
 
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
@@ -129,9 +134,6 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		require.True(t, balance.Amount.Equal(math.NewInt(500)))
 	})
 
-	// Fund acc since we withdraw all the funds
-	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))})
-
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
 			Sender:           ownerAddrStr,
@@ -152,6 +154,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 
 		// check if tracking is updated accordingly
 		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		fmt.Println(lockupAccountInfoResponse)
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(100)))
 	})
@@ -187,5 +190,35 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
+	})
+
+	// Update context time
+	// After third period 1500stake should be unlock
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: currentTime.Add(time.Minute * 3),
+	})
+
+	t.Run("ok - execute delegate message", func(t *testing.T) {
+		msg := &types.MsgDelegate{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		valbz, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+		require.NoError(t, err)
+
+		del, err := app.StakingKeeper.Delegations.Get(
+			ctx, collections.Join(sdk.AccAddress(accountAddr), sdk.ValAddress(valbz)),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, del)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		delFree := lockupAccountInfoResponse.DelegatedFree
+		require.True(t, delFree.AmountOf("stake").Equal(math.NewInt(100)))
 	})
 }

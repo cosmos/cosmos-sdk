@@ -12,9 +12,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
-	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -45,13 +43,9 @@ type Account struct {
 
 	Proposals collections.Map[uint64, v1.Proposal]
 	Votes     collections.Map[collections.Pair[uint64, []byte], int32] // key: proposalID + voter address
-	Tstung    collections.Map[[]byte, sdk.DecCoin]
 }
 
-type Options struct {
-}
-
-func NewAccount(name string, handlerMap *signing.HandlerMap) accountstd.AccountCreatorFunc {
+func NewAccount(name string) accountstd.AccountCreatorFunc {
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
 
 		return name, &Account{

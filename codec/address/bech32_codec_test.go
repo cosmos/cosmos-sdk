@@ -74,11 +74,11 @@ func TestBech32CodecRace(t *testing.T) {
 	cancel := make(chan bool)
 
 	for i := byte(1); i <= 2; i++ { // works which will loop in first 100 addresses
-		go addressStringCaller(t, ac, i, 100, cancel, done)
+		go bytesToStringCaller(t, ac, i, 100, cancel, done)
 	}
 
 	for i := byte(1); i <= 2; i++ { // works which will generate 1e6 new addresses
-		go addressStringCaller(t, ac, i, 1000000, cancel, done)
+		go bytesToStringCaller(t, ac, i, 1000000, cancel, done)
 	}
 
 	<-time.After(time.Millisecond * 30)
@@ -90,8 +90,8 @@ func TestBech32CodecRace(t *testing.T) {
 	}
 }
 
-// generates AccAddress with `prefix` and calls String method
-func addressStringCaller(t *testing.T, ac address.Codec, prefix byte, max uint32, cancel chan bool, done chan<- bool) {
+// generates AccAddress calling BytesToString
+func bytesToStringCaller(t *testing.T, ac address.Codec, prefix byte, max uint32, cancel chan bool, done chan<- bool) {
 	t.Helper()
 
 	bz := make([]byte, 5) // prefix + 4 bytes for uint

@@ -24,7 +24,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 	return k.HandleValidatorSignatureWithParams(ctx, params, addr, power, signed)
 }
 
-func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
+func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed consensusv1.BlockIDFlag) error {
 	height := k.HeaderService.HeaderInfo(ctx).Height
 
 	// fetch the validator public key

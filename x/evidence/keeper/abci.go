@@ -19,7 +19,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 	// evidence to the new types.Misbehavior type and store it in the cache.
 
 	res := consensusv1.MsgCometInfoResponse{}
-	if err := k.environment.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
+	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
 		return err
 	}
 
@@ -37,8 +37,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 				return err
 			}
 		default:
-			k.Logger().Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.EvidenceType))
-			k.Logger.Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
+			k.Logger.Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.EvidenceType))
 		}
 	}
 	return nil

@@ -658,14 +658,6 @@ func (bva BaseLockup) QueryLockupAccountBaseInfo(ctx context.Context, _ *lockupt
 	}
 	delegatedFree := sdk.NewCoins(sdk.NewCoin(bondDenom, delegatedFreeAmt))
 
-	fmt.Println(lockuptypes.QueryLockupAccountInfoResponse{
-		Owner:            ownerAddress,
-		OriginalLocking:  originalLocking,
-		DelegatedLocking: delegatedLocking,
-		DelegatedFree:    delegatedFree,
-		EndTime:          &endTime,
-	})
-
 	return &lockuptypes.QueryLockupAccountInfoResponse{
 		Owner:            ownerAddress,
 		OriginalLocking:  originalLocking,

@@ -267,14 +267,14 @@ func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) err
 	if err != nil {
 		return err
 	}
+	if len(keysToDelete) == 0 {
+		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "no grants found for granter %s", granter)
+	}
 	for _, key := range keysToDelete {
 		_, granteeAddr, msgType := parseGrantStoreKey([]byte(key))
 		if err := k.DeleteGrant(ctx, granteeAddr, granter, msgType); err != nil {
 			return err
 		}
-	}
-	if len(keysToDelete) == 0 {
-		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "no grants found for granter %s", granter)
 	}
 	return k.EventService.EventManager(ctx).Emit(&authz.EventRevokeAll{
 		Granter: granter.String(),

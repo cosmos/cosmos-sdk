@@ -151,9 +151,7 @@ func (bva *BaseClawback) ClawbackFunds(
 	}
 
 	for _, denom := range msg.Denoms {
-		var clawbackAmt math.Int
-		lockedAmt := lockedCoins.AmountOf(denom)
-		clawbackAmt = lockedAmt
+		clawbackAmt := lockedCoins.AmountOf(denom)
 
 		if clawbackAmt.IsZero() {
 			continue

@@ -14,8 +14,7 @@ var (
 	OwnerPrefix            = collections.NewPrefix(6)
 	WithdrawedCoinsPrefix  = collections.NewPrefix(7)
 	AdminPrefix            = collections.NewPrefix(8)
-	ClawbackDebtPrefix     = collections.NewPrefix(9)
-	OriginalVestingPrefix  = collections.NewPrefix(0)
+	OriginalVestingPrefix  = collections.NewPrefix(9)
 )
 
 var (

@@ -84,7 +84,7 @@ func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *types.
 ) {
 	baseLockup, ok := cva.BaseAccount.(*BaseLockup)
 	if !ok {
-		return nil, fmt.Errorf("clawback account type is not delegate enable")
+		return nil, fmt.Errorf("clawback account type is not undelegate enable")
 	}
 	return baseLockup.Undelegate(ctx, msg)
 }

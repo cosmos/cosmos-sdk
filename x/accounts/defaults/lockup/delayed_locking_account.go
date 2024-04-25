@@ -63,7 +63,7 @@ func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *types.Msg
 ) {
 	baseLockup, ok := dva.BaseAccount.(*BaseLockup)
 	if !ok {
-		return nil, fmt.Errorf("clawback account type is not delegate enable")
+		return nil, fmt.Errorf("clawback account type is not undelegate enable")
 	}
 	return baseLockup.Undelegate(ctx, msg)
 }

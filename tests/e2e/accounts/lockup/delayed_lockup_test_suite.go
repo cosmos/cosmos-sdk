@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
-	lockupaccount "cosmossdk.io/x/accounts/defaults/lockup"
 	"cosmossdk.io/x/accounts/defaults/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -25,11 +24,11 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 	})
 	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
-	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
+	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.DELAYED_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.DELAYED_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
 		Owner: ownerAddrStr,
 		// end time in 1 minutes
 		EndTime: currentTime.Add(time.Minute),
@@ -47,6 +46,14 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 		}
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NotNil(t, err)
+	})
+	t.Run("error - execute clawback, not enable", func(t *testing.T) {
+		msg := &types.MsgClawback{
+			Admin:  ownerAddrStr,
+			Denoms: []string{"stake"},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.Equal(t, err.Error(), "clawback is not enable for this account type")
 	})
 	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
@@ -149,5 +156,133 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 		// 1000stake - 100stake( above sent amt ) - 100stake(above delegate amt) = 800stake
 		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
 		require.True(t, balance.Amount.Equal(math.NewInt(800)))
+	})
+}
+
+func (s *E2ETestSuite) TestDelayedLockingAccountClawbackEnable() {
+	t := s.T()
+	app := setupApp(t)
+	currentTime := time.Now()
+	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger()).WithHeaderInfo(header.Info{
+		Time: currentTime,
+	})
+	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+	require.NoError(t, err)
+	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.DELAYED_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_PREFIX, accOwner, &types.MsgInitLockupAccount{
+		Owner: ownerAddrStr,
+		// end time in 1 minutes
+		EndTime: currentTime.Add(time.Minute),
+		Admin:   ownerAddrStr,
+	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	require.NoError(t, err)
+
+	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
+	require.NoError(t, err)
+
+	t.Run("error - execute message, wrong sender", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    addr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
+	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    ownerAddrStr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
+	t.Run("error - execute withdraw message, no withdrawable token", func(t *testing.T) {
+		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+		require.NoError(t, err)
+		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
+		require.NoError(t, err)
+		msg := &types.MsgWithdraw{
+			Withdrawer: ownerAddr,
+			ToAddress:  withdrawAddr,
+			Denoms:     []string{"stake"},
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NotNil(t, err)
+	})
+	t.Run("error - execute delegate message, delegate is not enable", func(t *testing.T) {
+		vals, err := app.StakingKeeper.GetAllValidators(ctx)
+		require.NoError(t, err)
+		val := vals[0]
+		msg := &types.MsgDelegate{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.Equal(t, err.Error(), "clawback account type is not delegate enable")
+	})
+	t.Run("error - execute undelegate message, undelegate is not enable", func(t *testing.T) {
+		vals, err := app.StakingKeeper.GetAllValidators(ctx)
+		require.NoError(t, err)
+		val := vals[0]
+		msg := &types.MsgUndelegate{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.Equal(t, err.Error(), "clawback account type is not undelegate enable")
+	})
+
+	// Update context time
+	// After endtime fund should be unlock
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: currentTime.Add(time.Second * 61),
+	})
+
+	// Check if token is sendable after unlock
+	t.Run("ok - execute send message", func(t *testing.T) {
+		msg := &types.MsgSend{
+			Sender:    ownerAddrStr,
+			ToAddress: addr,
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
+		require.True(t, balance.Amount.Equal(math.NewInt(100)))
+	})
+	// Test to withdraw all the remain funds to an account of choice
+	t.Run("ok - execute withdraw message", func(t *testing.T) {
+		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+		require.NoError(t, err)
+		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
+		require.NoError(t, err)
+		msg := &types.MsgWithdraw{
+			Withdrawer: ownerAddr,
+			ToAddress:  withdrawAddr,
+			Denoms:     []string{"stake"},
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		// withdrawable amount should be
+		// 1000stake - 100stake( above sent amt ) = 900stake
+		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
+		require.True(t, balance.Amount.Equal(math.NewInt(900)))
+	})
+	t.Run("error - execute clawback, no tokens available for clawback", func(t *testing.T) {
+		msg := &types.MsgClawback{
+			Admin:  ownerAddrStr,
+			Denoms: []string{"stake"},
+		}
+		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.Equal(t, err.Error(), "no tokens available for clawback")
 	})
 }

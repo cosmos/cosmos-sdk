@@ -14,6 +14,41 @@ message MsgInit {
   Config          Config  = 2;
 }
 
+// MsgInitResponse is the response returned after account initialization.
+message MsgInitResponse {}
+
+message MsgCreateProposal {
+  Proposal proposal = 1;
+}
+
+message MsgCreateProposalResponse {
+  uint64 proposal_id = 1;
+}
+
+message MsgVote {
+  uint64 proposal_id = 1;
+  VoteOption   vote        = 2;
+}
+
+message MsgVoteResponse {}
+
+message MsgExecuteProposal {
+  uint64 proposal_id = 1;
+}
+
+message MsgExecuteProposalResponse {
+  repeated google.protobuf.Any responses = 1;
+}
+
+// MsgUpdateConfigRequest is used to change the config or members.
+message MsgUpdateConfigRequest {
+  // only the members that are changing are required, if their weight is 0, they are removed.
+  repeated Member update_members = 1;
+
+  // not all fields from Config can be changed
+  Config Config = 2;
+}
+
 message Member {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   uint64 weight  = 2;
@@ -42,30 +77,12 @@ message Proposal {
   string   summary                      = 2;
   repeated google.protobuf.Any messages = 3;
 
-  // if true, the proposal will execute as soon as the quorum is reached.
+  // if true, the proposal will execute as soon as the quorum is reached (last voter will execute).
   bool execute = 4;
+
+  // voting_period_end will be set by the account when the proposal is created.
+  int64 voting_period_end = 5;
 }
-
-// MsgInitResponse is the response returned after base account initialization.
-// This is empty.
-message MsgInitResponse {}
-
-message MsgCreateProposal {
-  Proposal proposal = 1;
-}
-
-// MsgUpdateConfigRequest is used to change the config or members.
-message MsgUpdateConfigRequest {
-  // only the members that are changing are required, if their weight is 0, they are removed.
-  repeated Member update_members = 1;
-
-  // not all fields from Config can be changed
-  Config Config = 2;
-}
-
-// MsgSwapPubKeyResponse is the response for the MsgSwapPubKey message.
-// This is empty.
-message MsgUpdateConfigResponse {}
 
 // QuerySequence is the request for the account sequence.
 message QuerySequence {}
@@ -93,15 +110,15 @@ message QueryProposalResponse {
   Proposal proposal = 1;
 }
 
-message MsgVote {
-  uint64 proposal_id = 1;
-  bool   vote        = 2;
+
+// VoteOption enumerates the valid vote options for a given proposal.
+enum VoteOption {
+  // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
+  VOTE_OPTION_UNSPECIFIED = 0;
+  // VOTE_OPTION_YES defines the yes proposal vote option.
+  VOTE_OPTION_YES = 1;
+  // VOTE_OPTION_ABSTAIN defines the abstain proposal vote option.
+  VOTE_OPTION_ABSTAIN = 2;
+  // VOTE_OPTION_NO defines the no proposal vote option.
+  VOTE_OPTION_NO = 3;
 }
-
-message MsgVoteResponse {}
-
-message MsgExecuteProposal {
-  uint64 proposal_id = 1;
-}
-
-message MsgExecuteProposalResponse {}

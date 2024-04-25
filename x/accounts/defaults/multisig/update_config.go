@@ -9,19 +9,23 @@ import (
 // UpdateConfig updates the configuration of the multisig account.
 func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfigRequest) (*v1.MsgUpdateConfigResponse, error) {
 	// set members
-	for i := range msg.UpdatePubKeys {
-		if msg.UpdateWeights[i] == 0 {
-			if err := a.Members.Remove(ctx, msg.UpdatePubKeys[i]); err != nil {
+	for i := range msg.UpdateMembers {
+		addrBz, err := a.addrCodec.StringToBytes(msg.UpdateMembers[i].Address)
+		if err != nil {
+			return nil, err
+		}
+
+		if msg.UpdateMembers[i].Weight == 0 {
+			if err := a.Members.Remove(ctx, addrBz); err != nil {
 				return nil, err
 			}
 			continue
 		}
-		if err := a.Members.Set(ctx, msg.UpdatePubKeys[i], msg.UpdateWeights[i]); err != nil {
+		if err := a.Members.Set(ctx, addrBz, msg.UpdateMembers[i].Weight); err != nil {
 			return nil, err
 		}
 	}
 
-	// TODO: verify if this looks good to everyone from a UX perspective
 	if msg.Config != nil {
 		// set config
 		if err := a.Config.Set(ctx, *msg.Config); err != nil {

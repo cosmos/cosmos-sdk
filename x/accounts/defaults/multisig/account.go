@@ -3,6 +3,7 @@ package multisig
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -13,6 +14,7 @@ import (
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -43,6 +45,7 @@ type Account struct {
 
 	Proposals collections.Map[uint64, v1.Proposal]
 	Votes     collections.Map[collections.Pair[uint64, []byte], int32] // key: proposalID + voter address
+	Tstung    collections.Map[[]byte, sdk.DecCoin]
 }
 
 type Options struct {
@@ -124,6 +127,19 @@ func (a Account) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse
 		return nil, err
 	}
 
+	addr, err := a.addrCodec.BytesToString(sender)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = a.eventService.EventManager(ctx).EmitKV("vote",
+		event.NewAttribute("proposal_id", fmt.Sprint(msg.ProposalId)),
+		event.NewAttribute("voter", addr),
+		event.NewAttribute("vote", msg.Vote.String()),
+	); err != nil {
+		return nil, err
+	}
+
 	return &v1.MsgVoteResponse{}, a.Votes.Set(ctx, collections.Join(msg.ProposalId, sender), int32(msg.Vote))
 }
 
@@ -160,6 +176,18 @@ func (a Account) CreateProposal(ctx context.Context, msg *v1.MsgCreateProposal) 
 	}
 
 	if err = a.Proposals.Set(ctx, seq, proposal); err != nil {
+		return nil, err
+	}
+
+	addr, err := a.addrCodec.BytesToString(accountstd.Sender(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	if err = a.eventService.EventManager(ctx).EmitKV("proposal_created",
+		event.NewAttribute("proposal_id", fmt.Sprint(seq)),
+		event.NewAttribute("proposer", addr),
+	); err != nil {
 		return nil, err
 	}
 
@@ -221,6 +249,13 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 
 	responses, err := accountstd.ExecModuleAnys(ctx, prop.Messages)
 	if err != nil {
+		return nil, err
+	}
+
+	if err = a.eventService.EventManager(ctx).EmitKV("proposal_executed",
+		event.NewAttribute("proposal_id", fmt.Sprint(msg.ProposalId)),
+		event.NewAttribute("success", fmt.Sprint(err == nil)),
+	); err != nil {
 		return nil, err
 	}
 
@@ -288,4 +323,6 @@ func (a *Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 // RegisterQueryHandlers implements implementation.Account.
 func (a *Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QuerySequence)
+	accountstd.RegisterQueryHandler(builder, a.QueryProposal)
+	accountstd.RegisterQueryHandler(builder, a.QueryConfig)
 }

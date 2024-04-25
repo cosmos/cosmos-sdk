@@ -1,14 +1,15 @@
 package simapp
 
 import (
+	_ "embed"
+	"os"
+	"path/filepath"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/root"
-	_ "embed"
-	"os"
-	"path/filepath"
 
 	"cosmossdk.io/depinject"
 	authkeeper "cosmossdk.io/x/auth/keeper"

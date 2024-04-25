@@ -3,15 +3,15 @@ package runtime
 import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf"
-	storetypes "cosmossdk.io/store/types"
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/proof"
 )
 
 // NewKVStoreService creates a new KVStoreService.
 // This wrapper is kept for backwards compatibility.
-func NewKVStoreService(storeKey *storetypes.KVStoreKey) store.KVStoreService {
-	return stf.NewKVStoreService([]byte(storeKey.Name()))
+// When migration from runtime to runtime/v2, use NewKVStoreService(storeKey.Name()) instead of NewKVStoreService(storeKey).
+func NewKVStoreService(storeKey string) store.KVStoreService {
+	return stf.NewKVStoreService([]byte(storeKey))
 }
 
 type Store interface {

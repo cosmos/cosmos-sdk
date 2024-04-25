@@ -150,25 +150,30 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 // TxValidator implements appmodulev2.HasTxValidator.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// supports legacy ante handler
-	// eventually do the reverse, write ante handler as TxValidator
-	anteDecorators := []sdk.AnteDecorator{
-		ante.NewSetUpContextDecorator(),
+	validators := []appmodulev2.TxValidator[sdk.Tx]{
 		ante.NewValidateBasicDecorator(am.accountKeeper.GetEnvironment()),
-		ante.NewTxTimeoutHeightDecorator(),
+		ante.NewTxTimeoutHeightDecorator(am.accountKeeper.GetEnvironment()),
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
 	}
 
-	anteHandler := sdk.ChainAnteDecorators(anteDecorators...)
-	_, err := anteHandler(sdkCtx, nil /** do not import runtime **/, sdkCtx.ExecMode() == sdk.ExecModeSimulate)
-	return err
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
+	}
+
+	for _, validator := range validators {
+		if err := validator.ValidateTx(ctx, sdkTx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// ConsensusVersion implements HasConsensusVersion
+// ConsensusVersion implements appmodule.HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // AppModuleSimulation functions

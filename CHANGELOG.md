@@ -61,18 +61,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
-<<<<<<< HEAD
-* (telemetry) [#19903](https://github.com/cosmos/cosmos-sdk/pull/19903) Conditionally emit metrics based on enablement.
-    * **Introduction of `Now` Function**: Added a new function called `Now` to the telemetry package. It returns the current system time if telemetry is enabled, or a zero time if telemetry is not enabled.
-    * **Atomic Global Variable**: Implemented an atomic global variable to manage the state of telemetry's enablement. This ensures thread safety for the telemetry state.
-    * **Conditional Telemetry Emission**: All telemetry functions have been updated to emit metrics only when telemetry is enabled. They perform a check with `isTelemetryEnabled()` and return early if telemetry is disabled, minimizing unnecessary operations and overhead.
-||||||| 84c64b204d
-* (telemetry) [#19903](https://github.com/cosmos/cosmos-sdk/pull/19903) Conditionally emit metrics based on enablement.
-  * **Introduction of `Now` Function**: Added a new function called `Now` to the telemetry package. It returns the current system time if telemetry is enabled, or a zero time if telemetry is not enabled.
-  * **Atomic Global Variable**: Implemented an atomic global variable to manage the state of telemetry's enablement. This ensures thread safety for the telemetry state.
-  * **Conditional Telemetry Emission**: All telemetry functions have been updated to emit metrics only when telemetry is enabled. They perform a check with `isTelemetryEnabled()` and return early if telemetry is disabled, minimizing unnecessary operations and overhead.
-=======
->>>>>>> main
 * (types) [#19869](https://github.com/cosmos/cosmos-sdk/pull/19869) Removed `Any` type from `codec/types` and replaced it with an alias for `cosmos/gogoproto/types/any`.
 * (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Add customizability to start command.
     * Add `StartCmdOptions` in `server.AddCommands` instead of `servertypes.ModuleInitFlags`. To set custom flags set them in the `StartCmdOptions` struct on the `AddFlags` field.
@@ -186,12 +174,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
     * Additionally, to reflect this change, the module manager does not take a codec either.
 * (runtime) [#19747](https://github.com/cosmos/cosmos-sdk/pull/19747) `runtime.ValidatorAddressCodec` and `runtime.ConsensusAddressCodec` have been moved to `core`.
 * (baseapp) [#19993](https://github.com/cosmos/cosmos-sdk/pull/19993) Indicate pruning with error code "not found" rather than "invalid request".
-<<<<<<< HEAD
 * (x/consensus) [#20010](https://github.com/cosmos/cosmos-sdk/pull/20010) Move consensus module to be its own go.mod
-||||||| 84c64b204d
-=======
 * (server) [#20140](https://github.com/cosmos/cosmos-sdk/pull/20140) Remove embedded grpc-web proxy in favor of standalone grpc-web proxy. [Envoy Proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start)
->>>>>>> main
 
 ### Client Breaking Changes
 

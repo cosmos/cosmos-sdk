@@ -47,6 +47,7 @@ require (
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
 	github.com/google/go-cmp v0.6.0
+	github.com/google/gofuzz v1.2.0
 	github.com/jhump/protoreflect v1.16.0
 )
 

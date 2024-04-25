@@ -90,12 +90,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateMintDenom(i interface{}) error {
-	v, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateMintDenom(v string) error {
 	if strings.TrimSpace(v) == "" {
 		return errors.New("mint denom cannot be blank")
 	}
@@ -106,12 +101,7 @@ func validateMintDenom(i interface{}) error {
 	return nil
 }
 
-func validateInflationRateChange(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateInflationRateChange(v math.LegacyDec) error {
 	if v.IsNil() {
 		return fmt.Errorf("inflation rate change cannot be nil: %s", v)
 	}
@@ -125,12 +115,7 @@ func validateInflationRateChange(i interface{}) error {
 	return nil
 }
 
-func validateInflationMax(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateInflationMax(v math.LegacyDec) error {
 	if v.IsNil() {
 		return fmt.Errorf("max inflation cannot be nil: %s", v)
 	}
@@ -144,12 +129,7 @@ func validateInflationMax(i interface{}) error {
 	return nil
 }
 
-func validateInflationMin(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateInflationMin(v math.LegacyDec) error {
 	if v.IsNil() {
 		return fmt.Errorf("min inflation cannot be nil: %s", v)
 	}
@@ -163,12 +143,7 @@ func validateInflationMin(i interface{}) error {
 	return nil
 }
 
-func validateGoalBonded(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateGoalBonded(v math.LegacyDec) error {
 	if v.IsNil() {
 		return fmt.Errorf("goal bonded cannot be nil: %s", v)
 	}
@@ -182,12 +157,7 @@ func validateGoalBonded(i interface{}) error {
 	return nil
 }
 
-func validateBlocksPerYear(i interface{}) error {
-	v, ok := i.(uint64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateBlocksPerYear(v uint64) error {
 	if v == 0 {
 		return fmt.Errorf("blocks per year must be positive: %d", v)
 	}
@@ -195,12 +165,7 @@ func validateBlocksPerYear(i interface{}) error {
 	return nil
 }
 
-func validateGenesisEpochProvisions(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateGenesisEpochProvisions(v math.LegacyDec) error {
 	if v.IsNegative() {
 		return fmt.Errorf("genesis epoch provision must be non-negative")
 	}
@@ -208,12 +173,7 @@ func validateGenesisEpochProvisions(i interface{}) error {
 	return nil
 }
 
-func validateReductionPeriodInEpochs(i interface{}) error {
-	v, ok := i.(int64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateReductionPeriodInEpochs(v int64) error {
 	if v <= 0 {
 		return fmt.Errorf("max validators must be positive: %d", v)
 	}
@@ -221,12 +181,7 @@ func validateReductionPeriodInEpochs(i interface{}) error {
 	return nil
 }
 
-func validateReductionFactor(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateReductionFactor(v math.LegacyDec) error {
 	if v.GT(math.LegacyNewDec(1)) {
 		return fmt.Errorf("reduction factor cannot be greater than 1")
 	}
@@ -238,12 +193,7 @@ func validateReductionFactor(i interface{}) error {
 	return nil
 }
 
-func validateMintingRewardsDistributionStartEpoch(i interface{}) error {
-	v, ok := i.(int64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateMintingRewardsDistributionStartEpoch(v int64) error {
 	if v < 0 {
 		return fmt.Errorf("start epoch must be non-negative")
 	}

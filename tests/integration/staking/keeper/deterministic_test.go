@@ -27,6 +27,7 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -127,7 +128,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 			authtypes.ModuleName:    authModule,
 			banktypes.ModuleName:    bankModule,
 			stakingtypes.ModuleName: stakingModule,
-		})
+		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
+	)
 
 	ctx := integrationApp.Context()
 

@@ -261,6 +261,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 }
 
 func setupSimulationApp(t *testing.T, msg string) (simtypes.Config, dbm.DB, simtestutil.AppOptionsMap, *SimApp) {
+	t.Helper()
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
 

@@ -71,6 +71,11 @@ func (bva *BaseClawback) GetOriginalFunds() collections.Map[string, math.Int] {
 func (bva *BaseClawback) Init(ctx context.Context, msg *types.MsgInitLockupAccount, amount sdk.Coins) (
 	*types.MsgInitLockupAccountResponse, error,
 ) {
+	err := validateMsg(msg, true)
+	if err != nil {
+		return nil, err
+	}
+
 	owner, err := bva.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)

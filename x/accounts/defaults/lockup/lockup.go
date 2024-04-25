@@ -73,6 +73,11 @@ func (bva *BaseLockup) GetOriginalFunds() collections.Map[string, math.Int] {
 func (bva *BaseLockup) Init(ctx context.Context, msg *types.MsgInitLockupAccount, amount sdk.Coins) (
 	*types.MsgInitLockupAccountResponse, error,
 ) {
+	err := validateMsg(msg, false)
+	if err != nil {
+		return nil, err
+	}
+
 	owner, err := bva.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)

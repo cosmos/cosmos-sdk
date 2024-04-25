@@ -60,8 +60,8 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *types.MsgInitPe
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period duration length %d", period.Length)
 		}
 
-		if err := validateAmount(period.Amount); err != nil {
-			return nil, err
+		if period.Amount.IsZero() {
+			return nil, sdkerrors.ErrInvalidCoins.Wrap("period amount cannot be zero")
 		}
 
 		totalCoins = totalCoins.Add(period.Amount...)

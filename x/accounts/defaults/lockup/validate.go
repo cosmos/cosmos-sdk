@@ -1,17 +1,17 @@
 package lockup
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/x/accounts/defaults/lockup/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func validateAmount(amount sdk.Coins) error {
-	if !amount.IsValid() {
-		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
+func validateMsg(msg *types.MsgInitLockupAccount, isClawbackEnable bool) error {
+	if msg.Owner == "" {
+		return sdkerrors.ErrInvalidAddress.Wrap("account owner cannot be empty")
 	}
 
-	if amount.IsZero() {
-		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
+	if isClawbackEnable && msg.Admin == "" {
+		return sdkerrors.ErrInvalidAddress.Wrap("account admin cannot be empty")
 	}
 
 	return nil

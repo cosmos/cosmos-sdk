@@ -88,8 +88,12 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *types.MsgInitPe
 		Admin:     msg.Admin,
 	}
 
-	pva.BaseAccount.Init(ctx, msgInit, sortedAmt)
-	err := pva.StartTime.Set(ctx, msg.StartTime)
+	_, err := pva.BaseAccount.Init(ctx, msgInit, sortedAmt)
+	if err != nil {
+		return nil, err
+	}
+
+	err = pva.StartTime.Set(ctx, msg.StartTime)
 	if err != nil {
 		return nil, err
 	}

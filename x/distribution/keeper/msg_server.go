@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	metrics "github.com/hashicorp/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"

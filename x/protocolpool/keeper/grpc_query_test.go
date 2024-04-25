@@ -11,7 +11,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestUnclaimedBudget() {
-	startTime := suite.environment.HeaderService.GetHeaderInfo(suite.ctx).Time.Add(-70 * time.Second)
+	startTime := suite.environment.HeaderService.HeaderInfo(suite.ctx).Time.Add(-70 * time.Second)
 	period := time.Duration(60) * time.Second
 	zeroCoin := sdk.NewCoin("foo", math.ZeroInt())
 	nextClaimFrom := startTime.Add(period)

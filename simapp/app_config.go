@@ -130,10 +130,15 @@ var (
 						group.ModuleName,
 						pooltypes.ModuleName,
 					},
+					// The following is mostly only needed when ModuleName != StoreKey name.
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
 							ModuleName: authtypes.ModuleName,
 							KvStoreKey: "acc",
+						},
+						{
+							ModuleName: accounts.ModuleName,
+							KvStoreKey: accounts.StoreKey,
 						},
 					},
 					// NOTE: The genutils module must occur after staking so that pools are

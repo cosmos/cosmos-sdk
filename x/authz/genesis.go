@@ -1,7 +1,7 @@
 package authz
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )

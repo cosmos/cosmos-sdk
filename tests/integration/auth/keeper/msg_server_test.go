@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -82,10 +83,8 @@ func initFixture(t *testing.T) *fixture {
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountsKeeper, err := accounts.NewKeeper(
 		cdc,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger()),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, router)),
 		addresscodec.NewBech32Codec("cosmos"),
-		router,
-		queryRouter,
 		cdc.InterfaceRegistry(),
 		account,
 	)
@@ -156,7 +155,7 @@ func TestAsyncExec(t *testing.T) {
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
 
-	assert.NilError(t, testutil.FundAccount(f.ctx, f.bankKeeper, addrs[0], sdk.NewCoins(sdk.NewInt64Coin("stake", 50))))
+	assert.NilError(t, testutil.FundAccount(f.ctx, f.bankKeeper, addrs[0], sdk.NewCoins(sdk.NewInt64Coin("stake", 500))))
 
 	msg := &banktypes.MsgSend{
 		FromAddress: addrs[0].String(),
@@ -274,7 +273,7 @@ func TestAsyncExec(t *testing.T) {
 				if tc.expErrMsg != "" {
 					for _, res := range result.Results {
 						if res.Error != "" {
-							assert.Assert(t, strings.Contains(res.Error, tc.expErrMsg))
+							assert.Assert(t, strings.Contains(res.Error, tc.expErrMsg), fmt.Sprintf("res.Error %s does not contain %s", res.Error, tc.expErrMsg))
 						}
 						continue
 					}

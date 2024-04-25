@@ -9,7 +9,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
+	"cosmossdk.io/x/accounts/defaults/lockup"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,9 +36,10 @@ type ModuleInputs struct {
 	Cdc          codec.Codec
 	Environment  appmodule.Environment
 	AddressCodec address.Codec
-	ExecRouter   MsgRouter
-	QueryRouter  QueryRouter
 	Registry     cdctypes.InterfaceRegistry
+
+	// TODO: Add a way to inject custom accounts.
+	// Currently only the base account is supported.
 }
 
 type ModuleOutputs struct {
@@ -62,8 +65,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountskeeper, err := NewKeeper(
-		in.Cdc, in.Environment, in.AddressCodec,
-		in.ExecRouter, in.QueryRouter, in.Registry, account,
+		in.Cdc, in.Environment, in.AddressCodec, in.Registry, account,
+		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
+		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
+		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
+		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
 	)
 	if err != nil {
 		panic(err)

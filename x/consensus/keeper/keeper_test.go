@@ -36,7 +36,10 @@ func (s *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, env, authtypes.NewModuleAddress("gov").String())
+	authority, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	s.Require().NoError(err)
+
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, env, authority)
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper

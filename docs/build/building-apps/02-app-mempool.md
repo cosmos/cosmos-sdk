@@ -10,7 +10,7 @@ This sections describes how the app-side mempool can be used and replaced.
 
 Since `v0.47` the application has its own mempool to allow much more granular
 block building than previous versions. This change was enabled by
-[ABCI 1.0](https://github.com/cometbft/cometbft/blob/v0.37.0/spec/abci).
+[ABCI 1.0](https://docs.cometbft.com/v0.37/spec/abci/).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++. For more information please see [here](../abci/00-introduction.md)
 
 :::note Pre-requisite Readings

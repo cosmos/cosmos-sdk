@@ -21,6 +21,7 @@ COPY x/authz/go.mod x/authz/go.sum /work/x/authz/
 COPY x/bank/go.mod x/bank/go.sum /work/x/bank/
 COPY x/mint/go.mod x/mint/go.sum /work/x/mint/
 COPY x/accounts/go.mod x/accounts/go.sum /work/x/accounts/
+COPY x/accounts/defaults/lockup/go.mod x/accounts/defaults/lockup/go.sum /work/x/accounts/defaults/lockup/
 RUN go mod download
 
 COPY ./ /work

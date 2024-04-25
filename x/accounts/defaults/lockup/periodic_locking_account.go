@@ -200,10 +200,7 @@ func (pva PeriodicLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTim
 		unlockedCoins = unlockedCoins.Add(period.Amount...)
 
 		// update the start time of the next period
-		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
-		if err != nil {
-			return true, err
-		}
+		currentPeriodStartTime = currentPeriodStartTime.Add(period.Length)
 		return false, nil
 	})
 	if err != nil {
@@ -267,10 +264,7 @@ func (pva PeriodicLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, 
 		unlocked = unlocked.Add(sdk.NewCoin(denom, period.Amount.AmountOf(denom)))
 
 		// update the start time of the next period
-		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
-		if err != nil {
-			return true, err
-		}
+		currentPeriodStartTime = currentPeriodStartTime.Add(period.Length)
 		return false, nil
 	})
 	if err != nil {

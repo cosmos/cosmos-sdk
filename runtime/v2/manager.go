@@ -140,14 +140,78 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-// InitGenesis performs init genesis functionality for modules.
-func (m *MM) InitGenesis() {
-	panic("implement me")
+// ExportGenesis performs export genesis functionality for modules
+func (m *MM) ExportGenesis(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
+	if len(modulesToExport) == 0 {
+		modulesToExport = m.config.ExportGenesis
+	}
+
+	return m.ExportGenesisForModules(ctx, modulesToExport...)
 }
 
-// ExportGenesis performs export genesis functionality for modules
-func (m *MM) ExportGenesis() {
-	panic("implement me")
+// ExportGenesisForModules performs export genesis functionality for modules
+func (m *MM) ExportGenesisForModules(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
+	if len(modulesToExport) == 0 {
+		modulesToExport = m.config.ExportGenesis
+	}
+	// verify modules exists in app, so that we don't panic in the middle of an export
+	if err := m.checkModulesExists(modulesToExport); err != nil {
+		return nil, err
+	}
+
+	type genesisResult struct {
+		bz  json.RawMessage
+		err error
+	}
+
+	type ModuleI interface {
+		ExportGenesis(ctx context.Context) (json.RawMessage, error)
+	}
+
+	channels := make(map[string]chan genesisResult)
+	for _, moduleName := range modulesToExport {
+		mod := m.modules[moduleName]
+		var moduleI ModuleI
+
+		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
+			moduleI = module.(ModuleI)
+		} else if module, hasABCIGenesis := mod.(appmodulev2.HasGenesis); hasABCIGenesis {
+			moduleI = module.(ModuleI)
+		}
+
+		channels[moduleName] = make(chan genesisResult)
+		go func(moduleI ModuleI, ch chan genesisResult) {
+			jm, err := moduleI.ExportGenesis(ctx)
+			if err != nil {
+				ch <- genesisResult{nil, err}
+				return
+			}
+			ch <- genesisResult{jm, nil}
+		}(moduleI, channels[moduleName])
+	}
+
+	genesisData := make(map[string]json.RawMessage)
+	for moduleName := range channels {
+		res := <-channels[moduleName]
+		if res.err != nil {
+			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
+		}
+
+		genesisData[moduleName] = res.bz
+	}
+
+	return genesisData, nil
+}
+
+// checkModulesExists verifies that all modules in the list exist in the app
+func (m *MM) checkModulesExists(moduleName []string) error {
+	for _, name := range moduleName {
+		if _, ok := m.modules[name]; !ok {
+			return fmt.Errorf("module %s does not exist", name)
+		}
+	}
+
+	return nil
 }
 
 // BeginBlock runs the begin-block logic of all modules
@@ -365,34 +429,32 @@ func (m *MM) validateConfig() error {
 
 	if err := m.assertNoForgottenModules("InitGenesis", m.config.InitGenesis, func(moduleName string) bool {
 		module := m.modules[moduleName]
+		if _, hasGenesis := module.(appmodule.HasGenesisAuto); hasGenesis {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
+		}
+
 		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
 			return !hasGenesis
 		}
 
-		// TODO, if we actually don't support old genesis, let's panic here saying this module isn't server/v2 compatible
-		if _, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis); hasABCIGenesis {
-			return !hasABCIGenesis
-		}
-
-		_, hasGenesis := module.(sdkmodule.HasGenesis)
-		return !hasGenesis
+		_, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis)
+		return !hasABCIGenesis
 	}); err != nil {
 		return err
 	}
 
 	if err := m.assertNoForgottenModules("ExportGenesis", m.config.ExportGenesis, func(moduleName string) bool {
 		module := m.modules[moduleName]
+		if _, hasGenesis := module.(appmodule.HasGenesisAuto); hasGenesis {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
+		}
+
 		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
 			return !hasGenesis
 		}
 
-		// TODO, if we actually don't support old genesis, let's panic here saying this module isn't server/v2 compatible
-		if _, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis); hasABCIGenesis {
-			return !hasABCIGenesis
-		}
-
-		_, hasGenesis := module.(sdkmodule.HasGenesis)
-		return !hasGenesis
+		_, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis)
+		return !hasABCIGenesis
 	}); err != nil {
 		return err
 	}

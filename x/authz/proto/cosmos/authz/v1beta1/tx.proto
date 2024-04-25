@@ -92,7 +92,7 @@ message MsgRevokeResponse {}
 
 // MsgRevokeAll revokes all grants issued by the specified granter.
 message MsgRevokeAll {
-  option (cosmos_proto.message_added_in) = "x/authz v1.0.0";
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.51";
   option (cosmos.msg.v1.signer)          = "granter";
   option (amino.name)                    = "cosmos-sdk/MsgRevokeAll";
 
@@ -101,7 +101,7 @@ message MsgRevokeAll {
 
 // MsgRevokeAllResponse defines the Msg/MsgRevokeAllResponse response type.
 message MsgRevokeAllResponse {
-  option (cosmos_proto.message_added_in) = "x/authz v1.0.0";
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.51";
 }
 
 // MsgPruneExpiredGrants prunes the expired grants.

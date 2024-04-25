@@ -666,7 +666,8 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	}
 	ctx := modeState.Context().
 		WithTxBytes(txBytes).
-		WithExecMode(sdk.ExecMode(mode))
+		WithExecMode(sdk.ExecMode(mode)).
+		WithGasMeter(storetypes.NewInfiniteGasMeter())
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))

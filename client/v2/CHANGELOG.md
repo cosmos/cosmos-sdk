@@ -40,14 +40,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Upgrade SDK version to due prometheus breaking change.
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Bump `cosmossdk.io/store` to v1.1.0.
+* [#20083](https://github.com/cosmos/cosmos-sdk/pull/20083) Integrate latest version of cosmos-proto and improve version filtering.
 * [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Marshal enum as string in queries.
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
-  * Note, the given command must have a `client.Context` in its context.
+    * Note, the given command must have a `client.Context` in its context.
 * [#19216](https://github.com/cosmos/cosmos-sdk/pull/19216) Do not overwrite TxConfig, use directly the one provided in context. TxConfig should always be set in the `client.Context` in `root.go` of an app.
 
 ### Bug Fixes
 
+* [#19976](https://github.com/cosmos/cosmos-sdk/pull/19976) Add encoder for `cosmos.base.v1beta1.DecCoin`.
+* [#19377](https://github.com/cosmos/cosmos-sdk/pull/19377) Partly fix comment parsing in autocli.
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Simplify key flag parsing logic in flag handler.
+* [#20033](https://github.com/cosmos/cosmos-sdk/pull/20033) Respect output format from client ctx.
 
 ## [v2.0.0-beta.1] - 2023-11-07
 

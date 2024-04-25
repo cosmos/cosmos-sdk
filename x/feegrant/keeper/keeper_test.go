@@ -31,6 +31,7 @@ type KeeperTestSuite struct {
 	atom           sdk.Coins
 	feegrantKeeper keeper.Keeper
 	accountKeeper  *feegranttestutil.MockAccountKeeper
+	bankKeeper     *feegranttestutil.MockBankKeeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -49,10 +50,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	for i := 0; i < len(suite.addrs); i++ {
 		suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[i])).AnyTimes()
 	}
-
 	suite.accountKeeper.EXPECT().AddressCodec().Return(codecaddress.NewBech32Codec("cosmos")).AnyTimes()
+	suite.bankKeeper = feegranttestutil.NewMockBankKeeper(ctrl)
+	suite.bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper)
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper).SetBankKeeper(suite.bankKeeper)
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(555)))

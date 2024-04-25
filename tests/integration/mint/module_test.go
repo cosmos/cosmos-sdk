@@ -10,6 +10,7 @@ import (
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint/types"
+
 	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 

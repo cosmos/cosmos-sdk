@@ -3,9 +3,9 @@ package utils
 import (
 	"fmt"
 
+	"cosmossdk.io/simapp/network"
 	authcli "cosmossdk.io/x/auth/client/cli"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

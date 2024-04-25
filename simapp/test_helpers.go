@@ -14,13 +14,12 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/simapp/network"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 
-	"cosmossdk.io/simapp/network"
-	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -30,6 +29,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.

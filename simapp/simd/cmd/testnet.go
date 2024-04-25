@@ -17,11 +17,11 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/network"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"

@@ -8,10 +8,10 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
+	"cosmossdk.io/simapp/network"
 	"cosmossdk.io/x/bank/client/cli"
 	"cosmossdk.io/x/bank/types"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

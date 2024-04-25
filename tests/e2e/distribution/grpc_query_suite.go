@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/network"
 	"cosmossdk.io/x/distribution/types"
 
-	"cosmossdk.io/simapp/network"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"

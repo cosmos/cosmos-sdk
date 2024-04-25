@@ -158,7 +158,7 @@ type WeightedProposalContent struct {
 	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
 }
 
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent { 
+func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent {
 	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
 }
 
@@ -170,7 +170,7 @@ func (w WeightedProposalContent) DefaultWeight() int {
 	return w.defaultWeight
 }
 
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn { 
+func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
 	return w.contentSimulatorFn
 }
 

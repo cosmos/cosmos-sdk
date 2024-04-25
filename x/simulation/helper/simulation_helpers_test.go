@@ -12,11 +12,11 @@ import (
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 const (

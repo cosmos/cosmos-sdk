@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/network"
 	_ "cosmossdk.io/x/gov"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

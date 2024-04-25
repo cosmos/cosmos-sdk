@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"cosmossdk.io/simapp/network"
 	authclient "cosmossdk.io/x/auth/client"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"

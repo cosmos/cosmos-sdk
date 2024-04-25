@@ -12,39 +12,34 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 
+	abci_server "github.com/cometbft/cometbft/abci/server"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/network"
 	"cosmossdk.io/x/staking"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
-
-	"time"
-
-	abci_server "github.com/cometbft/cometbft/abci/server"
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/mock"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 func TestExportCmd_ConsensusParams(t *testing.T) {

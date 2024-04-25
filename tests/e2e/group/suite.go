@@ -10,11 +10,11 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/math"
+	"cosmossdk.io/simapp/network"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
 	client "cosmossdk.io/x/group/client/cli"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

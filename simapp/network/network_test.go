@@ -1,38 +1,31 @@
 package network_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
 
-	//nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
+	"cosmossdk.io/simapp/network"
 	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/auth"
 	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
 	_ "cosmossdk.io/x/staking"
 
-	"context"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-
-	_ "cosmossdk.io/x/accounts"
-
-	"cosmossdk.io/simapp/network"
+	"github.com/cosmos/cosmos-sdk/server"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-
-	"github.com/cosmos/cosmos-sdk/server"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // https://github.com/improbable-eng/grpc-web/blob/master/go/grpcweb/wrapper_test.go used as a reference

@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/simapp/network"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/vesting"
@@ -34,7 +35,6 @@ import (
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/upgrade"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"

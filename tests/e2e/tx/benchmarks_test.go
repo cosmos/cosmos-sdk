@@ -8,10 +8,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/network"
 	authclient "cosmossdk.io/x/auth/client"
 	banktypes "cosmossdk.io/x/bank/types"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"

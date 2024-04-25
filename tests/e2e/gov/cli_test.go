@@ -11,9 +11,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/simapp"
-	v1 "cosmossdk.io/x/gov/types/v1"
-
 	"cosmossdk.io/simapp/network"
+	v1 "cosmossdk.io/x/gov/types/v1"
 )
 
 func TestE2ETestSuite(t *testing.T) {

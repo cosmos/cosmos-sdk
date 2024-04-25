@@ -8,11 +8,11 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/network"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution/client/cli"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"cosmossdk.io/simapp/network"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

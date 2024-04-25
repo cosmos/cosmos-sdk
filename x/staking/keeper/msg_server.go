@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 type msgServer struct {
@@ -67,14 +68,16 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", msg.Pubkey.GetCachedValue())
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO: remove this
-	cp := sdkCtx.ConsensusParams()
-	if cp.Validator != nil {
+	res := consensusv1.QueryParamsResponse{}
+	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
+	}
+	if res.Params.Validator != nil {
 		pkType := pk.Type()
-		if !slices.Contains(cp.Validator.PubKeyTypes, pkType) {
+		if !slices.Contains(res.Params.Validator.PubKeyTypes, pkType) {
 			return nil, errorsmod.Wrapf(
 				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
+				"got: %s, expected: %s", pk.Type(), res.Params.Validator.PubKeyTypes,
 			)
 		}
 
@@ -112,7 +115,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, sdkCtx.HeaderInfo().Time,
+		msg.Commission.MaxChangeRate, k.HeaderService.HeaderInfo(ctx).Time,
 	)
 
 	validator, err = validator.SetInitialCommission(commission)

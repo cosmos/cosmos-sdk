@@ -187,8 +187,6 @@ replace (
 	cosmossdk.io/x/staking => ./x/staking
 )
 
-replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.1 // TODO remove
-
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring

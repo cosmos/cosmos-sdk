@@ -38,6 +38,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 			}
 		default:
 			k.Logger().Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.EvidenceType))
+			k.Logger.Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
 		}
 	}
 	return nil

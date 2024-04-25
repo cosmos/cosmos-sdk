@@ -44,7 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) `BurnCoins` takes an address instead of a module name
 * [#19477](https://github.com/cosmos/cosmos-sdk/pull/19477) `appmodule.Environment` is passed to bank `NewKeeper`
 * [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) The genesis api has been updated to match `appmodule.HasGenesis`.
-* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 
 ### Consensus Breaking Changes
 

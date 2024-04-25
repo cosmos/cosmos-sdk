@@ -102,6 +102,8 @@ func (c Context) HeaderHash() []byte {
 	return hash
 }
 
+// Deprecated: getting consensus params from the context is deprecated and will be removed after 0.51
+// Querying the consensus module for the parameters is required in server/v2
 func (c Context) ConsensusParams() cmtproto.ConsensusParams {
 	return c.consParams
 }

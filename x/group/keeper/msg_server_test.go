@@ -12,8 +12,6 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
@@ -21,7 +19,6 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1995,12 +1992,10 @@ func (s *TestSuite) TestWithdrawProposal() {
 			postRun: func(sdkCtx sdk.Context) {
 				resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
-				key := storetypes.NewKVStoreKey(group.StoreKey)
-				env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 				vpe := resp.Proposal.VotingPeriodEnd
 				timeDiff := vpe.Sub(s.sdkCtx.HeaderInfo().Time)
 				ctxVPE := sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(timeDiff).Add(time.Second * 1)})
-				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE, env))
+				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE))
 				events := ctxVPE.EventManager().ABCIEvents()
 
 				s.Require().True(eventTypeFound(events, EventProposalPruned))

@@ -49,7 +49,7 @@ func NewKeeper(
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
-		environment:      env,
+		Environment:      env,
 		codec:            cdc,
 		addressCodec:     addressCodec,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
@@ -74,8 +74,8 @@ func NewKeeper(
 }
 
 type Keeper struct {
-	// deps coming from the runtime
-	environment      appmodule.Environment
+	appmodule.Environment
+
 	addressCodec     address.Codec
 	codec            codec.Codec
 	makeSendCoinsMsg coinsTransferMsgFunc
@@ -268,7 +268,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 	if !isQuery {
 		return implementation.MakeAccountContext(
 			ctx,
-			k.environment.KVStoreService,
+			k.KVStoreService,
 			accountNumber,
 			accountAddr,
 			sender,
@@ -283,7 +283,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 	// and does not allow to get the sender.
 	return implementation.MakeAccountContext(
 		ctx,
-		k.environment.KVStoreService,
+		k.KVStoreService,
 		accountNumber,
 		accountAddr,
 		nil,
@@ -324,7 +324,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 // SendModuleMessageUntyped can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
 func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
-	resp, err := k.environment.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
+	resp, err := k.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -347,14 +347,14 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 	if !bytes.Equal(sender, wantSenders[0]) {
 		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	return k.environment.RouterService.MessageRouterService().InvokeTyped(ctx, msg, msgResp)
+	return k.RouterService.MessageRouterService().InvokeTyped(ctx, msg, msgResp)
 }
 
 // queryModule is the entrypoint for an account to query a module.
 // It will try to find the query handler for the given query and execute it.
 // If multiple query handlers are found, it will return an error.
 func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementation.ProtoMsg) error {
-	return k.environment.RouterService.QueryRouterService().InvokeTyped(ctx, queryReq, queryResp)
+	return k.RouterService.QueryRouterService().InvokeTyped(ctx, queryReq, queryResp)
 }
 
 // maybeSendFunds will send the provided coins between the provided addresses, if amt

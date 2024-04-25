@@ -16,8 +16,9 @@ import (
 
 // Keeper of the mint store
 type Keeper struct {
+	appmodule.Environment
+
 	cdc              codec.BinaryCodec
-	environment      appmodule.Environment
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	logger           log.Logger
@@ -48,8 +49,8 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
+		Environment:      env,
 		cdc:              cdc,
-		environment:      env,
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		logger:           env.Logger,
@@ -70,11 +71,6 @@ func NewKeeper(
 // GetAuthority returns the x/mint module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's

@@ -23,10 +23,6 @@ var (
 	VotesPrefix     = collections.NewPrefix(4)
 )
 
-const (
-	DefaultSigningAlgo = "default"
-)
-
 // Compile-time type assertions
 var (
 	_ accountstd.Interface = (*Account)(nil)
@@ -47,7 +43,6 @@ type Account struct {
 
 func NewAccount(name string) accountstd.AccountCreatorFunc {
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
-
 		return name, &Account{
 			Members:      collections.NewMap(deps.SchemaBuilder, MembersPrefix, "members", collections.BytesKey, collections.Uint64Value),
 			Sequence:     collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),

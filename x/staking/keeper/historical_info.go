@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"cosmossdk.io/x/staking/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -43,6 +42,9 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return nil
 	}
 
+	if headerInfo.Height == 0 {
+		return nil
+	}
 	historicalEntry := types.HistoricalRecord{
 		Time:           &headerInfo.Time,
 		ValidatorsHash: sdk.UnwrapSDKContext(ctx).CometInfo().ValidatorsHash,

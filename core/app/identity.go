@@ -1,4 +1,6 @@
 package app
 
-var RuntimeIdentity = []byte("runtime")
-var ConsensusIdentity = []byte("consensus")
+var (
+	RuntimeIdentity   = []byte("runtime")
+	ConsensusIdentity = []byte("consensus")
+)

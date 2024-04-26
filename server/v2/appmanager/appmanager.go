@@ -1,12 +1,13 @@
 package appmanager
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 
 	appmanager "cosmossdk.io/core/app"
-	"cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
@@ -22,38 +23,51 @@ type AppManager[T transaction.Tx] struct {
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
 	importState func(ctx context.Context, src map[string]io.Reader) error
 
+	initGenesis func(ctx context.Context, state io.Reader, txHandler func(tx json.RawMessage) error) error
+
 	stf *stf.STF[T]
 }
 
 func (a AppManager[T]) InitGenesis(
 	ctx context.Context,
-	headerInfo header.Info,
-	consensusMessages []transaction.Type,
+	blockRequest *appmanager.BlockRequest[T],
 	initGenesisJSON []byte,
-) (corestore.WriterMap, error) {
+	txDecoder transaction.Codec[T],
+) (*appmanager.BlockResponse, corestore.WriterMap, error) {
+	v, zeroState, err := a.db.StateLatest()
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
+	}
+	if v != 0 {
+		return nil, nil, fmt.Errorf("cannot init genesis on non-zero state")
+	}
+
+	var genTxs []T
+	zeroState, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
+		return a.initGenesis(ctx, bytes.NewBuffer(initGenesisJSON), func(jsonTx json.RawMessage) error {
+			genTx, err := txDecoder.DecodeJSON(jsonTx)
+			if err != nil {
+				return fmt.Errorf("failed to decode genesis transaction: %w", err)
+			}
+			genTxs = append(genTxs, genTx)
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
+	}
 	// run block 0
 	// TODO: in an ideal world, genesis state is simply an initial state being applied
 	// unaware of what that state means in relation to every other, so here we can
 	// chain genesis
-	block0 := &appmanager.BlockRequest[T]{
-		Height:            uint64(headerInfo.Height),
-		Time:              headerInfo.Time,
-		Hash:              headerInfo.Hash,
-		ChainId:           headerInfo.ChainID,
-		AppHash:           headerInfo.AppHash,
-		Txs:               nil,
-		ConsensusMessages: consensusMessages,
-	}
+	blockRequest.Txs = genTxs
 
-	_, genesisState, err := a.DeliverBlock(ctx, block0)
+	blockresponse, genesisState, err := a.stf.DeliverBlock(ctx, blockRequest, zeroState)
 	if err != nil {
-		return nil, err
+		return blockresponse, nil, fmt.Errorf("failed to deliver block 0: %w", err)
 	}
 
-	// TODO: ok so the problem we have now, the genesis is a mix of initial state
-	// then followed by txs from the genutil module.
-
-	return genesisState, nil
+	return blockresponse, genesisState, err
 }
 
 func (a AppManager[T]) DeliverBlock(

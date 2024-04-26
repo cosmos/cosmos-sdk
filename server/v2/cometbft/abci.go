@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"cosmossdk.io/core/header"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
+	"cosmossdk.io/core/comet"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	coreappmgr "cosmossdk.io/core/app"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -234,6 +236,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
+	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
 
 	// On a new chain, we consider the init chain block height as 0, even though
@@ -251,26 +254,41 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 		})
 	}
 
-	genesisHeaderInfo := header.Info{
-		Height:  req.InitialHeight,
-		Hash:    nil,
-		Time:    req.Time,
-		ChainID: req.ChainId,
-		AppHash: nil,
+	br := &coreappmgr.BlockRequest[T]{
+		Height:            uint64(req.InitialHeight),
+		Time:              req.Time,
+		Hash:              nil,
+		AppHash:           nil,
+		ChainId:           req.ChainId,
+		ConsensusMessages: consMessages,
 	}
 
-	genesisState, err := c.app.InitGenesis(ctx, genesisHeaderInfo, consMessages, req.AppStateBytes)
+	blockresponse, genesisState, err := c.app.InitGenesis(
+		ctx,
+		br,
+		req.AppStateBytes,
+		c.txCodec)
 	if err != nil {
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
-	println(genesisState) // TODO: this needs to be committed to store as height 0.
+	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
 
-	// TODO: populate
+	stateChanges, err := genesisState.GetStateChanges()
+	if err != nil {
+		return nil, err
+	}
+	stateRoot, err := c.store.Commit(&store.Changeset{
+		Changes: stateChanges,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
+	}
+
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
-		Validators:      req.Validators,
-		AppHash:         []byte{},
+		Validators:      validatorUpdates,
+		AppHash:         stateRoot,
 	}, nil
 }
 
@@ -355,14 +373,22 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// for passing consensus info as a consensus message
-	cometInfo := &consensusv1.ConsensusMsgCometInfoRequest{
-		Info: &consensusv1.CometInfo{
+	cometInfo := &consensustypes.ConsensusMsgCometInfoRequest{
+		Info: &consensustypes.CometInfo{
 			Evidence:        ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
 			LastCommit:      ToSDKCommitInfo(req.DecidedLastCommit),
 		},
 	}
+
+	// TODO remove this once we have a better way to pass consensus info
+	ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
+		Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
+		ValidatorsHash:  req.NextValidatorsHash,
+		ProposerAddress: req.ProposerAddress,
+		LastCommit:      sdktypes.ToSDKCommitInfo(req.DecidedLastCommit),
+	})
 
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never

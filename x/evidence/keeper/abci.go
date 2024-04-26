@@ -15,6 +15,9 @@ import (
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
 func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+	if k.HeaderService.HeaderInfo(ctx).Height == 0 {
+		return nil
+	}
 
 	bi := sdk.UnwrapSDKContext(ctx).CometInfo()
 

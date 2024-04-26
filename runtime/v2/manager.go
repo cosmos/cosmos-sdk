@@ -26,6 +26,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 type MM struct {
@@ -140,13 +141,58 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-// ExportGenesis performs export genesis functionality for modules
-func (m *MM) ExportGenesis(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
-	if len(modulesToExport) == 0 {
-		modulesToExport = m.config.ExportGenesis
-	}
+// InitGenesisJSON performs init genesis functionality for modules from genesis data in JSON format
+func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.RawMessage, txHandler func(json.RawMessage) error) error {
+	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
+	var seenValUpdates bool
+	for _, moduleName := range m.config.InitGenesis {
+		if genesisData[moduleName] == nil {
+			continue
+		}
 
-	return m.ExportGenesisForModules(ctx, modulesToExport...)
+		mod := m.modules[moduleName]
+
+		// skip genutil as it's a special module that handles gentxs
+		// TODO: should this be an empty extension interface on genutil for server v2?
+		if moduleName == "genutil" {
+			var genesisState types.GenesisState
+			err := m.cdc.UnmarshalJSON(genesisData[moduleName], &genesisState)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal %s genesis state: %w", moduleName, err)
+			}
+			for _, jsonTx := range genesisState.GenTxs {
+				txHandler(jsonTx)
+			}
+			continue
+		}
+
+		// we might get an adapted module, a native core API module or a legacy module
+		if _, ok := mod.(appmodule.HasGenesisAuto); ok {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
+		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
+				return err
+			}
+		} else if module, ok := mod.(appmodulev2.HasABCIGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
+			if err != nil {
+				return err
+			}
+
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if seenValUpdates {
+					return errors.New("validator InitGenesis updates already set by a previous module")
+				} else {
+					seenValUpdates = true
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules

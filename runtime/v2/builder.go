@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
@@ -120,6 +121,21 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 		ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
 		QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
 		SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
+		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error {
+			// this implementation assumes that the state is a JSON object
+			bz, err := io.ReadAll(src)
+			if err != nil {
+				return fmt.Errorf("failed to read import state: %w", err)
+			}
+			var genesisState map[string]json.RawMessage
+			if err = json.Unmarshal(bz, &genesisState); err != nil {
+				return err
+			}
+			if err = a.app.moduleManager.InitGenesisJSON(ctx, genesisState, txHandler); err != nil {
+				return fmt.Errorf("failed to init genesis: %w", err)
+			}
+			return nil
+		},
 	}
 
 	appManager, err := appManagerBuilder.Build()

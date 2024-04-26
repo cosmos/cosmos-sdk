@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"cosmossdk.io/x/upgrade/expected"
 	"github.com/spf13/cast"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
@@ -40,6 +41,7 @@ type ModuleInputs struct {
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
 	AppVersionModifier baseapp.AppVersionModifier
+	ConsensusKeeper    expected.ConsensusKeeper
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
@@ -78,7 +80,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	// set the governance module account as the authority for conducting upgrades
 	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, authorityStr)
-	m := NewAppModule(k)
+	m := NewAppModule(k, in.ConsensusKeeper)
 
 	return ModuleOutputs{UpgradeKeeper: k, Module: m}
 }

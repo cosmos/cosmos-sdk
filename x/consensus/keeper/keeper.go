@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -14,6 +15,7 @@ import (
 	"cosmossdk.io/core/event"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -25,6 +27,8 @@ type Keeper struct {
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
+	// storage of the last comet info
+	cometInfo collections.Item[types.CometInfo]
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
@@ -40,6 +44,10 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 
 func (k *Keeper) GetAuthority() string {
 	return k.authority
+}
+
+func (k Keeper) GetParams(ctx context.Context) (cmtproto.ConsensusParams, error) {
+	return k.ParamsStore.Get(ctx)
 }
 
 // Querier
@@ -106,4 +114,47 @@ func (k Keeper) SetParams(
 	}
 
 	return &types.ConsensusMsgParamsResponse{}, nil
+}
+
+// GetCometInfo returns info related to comet. If the application is using v1 then the information will be present on context,
+// if the application is using v2 then the information will be present in the cometInfo store.
+// TODO: use or delete
+func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
+	ci, err := k.cometInfo.Get(ctx)
+	// if the value is not found we may be using baseapp and not have consensus messages
+	if errors.Is(err, collections.ErrNotFound) {
+		ci := sdk.UnwrapSDKContext(ctx).CometInfo()
+		res := &types.MsgCometInfoResponse{CometInfo: &types.CometInfo{
+			ValidatorsHash:  ci.ValidatorsHash,
+			ProposerAddress: ci.ProposerAddress,
+		}}
+
+		for _, vote := range ci.LastCommit.Votes {
+			res.CometInfo.LastCommit.Votes = append(res.CometInfo.LastCommit.Votes, &types.VoteInfo{
+				Validator: &types.Validator{
+					Address: vote.Validator.Address,
+					Power:   vote.Validator.Power,
+				},
+				BlockIdFlag: types.BlockIDFlag(vote.BlockIDFlag),
+			})
+		}
+		res.CometInfo.LastCommit.Round = ci.LastCommit.Round
+
+		for _, evi := range ci.Evidence {
+			res.CometInfo.Evidence = append(res.CometInfo.Evidence, &types.Evidence{
+				EvidenceType: types.MisbehaviorType(evi.Type),
+				Validator: &types.Validator{
+					Address: evi.Validator.Address,
+					Power:   evi.Validator.Power,
+				},
+				Height:           evi.Height,
+				Time:             &evi.Time,
+				TotalVotingPower: evi.TotalVotingPower,
+			})
+		}
+
+		return res, err
+	}
+
+	return &types.MsgCometInfoResponse{CometInfo: &ci}, err
 }

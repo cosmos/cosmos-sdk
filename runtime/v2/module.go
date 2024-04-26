@@ -111,6 +111,7 @@ func init() {
 			ProvideGenesisTxHandler,
 			ProvideAppVersionModifier,
 		),
+		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 
@@ -163,7 +164,7 @@ type AppInputs struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       *codec.LegacyAmino
 	Logger            log.Logger
-	StoreOptions      *rootstorev2.FactoryOptions
+	StoreOptions      *rootstorev2.FactoryOptions `optional:"true"`
 }
 
 func SetupAppBuilder(inputs AppInputs) {

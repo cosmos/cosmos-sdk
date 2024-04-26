@@ -4,6 +4,7 @@ import (
 	"context"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
@@ -115,3 +116,7 @@ type StakingHooksWrapper struct{ StakingHooks }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (StakingHooksWrapper) IsOnePerModuleType() {}
+
+type ConsensusKeeper interface {
+	GetParams(ctx context.Context) (cmtproto.ConsensusParams, error)
+}

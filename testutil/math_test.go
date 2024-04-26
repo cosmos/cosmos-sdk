@@ -82,10 +82,10 @@ func TestDiffDecimalsMigrationWithLDec(t *testing.T) {
 		key,
 		100,
 		func(i int64) {
-			Dec := testDecCoin{
+			Dec := testLegDecCoin{
 				Denom:  "test",
 				Amount: i,
-				Fee:    math.NewDecFromInt64(100),
+				Fee:    sdk.NewDecNonLegacyCoinFromDec("test", math.NewDecFromInt64(100)),
 			}
 
 			feeBytes, err := json.Marshal(Dec.Fee)

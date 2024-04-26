@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -322,32 +321,29 @@ func TestStore_Save(t *testing.T) {
 	// regardless of format. However, a different height should succeed.
 	var (
 		wgStart, wgDone sync.WaitGroup
-		errCount        atomic.Uint32
+		mu              sync.Mutex
+		gotErrHeights   []uint64
 	)
-	const n = 3
-	wgStart.Add(n + 1)
-	wgDone.Add(n + 1)
-	for i := 0; i <= n; i++ {
+	srcHeights := []uint64{7, 7, 7, 8, 9}
+	wgStart.Add(len(srcHeights))
+	wgDone.Add(len(srcHeights))
+	for _, h := range srcHeights {
 		ch = make(chan io.ReadCloser, 1)
 		ch <- &ReadCloserMock{} // does not block on a buffered channel
 		close(ch)
-		go func(i int) {
+		go func(height uint64) {
 			wgStart.Done()
 			wgStart.Wait() // wait for all routines started
-			var err error
-			if i < n {
-				_, err = store.Save(7, 1, ch)
-			} else {
-				_, err = store.Save(8, 1, makeChunks(nil))
-			}
-			if err != nil {
-				errCount.Add(1)
+			if _, err = store.Save(height, 1, ch); err != nil {
+				mu.Lock()
+				gotErrHeights = append(gotErrHeights, height)
+				mu.Unlock()
 			}
 			wgDone.Done()
-		}(i)
+		}(h)
 	}
 	wgDone.Wait() // wait for all routines completed
-	assert.Equal(t, uint32(n-1), errCount.Load())
+	assert.Equal(t, []uint64{7, 7}, gotErrHeights)
 }
 
 type ReadCloserMock struct {

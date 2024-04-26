@@ -57,6 +57,14 @@ func NewAccount(name string) accountstd.AccountCreatorFunc {
 }
 
 func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitResponse, error) {
+	if msg.Config == nil {
+		return nil, errors.New("config must be specified")
+	}
+
+	if len(msg.Members) == 0 {
+		return nil, errors.New("members must be specified")
+	}
+
 	// set members
 	totalWeight := uint64(0)
 	for i := range msg.Members {
@@ -77,6 +85,10 @@ func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitRespons
 	}
 
 	if err := validateConfig(*msg.Config, totalWeight); err != nil {
+		return nil, err
+	}
+
+	if err := a.Config.Set(ctx, *msg.Config); err != nil {
 		return nil, err
 	}
 
@@ -102,9 +114,14 @@ func (a Account) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse
 	}
 
 	// check if the proposal exists
-	_, err = a.Proposals.Get(ctx, msg.ProposalId)
+	prop, err := a.Proposals.Get(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if the voting period has ended
+	if a.hs.HeaderInfo(ctx).Time.Unix() > prop.VotingPeriodEnd || prop.Status != v1.ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD {
+		return nil, errors.New("voting period has ended")
 	}
 
 	// check if the voter has already voted
@@ -162,6 +179,7 @@ func (a Account) CreateProposal(ctx context.Context, msg *v1.MsgCreateProposal) 
 		Messages:        msg.Proposal.Messages,
 		Execute:         msg.Proposal.Execute,
 		VotingPeriodEnd: a.hs.HeaderInfo(ctx).Time.Add(time.Second * time.Duration(config.VotingPeriod)).Unix(),
+		Status:          v1.ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD,
 	}
 
 	if err = a.Proposals.Set(ctx, seq, proposal); err != nil {
@@ -233,6 +251,11 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 	}
 
 	if yesVotes < uint64(config.Threshold) {
+		prop.Status = v1.ProposalStatus_PROPOSAL_STATUS_REJECTED
+		err = a.Proposals.Set(ctx, msg.ProposalId, prop)
+		if err != nil {
+			return nil, err
+		}
 		return nil, errors.New("threshold not reached")
 	}
 
@@ -248,28 +271,15 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 		return nil, err
 	}
 
+	prop.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
+	err = a.Proposals.Set(ctx, msg.ProposalId, prop)
+	if err != nil {
+		return nil, err
+	}
+
 	return &v1.MsgExecuteProposalResponse{
 		Responses: responses,
 	}, nil
-}
-
-func validateConfig(cfg v1.Config, totalWeight uint64) error {
-	// check for zero values
-	if cfg.Threshold <= 0 || cfg.Quorum <= 0 || cfg.VotingPeriod <= 0 {
-		return errors.New("threshold, quorum and voting period must be greater than zero")
-	}
-
-	// threshold must be less than or equal to the total weight
-	if totalWeight < uint64(cfg.Threshold) {
-		return errors.New("threshold must be less than or equal to the total weight")
-	}
-
-	// quota must be less than or equal to the total weight
-	if totalWeight < uint64(cfg.Quorum) {
-		return errors.New("quorum must be less than or equal to the total weight")
-	}
-
-	return nil
 }
 
 func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.QuerySequenceResponse, error) {
@@ -293,7 +303,21 @@ func (a Account) QueryConfig(ctx context.Context, _ *v1.QueryConfig) (*v1.QueryC
 	if err != nil {
 		return nil, err
 	}
-	return &v1.QueryConfigResponse{Config: &cfg}, nil
+
+	members := []*v1.Member{}
+	err = a.Members.Walk(ctx, nil, func(addr []byte, weight uint64) (stop bool, err error) {
+		addrStr, err := a.addrCodec.BytesToString(addr)
+		if err != nil {
+			return true, err
+		}
+		members = append(members, &v1.Member{Address: addrStr, Weight: weight})
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.QueryConfigResponse{Config: &cfg, Members: members}, nil
 }
 
 // RegisterExecuteHandlers implements implementation.Account.

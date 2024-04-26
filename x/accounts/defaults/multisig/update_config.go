@@ -2,12 +2,13 @@ package multisig
 
 import (
 	"context"
+	"errors"
 
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 )
 
 // UpdateConfig updates the configuration of the multisig account.
-func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfigRequest) (*v1.MsgUpdateConfigResponse, error) {
+func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfig) (*v1.MsgUpdateConfigResponse, error) {
 	// set members
 	for i := range msg.UpdateMembers {
 		addrBz, err := a.addrCodec.StringToBytes(msg.UpdateMembers[i].Address)
@@ -55,4 +56,23 @@ func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfigReques
 	}
 
 	return &v1.MsgUpdateConfigResponse{}, nil
+}
+
+func validateConfig(cfg v1.Config, totalWeight uint64) error {
+	// check for zero values
+	if cfg.Threshold <= 0 || cfg.Quorum <= 0 || cfg.VotingPeriod <= 0 {
+		return errors.New("threshold, quorum and voting period must be greater than zero")
+	}
+
+	// threshold must be less than or equal to the total weight
+	if totalWeight < uint64(cfg.Threshold) {
+		return errors.New("threshold must be less than or equal to the total weight")
+	}
+
+	// quota must be less than or equal to the total weight
+	if totalWeight < uint64(cfg.Quorum) {
+		return errors.New("quorum must be less than or equal to the total weight")
+	}
+
+	return nil
 }

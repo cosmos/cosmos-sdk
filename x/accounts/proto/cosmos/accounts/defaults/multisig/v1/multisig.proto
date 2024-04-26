@@ -40,14 +40,16 @@ message MsgExecuteProposalResponse {
   repeated google.protobuf.Any responses = 1;
 }
 
-// MsgUpdateConfigRequest is used to change the config or members.
-message MsgUpdateConfigRequest {
+// MsgUpdateConfig is used to change the config or members.
+message MsgUpdateConfig {
   // only the members that are changing are required, if their weight is 0, they are removed.
   repeated Member update_members = 1;
 
   // not all fields from Config can be changed
   Config Config = 2;
 }
+
+message MsgUpdateConfigResponse {}
 
 message Member {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -82,6 +84,8 @@ message Proposal {
 
   // voting_period_end will be set by the account when the proposal is created.
   int64 voting_period_end = 5;
+
+  ProposalStatus status = 6;
 }
 
 // QuerySequence is the request for the account sequence.
@@ -110,6 +114,17 @@ message QueryProposalResponse {
   Proposal proposal = 1;
 }
 
+// ProposalStatus enumerates the valid proposal statuses.
+enum ProposalStatus {
+  // PROPOSAL_STATUS_UNSPECIFIED defines a no-op proposal status.
+  PROPOSAL_STATUS_UNSPECIFIED = 0;
+  // PROPOSAL_STATUS_VOTING_PERIOD defines the proposal status during the voting period.
+  PROPOSAL_STATUS_VOTING_PERIOD = 1;
+  // PROPOSAL_STATUS_PASSED defines the proposal status when the proposal passed.
+  PROPOSAL_STATUS_PASSED = 2;
+  // PROPOSAL_STATUS_REJECTED defines the proposal status when the proposal was rejected.
+  PROPOSAL_STATUS_REJECTED = 3;
+}
 
 // VoteOption enumerates the valid vote options for a given proposal.
 enum VoteOption {

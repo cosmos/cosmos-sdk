@@ -13,6 +13,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/auth/ante"
@@ -45,6 +46,7 @@ type ModuleInputs struct {
 	ValidatorAddressCodec address.ValidatorAddressCodec
 	Codec                 codec.Codec
 	ProtoFileResolver     txsigning.ProtoFileResolver
+	Environment           appmodule.Environment
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
 	MetadataBankKeeper     BankKeeper                         `optional:"true"`
@@ -152,6 +154,7 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  in.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			Environment:     in.Environment,
 		},
 	)
 	if err != nil {

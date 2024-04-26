@@ -9,7 +9,6 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/header"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	coreappmgr "cosmossdk.io/core/app"
@@ -237,6 +236,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
+	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
 
 	// On a new chain, we consider the init chain block height as 0, even though
@@ -254,18 +254,18 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 		})
 	}
 
-	genesisHeaderInfo := header.Info{
-		Height:  req.InitialHeight,
-		Hash:    nil,
-		Time:    req.Time,
-		ChainID: req.ChainId,
-		AppHash: nil,
+	br := &coreappmgr.BlockRequest[T]{
+		Height:            uint64(req.InitialHeight),
+		Time:              req.Time,
+		Hash:              nil,
+		AppHash:           nil,
+		ChainId:           req.ChainId,
+		ConsensusMessages: consMessages,
 	}
 
 	blockresponse, genesisState, err := c.app.InitGenesis(
 		ctx,
-		genesisHeaderInfo,
-		consMessages,
+		br,
 		req.AppStateBytes,
 		c.txCodec)
 	if err != nil {

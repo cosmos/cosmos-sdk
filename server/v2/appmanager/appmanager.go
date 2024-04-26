@@ -8,7 +8,6 @@ import (
 	"io"
 
 	appmanager "cosmossdk.io/core/app"
-	"cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
@@ -31,8 +30,7 @@ type AppManager[T transaction.Tx] struct {
 
 func (a AppManager[T]) InitGenesis(
 	ctx context.Context,
-	headerInfo header.Info,
-	consensusMessages []transaction.Type,
+	blockRequest *appmanager.BlockRequest[T],
 	initGenesisJSON []byte,
 	txDecoder transaction.Codec[T],
 ) (*appmanager.BlockResponse, corestore.WriterMap, error) {
@@ -62,17 +60,9 @@ func (a AppManager[T]) InitGenesis(
 	// TODO: in an ideal world, genesis state is simply an initial state being applied
 	// unaware of what that state means in relation to every other, so here we can
 	// chain genesis
-	block0 := &appmanager.BlockRequest[T]{
-		Height:            uint64(0),
-		Time:              headerInfo.Time,
-		Hash:              headerInfo.Hash,
-		ChainId:           headerInfo.ChainID,
-		AppHash:           headerInfo.AppHash,
-		Txs:               genTxs,
-		ConsensusMessages: consensusMessages,
-	}
+	blockRequest.Txs = genTxs
 
-	blockresponse, genesisState, err := a.stf.DeliverBlock(ctx, block0, zeroState)
+	blockresponse, genesisState, err := a.stf.DeliverBlock(ctx, blockRequest, zeroState)
 	if err != nil {
 		return blockresponse, nil, fmt.Errorf("failed to deliver block 0: %w", err)
 	}

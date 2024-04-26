@@ -2918,6 +2918,7 @@ sure you are aware of any relevant breaking changes.
     * (types) [#6897](https://github.com/cosmos/cosmos-sdk/issues/6897) Add KV type from tendermint to `types` directory.
     * (version) [#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [#7941](https://github.com/cosmos/cosmos-sdk/pull/7941)
     `version --long` output now shows the list of build dependencies and replaced build dependencies.
+    * (proto) #20098 Use cosmos_proto added_in annotation instead of // Since comments.
 
 ## Previous Releases
 

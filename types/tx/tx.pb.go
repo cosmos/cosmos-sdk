@@ -804,7 +804,7 @@ func (m *ModeInfo_Multi) GetModeInfos() []*ModeInfo {
 
 // Fee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
+// which must be above some minimum to be accepted into the mempool.
 type Fee struct {
 	// amount is the amount of coins to be paid as a fee
 	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`

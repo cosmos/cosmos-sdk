@@ -143,7 +143,6 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-<<<<<<< HEAD
 // InitGenesisJSON performs init genesis functionality for modules from genesis data in JSON format
 func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.RawMessage, txHandler func(json.RawMessage) error) error {
 	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
@@ -206,19 +205,6 @@ func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.Ra
 		}
 	}
 	return nil
-||||||| a1fa976ccf
-// InitGenesis performs init genesis functionality for modules.
-func (m *MM) InitGenesis() {
-	panic("implement me")
-=======
-// ExportGenesis performs export genesis functionality for modules
-func (m *MM) ExportGenesis(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
-	if len(modulesToExport) == 0 {
-		modulesToExport = m.config.ExportGenesis
-	}
-
-	return m.ExportGenesisForModules(ctx, modulesToExport...)
->>>>>>> server_modular
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules

@@ -174,7 +174,7 @@ NOTE: The `MsgExec` message removes a grant if the grant has expired.
 The `MsgRevokeAll` message revokes all grants issued by the specified granter. This is useful for quickly removing all authorizations granted by a single granter without specifying individual message types or grantees.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/tree/main/proto/cosmos/authz/v1beta1/tx.proto#L91-L97
+https://github.com/cosmos/cosmos-sdk/tree/main/x/authz/proto/cosmos/authz/v1beta1/tx.proto#L93-L100
 ```
 
 The message handling should fail if:

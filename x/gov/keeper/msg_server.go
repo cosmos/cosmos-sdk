@@ -60,7 +60,7 @@ func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal
 	}
 
 	// This method checks that all message metadata, summary and title
-	// has te expected length defined in the module configuration.
+	// has the expected length defined in the module configuration.
 	if err := k.validateProposalLengths(msg.Metadata, msg.Title, msg.Summary); err != nil {
 		return nil, err
 	}

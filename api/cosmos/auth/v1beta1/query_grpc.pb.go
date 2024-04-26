@@ -36,41 +36,26 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueryClient interface {
 	// Accounts returns all the existing accounts.
-	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.43
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error)
 	// AccountAddressByID returns account address based on account number.
-	//
-	// Since: cosmos-sdk 0.46.2
 	AccountAddressByID(ctx context.Context, in *QueryAccountAddressByIDRequest, opts ...grpc.CallOption) (*QueryAccountAddressByIDResponse, error)
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
-	//
-	// Since: cosmos-sdk 0.46
 	ModuleAccounts(ctx context.Context, in *QueryModuleAccountsRequest, opts ...grpc.CallOption) (*QueryModuleAccountsResponse, error)
 	// ModuleAccountByName returns the module account info by module name
 	ModuleAccountByName(ctx context.Context, in *QueryModuleAccountByNameRequest, opts ...grpc.CallOption) (*QueryModuleAccountByNameResponse, error)
 	// Bech32Prefix queries bech32Prefix
-	//
-	// Since: cosmos-sdk 0.46
 	Bech32Prefix(ctx context.Context, in *Bech32PrefixRequest, opts ...grpc.CallOption) (*Bech32PrefixResponse, error)
 	// AddressBytesToString converts Account Address bytes to string
-	//
-	// Since: cosmos-sdk 0.46
 	AddressBytesToString(ctx context.Context, in *AddressBytesToStringRequest, opts ...grpc.CallOption) (*AddressBytesToStringResponse, error)
 	// AddressStringToBytes converts Address string to bytes
-	//
-	// Since: cosmos-sdk 0.46
 	AddressStringToBytes(ctx context.Context, in *AddressStringToBytesRequest, opts ...grpc.CallOption) (*AddressStringToBytesResponse, error)
 	// AccountInfo queries account info which is common to all account types.
-	//
-	// Since: cosmos-sdk 0.47
 	AccountInfo(ctx context.Context, in *QueryAccountInfoRequest, opts ...grpc.CallOption) (*QueryAccountInfoResponse, error)
 }
 
@@ -177,41 +162,26 @@ func (c *queryClient) AccountInfo(ctx context.Context, in *QueryAccountInfoReque
 // for forward compatibility
 type QueryServer interface {
 	// Accounts returns all the existing accounts.
-	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.43
 	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
 	// AccountAddressByID returns account address based on account number.
-	//
-	// Since: cosmos-sdk 0.46.2
 	AccountAddressByID(context.Context, *QueryAccountAddressByIDRequest) (*QueryAccountAddressByIDResponse, error)
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
-	//
-	// Since: cosmos-sdk 0.46
 	ModuleAccounts(context.Context, *QueryModuleAccountsRequest) (*QueryModuleAccountsResponse, error)
 	// ModuleAccountByName returns the module account info by module name
 	ModuleAccountByName(context.Context, *QueryModuleAccountByNameRequest) (*QueryModuleAccountByNameResponse, error)
 	// Bech32Prefix queries bech32Prefix
-	//
-	// Since: cosmos-sdk 0.46
 	Bech32Prefix(context.Context, *Bech32PrefixRequest) (*Bech32PrefixResponse, error)
 	// AddressBytesToString converts Account Address bytes to string
-	//
-	// Since: cosmos-sdk 0.46
 	AddressBytesToString(context.Context, *AddressBytesToStringRequest) (*AddressBytesToStringResponse, error)
 	// AddressStringToBytes converts Address string to bytes
-	//
-	// Since: cosmos-sdk 0.46
 	AddressStringToBytes(context.Context, *AddressStringToBytesRequest) (*AddressStringToBytesResponse, error)
 	// AccountInfo queries account info which is common to all account types.
-	//
-	// Since: cosmos-sdk 0.47
 	AccountInfo(context.Context, *QueryAccountInfoRequest) (*QueryAccountInfoResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

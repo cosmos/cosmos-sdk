@@ -29,9 +29,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	// TODO migrate all server dependencies to server/v2
-	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-
+	// "github.com/cosmos/cosmos-sdk/server"
+	// servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	server "cosmossdk.io/server/v2"
 	// end TODO
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -76,7 +76,7 @@ func initRootCmd(
 		// snapshot.Cmd(newApp),
 	)
 
-	// server.AddCommands(rootCmd, newApp, func(startCmd *cobra.Command) {})
+	server.AddCommands(rootCmd, log.NewNopLogger(), tempDir(), nil) // TODO: How to cast from AppModule to ServerModule 
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(

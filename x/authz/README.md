@@ -21,6 +21,7 @@ granting arbitrary privileges from one account (the granter) to another account 
 * [Messages](#messages)
     * [MsgGrant](#msggrant)
     * [MsgRevoke](#msgrevoke)
+    * [MsgRevokeAll](#msgrevokeall)
     * [MsgExec](#msgexec)
     * [MsgPruneExpiredGrants](#msgpruneexpiredgrants)
 * [Events](#events)
@@ -83,7 +84,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/types/send_authoriz
 
 #### StakeAuthorization
 
-`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/v0.44/modules/staking/). It takes an `AuthorizationType` to specify whether you want to authorise delegating, undelegating or redelegating (i.e. these have to be authorised separately). It also takes a required `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, which allows you to select which validators you allow or deny grantees to stake with.
+`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/main/build/modules/staking). It takes an `AuthorizationType` to specify whether you want to authorise delegating, undelegating or redelegating (i.e. these have to be authorised separately). It also takes a required `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, which allows you to select which validators you allow or deny grantees to stake with.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/authz.proto#L11-L35
@@ -167,6 +168,19 @@ The message handling should fail if:
 * provided `MsgTypeUrl` is empty.
 
 NOTE: The `MsgExec` message removes a grant if the grant has expired.
+
+### MsgRevokeAll
+
+The `MsgRevokeAll` message revokes all grants issued by the specified granter. This is useful for quickly removing all authorizations granted by a single granter without specifying individual message types or grantees.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/tree/main/x/authz/proto/cosmos/authz/v1beta1/tx.proto#L93-L100
+```
+
+The message handling should fail if:
+
+* the `granter` address is not provided or invalid.
+* the `granter` does not have any active grants.
 
 ### MsgExec
 

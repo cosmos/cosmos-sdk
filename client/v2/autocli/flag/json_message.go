@@ -68,6 +68,11 @@ func (j *jsonMessageFlagValue) Set(s string) error {
 		}
 		messageBytes, err = io.ReadAll(jsonFile)
 		if err != nil {
+			_ = jsonFile.Close()
+			return err
+		}
+		err = jsonFile.Close()
+		if err != nil {
 			return err
 		}
 	} else {

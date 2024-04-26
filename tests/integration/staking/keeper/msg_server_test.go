@@ -19,6 +19,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -161,9 +162,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	_, app, ctx := createTestInput(t)
-	var (
-		stakingKeeper = app.StakingKeeper
-	)
+	stakingKeeper := app.StakingKeeper
 
 	liquidStakingCapStrict := sdk.ZeroDec()
 	liquidStakingCapConservative := sdk.MustNewDecFromStr("0.8")
@@ -1711,4 +1710,341 @@ func createICAAccount(ctx sdk.Context, ak accountkeeper.AccountKeeper) sdk.AccAd
 	ak.SetAccount(ctx, account)
 
 	return icaAddress
+}
+
+func TestSlashTokenizedSharesFromRedelegations(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+	var (
+		stakingKeeper = app.StakingKeeper
+		bankKeeper    = app.BankKeeper
+		accountKeeper = app.AccountKeeper
+	)
+	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
+	validatorA := stakingKeeper.GetAllValidators(ctx)[0]
+	validatorAAddress := validatorA.GetOperator()
+	_, validatorBAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
+	_ = validatorBAddress
+	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	alice, _ := addrs[0], addrs[1]
+
+	delegateAmount := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	delegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
+
+	// Create ICA module account
+	icaAccountAddress := createICAAccount(ctx, accountKeeper)
+
+	// Fund module account
+	delegationCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
+	err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
+	require.NoError(t, err)
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegationCoin))
+	require.NoError(t, err)
+
+	// Alice delegates to validatorA
+	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: alice.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           delegateCoin,
+	})
+	require.NoError(t, err, "no error expected when delegating")
+
+	_, found := stakingKeeper.GetDelegation(ctx, alice, validatorAAddress)
+	require.True(t, found, "delegation should have been found")
+
+	validatorA, found = stakingKeeper.GetValidator(ctx, validatorAAddress)
+	require.True(t, found, "validator should have been found")
+
+	// save validatorA's voting power at the current block height
+	validatorAInfractionPower := sdk.TokensToConsensusPower(validatorA.Tokens, sdk.DefaultPowerReduction)
+
+	// pass one block
+	bondedPool := stakingKeeper.GetBondedPool(ctx)
+	balances := bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// Alice delegates to validatorB
+	delegateAmountB := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	delegateCoinToB := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmountB)
+
+	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: alice.String(),
+		ValidatorAddress: validatorBAddress.String(),
+		Amount:           delegateCoinToB,
+	})
+	require.NoError(t, err, "no error expected when delegating")
+
+	redelegateAmount := sdk.TokensFromConsensusPower(5, sdk.DefaultPowerReduction)
+	redelegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), redelegateAmount)
+
+	validatorB, found := stakingKeeper.GetValidator(ctx, validatorBAddress)
+	require.True(t, found, "validator should have been found")
+
+	// Alice redelegates half of its shares from validatorA to validatorB
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    alice.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorBAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	// Alice redelegates half of its shares from validatorA to validatorB again
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    alice.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorBAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	totalredelegatedAmount := redelegateAmount.Add(redelegateAmount)
+	del, found := stakingKeeper.GetDelegation(ctx, alice, validatorBAddress)
+	require.True(t, found, "delegation should have been found")
+	require.Equal(t, del.Shares.TruncateInt(), totalredelegatedAmount.Add(delegateCoinToB.Amount), "incorrect amount of delegation shares")
+
+	redelegation := stakingKeeper.GetRedelegationsFromSrcValidator(ctx, validatorAAddress)
+	require.Len(t, redelegation, 1, "expect one redelegation")
+	require.Len(t, redelegation[0].Entries, 2, "expect two redelegation entries")
+
+	// Alice tokenizes 3/4 its shares in validatorB
+	tokenizedAmount := sdk.TokensFromConsensusPower(15, sdk.DefaultPowerReduction)
+	tokenizedCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), tokenizedAmount)
+	token, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    alice.String(),
+		ValidatorAddress:    validatorBAddress.String(),
+		Amount:              tokenizedCoin,
+		TokenizedShareOwner: alice.String(),
+	})
+	shareRecord, err := stakingKeeper.GetTokenizeShareRecord(ctx, stakingKeeper.GetLastTokenizeShareRecordID(ctx))
+	require.NoError(t, err, "expect to found token share record")
+
+	// check that Alice's remaining delegation to validatorB after tokenization
+	delAlice, found := stakingKeeper.GetDelegation(ctx, alice, validatorBAddress)
+	require.True(t, found, "delegation should have been found")
+	require.Equal(t, delAlice.Shares, del.Shares.Sub(tokenizedAmount.ToLegacyDec()))
+
+	// check that a delegation from the share record address to validatorB is created
+	delShareRecord, found := stakingKeeper.GetDelegation(ctx, shareRecord.GetModuleAddress(), validatorBAddress)
+	require.True(t, found, "delegation should have been found")
+	require.Equal(t, delShareRecord.Shares, tokenizedAmount.ToLegacyDec())
+
+	// check that half of that Alice's redelegations are transferred to the share record address
+	tokenRed := stakingKeeper.GetRedelegations(ctx, shareRecord.GetModuleAddress(), uint16(10))
+	require.Len(t, tokenRed, 1, "expect one redelegation entry")
+	require.Len(t, tokenRed[0].Entries, 1, "expect one redelegation entry")
+	require.Equal(t, tokenRed[0].Entries[0].SharesDst.TruncateInt(), redelegateAmount)
+
+	// check that half of Alice's redelegations aren't altered
+	remRed := stakingKeeper.GetRedelegations(ctx, alice, uint16(10))
+	require.Len(t, remRed, 1, "expect one redelegation entry")
+	require.Len(t, remRed[0].Entries, 1, "expect one redelegation entry")
+	require.Equal(t, remRed[0].Entries[0].SharesDst.TruncateInt(), redelegateAmount)
+
+	// save bonded pool balance
+	bondedPool = stakingKeeper.GetBondedPool(ctx)
+	balances = bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+
+	// save validatorB tokens
+	validatorB, found = stakingKeeper.GetValidator(ctx, validatorBAddress)
+	require.True(t, found, "validator should have been found")
+	validatorBTokens := validatorB.Tokens
+
+	validatorAconsAddr, err := validatorA.GetConsAddr()
+	require.NoError(t, err)
+
+	// slash validatorA
+	slashFrac := sdk.NewDecWithPrec(75, 2)
+	stakingKeeper.Slash(ctx, validatorAconsAddr, 0, validatorAInfractionPower, slashFrac)
+
+	// check that all redelegated shares in ValidatorB from validatorA are slashed
+	expRedsSlashedAmt := slashFrac.MulInt(totalredelegatedAmount).TruncateInt()
+	validatorBAfterSlash, found := stakingKeeper.GetValidator(ctx, validatorBAddress)
+	require.True(t, found, "validator should have been found")
+	require.Equal(t, validatorBTokens.Sub(expRedsSlashedAmt), validatorBAfterSlash.Tokens)
+
+	// check that the shares of the share record in validatorB decreased
+	delShareRecordAfterSlash, found := stakingKeeper.GetDelegation(ctx, shareRecord.GetModuleAddress(), validatorBAddress)
+	require.True(t, found, "delegation should have been found")
+	require.Equal(t, delShareRecord.Shares.Sub(tokenRed[0].Entries[0].SharesDst.Mul(slashFrac)), delShareRecordAfterSlash.Shares)
+
+	// verify that Alice's shares in validatorB decreased
+	delAliceAfterSlash, found := stakingKeeper.GetDelegation(ctx, alice, validatorBAddress)
+	require.True(t, found, "delegation should have been found")
+	require.Equal(t, delAlice.Shares.Sub(tokenRed[0].Entries[0].SharesDst.Mul(slashFrac)), delAliceAfterSlash.Shares)
+
+	// check that the burned tokens are removed
+	// and from the bonded pool
+	burnedAmount := slashFrac.MulInt(sdk.TokensFromConsensusPower(validatorAInfractionPower, sdk.DefaultPowerReduction))
+	require.Equal(
+		t,
+		balances.Sub(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, burnedAmount.TruncateInt()))...),
+		bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()),
+	)
+
+	// Alice redeems all tokens
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx),
+		&types.MsgRedeemTokensForShares{
+			DelegatorAddress: alice.String(),
+			Amount:           token.Amount,
+		},
+	)
+	require.NoError(t, err, "no error expected during redemption")
+
+	// Check that Alice gets a normalized amount of shares after the slashing
+	delAliceAfterRedemption, found := stakingKeeper.GetDelegation(ctx, alice, validatorBAddress)
+	require.True(t, found, "delegation should have been found")
+	require.Equal(t, delAliceAfterSlash.Shares.Add(delShareRecordAfterSlash.Shares), delAliceAfterRedemption.Shares)
+}
+
+func TestRedelegationRemoval(t *testing.T) {
+	// Test that a redelegation that has been tokenized is still removed
+	// when the unbonding period has passed
+	_, app, ctx := createTestInput(t)
+	var (
+		stakingKeeper = app.StakingKeeper
+		bankKeeper    = app.BankKeeper
+	)
+	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
+	validatorA := stakingKeeper.GetAllValidators(ctx)[0]
+	validatorAAddress := validatorA.GetOperator()
+	_, validatorBAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
+
+	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	alice, _ := addrs[0], addrs[1]
+
+	delegateAmount := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	delegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
+
+	// Alice delegates to validatorA
+	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: alice.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           delegateCoin,
+	})
+
+	// Alice redelegates to validatorB
+	redelegateAmount := sdk.TokensFromConsensusPower(5, sdk.DefaultPowerReduction)
+	redelegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), redelegateAmount)
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    alice.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorBAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err)
+
+	redelegation := stakingKeeper.GetRedelegations(ctx, alice, uint16(10))
+	require.Len(t, redelegation, 1, "expect one redelegation")
+	require.Len(t, redelegation[0].Entries, 1, "expect one redelegation entry")
+
+	// Alice tokenizes the redelegation
+	tokenizedAmount := sdk.TokensFromConsensusPower(5, sdk.DefaultPowerReduction)
+	tokenizedCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), tokenizedAmount)
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    alice.String(),
+		ValidatorAddress:    validatorBAddress.String(),
+		Amount:              tokenizedCoin,
+		TokenizedShareOwner: alice.String(),
+	})
+	require.NoError(t, err)
+
+	// get the module account for the tokenization
+	shareRecord, err := stakingKeeper.GetTokenizeShareRecord(ctx, stakingKeeper.GetLastTokenizeShareRecordID(ctx))
+	require.NoError(t, err, "expect to found token share record")
+
+	// Check that the redelegation is still present
+	redelegation = stakingKeeper.GetRedelegations(ctx, shareRecord.GetModuleAddress(), uint16(10))
+	require.Len(t, redelegation, 1, "expect one redelegation")
+	require.Len(t, redelegation[0].Entries, 1, "expect one redelegation entry")
+
+	// advance time until the redelegations should mature
+	// end block
+	staking.EndBlocker(ctx, stakingKeeper)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	// advance by 22 days
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(22 * 24 * time.Hour))
+	// begin block
+	staking.BeginBlocker(ctx, stakingKeeper)
+	// end block
+	staking.EndBlocker(ctx, stakingKeeper)
+
+	// check that there the redelegation is removed
+	redelegation = stakingKeeper.GetRedelegations(ctx, shareRecord.GetModuleAddress(), uint16(10))
+	require.Len(t, redelegation, 0, "expect no redelegations")
+}
+
+func TestRedelegateSharesTwiceUsingTokenization(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+	var (
+		stakingKeeper = app.StakingKeeper
+		bankKeeper    = app.BankKeeper
+	)
+	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
+	validatorA := stakingKeeper.GetAllValidators(ctx)[0]
+	validatorAAddress := validatorA.GetOperator()
+	_, validatorBAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
+	_, validatorCAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
+
+	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	alice, bob := addrs[0], addrs[1]
+
+	delegateAmount := sdk.NewInt(1000)
+	delegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
+
+	// Alice delegates to validatorA
+	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: alice.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           delegateCoin,
+	})
+	require.NoError(t, err, "no error expected when delegating")
+
+	del, found := stakingKeeper.GetDelegation(ctx, alice, validatorAAddress)
+	require.True(t, found, "delegation should have been found")
+	redelegateAmount := delegateAmount.ToLegacyDec().QuoInt64(2)
+	redelegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), redelegateAmount.TruncateInt())
+
+	// Alice redelegates to validatorB
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    alice.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorBAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	// Alice tokenizes redelegations in validatorB
+	token, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    alice.String(),
+		ValidatorAddress:    validatorBAddress.String(),
+		Amount:              redelegateCoin,
+		TokenizedShareOwner: alice.String(),
+	})
+
+	// Alice sends share tokens to Bob
+	err = bankKeeper.SendCoins(ctx, alice, bob, sdk.NewCoins(token.Amount))
+	require.NoError(t, err, "no error expected during coins transfer")
+
+	balance := bankKeeper.GetBalance(ctx, bob, token.Amount.Denom)
+	require.Equal(t, token.Amount, balance)
+
+	// Bob redeems tokens from validatorB
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+		DelegatorAddress: bob.String(),
+		Amount:           balance,
+	})
+	require.NoError(t, err, "no error expected during redemption")
+
+	del, found = stakingKeeper.GetDelegation(ctx, bob, validatorBAddress)
+	require.True(t, found, "delegation should have been found")
+	require.Equal(t, del.Shares, redelegateAmount)
+
+	// Bob attempts to redelegate the same shares to validatorC
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    bob.String(),
+		ValidatorSrcAddress: validatorBAddress.String(),
+		ValidatorDstAddress: validatorCAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.Error(t, err, "error expected during forbidden redelegation")
 }

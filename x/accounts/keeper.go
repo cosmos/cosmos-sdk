@@ -324,6 +324,17 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 // SendModuleMessageUntyped can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
 func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+	// do sender assertions.
+	wantSenders, _, err := k.codec.GetMsgV1Signers(msg)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get signers: %w", err)
+	}
+	if len(wantSenders) != 1 {
+		return nil, fmt.Errorf("expected only one signer, got %d", len(wantSenders))
+	}
+	if !bytes.Equal(sender, wantSenders[0]) {
+		return nil, fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
+	}
 	resp, err := k.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
 	if err != nil {
 		return nil, err

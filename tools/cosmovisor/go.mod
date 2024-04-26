@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/x/upgrade v0.1.2-0.20240403102038-f63e5fdf7c96
+	cosmossdk.io/x/upgrade v0.1.2
 	github.com/otiai10/copy v1.14.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
@@ -48,7 +48,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.2 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/cosmos-sdk v0.50.6-0.20240403102038-f63e5fdf7c96 // indirect
+	github.com/cosmos/cosmos-sdk v0.50.6 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.12 // indirect

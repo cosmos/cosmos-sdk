@@ -50,39 +50,3 @@ func (db *RocksDB) NewBatch() store.RawBatch {
 func (db *RocksDB) NewBatchWithSize(_ int) store.RawBatch {
 	return db.NewBatch()
 }
-
-var _ corestore.Iterator = (*rocksDBIterator)(nil)
-
-type rocksDBIterator struct{}
-
-func (itr *rocksDBIterator) Domain() (start, end []byte) {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (itr *rocksDBIterator) Valid() bool {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (itr *rocksDBIterator) Key() []byte {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (itr *rocksDBIterator) Value() []byte {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (itr *rocksDBIterator) Next() {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (itr *rocksDBIterator) Error() error {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (itr *rocksDBIterator) Close() error {
-	panic("rocksdb must be built with -tags rocksdb")
-}
-
-func (itr *rocksDBIterator) assertIsValid() {
-	panic("rocksdb must be built with -tags rocksdb")
-}

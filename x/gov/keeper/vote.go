@@ -35,6 +35,11 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		return err
 	}
 
+	err = k.assertVoteOptionsLen(options)
+	if err != nil {
+		return err
+	}
+
 	for _, option := range options {
 		switch proposal.ProposalType {
 		case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:

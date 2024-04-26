@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"

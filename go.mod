@@ -80,6 +80,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
@@ -183,6 +184,7 @@ replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
 	cosmossdk.io/depinject => ./depinject
+	cosmossdk.io/math => ./math
 	cosmossdk.io/x/accounts => ./x/accounts
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank

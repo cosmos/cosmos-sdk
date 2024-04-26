@@ -14,7 +14,6 @@ func TestDiffCollectionsMigration(t *testing.T) {
 	key := storetypes.NewKVStoreKey("test")
 	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient"))
 
-	// First try with some invalid hash
 	err := testutil.DiffCollectionsMigration(
 		ctx,
 		key,
@@ -26,7 +25,7 @@ func TestDiffCollectionsMigration(t *testing.T) {
 	)
 	require.Error(t, err)
 
-	// Now reset and try with the correct hash
+
 	ctx = testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient"))
 	err = testutil.DiffCollectionsMigration(
 		ctx,

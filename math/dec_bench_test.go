@@ -2,6 +2,8 @@ package math
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkCompareLegacyDecAndNewDec(b *testing.B) {
@@ -78,21 +80,16 @@ func BenchmarkCompareLegacySubAndDecMul(b *testing.B) {
 	})
 }
 
-func BenchmarkCompareLegacySubAndDecSub(b *testing.B) {
-	legacyB1 := LegacyNewDec(100)
-	legacyB2 := LegacyNewDec(5)
-	newB1 := NewDecFromInt64(100)
-	newB2 := NewDecFromInt64(5)
+func TestMigration(t *testing.T) {
+	legacyDec, _ := LegacyNewDecFromStr("123.456")
+	newDec, err := MigrateLegacyDecToDec(legacyDec)
+	require.NoError(t, err)
 
-	b.Run("LegacyDec", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			_ = legacyB1.Sub(legacyB2)
-		}
-	})
+	expectedDec, _ := NewDecFromString("123.456")
+	require.True(t, newDec.Equal(expectedDec))
+}
 
-	b.Run("NewDec", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			_, _ = newB1.Sub(newB2)
-		}
-	})
+func MigrateLegacyDecToDec(legacyDec LegacyDec) (Dec, error) {
+	str := legacyDec.String()
+	return NewDecFromString(str)
 }

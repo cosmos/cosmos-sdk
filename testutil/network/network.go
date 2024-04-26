@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -348,7 +349,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		apiAddr := ""
 		cmtCfg.RPC.ListenAddress = ""
 		appCfg.GRPC.Enable = false
-		appCfg.GRPCWeb.Enable = false
 		apiListenAddr := ""
 		if i == 0 {
 			if cfg.APIAddress != "" {
@@ -388,7 +388,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%s", port)
 			}
 			appCfg.GRPC.Enable = true
-			appCfg.GRPCWeb.Enable = true
 		}
 
 		logger := log.NewNopLogger()
@@ -649,29 +648,29 @@ func (n *Network) LatestHeight() (int64, error) {
 	timeout := time.NewTimer(time.Second * 5)
 	defer timeout.Stop()
 
-	var latestHeight int64
+	var latestHeight atomic.Int64
 	val := n.Validators[0]
 	queryClient := cmtservice.NewServiceClient(val.clientCtx)
 
 	for {
 		select {
 		case <-timeout.C:
-			return latestHeight, errors.New("timeout exceeded waiting for block")
+			return latestHeight.Load(), errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
 			done := make(chan struct{})
 			go func() {
 				res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
 				if err == nil && res != nil {
-					latestHeight = res.SdkBlock.Header.Height
+					latestHeight.Store(res.SdkBlock.Header.Height)
 				}
 				done <- struct{}{}
 			}()
 			select {
 			case <-timeout.C:
-				return latestHeight, errors.New("timeout exceeded waiting for block")
+				return latestHeight.Load(), errors.New("timeout exceeded waiting for block")
 			case <-done:
-				if latestHeight != 0 {
-					return latestHeight, nil
+				if latestHeight.Load() != 0 {
+					return latestHeight.Load(), nil
 				}
 			}
 		}

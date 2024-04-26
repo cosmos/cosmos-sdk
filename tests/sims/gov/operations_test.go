@@ -158,7 +158,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.Equal(t, simulation.TypeMsgSubmitProposal, sdk.MsgTypeURL(&msg))
 }
 
-// TestSimulateMsgSubmitProposal tests the normal scenario of a valid message of type TypeMsgSubmitProposal.
+// TestSimulateMsgSubmitLegacyProposal tests the normal scenario of a valid message of type TypeMsgSubmitProposal.
 // Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)

@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19363](https://github.com/cosmos/cosmos-sdk/pull/19363) Remove `IterateAccounts` and `GetAllAccounts` methods from the AccountKeeper interface and Keeper.
 * [#19290](https://github.com/cosmos/cosmos-sdk/issues/19290) Pass `appmodule.Environment` to NewKeeper instead of passing individual services. 
 * [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating vesting accounts on a running chain. 
+* [#19600](https://github.com/cosmos/cosmos-sdk/pull/19600) add a consensus query method to the consensus module in order for modules to query consensus for the consensus params. 
 <!-- TODO add a link to lockup accounts docs -->
 
 ### Consensus Breaking Changes

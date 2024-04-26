@@ -33,9 +33,9 @@ type Account struct {
 	Sequence collections.Sequence
 	Config   collections.Item[v1.Config]
 
-	addrCodec    address.Codec
-	hs           header.Service
-	eventService event.Service
+	addrCodec     address.Codec
+	headerService header.Service
+	eventService  event.Service
 
 	Proposals collections.Map[uint64, v1.Proposal]
 	Votes     collections.Map[collections.Pair[uint64, []byte], int32] // key: proposalID + voter address
@@ -44,14 +44,14 @@ type Account struct {
 func NewAccount(name string) accountstd.AccountCreatorFunc {
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
 		return name, &Account{
-			Members:      collections.NewMap(deps.SchemaBuilder, MembersPrefix, "members", collections.BytesKey, collections.Uint64Value),
-			Sequence:     collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
-			Config:       collections.NewItem(deps.SchemaBuilder, ConfigPrefix, "config", codec.CollValue[v1.Config](deps.LegacyStateCodec)),
-			Proposals:    collections.NewMap(deps.SchemaBuilder, ProposalsPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](deps.LegacyStateCodec)),
-			Votes:        collections.NewMap(deps.SchemaBuilder, VotesPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.Int32Value),
-			addrCodec:    deps.AddressCodec,
-			hs:           deps.Environment.HeaderService,
-			eventService: deps.Environment.EventService,
+			Members:       collections.NewMap(deps.SchemaBuilder, MembersPrefix, "members", collections.BytesKey, collections.Uint64Value),
+			Sequence:      collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
+			Config:        collections.NewItem(deps.SchemaBuilder, ConfigPrefix, "config", codec.CollValue[v1.Config](deps.LegacyStateCodec)),
+			Proposals:     collections.NewMap(deps.SchemaBuilder, ProposalsPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](deps.LegacyStateCodec)),
+			Votes:         collections.NewMap(deps.SchemaBuilder, VotesPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.Int32Value),
+			addrCodec:     deps.AddressCodec,
+			headerService: deps.Environment.HeaderService,
+			eventService:  deps.Environment.EventService,
 		}, nil
 	}
 }
@@ -120,7 +120,7 @@ func (a Account) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse
 	}
 
 	// check if the voting period has ended
-	if a.hs.HeaderInfo(ctx).Time.Unix() > prop.VotingPeriodEnd || prop.Status != v1.ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD {
+	if a.headerService.HeaderInfo(ctx).Time.Unix() > prop.VotingPeriodEnd || prop.Status != v1.ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD {
 		return nil, errors.New("voting period has ended")
 	}
 
@@ -174,12 +174,17 @@ func (a Account) CreateProposal(ctx context.Context, msg *v1.MsgCreateProposal) 
 
 	// create the proposal
 	proposal := v1.Proposal{
-		Title:           msg.Proposal.Title,
-		Summary:         msg.Proposal.Summary,
-		Messages:        msg.Proposal.Messages,
-		Execute:         msg.Proposal.Execute,
-		VotingPeriodEnd: a.hs.HeaderInfo(ctx).Time.Add(time.Second * time.Duration(config.VotingPeriod)).Unix(),
-		Status:          v1.ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD,
+		Title:    msg.Proposal.Title,
+		Summary:  msg.Proposal.Summary,
+		Messages: msg.Proposal.Messages,
+		Status:   v1.ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD,
+	}
+
+	// set the voting period, if not specified, use the default
+	if msg.Proposal.VotingPeriodEnd != 0 {
+		proposal.VotingPeriodEnd = msg.Proposal.VotingPeriodEnd
+	} else {
+		proposal.VotingPeriodEnd = a.headerService.HeaderInfo(ctx).Time.Add(time.Second * time.Duration(config.VotingPeriod)).Unix()
 	}
 
 	if err = a.Proposals.Set(ctx, seq, proposal); err != nil {
@@ -213,7 +218,7 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 	}
 
 	// check if voting period is still active and early execution is disabled
-	if a.hs.HeaderInfo(ctx).Time.Unix() < prop.VotingPeriodEnd && !config.EarlyExecution {
+	if a.headerService.HeaderInfo(ctx).Time.Unix() < prop.VotingPeriodEnd && !config.EarlyExecution {
 		return nil, errors.New("voting period has not ended yet")
 	}
 

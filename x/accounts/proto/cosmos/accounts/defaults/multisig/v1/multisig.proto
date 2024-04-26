@@ -79,13 +79,10 @@ message Proposal {
   string   summary                      = 2;
   repeated google.protobuf.Any messages = 3;
 
-  // if true, the proposal will execute as soon as the quorum is reached (last voter will execute).
-  bool execute = 4;
-
   // voting_period_end will be set by the account when the proposal is created.
-  int64 voting_period_end = 5;
+  int64 voting_period_end = 4;
 
-  ProposalStatus status = 6;
+  ProposalStatus status = 5;
 }
 
 // QuerySequence is the request for the account sequence.

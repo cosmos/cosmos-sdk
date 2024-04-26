@@ -71,6 +71,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
+					RpcMethod: "RevokeAll",
+					Use:       "revoke-all --from [signer]",
+					Short:     "Revoke all authorizations from the signer",
+					Example:   fmt.Sprintf("%s tx authz revoke-all --from=cosmos1skj..", version.AppName),
+				},
+				{
 					RpcMethod: "PruneExpiredGrants",
 					Use:       "prune-grants --from [granter]",
 					Short:     "Prune expired grants",

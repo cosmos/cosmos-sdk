@@ -21,6 +21,7 @@ granting arbitrary privileges from one account (the granter) to another account 
 * [Messages](#messages)
     * [MsgGrant](#msggrant)
     * [MsgRevoke](#msgrevoke)
+    * [MsgRevokeAll](#msgrevokeall)
     * [MsgExec](#msgexec)
     * [MsgPruneExpiredGrants](#msgpruneexpiredgrants)
 * [Events](#events)
@@ -167,6 +168,19 @@ The message handling should fail if:
 * provided `MsgTypeUrl` is empty.
 
 NOTE: The `MsgExec` message removes a grant if the grant has expired.
+
+### MsgRevokeAll
+
+The `MsgRevokeAll` message revokes all grants issued by the specified granter. This is useful for quickly removing all authorizations granted by a single granter without specifying individual message types or grantees.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/tree/main/proto/cosmos/authz/v1beta1/tx.proto#L91-L97
+```
+
+The message handling should fail if:
+
+* the `granter` address is not provided or invalid.
+* the `granter` does not have any active grants.
 
 ### MsgExec
 

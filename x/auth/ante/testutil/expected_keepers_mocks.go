@@ -15,43 +15,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockHasEnvironment is a mock of HasEnvironment interface.
-type MockHasEnvironment struct {
-	ctrl     *gomock.Controller
-	recorder *MockHasEnvironmentMockRecorder
-}
-
-// MockHasEnvironmentMockRecorder is the mock recorder for MockHasEnvironment.
-type MockHasEnvironmentMockRecorder struct {
-	mock *MockHasEnvironment
-}
-
-// NewMockHasEnvironment creates a new mock instance.
-func NewMockHasEnvironment(ctrl *gomock.Controller) *MockHasEnvironment {
-	mock := &MockHasEnvironment{ctrl: ctrl}
-	mock.recorder = &MockHasEnvironmentMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockHasEnvironment) EXPECT() *MockHasEnvironmentMockRecorder {
-	return m.recorder
-}
-
-// Environment mocks base method.
-func (m *MockHasEnvironment) Environment() appmodule.Environment {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Environment")
-	ret0, _ := ret[0].(appmodule.Environment)
-	return ret0
-}
-
-// Environment indicates an expected call of Environment.
-func (mr *MockHasEnvironmentMockRecorder) Environment() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Environment", reflect.TypeOf((*MockHasEnvironment)(nil).Environment))
-}
-
 // MockAccountKeeper is a mock of AccountKeeper interface.
 type MockAccountKeeper struct {
 	ctrl     *gomock.Controller
@@ -89,20 +52,6 @@ func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddressCodec", reflect.TypeOf((*MockAccountKeeper)(nil).AddressCodec))
 }
 
-// Environment mocks base method.
-func (m *MockAccountKeeper) Environment() appmodule.Environment {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Environment")
-	ret0, _ := ret[0].(appmodule.Environment)
-	return ret0
-}
-
-// Environment indicates an expected call of Environment.
-func (mr *MockAccountKeeperMockRecorder) Environment() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Environment", reflect.TypeOf((*MockAccountKeeper)(nil).Environment))
-}
-
 // GetAccount mocks base method.
 func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types0.AccAddress) types0.AccountI {
 	m.ctrl.T.Helper()
@@ -115,6 +64,20 @@ func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types0.AccAddre
 func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
+}
+
+// GetEnvironment mocks base method.
+func (m *MockAccountKeeper) GetEnvironment() appmodule.Environment {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironment")
+	ret0, _ := ret[0].(appmodule.Environment)
+	return ret0
+}
+
+// GetEnvironment indicates an expected call of GetEnvironment.
+func (mr *MockAccountKeeperMockRecorder) GetEnvironment() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironment", reflect.TypeOf((*MockAccountKeeper)(nil).GetEnvironment))
 }
 
 // GetModuleAddress mocks base method.

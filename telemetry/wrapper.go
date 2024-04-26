@@ -90,7 +90,7 @@ func SetGaugeWithLabels(keys []string, val float32, labels []metrics.Label) {
 	metrics.SetGaugeWithLabels(keys, val, append(labels, globalLabels...))
 }
 
-// MeasureSince provides a wrapper functionality for emitting a a time measure
+// MeasureSince provides a wrapper functionality for emitting a time measure
 // metric with global labels (if any).
 func MeasureSince(start time.Time, keys ...string) {
 	if !IsTelemetryEnabled() {

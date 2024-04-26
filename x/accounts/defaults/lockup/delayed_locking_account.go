@@ -131,7 +131,7 @@ func (dva DelayedLockingAccount) QueryVestingAccountInfo(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	hs := dva.headerService.GetHeaderInfo(ctx)
+	hs := dva.headerService.HeaderInfo(ctx)
 	unlockedCoins, lockedCoins, err := dva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err

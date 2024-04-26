@@ -8768,7 +8768,7 @@ func (*ModeInfo_Multi_) isModeInfo_Sum() {}
 
 // Fee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
+// which must be above some minimum to be accepted into the mempool.
 type Fee struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

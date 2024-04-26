@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
 
@@ -22,8 +21,9 @@ import (
 // managing persistence, state transitions and query handling for the evidence
 // module.
 type Keeper struct {
+	appmodule.Environment
+
 	cdc            codec.BinaryCodec
-	environment    appmodule.Environment
 	router         types.Router
 	stakingKeeper  types.StakingKeeper
 	slashingKeeper types.SlashingKeeper
@@ -41,8 +41,8 @@ func NewKeeper(
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := &Keeper{
+		Environment:    env,
 		cdc:            cdc,
-		environment:    env,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 		addressCodec:   ac,
@@ -54,11 +54,6 @@ func NewKeeper(
 	}
 	k.Schema = schema
 	return k
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger() log.Logger {
-	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // SetRouter sets the Evidence Handler router for the x/evidence module. Note,
@@ -106,7 +101,7 @@ func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) 
 		return errors.Wrap(types.ErrInvalidEvidence, err.Error())
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSubmitEvidence,
 		event.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
 	); err != nil {

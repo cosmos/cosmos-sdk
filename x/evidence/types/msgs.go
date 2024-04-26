@@ -18,7 +18,7 @@ var (
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
-func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEvidence, error) {
+func NewMsgSubmitEvidence(s string, evi exported.Evidence) (*MsgSubmitEvidence, error) {
 	msg, ok := evi.(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("cannot proto marshal %T", evi)
@@ -27,7 +27,7 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEv
 	if err != nil {
 		return nil, err
 	}
-	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
+	return &MsgSubmitEvidence{Submitter: s, Evidence: any}, nil
 }
 
 func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {

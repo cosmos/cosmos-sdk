@@ -49,7 +49,7 @@ func initFixture(t *testing.T) *fixture {
 		}
 	}()
 
-	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	clientConn, err := grpc.NewClient(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, bank.AppModule{})

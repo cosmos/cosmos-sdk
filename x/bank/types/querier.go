@@ -1,7 +1,6 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -14,19 +13,19 @@ const (
 )
 
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
-func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequest {
-	return &QueryBalanceRequest{Address: addr.String(), Denom: denom}
+func NewQueryBalanceRequest(addr, denom string) *QueryBalanceRequest {
+	return &QueryBalanceRequest{Address: addr, Denom: denom}
 }
 
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
-func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest, resolveDenom bool) *QueryAllBalancesRequest {
-	return &QueryAllBalancesRequest{Address: addr.String(), Pagination: req, ResolveDenom: resolveDenom}
+func NewQueryAllBalancesRequest(addr string, req *query.PageRequest, resolveDenom bool) *QueryAllBalancesRequest {
+	return &QueryAllBalancesRequest{Address: addr, Pagination: req, ResolveDenom: resolveDenom}
 }
 
 // NewQuerySpendableBalancesRequest creates a new instance of a
 // QuerySpendableBalancesRequest.
-func NewQuerySpendableBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QuerySpendableBalancesRequest {
-	return &QuerySpendableBalancesRequest{Address: addr.String(), Pagination: req}
+func NewQuerySpendableBalancesRequest(addr string, req *query.PageRequest) *QuerySpendableBalancesRequest {
+	return &QuerySpendableBalancesRequest{Address: addr, Pagination: req}
 }
 
 // NewQuerySpendableBalanceByDenomRequest creates a new instance of a

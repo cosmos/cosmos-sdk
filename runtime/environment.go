@@ -17,12 +17,13 @@ func NewEnvironment(
 	opts ...EnvOption,
 ) appmodule.Environment {
 	env := appmodule.Environment{
-		Logger:         logger,
-		EventService:   EventService{},
-		HeaderService:  HeaderService{},
-		BranchService:  BranchService{},
-		GasService:     GasService{},
-		KVStoreService: kvService,
+		Logger:             logger,
+		EventService:       EventService{},
+		HeaderService:      HeaderService{},
+		BranchService:      BranchService{},
+		GasService:         GasService{},
+		TransactionService: TransactionService{},
+		KVStoreService:     kvService,
 	}
 
 	for _, opt := range opts {

@@ -52,7 +52,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val0 := s.network.GetValidators()[0]
-	s.conn, err = grpc.Dial(
+	s.conn, err = grpc.NewClient(
 		val0.GetAppConfig().GRPC.Address,
 		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cfg.InterfaceRegistry).GRPCCodec())),

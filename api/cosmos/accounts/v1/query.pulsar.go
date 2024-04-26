@@ -4322,7 +4322,7 @@ func (x *AccountQueryResponse) GetResponse() *anypb.Any {
 	return nil
 }
 
-// SchemaResponse is the response type for the Query/Schema RPC method.
+// SchemaRequest is the request type for the Query/Schema RPC method.
 type SchemaRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

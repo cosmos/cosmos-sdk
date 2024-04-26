@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -122,7 +123,7 @@ func TestKeeperEndToEndWithPrimaryKeyTable(t *testing.T) {
 	err := k.primaryKeyTable.Create(store, &tm)
 	require.NoError(t, err)
 	// then we should find it by primary key
-	primaryKey := PrimaryKey(&tm)
+	primaryKey := PrimaryKey(&tm, address.NewBech32Codec("cosmos"))
 	exists := k.primaryKeyTable.Has(store, primaryKey)
 	require.True(t, exists)
 
@@ -192,6 +193,7 @@ func TestKeeperEndToEndWithPrimaryKeyTable(t *testing.T) {
 func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	ac := address.NewBech32Codec("cosmos")
 
 	key := storetypes.NewKVStoreKey("test")
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
@@ -216,7 +218,7 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	// get by primary key
 	testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	var loaded testdata.TableModel
-	err = k.primaryKeyTable.GetOne(store, PrimaryKey(&tm), &loaded)
+	err = k.primaryKeyTable.GetOne(store, PrimaryKey(&tm, ac), &loaded)
 	require.NoError(t, err)
 	t.Logf("gas consumed on get by primary key: %d", testCtx.Ctx.GasMeter().GasConsumed())
 
@@ -260,7 +262,7 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 			Number:   123,
 			Metadata: []byte("metadata"),
 		}
-		err = k.primaryKeyTable.GetOne(store, PrimaryKey(&tm), &loaded)
+		err = k.primaryKeyTable.GetOne(store, PrimaryKey(&tm, ac), &loaded)
 		require.NoError(t, err)
 		t.Logf("%d: gas consumed on get by primary key: %d", i, testCtx.Ctx.GasMeter().GasConsumed())
 	}
@@ -391,7 +393,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	keys, err := ReadAll(it, &loaded)
 	require.NoError(t, err)
 	for i := range keys {
-		assert.Equal(t, PrimaryKey(&testRecords[i]), keys[i].Bytes())
+		assert.Equal(t, PrimaryKey(&testRecords[i], address.NewBech32Codec("cosmos")), keys[i].Bytes())
 	}
 	assert.Equal(t, testRecords, loaded)
 
@@ -411,7 +413,7 @@ func assertIndex(t *testing.T, store corestore.KVStore, index Index, v testdata.
 	var loaded []testdata.TableModel
 	keys, err := ReadAll(it, &loaded)
 	require.NoError(t, err)
-	assert.Equal(t, []RowID{PrimaryKey(&v)}, keys)
+	assert.Equal(t, []RowID{PrimaryKey(&v, address.NewBech32Codec("cosmos"))}, keys)
 	assert.Equal(t, []testdata.TableModel{v}, loaded)
 }
 

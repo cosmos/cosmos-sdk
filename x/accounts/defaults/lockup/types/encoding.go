@@ -1,11 +1,11 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 	"reflect"
 	"strings"
 
-	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )

@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Add transaction service.
 * [#18379](https://github.com/cosmos/cosmos-sdk/pull/18379) Add branch service.
 * [#18457](https://github.com/cosmos/cosmos-sdk/pull/18457) Add branch.ExecuteWithGasLimit.
 * [#19041](https://github.com/cosmos/cosmos-sdk/pull/19041) Add `appmodule.Environment` interface to fetch different services

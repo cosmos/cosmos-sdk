@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/address"
@@ -15,9 +17,9 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/gogoproto/proto"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -134,7 +136,7 @@ func (bva *BaseLockup) Delegate(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 
 	balance, err := bva.getBalance(ctx, delegatorAddress, msg.Amount.Denom)
 	if err != nil {
@@ -144,7 +146,6 @@ func (bva *BaseLockup) Delegate(
 	if err != nil {
 		return nil, err
 	}
-
 	err = bva.TrackDelegation(
 		ctx,
 		sdk.Coins{*balance},
@@ -154,8 +155,11 @@ func (bva *BaseLockup) Delegate(
 	if err != nil {
 		return nil, err
 	}
-
-	msgDelegate := makeMsgDelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
+	msgDelegate := &stakingtypes.MsgDelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+		Amount:           msg.Amount,
+	}
 	responses, err := sendMessage(ctx, msgDelegate)
 	if err != nil {
 		return nil, err
@@ -179,13 +183,17 @@ func (bva *BaseLockup) Undelegate(
 		return nil, err
 	}
 
-	err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount})
+	msgUndelegate := &stakingtypes.MsgUndelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+		Amount:           msg.Amount,
+	}
+	responses, err := sendMessage(ctx, msgUndelegate)
 	if err != nil {
 		return nil, err
 	}
 
-	msgUndelegate := makeMsgUndelegate(delegatorAddress, msg.ValidatorAddress, msg.Amount)
-	responses, err := sendMessage(ctx, msgUndelegate)
+	err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +216,7 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Amount.Denoms()...)
 	if err != nil {
@@ -220,7 +228,11 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	msgSend := makeMsgSend(fromAddress, msg.ToAddress, msg.Amount)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.ToAddress,
+		Amount:      msg.Amount,
+	}
 	responses, err := sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
@@ -246,7 +258,7 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, err
 	}
 
-	hs := bva.headerService.GetHeaderInfo(ctx)
+	hs := bva.headerService.HeaderInfo(ctx)
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Denoms...)
 	if err != nil {
 		return nil, err
@@ -304,7 +316,11 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, fmt.Errorf("no tokens available for withdrawing")
 	}
 
-	msgSend := makeMsgSend(fromAddress, msg.ToAddress, amount)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddress,
+		ToAddress:   msg.ToAddress,
+		Amount:      amount,
+	}
 	_, err = sendMessage(ctx, msgSend)
 	if err != nil {
 		return nil, err
@@ -357,6 +373,12 @@ func (bva *BaseLockup) TrackDelegation(
 ) error {
 	for _, coin := range amount {
 		baseAmt := balance.AmountOf(coin.Denom)
+		// return error if the delegation amount is zero or if the base coins does not
+		// exceed the desired delegation amount.
+		if coin.IsZero() || baseAmt.LT(coin.Amount) {
+			return sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
+		}
+
 		lockedAmt := lockedCoins.AmountOf(coin.Denom)
 		delLockingAmt, err := bva.DelegatedLocking.Get(ctx, coin.Denom)
 		if err != nil {
@@ -365,12 +387,6 @@ func (bva *BaseLockup) TrackDelegation(
 		delFreeAmt, err := bva.DelegatedFree.Get(ctx, coin.Denom)
 		if err != nil {
 			return err
-		}
-
-		// return error if the delegation amount is zero or if the base coins does not
-		// exceed the desired delegation amount.
-		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
-			return sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds")
 		}
 
 		// compute x and y per the specification, where:
@@ -416,9 +432,10 @@ func (bva *BaseLockup) TrackDelegation(
 func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) error {
 	for _, coin := range amount {
 		// return error if the undelegation amount is zero
-		if coin.Amount.IsZero() {
+		if coin.IsZero() {
 			return sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins")
 		}
+
 		delFreeAmt, err := bva.DelegatedFree.Get(ctx, coin.Denom)
 		if err != nil {
 			return err
@@ -460,7 +477,7 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 
 func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {
 	// Query account balance for the sent denom
-	balanceQueryReq := banktypes.NewQueryBalanceRequest(sdk.AccAddress(sender), denom)
+	balanceQueryReq := &banktypes.QueryBalanceRequest{Address: sender, Denom: denom}
 	resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
 	if err != nil {
 		return nil, err

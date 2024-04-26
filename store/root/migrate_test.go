@@ -88,7 +88,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	s.Require().NoError(err)
 
 	// start the migration process
-	s.rootStore.StartMigration()
+	s.Require().NoError(s.rootStore.StartMigration())
 
 	// continue to apply changeset against the original store
 	latestVersion := originalLatestVersion + 1

@@ -236,9 +236,6 @@ func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (inter
 			typeGraphNode = vr.typeGraphNode()
 		} else {
 			typeGraphNode = c.typeGraphNode(typ)
-			if err != nil {
-				return nil, err
-			}
 		}
 
 		c.addGraphEdge(typeGraphNode, providerGraphNode)

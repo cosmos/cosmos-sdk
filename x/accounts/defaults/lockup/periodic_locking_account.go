@@ -44,7 +44,7 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
 	}
 
-	hs := pva.headerService.GetHeaderInfo(ctx)
+	hs := pva.headerService.HeaderInfo(ctx)
 
 	if msg.StartTime.Before(hs.Time) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("start time %s should be after block time")
@@ -78,6 +78,24 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 	sortedAmt := totalCoins.Sort()
 	for _, coin := range sortedAmt {
 		err := pva.OriginalLocking.Set(ctx, coin.Denom, coin.Amount)
+		if err != nil {
+			return nil, err
+		}
+
+		// Set initial value for all withdrawed token
+		err = pva.WithdrawedCoins.Set(ctx, coin.Denom, math.ZeroInt())
+		if err != nil {
+			return nil, err
+		}
+
+		// Set initial value for all delegated free token
+		err = pva.DelegatedFree.Set(ctx, coin.Denom, math.ZeroInt())
+		if err != nil {
+			return nil, err
+		}
+
+		// Set initial value for all delegated locking token
+		err = pva.DelegatedLocking.Set(ctx, coin.Denom, math.ZeroInt())
 		if err != nil {
 			return nil, err
 		}
@@ -290,7 +308,7 @@ func (pva PeriodicLockingAccount) QueryLockupAccountInfo(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	hs := pva.headerService.GetHeaderInfo(ctx)
+	hs := pva.headerService.HeaderInfo(ctx)
 	unlockedCoins, lockedCoins, err := pva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err

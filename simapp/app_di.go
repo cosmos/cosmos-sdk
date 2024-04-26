@@ -15,7 +15,9 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/auth"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authsims "cosmossdk.io/x/auth/simulation"
@@ -73,6 +75,7 @@ type SimApp struct {
 	UnorderedTxManager *unorderedtx.Manager
 
 	// keepers
+	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
@@ -183,6 +186,7 @@ func NewSimApp(
 		&app.txConfig,
 		&app.interfaceRegistry,
 		&app.AuthKeeper,
+		&app.AccountsKeeper,
 		&app.BankKeeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
@@ -256,7 +260,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, &app.AccountsKeeper, authsims.RandomGenesisAccounts),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
@@ -292,11 +296,39 @@ func NewSimApp(
 		}
 	}
 
+	// set custom ante handlers
+	app.setCustomAnteHandler()
+
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
 
 	return app
+}
+
+// overwrite default ante handlers with custom ante handlers
+// set SkipAnteHandler to true in app config and set custom ante handler on baseapp
+func (app *SimApp) setCustomAnteHandler() {
+	anteHandler, err := NewAnteHandler(
+		HandlerOptions{
+			ante.HandlerOptions{
+				AccountKeeper:   app.AuthKeeper,
+				BankKeeper:      app.BankKeeper,
+				SignModeHandler: app.txConfig.SignModeHandler(),
+				FeegrantKeeper:  app.FeeGrantKeeper,
+				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+				Environment:     app.AuthKeeper.Environment,
+			},
+			&app.CircuitBreakerKeeper,
+			app.UnorderedTxManager,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Set the AnteHandler for the app
+	app.SetAnteHandler(anteHandler)
 }
 
 // Close implements the Application interface and closes all necessary application

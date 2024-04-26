@@ -28,7 +28,7 @@ func (k Keeper) Hooks() Hooks {
 // AfterValidatorBonded updates the signing info start height or create a new signing info
 func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	signingInfo, err := h.k.ValidatorSigningInfo.Get(ctx, consAddr)
-	blockHeight := h.k.environment.HeaderService.GetHeaderInfo(ctx).Height
+	blockHeight := h.k.HeaderService.HeaderInfo(ctx).Height
 	if err == nil {
 		signingInfo.StartHeight = blockHeight
 	} else {

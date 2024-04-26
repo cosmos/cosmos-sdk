@@ -170,17 +170,6 @@ max-recv-msg-size = "10485760"
 max-send-msg-size = "2147483647"
 
 ###############################################################################
-###                        gRPC Web Configuration                           ###
-###############################################################################
-
-[grpc-web]
-
-# GRPCWebEnable defines if the gRPC-web should be enabled.
-# NOTE: gRPC must also be enabled, otherwise, this configuration is a no-op.
-# NOTE: gRPC-Web uses the same address as the API server.
-enable = true
-
-###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################
 
@@ -233,7 +222,7 @@ stop-node-on-err = true
 #
 # Note, this configuration only applies to SDK built-in app-side mempool
 # implementations.
-max-txs = 5000
+max-txs = -1
 
 [custom]
 

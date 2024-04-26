@@ -20,7 +20,7 @@ import (
 // `accAddr` is the address to be added to the genesis state, `amountStr` is the list of initial coins
 // to be added for the account, `appendAcct` updates the account if already exists.
 // `vestingStart, vestingEnd and vestingAmtStr` respectively are the schedule start time, end time (unix epoch)
-// `moduleName“ is the module name for which the account is being created
+// `moduleName` is the module name for which the account is being created
 // and coins to be appended to the account already in the genesis.json file.
 func AddGenesisAccount(
 	cdc codec.Codec,
@@ -131,8 +131,10 @@ func AddGenesisAccount(
 		bankGenState.Balances = append(bankGenState.Balances, balances)
 	}
 
-	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
-
+	bankGenState.Balances, err = banktypes.SanitizeGenesisBalances(bankGenState.Balances, addressCodec)
+	if err != nil {
+		return fmt.Errorf("failed to sanitize genesis balance: %w", err)
+	}
 	bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 
 	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)

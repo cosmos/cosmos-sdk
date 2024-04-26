@@ -155,7 +155,7 @@ func GRPCWrap(err error, c codes.Code, msg string) error {
 		return nil
 	}
 	st := status.New(c, msg)
-	var sdkErr *Error
+	var sdkErr *errorsmod.Error
 	if errors.As(err, &sdkErr) {
 		errorInfo := &errdetails.ErrorInfo{
 			Reason:   sdkErr.Error(),

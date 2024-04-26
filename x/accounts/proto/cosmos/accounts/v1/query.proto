@@ -32,7 +32,7 @@ message AccountQueryResponse {
   google.protobuf.Any response = 1;
 }
 
-// SchemaResponse is the response type for the Query/Schema RPC method.
+// SchemaRequest is the request type for the Query/Schema RPC method.
 message SchemaRequest {
   // account_type defines the account type to query the schema for.
   string account_type = 1;

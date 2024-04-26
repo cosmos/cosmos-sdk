@@ -281,7 +281,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 	pubKey cryptotypes.PubKey,
 	signature signing.SignatureV2,
 ) error {
-	if svd.ak.Environment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate && pubKey == nil {
+	if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate && pubKey == nil {
 		pubKey = simSecp256k1Pubkey
 	}
 
@@ -311,7 +311,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	// we're in simulation mode, or in ReCheckTx, or context is not
 	// on sig verify tx, then we do not need to verify the signatures
 	// in the tx.
-	if svd.ak.Environment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
+	if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
 		return nil
 	}
 
@@ -385,7 +385,7 @@ func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI,
 	if txPubKey == nil {
 		// if we're not in simulation mode, and we do not have a valid pubkey
 		// for this signer, then we simply error.
-		if svd.ak.Environment().TransactionService.ExecMode(ctx) != transaction.ExecModeSimulate {
+		if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) != transaction.ExecModeSimulate {
 			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", acc.GetAddress().String())
 		}
 		// if we're in simulation mode, then we can populate the pubkey with the
@@ -460,27 +460,35 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
-func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if err := vscd.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+
+	return next(ctx, tx, false)
+}
+
+func (vscd ValidateSigCountDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
+	sigTx, ok := tx.(authsigning.SigVerifiableTx) // TODO: what do we do with this.
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}
 
 	params := vscd.ak.GetParams(ctx)
 	pubKeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	sigCount := 0
 	for _, pk := range pubKeys {
 		sigCount += CountSubKeys(pk)
 		if uint64(sigCount) > params.TxSigLimit {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
+			return errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
 	}
 
-	return next(ctx, tx, false)
+	return nil
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas

@@ -27,7 +27,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
-	storetypes "cosmossdk.io/store/types"
 	rootstorev2 "cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/tx/signing"
 
@@ -106,10 +105,8 @@ func init() {
 		appconfig.Provide(
 			ProvideAppBuilder,
 			ProvideInterfaceRegistry,
-			ProvideKVStoreKey,
 			ProvideEnvironment,
 			ProvideModuleManager,
-			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
 			ProvideGenesisTxHandler,
 			ProvideAppVersionModifier,
@@ -179,6 +176,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
+<<<<<<< HEAD
 	if inputs.StoreOptions != nil {
 		// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
 		// registerStoreKey could instead set this on StoreOptions directly
@@ -186,6 +184,19 @@ func SetupAppBuilder(inputs AppInputs) {
 		for _, sk := range inputs.AppBuilder.app.storeKeys {
 			inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk.String())
 		}
+||||||| a1fa976ccf
+	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
+	// registerStoreKey could instead set this on StoreOptions directly
+	inputs.AppBuilder.storeOptions = inputs.StoreOptions
+	for _, sk := range inputs.AppBuilder.app.storeKeys {
+		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk.String())
+=======
+	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
+	// registerStoreKey could instead set this on StoreOptions directly
+	inputs.AppBuilder.storeOptions = inputs.StoreOptions
+	for _, sk := range inputs.AppBuilder.app.storeKeys {
+		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk)
+>>>>>>> server_modular
 	}
 }
 
@@ -226,51 +237,26 @@ func ProvideInterfaceRegistry(
 	return interfaceRegistry, nil
 }
 
-func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
-	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
-}
-
-func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
-	for _, cfg := range config.OverrideStoreKeys {
-		if cfg.ModuleName == moduleName {
-			return cfg
-		}
-	}
-	return nil
-}
-
-func ProvideKVStoreKey(config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
-	override := storeKeyOverride(config, key.Name())
-
-	var storeKeyName string
-	if override != nil {
-		storeKeyName = override.KvStoreKey
-	} else {
-		storeKeyName = key.Name()
-	}
-
-	storeKey := storetypes.NewKVStoreKey(storeKeyName)
-	registerStoreKey(app, storeKey)
-	return storeKey
-}
-
-func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
-	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
-	registerStoreKey(app, storeKey)
-	return storeKey
-}
-
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
 func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) (
 	appmodulev2.Environment,
 	store.KVStoreService,
 	store.MemoryStoreService,
 ) {
-	kvStoreKey := ProvideKVStoreKey(config, key, app)
-	kvService := stf.NewKVStoreService([]byte(kvStoreKey.Name()))
 
-	memStoreKey := ProvideMemoryStoreKey(key, app)
-	memService := stf.NewMemoryStoreService([]byte(memStoreKey.Name()))
+	var kvStoreKey string
+	storeKeyOverride := storeKeyOverride(config, key.Name())
+	if storeKeyOverride != nil {
+		kvStoreKey = storeKeyOverride.KvStoreKey
+	} else {
+		kvStoreKey = key.Name()
+	}
+	registerStoreKey(app, kvStoreKey)
+	kvService := stf.NewKVStoreService([]byte(kvStoreKey))
+
+	memStoreKey := fmt.Sprintf("memory:%s", key.Name())
+	registerStoreKey(app, memStoreKey)
+	memService := stf.NewMemoryStoreService([]byte(memStoreKey))
 
 	env := appmodulev2.Environment{
 		Logger:          logger,
@@ -283,6 +269,20 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	}
 
 	return env, kvService, memService
+}
+
+func registerStoreKey(wrapper *AppBuilder, key string) {
+	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
+}
+
+func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
+	for _, cfg := range config.OverrideStoreKeys {
+		if cfg.ModuleName == moduleName {
+			return cfg
+		}
+	}
+
+	return nil
 }
 
 type AddressCodecInputs struct {

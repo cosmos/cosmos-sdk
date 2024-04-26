@@ -30,7 +30,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueryClient interface {
-	// Allowance returns granted allwance to the grantee by the granter.
+	// Allowance returns granted allowance to the grantee by the granter.
 	Allowance(ctx context.Context, in *QueryAllowanceRequest, opts ...grpc.CallOption) (*QueryAllowanceResponse, error)
 	// Allowances returns all the grants for the given grantee address.
 	Allowances(ctx context.Context, in *QueryAllowancesRequest, opts ...grpc.CallOption) (*QueryAllowancesResponse, error)
@@ -79,7 +79,7 @@ func (c *queryClient) AllowancesByGranter(ctx context.Context, in *QueryAllowanc
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
-	// Allowance returns granted allwance to the grantee by the granter.
+	// Allowance returns granted allowance to the grantee by the granter.
 	Allowance(context.Context, *QueryAllowanceRequest) (*QueryAllowanceResponse, error)
 	// Allowances returns all the grants for the given grantee address.
 	Allowances(context.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error)

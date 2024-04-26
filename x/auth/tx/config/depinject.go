@@ -59,7 +59,7 @@ type ModuleOutputs struct {
 
 	TxConfig        client.TxConfig
 	TxConfigOptions tx.ConfigOptions
-	BaseAppOption   runtime.BaseAppOption // TODO find alternative to this
+	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {

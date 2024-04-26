@@ -46,7 +46,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	txService := dfd.accountKeeper.Environment().TransactionService
+	txService := dfd.accountKeeper.GetEnvironment().TransactionService
 	execMode := txService.ExecMode(ctx)
 	if execMode != transaction.ExecModeSimulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")

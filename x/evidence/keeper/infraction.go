@@ -25,7 +25,6 @@ import (
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
 func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
-	logger := k.Logger()
 	consAddr := evidence.GetConsensusAddress(k.stakingKeeper.ConsensusAddressCodec())
 
 	validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
@@ -58,12 +57,12 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 			// allowable but none of the disallowed evidence types.  Instead of
 			// getting this coordination right, it is easier to relax the
 			// constraints and ignore evidence that cannot be handled.
-			logger.Error(fmt.Sprintf("ignore evidence; expected public key for validator %s not found", consAddr))
+			k.Logger.Error(fmt.Sprintf("ignore evidence; expected public key for validator %s not found", consAddr))
 			return nil
 		}
 	}
 
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	// calculate the age of the evidence
 	infractionHeight := evidence.GetHeight()
 	infractionTime := evidence.GetTime()
@@ -77,7 +76,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	cp := sdkCtx.ConsensusParams() // TODO: remove in favor of querying consensus module
 	if cp.Evidence != nil {
 		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
-			logger.Info(
+			k.Logger.Info(
 				"ignored equivocation; evidence too old",
 				"validator", consAddr,
 				"infraction_height", infractionHeight,
@@ -95,7 +94,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 
 	// ignore if the validator is already tombstoned
 	if k.slashingKeeper.IsTombstoned(ctx, consAddr) {
-		logger.Info(
+		k.Logger.Info(
 			"ignored equivocation; validator already tombstoned",
 			"validator", consAddr,
 			"infraction_height", infractionHeight,
@@ -104,7 +103,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		return nil
 	}
 
-	logger.Info(
+	k.Logger.Info(
 		"confirmed equivocation",
 		"validator", consAddr,
 		"infraction_height", infractionHeight,

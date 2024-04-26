@@ -103,7 +103,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // RegisterMigrations registers module migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
-	m := keeper.NewMigrator(am.keeper)
+	m := keeper.NewMigrator(am.keeper, am.stakingKeeper.ValidatorAddressCodec())
 
 	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)

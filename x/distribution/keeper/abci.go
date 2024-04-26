@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"time"
 
 	corecomet "cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
@@ -16,8 +15,8 @@ import (
 // and distribute rewards for the previous block.
 // TODO: use context.Context after including the comet service
 func (k Keeper) BeginBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	header := k.environment.HeaderService.GetHeaderInfo(ctx)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+	header := k.HeaderService.HeaderInfo(ctx)
 	if header.Height == 0 {
 		return nil
 	}

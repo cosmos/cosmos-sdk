@@ -186,7 +186,7 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		return false, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeProposalDeposit,
 		event.NewAttribute(types.AttributeKeyDepositor, depositorStrAddr),
 		event.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),

@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/slashing/types"
 
@@ -20,6 +19,7 @@ import (
 // Keeper of the slashing store
 type Keeper struct {
 	appmodule.Environment
+
 	cdc         codec.BinaryCodec
 	legacyAmino *codec.LegacyAmino
 	sk          types.StakingKeeper
@@ -81,11 +81,6 @@ func NewKeeper(environment appmodule.Environment, cdc codec.BinaryCodec, legacyA
 // GetAuthority returns the x/slashing module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	return k.Environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation

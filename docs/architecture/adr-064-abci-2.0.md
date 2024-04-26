@@ -401,7 +401,7 @@ in both `BeginBlock` and `EndBlock` events`.
 
 ### Upgrading
 
-CometBFT defines a consensus parameter, [`VoteExtensionsEnableHeight`](https://github.com/cometbft/cometbft/blob/v0.38.0-alpha.1/spec/abci/abci%2B%2B_app_requirements.md#abciparamsvoteextensionsenableheight),
+CometBFT defines a consensus parameter, [`VoteExtensionsEnableHeight`](https://docs.cometbft.com/v1.0/spec/abci/abci++_app_requirements#featureparamsvoteextensionsenableheight),
 which specifies the height at which vote extensions are enabled and **required**.
 If the value is set to zero, which is the default, then vote extensions are
 disabled and an application is not required to implement and use vote extensions.

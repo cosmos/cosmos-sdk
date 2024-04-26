@@ -10,9 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
@@ -36,8 +34,6 @@ var (
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
-
-	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
 )
 
 // AppModule implements an application module for the feegrant module.
@@ -155,11 +151,4 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // EndBlock returns the end blocker for the feegrant module.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return EndBlocker(ctx, am.keeper)
-}
-
-// TxValidator implements appmodulev2.HasTxValidator.
-// It replaces auth ante handlers for server/v2
-func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	// TODO in follow-up
-	return nil
 }

@@ -1,7 +1,6 @@
 package tx_test
 
 import (
-	"encoding/hex"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -99,23 +98,4 @@ func mustAny(msg proto.Message) *types.Any {
 		panic(err)
 	}
 	return a
-}
-
-type DummyProtoMessage1 struct{}
-
-func (d *DummyProtoMessage1) Reset()         {}
-func (d *DummyProtoMessage1) String() string { return "/dummy.proto.message1" }
-func (d *DummyProtoMessage1) ProtoMessage()  {}
-
-type DummyProtoMessage2 struct{}
-
-func (d *DummyProtoMessage2) Reset()         {}
-func (d *DummyProtoMessage2) String() string { return "/dummy.proto.message2" }
-func (d *DummyProtoMessage2) ProtoMessage()  {}
-
-type dummyAddressCodec struct{}
-
-func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) { return hex.DecodeString(text) }
-func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
-	return hex.EncodeToString(bz), nil
 }

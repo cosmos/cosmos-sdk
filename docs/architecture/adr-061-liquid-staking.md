@@ -404,6 +404,36 @@ func QueueTokenizeSharesAuthorization(address sdk.AccAddress) time.Time
 func RemoveExpiredTokenizeShareLocks(blockTime time.Time) (unlockedAddresses []string) 
 ```
 
+### Tokenizing & Redelegations
+
+When a delegation is tokenized, the shares are transferred to a module account. This means that the shares are no longer owned by the delegator, and thus if these shares are from a redelegation, that redelegation needs to be updated to point to the module account;
+otherwise, the redelegation would still point to the delegator account, which doesn't own the shares anymore.
+
+On a high-level, this is simple.
+When a delegator D tokenizes some amount of shares delegated to validator V, we:
+* Identify how many of the shares that are tokenized belong to redelegations
+* Rewrite the redelegations to have the module account as delegator address (this is originally D's address)
+
+When a user redeems shares, we do the reverse operation:
+* Identify again which of the shares being redeemed belong to redelegations
+* Rewrite those redelegations to have the users' account as delegator address (this is originally the module account)
+
+In practice, there are several logistical challenges with this. First, it is nontrivial to figure out how many shares being tokenized come from redelegations. Note that if a user redelegates, their shares get immediately transferred to the new validator, but a redelegation entry is created to still keep them accountable for infractions that the old validator committed.
+
+Since the shares are transferred immediately, users may also undelegate the shares *that still have a redelegation ongoing underneath*.
+These shares are removed immediately, and we obviously cannot tokenize these shares.
+Thus, we must figure out how many shares that were transferred via redelegations *do not* have a subsequent undelegation, to know how many shares of the users correspond to redelegations and how many correspond to native delegations that don't have an ongoing redelegation.
+See this figure for a brief overview of the algorithm: 
+![A rough example of the algorithm to identify how many redelegations are not matched by subsequent undelegations.](image/redelegations.png)
+
+The algorithm goes through existing redelegations (by D from any validator to V) and undelegations (by D from V)
+in order of their completion time. We simply match redelegations with following undelegations, and we assume that undelegations always first affect the incoming tokens from redelegations before touching native stake. This is simply an ordering imposed by our algorithm, and reflects the fact that we can essentially choose which redelegations to rewrite/transfer with tokenizations (and in this case, we choose to not rewrite redelegations that are matched by a subsequent unbonding operation). (See the `ComputeRemainingRedelegatedSharesAfterUnbondings` function [here](../../x/staking/keeper/tokenize_share_record.go#373))
+
+After identifying how many redelegations must be transferred to tokenize or redeem the desired amount of shares,
+we simply get redelegations for that specified amount of shares and rewrite them.
+One final challenge here is that redelegations are always for specific amounts, and this might be different than the amount we actually need to rewrite. For example, imagine we have a redelegation for 4 shares, but need to tokenize 3 shares that are backed by redelegations. Then we need to split the redelegation: we create one redelegation for 3 shares that we give the *rewritten* delegator address, and we create one redelegation for 1 share (which is otherwise identical to the original redelegation, i.e. it still points to the old delegator address). (See the `updateRedelegationEntriesByAmount` function [here](../../x/staking/keeper/tokenize_share_record.go#327))
+
+
 ## References
 
 Please see this document for a technical spec for the LSM: https://docs.google.com/document/d/1WYPUHmQii4o-q2225D_XyqE6-1bvM7Q128Y9amqRwqY/edit#heading=h.zcpx47mn67kl

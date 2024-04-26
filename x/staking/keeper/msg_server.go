@@ -740,6 +740,15 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		Validator:     msg.ValidatorAddress,
 	}
 
+	// Check if the delegator has redelegated some shares to the validator, in this case,
+	// update the redelegations for which the shares are tokenized.
+	if k.HasReceivingRedelegation(ctx, delegatorAddress, valAddr) {
+		err := k.TransferRedelegationsOfTokenizedShares(ctx, delegation, shares, delegatorAddress, record.GetModuleAddress())
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// note: this returnAmount can be slightly off from the original delegation amount if there
 	// is a decimal to int precision error
 	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, shares)
@@ -782,6 +791,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if err != nil {
 		return nil, err
 	}
+
 	// send coins to module account
 	err = k.bankKeeper.SendCoins(ctx, delegatorAddress, record.GetModuleAddress(), sdk.Coins{returnCoin})
 	if err != nil {
@@ -852,11 +862,21 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 		return nil, types.ErrNoUnbondingDelegation
 	}
 
+	// Normalize the amount of share tokens due to potential discrepancies between
+	// the total delegation shares and the share token supply ratio,
+	// which may not always be 1:1 due to slashing.
+
+	// get total shares and token supply
+	shareTokenSupply := k.bankKeeper.GetSupply(ctx, shareToken.Denom)
+	shareTokenFraction := delegation.Shares.QuoInt(shareTokenSupply.Amount)
+	// normalize share tokens amount to redeem
+	shareTokenAmount := shareTokenFraction.MulInt(shareToken.Amount)
+
 	// Similar to undelegations, if the account is attempting to tokenize the full delegation,
 	// but there's a precision error due to the decimal to int conversion, round up to the
 	// full decimal amount before modifying the delegation
-	shares := sdk.NewDecFromInt(shareToken.Amount)
-	if shareToken.Amount.Equal(delegation.Shares.TruncateInt()) {
+	shares := shareTokenAmount
+	if shareTokenAmount.TruncateInt().Equal(delegation.Shares.TruncateInt()) {
 		shares = delegation.Shares
 	}
 	tokens := validator.TokensFromShares(shares).TruncateInt()
@@ -864,6 +884,15 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	// prevent redemption that returns a 0 amount
 	if tokens.IsZero() {
 		return nil, types.ErrTinyRedemptionAmount
+	}
+
+	// check if the shares are from redelegations, in this case,
+	// update the redelegations for which the shares are redeemed
+	if k.HasReceivingRedelegation(ctx, record.GetModuleAddress(), valAddr) {
+		err := k.TransferRedelegationsOfTokenizedShares(ctx, delegation, shares, record.GetModuleAddress(), delegatorAddress)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked

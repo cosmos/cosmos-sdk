@@ -14,8 +14,6 @@ cosmossdk.io/log v1.3.1 h1:UZx8nWIkfbbNEWusZqzAx3ZGvu54TZacWib3EzUYmGI=
 cosmossdk.io/log v1.3.1/go.mod h1:2/dIomt8mKdk6vl3OWJcPk2be3pGOS8OQaLUM/3/tCM=
 cosmossdk.io/math v1.3.0 h1:RC+jryuKeytIiictDslBP9i1fhkVm6ZDmZEoNP316zE=
 cosmossdk.io/math v1.3.0/go.mod h1:vnRTxewy+M7BtXBNFybkuhSH4WfedVAAnERHgVFhp3k=
-cosmossdk.io/store v1.1.0 h1:LnKwgYMc9BInn9PhpTFEQVbL9UK475G2H911CGGnWHk=
-cosmossdk.io/store v1.1.0/go.mod h1:oZfW/4Fc/zYqu3JmQcQdUJ3fqu5vnYTn3LZFFy8P8ng=
 cosmossdk.io/x/tx v0.13.1 h1:Mg+EMp67Pz+NukbJqYxuo8uRp7N/a9uR+oVS9pONtj8=
 cosmossdk.io/x/tx v0.13.1/go.mod h1:CBCU6fsRVz23QGFIQBb1DNX2DztJCf3jWyEkHY2nJQ0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -31,6 +29,8 @@ github.com/DataDog/datadog-go v3.2.0+incompatible h1:qSG2N4FghB1He/r2mFrWKCaL7dX
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.5.5 h1:oWf5W7GtOLgp6bciQYDmhHHjdhYkALu6S/5Ni9ZgSvQ=
 github.com/DataDog/zstd v1.5.5/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
+github.com/InjectiveLabs/cosmos-sdk/store v1.0.2-0.20240426135407-dfcf7db6a1f0 h1:X+//ozAazlPc0WgtSTDONIHan0HZzPMCBy1WnC4ozMM=
+github.com/InjectiveLabs/cosmos-sdk/store v1.0.2-0.20240426135407-dfcf7db6a1f0/go.mod h1:ZW4eIE98wivInyQyhxU2nHqEielc/iZAcr41qNyWSrw=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=

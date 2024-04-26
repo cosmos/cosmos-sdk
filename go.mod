@@ -44,6 +44,7 @@ require (
 	github.com/magiconair/properties v1.8.7
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-isatty v0.0.20
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.0
 	github.com/prometheus/common v0.52.2
 	github.com/rs/zerolog v1.32.0
@@ -57,6 +58,7 @@ require (
 	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
 	golang.org/x/sync v0.7.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240205150955-31a09d347014
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gotest.tools/v3 v3.5.1
@@ -131,7 +133,6 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/procfs v0.13.0 // indirect
@@ -155,7 +156,6 @@ require (
 	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
@@ -169,10 +169,10 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	cosmossdk.io/store => github.com/InjectiveLabs/cosmos-sdk/store v0.50.x-inj
-	cosmossdk.io/x/evidence => github.com/InjectiveLabs/cosmos-sdk/x/evidence v0.50.x-inj
-	cosmossdk.io/x/feegrant => github.com/InjectiveLabs/cosmos-sdk/x/feegrant v0.50.x-inj
-	cosmossdk.io/x/upgrade => github.com/InjectiveLabs/cosmos-sdk/x/upgrade v0.50.x-inj
+	cosmossdk.io/store => github.com/InjectiveLabs/cosmos-sdk/store v1.0.2-0.20240426135407-dfcf7db6a1f0
+	cosmossdk.io/x/evidence => github.com/InjectiveLabs/cosmos-sdk/x/evidence v0.1.1-0.20240426135407-dfcf7db6a1f0
+	cosmossdk.io/x/feegrant => github.com/InjectiveLabs/cosmos-sdk/x/feegrant v0.1.1-0.20240426135407-dfcf7db6a1f0
+	cosmossdk.io/x/upgrade => github.com/InjectiveLabs/cosmos-sdk/x/upgrade v0.1.2-0.20240426135407-dfcf7db6a1f0
 
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

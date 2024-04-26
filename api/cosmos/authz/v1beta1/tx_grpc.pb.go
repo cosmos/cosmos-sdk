@@ -47,8 +47,6 @@ type MsgClient interface {
 	// RevokeAll revokes all grants issued by the specified granter.
 	RevokeAll(ctx context.Context, in *MsgRevokeAll, opts ...grpc.CallOption) (*MsgRevokeAllResponse, error)
 	// PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
-	//
-	// Since cosmos-sdk 0.51
 	PruneExpiredGrants(ctx context.Context, in *MsgPruneExpiredGrants, opts ...grpc.CallOption) (*MsgPruneExpiredGrantsResponse, error)
 }
 
@@ -124,8 +122,6 @@ type MsgServer interface {
 	// RevokeAll revokes all grants issued by the specified granter.
 	RevokeAll(context.Context, *MsgRevokeAll) (*MsgRevokeAllResponse, error)
 	// PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
-	//
-	// Since cosmos-sdk 0.51
 	PruneExpiredGrants(context.Context, *MsgPruneExpiredGrants) (*MsgPruneExpiredGrantsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

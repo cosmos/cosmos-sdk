@@ -176,27 +176,11 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-<<<<<<< HEAD
-	if inputs.StoreOptions != nil {
-		// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
-		// registerStoreKey could instead set this on StoreOptions directly
-		inputs.AppBuilder.storeOptions = inputs.StoreOptions
-		for _, sk := range inputs.AppBuilder.app.storeKeys {
-			inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk.String())
-		}
-||||||| a1fa976ccf
-	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
-	// registerStoreKey could instead set this on StoreOptions directly
-	inputs.AppBuilder.storeOptions = inputs.StoreOptions
-	for _, sk := range inputs.AppBuilder.app.storeKeys {
-		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk.String())
-=======
 	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
 	// registerStoreKey could instead set this on StoreOptions directly
 	inputs.AppBuilder.storeOptions = inputs.StoreOptions
 	for _, sk := range inputs.AppBuilder.app.storeKeys {
 		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk)
->>>>>>> server_modular
 	}
 }
 

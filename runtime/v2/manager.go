@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"sort"
 
-	"cosmossdk.io/core/genesis"
-
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
@@ -169,18 +167,8 @@ func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.Ra
 		}
 
 		// we might get an adapted module, a native core API module or a legacy module
-		if module, ok := mod.(appmodule.HasGenesisAuto); ok {
-			m.logger.Debug("running initialization for module", "module", moduleName)
-			// core API genesis
-			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
-			if err != nil {
-				return err
-			}
-
-			err = module.InitGenesis(ctx, source)
-			if err != nil {
-				return err
-			}
+		if _, ok := mod.(appmodule.HasGenesisAuto); ok {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
 		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {

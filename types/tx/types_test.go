@@ -195,8 +195,10 @@ func TestTx_GetSigners(t *testing.T) {
 		},
 	}
 	ir, err := codectypes.NewInterfaceRegistryWithOptions(options)
+	require.Nil(t, err)
 	cdc := codec.NewProtoCodec(ir)
 	b, _, err := transaction.GetSigners(cdc)
+	require.Nil(t, err)
 
 	expect := "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs"
 	actual, err := addrCdc.BytesToString(b[0])

@@ -2,8 +2,8 @@ package tx_test
 
 import (
 	"encoding/hex"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"testing"
+
 
 	"github.com/cosmos/gogoproto/proto"
 	types2 "github.com/cosmos/gogoproto/types/any"
@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 func TestTx_GetMsgs(t *testing.T) {

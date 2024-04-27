@@ -1,12 +1,12 @@
 package tx_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -124,7 +124,7 @@ func Test_GetMsgs(t *testing.T) {
 			expErr:   false,
 		},
 		{
-			name:   "GetMsgs from a slice that contains uncashed Any message",
+			name:   "GetMsgs from a slice that contains uncached Any message",
 			msgs:   []*types.Any{{}},
 			expErr: true,
 		},
@@ -185,8 +185,6 @@ func TestTx_UnpackInterfaces(t *testing.T) {
 		})
 	}
 }
-
-// in get cached value there are an error
 
 func mustAny(msg proto.Message) *types.Any {
 	a, err := types.NewAnyWithValue(msg)

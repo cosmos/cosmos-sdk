@@ -101,7 +101,7 @@ Reset is called by an authorized account to enable execution for a specific msgU
 ### MsgAuthorizeCircuitBreaker
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/circuit/v1/tx.proto#L26-L40
+https://github.com/cosmos/cosmos-sdk/blob/main/x/circuit/proto/cosmos/circuit/v1/tx.proto#L25-L40
 ```
 
 This message is expected to fail if:
@@ -111,7 +111,7 @@ This message is expected to fail if:
 ### MsgTripCircuitBreaker
 
 ```protobuf reference 
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/circuit/v1/tx.proto#L48-L60
+https://github.com/cosmos/cosmos-sdk/blob/main/x/circuit/proto/cosmos/circuit/v1/tx.proto#L47-L60
 ```
 
 This message is expected to fail if:
@@ -121,7 +121,7 @@ This message is expected to fail if:
 ### MsgResetCircuitBreaker
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/circuit/v1/tx.proto#L68-L78
+https://github.com/cosmos/cosmos-sdk/blob/main/x/circuit/proto/cosmos/circuit/v1/tx.proto#L67-L78
 ```
 
 This message is expected to fail if:

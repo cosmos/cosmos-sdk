@@ -72,8 +72,6 @@ type QueryClient interface {
 	// proposal itself.
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
 	// Groups queries all groups in state.
-	//
-	// Since: cosmos-sdk 0.47.1
 	Groups(ctx context.Context, in *QueryGroupsRequest, opts ...grpc.CallOption) (*QueryGroupsResponse, error)
 }
 
@@ -246,8 +244,6 @@ type QueryServer interface {
 	// proposal itself.
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
 	// Groups queries all groups in state.
-	//
-	// Since: cosmos-sdk 0.47.1
 	Groups(context.Context, *QueryGroupsRequest) (*QueryGroupsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

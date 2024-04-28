@@ -145,7 +145,10 @@ func initFixture(tb testing.TB) *fixture {
 			banktypes.ModuleName:    bankModule,
 			stakingtypes.ModuleName: stakingModule,
 			types.ModuleName:        govModule,
-		})
+		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
+	)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

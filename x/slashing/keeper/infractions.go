@@ -106,8 +106,8 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx sdk.Context, params types
 		)
 	}
 
-	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
-	maxMissed := k.SignedBlocksWindow(ctx) - minSignedPerWindow
+	minHeight := signInfo.StartHeight + params.SignedBlocksWindow
+	maxMissed := params.SignedBlocksWindow - minSignedPerWindow
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {

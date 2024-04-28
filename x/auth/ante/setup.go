@@ -3,11 +3,13 @@ package ante
 import (
 	"fmt"
 
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // GasTx defines a Tx with a GetGas() method which is needed to use SetUpContextDecorator
@@ -21,10 +23,14 @@ type GasTx interface {
 // on gas provided and gas used.
 // CONTRACT: Must be first decorator in the chain
 // CONTRACT: Tx must implement GasTx interface
-type SetUpContextDecorator struct{}
+type SetUpContextDecorator struct {
+	env appmodule.Environment
+}
 
-func NewSetUpContextDecorator() SetUpContextDecorator {
-	return SetUpContextDecorator{}
+func NewSetUpContextDecorator(env appmodule.Environment) SetUpContextDecorator {
+	return SetUpContextDecorator{
+		env: env,
+	}
 }
 
 func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -39,11 +45,17 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 
 	newCtx = SetGasMeter(ctx, gasTx.GetGas())
 
-	if cp := ctx.ConsensusParams(); cp.Block != nil {
+	// TODO: possibly cache the result of this query for other antehandlers to use
+	var res consensusv1.QueryParamsResponse
+	if err := sud.env.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+		return newCtx, err
+	}
+
+	if res.Params.Block != nil {
 		// If there exists a maximum block gas limit, we must ensure that the tx
 		// does not exceed it.
-		if cp.Block.MaxGas > 0 && gasTx.GetGas() > uint64(cp.Block.MaxGas) {
-			return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), cp.Block.MaxGas)
+		if res.Params.Block.MaxGas > 0 && gasTx.GetGas() > uint64(res.Params.Block.MaxGas) {
+			return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), res.Params.Block.MaxGas)
 		}
 	}
 

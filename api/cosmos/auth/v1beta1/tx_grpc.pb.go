@@ -29,8 +29,6 @@ const (
 type MsgClient interface {
 	// UpdateParams defines a (governance) operation for updating the x/auth module
 	// parameters. The authority defaults to the x/gov module account.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// NonAtomicExec allows users to submit multiple messages for non-atomic execution.
 	NonAtomicExec(ctx context.Context, in *MsgNonAtomicExec, opts ...grpc.CallOption) (*MsgNonAtomicExecResponse, error)
@@ -68,8 +66,6 @@ func (c *msgClient) NonAtomicExec(ctx context.Context, in *MsgNonAtomicExec, opt
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the x/auth module
 	// parameters. The authority defaults to the x/gov module account.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// NonAtomicExec allows users to submit multiple messages for non-atomic execution.
 	NonAtomicExec(context.Context, *MsgNonAtomicExec) (*MsgNonAtomicExecResponse, error)

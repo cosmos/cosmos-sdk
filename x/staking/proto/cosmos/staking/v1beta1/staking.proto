@@ -133,12 +133,11 @@ message Validator {
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // min_self_delegation is the validator's self declared minimum self delegation.
-  //
-  // Since: cosmos-sdk 0.46
   string min_self_delegation = 11 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
+    (cosmos_proto.scalar)         = "cosmos.Int",
+    (gogoproto.customtype)        = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)          = false,
+    (cosmos_proto.field_added_in) = "cosmos-sdk 0.47"
   ];
 
   // strictly positive if this validator's unbonding has been stopped by external modules

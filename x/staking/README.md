@@ -88,7 +88,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x51 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L310-L333
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L310-L339
 ```
 
 ### Validator
@@ -151,11 +151,11 @@ is updated during the validator set update process which takes place in [`EndBlo
 Each validator's state is stored in a `Validator` struct:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L82-L138
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L102-148
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L26-L80
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L40-L64
 ```
 
 ### Delegation
@@ -171,7 +171,7 @@ delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L198-L216
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L204-L221
 ```
 
 #### Delegator Shares
@@ -219,7 +219,7 @@ detected.
 A UnbondingDelegation object is created every time an unbonding is initiated.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L218-L261
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L223-L264
 ```
 
 ### Redelegation
@@ -261,7 +261,7 @@ A redelegation object is created every time a redelegation occurs. To prevent
   where the source validator for this new redelegation is `Validator X`.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L263-L308
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L267-L310
 ```
 
 ## ConsPubkeyRotation
@@ -320,7 +320,7 @@ delegations queue is kept.
 * UnbondingDelegation: `0x41 | format(time) -> []DVPair`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L162-L172
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L170-L179
 ```
 
 #### RedelegationQueue
@@ -331,7 +331,7 @@ kept.
 * RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L179-L191
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L186-L197
 ```
 
 #### ValidatorQueue
@@ -358,7 +358,7 @@ Whenever the next item with the same waiting time comes to the queue, we will ge
 the present store info and append the `ValAddress` to the array and set it back in the store.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/8f0d5b15f0b10da7645d7fc1aa868fe44e3f3a44/proto/cosmos/staking/v1beta1/staking.proto#L429-L433
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L431-L435
 ```
 
 ### HistoricalInfo
@@ -367,7 +367,7 @@ HistoricalInfo objects are stored and pruned at each block such that the staking
 the `n` most recent historical info defined by staking module parameter: `HistoricalEntries`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L17-L24
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L17-L26
 ```
 
 At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
@@ -572,11 +572,11 @@ A validator is created using the `MsgCreateValidator` message.
 The validator must be created with an initial delegation from the operator.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L20-L21
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L20-L21
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L50-L73
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L56-L78
 ```
 
 This message is expected to fail if:
@@ -601,11 +601,11 @@ The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditValidator` message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L23-L24
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L23-L24
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L78-L97
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L78-L97
 ```
 
 This message is expected to fail if:
@@ -624,11 +624,11 @@ some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L102-L114
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L102-L114
 ```
 
 This message is expected to fail if:
@@ -660,17 +660,17 @@ The `MsgUndelegate` message allows delegators to undelegate their tokens from
 validator.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L34-L36
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L34-L36
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L140-L152
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L140-L152
 ```
 
 This message returns a response containing the completion time of the undelegation:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L154-L158
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L154-L158
 ```
 
 This message is expected to fail if:
@@ -699,11 +699,11 @@ When this message is processed the following actions occur:
 The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and delegate back to a previous validator. However, please note that this feature does not support canceling unbond delegations from jailed validators.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L38-L42
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L38-L42
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L160-L175
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L160-L175
 ```
 
 This message is expected to fail if:
@@ -727,17 +727,17 @@ the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L119-L132
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L119-L132
 ```
 
 This message returns a response containing the completion time of the redelegation:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L133-L138
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L133-L138
 ```
 
 This message is expected to fail if:
@@ -771,7 +771,7 @@ The params are updated through a governance proposal where the signer is the gov
 When the `MinCommissionRate` is updated, all validators with a lower (max) commission rate than `MinCommissionRate` will be updated to `MinCommissionRate`.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L182-L195
+https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L182-L195
 ```
 
 The message handling can fail if:
@@ -784,7 +784,7 @@ The `MsgRotateConsPubKey` updates the consensus pubkey of a validator
 with a new pubkey, the validator must pay rotation fees (default fee 1000000stake) to rotate the consensus pubkey.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/efa7636756ad0164ae5ef75f958ffec95a4201a4/proto/cosmos/staking/v1beta1/tx.proto#L213-L226
+https://github.com/cosmos/cosmos-sdk/blob/x/main/staking/proto/cosmos/staking/v1beta1/tx.proto#L213-L226
 ```
 
 The message handling can fail if:

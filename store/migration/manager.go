@@ -115,7 +115,7 @@ func (m *Manager) Migrate(height uint64) error {
 			if _, err := m.stateCommitment.Restore(height, 0, ms, chStorage); err != nil {
 				return err
 			}
-		} else { // there is no commitment migration, just consume the stream
+		} else { // there is no commitment migration, just consume the stream to restore the state storage
 			var storeKey []byte
 		loop:
 			for {

@@ -59,7 +59,7 @@ func startInProcess(cfg Config, val *Validator) error {
 				Sha256Checksum: []byte{},
 			}, err
 		}
-		return node.ChecksummedGenesisDoc{GenesisDoc: gen}, nil
+		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: make([]byte, 0)}, nil
 	}
 
 	cmtApp := server.NewCometABCIWrapper(app)

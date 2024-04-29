@@ -3,7 +3,6 @@ package accounts
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
@@ -20,7 +19,6 @@ func NewQueryServer(k Keeper) v1.QueryServer {
 		k:           k,
 		schemaCache: make(map[string]*v1.SchemaResponse, len(schemas)), // Initialize with precomputed length
 		schemas:     schemas,                                           // Store precalculated schemas.
-		mu:          &sync.Mutex{},                                     // Initialize mutex.
 	}
 }
 
@@ -28,13 +26,9 @@ type queryServer struct {
 	k           Keeper
 	schemaCache map[string]*v1.SchemaResponse
 	schemas     map[string]*v1.SchemaResponse // Stores precalculated schemas.
-	mu          *sync.Mutex
 }
 
 func (q *queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryRequest) (*v1.AccountQueryResponse, error) {
-	q.mu.Lock()
-	defer q.mu.Unlock()
-
 	// get target addr
 	targetAddr, err := q.k.addressCodec.StringToBytes(request.Target)
 	if err != nil {
@@ -66,9 +60,6 @@ func (q *queryServer) AccountQuery(ctx context.Context, request *v1.AccountQuery
 // Schema retrieves the schema for a given account type.
 // It checks the cache first and computes the schema if not found.
 func (q *queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.SchemaResponse, error) {
-	q.mu.Lock()
-	defer q.mu.Unlock()
-
 	// Check if the schema is cached.
 	if schema, ok := q.schemaCache[request.AccountType]; ok {
 		return schema, nil
@@ -87,9 +78,6 @@ func (q *queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.
 }
 
 func (q *queryServer) AccountType(ctx context.Context, request *v1.AccountTypeRequest) (*v1.AccountTypeResponse, error) {
-	q.mu.Lock()
-	defer q.mu.Unlock()
-
 	addr, err := q.k.addressCodec.StringToBytes(request.Address)
 	if err != nil {
 		return nil, err
@@ -104,9 +92,6 @@ func (q *queryServer) AccountType(ctx context.Context, request *v1.AccountTypeRe
 }
 
 func (q *queryServer) AccountNumber(ctx context.Context, request *v1.AccountNumberRequest) (*v1.AccountNumberResponse, error) {
-	q.mu.Lock()
-	defer q.mu.Unlock()
-
 	addr, err := q.k.addressCodec.StringToBytes(request.Address)
 	if err != nil {
 		return nil, err

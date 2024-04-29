@@ -6,7 +6,6 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // BankKeeper defines the contract needed for supply related APIs (noalias)
@@ -20,8 +19,4 @@ type BankKeeper interface {
 type AccountsModKeeper interface {
 	SendModuleMessageUntyped(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error)
 	IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool
-}
-
-type ConsensusKeeper interface {
-	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
 }

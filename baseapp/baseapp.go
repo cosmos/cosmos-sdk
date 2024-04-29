@@ -871,6 +871,8 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	}
 
 	msgs := tx.GetMsgs()
+	// run validate basic if mode != recheck.
+	// as validate basic is stateless, it is guaranteed to pass recheck, given that its passed checkTx.
 	if mode != execModeReCheck {
 		if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
 			return sdk.GasInfo{}, nil, nil, err

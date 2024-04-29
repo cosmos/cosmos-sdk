@@ -287,7 +287,7 @@ func (s *E2ETestSuite) TestContinuousLockingAccountClawbackEnable() {
 			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
 		}
 		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
-		require.Equal(t, err.Error(), "clawback account type is not undelegate enable")
+		require.Equal(t, err.Error(), "invalid message: no handler for message cosmos.accounts.defaults.lockup.MsgUndelegate")
 	})
 
 	// Update context time

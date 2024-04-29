@@ -58,16 +58,6 @@ func (dva *DelayedLockingAccount) Delegate(ctx context.Context, msg *types.MsgDe
 	return baseLockup.Delegate(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
-func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
-	*types.MsgExecuteMessagesResponse, error,
-) {
-	baseLockup, ok := dva.BaseAccount.(*BaseLockup)
-	if !ok {
-		return nil, fmt.Errorf("clawback account type is not undelegate enable")
-	}
-	return baseLockup.Undelegate(ctx, msg)
-}
-
 func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {

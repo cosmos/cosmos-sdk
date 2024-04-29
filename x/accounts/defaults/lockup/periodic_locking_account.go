@@ -111,16 +111,6 @@ func (pva *PeriodicLockingAccount) Delegate(ctx context.Context, msg *types.MsgD
 	return baseLockup.Delegate(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (
-	*types.MsgExecuteMessagesResponse, error,
-) {
-	baseLockup, ok := pva.BaseAccount.(*BaseLockup)
-	if !ok {
-		return nil, fmt.Errorf("clawback account type is not undelegate enable")
-	}
-	return baseLockup.Undelegate(ctx, msg)
-}
-
 func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *types.MsgSend) (
 	*types.MsgExecuteMessagesResponse, error,
 ) {

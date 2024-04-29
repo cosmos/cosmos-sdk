@@ -25,7 +25,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	})
 	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
-	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1500))})
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
@@ -320,7 +320,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccountClawbackEnable() {
 			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
 		}
 		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
-		require.Equal(t, err.Error(), "clawback account type is not undelegate enable")
+		require.Equal(t, err.Error(), "invalid message: no handler for message cosmos.accounts.defaults.lockup.MsgUndelegate")
 	})
 
 	// Update context time

@@ -27,6 +27,11 @@ import (
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	_ "cosmossdk.io/x/accounts"
+	_ "cosmossdk.io/x/auth"           // import auth as a blank
+	_ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
+	_ "cosmossdk.io/x/bank"           // import bank as a blank
+	_ "cosmossdk.io/x/staking"        // import staking as a blank
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

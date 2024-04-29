@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"fmt"
-
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -73,7 +71,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	k := keeper.NewAccountKeeper(in.Environment, in.Cdc, in.AccountI, in.AccountsModKeeper, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
-	fmt.Println("Account Keeper", k)
 	m := NewAppModule(in.Cdc, k, in.AccountsModKeeper, in.RandomGenesisAccountsFn)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

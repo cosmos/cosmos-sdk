@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (baseapp) [#20107](https://github.com/cosmos/cosmos-sdk/pull/20107) Avoid header height overwrite block height.
+* (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
 
 ## [v0.50.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.6) - 2024-04-22
 
@@ -69,7 +70,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#19970](https://github.com/cosmos/cosmos-sdk/pull/19970) Fix default config values to use no-op mempool as default.
 * (crypto) [#20027](https://github.com/cosmos/cosmos-sdk/pull/20027) secp256r1 keys now implement gogoproto's customtype interface.
 * (x/bank) [#20028](https://github.com/cosmos/cosmos-sdk/pull/20028) Align query with multi denoms for send-enabled.
-* (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
 
 ## [v0.50.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.5) - 2024-03-12
 

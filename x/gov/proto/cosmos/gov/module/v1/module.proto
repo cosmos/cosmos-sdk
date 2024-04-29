@@ -24,4 +24,8 @@ message Module {
   // max_summary_len defines the maximum proposal summary length.
   // Defaults to 10200 if not explicitly set.
   uint64 max_summary_len = 4;
+
+  // max_vote_options_len defines the maximum number of vote options a proposal can have.
+  // Defaults to 0 if not explicitly set.
+  uint64 max_vote_options_len = 5;
 }

@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package cosmos.autocli.v1;
 
+import "cosmos_proto/cosmos.proto";
 option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 
 // ModuleOptions describes the CLI options for a Cosmos SDK module.
@@ -91,9 +92,7 @@ message RpcCommandOptions {
   // Normally autocli generates a transaction containing the message and broadcast it.
   // However, when true, autocli generates a proposal transaction containing the message and broadcast it.
   // This option is ineffective for query commands.
-  //
-  // Since: client/v2 v2.0.0-beta.2
-  bool gov_proposal = 13;
+  bool gov_proposal = 13 [(cosmos_proto.field_added_in) = "client/v2 v2.0.0-beta.2"];
 }
 
 // FlagOptions are options for flags generated from rpc request fields.

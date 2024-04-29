@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
-	context "context"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"

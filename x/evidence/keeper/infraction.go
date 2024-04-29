@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/x/evidence/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the
@@ -25,7 +26,6 @@ import (
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
 func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
-	logger := k.Logger()
 	consAddr := evidence.GetConsensusAddress(k.stakingKeeper.ConsensusAddressCodec())
 
 	validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
@@ -58,12 +58,12 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 			// allowable but none of the disallowed evidence types.  Instead of
 			// getting this coordination right, it is easier to relax the
 			// constraints and ignore evidence that cannot be handled.
-			logger.Error(fmt.Sprintf("ignore evidence; expected public key for validator %s not found", consAddr))
+			k.Logger.Error(fmt.Sprintf("ignore evidence; expected public key for validator %s not found", consAddr))
 			return nil
 		}
 	}
 
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	// calculate the age of the evidence
 	infractionHeight := evidence.GetHeight()
 	infractionTime := evidence.GetTime()
@@ -73,17 +73,19 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// Reject evidence if the double-sign is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	cp := sdkCtx.ConsensusParams() // TODO: remove in favor of querying consensus module
-	if cp.Evidence != nil {
-		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
-			logger.Info(
+	var res consensusv1.QueryParamsResponse
+	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+		return fmt.Errorf("failed to query consensus params: %w", err)
+	}
+	if res.Params.Evidence != nil {
+		if ageDuration > res.Params.Evidence.MaxAgeDuration && ageBlocks > res.Params.Evidence.MaxAgeNumBlocks {
+			k.Logger.Info(
 				"ignored equivocation; evidence too old",
 				"validator", consAddr,
 				"infraction_height", infractionHeight,
-				"max_age_num_blocks", cp.Evidence.MaxAgeNumBlocks,
+				"max_age_num_blocks", res.Params.Evidence.MaxAgeNumBlocks,
 				"infraction_time", infractionTime,
-				"max_age_duration", cp.Evidence.MaxAgeDuration,
+				"max_age_duration", res.Params.Evidence.MaxAgeDuration,
 			)
 			return nil
 		}
@@ -95,7 +97,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 
 	// ignore if the validator is already tombstoned
 	if k.slashingKeeper.IsTombstoned(ctx, consAddr) {
-		logger.Info(
+		k.Logger.Info(
 			"ignored equivocation; validator already tombstoned",
 			"validator", consAddr,
 			"infraction_height", infractionHeight,
@@ -104,7 +106,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		return nil
 	}
 
-	logger.Info(
+	k.Logger.Info(
 		"confirmed equivocation",
 		"validator", consAddr,
 		"infraction_height", infractionHeight,

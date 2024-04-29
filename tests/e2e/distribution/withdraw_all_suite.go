@@ -40,7 +40,7 @@ func (s *WithdrawAllTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-// TearDownSuite cleans up the curret test network after _each_ test.
+// TearDownSuite cleans up the current test network after _each_ test.
 func (s *WithdrawAllTestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()

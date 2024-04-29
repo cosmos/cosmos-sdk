@@ -61,7 +61,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 		defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeMint,
 		event.NewAttribute(types.AttributeKeyBondedRatio, bondedRatio.String()),
 		event.NewAttribute(types.AttributeKeyInflation, minter.Inflation.String()),

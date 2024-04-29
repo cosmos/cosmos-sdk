@@ -14,15 +14,23 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	_ "cosmossdk.io/x/accounts"
+	_ "cosmossdk.io/x/auth"           // import auth as a blank
+	_ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
+	_ "cosmossdk.io/x/bank"           // import bank as a blank
+	_ "cosmossdk.io/x/staking"        // import staking as a blank
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -149,5 +157,18 @@ func GenNewMsgCreateValidator(
 		stakingtypes.NewDescription(moniker, "", "", "", ""),
 		stakingtypes.NewCommissionRates(commission, math.LegacyOneDec(), math.LegacyOneDec()),
 		minSelfDelegation,
+	)
+}
+
+// MinimumAppConfig defines the minimum of modules required for a call to New to succeed
+func MinimumAppConfig() depinject.Config {
+	return configurator.NewAppConfig(
+		configurator.AccountsModule(),
+		configurator.AuthModule(),
+		configurator.BankModule(),
+		configurator.GenutilModule(),
+		configurator.StakingModule(),
+		configurator.ConsensusModule(),
+		configurator.TxModule(),
 	)
 }

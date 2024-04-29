@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -277,4 +278,22 @@ func TestJSONUpdate(t *testing.T) {
 	require.NoError(t, err)
 	space.Get(ctx, key, &param)
 	require.Equal(t, paramJSON{40964096, "goodbyeworld"}, param)
+}
+
+func TestDeleteSubspace(t *testing.T) {
+	_, _, _, _, keeper := testComponents()
+	name := "test"
+
+	t.Run("should return an error if DeleteSubspace is invoked on a non-existent subspace", func(t *testing.T) {
+		err := keeper.DeleteSubspace(name)
+		assert.Error(t, err)
+	})
+	t.Run("should return no error if DeleteSubspace is invoked on a subspace", func(t *testing.T) {
+		keeper.Subspace(name)
+		err := keeper.DeleteSubspace(name)
+		assert.NoError(t, err)
+		_, exists := keeper.GetSubspace(name)
+		assert.False(t, exists)
+	})
+
 }

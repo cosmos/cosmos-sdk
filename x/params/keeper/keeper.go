@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,4 +72,13 @@ func (k Keeper) GetSubspaces() []types.Subspace {
 	}
 
 	return spaces
+}
+
+func (k Keeper) DeleteSubspace(s string) error {
+	_, ok := k.spaces[s]
+	if !ok {
+		return fmt.Errorf("can not delete subspace %s because it does not exist", s)
+	}
+	delete(k.spaces, s)
+	return nil
 }

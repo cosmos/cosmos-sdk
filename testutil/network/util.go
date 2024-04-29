@@ -49,11 +49,15 @@ func startInProcess(cfg Config, val *Validator) error {
 	appGenesisProvider := func() (node.ChecksummedGenesisDoc, error) {
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cmtCfg.GenesisFile())
 		if err != nil {
-			return node.ChecksummedGenesisDoc{}, err
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
 		}
 		gen, err := appGenesis.ToGenesisDoc()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{}, err
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
 		}
 		return node.ChecksummedGenesisDoc{GenesisDoc: gen}, nil
 	}

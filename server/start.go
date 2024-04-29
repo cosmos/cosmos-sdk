@@ -422,21 +422,29 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 	return func() (node.ChecksummedGenesisDoc, error) {
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
 		if err != nil {
-			return node.ChecksummedGenesisDoc{}, err
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
 		}
 
 		gen, err := appGenesis.ToGenesisDoc()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{}, err
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
 		}
 		genbz, err := gen.AppState.MarshalJSON()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{}, err
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
 		}
 
 		bz, err := json.Marshal(genbz)
 		if err != nil {
-			return node.ChecksummedGenesisDoc{}, err
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
 		}
 		sum := sha256.Sum256(bz)
 

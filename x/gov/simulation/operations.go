@@ -342,6 +342,7 @@ func SimulateMsgDeposit(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to get proposal"), nil, err
 		}
 
+		//nolint:staticcheck // SA1019: ignore this!
 		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, p.Expedited)
 		switch {
 		case skip:

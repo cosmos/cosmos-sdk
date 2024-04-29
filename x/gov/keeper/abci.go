@@ -222,6 +222,7 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
 			proposal.ProposalType = v1.ProposalType_PROPOSAL_TYPE_STANDARD
+			//nolint:staticcheck // SA1019: ignore this!
 			proposal.Expedited = false // can be removed as never read but kept for state coherence
 			params, err := k.Params.Get(ctx)
 			if err != nil {

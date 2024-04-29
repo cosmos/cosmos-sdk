@@ -18,7 +18,7 @@ require (
 	google.golang.org/protobuf v1.33.0
 )
 
-require cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000 // indirect
+require cosmossdk.io/x/distribution v0.0.0-20240429083151-cb50b4caa218 // indirect
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20240130113600-88ef6483f90f.1 // indirect

@@ -164,7 +164,10 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
+require (
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
+	cosmossdk.io/x/distribution v0.0.0-20240429083151-cb50b4caa218 // indirect
+)
 
 replace github.com/cosmos/cosmos-sdk => ../../.
 

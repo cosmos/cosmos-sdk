@@ -180,7 +180,7 @@ func (bva *BaseLockup) Delegate(
 		return nil, err
 	}
 
-	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
+	return &types.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
 func (bva *BaseLockup) Undelegate(
@@ -213,13 +213,13 @@ func (bva *BaseLockup) Undelegate(
 		return nil, err
 	}
 
-	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
+	return &types.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
 func (bva *BaseLockup) WithdrawReward(
-	ctx context.Context, msg *lockuptypes.MsgWithdrawReward,
+	ctx context.Context, msg *types.MsgWithdrawReward,
 ) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
+	*types.MsgExecuteMessagesResponse, error,
 ) {
 	err := bva.checkSender(ctx, msg.Sender)
 	if err != nil {
@@ -280,7 +280,7 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
+	return &types.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
 // WithdrawUnlockedCoins allow owner to withdraw the unlocked token for a specific denoms to an

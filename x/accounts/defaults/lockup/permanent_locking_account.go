@@ -132,7 +132,11 @@ func (plva PermanentLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 	accountstd.RegisterExecuteHandler(builder, plva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, plva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, plva.ClawbackFunds)
-	plva.BaseLockup.RegisterExecuteHandlers(builder)
+
+	baseLockup, ok := plva.BaseAccount.(*BaseLockup)
+	if ok {
+		baseLockup.RegisterExecuteHandlers(builder)
+	}
 }
 
 func (plva PermanentLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

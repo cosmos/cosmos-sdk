@@ -341,7 +341,11 @@ func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 	accountstd.RegisterExecuteHandler(builder, pva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, pva.WithdrawUnlockedCoins)
 	accountstd.RegisterExecuteHandler(builder, pva.ClawbackFunds)
-	pva.BaseLockup.RegisterExecuteHandlers(builder)
+
+	baseLockup, ok := pva.BaseAccount.(*BaseLockup)
+	if ok {
+		baseLockup.RegisterExecuteHandlers(builder)
+	}
 }
 
 func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

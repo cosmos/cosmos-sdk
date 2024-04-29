@@ -116,17 +116,6 @@ func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockT
 	unlockedCoins = sdk.Coins{}
 	lockedCoins = sdk.Coins{}
 
-	// We must handle the case where the start time for a lockup account has
-	// been set into the future or when the start of the chain is not exactly
-	// known.
-	startTime, err := cva.StartTime.Get(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	endTime, err := cva.GetEndTime().Get(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
 	var originalVesting sdk.Coins
 	err = IterateCoinEntries(ctx, cva.GetOriginalFunds(), func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
@@ -240,7 +229,11 @@ func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 	accountstd.RegisterExecuteHandler(builder, cva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, cva.WithdrawUnlockedCoins)
 	accountstd.RegisterExecuteHandler(builder, cva.ClawbackFunds)
-	cva.BaseLockup.RegisterExecuteHandlers(builder)
+
+	baseLockup, ok := cva.BaseAccount.(*BaseLockup)
+	if ok {
+		baseLockup.RegisterExecuteHandlers(builder)
+	}
 }
 
 func (cva ContinuousLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

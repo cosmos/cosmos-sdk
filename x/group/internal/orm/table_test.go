@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -231,7 +232,7 @@ func TestDelete(t *testing.T) {
 
 			// then
 			var loaded testdata.TableModel
-			if spec.expErr == sdkerrors.ErrNotFound {
+			if errors.Is(spec.expErr, sdkerrors.ErrNotFound) {
 				require.NoError(t, myTable.GetOne(store, EncodeSequence(1), &loaded))
 				assert.Equal(t, initValue, loaded)
 			} else {

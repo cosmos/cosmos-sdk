@@ -79,6 +79,17 @@ message MsgUndelegate {
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
+// MsgWithdrawReward defines a message that enable lockup account to execute withdraw reward message
+message MsgWithdrawReward {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string sender            = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
 // MsgSend defines a message that enable lockup account to execute send message
 message MsgSend {
   option (cosmos.msg.v1.signer) = "sender";

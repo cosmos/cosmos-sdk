@@ -29,11 +29,16 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 		},
 		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
-
-	if msg.Feature != nil {
+	if msg.Feature != nil && msg.Feature.VoteExtensionsEnableHeight != nil && msg.Feature.PbtsEnableHeight != nil {
 		cp.Feature = &cmtproto.FeatureParams{
 			VoteExtensionsEnableHeight: msg.Feature.VoteExtensionsEnableHeight,
 			PbtsEnableHeight:           msg.Feature.PbtsEnableHeight,
+		}
+	}
+	if msg.Synchrony != nil {
+		cp.Synchrony = &cmtproto.SynchronyParams{
+			Precision:    msg.Synchrony.Precision,
+			MessageDelay: msg.Synchrony.MessageDelay,
 		}
 	}
 

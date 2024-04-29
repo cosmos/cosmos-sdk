@@ -31,8 +31,6 @@ type MsgClient interface {
 	VerifyInvariant(ctx context.Context, in *MsgVerifyInvariant, opts ...grpc.CallOption) (*MsgVerifyInvariantResponse, error)
 	// UpdateParams defines a governance operation for updating the x/crisis module
 	// parameters. The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 }
 
@@ -70,8 +68,6 @@ type MsgServer interface {
 	VerifyInvariant(context.Context, *MsgVerifyInvariant) (*MsgVerifyInvariantResponse, error)
 	// UpdateParams defines a governance operation for updating the x/crisis module
 	// parameters. The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

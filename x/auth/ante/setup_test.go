@@ -28,19 +28,19 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	require.NoError(t, suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(101)
+	suite.txBuilder.SetGasLimit(10000000000)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator()
+	sud := ante.NewSetUpContextDecorator(suite.env)
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	suite.ctx = suite.ctx.
 		WithBlockHeight(1).
 		WithGasMeter(storetypes.NewGasMeter(0)).
-		WithConsensusParams(cmtproto.ConsensusParams{
+		WithConsensusParams(cmtproto.ConsensusParams{ // TODO: This is being ignored
 			Block: &cmtproto.BlockParams{
 				MaxGas: 100,
 			},
@@ -69,7 +69,7 @@ func TestSetup(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator()
+	sud := ante.NewSetUpContextDecorator(suite.env)
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
@@ -104,7 +104,7 @@ func TestRecoverPanic(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator()
+	sud := ante.NewSetUpContextDecorator(suite.env)
 	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})
 
 	// Set height to non-zero value for GasMeter to be set

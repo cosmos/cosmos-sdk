@@ -1813,7 +1813,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 				return nil, err
 			}
 
-			cp := ctx.ConsensusParams()
+			cp := ctx.ConsensusParams() // nolint:staticcheck // ignore linting error
 			extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 			if extsEnabled {
 				req.Txs = append(req.Txs, []byte("some-tx-that-does-something-from-votes"))

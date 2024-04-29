@@ -12,9 +12,9 @@ import (
 	govclitestutil "cosmossdk.io/x/gov/client/testutil"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

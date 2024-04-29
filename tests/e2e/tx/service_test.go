@@ -17,7 +17,6 @@ import (
 	authtest "cosmossdk.io/x/auth/client/testutil"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 	banktypes "cosmossdk.io/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -28,6 +27,7 @@ import (
 	e2etestutil "github.com/cosmos/cosmos-sdk/tests/e2e/utils"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

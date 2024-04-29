@@ -12,7 +12,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/client/cli"
 	minttypes "cosmossdk.io/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )

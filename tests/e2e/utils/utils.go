@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	authcli "cosmossdk.io/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

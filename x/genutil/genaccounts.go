@@ -10,10 +10,10 @@ import (
 	authvesting "cosmossdk.io/x/auth/vesting/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // AddGenesisAccount adds a genesis account to the genesis state.

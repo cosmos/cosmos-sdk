@@ -8,9 +8,9 @@ import (
 
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"

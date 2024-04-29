@@ -11,12 +11,12 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution/client/cli"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

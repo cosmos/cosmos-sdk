@@ -143,11 +143,11 @@ func GenNewMsgCreateValidator(
 	selfDelegation sdk.Coin, moniker string, commission math.LegacyDec, minSelfDelegation math.Int,
 ) (*stakingtypes.MsgCreateValidator, error) {
 	return stakingtypes.NewMsgCreateValidator(
-		valAddr, 
-		pubKey, 
-		selfDelegation, 
-		stakingtypes.NewDescription(moniker, "", "", "", ""), 
-		stakingtypes.NewCommissionRates(commission, math.LegacyOneDec(), math.LegacyOneDec()), 
+		valAddr,
+		pubKey,
+		selfDelegation,
+		stakingtypes.NewDescription(moniker, "", "", "", ""),
+		stakingtypes.NewCommissionRates(commission, math.LegacyOneDec(), math.LegacyOneDec()),
 		minSelfDelegation,
 	)
 }

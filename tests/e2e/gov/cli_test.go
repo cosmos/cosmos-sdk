@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/simapp"
 	v1 "cosmossdk.io/x/gov/types/v1"
+
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
-	github.com/cometbft/cometbft v0.37.5
+	github.com/cometbft/cometbft v0.37.6
 	github.com/cosmos/cosmos-sdk v0.47.0-rc3
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/spf13/cobra v1.8.0
@@ -111,11 +111,11 @@ require (
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/term v0.15.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto v0.0.0-20240102182953-50ed04b92917 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0 // indirect

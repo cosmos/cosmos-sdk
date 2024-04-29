@@ -32,7 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"

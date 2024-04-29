@@ -16,6 +16,7 @@ import (
 )
 
 func setup(t *testing.T, ctx context.Context, ss store.KVStoreService) *BaseLockup {
+	t.Helper()
 	deps := makeMockDependencies(ss)
 	owner := "owner"
 

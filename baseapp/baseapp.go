@@ -462,7 +462,7 @@ func (app *BaseApp) setTrace(trace bool) {
 }
 
 func (app *BaseApp) setIndexEvents(ie []string) {
-	app.indexEvents = make(map[string]struct{})
+	app.indexEvents = make(map[string]struct{}, len(ie))
 
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}

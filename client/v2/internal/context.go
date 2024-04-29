@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"cosmossdk.io/client/v2/tx"
+
 	"cosmossdk.io/core/address"
 	"encoding/json"
 	"fmt"
@@ -38,29 +39,30 @@ type Context struct {
 	KeyringOptions        []keyring.Option
 	KeyringDir            string
 	KeyringDefaultKeyName string
-	Output                io.Writer
-	OutputFormat          string
-	Height                int64
-	HomeDir               string
+
+	Output       io.Writer
+	OutputFormat string
+	Height       int64
+	HomeDir      string
 	// From is a name or an address of a keyring account used to set FromName and FromAddress fields.
 	// Should be set by the "from" flag.
 	From string
 	// Name of a keyring account used to sign transactions.
 	FromName string
 	// Address of a keyring account used to sign transactions.
-	FromAddress       string
-	BroadcastMode     string
-	SignModeStr       string
-	UseLedger         bool
-	Simulate          bool
-	GenerateOnly      bool
-	Offline           bool
-	SkipConfirm       bool
-	TxConfig          tx.TxConfig
-	AccountRetriever  tx.AccountRetriever
-	NodeURI           string
-	FeePayer          string
-	FeeGranter        string
+	FromAddress   string
+	BroadcastMode string
+	SignModeStr   string
+
+	Simulate     bool
+	GenerateOnly bool
+	Offline      bool
+	SkipConfirm  bool
+	NodeURI      string
+
+	FeePayer   string
+	FeeGranter string
+
 	Viper             *viper.Viper
 	LedgerHasProtobuf bool
 	PreprocessTxHook  PreprocessTxFn
@@ -159,12 +161,6 @@ func (ctx Context) WithGRPCClient(grpcClient *grpc.ClientConn) Context {
 	return ctx
 }
 
-// WithUseLedger returns a copy of the context with an updated UseLedger flag.
-func (ctx Context) WithUseLedger(useLedger bool) Context {
-	ctx.UseLedger = useLedger
-	return ctx
-}
-
 // WithChainID returns a copy of the context with an updated chain ID.
 func (ctx Context) WithChainID(chainID string) Context {
 	ctx.ChainID = chainID
@@ -254,18 +250,6 @@ func (ctx Context) WithSignModeStr(signModeStr string) Context {
 // value.
 func (ctx Context) WithSkipConfirmation(skip bool) Context {
 	ctx.SkipConfirm = skip
-	return ctx
-}
-
-// WithTxConfig returns the context with an updated TxConfig
-func (ctx Context) WithTxConfig(generator tx.TxConfig) Context {
-	ctx.TxConfig = generator
-	return ctx
-}
-
-// WithAccountRetriever returns the context with an updated AccountRetriever
-func (ctx Context) WithAccountRetriever(retriever tx.AccountRetriever) Context {
-	ctx.AccountRetriever = retriever
 	return ctx
 }
 

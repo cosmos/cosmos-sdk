@@ -4,8 +4,9 @@ import (
 	"context"
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	tx "cosmossdk.io/client/v2/internal"
 	"cosmossdk.io/client/v2/internal/offchain"
-	"github.com/cosmos/cosmos-sdk/client/V2/tx"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

@@ -1,6 +1,7 @@
-package signing
+package offchain
 
 import (
+	"cosmossdk.io/client/v2/internal/testpb"
 	"encoding/hex"
 	"strings"
 	"testing"
@@ -11,7 +12,6 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/tx/internal/testpb"
 )
 
 var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{

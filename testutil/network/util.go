@@ -19,16 +19,16 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
-	authtypes "cosmossdk.io/x/auth/types"
-	banktypes "cosmossdk.io/x/bank/types"
+	// authtypes "cosmossdk.io/x/auth/types"
+	// banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func startInProcess(cfg Config, val *Validator) error {
@@ -149,8 +149,8 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 			return err
 		}
 
-		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator,
+		appState, err := genutil.GenAppStateFromConfigWithEmptyBalIterator(cfg.Codec, cfg.TxConfig,
+			cmtCfg, initCfg, appGenesis, genutiltypes.DefaultMessageValidator,
 			cfg.ValidatorAddressCodec, cfg.AddressCodec)
 		if err != nil {
 			return err
@@ -165,27 +165,9 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 	return nil
 }
 
-func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
-	// set the accounts in the genesis state
-	var authGenState authtypes.GenesisState
-	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.AuthModuleName], &authGenState)
-
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	if err != nil {
-		return err
-	}
-
-	authGenState.Accounts = append(authGenState.Accounts, accounts...)
-	cfg.GenesisState[testutil.AuthModuleName] = cfg.Codec.MustMarshalJSON(&authGenState)
-
-	// set the balances in the genesis state
-	var bankGenState banktypes.GenesisState
-	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.BankModuleName], &bankGenState)
-
-	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
-	cfg.GenesisState[testutil.BankModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
-
-	appGenStateJSON, err := json.MarshalIndent(cfg.GenesisState, "", "  ")
+func initGenFiles(cfg Config, genAccs []sdk.AccAddress, genFiles []string) error {
+	genState, err := genutil.InitGenFileFromAddrs(genAccs, cfg.GenesisState, cfg.Codec, cfg.ChainID, cfg.BondDenom, cfg.StakingTokens, cfg.AccountTokens)
+	appGenStateJSON, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return err
 	}

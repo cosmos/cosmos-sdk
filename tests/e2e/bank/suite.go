@@ -8,9 +8,9 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp/network"
 	"cosmossdk.io/x/bank/client/cli"
 	"cosmossdk.io/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

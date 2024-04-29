@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	bankexported "cosmossdk.io/x/bank/exported"
+	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,6 +22,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
+
+// GenAppStateFromConfig gets the genesis app state from the config
+func GenAppStateFromConfigWithEmptyBalIterator(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,
+	config *cfg.Config, initCfg types.InitConfig, genesis *types.AppGenesis,
+	validator types.MessageValidator, valAddrCodec address.ValidatorAddressCodec, addressCodec address.Codec,
+) (appState json.RawMessage, err error) {
+	return GenAppStateFromConfig(cdc, txEncodingConfig, config, initCfg, genesis, banktypes.GenesisBalancesIterator{}, validator, valAddrCodec, addressCodec)
+}
 
 // GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,

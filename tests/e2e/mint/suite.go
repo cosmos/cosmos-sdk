@@ -4,8 +4,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp/network"
 	minttypes "cosmossdk.io/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
 type E2ETestSuite struct {

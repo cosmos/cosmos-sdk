@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp/network"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

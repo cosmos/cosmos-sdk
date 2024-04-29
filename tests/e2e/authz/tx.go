@@ -10,7 +10,6 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp/network"
 	authcli "cosmossdk.io/x/auth/client/cli"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/client/cli"
@@ -21,6 +20,7 @@ import (
 	govv1 "cosmossdk.io/x/gov/types/v1"
 	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

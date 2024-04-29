@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // AddGenesisAccount adds a genesis account to the genesis state.
@@ -150,4 +151,8 @@ func AddGenesisAccount(
 
 	appGenesis.AppState = appStateJSON
 	return ExportGenesisFile(appGenesis, genesisFileURL)
+}
+
+func GenAccRetriver() client.AccountRetriever {
+	return authtypes.AccountRetriever{}
 }

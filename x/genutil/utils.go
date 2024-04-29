@@ -14,8 +14,13 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 
+	"cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
+	banktypes "cosmossdk.io/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -91,4 +96,42 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 	}
 
 	return nodeID, valPubKey, nil
+}
+
+func InitGenFileFromAddrs(addrs []sdk.AccAddress, genState map[string]json.RawMessage, codec codec.Codec, chainId string, bondDenom string, stakeAmount, accAmount math.Int) (map[string]json.RawMessage, error) {
+	var (
+		genAccounts []authtypes.GenesisAccount
+		genBalances []banktypes.Balance
+		authGenState authtypes.GenesisState
+		bankGenState banktypes.GenesisState
+	)
+
+	for i := 0; i < len(addrs); i++ {
+
+		balances := sdk.NewCoins(
+			sdk.NewCoin(fmt.Sprintf("%stoken", fmt.Sprintf("node%d", i)), accAmount),
+			sdk.NewCoin(bondDenom, stakeAmount),
+		)
+
+		genBalances = append(genBalances, banktypes.Balance{Address: addrs[i].String(), Coins: balances.Sort()})
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addrs[i], nil, 0, 0))
+	}
+
+	codec.MustUnmarshalJSON(genState[authtypes.ModuleName], &authGenState)
+
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	if err != nil {
+		return nil, err
+	}
+
+	authGenState.Accounts = append(authGenState.Accounts, accounts...)
+	genState[authtypes.ModuleName] = codec.MustMarshalJSON(&authGenState)
+
+	// set the balances in the genesis state
+	codec.MustUnmarshalJSON(genState[banktypes.ModuleName], &bankGenState)
+
+	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
+	genState[banktypes.ModuleName] = codec.MustMarshalJSON(&bankGenState)
+
+	return genState, nil
 }

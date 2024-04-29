@@ -27,11 +27,12 @@ import (
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"           // import auth as a blank
-	_ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
-	authtypes "cosmossdk.io/x/auth/types"
+
+	// _ "cosmossdk.io/x/auth"           // import auth as a blank
+	// _ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
+	// authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank" // import bank as a blank
-	banktypes "cosmossdk.io/x/bank/types"
+	// banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/staking" // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -145,7 +146,7 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 		TxConfig:              fixture.EncodingConfig.TxConfig,
 		LegacyAmino:           fixture.EncodingConfig.Amino,
 		InterfaceRegistry:     fixture.EncodingConfig.InterfaceRegistry,
-		AccountRetriever:      authtypes.AccountRetriever{},
+		AccountRetriever:      genutil.GenAccRetriver(),
 		AppConstructor:        fixture.AppConstructor,
 		GenesisState:          fixture.GenesisState,
 		TimeoutCommit:         2 * time.Second,
@@ -324,9 +325,8 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	valPubKeys := make([]cryptotypes.PubKey, cfg.NumValidators)
 
 	var (
-		genAccounts []authtypes.GenesisAccount
-		genBalances []banktypes.Balance
-		genFiles    []string
+		genAccs  []sdk.AccAddress
+		genFiles []string
 	)
 
 	buf := bufio.NewReader(os.Stdin)
@@ -460,6 +460,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		if err != nil {
 			return nil, err
 		}
+		genAccs = append(genAccs, addr)
 
 		// if PrintMnemonic is set to true, we print the first validator node's secret to the network's logger
 		// for debugging and manual testing
@@ -479,14 +480,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			return nil, err
 		}
 
-		balances := sdk.NewCoins(
-			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), cfg.AccountTokens),
-			sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-		)
-
 		genFiles = append(genFiles, cmtCfg.GenesisFile())
-		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
-		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
 		if err != nil {
@@ -580,7 +574,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		}
 	}
 
-	err := initGenFiles(cfg, genAccounts, genBalances, genFiles)
+	err := initGenFiles(cfg, genAccs, genFiles)
 	if err != nil {
 		return nil, err
 	}

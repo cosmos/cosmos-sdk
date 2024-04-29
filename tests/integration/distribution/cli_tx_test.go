@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/simapp/network"
 	"cosmossdk.io/x/distribution/client/cli"
 	minttypes "cosmossdk.io/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -23,8 +23,8 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/network"
 	"cosmossdk.io/x/staking"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

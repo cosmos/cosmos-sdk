@@ -86,7 +86,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/tests/integration/bank
 
 ## Simulations
 
-Simulations uses as well a minimal application, built with [`depinject`](../packages/01-depinject.md):
+Simulations uses as well a minimal application, built with [`depinject`](https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/build/packages/01-depinject.md):
 
 :::note
 You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/slashing/app_test.go#L54-L62). There is no difference between those two ways, use whichever you prefer.

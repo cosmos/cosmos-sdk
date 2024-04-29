@@ -8,7 +8,7 @@ import (
 )
 
 func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, error) {
-	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil || msg.Abci == nil {
+	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil {
 		return cmtproto.ConsensusParams{}, errors.New("all parameters must be present")
 	}
 
@@ -27,11 +27,16 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 		},
 		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
-
-	if msg.Feature != nil {
+	if msg.Feature != nil && msg.Feature.VoteExtensionsEnableHeight != nil && msg.Feature.PbtsEnableHeight != nil {
 		cp.Feature = &cmtproto.FeatureParams{
 			VoteExtensionsEnableHeight: msg.Feature.VoteExtensionsEnableHeight,
 			PbtsEnableHeight:           msg.Feature.PbtsEnableHeight,
+		}
+	}
+	if msg.Synchrony != nil {
+		cp.Synchrony = &cmtproto.SynchronyParams{
+			Precision:    msg.Synchrony.Precision,
+			MessageDelay: msg.Synchrony.MessageDelay,
 		}
 	}
 

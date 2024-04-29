@@ -75,6 +75,8 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 					Abci:      defaultConsensusParams.Abci,
+					Synchrony: defaultConsensusParams.Synchrony,
+					Feature:   defaultConsensusParams.Feature,
 				}
 				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
@@ -86,6 +88,8 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Evidence:  defaultConsensusParams.Evidence,
 					Version:   defaultConsensusParams.Version,
 					Abci:      defaultConsensusParams.Abci,
+					Synchrony: defaultConsensusParams.Synchrony,
+					Feature:   defaultConsensusParams.Feature,
 				},
 			},
 			true,
@@ -102,6 +106,11 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Abci: &cmtproto.ABCIParams{ //nolint: staticcheck // needs update in a follow up pr
 						VoteExtensionsEnableHeight: 1234,
 					},
+					Synchrony: defaultConsensusParams.Synchrony,
+					Feature: &cmtproto.FeatureParams{
+						VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1234},
+						PbtsEnableHeight:           &gogotypes.Int64Value{Value: 0},
+					},
 				}
 				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
@@ -112,8 +121,11 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 					Version:   defaultConsensusParams.Version,
+					Abci:      defaultConsensusParams.Abci,
+					Synchrony: defaultConsensusParams.Synchrony,
 					Feature: &cmtproto.FeatureParams{
 						VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1234},
+						PbtsEnableHeight:           &gogotypes.Int64Value{Value: 0},
 					},
 				},
 			},

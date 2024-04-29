@@ -524,7 +524,7 @@ func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx context.Context) cmtproto.ConsensusParams {
 	if app.paramStore == nil {
 		return cmtproto.ConsensusParams{}
 	}
@@ -543,7 +543,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 
 // StoreConsensusParams sets the consensus parameters to the BaseApp's param
 // store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
+func (app *BaseApp) StoreConsensusParams(ctx context.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
 		return errors.New("cannot store consensus params with no params store set")
 	}

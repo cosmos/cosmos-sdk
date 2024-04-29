@@ -26,6 +26,7 @@ func (msg ConsensusMsgParams) ToProtoConsensusParams() (cmtproto.ConsensusParams
 		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
+
 		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
 

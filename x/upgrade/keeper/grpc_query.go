@@ -32,17 +32,17 @@ func (k Keeper) AppliedPlan(ctx context.Context, req *types.QueryAppliedPlanRequ
 }
 
 // UpgradedConsensusState implements the Query/UpgradedConsensusState gRPC method
-func (k Keeper) UpgradedConsensusState(ctx context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
+func (k Keeper) UpgradedConsensusState(ctx context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
 	consState, err := k.GetUpgradedConsensusState(ctx, req.LastHeight)
 	if err != nil {
 		if errors.Is(err, types.ErrNoUpgradedConsensusStateFound) {
-			return &types.QueryUpgradedConsensusStateResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
+			return &types.QueryUpgradedConsensusStateResponse{}, nil
 		}
 
 		return nil, err
 	}
 
-	return &types.QueryUpgradedConsensusStateResponse{ //nolint:staticcheck // we're using a deprecated call for compatibility
+	return &types.QueryUpgradedConsensusStateResponse{
 		UpgradedConsensusState: consState,
 	}, nil
 }

@@ -128,7 +128,7 @@ func TestTrackingDelegation(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds"),
+			sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins for staking denom or insufficient funds"),
 		},
 		{
 			"zero amount",
@@ -137,7 +137,7 @@ func TestTrackingDelegation(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins or insufficient funds"),
+			sdkerrors.ErrInvalidCoins.Wrap("delegation attempt with zero coins for staking denom or insufficient funds"),
 		},
 	}
 
@@ -200,7 +200,7 @@ func TestTrackingUnDelegation(t *testing.T) {
 			sdk.Coins{sdk.NewCoin("test", math.NewInt(0))},
 			nil,
 			nil,
-			sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins"),
+			sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins for staking denom"),
 		},
 	}
 

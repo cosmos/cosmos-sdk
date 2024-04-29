@@ -177,10 +177,10 @@ func (dva DelayedLockingAccount) RegisterInitHandler(builder *accountstd.InitBui
 
 func (dva DelayedLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, dva.Delegate)
-	accountstd.RegisterExecuteHandler(builder, dva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, dva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, dva.WithdrawUnlockedCoins)
 	accountstd.RegisterExecuteHandler(builder, dva.ClawbackFunds)
+	dva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (dva DelayedLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

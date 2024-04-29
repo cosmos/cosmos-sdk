@@ -35,6 +35,10 @@ func (s *E2ETestSuite) TestPermanentLockingAccount() {
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
+	vals, err := app.StakingKeeper.GetAllValidators(ctx)
+	require.NoError(t, err)
+	val := vals[0]
+
 	t.Run("error - execute message, wrong sender", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    addr,
@@ -62,9 +66,6 @@ func (s *E2ETestSuite) TestPermanentLockingAccount() {
 		require.NotNil(t, err)
 	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
-		vals, err := app.StakingKeeper.GetAllValidators(ctx)
-		require.NoError(t, err)
-		val := vals[0]
 		msg := &types.MsgDelegate{
 			Sender:           ownerAddrStr,
 			ValidatorAddress: val.OperatorAddress,
@@ -81,6 +82,19 @@ func (s *E2ETestSuite) TestPermanentLockingAccount() {
 		)
 		require.NoError(t, err)
 		require.NotNil(t, del)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(100)))
+	})
+	t.Run("ok - execute withdraw reward message", func(t *testing.T) {
+		msg := &types.MsgWithdrawReward{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
 	})
 	t.Run("ok - execute undelegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -101,6 +115,11 @@ func (s *E2ETestSuite) TestPermanentLockingAccount() {
 		)
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 	})
 
 	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})

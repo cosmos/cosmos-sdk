@@ -50,7 +50,7 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *types.MsgInit
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
 
-	if msg.EndTime.Before(msg.StartTime) || msg.EndTime.Equal(msg.StartTime) {
+	if !msg.EndTime.After(msg.StartTime) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start before end)")
 	}
 
@@ -130,21 +130,16 @@ func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockT
 	var originalVesting sdk.Coins
 	err = IterateCoinEntries(ctx, cva.GetOriginalFunds(), func(key string, value math.Int) (stop bool, err error) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		vestedCoin, vestingCoin, err := cva.GetLockCoinInfoWithDenom(ctx, blockTime, key)
+		unlockedCoin, lockedCoin, err := cva.GetLockCoinInfoWithDenom(ctx, blockTime, key)
 		if err != nil {
 			return true, err
 		}
-		unlockedCoins = append(unlockedCoins, *vestedCoin)
-		lockedCoins = append(lockedCoins, *vestingCoin)
+		unlockedCoins = append(unlockedCoins, *unlockedCoin)
+		lockedCoins = append(lockedCoins, *lockedCoin)
 		return false, nil
 	})
 	if err != nil {
 		return nil, nil, err
-	}
-	if startTime.After(blockTime) {
-		return unlockedCoins, originalVesting, nil
-	} else if endTime.Before(blockTime) {
-		return originalVesting, lockedCoins, nil
 	}
 
 	return unlockedCoins, lockedCoins, nil
@@ -242,10 +237,10 @@ func (cva ContinuousLockingAccount) RegisterInitHandler(builder *accountstd.Init
 
 func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, cva.Delegate)
-	accountstd.RegisterExecuteHandler(builder, cva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, cva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, cva.WithdrawUnlockedCoins)
 	accountstd.RegisterExecuteHandler(builder, cva.ClawbackFunds)
+	cva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (cva ContinuousLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

@@ -76,9 +76,25 @@ func (k Keeper) GetAuthzRules(ctx context.Context) (authz.AuthzRules, error) {
 		return authz.AuthzRules{}, err
 	}
 
-	if bz == nil {
-		return authz.AuthzRules{}, sdkerrors.ErrNotFound.Wrap("nil value")
+	authzRules1 := authz.AuthzRules{
+		Send: authz.SendAuthzRules{
+			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
+			BlockedRecipients: []string{
+				"cosmos1rnr5jrt4exl0samwj0yegv99jeskl0hsge5zwt",
+			},
+		},
+		Generic: authz.GenericAuthzRules{
+			BlockedMessages: []string{"cosmos.bank.v1beta1.MsgDelegate"},
+		},
 	}
+
+	if bz == nil {
+		return authzRules1, nil
+	}
+
+	// if bz == nil {
+	// 	return authz.AuthzRules{}, authz.ErrEmptyAuthzRules
+	// }
 
 	var authzRules authz.AuthzRules
 	err = k.cdc.Unmarshal(bz, &authzRules)

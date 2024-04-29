@@ -1,4 +1,4 @@
-//go:build app_v1
+//go:build !app_v1
 
 package simapp
 
@@ -522,6 +522,7 @@ func NewSimApp(
 	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
+
 	app.setAnteHandler(txConfig)
 
 	// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
@@ -566,6 +567,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 		HandlerOptions{
 			ante.HandlerOptions{
 				AccountKeeper:   app.AccountKeeper,
+				AuthzKeeper:     app.AuthzKeeper,
 				BankKeeper:      app.BankKeeper,
 				SignModeHandler: txConfig.SignModeHandler(),
 				FeegrantKeeper:  app.FeeGrantKeeper,

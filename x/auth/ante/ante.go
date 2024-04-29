@@ -14,6 +14,7 @@ import (
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
 	AccountKeeper          AccountKeeper
+	AuthzKeeper            AuthzKeeper
 	BankKeeper             types.BankKeeper
 	ExtensionOptionChecker ExtensionOptionChecker
 	FeegrantKeeper         FeegrantKeeper

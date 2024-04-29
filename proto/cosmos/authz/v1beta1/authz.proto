@@ -55,6 +55,9 @@ message AuthzRules {
 
   // Stake authz rules
   StakeAuthzRules stake = 2 [(gogoproto.nullable) = false];
+
+  // Generic authz rules
+  GenericAuthzRules generic = 3 [(gogoproto.nullable) = false];
 }
 
 // Send authz rules
@@ -71,4 +74,9 @@ message SendAuthzRules {
 // Stake authz rules
 message StakeAuthzRules {
   repeated string blocked_validators = 1;
+}
+
+// Generic authz rules
+message GenericAuthzRules {
+  repeated string blocked_messages = 1;
 }

@@ -37,9 +37,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [State Compatible]
+### [State Breaking]
+
+### [State Compatible]
+
+* (perf) [#601](https://github.com/osmosis-labs/cosmos-sdk/pull/601) Don't run ValidateBasic on recheck
 
 ## v24
+
+## [v0.47.5-v24-osmo-5](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-5)
+
+* (iavl) [#593](https://github.com/osmosis-labs/cosmos-sdk/pull/593) IAVL async pruning
+
+## [v0.47.5-v24-osmo-4](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-4)
+
+* (iavl) [#594](https://github.com/osmosis-labs/cosmos-sdk/pull/594) IAVL bump to fix legacy node key bug
 
 ## [v0.47.5-v24-osmo-3](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v24-osmo-3)
 
@@ -52,7 +64,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## IAVL v23 v1 Releases
 
-## [Unreleased IAVL v1]
+## [v0.47.5-v23-osmo-9-iavl-v1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-9-iavl-v1)
+
+* (iavl) [#593](https://github.com/osmosis-labs/cosmos-sdk/pull/593) IAVL async pruning
 
 ## [v0.47.5-v23-osmo-8-iavl-v1](https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v23-osmo-8-iavl-v1)
 

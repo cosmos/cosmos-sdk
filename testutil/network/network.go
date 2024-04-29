@@ -26,15 +26,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	_ "cosmossdk.io/x/accounts"
-
-	// _ "cosmossdk.io/x/auth"           // import auth as a blank
-	// _ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
-	// authtypes "cosmossdk.io/x/auth/types"
-	_ "cosmossdk.io/x/bank" // import bank as a blank
-	// banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/staking" // import staking as a blank
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -487,12 +478,12 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			return nil, err
 		}
 
-		createValMsg, err := stakingtypes.NewMsgCreateValidator(
+		createValMsg, err := genutil.GenNewMsgCreateValidator(
 			sdk.ValAddress(addr).String(),
 			valPubKeys[i],
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
-			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(commission, sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
+			nodeDirName,
+			commission,
 			sdkmath.OneInt(),
 		)
 		if err != nil {

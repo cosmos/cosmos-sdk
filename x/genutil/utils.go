@@ -17,6 +17,8 @@ import (
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -98,10 +100,10 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 	return nodeID, valPubKey, nil
 }
 
-func InitGenFileFromAddrs(addrs []sdk.AccAddress, genState map[string]json.RawMessage, codec codec.Codec, chainId string, bondDenom string, stakeAmount, accAmount math.Int) (map[string]json.RawMessage, error) {
+func InitGenFileFromAddrs(addrs []sdk.AccAddress, genState map[string]json.RawMessage, codec codec.Codec, chainId, bondDenom string, stakeAmount, accAmount math.Int) (map[string]json.RawMessage, error) {
 	var (
-		genAccounts []authtypes.GenesisAccount
-		genBalances []banktypes.Balance
+		genAccounts  []authtypes.GenesisAccount
+		genBalances  []banktypes.Balance
 		authGenState authtypes.GenesisState
 		bankGenState banktypes.GenesisState
 	)
@@ -134,4 +136,18 @@ func InitGenFileFromAddrs(addrs []sdk.AccAddress, genState map[string]json.RawMe
 	genState[banktypes.ModuleName] = codec.MustMarshalJSON(&bankGenState)
 
 	return genState, nil
+}
+
+func GenNewMsgCreateValidator(
+	valAddr string, pubKey cryptotypes.PubKey,
+	selfDelegation sdk.Coin, moniker string, commission math.LegacyDec, minSelfDelegation math.Int,
+) (*stakingtypes.MsgCreateValidator, error) {
+	return stakingtypes.NewMsgCreateValidator(
+		valAddr, 
+		pubKey, 
+		selfDelegation, 
+		stakingtypes.NewDescription(moniker, "", "", "", ""), 
+		stakingtypes.NewCommissionRates(commission, math.LegacyOneDec(), math.LegacyOneDec()), 
+		minSelfDelegation,
+	)
 }

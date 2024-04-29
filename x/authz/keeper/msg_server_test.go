@@ -435,3 +435,67 @@ func (suite *TestSuite) TestPruneExpiredGrants() {
 	})
 	suite.Require().Equal(0, totalGrants)
 }
+
+func (suite *TestSuite) TestRevokeAllGrants() {
+	addrs := simtestutil.CreateIncrementalAccounts(3)
+
+	grantee, grantee2, granter := addrs[0], addrs[1], addrs[2]
+	granterStrAddr, err := suite.accountKeeper.AddressCodec().BytesToString(granter)
+	suite.Require().NoError(err)
+
+	testCases := []struct {
+		name     string
+		malleate func() *authz.MsgRevokeAll
+		expErr   bool
+		errMsg   string
+	}{
+		{
+			name: "invalid granter",
+			malleate: func() *authz.MsgRevokeAll {
+				return &authz.MsgRevokeAll{
+					Granter: "invalid",
+				}
+			},
+			expErr: true,
+			errMsg: "invalid bech32 string",
+		},
+		{
+			name: "no existing grant to revoke",
+			malleate: func() *authz.MsgRevokeAll {
+				return &authz.MsgRevokeAll{
+					Granter: granterStrAddr,
+				}
+			},
+			expErr: true,
+			errMsg: "authorization not found",
+		},
+		{
+			name: "valid grant",
+			malleate: func() *authz.MsgRevokeAll {
+				suite.createSendAuthorization(grantee, granter)
+				suite.createSendAuthorization(grantee2, granter)
+				return &authz.MsgRevokeAll{
+					Granter: granterStrAddr,
+				}
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			_, err := suite.msgSrvr.RevokeAll(suite.ctx, tc.malleate())
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.errMsg)
+			} else {
+				suite.Require().NoError(err)
+				totalGrants := 0
+				_ = suite.authzKeeper.IterateGranterGrants(suite.ctx, granter, func(sdk.AccAddress, string) (bool, error) {
+					totalGrants++
+					return false, nil
+				})
+				suite.Require().Equal(0, totalGrants)
+			}
+		})
+	}
+}

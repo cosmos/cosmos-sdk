@@ -43,7 +43,7 @@ var (
 // See: https://github.com/cosmos/cosmos-sdk/blob/0e34478eb7420b69869ed50f129fc274a97a9b06/x/mint/types/keys.go#L13
 const (
 	mintModuleName     = "mint"
-	protocolModuleName = "protocol-pool"
+	protocolModuleName = "protocolpool"
 )
 
 // getTestProposal creates and returns a test proposal message.
@@ -77,7 +77,14 @@ type mocks struct {
 }
 
 func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
-	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
+	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).DoAndReturn(func(name string) sdk.AccAddress {
+		if name == types.ModuleName {
+			return govAcct
+		} else if name == protocolModuleName {
+			return poolAcct
+		}
+		panic(fmt.Sprintf("unexpected module name: %s", name))
+	}).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAddress(protocolModuleName).Return(poolAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	m.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()

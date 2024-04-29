@@ -24,6 +24,7 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -99,7 +100,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := keeper.NewBaseKeeper(
-
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		accountKeeper,
@@ -116,7 +116,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		map[string]appmodule.AppModule{
 			authtypes.ModuleName: authModule,
 			banktypes.ModuleName: bankModule,
-		})
+		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
+	)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

@@ -1,6 +1,8 @@
 syntax = "proto3";
 package cosmos.base.query.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
+
 option go_package = "github.com/cosmos/cosmos-sdk/types/query";
 
 // PageRequest is to be embedded in gRPC request messages for efficient
@@ -32,9 +34,7 @@ message PageRequest {
   bool count_total = 4;
 
   // reverse is set to true if results are to be returned in the descending order.
-  //
-  // Since: cosmos-sdk 0.43
-  bool reverse = 5;
+  bool reverse = 5 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
 }
 
 // PageResponse is to be embedded in gRPC response messages where the

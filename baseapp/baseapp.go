@@ -223,12 +223,21 @@ func (app *BaseApp) Name() string {
 	return app.name
 }
 
-func (app *BaseApp) InitAppVersion(ctx sdk.Context) {
-	if app.appVersion == 0 && app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
+// GetAppVersionFromParamStore returns the app version from the param store.
+func (app *BaseApp) GetAppVersionFromParamStore(ctx sdk.Context) uint64 {
+	if app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
 		var vp tmproto.VersionParams
 		app.paramStore.Get(ctx, ParamStoreKeyVersionParams, &vp)
-		// set the app version
-		app.appVersion = vp.AppVersion
+		return vp.AppVersion
+	}
+	return 0
+}
+
+// SetInitialAppVersionInConsensusParams sets the initial app version
+// in the consensus params if it has not yet been set.
+func (app *BaseApp) SetInitialAppVersionInConsensusParams(ctx sdk.Context, version uint64) {
+	if !app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
+		app.paramStore.Set(ctx, ParamStoreKeyVersionParams, &tmproto.VersionParams{AppVersion: version})
 	}
 }
 
@@ -543,14 +552,6 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
 	if app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
 		app.paramStore.Set(ctx, ParamStoreKeyVersionParams, cp.Version)
-	}
-}
-
-// SetInitialAppVersionInConsensusParams sets the initial app version
-// in the consensus params if it has not yet been set.
-func (app *BaseApp) SetInitialAppVersionInConsensusParams(ctx sdk.Context, version uint64) {
-	if !app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
-		app.paramStore.Set(ctx, ParamStoreKeyVersionParams, &tmproto.VersionParams{AppVersion: version})
 	}
 }
 

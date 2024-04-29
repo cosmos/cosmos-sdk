@@ -128,16 +128,8 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 
 // Info implements the ABCI interface.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
+	// get the latest height and app hash
 	lastCommitID := app.cms.LastCommitID()
-	// load the app version for a non zero height and zero app hash
-	if lastCommitID.Version > 0 && app.appVersion == 0 {
-		ctx, err := app.createQueryContext(lastCommitID.Version, false)
-		if err != nil {
-			panic(err)
-		}
-		// initialise the app version by checking if it is already in state
-		app.InitAppVersion(ctx)
-	}
 	return abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,
@@ -621,7 +613,7 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 }
 
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
-	ctx, err := app.createQueryContext(req.Height, req.Prove)
+	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)
 	}
@@ -667,9 +659,9 @@ func checkNegativeHeight(height int64) error {
 	return nil
 }
 
-// createQueryContext creates a new sdk.Context for a query, taking as args
+// CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
-func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, error) {
+func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
@@ -709,6 +701,10 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 				sdkerrors.ErrInvalidRequest,
 				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
 			)
+	}
+
+	if app.checkState == nil {
+		app.setCheckState(tmproto.Header{Height: height})
 	}
 
 	// branch the commit-multistore for safety
@@ -892,7 +888,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]), app.trace)
 	}
 
-	ctx, err := app.createQueryContext(req.Height, req.Prove)
+	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)
 	}

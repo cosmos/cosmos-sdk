@@ -157,7 +157,7 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := app.createQueryContext(tc.height, tc.prove)
+			_, err := app.CreateQueryContext(tc.height, tc.prove)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {

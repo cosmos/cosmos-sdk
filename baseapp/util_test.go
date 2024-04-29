@@ -53,13 +53,6 @@ func (app *BaseApp) GetName() string {
 	return app.name
 }
 
-// CreateQueryContext calls app's createQueryContext.
-//
-// This method is only accessible in baseapp tests.
-func (app *BaseApp) CreateQueryContext(height int64, prove bool) (types.Context, error) {
-	return app.createQueryContext(height, prove)
-}
-
 // MinGasPrices returns minGasPrices.
 //
 // This method is only accessible in baseapp tests.

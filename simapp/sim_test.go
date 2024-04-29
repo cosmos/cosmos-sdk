@@ -32,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/simulation/helper"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -181,7 +182,7 @@ func TestAppImportExport(t *testing.T) {
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
 		if !assert.Equal(t, 0, len(failedKVAs), helper.GetSimulationLog(keyName, app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs)) {
 			for _, v := range failedKVAs {
-				t.Logf("store missmatch: %q\n", v)
+				t.Logf("store mismatch: %q\n", v)
 			}
 			t.FailNow()
 		}
@@ -260,7 +261,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func setupSimulationApp(t *testing.T, msg string) (simtypes.Config, dbm.DB, helper.AppOptionsMap, *SimApp) {
+func setupSimulationApp(t *testing.T, msg string) (simtypes.Config, dbm.DB, simtestutil.AppOptionsMap, *SimApp) {
+	t.Helper()
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
 

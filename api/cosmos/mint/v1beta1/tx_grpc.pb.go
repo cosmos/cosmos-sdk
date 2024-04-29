@@ -28,8 +28,6 @@ const (
 type MsgClient interface {
 	// UpdateParams defines a governance operation for updating the x/mint module
 	// parameters. The authority is defaults to the x/gov module account.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 }
 
@@ -56,8 +54,6 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 type MsgServer interface {
 	// UpdateParams defines a governance operation for updating the x/mint module
 	// parameters. The authority is defaults to the x/gov module account.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

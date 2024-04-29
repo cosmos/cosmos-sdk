@@ -28,6 +28,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/x/simulation/helper"
 )
 
 const appName = "integration-app"
@@ -52,6 +53,8 @@ func NewIntegrationApp(
 	addressCodec address.Codec,
 	validatorCodec address.Codec,
 	modules map[string]appmodule.AppModule,
+	msgRouter *baseapp.MsgServiceRouter,
+	grpcRouter *baseapp.GRPCQueryRouter,
 ) *App {
 	db := dbm.NewMemDB()
 
@@ -83,14 +86,27 @@ func NewIntegrationApp(
 		return moduleManager.EndBlock(sdkCtx)
 	})
 
-	msgRouter := baseapp.NewMsgServiceRouter()
 	msgRouter.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(msgRouter)
+	grpcRouter.SetInterfaceRegistry(interfaceRegistry)
+	bApp.SetGRPCQueryRouter(grpcRouter)
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
 		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(baseapp.NewGRPCQueryRouter(), msgRouter)), sdk.AccAddress(addresstypes.Module("gov")).String())
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
+		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
+
+		_, err := consensusParamsKeeper.SetParams(sdkCtx, &consensusparamtypes.ConsensusMsgParams{
+			Version:   simtestutil.DefaultConsensusParams.Version,
+			Block:     simtestutil.DefaultConsensusParams.Block,
+			Evidence:  simtestutil.DefaultConsensusParams.Evidence,
+			Validator: simtestutil.DefaultConsensusParams.Validator,
+			Abci:      simtestutil.DefaultConsensusParams.Abci,
+		})
+		if err != nil {
+			panic(fmt.Errorf("failed to set consensus params: %w", err))
+		}
 
 		if err := bApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("failed to load application version from store: %w", err))

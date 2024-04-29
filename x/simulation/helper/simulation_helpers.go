@@ -23,7 +23,7 @@ import (
 
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.
 // If `skip` is false it skips the current test. `skip` should be set using the `FlagEnabledValue` flag.
-// Returns error on an invalid db intantiation or temp dir creation.
+// Returns error on an invalid db instantiation or temp dir creation.
 func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (dbm.DB, string, log.Logger, bool, error) {
 	if !skip {
 		return nil, "", nil, true, nil

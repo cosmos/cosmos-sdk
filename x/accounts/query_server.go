@@ -60,19 +60,11 @@ func (q *queryServer) AccountQuery(ctx context.Context, request *v1.AccountQuery
 // Schema retrieves the schema for a given account type.
 // It checks the cache first and computes the schema if not found.
 func (q *queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.SchemaResponse, error) {
-	// Check if the schema is cached.
-	if schema, ok := q.schemaCache[request.AccountType]; ok {
-		return schema, nil
-	}
-
 	// Fetch schema from precalculated schemas.
 	schema, ok := q.schemas[request.AccountType]
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", errAccountTypeNotFound, request.AccountType)
 	}
-
-	// Cache the schema for future use.
-	q.schemaCache[request.AccountType] = schema
 
 	return schema, nil
 }

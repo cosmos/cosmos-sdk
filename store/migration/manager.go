@@ -141,10 +141,8 @@ func (m *Manager) writeChangeset() error {
 		if err := batch.Write(); err != nil {
 			return fmt.Errorf("failed to write changeset to db: %w", err)
 		}
-
-		err = batch.Close()
-		if err != nil {
-			return err
+		if err := batch.Close(); err != nil {
+			return fmt.Errorf("failed to close batch: %w", err)
 		}
 	}
 

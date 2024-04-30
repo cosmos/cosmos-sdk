@@ -15,8 +15,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -71,7 +69,7 @@ type hasDefaultGenesis interface {
 	DefaultGenesis() map[string]json.RawMessage
 }
 
-func initCmd(mm hasDefaultGenesis, getClientCtxChainID func(*cobra.Command) string, getCometCfg func(*cobra.Command) *cmtcfg.Config) *cobra.Command {
+func InitCmd(mm hasDefaultGenesis) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",

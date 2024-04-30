@@ -3,8 +3,6 @@ package cmd
 import (
 	"os"
 
-	"cosmossdk.io/runtime/v2"
-
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -13,6 +11,7 @@ import (
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
@@ -23,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	server "cosmossdk.io/server/v2"
+	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )

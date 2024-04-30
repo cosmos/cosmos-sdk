@@ -1155,7 +1155,7 @@ func gRPCErrorToSDKError(err error) error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	if len(status.Details()) > 0 {
-		err = sdkerrors.Wrapf(err, "%v", status.Details())
+		err = errorsmod.Wrapf(err, "%v", status.Details())
 	}
 	switch status.Code() {
 	case codes.NotFound:

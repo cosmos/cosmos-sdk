@@ -44,6 +44,10 @@ type transientStoreService struct {
 	key *storetypes.TransientStoreKey
 }
 
+func NewTransientKVStoreService(tKey *storetypes.TransientStoreKey) store.TransientStoreService {
+	return &transientStoreService{key: tKey}
+}
+
 func (t transientStoreService) OpenTransientStore(ctx context.Context) store.KVStore {
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(t.key))
 }

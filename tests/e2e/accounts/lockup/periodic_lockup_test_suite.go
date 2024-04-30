@@ -37,7 +37,8 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 			{
 				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
 				Length: time.Minute,
-			}, {
+			},
+			{
 				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
 				Length: time.Minute,
 			},

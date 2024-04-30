@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/genesis"
-	"github.com/cosmos/cosmos-sdk/baseapp"
-
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -21,6 +18,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -30,6 +28,7 @@ import (
 	rootstorev2 "cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -178,9 +177,9 @@ func SetupAppBuilder(inputs AppInputs) {
 
 	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
 	// registerStoreKey could instead set this on StoreOptions directly
-	inputs.AppBuilder.storeOptions = inputs.StoreOptions
-	for _, sk := range inputs.AppBuilder.app.storeKeys {
-		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk)
+	if inputs.StoreOptions != nil {
+		inputs.AppBuilder.storeOptions = inputs.StoreOptions
+		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
 	}
 }
 
@@ -227,7 +226,6 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	store.KVStoreService,
 	store.MemoryStoreService,
 ) {
-
 	var kvStoreKey string
 	storeKeyOverride := storeKeyOverride(config, key.Name())
 	if storeKeyOverride != nil {

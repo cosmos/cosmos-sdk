@@ -79,7 +79,6 @@ func NewModuleManager(
 
 	if err := mm.validateConfig(); err != nil {
 		panic(err)
-
 	}
 
 	return mm

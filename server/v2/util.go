@@ -2,25 +2,25 @@ package serverv2
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"time"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
-
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
 
-	"fmt"
-	"path"
-	"strings"
-
+	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/cobra"
-
-	"github.com/spf13/pflag"
 )
 
-// ServerContextKey defines the context key used to retrieve a server.Context from
+// ContextKey defines the context key used to retrieve a server.Context from
 // a command's Context.
 const ContextKey = sdk.ContextKey("server.context")
 
@@ -33,7 +33,12 @@ type Context struct {
 
 // InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext
 // except it also sets the server context on the command and the server logger.
-func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
+func InterceptConfigsPreRunHandler(
+	cmd *cobra.Command,
+	customAppConfigTemplate string,
+	customAppConfig interface{},
+	cmtConfig *cmtcfg.Config,
+) error {
 	viper, config, err := InterceptConfigsAndCreateContext(viper.New(), cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return err
@@ -63,7 +68,13 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 // is used to read and parse the application configuration. Command handlers can
 // fetch the server Context to get the CometBFT configuration or to get access
 // to Viper.
-func InterceptConfigsAndCreateContext(viper *viper.Viper, cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*viper.Viper, *cmtcfg.Config, error) {
+func InterceptConfigsAndCreateContext(
+	viper *viper.Viper,
+	cmd *cobra.Command,
+	customAppConfigTemplate string,
+	customAppConfig interface{},
+	cmtConfig *cmtcfg.Config,
+) (*viper.Viper, *cmtcfg.Config, error) {
 	// serverCtx := NewDefaultContext()
 
 	// Get the executable name and configure the viper instance so that environmental
@@ -107,9 +118,99 @@ func InterceptConfigsAndCreateContext(viper *viper.Viper, cmd *cobra.Command, cu
 // configuration file. The CometBFT configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
 // viperCfg object.
-func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
-	// TODO: Should we keep config same as server v1
-	return cmtConfig, nil
+func interceptConfigs(
+	rootViper *viper.Viper,
+	customAppTemplate string,
+	customConfig interface{},
+	cmtConfig *cmtcfg.Config,
+) (*cmtcfg.Config, error) {
+	rootDir := rootViper.GetString("home")
+	configPath := filepath.Join(rootDir, "config")
+	cmtCfgFile := filepath.Join(configPath, "config.toml")
+
+	conf := cmtConfig
+
+	switch _, err := os.Stat(cmtCfgFile); {
+	case os.IsNotExist(err):
+		cmtcfg.EnsureRoot(rootDir)
+
+		if err = conf.ValidateBasic(); err != nil {
+			return nil, fmt.Errorf("error in config file: %w", err)
+		}
+
+		defaultCometCfg := cmtcfg.DefaultConfig()
+		// The SDK is opinionated about those comet values, so we set them here.
+		// We verify first that the user has not changed them for not overriding them.
+		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
+			conf.Consensus.TimeoutCommit = 5 * time.Second
+		}
+		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
+			conf.RPC.PprofListenAddress = "localhost:6060"
+		}
+
+		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
+
+	case err != nil:
+		return nil, err
+
+	default:
+		rootViper.SetConfigType("toml")
+		rootViper.SetConfigName("config")
+		rootViper.AddConfigPath(configPath)
+
+		if err := rootViper.ReadInConfig(); err != nil {
+			return nil, fmt.Errorf("failed to read in %s: %w", cmtCfgFile, err)
+		}
+	}
+
+	// Read into the configuration whatever data the viper instance has for it.
+	// This may come from the configuration file above but also any of the other
+	// sources viper uses.
+	if err := rootViper.Unmarshal(conf); err != nil {
+		return nil, err
+	}
+
+	conf.SetRoot(rootDir)
+
+	appCfgFilePath := filepath.Join(configPath, "app.toml")
+	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
+		if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
+			return nil, fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
+		}
+
+		if customAppTemplate != "" {
+			if err := config.SetConfigTemplate(customAppTemplate); err != nil {
+				return nil, fmt.Errorf("failed to set config template: %w", err)
+			}
+
+			if err = rootViper.Unmarshal(&customConfig); err != nil {
+				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
+			}
+
+			if err := config.WriteConfigFile(appCfgFilePath, customConfig); err != nil {
+				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+			}
+		} else {
+			appConf, err := config.ParseConfig(rootViper)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
+			}
+
+			if err := config.WriteConfigFile(appCfgFilePath, appConf); err != nil {
+				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+			}
+		}
+	}
+
+	rootViper.SetConfigType("toml")
+	rootViper.SetConfigName("app")
+	rootViper.AddConfigPath(configPath)
+
+	if err := rootViper.MergeInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to merge configuration: %w", err)
+	}
+
+	return conf, nil
 }
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {

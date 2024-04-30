@@ -17,4 +17,4 @@ jobs:
       - name: Build simapp
         run: make build
       - name: Simapp v2 start
-        run: bash ./simv2.sh
+        run: bash ./scripts/simdv2.sh

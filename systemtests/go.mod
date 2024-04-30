@@ -25,7 +25,7 @@ require (
 
 require (
 	cosmossdk.io/math v1.3.0
-	github.com/cometbft/cometbft v0.38.5
+	github.com/cometbft/cometbft v0.38.6
 	github.com/creachadair/tomledit v0.0.26
 	github.com/tidwall/gjson v1.14.2
 	github.com/tidwall/sjson v1.2.5

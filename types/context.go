@@ -393,6 +393,18 @@ func UnwrapSDKContext(ctx context.Context) Context {
 	return ctx.Value(SdkContextKey).(Context)
 }
 
+// MaybeSDKContext attempts to return a Context from a context.Context instance. If the
+// context.Context does not contain a Context, it returns false.
+// Introduced for compatibility between server v1 and server v2 which does not use the legacy
+// content wrapping pattern.
+func MaybeSDKContext(ctx context.Context) (Context, bool) {
+	sdkCtx, ok := ctx.(Context)
+	if !ok {
+		sdkCtx, ok = ctx.Value(SdkContextKey).(Context)
+	}
+	return sdkCtx, ok
+}
+
 // ToSDKEvidence takes comet evidence and returns sdk evidence
 func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
 	evidence := make([]comet.Evidence, len(ev))

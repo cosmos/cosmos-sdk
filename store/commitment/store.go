@@ -399,9 +399,8 @@ loop:
 				if err := importer.Commit(); err != nil {
 					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 				}
-				err := importer.Close()
-				if err != nil {
-					return snapshotstypes.SnapshotItem{}, err
+				if err := importer.Close(); err != nil {
+					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
 				}
 			}
 

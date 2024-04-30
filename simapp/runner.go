@@ -25,6 +25,7 @@ import (
 
 const SimAppChainID = "simulation-app"
 
+// this list of seeds was imported from the original simulation runner: https://github.com/cosmos/tools/blob/v1.0.0/cmd/runsim/main.go#L32
 var defaultSeeds = []int64{
 	1, 2, 4, 7, 32, 123, 124, 582, 1893, 2989,
 	3012, 4728, 37827, 981928, 87821, 891823782,
@@ -173,6 +174,13 @@ func WriteToDebugLog(logger log.Logger) io.Writer {
 		logger.Debug(string(p))
 		return len(p), nil
 	})
+}
+
+// AppOptionsFn is an adapter to the single method AppOptions interface
+type AppOptionsFn func(string) any
+
+func (f AppOptionsFn) Get(k string) any {
+	return f(k)
 }
 
 // FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of

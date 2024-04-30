@@ -20,9 +20,6 @@ type Config struct {
 	Lean   bool // lean simulation log output
 	Commit bool // have the simulation commit
 
-	OnOperation   bool // run slow invariants every operation
-	AllInvariants bool // print all failed invariants if a broken invariant is found
-
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
 }
@@ -43,8 +40,6 @@ func (c Config) Clone() Config {
 		ChainID:            c.ChainID,
 		Lean:               c.Lean,
 		Commit:             c.Commit,
-		OnOperation:        c.OnOperation,
-		AllInvariants:      c.AllInvariants,
 		DBBackend:          c.DBBackend,
 		BlockMaxGas:        c.BlockMaxGas,
 	}

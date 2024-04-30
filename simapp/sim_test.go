@@ -189,21 +189,15 @@ func TestAppStateDeterminism(t *testing.T) {
 		mx.Lock()
 		otherHashes := appHashResults[seed]
 		appHashResults[seed] = append(otherHashes, appHash)
+		t.Logf("+++ hashes: %#X\n", appHashResults)
 		mx.Unlock()
 		// and check that all app hashes per seed are equal for each iteration
 		for i := 0; i < len(otherHashes); i++ {
 			require.Equal(t, otherHashes[i], appHash, "non-determinism in seed %d: %v\n", seed, otherHashes)
 		}
 	}
-
+	// run simulations
 	RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, captureAndCheckHash)
-}
-
-// AppOptionsFn is an adapter to the single method AppOptions interface
-type AppOptionsFn func(string) any
-
-func (f AppOptionsFn) Get(k string) any {
-	return f(k)
 }
 
 type ComparableStoreApp interface {

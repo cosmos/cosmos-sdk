@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/stretchr/testify/suite"
 
@@ -114,7 +113,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 		valUpdate := res.ValidatorUpdates[0]
 		require.Equal(
-			valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
+			valUpdate.PubKeyBytes,
 			val.GetPubKey().Bytes(),
 		)
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
+	"math" // nolint:typecheck //it is used
 
 	protoio "github.com/cosmos/gogoproto/io"
 
@@ -380,7 +380,7 @@ func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
-		storeKey     string
+		storeKey     string // nolint:typecheck // it is used
 	)
 
 loop:

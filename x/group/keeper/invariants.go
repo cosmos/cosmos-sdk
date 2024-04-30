@@ -42,12 +42,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 		msg += fmt.Sprintf("PrefixScan failure on group table\n%v\n", err)
 		return msg, broken
 	}
-	defer func(groupIt orm.Iterator) {
-		err := groupIt.Close()
-		if err != nil {
-			return
-		}
-	}(groupIt)
+	defer groupIt.Close()
 
 	groups := make(map[uint64]group.GroupInfo)
 	for {

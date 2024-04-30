@@ -70,7 +70,7 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, logger log.Logger) BaseViewKeeper {
+func NewBaseViewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, tStoreService store.TransientStoreService, ak types.AccountKeeper, logger log.Logger) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := BaseViewKeeper{
 		cdc:           cdc,

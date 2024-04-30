@@ -7,12 +7,12 @@ import (
 )
 
 // A MintingRestrictionFn can restrict minting of coins.
-type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+type MintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
 
 var _ MintingRestrictionFn = NoOpMintingRestrictionFn
 
 // NoOpMintingRestrictionFn is a no-op MintingRestrictionFn.
-func NoOpMintingRestrictionFn(_ sdk.Context, _ sdk.Coins) error {
+func NoOpMintingRestrictionFn(_ context.Context, _ sdk.Coins) error {
 	return nil
 }
 
@@ -40,7 +40,7 @@ func ComposeMintingRestrictions(restrictions ...MintingRestrictionFn) MintingRes
 	case 1:
 		return toRun[0]
 	}
-	return func(ctx sdk.Context, coins sdk.Coins) error {
+	return func(ctx context.Context, coins sdk.Coins) error {
 		for _, r := range toRun {
 			err := r(ctx, coins)
 			if err != nil {

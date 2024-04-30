@@ -365,12 +365,15 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	feeTx, isFeeTx := tx.(sdk.FeeTx)
-	signers := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return sdk.Context{}, err
+	}
 
 	// increment sequence of all signers, except for fee payers
 	for _, addr := range signers {
 		// skip sequence increment of fee payer, when multiple signers exist
-		if isFeeTx && len(signers) > 1 && feeTx.FeePayer().Equals(addr) {
+		if isFeeTx && len(signers) > 1 && bytes.Equal(feeTx.FeePayer(), addr) {
 			continue
 		}
 

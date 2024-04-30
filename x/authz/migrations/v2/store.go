@@ -34,7 +34,7 @@ func addExpiredGrantsIndex(ctx context.Context, env appmodule.Environment, cdc c
 	defer grantsIter.Close()
 
 	queueItems := make(map[string][]string)
-	now := env.HeaderService.GetHeaderInfo(ctx).Time
+	now := env.HeaderService.HeaderInfo(ctx).Time
 	for ; grantsIter.Valid(); grantsIter.Next() {
 		var grant authz.Grant
 		bz := grantsIter.Value()

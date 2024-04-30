@@ -46,7 +46,7 @@ func ValidateVoteExtensions(
 	extCommit abci.ExtendedCommitInfo,
 ) error {
 	// Get values from context
-	cp := ctx.ConsensusParams()
+	cp := ctx.ConsensusParams() // nolint:staticcheck // ignore linting error
 	currentHeight := ctx.HeaderInfo().Height
 	chainID := ctx.HeaderInfo().ChainID
 	commitInfo := ctx.CometInfo().LastCommit
@@ -249,7 +249,7 @@ func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
 func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		var maxBlockGas uint64
-		if b := ctx.ConsensusParams().Block; b != nil {
+		if b := ctx.ConsensusParams().Block; b != nil { // nolint:staticcheck // ignore linting error
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
@@ -375,7 +375,7 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 		var totalTxGas uint64
 
 		var maxBlockGas int64
-		if b := ctx.ConsensusParams().Block; b != nil {
+		if b := ctx.ConsensusParams().Block; b != nil { // nolint:staticcheck // ignore linting error
 			maxBlockGas = b.MaxGas
 		}
 

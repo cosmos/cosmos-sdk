@@ -26,10 +26,10 @@ func (k Keeper) AddEpochInfo(ctx context.Context, epoch types.EpochInfo) error {
 
 	// Initialize empty and default epoch values
 	if epoch.StartTime.IsZero() {
-		epoch.StartTime = k.environment.HeaderService.GetHeaderInfo(ctx).Time
+		epoch.StartTime = k.HeaderService.HeaderInfo(ctx).Time
 	}
 	if epoch.CurrentEpochStartHeight == 0 {
-		epoch.CurrentEpochStartHeight = k.environment.HeaderService.GetHeaderInfo(ctx).Height
+		epoch.CurrentEpochStartHeight = k.HeaderService.HeaderInfo(ctx).Height
 	}
 	return k.EpochInfo.Set(ctx, epoch.Identifier, epoch)
 }
@@ -57,5 +57,5 @@ func (k Keeper) NumBlocksSinceEpochStart(ctx context.Context, identifier string)
 	if err != nil {
 		return 0, fmt.Errorf("epoch with identifier %s not found", identifier)
 	}
-	return k.environment.HeaderService.GetHeaderInfo(ctx).Height - epoch.CurrentEpochStartHeight, nil
+	return k.HeaderService.HeaderInfo(ctx).Height - epoch.CurrentEpochStartHeight, nil
 }

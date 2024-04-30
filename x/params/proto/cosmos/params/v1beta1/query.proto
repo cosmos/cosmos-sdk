@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/params/v1beta1/params.proto";
 import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/x/params/types/proposal";
 
@@ -17,10 +18,9 @@ service Query {
   }
 
   // Subspaces queries for all registered subspaces and all keys for a subspace.
-  //
-  // Since: cosmos-sdk 0.46
   rpc Subspaces(QuerySubspacesRequest) returns (QuerySubspacesResponse) {
-    option (google.api.http).get = "/cosmos/params/v1beta1/subspaces";
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
+    option (google.api.http).get          = "/cosmos/params/v1beta1/subspaces";
   }
 }
 
@@ -41,23 +41,21 @@ message QueryParamsResponse {
 
 // QuerySubspacesRequest defines a request type for querying for all registered
 // subspaces and all keys for a subspace.
-//
-// Since: cosmos-sdk 0.46
-message QuerySubspacesRequest {}
+message QuerySubspacesRequest {
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
+}
 
 // QuerySubspacesResponse defines the response types for querying for all
 // registered subspaces and all keys for a subspace.
-//
-// Since: cosmos-sdk 0.46
 message QuerySubspacesResponse {
-  repeated Subspace subspaces = 1;
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
+  repeated Subspace subspaces            = 1;
 }
 
 // Subspace defines a parameter subspace name and all the keys that exist for
 // the subspace.
-//
-// Since: cosmos-sdk 0.46
 message Subspace {
-  string          subspace = 1;
-  repeated string keys     = 2;
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
+  string          subspace               = 1;
+  repeated string keys                   = 2;
 }

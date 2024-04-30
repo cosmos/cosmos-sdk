@@ -79,7 +79,6 @@ type KeeperTestSuite struct {
 	consAddressCodec coreaddress.ConsensusAddressCodec
 
 	evidenceKeeper keeper.Keeper
-	bankKeeper     *evidencetestutil.MockBankKeeper
 	accountKeeper  *evidencetestutil.MockAccountKeeper
 	slashingKeeper *evidencetestutil.MockSlashingKeeper
 	stakingKeeper  *evidencetestutil.MockStakingKeeper
@@ -103,7 +102,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	stakingKeeper := evidencetestutil.NewMockStakingKeeper(ctrl)
 	slashingKeeper := evidencetestutil.NewMockSlashingKeeper(ctrl)
 	accountKeeper := evidencetestutil.NewMockAccountKeeper(ctrl)
-	bankKeeper := evidencetestutil.NewMockBankKeeper(ctrl)
 
 	evidenceKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -115,7 +113,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.stakingKeeper = stakingKeeper
 	suite.slashingKeeper = slashingKeeper
-	suite.bankKeeper = bankKeeper
 
 	router := types.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
@@ -132,7 +129,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.evidenceKeeper = *evidenceKeeper
 
 	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
-		suite.evidenceKeeper.Logger())
+		suite.evidenceKeeper.Logger)
 
 	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }

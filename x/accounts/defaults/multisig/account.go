@@ -41,6 +41,7 @@ type Account struct {
 	Votes     collections.Map[collections.Pair[uint64, []byte], int32] // key: proposalID + voter address
 }
 
+// NewAccount returns a new multisig account creator function.
 func NewAccount(name string) accountstd.AccountCreatorFunc {
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
 		return name, &Account{
@@ -56,6 +57,7 @@ func NewAccount(name string) accountstd.AccountCreatorFunc {
 	}
 }
 
+// Init initializes the multisig account with the given configuration and members.
 func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitResponse, error) {
 	if msg.Config == nil {
 		return nil, errors.New("config must be specified")
@@ -102,6 +104,7 @@ func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitRespons
 	return &v1.MsgInitResponse{}, nil
 }
 
+// Vote casts a vote on a proposal. The sender must be a member of the multisig and the proposal must be in the voting period.
 func (a Account) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse, error) {
 	if msg.Vote <= v1.VoteOption_VOTE_OPTION_UNSPECIFIED {
 		return nil, errors.New("vote must be specified")
@@ -156,6 +159,8 @@ func (a Account) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse
 	return &v1.MsgVoteResponse{}, a.Votes.Set(ctx, collections.Join(msg.ProposalId, sender), int32(msg.Vote))
 }
 
+// CreateProposal creates a new proposal. If the proposal contains a voting
+// period it will be used, otherwise the default voting period will be used.
 func (a Account) CreateProposal(ctx context.Context, msg *v1.MsgCreateProposal) (*v1.MsgCreateProposalResponse, error) {
 	// check if the sender is a member
 	_, err := a.Members.Get(ctx, accountstd.Sender(ctx))
@@ -213,6 +218,7 @@ func (a Account) CreateProposal(ctx context.Context, msg *v1.MsgCreateProposal) 
 	return &v1.MsgCreateProposalResponse{ProposalId: seq}, nil
 }
 
+// deleteProposalAndVotes deletes a proposal and its votes, pruning the state.
 func (a Account) deleteProposalAndVotes(ctx context.Context, proposalID uint64) error {
 	// delete the proposal
 	if err := a.Proposals.Remove(ctx, proposalID); err != nil {
@@ -224,6 +230,8 @@ func (a Account) deleteProposalAndVotes(ctx context.Context, proposalID uint64) 
 	return a.Votes.Clear(ctx, rng)
 }
 
+// ExecuteProposal tallies the votes for a proposal and executes it if it passes. If early execution is enabled, it will
+// ignore the voting period and tally the votes without deleting them if the proposal has not passed.
 func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal) (*v1.MsgExecuteProposalResponse, error) {
 	prop, err := a.Proposals.Get(ctx, msg.ProposalId)
 	if err != nil {
@@ -318,6 +326,7 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 	return resp, nil
 }
 
+// QuerySequence returns the current sequence number, used for proposal IDs.
 func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.QuerySequenceResponse, error) {
 	seq, err := a.Sequence.Peek(ctx)
 	if err != nil {
@@ -326,6 +335,7 @@ func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.Qu
 	return &v1.QuerySequenceResponse{Sequence: seq}, nil
 }
 
+// QueryProposal returns a proposal for a given ID, if the proposal hasn't been pruned yet.
 func (a Account) QueryProposal(ctx context.Context, q *v1.QueryProposal) (*v1.QueryProposalResponse, error) {
 	proposal, err := a.Proposals.Get(ctx, q.ProposalId)
 	if err != nil {
@@ -334,6 +344,7 @@ func (a Account) QueryProposal(ctx context.Context, q *v1.QueryProposal) (*v1.Qu
 	return &v1.QueryProposalResponse{Proposal: &proposal}, nil
 }
 
+// QueryConfig returns the current multisig configuration.
 func (a Account) QueryConfig(ctx context.Context, _ *v1.QueryConfig) (*v1.QueryConfigResponse, error) {
 	cfg, err := a.Config.Get(ctx)
 	if err != nil {

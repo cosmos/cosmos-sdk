@@ -5,6 +5,8 @@ package cosmos.consensus.v1;
 import "tendermint/types/params.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 
@@ -27,8 +29,9 @@ message ConsensusMsgParamsResponse {}
 
 // MsgCometInfoRequest is the Msg/CometInfo request type. This is a consensus message that is sent from cometbft.
 message MsgSetCometInfoRequest {
-  string    signer     = 1;
-  CometInfo comet_info = 2;
+  option (cosmos.msg.v1.signer) = "signer";
+  string    signer              = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  CometInfo comet_info          = 2;
 }
 
 // MsgCometInfoResponse is the Msg/CometInfo response type. This is a consensus message that is sent from cometbft.

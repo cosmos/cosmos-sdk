@@ -62,7 +62,6 @@ func (s *E2ETestSuite) fundAccount(app *simapp.SimApp, ctx sdk.Context, addr sdk
 }
 
 func (s *E2ETestSuite) queryLockupAccInfo(ctx sdk.Context, app *simapp.SimApp, accAddr []byte) *types.QueryLockupAccountInfoResponse {
- 	t.Helper()
 	req := &types.QueryLockupAccountInfoRequest{}
 	resp, err := s.queryAcc(ctx, req, app, accAddr)
 	require.NoError(s.T(), err)

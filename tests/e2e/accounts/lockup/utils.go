@@ -61,15 +61,15 @@ func (s *E2ETestSuite) fundAccount(app *simapp.SimApp, ctx sdk.Context, addr sdk
 	require.NoError(s.T(), testutil.FundAccount(ctx, app.BankKeeper, addr, amt))
 }
 
-func (s *E2ETestSuite) queryLockupAccInfo(t *testing.T, ctx sdk.Context, app *simapp.SimApp, accAddr []byte) *types.QueryLockupAccountInfoResponse {
-	t.Helper()
+func (s *E2ETestSuite) queryLockupAccInfo(ctx sdk.Context, app *simapp.SimApp, accAddr []byte) *types.QueryLockupAccountInfoResponse {
+ 	t.Helper()
 	req := &types.QueryLockupAccountInfoRequest{}
 	resp, err := s.queryAcc(ctx, req, app, accAddr)
-	require.NoError(t, err)
-	require.NotNil(t, resp)
+	require.NoError(s.T(), err)
+	require.NotNil(s.T(), resp)
 
 	lockupAccountInfoResponse, ok := resp.(*types.QueryLockupAccountInfoResponse)
-	require.True(t, ok)
+	require.True(s.T(), ok)
 
 	return lockupAccountInfoResponse
 }

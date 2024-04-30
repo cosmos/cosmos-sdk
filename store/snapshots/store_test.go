@@ -346,8 +346,7 @@ func TestStore_Save(t *testing.T) {
 	assert.Equal(t, []uint64{7, 7}, gotErrHeights)
 }
 
-type ReadCloserMock struct {
-}
+type ReadCloserMock struct{}
 
 func (r ReadCloserMock) Read(p []byte) (n int, err error) {
 	return len(p), io.EOF

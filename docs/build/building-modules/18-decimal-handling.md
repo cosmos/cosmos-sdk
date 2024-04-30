@@ -3,59 +3,122 @@ sidebar_position: 1
 ---
 # Decimal Handling in Cosmos SDK
 
-:::note
-As part of ongoing improvements to the Cosmos SDK, we have updated our decimal handling from `LegacyDec` to `Dec`. This update is crucial for modules that perform mathematical computations, ensuring higher precision and better performance.
-:::
-
 ## Introduction
 
-In the Cosmos SDK we have 2 types of decimals LegacyDec and Dec. `LegacyDec` is the old decimal type that was used, which is still available. `Dec` is the new decimal type and is more performant than `LegacyDec`.
+In the Cosmos SDK we have 2 types of decimals `LegacyDec` and `Dec`. `LegacyDec` is the old decimal type that was used, which is still available to be used and `Dec` is the new decimal type and is more performant than `LegacyDec`. These are state-breaking changes and will require an upgrade but it is recommended to use `Dec` for new modules.
 
 ## Why the Change?
 
 * **Enhanced Precision**: `Dec` uses the [apd](https://github.com/cockroachdb/apd) library for arbitrary precision decimals, suitable for accurate financial calculations.
 * **Immutable Operations**: `Dec` operations are safer for concurrent use as they do not mutate the original values.
-* **Better Performance**: `Dec` operations are faster and more efficient than `LegacyDec`.
+* **Better Performance**: `Dec` operations are faster and more efficient than `LegacyDec`.`
 
-Benchmarking results below between `LegacyDec` and `Dec`:
+## Using `Dec` in Modules that havent used `LegacyDec`
 
+If you are creating a new module or updating an existing module that has not used `LegacyDec`, you can directly use `Dec` without any changes.
+
+As an example we will use `DecCoin` which is a common type used in the Cosmos SDK.
+
+
+```protobuf
+message DecCoin {
+  option (gogoproto.equal) = true;
+
+  string denom  = 1;
+  string amount = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
 ```
-BenchmarkCompareLegacyDecAndNewDec/LegacyDec-10    	 8621032	       143.8 ns/op	     144 B/op	       3 allocs/op
-BenchmarkCompareLegacyDecAndNewDec/NewDec-10       	 5206173	       238.7 ns/op	     176 B/op	       7 allocs/op
-BenchmarkCompareLegacyDecAndNewDecQuoInteger/LegacyDec-10         	 5767692	       205.1 ns/op	     232 B/op	       6 allocs/op
-BenchmarkCompareLegacyDecAndNewDecQuoInteger/NewDec-10            	23172602	        51.75 ns/op	      16 B/op	       2 allocs/op
-BenchmarkCompareLegacyAddAndDecAdd/LegacyDec-10                   	21157941	        56.33 ns/op	      80 B/op	       2 allocs/op
-BenchmarkCompareLegacyAddAndDecAdd/NewDec-10                      	24133659	        48.92 ns/op	      48 B/op	       1 allocs/op
-BenchmarkCompareLegacySubAndDecMul/LegacyDec-10                   	14256832	        87.47 ns/op	      80 B/op	       2 allocs/op
-BenchmarkCompareLegacySubAndDecMul/NewDec-10                      	18273994	        65.68 ns/op	      48 B/op	       1 allocs/op
-BenchmarkCompareLegacySubAndDecSub/LegacyDec-10                   	19988325	        64.46 ns/op	      80 B/op	       2 allocs/op
-BenchmarkCompareLegacySubAndDecSub/NewDec-10                      	27430347	        42.45 ns/op	       8 B/op	       1 allocs/op
+
+How you can implement `Dec` in your module:
+
+```go
+import (
+	"cosmossdk.io/math"
+)
+
+example := math.NewDecFromInt64(100)
 ```
 
-## Updating Your Modules
+# Modules migrating from `LegacyDec` to `Dec`
 
-Modules using `LegacyDec` should transition to `Dec` to maintain compatibility with the latest SDK updates. This involves:
+When migrating from `LegacyDec` to `Dec`, you need to update your module to use the new decimal type. **These types are state breaking changes and require a migration.**
 
-1. Updating type declarations from `LegacyDec` to `Dec`.
-2. Modifying arithmetic operations to handle the new method signatures and potential errors.
+## Precision Handling
 
-# Example Update
+The reason for the state breaking change is the difference in precision handling between the two decimal types:
 
-Transitioning an addition operation from `LegacyDec` to `Dec`:
+* **LegacyDec**: Fixed precision of 18 decimal places.
+* **Dec**: Flexible precision up to 34 decimal places using the apd library.
+
+## Byte Representation Changes Example
+
+The change in precision handling directly impacts the byte representation of decimal values:
+
+**Legacy Dec Byte Representation:**
+`2333435363738393030303030303030303030303030303030303030`
+
+This example includes the value 123456789 followed by 18 zeros to maintain the fixed precision.
+
+**New Dec Byte Representation:**
+`0a03617364121031323334353637383900000000000000`
+
+This example shows the value 123456789 without additional padding, reflecting the flexible precision handling of the new Dec type.
+
+## Impact of Precision Change
+
+The increase in precision from 18 to 34 decimal places allows for more detailed decimal values but requires data migration. This change in how data is formatted and stored is a key aspect of why the transition is considered state-breaking.
+
+## Example of State-Breaking Change
+
+The protobuf definitions for DecCoin illustrate the change in the custom type for the amount field.
 
 **Before:**
 
-```go
-result := legacyDec1.Add(legacyDec2)
+```protobuf
+message DecCoin {
+  option (gogoproto.equal) = true;
+
+  string denom  = 1;
+  string amount = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+}
 ```
 
 **After:**
 
-```go
-result, err := dec1.Add(dec2)
-if err != nil {
-    log.Fatalf("Error during addition: %v", err)
+```protobuf
+message DecCoin {
+  option (gogoproto.equal) = true;
+
+  string denom  = 1;
+  string amount = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 ```
 
-This can be done for all arithmetic operations, including subtraction, multiplication, division, and more.
+## Converting `LegacyDec` to `Dec` without storing the data
+
+If you would like to convert a `LegacyDec` to a `Dec` without a state migration changing how the data is handled internally within the application logic and not how it's stored or represented. You can use the following methods.
+
+```go
+func LegacyDecToDec(ld LegacyDec) (Dec, error) {
+    return NewDecFromString(ld.String())
+}
+```
+
+```go
+func DecToLegacyDec(ld Dec) (LegacyDec, error) {
+    return LegacyDecFromString(ld.String())
+}
+```
+

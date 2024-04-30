@@ -15,6 +15,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -69,9 +71,7 @@ type hasDefaultGenesis interface {
 	DefaultGenesis() map[string]json.RawMessage
 }
 
-// InitCmd returns a command that initializes all files needed for Tendermint
-// and the respective application.
-func InitCmd(mm hasDefaultGenesis) *cobra.Command {
+func initCmd(mm hasDefaultGenesis, getClientCtxChainID func(*cobra.Command) string, getCometCfg func(*cobra.Command) *cmtcfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
@@ -79,7 +79,6 @@ func InitCmd(mm hasDefaultGenesis) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 

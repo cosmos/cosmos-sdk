@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/store/v2/root"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/x/accounts"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -54,6 +55,7 @@ type SimApp struct {
 	consensusAuthority consensustypes.Authority
 
 	// keepers
+	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper

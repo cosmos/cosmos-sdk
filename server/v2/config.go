@@ -1,8 +1,13 @@
 package serverv2
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/spf13/cobra"
+)
 
-var ServerContextKey = struct{}{}
+var ServerContextKey = server.ServerContextKey
+
+// var ServerContextKey = struct{}{}
 
 // Config is the config of the main server.
 type Config struct {

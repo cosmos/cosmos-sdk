@@ -7,12 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
-	grpc "cosmossdk.io/server/v2/api/grpc"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
+
+	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
+	grpc "cosmossdk.io/server/v2/api/grpc"
 )
 
 type mockGRPCService struct {
@@ -26,6 +27,7 @@ type mockInterfaceRegistry struct{}
 func (*mockInterfaceRegistry) Resolve(typeUrl string) (gogoproto.Message, error) {
 	panic("not implemented")
 }
+
 func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string {
 	panic("not implemented")
 }

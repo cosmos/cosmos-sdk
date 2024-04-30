@@ -29,9 +29,10 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	// TODO migrate all server dependencies to server/v2
-	// "github.com/cosmos/cosmos-sdk/server"
-	// servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	server "cosmossdk.io/server/v2"
+	serverv2 "cosmossdk.io/server/v2"
+	"github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+
 	// end TODO
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -59,8 +60,8 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	interfaceRegistry codectypes.InterfaceRegistry,
-	appCodec codec.Codec,
+	_ codectypes.InterfaceRegistry,
+	_ codec.Codec,
 	moduleManager *runtimev2.MM,
 	v1moduleManager *module.Manager,
 ) {
@@ -76,7 +77,7 @@ func initRootCmd(
 		// snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, log.NewNopLogger(), tempDir(), nil) // TODO: How to cast from AppModule to ServerModule 
+	serverv2.AddCommands(rootCmd, log.NewNopLogger(), tempDir(), nil) // TODO: How to cast from AppModule to ServerModule
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(

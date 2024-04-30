@@ -178,9 +178,9 @@ func SetupAppBuilder(inputs AppInputs) {
 
 	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
 	// registerStoreKey could instead set this on StoreOptions directly
-	inputs.AppBuilder.storeOptions = inputs.StoreOptions
-	for _, sk := range inputs.AppBuilder.app.storeKeys {
-		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, sk)
+	if inputs.StoreOptions != nil {
+		inputs.AppBuilder.storeOptions = inputs.StoreOptions
+		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
 	}
 }
 
@@ -227,7 +227,6 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	store.KVStoreService,
 	store.MemoryStoreService,
 ) {
-
 	var kvStoreKey string
 	storeKeyOverride := storeKeyOverride(config, key.Name())
 	if storeKeyOverride != nil {

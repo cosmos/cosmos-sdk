@@ -5,14 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	mathrand "math/rand"
+	"sigs.k8s.io/yaml"
 	"strings"
 	"testing"
 	"unsafe"
-
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -568,6 +567,12 @@ func (s *addressTestSuite) TestMustValAddressFromBech32() {
 	s.Require().Equal(valAddress1, valAddress2)
 }
 
+func (s *addressTestSuite) TestMustValAddressFromBech32Panic() {
+	s.Require().Panics(func() {
+		types.MustValAddressFromBech32("")
+	})
+}
+
 func (s *addressTestSuite) TestGetBech32PrefixAccPub() {
 	actual := types.GetBech32PrefixAccPub("")
 	s.Require().Equal(types.PrefixPublic, actual)
@@ -663,38 +668,163 @@ func (s *addressTestSuite) TestUnmarshalYAMLAccAddressWithEmptyString() {
 	s.Require().Equal(&types.AccAddress{}, addr)
 }
 
-func (s *addressTestSuite) TestFormatAccAddress() {
+func (s *addressTestSuite) TestFormatAccAddressAsString() {
 	accAddr, err := types.AccAddressFromBech32("cosmos16wzkdf9flyfnf6wsgdmmrfazc039u3gv5y90ut")
 	s.Require().NoError(err)
-	ptr := uintptr(unsafe.Pointer(accAddr))
-	cases := []struct {
-		name     string
-		verb     rune
-		expected string
-	}{
-		{
-			name:     "Format AccAddress as string",
-			verb:     's',
-			expected: "cosmos16wzkdf9flyfnf6wsgdmmrfazc039u3gv5y90ut",
-		},
-		{
-			name:     "Format AccAddress as poinyer",
-			verb:     'p',
-			expected: ptr,
-		},
-		{
-			name:     "Format AccAddress as hexadecimal",
-			verb:     'p',
-			expected: "D38566A4A9F91334E9D04377B1A7A2C3E25E450C",
-		},
-	}
 
-	for _, tc := range cases {
-		s.T().Run(tc.name)
-	}
+	actual := fmt.Sprintf("%s", accAddr)
+	s.Require().Equal("cosmos16wzkdf9flyfnf6wsgdmmrfazc039u3gv5y90ut", actual)
+}
 
-	actual := fmt.Sprintf("%X", accAddr)
-	fmt.Println(actual)
-	// 0xc0006c8420
-	// D38566A4A9F91334E9D04377B1A7A2C3E25E450C
+func (s *addressTestSuite) TestFormatAccAddressAsPointer() {
+	accAddr, err := types.AccAddressFromBech32("cosmos16wzkdf9flyfnf6wsgdmmrfazc039u3gv5y90ut")
+	s.Require().NoError(err)
+
+	ptrAddr := &accAddr
+	actual := fmt.Sprintf("%p", ptrAddr)
+	expected := uintptr(unsafe.Pointer(&accAddr))
+	s.Require().Equal(fmt.Sprintf("%X", expected), actual)
+}
+
+func (s *addressTestSuite) TestFormatAccAddressWhenVerbIsDifferentFromSOrP() {
+	accAddr, err := types.AccAddressFromBech32("cosmos16wzkdf9flyfnf6wsgdmmrfazc039u3gv5y90ut")
+	s.Require().NoError(err)
+
+	// When the verb is different from 's' or 'p', then the address is always formatted to base 16, with uppercase letters for A-F
+	expected := "D38566A4A9F91334E9D04377B1A7A2C3E25E450C"
+
+	// GENERAL
+	actual := fmt.Sprintf("%v", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%#v", accAddr)
+	s.Require().Equal(expected, actual)
+
+	// BOOLEAN
+	actual = fmt.Sprintf("%t", accAddr)
+	s.Require().Equal(expected, actual)
+
+	// INTEGERS
+	actual = fmt.Sprintf("%b", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%c", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%d", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%o", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%O", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%x", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%X", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%U", accAddr)
+	s.Require().Equal(expected, actual)
+
+	// Floating-point and complex constituents
+	actual = fmt.Sprintf("%e", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%E", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%f", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%F", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%g", accAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%G", accAddr)
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONValAddressFailed() {
+	addr := &types.ValAddress{}
+	err := addr.UnmarshalJSON(nil)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONValAddressWithEmptyString() {
+	addr := &types.ValAddress{}
+	err := addr.UnmarshalJSON([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.ValAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLValAddressFailed() {
+	malformedYAML := []byte("k:k:K:")
+	addr := &types.ValAddress{}
+	err := addr.UnmarshalYAML(malformedYAML)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLValAddressWithEmptyString() {
+	addr := &types.AccAddress{}
+	err := addr.UnmarshalYAML([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.ValAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestFormatValAddressAsString() {
+	accAddr, err := types.ValAddressFromBech32("cosmosvaloper1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnxz90a2")
+	s.Require().NoError(err)
+
+	actual := fmt.Sprintf("%s", accAddr)
+	s.Require().Equal("cosmosvaloper1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnxz90a2", actual)
+}
+
+func (s *addressTestSuite) TestFormatValAddressAsPointer() {
+	valAddr, err := types.ValAddressFromBech32("cosmosvaloper1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnxz90a2")
+	s.Require().NoError(err)
+
+	ptrAddr := &valAddr
+	actual := fmt.Sprintf("%p", ptrAddr)
+	expected := uintptr(unsafe.Pointer(&valAddr))
+	s.Require().Equal(fmt.Sprintf("%X", expected), actual)
+}
+
+func (s *addressTestSuite) TestFormatValAddressWhenVerbIsDifferentFromSOrP() {
+	valAddr, err := types.ValAddressFromBech32("cosmosvaloper1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnxz90a2")
+	s.Require().NoError(err)
+
+	// When the verb is different from 's' or 'p', then the address is always formatted to base 16, with uppercase letters for A-F
+	expected := "000102030405060708090A0B0C0D0E0F10111213"
+
+	// GENERAL
+	actual := fmt.Sprintf("%v", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%#v", valAddr)
+	s.Require().Equal(expected, actual)
+
+	// BOOLEAN
+	actual = fmt.Sprintf("%t", valAddr)
+	s.Require().Equal(expected, actual)
+
+	// INTEGERS
+	actual = fmt.Sprintf("%b", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%c", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%d", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%o", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%O", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%x", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%X", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%U", valAddr)
+	s.Require().Equal(expected, actual)
+
+	// Floating-point and complex constituents
+	actual = fmt.Sprintf("%e", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%E", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%f", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%F", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%g", valAddr)
+	s.Require().Equal(expected, actual)
+	actual = fmt.Sprintf("%G", valAddr)
 }

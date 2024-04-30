@@ -58,6 +58,13 @@ func (s *addressTestSuite) testMarshal(original, res interface{}, marshal func()
 	s.Require().Equal(original, res)
 }
 
+func (s *addressTestSuite) testMarshalYAML(original, res interface{}, marshal func() (interface{}, error), unmarshal func([]byte) error) {
+	bz, err := marshal()
+	s.Require().Nil(err)
+	s.Require().Nil(unmarshal([]byte(bz.(string))))
+	s.Require().Equal(original, res)
+}
+
 func (s *addressTestSuite) TestEmptyAddresses() {
 	s.T().Parallel()
 	s.Require().Equal((types.AccAddress{}).String(), "")
@@ -126,6 +133,45 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.Require().NotNil(err)
 
 		err = (*types.AccAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
+		s.Require().NotNil(err)
+	}
+
+	_, err := types.AccAddressFromHexUnsafe("")
+	s.Require().Equal(types.ErrEmptyHexAddress, err)
+}
+
+func (s *addressTestSuite) TestRandBech32AccAddrConsistencyYAML() {
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
+
+	for i := 0; i < 1000; i++ {
+		_, err := rand.Read(pub.Key)
+		s.Require().NoError(err)
+		acc := types.AccAddress(pub.Address())
+		res := &types.AccAddress{}
+
+		s.testMarshalYAML(&acc, res, acc.MarshalYAML, res.UnmarshalYAML)
+		s.testMarshalYAML(&acc, res, acc.MarshalYAML, res.UnmarshalYAML)
+
+		str := acc.String()
+		*res, err = types.AccAddressFromBech32(str)
+		s.Require().Nil(err)
+		s.Require().Equal(acc, *res)
+
+		str = hex.EncodeToString(acc)
+		*res, err = types.AccAddressFromHexUnsafe(str)
+		s.Require().Nil(err)
+		s.Require().Equal(acc, *res)
+	}
+
+	for _, str := range invalidStrs {
+		_, err := types.AccAddressFromHexUnsafe(str)
+		s.Require().NotNil(err)
+
+		_, err = types.AccAddressFromBech32(str)
+		s.Require().NotNil(err)
+
+		err = (*types.AccAddress)(nil).UnmarshalYAML([]byte("\"" + str + "\""))
 		s.Require().NotNil(err)
 	}
 
@@ -507,7 +553,7 @@ func (s *addressTestSuite) TestGetFromBech32() {
 	s.Require().Equal("invalid Bech32 prefix; expected x, got cosmos", err.Error())
 }
 
-func (s *addressTestSuite) TestMustAccAddressFromBech32() {
+func (s *addressTestSuite) TestMustValAddressFromBech32() {
 	bech32PrefixValAddr := types.GetConfig().GetBech32ValidatorAddrPrefix()
 	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	address := types.MustBech32ifyAddressBytes(bech32PrefixValAddr, addr20byte)
@@ -518,4 +564,79 @@ func (s *addressTestSuite) TestMustAccAddressFromBech32() {
 	valAddress2 := types.MustValAddressFromBech32(address)
 
 	s.Require().Equal(valAddress1, valAddress2)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixAccPub() {
+	actual := types.GetBech32PrefixAccPub("")
+	s.Require().Equal(types.PrefixPublic, actual)
+
+	actual = types.GetBech32PrefixAccPub("cosmos")
+	expected := "cosmos" + types.PrefixPublic
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixValAddress() {
+	actual := types.GetBech32PrefixValAddr("")
+	expected := types.PrefixValidator + types.PrefixOperator
+	s.Require().Equal(expected, actual)
+
+	actual = types.GetBech32PrefixValAddr("cosmos1")
+	expected = "cosmos1" + types.PrefixValidator + types.PrefixOperator
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixValPub() {
+	actual := types.GetBech32PrefixValPub("")
+	expected := types.PrefixValidator + types.PrefixOperator + types.PrefixPublic
+	s.Require().Equal(expected, actual)
+
+	actual = types.GetBech32PrefixValPub("cosmos2")
+	expected = "cosmos2" + types.PrefixValidator + types.PrefixOperator + types.PrefixPublic
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixConsAddr() {
+	actual := types.GetBech32PrefixConsAddr("")
+	expected := types.PrefixValidator + types.PrefixConsensus
+	s.Require().Equal(expected, actual)
+
+	actual = types.GetBech32PrefixConsAddr("cosmos3")
+	expected = "cosmos3" + types.PrefixValidator + types.PrefixConsensus
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixConsPub() {
+	actual := types.GetBech32PrefixConsPub("")
+	expected := types.PrefixValidator + types.PrefixConsensus + types.PrefixPublic
+	s.Require().Equal(expected, actual)
+
+	actual = types.GetBech32PrefixConsPub("cosmos4")
+	expected = "cosmos4" + types.PrefixValidator + types.PrefixConsensus + types.PrefixPublic
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestMustAccAddressFromBech32() {
+	bech32PrefixAccAddr := types.GetConfig().GetBech32AccountAddrPrefix()
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	address := types.MustBech32ifyAddressBytes(bech32PrefixAccAddr, addr20byte)
+
+	valAddress1, err := types.AccAddressFromBech32(address)
+	s.Require().Nil(err)
+
+	valAddress2 := types.MustAccAddressFromBech32(address)
+
+	s.Require().Equal(valAddress1, valAddress2)
+}
+
+func (s *addressTestSuite) TestMustAccAddressFromBech32Panic() {
+	s.Require().Panics(func() {
+		types.MustAccAddressFromBech32("no-valid")
+	})
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONAccAddressFailed() {
+	addr := &types.AccAddress{}
+	err := addr.UnmarshalJSON([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.AccAddress{}, addr)
 }

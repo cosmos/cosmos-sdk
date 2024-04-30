@@ -48,7 +48,7 @@ func GetSimulatorFlags() {
 	flag.IntVar(&FlagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
-	flag.BoolVar(&FlagCommitValue, "Commit", false, "have the simulation commit")
+	flag.BoolVar(&FlagCommitValue, "Commit", true, "have the simulation commit")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
 	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
 	flag.StringVar(&FlagDBBackendValue, "DBBackend", "goleveldb", "custom db backend type")

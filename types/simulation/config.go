@@ -26,3 +26,26 @@ type Config struct {
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
 }
+
+func (c Config) Clone() Config {
+	return Config{
+		GenesisFile:        c.GenesisFile,
+		ParamsFile:         c.ParamsFile,
+		ExportParamsPath:   c.ExportParamsPath,
+		ExportParamsHeight: c.ExportParamsHeight,
+		ExportStatePath:    c.ExportStatePath,
+		ExportStatsPath:    c.ExportStatsPath,
+		Seed:               c.Seed,
+		InitialBlockHeight: c.InitialBlockHeight,
+		GenesisTime:        c.GenesisTime,
+		NumBlocks:          c.NumBlocks,
+		BlockSize:          c.BlockSize,
+		ChainID:            c.ChainID,
+		Lean:               c.Lean,
+		Commit:             c.Commit,
+		OnOperation:        c.OnOperation,
+		AllInvariants:      c.AllInvariants,
+		DBBackend:          c.DBBackend,
+		BlockMaxGas:        c.BlockMaxGas,
+	}
+}

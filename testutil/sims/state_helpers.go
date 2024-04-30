@@ -36,30 +36,35 @@ const (
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
-// It calls AppStateFnWithExtendedCb with nil rawStateCb.
-func AppStateFn(cdc codec.JSONCodec, addresCodec, validatorCodec address.Codec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
-	return AppStateFnWithExtendedCb(cdc, addresCodec, validatorCodec, simManager, genesisState, nil)
+// It calls appStateFnWithExtendedCb with nil rawStateCb.
+func AppStateFn(
+	cdc codec.JSONCodec,
+	addresCodec, validatorCodec address.Codec,
+	simManager *module.SimulationManager,
+	genesisState map[string]json.RawMessage,
+) simtypes.AppStateFn {
+	return appStateFnWithExtendedCb(cdc, addresCodec, validatorCodec, simManager, genesisState, nil)
 }
 
-// AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
-// It calls AppStateFnWithExtendedCbs with nil moduleStateCb.
-func AppStateFnWithExtendedCb(
+// appStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
+// It calls appStateFnWithExtendedCbs with nil moduleStateCb.
+func appStateFnWithExtendedCb(
 	cdc codec.JSONCodec,
 	addresCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
 	rawStateCb func(rawState map[string]json.RawMessage),
 ) simtypes.AppStateFn {
-	return AppStateFnWithExtendedCbs(cdc, addresCodec, validatorCodec, simManager, genesisState, nil, rawStateCb)
+	return appStateFnWithExtendedCbs(cdc, addresCodec, validatorCodec, simManager, genesisState, nil, rawStateCb)
 }
 
-// AppStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
+// appStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 // genesisState is the default genesis state of the whole app.
 // moduleStateCb is the callback function to access moduleState.
 // rawStateCb is the callback function to extend rawState.
-func AppStateFnWithExtendedCbs(
+func appStateFnWithExtendedCbs(
 	cdc codec.JSONCodec,
 	addressCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
@@ -219,15 +224,6 @@ func AppStateRandomizedFn(
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs
 	}
-
-	fmt.Printf(
-		`Selected randomly generated parameters for simulated genesis:
-{
-  stake_per_account: "%d",
-  initially_bonded_validators: "%d"
-}
-`, initialStake.Uint64(), numInitiallyBonded,
-	)
 
 	simState := &module.SimulationState{
 		AppParams:      appParams,

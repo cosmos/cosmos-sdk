@@ -305,24 +305,29 @@ test-sim-custom-genesis-fast:
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 5 TestAppImportExport
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 20m -run TestAppImportExport
+		-NumBlocks=50 -Period=5
 
 test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 5 TestAppSimulationAfterImport
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -run TestAppSimulationAfterImport
+		-NumBlocks=50 -Period=5
+
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
 	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.simapp/config/genesis.json -SigverifyTx=false -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
 
-test-sim-multi-seed-long: runsim
+test-sim-multi-seed-long:
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 500 50 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 1h -run TestFullAppSimulation
+		-NumBlocks=500 -Period=50
 
-test-sim-multi-seed-short: runsim
+test-sim-multi-seed-short:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 10 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -run TestFullAppSimulation
+		-NumBlocks=50 -Period=10
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."

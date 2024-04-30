@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	mathrand "math/rand"
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -636,7 +638,63 @@ func (s *addressTestSuite) TestMustAccAddressFromBech32Panic() {
 
 func (s *addressTestSuite) TestUnmarshalJSONAccAddressFailed() {
 	addr := &types.AccAddress{}
+	err := addr.UnmarshalJSON(nil)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONAccAddressWithEmptyString() {
+	addr := &types.AccAddress{}
 	err := addr.UnmarshalJSON([]byte{34, 34})
 	s.Require().NoError(err)
 	s.Require().Equal(&types.AccAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLAccAddressFailed() {
+	malformedYAML := []byte("k:k:K:")
+	addr := &types.AccAddress{}
+	err := addr.UnmarshalYAML(malformedYAML)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLAccAddressWithEmptyString() {
+	addr := &types.AccAddress{}
+	err := addr.UnmarshalYAML([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.AccAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestFormatAccAddress() {
+	accAddr, err := types.AccAddressFromBech32("cosmos16wzkdf9flyfnf6wsgdmmrfazc039u3gv5y90ut")
+	s.Require().NoError(err)
+	ptr := uintptr(unsafe.Pointer(accAddr))
+	cases := []struct {
+		name     string
+		verb     rune
+		expected string
+	}{
+		{
+			name:     "Format AccAddress as string",
+			verb:     's',
+			expected: "cosmos16wzkdf9flyfnf6wsgdmmrfazc039u3gv5y90ut",
+		},
+		{
+			name:     "Format AccAddress as poinyer",
+			verb:     'p',
+			expected: ptr,
+		},
+		{
+			name:     "Format AccAddress as hexadecimal",
+			verb:     'p',
+			expected: "D38566A4A9F91334E9D04377B1A7A2C3E25E450C",
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name)
+	}
+
+	actual := fmt.Sprintf("%X", accAddr)
+	fmt.Println(actual)
+	// 0xc0006c8420
+	// D38566A4A9F91334E9D04377B1A7A2C3E25E450C
 }

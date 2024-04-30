@@ -42,7 +42,12 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 		msg += fmt.Sprintf("PrefixScan failure on group table\n%v\n", err)
 		return msg, broken
 	}
-	defer groupIt.Close()
+	defer func(groupIt orm.Iterator) {
+		err := groupIt.Close()
+		if err != nil {
+			return
+		}
+	}(groupIt)
 
 	groups := make(map[uint64]group.GroupInfo)
 	for {
@@ -76,7 +81,6 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 			msg += fmt.Sprintf("error while returning group member iterator for group with ID %d\n%v\n", groupInfo.Id, err)
 			return msg, broken
 		}
-		defer memIt.Close()
 
 		for {
 			var groupMember group.GroupMember
@@ -112,6 +116,10 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 			broken = true
 			msg += fmt.Sprintf("group's TotalWeight must be equal to the sum of its members' weights\ngroup weight: %s\nSum of group members weights: %s\n", groupWeight.String(), membersWeight.String())
 			break
+		}
+		err = memIt.Close()
+		if err != nil {
+			return "", broken
 		}
 	}
 

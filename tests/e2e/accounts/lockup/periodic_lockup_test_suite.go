@@ -1,6 +1,7 @@
 package lockup
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -36,16 +37,25 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 			{
 				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
 				Length: time.Minute,
-			}, {
+			},
+			{
+				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
+				Length: time.Minute,
+			},
+			{
 				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
 				Length: time.Minute,
 			},
 		},
-	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1500))})
 	require.NoError(t, err)
 
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
+
+	vals, err := app.StakingKeeper.GetAllValidators(ctx)
+	require.NoError(t, err)
+	val := vals[0]
 
 	t.Run("error - execute message, wrong sender", func(t *testing.T) {
 		msg := &types.MsgSend{
@@ -125,13 +135,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		require.True(t, balance.Amount.Equal(math.NewInt(500)))
 	})
 
-	// Fund acc since we withdraw all the funds
-	s.fundAccount(app, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))})
-
 	t.Run("ok - execute delegate message", func(t *testing.T) {
-		vals, err := app.StakingKeeper.GetAllValidators(ctx)
-		require.NoError(t, err)
-		val := vals[0]
 		msg := &types.MsgDelegate{
 			Sender:           ownerAddrStr,
 			ValidatorAddress: val.OperatorAddress,
@@ -148,6 +152,20 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		)
 		require.NoError(t, err)
 		require.NotNil(t, del)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		fmt.Println(lockupAccountInfoResponse)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(100)))
+	})
+	t.Run("ok - execute withdraw reward message", func(t *testing.T) {
+		msg := &types.MsgWithdrawReward{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
 	})
 	t.Run("ok - execute undelegate message", func(t *testing.T) {
 		vals, err := app.StakingKeeper.GetAllValidators(ctx)
@@ -168,5 +186,40 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		)
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
+	})
+
+	// Update context time
+	// After third period 1500stake should be unlock
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: currentTime.Add(time.Minute * 3),
+	})
+
+	t.Run("ok - execute delegate message", func(t *testing.T) {
+		msg := &types.MsgDelegate{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		valbz, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+		require.NoError(t, err)
+
+		del, err := app.StakingKeeper.Delegations.Get(
+			ctx, collections.Join(sdk.AccAddress(accountAddr), sdk.ValAddress(valbz)),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, del)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		delFree := lockupAccountInfoResponse.DelegatedFree
+		require.True(t, delFree.AmountOf("stake").Equal(math.NewInt(100)))
 	})
 }

@@ -57,10 +57,8 @@ type QueryClient interface {
 	// TallyResult queries the tally of a proposal vote.
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
 	// ProposalVoteOptions queries the valid voting options for a proposal.
-	// Since: cosmos-sdk x/gov v1.0.0
 	ProposalVoteOptions(ctx context.Context, in *QueryProposalVoteOptionsRequest, opts ...grpc.CallOption) (*QueryProposalVoteOptionsResponse, error)
 	// MessageBasedParams queries the message specific governance params based on a msg url.
-	// Since: cosmos-sdk x/gov v1.0.0
 	MessageBasedParams(ctx context.Context, in *QueryMessageBasedParamsRequest, opts ...grpc.CallOption) (*QueryMessageBasedParamsResponse, error)
 }
 
@@ -194,10 +192,8 @@ type QueryServer interface {
 	// TallyResult queries the tally of a proposal vote.
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
 	// ProposalVoteOptions queries the valid voting options for a proposal.
-	// Since: cosmos-sdk x/gov v1.0.0
 	ProposalVoteOptions(context.Context, *QueryProposalVoteOptionsRequest) (*QueryProposalVoteOptionsResponse, error)
 	// MessageBasedParams queries the message specific governance params based on a msg url.
-	// Since: cosmos-sdk x/gov v1.0.0
 	MessageBasedParams(context.Context, *QueryMessageBasedParamsRequest) (*QueryMessageBasedParamsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

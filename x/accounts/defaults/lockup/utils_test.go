@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -53,6 +54,7 @@ func (a addressCodec) StringToBytes(text string) ([]byte, error) { return []byte
 func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string(bz), nil }
 
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
+	t.Helper()
 	return accountstd.NewMockContext(
 		0, []byte("lockup_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
 			return nil
@@ -60,13 +62,23 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			return nil, nil
 		}, func(ctx context.Context, req, resp ProtoMsg) error {
 			_, ok := req.(*banktypes.QueryBalanceRequest)
-			require.True(t, ok)
+			if !ok {
+				_, ok = req.(*stakingtypes.QueryParamsRequest)
+				require.True(t, ok)
+				gogoproto.Merge(resp.(gogoproto.Message), &stakingtypes.QueryParamsResponse{
+					Params: stakingtypes.Params{
+						BondDenom: "test",
+					},
+				})
+				return nil
+			}
 			gogoproto.Merge(resp.(gogoproto.Message), &banktypes.QueryBalanceResponse{
 				Balance: &sdk.Coin{
 					Denom:  "test",
 					Amount: math.NewInt(5),
 				},
 			})
+
 			return nil
 		},
 	)

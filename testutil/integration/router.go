@@ -63,7 +63,10 @@ func NewIntegrationApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
+	bApp.SetInitChainer(func(
+		ctx sdk.Context,
+		_ *cmtabcitypes.RequestInitChain,
+	) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
 				if err := m.InitGenesis(ctx, m.DefaultGenesis()); err != nil {
@@ -94,6 +97,7 @@ func NewIntegrationApp(
 		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
 
 		_, err := consensusParamsKeeper.SetParams(sdkCtx, &consensusparamtypes.ConsensusMsgParams{
+			Signer:    "consensus",
 			Version:   simtestutil.DefaultConsensusParams.Version,
 			Block:     simtestutil.DefaultConsensusParams.Block,
 			Evidence:  simtestutil.DefaultConsensusParams.Evidence,

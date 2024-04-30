@@ -11,7 +11,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group/errors"
+	grouperrors "cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -71,7 +71,7 @@ func TestCreate(t *testing.T) {
 				Id:   1,
 				Name: "some name",
 			},
-			expErr: errors.ErrORMEmptyKey,
+			expErr: grouperrors.ErrORMEmptyKey,
 		},
 		"happy path": {
 			rowID: EncodeSequence(1),

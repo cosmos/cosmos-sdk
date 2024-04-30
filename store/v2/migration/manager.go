@@ -182,13 +182,17 @@ func (m *Manager) writeChangeset() error {
 		}
 
 		batch := m.db.NewBatch()
-		defer batch.Close()
 
 		if err := batch.Set(csKey, csBytes); err != nil {
 			return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
 		}
 		if err := batch.Write(); err != nil {
 			return fmt.Errorf("failed to write changeset to db: %w", err)
+		}
+
+		err = batch.Close()
+		if err != nil {
+			return err
 		}
 	}
 

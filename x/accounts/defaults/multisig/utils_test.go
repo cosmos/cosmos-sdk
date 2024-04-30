@@ -30,11 +30,6 @@ type ProtoMsg = protoiface.MessageV1
 
 var TestFunds = sdk.NewCoins(sdk.NewCoin("test", math.NewInt(10)))
 
-type cdc interface {
-	Marshal(gogoproto.Message) ([]byte, error)
-	Unmarshal([]byte, gogoproto.Message) error
-}
-
 // mock statecodec
 type mockStateCodec struct {
 	codec.Codec

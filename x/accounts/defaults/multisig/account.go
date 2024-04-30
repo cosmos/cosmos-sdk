@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

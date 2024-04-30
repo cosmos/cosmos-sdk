@@ -19,7 +19,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 	// evidence to the new types.Misbehavior type and store it in the cache.
 
 	res := consensusv1.QueryCometInfoResponse{}
-	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
+	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryCometInfoRequest{}, &res); err != nil {
 		return err
 	}
 

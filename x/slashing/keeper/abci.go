@@ -23,7 +23,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 	}
 
 	res := consensusv1.QueryCometInfoResponse{}
-	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
+	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryCometInfoRequest{}, &res); err != nil {
 		return err
 	}
 	for _, vote := range res.CometInfo.LastCommit.Votes {

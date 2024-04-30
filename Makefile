@@ -280,8 +280,8 @@ endif
 #? test-sim-nondeterminism: Run non-determinism test for simapp
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=30m -run TestAppStateDeterminism \
+		-NumBlocks=100 -BlockSize=200 -Period=0
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #
@@ -294,39 +294,40 @@ test-sim-nondeterminism:
 #   make test-sim-nondeterminism-streaming
 test-sim-nondeterminism-streaming:
 	@echo "Running non-determinism-streaming test..."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h -EnableStreaming=true
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=30m -run TestAppStateDeterminism \
+		-NumBlocks=100 -BlockSize=200 -Period=0 -EnableStreaming=true
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
-		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -SigverifyTx=false -v -timeout 24h
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=30m -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+		-NumBlocks=100 -BlockSize=200 -Seed=99 -Period=5 -SigverifyTx=false
 
-test-sim-import-export: runsim
+test-sim-import-export:
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 20m -run TestAppImportExport
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 20m -run TestAppImportExport \
 		-NumBlocks=50 -Period=5
 
-test-sim-after-import: runsim
+test-sim-after-import:
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -run TestAppSimulationAfterImport
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -run TestAppSimulationAfterImport \
 		-NumBlocks=50 -Period=5
 
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.simapp/config/genesis.json -SigverifyTx=false -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.simapp/config/genesis.json \
+		-SigverifyTx=false -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
 
 test-sim-multi-seed-long:
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 1h -run TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=1h -run TestFullAppSimulation \
 		-NumBlocks=500 -Period=50
 
 test-sim-multi-seed-short:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -run TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -run TestFullAppSimulation \
 		-NumBlocks=50 -Period=10
 
 test-sim-benchmark-invariants:

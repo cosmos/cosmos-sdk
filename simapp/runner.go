@@ -128,9 +128,6 @@ type TestInstance[T SimulationApp] struct {
 
 func NewSimulationAppInstance[T SimulationApp](t *testing.T, tCfg simtypes.Config, appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T) TestInstance[T] {
 	workDir := t.TempDir()
-	tCfg.ExportParamsPath = filepath.Join(workDir, "params.json")
-	tCfg.ExportStatePath = filepath.Join(workDir, "state.json")
-	tCfg.ExportStatsPath = filepath.Join(workDir, "stats.json")
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {

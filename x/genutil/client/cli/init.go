@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 
 	cfg "github.com/cometbft/cometbft/config"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
 
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"

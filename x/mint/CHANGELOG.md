@@ -31,6 +31,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#20044](https://github.com/cosmos/cosmos-sdk/pull/20044) `NewGenesisState` function now takes an additional parameter `reductionStartedEpoch` along with the old params.
+* [#20044](https://github.com/cosmos/cosmos-sdk/pull/20044) `NewParams` function now takes additional parameters `epochIdentifier`, `reductionPeriodInEpochs`, `reductionFactor`, `mintingRewardsDistrStartEpoch`, `epochProvisions` along with the old params.
 * [#19367](https://github.com/cosmos/cosmos-sdk/pull/19398) `appmodule.Environment` is received on the Keeper to get access to different application services
 
 ### Bug Fixes

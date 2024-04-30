@@ -6,16 +6,15 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  start:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-arch: ["amd64", "arm", "arm64"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
           check-latest: true
+      - name: Build simapp
+        run: make build
       - name: Simapp v2 start
         run: bash ./simv2.sh

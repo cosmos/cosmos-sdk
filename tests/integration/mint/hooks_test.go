@@ -1,4 +1,4 @@
-package keeper_test
+package mint
 
 import (
 	"testing"
@@ -11,7 +11,6 @@ import (
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/mint/keeper"
-	"cosmossdk.io/x/mint/testutil"
 	"cosmossdk.io/x/mint/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -238,7 +237,7 @@ func TestAfterEpochEnd(t *testing.T) {
 			)
 			app, err := simtestutil.SetupAtGenesis(
 				depinject.Configs(
-					testutil.AppConfig,
+					AppConfig,
 					depinject.Supply(log.NewNopLogger()),
 				),
 				&mintKeeper,

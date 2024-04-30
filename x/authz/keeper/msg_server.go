@@ -3,9 +3,8 @@ package keeper
 import (
 	"context"
 	"errors"
-	"strings"
-
 	"fmt"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -143,17 +142,17 @@ func validateMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-// Exec implements the MsgServer.ExecCompat method.
+// ExecCompat implements the MsgServer.ExecCompat method.
 func (k Keeper) ExecCompat(goCtx context.Context, msg *authz.MsgExecCompat) (*authz.MsgExecCompatResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 
 	if len(msg.Msgs) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
 	}
 
 	subMsgs := make([]sdk.Msg, len(msg.Msgs))
@@ -161,15 +160,13 @@ func (k Keeper) ExecCompat(goCtx context.Context, msg *authz.MsgExecCompat) (*au
 		var iMsg sdk.Msg
 		err := codec.GlobalCdc.UnmarshalInterfaceJSON([]byte(m), &iMsg)
 		if err != nil {
-			return fmt.Errorf("parse message at index %d error: %w", idx, err)
+			return nil, fmt.Errorf("parse message at index %d error: %w", idx, err)
 		}
-
-		err = iMsg.ValidateBasic()
-		if err != nil {
-			return fmt.Errorf("validate message at index %d error: %w", idx, err)
-		}
-
 		subMsgs[idx] = iMsg
+	}
+
+	if err := validateMsgs(subMsgs); err != nil {
+		return nil, err
 	}
 
 	results, err := k.DispatchActions(ctx, grantee, subMsgs)

@@ -67,7 +67,14 @@ func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitRespons
 
 	// set members
 	totalWeight := uint64(0)
+	membersMap := map[string]struct{}{} // to check for duplicates
 	for i := range msg.Members {
+		if _, ok := membersMap[msg.Members[i].Address]; ok {
+			return nil, errors.New("duplicate member address found")
+		}
+
+		membersMap[msg.Members[i].Address] = struct{}{}
+
 		addrBz, err := a.addrCodec.StringToBytes(msg.Members[i].Address)
 		if err != nil {
 			return nil, err
@@ -206,6 +213,17 @@ func (a Account) CreateProposal(ctx context.Context, msg *v1.MsgCreateProposal) 
 	return &v1.MsgCreateProposalResponse{ProposalId: seq}, nil
 }
 
+func (a Account) deleteProposalAndVotes(ctx context.Context, proposalID uint64) error {
+	// delete the proposal
+	if err := a.Proposals.Remove(ctx, proposalID); err != nil {
+		return err
+	}
+
+	// delete the votes
+	rng := collections.NewPrefixedPairRange[uint64, []byte](proposalID)
+	return a.Votes.Clear(ctx, rng)
+}
+
 func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal) (*v1.MsgExecuteProposalResponse, error) {
 	prop, err := a.Proposals.Get(ctx, msg.ProposalId)
 	if err != nil {
@@ -218,8 +236,9 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 	}
 
 	// check if voting period is still active and early execution is disabled
-	if a.headerService.HeaderInfo(ctx).Time.Unix() < prop.VotingPeriodEnd && !config.EarlyExecution {
-		return nil, errors.New("voting period has not ended yet")
+	votingPeriodEnded := a.headerService.HeaderInfo(ctx).Time.Unix() > prop.VotingPeriodEnd
+	if !votingPeriodEnded && !config.EarlyExecution {
+		return nil, errors.New("voting period has not ended yet, and early execution is not enabled")
 	}
 
 	// perform tally
@@ -251,40 +270,52 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 	}
 
 	totalWeight := yesVotes + noVotes + abstainVotes
+	var (
+		rejectErr error
+		execErr   error
+	)
+
+	resp := &v1.MsgExecuteProposalResponse{}
+
 	if totalWeight < uint64(config.Quorum) {
-		return nil, errors.New("quorum not reached")
-	}
-
-	if yesVotes < uint64(config.Threshold) {
+		rejectErr = errors.New("quorum not reached")
 		prop.Status = v1.ProposalStatus_PROPOSAL_STATUS_REJECTED
-		err = a.Proposals.Set(ctx, msg.ProposalId, prop)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New("threshold not reached")
+	} else if yesVotes < uint64(config.Threshold) {
+		rejectErr = errors.New("threshold not reached")
+		prop.Status = v1.ProposalStatus_PROPOSAL_STATUS_REJECTED
+	} else {
+		// we have quorum and threshold, execute the proposal
+		prop.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
+		resp.Responses, execErr = accountstd.ExecModuleAnys(ctx, prop.Messages) // do not return this error, just emit the event
 	}
 
-	responses, err := accountstd.ExecModuleAnys(ctx, prop.Messages)
-	if err != nil {
+	// if early execution is enabled, we return early if the proposal has NOT passed
+	if config.EarlyExecution && prop.Status != v1.ProposalStatus_PROPOSAL_STATUS_PASSED {
+		return nil, errors.New("early execution attempted and proposal has not passed")
+	}
+
+	if err = a.deleteProposalAndVotes(ctx, msg.ProposalId); err != nil {
 		return nil, err
 	}
 
-	if err = a.eventService.EventManager(ctx).EmitKV("proposal_executed",
+	if err = a.eventService.EventManager(ctx).EmitKV("proposal_tally",
 		event.NewAttribute("proposal_id", fmt.Sprint(msg.ProposalId)),
-		event.NewAttribute("success", fmt.Sprint(err == nil)),
+		event.NewAttribute("yes_votes", fmt.Sprint(yesVotes)),
+		event.NewAttribute("no_votes", fmt.Sprint(noVotes)),
+		event.NewAttribute("abstain_votes", fmt.Sprint(abstainVotes)),
+		event.NewAttribute("status", prop.Status.String()),
+		event.NewAttribute("reject_err", fmt.Sprint(rejectErr)),
+		event.NewAttribute("exec_err", fmt.Sprint(execErr)),
 	); err != nil {
 		return nil, err
 	}
 
-	prop.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
 	err = a.Proposals.Set(ctx, msg.ProposalId, prop)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.MsgExecuteProposalResponse{
-		Responses: responses,
-	}, nil
+	return resp, nil
 }
 
 func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.QuerySequenceResponse, error) {

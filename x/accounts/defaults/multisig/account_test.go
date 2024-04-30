@@ -443,7 +443,14 @@ func TestProposal_NotPassing(t *testing.T) {
 	_, err = acc.ExecuteProposal(ctx, &v1.MsgExecuteProposal{
 		ProposalId: propId,
 	})
-	require.ErrorContains(t, err, "threshold not reached")
+	require.NoError(t, err)
+
+	// check proposal status
+	prop, err := acc.QueryProposal(ctx, &v1.QueryProposal{
+		ProposalId: propId,
+	})
+	require.NoError(t, err)
+	require.Equal(t, v1.ProposalStatus_PROPOSAL_STATUS_REJECTED, prop.Proposal.Status)
 
 	// vote with addr3
 	ctx = accountstd.SetSender(ctx, []byte("addr3"))

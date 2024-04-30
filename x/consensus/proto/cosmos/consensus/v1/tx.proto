@@ -21,7 +21,7 @@ service Msg {
   }
 
   // CometInfo is used to set the information of cometbft to be used by other modules
-  rpc CometInfo(consensus.v1.MsgSetCometInfoRequest) returns (consensus.v1.MsgSetCometInfoResponse) {
+  rpc SetCometInfo(consensus.v1.MsgCometInfoRequest) returns (consensus.v1.MsgCometInfoResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.52";
   }
 }

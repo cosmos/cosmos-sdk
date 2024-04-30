@@ -28,22 +28,22 @@ message ConsensusMsgParams {
 message ConsensusMsgParamsResponse {}
 
 // MsgCometInfoRequest is the Msg/CometInfo request type. This is a consensus message that is sent from cometbft.
-message MsgSetCometInfoRequest {
+message MsgCometInfoRequest {
   option (cosmos.msg.v1.signer) = "signer";
   string    signer              = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   CometInfo comet_info          = 2;
 }
 
 // MsgCometInfoResponse is the Msg/CometInfo response type. This is a consensus message that is sent from cometbft.
-message MsgSetCometInfoResponse {}
+message MsgCometInfoResponse {}
 
 // ConsensusMsgCometInfoResponse represents the consensus message containing information about the validators, proposer,
 // and last commit.
-message MsgCometInfoRequest {}
+message QueryCometInfoRequest {}
 
 // MsgCometInfoResponse represents the consensus message containing information about the validators, proposer,
 // and last commit.
-message MsgCometInfoResponse {
+message QueryCometInfoResponse {
   CometInfo comet_info = 1;
 }
 

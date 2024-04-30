@@ -22,7 +22,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 		return err
 	}
 
-	res := consensusv1.MsgCometInfoResponse{}
+	res := consensusv1.QueryCometInfoResponse{}
 	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
 		return err
 	}

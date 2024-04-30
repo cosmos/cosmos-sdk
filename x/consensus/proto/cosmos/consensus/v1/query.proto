@@ -4,6 +4,8 @@ package cosmos.consensus.v1;
 
 import "google/api/annotations.proto";
 import "tendermint/types/params.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/consensus/v1/consensus.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 
@@ -12,6 +14,12 @@ service Query {
   // Params queries the parameters of x/consensus module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/consensus/v1/params";
+  }
+
+  // CometInfo is used to set the information of cometbft to be used by other modules
+  rpc GetCometInfo(consensus.v1.QueryCometInfoRequest) returns (consensus.v1.QueryCometInfoResponse) {
+    option (google.api.http).get          = "/cosmos/consensus/v1/comet_info";
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.52";
   }
 }
 

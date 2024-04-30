@@ -42,7 +42,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return nil
 	}
 
-	res := consensusv1.MsgCometInfoResponse{}
+	res := consensusv1.QueryCometInfoResponse{}
 	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
 		return err
 	}

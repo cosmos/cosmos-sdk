@@ -115,12 +115,12 @@ func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*
 
 // GetCometInfo returns info related to comet. If the application is using v1 then the information will be present on context,
 // if the application is using v2 then the information will be present in the cometInfo store.
-func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
+func (k Keeper) GetCometInfo(ctx context.Context, req *types.QueryCometInfoRequest) (*types.QueryCometInfoResponse, error) {
 	ci, err := k.cometInfo.Get(ctx)
 	// if the value is not found we may be using baseapp and not have consensus messages
 	if errors.Is(err, collections.ErrNotFound) {
 		ci := sdk.UnwrapSDKContext(ctx).CometInfo()
-		res := &types.MsgCometInfoResponse{CometInfo: &types.CometInfo{
+		res := &types.QueryCometInfoResponse{CometInfo: &types.CometInfo{
 			ValidatorsHash:  ci.ValidatorsHash,
 			ProposerAddress: ci.ProposerAddress,
 		}}
@@ -152,16 +152,16 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest
 		return res, err
 	}
 
-	return &types.MsgCometInfoResponse{CometInfo: &ci}, err
+	return &types.QueryCometInfoResponse{CometInfo: &ci}, err
 }
 
 // SetCometInfo is called by the framework to set the value at genesis.
-func (k Keeper) CometInfo(ctx context.Context, req *types.MsgSetCometInfoRequest) (*types.MsgSetCometInfoResponse, error) {
+func (k Keeper) SetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
 	if req.Signer != "consensus" { // TODO move this to core when up-streamed from server/v2
 		return nil, fmt.Errorf("invalid signer; expected %s, got %s", "consensus", req.Signer)
 	}
 
 	err := k.cometInfo.Set(ctx, *req.CometInfo)
 
-	return &types.MsgSetCometInfoResponse{}, err
+	return &types.MsgCometInfoResponse{}, err
 }

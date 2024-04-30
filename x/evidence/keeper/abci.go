@@ -18,7 +18,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 	// If the user is using the legacy CometBFT consensus, we need to convert the
 	// evidence to the new types.Misbehavior type and store it in the cache.
 
-	res := consensusv1.MsgCometInfoResponse{}
+	res := consensusv1.QueryCometInfoResponse{}
 	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.MsgCometInfoRequest{}, &res); err != nil {
 		return err
 	}

@@ -20,6 +20,7 @@ import (
 	mintkeeper "cosmossdk.io/x/mint/keeper"
 	minttypes "cosmossdk.io/x/mint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -80,6 +81,8 @@ func Example() {
 			authtypes.ModuleName: authModule,
 			minttypes.ModuleName: mintModule,
 		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
 	)
 
 	// register the message and query servers
@@ -170,6 +173,8 @@ func Example_oneModule() {
 		map[string]appmodule.AppModule{
 			authtypes.ModuleName: authModule,
 		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
 	)
 
 	// register the message and query servers

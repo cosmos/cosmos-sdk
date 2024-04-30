@@ -24,6 +24,7 @@ const (
 	Msg_Grant_FullMethodName              = "/cosmos.authz.v1beta1.Msg/Grant"
 	Msg_Exec_FullMethodName               = "/cosmos.authz.v1beta1.Msg/Exec"
 	Msg_Revoke_FullMethodName             = "/cosmos.authz.v1beta1.Msg/Revoke"
+	Msg_RevokeAll_FullMethodName          = "/cosmos.authz.v1beta1.Msg/RevokeAll"
 	Msg_PruneExpiredGrants_FullMethodName = "/cosmos.authz.v1beta1.Msg/PruneExpiredGrants"
 )
 
@@ -43,9 +44,9 @@ type MsgClient interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.CallOption) (*MsgRevokeResponse, error)
+	// RevokeAll revokes all grants issued by the specified granter.
+	RevokeAll(ctx context.Context, in *MsgRevokeAll, opts ...grpc.CallOption) (*MsgRevokeAllResponse, error)
 	// PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
-	//
-	// Since cosmos-sdk 0.51
 	PruneExpiredGrants(ctx context.Context, in *MsgPruneExpiredGrants, opts ...grpc.CallOption) (*MsgPruneExpiredGrantsResponse, error)
 }
 
@@ -84,6 +85,15 @@ func (c *msgClient) Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.Call
 	return out, nil
 }
 
+func (c *msgClient) RevokeAll(ctx context.Context, in *MsgRevokeAll, opts ...grpc.CallOption) (*MsgRevokeAllResponse, error) {
+	out := new(MsgRevokeAllResponse)
+	err := c.cc.Invoke(ctx, Msg_RevokeAll_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) PruneExpiredGrants(ctx context.Context, in *MsgPruneExpiredGrants, opts ...grpc.CallOption) (*MsgPruneExpiredGrantsResponse, error) {
 	out := new(MsgPruneExpiredGrantsResponse)
 	err := c.cc.Invoke(ctx, Msg_PruneExpiredGrants_FullMethodName, in, out, opts...)
@@ -109,9 +119,9 @@ type MsgServer interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error)
+	// RevokeAll revokes all grants issued by the specified granter.
+	RevokeAll(context.Context, *MsgRevokeAll) (*MsgRevokeAllResponse, error)
 	// PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
-	//
-	// Since cosmos-sdk 0.51
 	PruneExpiredGrants(context.Context, *MsgPruneExpiredGrants) (*MsgPruneExpiredGrantsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
@@ -128,6 +138,9 @@ func (UnimplementedMsgServer) Exec(context.Context, *MsgExec) (*MsgExecResponse,
 }
 func (UnimplementedMsgServer) Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Revoke not implemented")
+}
+func (UnimplementedMsgServer) RevokeAll(context.Context, *MsgRevokeAll) (*MsgRevokeAllResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevokeAll not implemented")
 }
 func (UnimplementedMsgServer) PruneExpiredGrants(context.Context, *MsgPruneExpiredGrants) (*MsgPruneExpiredGrantsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PruneExpiredGrants not implemented")
@@ -199,6 +212,24 @@ func _Msg_Revoke_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RevokeAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRevokeAll)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RevokeAll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RevokeAll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RevokeAll(ctx, req.(*MsgRevokeAll))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_PruneExpiredGrants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgPruneExpiredGrants)
 	if err := dec(in); err != nil {
@@ -235,6 +266,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Revoke",
 			Handler:    _Msg_Revoke_Handler,
+		},
+		{
+			MethodName: "RevokeAll",
+			Handler:    _Msg_RevokeAll_Handler,
 		},
 		{
 			MethodName: "PruneExpiredGrants",

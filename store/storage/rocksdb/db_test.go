@@ -65,7 +65,7 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	// seek past domain, which should make the iterator invalid and produce an error
 	require.False(t, iter.Valid())
 
-	// reverse iterator with with a start and end domain
+	// reverse iterator with a start and end domain
 	iter2, err := db.ReverseIterator(storeKey1, 1, []byte("key010"), []byte("key019"))
 	require.NoError(t, err)
 

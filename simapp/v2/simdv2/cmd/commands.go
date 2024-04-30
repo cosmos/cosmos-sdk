@@ -32,6 +32,7 @@ import (
 	// "github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/server"
+	serverv2 "cosmossdk.io/server/v2"
 	// end TODO
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -76,7 +77,7 @@ func initRootCmd(
 		// snapshot.Cmd(newApp),
 	)
 
-	// server.AddCommands(rootCmd, log.NewNopLogger(), tempDir(), nil) // TODO: How to cast from AppModule to ServerModule 
+	serverv2.AddCommands(rootCmd, log.NewNopLogger(), tempDir(), nil) // TODO: How to cast from AppModule to ServerModule 
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(

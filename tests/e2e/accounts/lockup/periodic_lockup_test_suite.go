@@ -154,7 +154,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		require.NotNil(t, del)
 
 		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
 		fmt.Println(lockupAccountInfoResponse)
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(100)))
@@ -188,7 +188,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		require.Equal(t, len(ubd.Entries), 1)
 
 		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 	})
@@ -218,7 +218,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		require.NotNil(t, del)
 
 		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(t, ctx, app, accountAddr)
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
 		delFree := lockupAccountInfoResponse.DelegatedFree
 		require.True(t, delFree.AmountOf("stake").Equal(math.NewInt(100)))
 	})

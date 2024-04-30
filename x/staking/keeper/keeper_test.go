@@ -76,7 +76,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		env,
 		accountKeeper,
 		bankKeeper,
-		nil,
 		authority,
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),

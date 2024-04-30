@@ -42,10 +42,8 @@ type ModuleInputs struct {
 	ConsensusAddressCodec address.ConsensusAddressCodec
 	AccountKeeper         types.AccountKeeper
 	BankKeeper            types.BankKeeper
-	// TODO: audit this addition
-	ConsensusKeeper types.ConsensusKeeper
-	Cdc             codec.Codec
-	Environment     appmodule.Environment
+	Cdc                   codec.Codec
+	Environment           appmodule.Environment
 }
 
 // Dependency Injection Outputs
@@ -73,7 +71,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.Environment,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.ConsensusKeeper,
 		as,
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,

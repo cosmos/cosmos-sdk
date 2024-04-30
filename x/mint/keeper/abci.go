@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"time"
 
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/mint/types"
@@ -13,7 +12,7 @@ import (
 
 // BeginBlocker mints new tokens for the previous block.
 func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationFn) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// fetch stored minter & params
 	minter, err := k.Minter.Get(ctx)
@@ -86,7 +85,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationF
 		defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeMint,
 		event.NewAttribute(types.AttributeKeyBondedRatio, bondedRatio.String()),
 		event.NewAttribute(types.AttributeKeyInflation, minter.Inflation.String()),

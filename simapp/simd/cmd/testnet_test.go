@@ -27,6 +27,7 @@ import (
 
 func Test_TestnetCmd(t *testing.T) {
 	config := configurator.NewAppConfig(
+		configurator.AccountsModule(),
 		configurator.AuthModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),
@@ -44,10 +45,11 @@ func Test_TestnetCmd(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.NotNil(t, moduleManager)
-	require.Len(t, moduleManager.Modules, 7)
+	require.Len(t, moduleManager.Modules, 8)
 
 	home := t.TempDir()
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, staking.AppModule{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(cdcOpts, auth.AppModule{}, staking.AppModule{})
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
@@ -59,7 +61,9 @@ func Test_TestnetCmd(t *testing.T) {
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(home).
-		WithTxConfig(encodingConfig.TxConfig)
+		WithTxConfig(encodingConfig.TxConfig).
+		WithAddressCodec(cdcOpts.GetAddressCodec()).
+		WithValidatorAddressCodec(cdcOpts.GetValidatorCodec())
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)

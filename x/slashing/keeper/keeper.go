@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/slashing/types"
 
@@ -19,7 +18,8 @@ import (
 
 // Keeper of the slashing store
 type Keeper struct {
-	environment appmodule.Environment
+	appmodule.Environment
+
 	cdc         codec.BinaryCodec
 	legacyAmino *codec.LegacyAmino
 	sk          types.StakingKeeper
@@ -41,7 +41,7 @@ type Keeper struct {
 func NewKeeper(environment appmodule.Environment, cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, sk types.StakingKeeper, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(environment.KVStoreService)
 	k := Keeper{
-		environment: environment,
+		Environment: environment,
 		cdc:         cdc,
 		legacyAmino: legacyAmino,
 		sk:          sk,
@@ -83,11 +83,6 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	return k.environment.Logger.With("module", "x/"+types.ModuleName)
-}
-
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	return k.AddrPubkeyRelation.Get(ctx, a)
@@ -120,7 +115,7 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSlash,
 		event.NewAttribute(types.AttributeKeyAddress, consStr),
 		event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
@@ -141,7 +136,7 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		return err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSlash,
 		event.NewAttribute(types.AttributeKeyJailed, consStr),
 	); err != nil {

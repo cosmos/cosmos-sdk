@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
 	banktype "cosmossdk.io/x/bank/types"
@@ -121,7 +122,7 @@ func SimulateMsgGrant(
 		if !t1.Before(ctx.HeaderInfo().Time) {
 			expiration = &t1
 		}
-		randomAuthz := generateRandomAuthorization(r, spendLimit)
+		randomAuthz := generateRandomAuthorization(r, spendLimit, ak.AddressCodec())
 
 		granterAddr, err := ak.AddressCodec().BytesToString(granter.Address)
 		if err != nil {
@@ -158,9 +159,9 @@ func SimulateMsgGrant(
 	}
 }
 
-func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Authorization {
+func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins, addressCodec address.Codec) authz.Authorization {
 	authorizations := make([]authz.Authorization, 2)
-	sendAuthz := banktype.NewSendAuthorization(spendLimit, nil)
+	sendAuthz := banktype.NewSendAuthorization(spendLimit, nil, addressCodec)
 	authorizations[0] = sendAuthz
 	authorizations[1] = authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{}))
 

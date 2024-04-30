@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	address "cosmossdk.io/core/address"
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -74,7 +74,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
 			moduleNameStr, _ := cmd.Flags().GetString(flagModuleName)
 
-			return genutil.AddGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
+			return genutil.AddGenesisAccount(clientCtx.Codec, clientCtx.AddressCodec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
 		},
 	}
 

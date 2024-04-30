@@ -18,7 +18,7 @@ import (
 var StoreKey = "Counter"
 
 type Keeper struct {
-	env appmodule.Environment
+	appmodule.Environment
 
 	CountStore collections.Item[int64]
 }
@@ -26,8 +26,8 @@ type Keeper struct {
 func NewKeeper(env appmodule.Environment) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
-		env:        env,
-		CountStore: collections.NewItem(sb, collections.NewPrefix(0), "count", collections.Int64Value),
+		Environment: env,
+		CountStore:  collections.NewItem(sb, collections.NewPrefix(0), "count", collections.Int64Value),
 	}
 }
 
@@ -67,7 +67,7 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter
 		return nil, err
 	}
 
-	if err := k.env.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		"increase_counter",
 		event.NewAttribute("signer", msg.Signer),
 		event.NewAttribute("new count", fmt.Sprint(num+msg.Count))); err != nil {

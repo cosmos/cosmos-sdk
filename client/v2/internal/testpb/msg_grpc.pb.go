@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_Send_FullMethodName = "/testpb.Msg/Send"
+	Msg_Send_FullMethodName     = "/testpb.Msg/Send"
+	Msg_Clawback_FullMethodName = "/testpb.Msg/Clawback"
 )
 
 // MsgClient is the client API for Msg service.
@@ -28,6 +29,7 @@ const (
 type MsgClient interface {
 	// Send a request and returns the request as a response.
 	Send(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgResponse, error)
+	Clawback(ctx context.Context, in *MsgClawbackRequest, opts ...grpc.CallOption) (*MsgClawbackResponse, error)
 }
 
 type msgClient struct {
@@ -47,12 +49,22 @@ func (c *msgClient) Send(ctx context.Context, in *MsgRequest, opts ...grpc.CallO
 	return out, nil
 }
 
+func (c *msgClient) Clawback(ctx context.Context, in *MsgClawbackRequest, opts ...grpc.CallOption) (*MsgClawbackResponse, error) {
+	out := new(MsgClawbackResponse)
+	err := c.cc.Invoke(ctx, Msg_Clawback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
 	// Send a request and returns the request as a response.
 	Send(context.Context, *MsgRequest) (*MsgResponse, error)
+	Clawback(context.Context, *MsgClawbackRequest) (*MsgClawbackResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -62,6 +74,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) Send(context.Context, *MsgRequest) (*MsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
+}
+func (UnimplementedMsgServer) Clawback(context.Context, *MsgClawbackRequest) (*MsgClawbackResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Clawback not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -94,6 +109,24 @@ func _Msg_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_Clawback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClawbackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Clawback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_Clawback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Clawback(ctx, req.(*MsgClawbackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +137,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Send",
 			Handler:    _Msg_Send_Handler,
+		},
+		{
+			MethodName: "Clawback",
+			Handler:    _Msg_Clawback_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

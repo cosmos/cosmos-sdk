@@ -95,7 +95,7 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, err
 	}
 
-	k.Logger(ctx).Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
+	k.Logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
@@ -164,7 +164,7 @@ func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWit
 		return nil, err
 	}
 	if amount.IsNil() {
-		k.Logger(ctx).Info(fmt.Sprintf("no distribution amount found for recipient %s", msg.RecipientAddress))
+		k.Logger.Info(fmt.Sprintf("no distribution amount found for recipient %s", msg.RecipientAddress))
 	}
 
 	return &types.MsgWithdrawContinuousFundResponse{Amount: amount}, nil
@@ -180,8 +180,8 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, err
 	}
 
-	canceledHeight := k.environment.HeaderService.GetHeaderInfo(ctx).Height
-	canceledTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	canceledHeight := k.HeaderService.HeaderInfo(ctx).Height
+	canceledTime := k.HeaderService.HeaderInfo(ctx).Time
 
 	found, err := k.ContinuousFund.Has(ctx, recipient)
 	if !found {

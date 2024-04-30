@@ -15,7 +15,6 @@ use (
 	./orm
 	./simapp
 	./tests
-	./tests/starship/tests
 	./store
 	./tools/cosmovisor
 	./tools/confix
@@ -38,5 +37,6 @@ use (
 	./x/staking
 	./x/tx
 	./x/upgrade
+	./x/epochs
 	./x/accounts/defaults/lockup
 )

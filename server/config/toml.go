@@ -183,17 +183,6 @@ max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
 ###############################################################################
-###                        gRPC Web Configuration                           ###
-###############################################################################
-
-[grpc-web]
-
-# GRPCWebEnable defines if the gRPC-web should be enabled.
-# NOTE: gRPC must also be enabled, otherwise, this configuration is a no-op.
-# NOTE: gRPC-Web uses the same address as the API server.
-enable = {{ .GRPCWeb.Enable }}
-
-###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################
 
@@ -240,7 +229,7 @@ stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 
 [mempool]
 # Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
-# Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool.
+# Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool (no-op mempool).
 # Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
 #
 # Note, this configuration only applies to SDK built-in app-side mempool

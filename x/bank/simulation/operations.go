@@ -218,8 +218,13 @@ func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keep
 			// generate random input fields, ignore to address
 			from, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
+			fromAddr, err := ak.AddressCodec().BytesToString(from.Address)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msgType, "could not retrieve address"), nil, err
+			}
+
 			// make sure account is fresh and not used in previous input
-			for usedAddrs[from.Address.String()] {
+			for usedAddrs[fromAddr] {
 				from, _, coins, skip = randomSendFields(r, ctx, accs, bk, ak)
 			}
 
@@ -228,13 +233,13 @@ func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keep
 			}
 
 			// set input address in used address map
-			usedAddrs[from.Address.String()] = true
+			usedAddrs[fromAddr] = true
 
 			// set signer privkey
 			privs[i] = from.PrivKey
 
 			// set next input and accumulate total sent coins
-			inputs[i] = types.NewInput(from.Address, coins)
+			inputs[i] = types.NewInput(fromAddr, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 
@@ -244,7 +249,11 @@ func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keep
 		}
 
 		for o := range outputs {
-			outAddr, _ := simtypes.RandomAcc(r, accs)
+			out, _ := simtypes.RandomAcc(r, accs)
+			outAddr, err := ak.AddressCodec().BytesToString(out.Address)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msgType, "could not retrieve output address"), nil, err
+			}
 
 			var outCoins sdk.Coins
 			// split total sent coins into random subsets for output
@@ -257,7 +266,7 @@ func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keep
 				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
 
-			outputs[o] = types.NewOutput(outAddr.Address, outCoins)
+			outputs[o] = types.NewOutput(outAddr, outCoins)
 		}
 
 		// remove any output that has no coins
@@ -305,9 +314,13 @@ func SimulateMsgMultiSendToModuleAccount(
 		for i := range inputs {
 			sender := accs[i]
 			privs[i] = sender.PrivKey
+			senderAddr, err := ak.AddressCodec().BytesToString(sender.Address)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, err
+			}
 			spendable := bk.SpendableCoins(ctx, sender.Address)
 			coins := simtypes.RandSubsetCoins(r, spendable)
-			inputs[i] = types.NewInput(sender.Address, coins)
+			inputs[i] = types.NewInput(senderAddr, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
@@ -315,6 +328,11 @@ func SimulateMsgMultiSendToModuleAccount(
 		}
 		moduleAccounts := getModuleAccounts(ak, ctx, moduleAccount)
 		for i := range outputs {
+			outAddr, err := ak.AddressCodec().BytesToString(moduleAccounts[i].Address)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msgType, "could not retrieve output address"), nil, err
+			}
+
 			var outCoins sdk.Coins
 			// split total sent coins into random subsets for output
 			if i == len(outputs)-1 {
@@ -325,7 +343,7 @@ func SimulateMsgMultiSendToModuleAccount(
 				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
 				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
-			outputs[i] = types.NewOutput(moduleAccounts[i].Address, outCoins)
+			outputs[i] = types.NewOutput(outAddr, outCoins)
 		}
 		// remove any output that has no coins
 		for i := 0; i < len(outputs); {

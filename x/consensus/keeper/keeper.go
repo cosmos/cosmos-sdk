@@ -39,6 +39,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 		Environment: env,
 		authority:   authority,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+		cometInfo:   collections.NewItem(sb, collections.NewPrefix("CometInfo"), "comet_info", codec.CollValue[types.CometInfo](cdc)),
 	}
 }
 
@@ -93,7 +94,10 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 // SetParams sets the consensus parameters on init of a chain. This is a consensus message. It can only be called by the consensus server
 // This is used in the consensus message handler set in module.go.
-func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*types.ConsensusMsgParamsResponse, error) {
+func (k Keeper) SetParams(
+	ctx context.Context,
+	req *types.ConsensusMsgParams,
+) (*types.ConsensusMsgParamsResponse, error) {
 	if req.Signer != "consensus" {
 		return nil, fmt.Errorf("invalid signer; expected %s, got %s", "consensus", req.Signer)
 	}
@@ -115,7 +119,10 @@ func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*
 
 // GetCometInfo returns info related to comet. If the application is using v1 then the information will be present on context,
 // if the application is using v2 then the information will be present in the cometInfo store.
-func (k Keeper) GetCometInfo(ctx context.Context, req *types.QueryCometInfoRequest) (*types.QueryCometInfoResponse, error) {
+func (k Keeper) GetCometInfo(
+	ctx context.Context,
+	_ *types.QueryCometInfoRequest,
+) (*types.QueryCometInfoResponse, error) {
 	ci, err := k.cometInfo.Get(ctx)
 	// if the value is not found we may be using baseapp and not have consensus messages
 	if errors.Is(err, collections.ErrNotFound) {
@@ -123,6 +130,7 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.QueryCometInfoReque
 		res := &types.QueryCometInfoResponse{CometInfo: &types.CometInfo{
 			ValidatorsHash:  ci.ValidatorsHash,
 			ProposerAddress: ci.ProposerAddress,
+			LastCommit:      &types.CommitInfo{},
 		}}
 
 		for _, vote := range ci.LastCommit.Votes {
@@ -149,7 +157,7 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.QueryCometInfoReque
 			})
 		}
 
-		return res, err
+		return res, nil
 	}
 
 	return &types.QueryCometInfoResponse{CometInfo: &ci}, err

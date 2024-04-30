@@ -35,7 +35,6 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcryptoproto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -531,25 +530,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMe
 
 	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
 	for i, v := range validatorUpdates {
-		var pubkey cmtcryptoproto.PublicKey
-		switch v.PubKeyType {
-		case "ed25519":
-			pubkey = cmtcryptoproto.PublicKey{
-				Sum: &cmtcryptoproto.PublicKey_Ed25519{
-					Ed25519: v.PubKey,
-				},
-			}
-		case "secp256k1":
-			pubkey = cmtcryptoproto.PublicKey{
-				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
-					Secp256K1: v.PubKey,
-				},
-			}
-		}
-
 		cometValidatorUpdates[i] = abci.ValidatorUpdate{
-			PubKey: pubkey,
-			Power:  v.Power,
+			PubKeyBytes: v.PubKey,
+			Power:       v.Power,
+			PubKeyType:  v.PubKeyType,
 		}
 	}
 
@@ -845,8 +829,15 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
 				}
 			}
-		} else {
-			continue
+		}
+	}
+
+	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
+	for i, v := range validatorUpdates {
+		cometValidatorUpdates[i] = abci.ValidatorUpdate{
+			PubKeyBytes: v.PubKey,
+			PubKeyType:  v.PubKeyType,
+			Power:       v.Power,
 		}
 	}
 

@@ -1,0 +1,21 @@
+name: Simapp V2 Start
+on:
+  pull_request:
+  merge_group:
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-arch: ["amd64", "arm", "arm64"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          check-latest: true
+      - name: Simapp v2 start
+        run: bash ./simv2.sh

@@ -13,6 +13,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	registrar.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgUpdateParams{},
+		&MsgSetCometInfoRequest{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)

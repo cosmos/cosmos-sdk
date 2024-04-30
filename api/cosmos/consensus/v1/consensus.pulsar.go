@@ -1187,27 +1187,27 @@ func (x *fastReflection_ConsensusMsgParamsResponse) ProtoMethods() *protoiface.M
 }
 
 var (
-	md_ConsensusMsgCometInfoRequest            protoreflect.MessageDescriptor
-	fd_ConsensusMsgCometInfoRequest_signer     protoreflect.FieldDescriptor
-	fd_ConsensusMsgCometInfoRequest_comet_info protoreflect.FieldDescriptor
+	md_MsgSetCometInfoRequest            protoreflect.MessageDescriptor
+	fd_MsgSetCometInfoRequest_signer     protoreflect.FieldDescriptor
+	fd_MsgSetCometInfoRequest_comet_info protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_consensus_v1_consensus_proto_init()
-	md_ConsensusMsgCometInfoRequest = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("ConsensusMsgCometInfoRequest")
-	fd_ConsensusMsgCometInfoRequest_signer = md_ConsensusMsgCometInfoRequest.Fields().ByName("signer")
-	fd_ConsensusMsgCometInfoRequest_comet_info = md_ConsensusMsgCometInfoRequest.Fields().ByName("comet_info")
+	md_MsgSetCometInfoRequest = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("MsgSetCometInfoRequest")
+	fd_MsgSetCometInfoRequest_signer = md_MsgSetCometInfoRequest.Fields().ByName("signer")
+	fd_MsgSetCometInfoRequest_comet_info = md_MsgSetCometInfoRequest.Fields().ByName("comet_info")
 }
 
-var _ protoreflect.Message = (*fastReflection_ConsensusMsgCometInfoRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgSetCometInfoRequest)(nil)
 
-type fastReflection_ConsensusMsgCometInfoRequest ConsensusMsgCometInfoRequest
+type fastReflection_MsgSetCometInfoRequest MsgSetCometInfoRequest
 
-func (x *ConsensusMsgCometInfoRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_ConsensusMsgCometInfoRequest)(x)
+func (x *MsgSetCometInfoRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSetCometInfoRequest)(x)
 }
 
-func (x *ConsensusMsgCometInfoRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgSetCometInfoRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_consensus_v1_consensus_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1219,43 +1219,43 @@ func (x *ConsensusMsgCometInfoRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_ConsensusMsgCometInfoRequest_messageType fastReflection_ConsensusMsgCometInfoRequest_messageType
-var _ protoreflect.MessageType = fastReflection_ConsensusMsgCometInfoRequest_messageType{}
+var _fastReflection_MsgSetCometInfoRequest_messageType fastReflection_MsgSetCometInfoRequest_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSetCometInfoRequest_messageType{}
 
-type fastReflection_ConsensusMsgCometInfoRequest_messageType struct{}
+type fastReflection_MsgSetCometInfoRequest_messageType struct{}
 
-func (x fastReflection_ConsensusMsgCometInfoRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_ConsensusMsgCometInfoRequest)(nil)
+func (x fastReflection_MsgSetCometInfoRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSetCometInfoRequest)(nil)
 }
-func (x fastReflection_ConsensusMsgCometInfoRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_ConsensusMsgCometInfoRequest)
+func (x fastReflection_MsgSetCometInfoRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSetCometInfoRequest)
 }
-func (x fastReflection_ConsensusMsgCometInfoRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_ConsensusMsgCometInfoRequest
+func (x fastReflection_MsgSetCometInfoRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSetCometInfoRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_ConsensusMsgCometInfoRequest
+func (x *fastReflection_MsgSetCometInfoRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSetCometInfoRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Type() protoreflect.MessageType {
-	return _fastReflection_ConsensusMsgCometInfoRequest_messageType
+func (x *fastReflection_MsgSetCometInfoRequest) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSetCometInfoRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) New() protoreflect.Message {
-	return new(fastReflection_ConsensusMsgCometInfoRequest)
+func (x *fastReflection_MsgSetCometInfoRequest) New() protoreflect.Message {
+	return new(fastReflection_MsgSetCometInfoRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Interface() protoreflect.ProtoMessage {
-	return (*ConsensusMsgCometInfoRequest)(x)
+func (x *fastReflection_MsgSetCometInfoRequest) Interface() protoreflect.ProtoMessage {
+	return (*MsgSetCometInfoRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1263,16 +1263,16 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Interface() protoreflect.P
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgSetCometInfoRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Signer != "" {
 		value := protoreflect.ValueOfString(x.Signer)
-		if !f(fd_ConsensusMsgCometInfoRequest_signer, value) {
+		if !f(fd_MsgSetCometInfoRequest_signer, value) {
 			return
 		}
 	}
 	if x.CometInfo != nil {
 		value := protoreflect.ValueOfMessage(x.CometInfo.ProtoReflect())
-		if !f(fd_ConsensusMsgCometInfoRequest_comet_info, value) {
+		if !f(fd_MsgSetCometInfoRequest_comet_info, value) {
 			return
 		}
 	}
@@ -1289,17 +1289,17 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Range(f func(protoreflect.
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgSetCometInfoRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.signer":
 		return x.Signer != ""
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.comet_info":
 		return x.CometInfo != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1309,17 +1309,17 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Has(fd protoreflect.FieldD
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgSetCometInfoRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.signer":
 		x.Signer = ""
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.comet_info":
 		x.CometInfo = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1329,19 +1329,19 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Clear(fd protoreflect.Fiel
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSetCometInfoRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.signer":
 		value := x.Signer
 		return protoreflect.ValueOfString(value)
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.comet_info":
 		value := x.CometInfo
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1355,17 +1355,17 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Get(descriptor protoreflec
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgSetCometInfoRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.signer":
 		x.Signer = value.Interface().(string)
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.comet_info":
 		x.CometInfo = value.Message().Interface().(*CometInfo)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1379,48 +1379,48 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) Set(fd protoreflect.FieldD
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSetCometInfoRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.comet_info":
 		if x.CometInfo == nil {
 			x.CometInfo = new(CometInfo)
 		}
 		return protoreflect.ValueOfMessage(x.CometInfo.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
-		panic(fmt.Errorf("field signer of message cosmos.consensus.v1.ConsensusMsgCometInfoRequest is not mutable"))
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.signer":
+		panic(fmt.Errorf("field signer of message cosmos.consensus.v1.MsgSetCometInfoRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSetCometInfoRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.signer":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.signer":
 		return protoreflect.ValueOfString("")
-	case "cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info":
+	case "cosmos.consensus.v1.MsgSetCometInfoRequest.comet_info":
 		m := new(CometInfo)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgSetCometInfoRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.ConsensusMsgCometInfoRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.MsgSetCometInfoRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1428,7 +1428,7 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) WhichOneof(d protoreflect.
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgSetCometInfoRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1439,7 +1439,7 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) GetUnknown() protoreflect.
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgSetCometInfoRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1451,7 +1451,7 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) SetUnknown(fields protoref
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) IsValid() bool {
+func (x *fastReflection_MsgSetCometInfoRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -1461,9 +1461,9 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_ConsensusMsgCometInfoRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgSetCometInfoRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*ConsensusMsgCometInfoRequest)
+		x := input.Message.Interface().(*MsgSetCometInfoRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1493,7 +1493,7 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) ProtoMethods() *protoiface
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*ConsensusMsgCometInfoRequest)
+		x := input.Message.Interface().(*MsgSetCometInfoRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1544,7 +1544,7 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) ProtoMethods() *protoiface
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*ConsensusMsgCometInfoRequest)
+		x := input.Message.Interface().(*MsgSetCometInfoRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1576,10 +1576,10 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) ProtoMethods() *protoiface
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ConsensusMsgCometInfoRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSetCometInfoRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ConsensusMsgCometInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSetCometInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1686,23 +1686,23 @@ func (x *fastReflection_ConsensusMsgCometInfoRequest) ProtoMethods() *protoiface
 }
 
 var (
-	md_ConsensusMsgCometInfoResponse protoreflect.MessageDescriptor
+	md_MsgSetCometInfoResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_consensus_v1_consensus_proto_init()
-	md_ConsensusMsgCometInfoResponse = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("ConsensusMsgCometInfoResponse")
+	md_MsgSetCometInfoResponse = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("MsgSetCometInfoResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_ConsensusMsgCometInfoResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgSetCometInfoResponse)(nil)
 
-type fastReflection_ConsensusMsgCometInfoResponse ConsensusMsgCometInfoResponse
+type fastReflection_MsgSetCometInfoResponse MsgSetCometInfoResponse
 
-func (x *ConsensusMsgCometInfoResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_ConsensusMsgCometInfoResponse)(x)
+func (x *MsgSetCometInfoResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSetCometInfoResponse)(x)
 }
 
-func (x *ConsensusMsgCometInfoResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgSetCometInfoResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_consensus_v1_consensus_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1714,43 +1714,43 @@ func (x *ConsensusMsgCometInfoResponse) slowProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_ConsensusMsgCometInfoResponse_messageType fastReflection_ConsensusMsgCometInfoResponse_messageType
-var _ protoreflect.MessageType = fastReflection_ConsensusMsgCometInfoResponse_messageType{}
+var _fastReflection_MsgSetCometInfoResponse_messageType fastReflection_MsgSetCometInfoResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSetCometInfoResponse_messageType{}
 
-type fastReflection_ConsensusMsgCometInfoResponse_messageType struct{}
+type fastReflection_MsgSetCometInfoResponse_messageType struct{}
 
-func (x fastReflection_ConsensusMsgCometInfoResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_ConsensusMsgCometInfoResponse)(nil)
+func (x fastReflection_MsgSetCometInfoResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSetCometInfoResponse)(nil)
 }
-func (x fastReflection_ConsensusMsgCometInfoResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_ConsensusMsgCometInfoResponse)
+func (x fastReflection_MsgSetCometInfoResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSetCometInfoResponse)
 }
-func (x fastReflection_ConsensusMsgCometInfoResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_ConsensusMsgCometInfoResponse
+func (x fastReflection_MsgSetCometInfoResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSetCometInfoResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_ConsensusMsgCometInfoResponse
+func (x *fastReflection_MsgSetCometInfoResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSetCometInfoResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Type() protoreflect.MessageType {
-	return _fastReflection_ConsensusMsgCometInfoResponse_messageType
+func (x *fastReflection_MsgSetCometInfoResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSetCometInfoResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) New() protoreflect.Message {
-	return new(fastReflection_ConsensusMsgCometInfoResponse)
+func (x *fastReflection_MsgSetCometInfoResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgSetCometInfoResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Interface() protoreflect.ProtoMessage {
-	return (*ConsensusMsgCometInfoResponse)(x)
+func (x *fastReflection_MsgSetCometInfoResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgSetCometInfoResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1758,7 +1758,7 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) Interface() protoreflect.
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgSetCometInfoResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -1772,13 +1772,13 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) Range(f func(protoreflect
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgSetCometInfoResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1788,13 +1788,13 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) Has(fd protoreflect.Field
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgSetCometInfoResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1804,13 +1804,13 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) Clear(fd protoreflect.Fie
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSetCometInfoResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1824,13 +1824,13 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) Get(descriptor protorefle
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgSetCometInfoResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1844,36 +1844,36 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) Set(fd protoreflect.Field
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSetCometInfoResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSetCometInfoResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgCometInfoResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.MsgSetCometInfoResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgCometInfoResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.MsgSetCometInfoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgSetCometInfoResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.ConsensusMsgCometInfoResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.MsgSetCometInfoResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1881,7 +1881,7 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) WhichOneof(d protoreflect
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgSetCometInfoResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1892,7 +1892,7 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) GetUnknown() protoreflect
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgSetCometInfoResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1904,7 +1904,7 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) SetUnknown(fields protore
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) IsValid() bool {
+func (x *fastReflection_MsgSetCometInfoResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -1914,9 +1914,9 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_ConsensusMsgCometInfoResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgSetCometInfoResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*ConsensusMsgCometInfoResponse)
+		x := input.Message.Interface().(*MsgSetCometInfoResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1938,7 +1938,7 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) ProtoMethods() *protoifac
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*ConsensusMsgCometInfoResponse)
+		x := input.Message.Interface().(*MsgSetCometInfoResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1968,7 +1968,7 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) ProtoMethods() *protoifac
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*ConsensusMsgCometInfoResponse)
+		x := input.Message.Interface().(*MsgSetCometInfoResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2000,10 +2000,10 @@ func (x *fastReflection_ConsensusMsgCometInfoResponse) ProtoMethods() *protoifac
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ConsensusMsgCometInfoResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSetCometInfoResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ConsensusMsgCometInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSetCometInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -5923,7 +5923,7 @@ func (*ConsensusMsgParamsResponse) Descriptor() ([]byte, []int) {
 }
 
 // MsgCometInfoRequest is the Msg/CometInfo request type. This is a consensus message that is sent from cometbft.
-type ConsensusMsgCometInfoRequest struct {
+type MsgSetCometInfoRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -5932,8 +5932,8 @@ type ConsensusMsgCometInfoRequest struct {
 	CometInfo *CometInfo `protobuf:"bytes,2,opt,name=comet_info,json=cometInfo,proto3" json:"comet_info,omitempty"`
 }
 
-func (x *ConsensusMsgCometInfoRequest) Reset() {
-	*x = ConsensusMsgCometInfoRequest{}
+func (x *MsgSetCometInfoRequest) Reset() {
+	*x = MsgSetCometInfoRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_consensus_v1_consensus_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -5941,25 +5941,25 @@ func (x *ConsensusMsgCometInfoRequest) Reset() {
 	}
 }
 
-func (x *ConsensusMsgCometInfoRequest) String() string {
+func (x *MsgSetCometInfoRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConsensusMsgCometInfoRequest) ProtoMessage() {}
+func (*MsgSetCometInfoRequest) ProtoMessage() {}
 
-// Deprecated: Use ConsensusMsgCometInfoRequest.ProtoReflect.Descriptor instead.
-func (*ConsensusMsgCometInfoRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgSetCometInfoRequest.ProtoReflect.Descriptor instead.
+func (*MsgSetCometInfoRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_consensus_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ConsensusMsgCometInfoRequest) GetSigner() string {
+func (x *MsgSetCometInfoRequest) GetSigner() string {
 	if x != nil {
 		return x.Signer
 	}
 	return ""
 }
 
-func (x *ConsensusMsgCometInfoRequest) GetCometInfo() *CometInfo {
+func (x *MsgSetCometInfoRequest) GetCometInfo() *CometInfo {
 	if x != nil {
 		return x.CometInfo
 	}
@@ -5967,14 +5967,14 @@ func (x *ConsensusMsgCometInfoRequest) GetCometInfo() *CometInfo {
 }
 
 // MsgCometInfoResponse is the Msg/CometInfo response type. This is a consensus message that is sent from cometbft.
-type ConsensusMsgCometInfoResponse struct {
+type MsgSetCometInfoResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *ConsensusMsgCometInfoResponse) Reset() {
-	*x = ConsensusMsgCometInfoResponse{}
+func (x *MsgSetCometInfoResponse) Reset() {
+	*x = MsgSetCometInfoResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_consensus_v1_consensus_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -5982,14 +5982,14 @@ func (x *ConsensusMsgCometInfoResponse) Reset() {
 	}
 }
 
-func (x *ConsensusMsgCometInfoResponse) String() string {
+func (x *MsgSetCometInfoResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConsensusMsgCometInfoResponse) ProtoMessage() {}
+func (*MsgSetCometInfoResponse) ProtoMessage() {}
 
-// Deprecated: Use ConsensusMsgCometInfoResponse.ProtoReflect.Descriptor instead.
-func (*ConsensusMsgCometInfoResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgSetCometInfoResponse.ProtoReflect.Descriptor instead.
+func (*MsgSetCometInfoResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_consensus_proto_rawDescGZIP(), []int{3}
 }
 
@@ -6353,102 +6353,102 @@ var file_cosmos_consensus_v1_consensus_proto_rawDesc = []byte{
 	0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
 	0x41, 0x42, 0x43, 0x49, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x04, 0x61, 0x62, 0x63, 0x69,
 	0x22, 0x1c, 0x0a, 0x1a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x75,
-	0x0a, 0x1c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x43, 0x6f,
-	0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16,
-	0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
-	0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x3d, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x5f,
-	0x69, 0x6e, 0x66, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x6f,
+	0x0a, 0x16, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66,
+	0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e,
+	0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72,
+	0x12, 0x3d, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f,
+	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x65, 0x74,
+	0x49, 0x6e, 0x66, 0x6f, 0x52, 0x09, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x22,
+	0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e,
+	0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x15, 0x0a, 0x13, 0x4d, 0x73,
+	0x67, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x22, 0x55, 0x0a, 0x14, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66,
+	0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3d, 0x0a, 0x0a, 0x63, 0x6f, 0x6d,
+	0x65, 0x74, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
+	0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x09, 0x63,
+	0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x22, 0xdc, 0x01, 0x0a, 0x09, 0x43, 0x6f, 0x6d,
+	0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x27, 0x0a, 0x0f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x73, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x0e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x48, 0x61, 0x73, 0x68, 0x12,
+	0x29, 0x0a, 0x10, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0f, 0x70, 0x72, 0x6f, 0x70, 0x6f,
+	0x73, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x40, 0x0a, 0x0b, 0x6c, 0x61,
+	0x73, 0x74, 0x5f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
+	0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x49, 0x6e, 0x66, 0x6f,
+	0x52, 0x0a, 0x6c, 0x61, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x12, 0x39, 0x0a, 0x08,
+	0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x08, 0x65,
+	0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x57, 0x0a, 0x0a, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x14, 0x0a, 0x05, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x33, 0x0a, 0x05, 0x76,
+	0x6f, 0x74, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31,
-	0x2e, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x09, 0x63, 0x6f, 0x6d, 0x65,
-	0x74, 0x49, 0x6e, 0x66, 0x6f, 0x22, 0x1f, 0x0a, 0x1d, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
-	0x75, 0x73, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x15, 0x0a, 0x13, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d,
-	0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x55, 0x0a,
-	0x14, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3d, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x5f, 0x69,
-	0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x2e, 0x56, 0x6f, 0x74, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x73,
+	0x22, 0x8e, 0x01, 0x0a, 0x08, 0x56, 0x6f, 0x74, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x3c, 0x0a,
+	0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
+	0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x52, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x44, 0x0a, 0x0d, 0x62,
+	0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x69, 0x64, 0x5f, 0x66, 0x6c, 0x61, 0x67, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73,
+	0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44,
+	0x46, 0x6c, 0x61, 0x67, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x64, 0x46, 0x6c, 0x61,
+	0x67, 0x22, 0x3b, 0x0a, 0x09, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x18,
+	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65,
+	0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x8f,
+	0x02, 0x0a, 0x08, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x49, 0x0a, 0x0d, 0x65,
+	0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73,
+	0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x69, 0x73, 0x62, 0x65, 0x68, 0x61,
+	0x76, 0x69, 0x6f, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x0c, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e,
+	0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12, 0x3c, 0x0a, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x09, 0x63, 0x6f, 0x6d, 0x65, 0x74,
-	0x49, 0x6e, 0x66, 0x6f, 0x22, 0xdc, 0x01, 0x0a, 0x09, 0x43, 0x6f, 0x6d, 0x65, 0x74, 0x49, 0x6e,
-	0x66, 0x6f, 0x12, 0x27, 0x0a, 0x0f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73,
-	0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0e, 0x76, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x48, 0x61, 0x73, 0x68, 0x12, 0x29, 0x0a, 0x10, 0x70,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0f, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x40, 0x0a, 0x0b, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x63,
-	0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76,
-	0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0a, 0x6c, 0x61,
-	0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x12, 0x39, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64,
-	0x65, 0x6e, 0x63, 0x65, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31,
-	0x2e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65,
-	0x6e, 0x63, 0x65, 0x22, 0x57, 0x0a, 0x0a, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x49, 0x6e, 0x66,
-	0x6f, 0x12, 0x14, 0x0a, 0x05, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05,
-	0x52, 0x05, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x33, 0x0a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x73,
-	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x6f, 0x74,
-	0x65, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x73, 0x22, 0x8e, 0x01, 0x0a,
-	0x08, 0x56, 0x6f, 0x74, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x3c, 0x0a, 0x09, 0x76, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x09, 0x76, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x44, 0x0a, 0x0d, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
-	0x5f, 0x69, 0x64, 0x5f, 0x66, 0x6c, 0x61, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x20,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x46, 0x6c, 0x61, 0x67,
-	0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x64, 0x46, 0x6c, 0x61, 0x67, 0x22, 0x3b, 0x0a,
-	0x09, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x8f, 0x02, 0x0a, 0x08, 0x45,
-	0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x49, 0x0a, 0x0d, 0x65, 0x76, 0x69, 0x64, 0x65,
-	0x6e, 0x63, 0x65, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x24,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x69, 0x73, 0x62, 0x65, 0x68, 0x61, 0x76, 0x69, 0x6f, 0x72,
-	0x54, 0x79, 0x70, 0x65, 0x52, 0x0c, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x54, 0x79,
-	0x70, 0x65, 0x12, 0x3c, 0x0a, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63,
-	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x12, 0x16, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x34, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x2c,
-	0x0a, 0x12, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x76, 0x6f, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x70,
-	0x6f, 0x77, 0x65, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x10, 0x74, 0x6f, 0x74, 0x61,
-	0x6c, 0x56, 0x6f, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x2a, 0x77, 0x0a, 0x0b,
-	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x46, 0x6c, 0x61, 0x67, 0x12, 0x1d, 0x0a, 0x19, 0x42,
-	0x4c, 0x4f, 0x43, 0x4b, 0x5f, 0x49, 0x44, 0x5f, 0x46, 0x4c, 0x41, 0x47, 0x5f, 0x55, 0x4e, 0x53,
-	0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x18, 0x0a, 0x14, 0x42, 0x4c,
-	0x4f, 0x43, 0x4b, 0x5f, 0x49, 0x44, 0x5f, 0x46, 0x4c, 0x41, 0x47, 0x5f, 0x41, 0x42, 0x53, 0x45,
-	0x4e, 0x54, 0x10, 0x01, 0x12, 0x18, 0x0a, 0x14, 0x42, 0x4c, 0x4f, 0x43, 0x4b, 0x5f, 0x49, 0x44,
-	0x5f, 0x46, 0x4c, 0x41, 0x47, 0x5f, 0x43, 0x4f, 0x4d, 0x4d, 0x49, 0x54, 0x10, 0x02, 0x12, 0x15,
-	0x0a, 0x11, 0x42, 0x4c, 0x4f, 0x43, 0x4b, 0x5f, 0x49, 0x44, 0x5f, 0x46, 0x4c, 0x41, 0x47, 0x5f,
-	0x4e, 0x49, 0x4c, 0x10, 0x03, 0x2a, 0x82, 0x01, 0x0a, 0x0f, 0x4d, 0x69, 0x73, 0x62, 0x65, 0x68,
-	0x61, 0x76, 0x69, 0x6f, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x20, 0x0a, 0x1c, 0x4d, 0x49, 0x53,
-	0x42, 0x45, 0x48, 0x41, 0x56, 0x49, 0x4f, 0x52, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x55, 0x4e,
-	0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x23, 0x0a, 0x1f, 0x4d,
-	0x49, 0x53, 0x42, 0x45, 0x48, 0x41, 0x56, 0x49, 0x4f, 0x52, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f,
-	0x44, 0x55, 0x50, 0x4c, 0x49, 0x43, 0x41, 0x54, 0x45, 0x5f, 0x56, 0x4f, 0x54, 0x45, 0x10, 0x01,
-	0x12, 0x28, 0x0a, 0x24, 0x4d, 0x49, 0x53, 0x42, 0x45, 0x48, 0x41, 0x56, 0x49, 0x4f, 0x52, 0x5f,
-	0x54, 0x59, 0x50, 0x45, 0x5f, 0x4c, 0x49, 0x47, 0x48, 0x54, 0x5f, 0x43, 0x4c, 0x49, 0x45, 0x4e,
-	0x54, 0x5f, 0x41, 0x54, 0x54, 0x41, 0x43, 0x4b, 0x10, 0x02, 0x42, 0xc9, 0x01, 0x0a, 0x17, 0x63,
-	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
-	0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x42, 0x0e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75,
-	0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x63,
-	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x58,
-	0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
-	0x73, 0x75, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
-	0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1f, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c,
-	0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
-	0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
-	0x75, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x34, 0x0a, 0x04,
+	0x74, 0x69, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x04, 0x74, 0x69,
+	0x6d, 0x65, 0x12, 0x2c, 0x0a, 0x12, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x76, 0x6f, 0x74, 0x69,
+	0x6e, 0x67, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x10,
+	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x56, 0x6f, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x6f, 0x77, 0x65, 0x72,
+	0x2a, 0x77, 0x0a, 0x0b, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x46, 0x6c, 0x61, 0x67, 0x12,
+	0x1d, 0x0a, 0x19, 0x42, 0x4c, 0x4f, 0x43, 0x4b, 0x5f, 0x49, 0x44, 0x5f, 0x46, 0x4c, 0x41, 0x47,
+	0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x18,
+	0x0a, 0x14, 0x42, 0x4c, 0x4f, 0x43, 0x4b, 0x5f, 0x49, 0x44, 0x5f, 0x46, 0x4c, 0x41, 0x47, 0x5f,
+	0x41, 0x42, 0x53, 0x45, 0x4e, 0x54, 0x10, 0x01, 0x12, 0x18, 0x0a, 0x14, 0x42, 0x4c, 0x4f, 0x43,
+	0x4b, 0x5f, 0x49, 0x44, 0x5f, 0x46, 0x4c, 0x41, 0x47, 0x5f, 0x43, 0x4f, 0x4d, 0x4d, 0x49, 0x54,
+	0x10, 0x02, 0x12, 0x15, 0x0a, 0x11, 0x42, 0x4c, 0x4f, 0x43, 0x4b, 0x5f, 0x49, 0x44, 0x5f, 0x46,
+	0x4c, 0x41, 0x47, 0x5f, 0x4e, 0x49, 0x4c, 0x10, 0x03, 0x2a, 0x82, 0x01, 0x0a, 0x0f, 0x4d, 0x69,
+	0x73, 0x62, 0x65, 0x68, 0x61, 0x76, 0x69, 0x6f, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x20, 0x0a,
+	0x1c, 0x4d, 0x49, 0x53, 0x42, 0x45, 0x48, 0x41, 0x56, 0x49, 0x4f, 0x52, 0x5f, 0x54, 0x59, 0x50,
+	0x45, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12,
+	0x23, 0x0a, 0x1f, 0x4d, 0x49, 0x53, 0x42, 0x45, 0x48, 0x41, 0x56, 0x49, 0x4f, 0x52, 0x5f, 0x54,
+	0x59, 0x50, 0x45, 0x5f, 0x44, 0x55, 0x50, 0x4c, 0x49, 0x43, 0x41, 0x54, 0x45, 0x5f, 0x56, 0x4f,
+	0x54, 0x45, 0x10, 0x01, 0x12, 0x28, 0x0a, 0x24, 0x4d, 0x49, 0x53, 0x42, 0x45, 0x48, 0x41, 0x56,
+	0x49, 0x4f, 0x52, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x4c, 0x49, 0x47, 0x48, 0x54, 0x5f, 0x43,
+	0x4c, 0x49, 0x45, 0x4e, 0x54, 0x5f, 0x41, 0x54, 0x54, 0x41, 0x43, 0x4b, 0x10, 0x02, 0x42, 0xc9,
+	0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f,
+	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x42, 0x0e, 0x43, 0x6f, 0x6e, 0x73,
+	0x65, 0x6e, 0x73, 0x75, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2f,
+	0x76, 0x31, 0x3b, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x76, 0x31, 0xa2, 0x02,
+	0x03, 0x43, 0x43, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x6f,
+	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31,
+	0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
+	0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x43, 0x6f, 0x6e,
+	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -6466,25 +6466,25 @@ func file_cosmos_consensus_v1_consensus_proto_rawDescGZIP() []byte {
 var file_cosmos_consensus_v1_consensus_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_cosmos_consensus_v1_consensus_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_cosmos_consensus_v1_consensus_proto_goTypes = []interface{}{
-	(BlockIDFlag)(0),                      // 0: cosmos.consensus.v1.BlockIDFlag
-	(MisbehaviorType)(0),                  // 1: cosmos.consensus.v1.MisbehaviorType
-	(*ConsensusMsgParams)(nil),            // 2: cosmos.consensus.v1.ConsensusMsgParams
-	(*ConsensusMsgParamsResponse)(nil),    // 3: cosmos.consensus.v1.ConsensusMsgParamsResponse
-	(*ConsensusMsgCometInfoRequest)(nil),  // 4: cosmos.consensus.v1.ConsensusMsgCometInfoRequest
-	(*ConsensusMsgCometInfoResponse)(nil), // 5: cosmos.consensus.v1.ConsensusMsgCometInfoResponse
-	(*MsgCometInfoRequest)(nil),           // 6: cosmos.consensus.v1.MsgCometInfoRequest
-	(*MsgCometInfoResponse)(nil),          // 7: cosmos.consensus.v1.MsgCometInfoResponse
-	(*CometInfo)(nil),                     // 8: cosmos.consensus.v1.CometInfo
-	(*CommitInfo)(nil),                    // 9: cosmos.consensus.v1.CommitInfo
-	(*VoteInfo)(nil),                      // 10: cosmos.consensus.v1.VoteInfo
-	(*Validator)(nil),                     // 11: cosmos.consensus.v1.Validator
-	(*Evidence)(nil),                      // 12: cosmos.consensus.v1.Evidence
-	(*types.VersionParams)(nil),           // 13: tendermint.types.VersionParams
-	(*types.BlockParams)(nil),             // 14: tendermint.types.BlockParams
-	(*types.EvidenceParams)(nil),          // 15: tendermint.types.EvidenceParams
-	(*types.ValidatorParams)(nil),         // 16: tendermint.types.ValidatorParams
-	(*types.ABCIParams)(nil),              // 17: tendermint.types.ABCIParams
-	(*timestamppb.Timestamp)(nil),         // 18: google.protobuf.Timestamp
+	(BlockIDFlag)(0),                   // 0: cosmos.consensus.v1.BlockIDFlag
+	(MisbehaviorType)(0),               // 1: cosmos.consensus.v1.MisbehaviorType
+	(*ConsensusMsgParams)(nil),         // 2: cosmos.consensus.v1.ConsensusMsgParams
+	(*ConsensusMsgParamsResponse)(nil), // 3: cosmos.consensus.v1.ConsensusMsgParamsResponse
+	(*MsgSetCometInfoRequest)(nil),     // 4: cosmos.consensus.v1.MsgSetCometInfoRequest
+	(*MsgSetCometInfoResponse)(nil),    // 5: cosmos.consensus.v1.MsgSetCometInfoResponse
+	(*MsgCometInfoRequest)(nil),        // 6: cosmos.consensus.v1.MsgCometInfoRequest
+	(*MsgCometInfoResponse)(nil),       // 7: cosmos.consensus.v1.MsgCometInfoResponse
+	(*CometInfo)(nil),                  // 8: cosmos.consensus.v1.CometInfo
+	(*CommitInfo)(nil),                 // 9: cosmos.consensus.v1.CommitInfo
+	(*VoteInfo)(nil),                   // 10: cosmos.consensus.v1.VoteInfo
+	(*Validator)(nil),                  // 11: cosmos.consensus.v1.Validator
+	(*Evidence)(nil),                   // 12: cosmos.consensus.v1.Evidence
+	(*types.VersionParams)(nil),        // 13: tendermint.types.VersionParams
+	(*types.BlockParams)(nil),          // 14: tendermint.types.BlockParams
+	(*types.EvidenceParams)(nil),       // 15: tendermint.types.EvidenceParams
+	(*types.ValidatorParams)(nil),      // 16: tendermint.types.ValidatorParams
+	(*types.ABCIParams)(nil),           // 17: tendermint.types.ABCIParams
+	(*timestamppb.Timestamp)(nil),      // 18: google.protobuf.Timestamp
 }
 var file_cosmos_consensus_v1_consensus_proto_depIdxs = []int32{
 	13, // 0: cosmos.consensus.v1.ConsensusMsgParams.version:type_name -> tendermint.types.VersionParams
@@ -6492,7 +6492,7 @@ var file_cosmos_consensus_v1_consensus_proto_depIdxs = []int32{
 	15, // 2: cosmos.consensus.v1.ConsensusMsgParams.evidence:type_name -> tendermint.types.EvidenceParams
 	16, // 3: cosmos.consensus.v1.ConsensusMsgParams.validator:type_name -> tendermint.types.ValidatorParams
 	17, // 4: cosmos.consensus.v1.ConsensusMsgParams.abci:type_name -> tendermint.types.ABCIParams
-	8,  // 5: cosmos.consensus.v1.ConsensusMsgCometInfoRequest.comet_info:type_name -> cosmos.consensus.v1.CometInfo
+	8,  // 5: cosmos.consensus.v1.MsgSetCometInfoRequest.comet_info:type_name -> cosmos.consensus.v1.CometInfo
 	8,  // 6: cosmos.consensus.v1.MsgCometInfoResponse.comet_info:type_name -> cosmos.consensus.v1.CometInfo
 	9,  // 7: cosmos.consensus.v1.CometInfo.last_commit:type_name -> cosmos.consensus.v1.CommitInfo
 	12, // 8: cosmos.consensus.v1.CometInfo.evidence:type_name -> cosmos.consensus.v1.Evidence
@@ -6540,7 +6540,7 @@ func file_cosmos_consensus_v1_consensus_proto_init() {
 			}
 		}
 		file_cosmos_consensus_v1_consensus_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConsensusMsgCometInfoRequest); i {
+			switch v := v.(*MsgSetCometInfoRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6552,7 +6552,7 @@ func file_cosmos_consensus_v1_consensus_proto_init() {
 			}
 		}
 		file_cosmos_consensus_v1_consensus_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConsensusMsgCometInfoResponse); i {
+			switch v := v.(*MsgSetCometInfoResponse); i {
 			case 0:
 				return &v.state
 			case 1:

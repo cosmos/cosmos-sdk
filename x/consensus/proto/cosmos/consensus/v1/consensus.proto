@@ -26,13 +26,13 @@ message ConsensusMsgParams {
 message ConsensusMsgParamsResponse {}
 
 // MsgCometInfoRequest is the Msg/CometInfo request type. This is a consensus message that is sent from cometbft.
-message MsgCometInfoRequest {
+message MsgSetCometInfoRequest {
   string    signer     = 1;
   CometInfo comet_info = 2;
 }
 
 // MsgCometInfoResponse is the Msg/CometInfo response type. This is a consensus message that is sent from cometbft.
-message MsgCometInfoResponse {}
+message MsgSetCometInfoResponse {}
 
 // ConsensusMsgCometInfoResponse represents the consensus message containing information about the validators, proposer,
 // and last commit.

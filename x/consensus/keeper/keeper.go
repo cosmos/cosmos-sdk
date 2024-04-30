@@ -156,12 +156,12 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest
 }
 
 // SetCometInfo is called by the framework to set the value at genesis.
-func (k *Keeper) SetCometInfo(ctx context.Context, req *types.ConsensusMsgCometInfoRequest) (*types.ConsensusMsgCometInfoResponse, error) {
-	if req.Signer != "consensus" { //TODO move this to core when upstreamed from server/v2
+func (k Keeper) CometInfo(ctx context.Context, req *types.MsgSetCometInfoRequest) (*types.MsgSetCometInfoResponse, error) {
+	if req.Signer != "consensus" { // TODO move this to core when up-streamed from server/v2
 		return nil, fmt.Errorf("invalid signer; expected %s, got %s", "consensus", req.Signer)
 	}
 
 	err := k.cometInfo.Set(ctx, *req.CometInfo)
 
-	return &types.ConsensusMsgCometInfoResponse{}, err
+	return &types.MsgSetCometInfoResponse{}, err
 }

@@ -8,31 +8,27 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 func Test_SetMsg(t *testing.T) {
-	cases := []struct {
-		name   string
+	cases := map[string]struct {
 		msg    sdk.Msg
 		expErr bool
 	}{
-		{
-			name:   "Set nil Msg",
+		"Set nil Msg": {
 			msg:    nil,
 			expErr: true,
 		},
-		{
-			name:   "Set a valid message",
+		"Set a valid message": {
 			msg:    &DummyProtoMessage1{},
 			expErr: false,
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
 			actual, err := tx.SetMsg(tc.msg)
 			if tc.expErr {
 				require.Error(t, err)
@@ -40,42 +36,37 @@ func Test_SetMsg(t *testing.T) {
 			}
 
 			expected := mustAny(tc.msg)
+			require.NoError(t, err)
 			require.Equal(t, expected, actual)
-			require.Nil(t, err)
 		})
 	}
 }
 
 func Test_SetMsgs(t *testing.T) {
-	cases := []struct {
-		name   string
+	cases := map[string]struct {
 		msgs   []sdk.Msg
 		expErr bool
 	}{
-		{
-			name:   "Set nil slice of messages",
+		"Set nil slice of messages": {
 			msgs:   nil,
 			expErr: false,
 		},
-		{
-			name:   "Set empty slice of messages",
+		"Set empty slice of messages": {
 			msgs:   []sdk.Msg{},
 			expErr: false,
 		},
-		{
-			name:   "Set nil message inside the slice of messages",
+		"Set nil message inside the slice of messages": {
 			msgs:   []sdk.Msg{nil},
 			expErr: true,
 		},
-		{
-			name:   "Set valid messages",
+		"Set valid messages": {
 			msgs:   []sdk.Msg{&DummyProtoMessage1{}, &DummyProtoMessage2{}},
 			expErr: false,
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
 			actual, err := tx.SetMsgs(tc.msgs)
 			if tc.expErr {
 				require.Error(t, err)
@@ -88,8 +79,8 @@ func Test_SetMsgs(t *testing.T) {
 				expected[i] = a
 			}
 
+			require.NoError(t, err)
 			require.Equal(t, expected, actual)
-			require.Nil(t, err)
 		})
 	}
 }
@@ -97,89 +88,78 @@ func Test_SetMsgs(t *testing.T) {
 func Test_GetMsgs(t *testing.T) {
 	sdkMsgs := []sdk.Msg{&DummyProtoMessage1{}, &DummyProtoMessage2{}}
 	anyMsg, err := tx.SetMsgs(sdkMsgs)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
-	cases := []struct {
-		name     string
+	cases := map[string]struct {
 		msgs     []*types.Any
 		expected []sdk.Msg
 		expErr   bool
 	}{
-		{
-			name:     "GetMsgs from a nil slice of Any messages",
+		"GetMsgs from a nil slice of Any messages": {
 			msgs:     nil,
 			expected: []sdk.Msg{},
 			expErr:   false,
 		},
-		{
-			name:     "GetMsgs from empty slice of Any messages",
+		"GetMsgs from empty slice of Any messages": {
 			msgs:     []*types.Any{},
 			expected: []sdk.Msg{},
 			expErr:   false,
 		},
-		{
-			name:     "GetMsgs from a slice with valid Any messages",
+		"GetMsgs from a slice with valid Any messages": {
 			msgs:     anyMsg,
 			expected: sdkMsgs,
 			expErr:   false,
 		},
-		{
-			name:   "GetMsgs from a slice that contains uncached Any message",
+		"GetMsgs from a slice that contains uncached Any message": {
 			msgs:   []*types.Any{{}},
 			expErr: true,
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
 			actual, err := tx.GetMsgs(tc.msgs, "dummy")
 			if tc.expErr {
 				require.Error(t, err)
 				return
 			}
 
+			require.NoError(t, err)
 			require.Equal(t, tc.expected, actual)
-			require.Nil(t, err)
 		})
 	}
 }
 
 func TestTx_UnpackInterfaces(t *testing.T) {
-	unpacker := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-
+	unpacker := codec.NewProtoCodec(types.NewInterfaceRegistry())
 	sdkMsgs := []sdk.Msg{&DummyProtoMessage1{}, &DummyProtoMessage2{}}
 	anyMsg, err := tx.SetMsgs(sdkMsgs)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
-	cases := []struct {
-		name   string
+	cases := map[string]struct {
 		msgs   []*types.Any
 		expErr bool
 	}{
-		{
-			name:   "Unpack nil slice messages",
+		"Unpack nil slice messages": {
 			msgs:   nil,
 			expErr: false,
 		},
-		{
-			name:   "Unpack empty slice of messages",
+		"Unpack empty slice of messages": {
 			msgs:   []*types.Any{},
 			expErr: false,
 		},
-		{
-			name:   "Unpack valid messages",
+		"Unpack valid messages": {
 			msgs:   anyMsg,
 			expErr: false,
 		},
-		{
-			name:   "Unpack uncashed message",
+		"Unpack uncashed message": {
 			msgs:   []*types.Any{{TypeUrl: "uncached"}},
 			expErr: true,
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
 			err = tx.UnpackInterfaces(unpacker, tc.msgs)
 			require.Equal(t, tc.expErr, err != nil)
 		})

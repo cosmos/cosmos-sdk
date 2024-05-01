@@ -144,6 +144,57 @@ jobs:
           name: "${{ github.sha }}-e2e-coverage"
           path: ./tests/e2e-profile.out
 
+  test-system:
+    needs: [tests, test-integration, test-e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          check-latest: true
+          cache: true
+          cache-dependency-path: |
+            simapp/go.sum
+            systemtest/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
+      - name: Install musl lib for simd (docker) binary
+        if: env.GIT_DIFF
+        run: |
+          sudo apt-get install -y musl
+      - name: system tests v1
+        if: env.GIT_DIFF
+        run: |
+          COSMOS_BUILD_OPTIONS=legacy make test-system
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: "testnet-setup"
+          path: ./systemtests/testnet/
+          retention-days: 3
+      #      - name: system tests v2
+      #        if: env.GIT_DIFF
+      #        run: |
+      #          make test-system
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: "testnet-setup"
+          path: ./systemtests/testnet/
+          retention-days: 3
+
   repo-analysis:
     runs-on: ubuntu-latest
     needs: [tests, test-integration, test-e2e]
@@ -1245,7 +1296,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: x/mint/
-  
+
   test-x-epochs:
     runs-on: ubuntu-latest
     steps:

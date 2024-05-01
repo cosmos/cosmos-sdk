@@ -413,6 +413,7 @@ loop:
 			if err != nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to import tree for version %d: %w", version, err)
 			}
+			defer importer.Close()
 
 		case *snapshotstypes.SnapshotItem_IAVL:
 			if importer == nil {
@@ -459,10 +460,6 @@ loop:
 		if err := importer.Commit(); err != nil {
 			return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 		}
-	}
-
-	if err := importer.Close(); err != nil {
-		return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
 	}
 
 	return snapshotItem, c.LoadVersion(version)

@@ -171,7 +171,6 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 			chunk, err := s.loadChunkFile(height, format, i)
 			if err != nil {
 				_ = pw.CloseWithError(err)
-				_ = chunk.Close()
 				return
 			}
 			err = func() error {

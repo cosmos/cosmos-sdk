@@ -157,13 +157,13 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 				if _, err := io.Copy(pw, chunk); err != nil {
 					return fmt.Errorf("failed to copy chunk %d: %w", i, err)
 				}
+				_ = pw.Close()
 				return nil
 			}()
 			if err != nil {
 				_ = pw.CloseWithError(err)
 				return
 			}
-			_ = pw.Close()
 		}
 	}()
 

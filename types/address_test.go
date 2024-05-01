@@ -628,12 +628,11 @@ func (s *addressTestSuite) TestMustAccAddressFromBech32() {
 	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	address := types.MustBech32ifyAddressBytes(bech32PrefixAccAddr, addr20byte)
 
-	valAddress1, err := types.AccAddressFromBech32(address)
-	s.Require().Nil(err)
+	accAddress1, err := types.AccAddressFromBech32(address)
+	s.Require().NoError(err)
 
-	valAddress2 := types.MustAccAddressFromBech32(address)
-
-	s.Require().Equal(valAddress1, valAddress2)
+	accAddress2 := types.MustAccAddressFromBech32(address)
+	s.Require().Equal(accAddress1, accAddress2)
 }
 
 func (s *addressTestSuite) TestMustAccAddressFromBech32Panic() {
@@ -673,7 +672,7 @@ func (s *addressTestSuite) TestFormatAccAddressAsString() {
 	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	accAddr := types.AccAddress(addr20byte)
 
-	actual := fmt.Sprintf("%s", accAddr)
+	actual := fmt.Sprintf("%s", accAddr) // this will call internally  the method AccAddress.Format
 
 	hrp := types.GetConfig().GetBech32AccountAddrPrefix()
 	expected, err := bech32.ConvertAndEncode(hrp, addr20byte)
@@ -688,7 +687,7 @@ func (s *addressTestSuite) TestFormatAccAddressAsPointer() {
 	accAddr := types.MustAccAddressFromBech32(address)
 
 	ptrAddr := &accAddr
-	actual := fmt.Sprintf("%p", ptrAddr)
+	actual := fmt.Sprintf("%p", ptrAddr) // this will call internally  the method AccAddress.Format
 	expected := uintptr(unsafe.Pointer(&accAddr))
 	s.Require().Equal(fmt.Sprintf("0x%x", expected), actual)
 }
@@ -700,7 +699,7 @@ func (s *addressTestSuite) TestFormatAccAddressWhenVerbIsDifferentFromSOrP() {
 	accAddr := types.MustAccAddressFromBech32(address)
 
 	// When the verb is different from 's' or 'p', then the address is always formatted to base 16, with uppercase letters for A-F
-	expected := fmt.Sprintf("%X", types.AccAddress(addr20byte))
+	expected := fmt.Sprintf("%X", addr20byte)
 
 	// GENERAL
 	actual := fmt.Sprintf("%v", accAddr)
@@ -765,36 +764,44 @@ func (s *addressTestSuite) TestUnmarshalYAMLValAddressFailed() {
 }
 
 func (s *addressTestSuite) TestUnmarshalYAMLValAddressWithEmptyString() {
-	addr := &types.AccAddress{}
+	addr := &types.ValAddress{}
 	err := addr.UnmarshalYAML([]byte{34, 34})
 	s.Require().NoError(err)
 	s.Require().Equal(&types.ValAddress{}, addr)
 }
 
 func (s *addressTestSuite) TestFormatValAddressAsString() {
-	accAddr, err := types.ValAddressFromBech32("cosmosvaloper1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnxz90a2")
-	s.Require().NoError(err)
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	accAddr := types.ValAddress(addr20byte)
 
 	actual := fmt.Sprintf("%s", accAddr)
-	s.Require().Equal("cosmosvaloper1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnxz90a2", actual)
+
+	hrp := types.GetConfig().GetBech32ValidatorAddrPrefix()
+	expected, err := bech32.ConvertAndEncode(hrp, addr20byte)
+	s.Require().NoError(err)
+	s.Require().Equal(expected, actual)
 }
 
 func (s *addressTestSuite) TestFormatValAddressAsPointer() {
-	valAddr, err := types.ValAddressFromBech32("cosmosvaloper1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnxz90a2")
-	s.Require().NoError(err)
+	bech32PrefixValAddr := types.GetConfig().GetBech32ValidatorAddrPrefix()
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	address := types.MustBech32ifyAddressBytes(bech32PrefixValAddr, addr20byte)
+	accAddr := types.MustValAddressFromBech32(address)
 
-	ptrAddr := &valAddr
+	ptrAddr := &accAddr
 	actual := fmt.Sprintf("%p", ptrAddr)
-	expected := uintptr(unsafe.Pointer(&valAddr))
-	s.Require().Equal(fmt.Sprintf("%X", expected), actual)
+	expected := uintptr(unsafe.Pointer(&accAddr))
+	s.Require().Equal(fmt.Sprintf("0x%x", expected), actual)
 }
 
 func (s *addressTestSuite) TestFormatValAddressWhenVerbIsDifferentFromSOrP() {
-	valAddr, err := types.ValAddressFromBech32("cosmosvaloper1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnxz90a2")
-	s.Require().NoError(err)
+	bech32PrefixValAddr := types.GetConfig().GetBech32ValidatorAddrPrefix()
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	address := types.MustBech32ifyAddressBytes(bech32PrefixValAddr, addr20byte)
+	valAddr := types.MustValAddressFromBech32(address)
 
 	// When the verb is different from 's' or 'p', then the address is always formatted to base 16, with uppercase letters for A-F
-	expected := "000102030405060708090A0B0C0D0E0F10111213"
+	expected := fmt.Sprintf("%X", types.AccAddress(addr20byte))
 
 	// GENERAL
 	actual := fmt.Sprintf("%v", valAddr)
@@ -838,8 +845,6 @@ func (s *addressTestSuite) TestFormatValAddressWhenVerbIsDifferentFromSOrP() {
 	actual = fmt.Sprintf("%G", valAddr)
 }
 
-/////////////////
-
 func (s *addressTestSuite) TestUnmarshalJSONConsAddressFailed() {
 	addr := &types.ConsAddress{}
 	err := addr.UnmarshalJSON(nil)
@@ -868,29 +873,40 @@ func (s *addressTestSuite) TestUnmarshalYAMLConsAddressWithEmptyString() {
 }
 
 func (s *addressTestSuite) TestFormatConsAddressAsString() {
-	consAddr, err := types.ConsAddressFromBech32("cosmosvalcons1r32w2y79jr79ruffjycmefy7xcqux30vnk4dr7")
-	s.Require().NoError(err)
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	consAddr := types.ConsAddress(addr20byte)
 
 	actual := fmt.Sprintf("%s", consAddr)
-	s.Require().Equal("cosmosvalcons1r32w2y79jr79ruffjycmefy7xcqux30vnk4dr7", actual)
+
+	hrp := types.GetConfig().GetBech32ConsensusAddrPrefix()
+	expected, err := bech32.ConvertAndEncode(hrp, addr20byte)
+	s.Require().NoError(err)
+	s.Require().Equal(expected, actual)
 }
 
 func (s *addressTestSuite) TestFormatConsAddressAsPointer() {
-	consAddr, err := types.ConsAddressFromBech32("cosmosvalcons1r32w2y79jr79ruffjycmefy7xcqux30vnk4dr7")
+	bech32PrefixConsAddr := types.GetConfig().GetBech32ConsensusAddrPrefix()
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	address := types.MustBech32ifyAddressBytes(bech32PrefixConsAddr, addr20byte)
+
+	consAddr, err := types.ConsAddressFromBech32(address)
 	s.Require().NoError(err)
 
 	ptrAddr := &consAddr
 	actual := fmt.Sprintf("%p", ptrAddr)
 	expected := uintptr(unsafe.Pointer(&consAddr))
-	s.Require().Equal(fmt.Sprintf("%X", expected), actual)
+	s.Require().Equal(fmt.Sprintf("0x%x", expected), actual)
 }
 
 func (s *addressTestSuite) TestFormatConsAddressWhenVerbIsDifferentFromSOrP() {
-	consAddr, err := types.ConsAddressFromBech32("cosmosvalcons1r32w2y79jr79ruffjycmefy7xcqux30vnk4dr7")
+	bech32PrefixAccAddr := types.GetConfig().GetBech32ConsensusAddrPrefix()
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	address := types.MustBech32ifyAddressBytes(bech32PrefixAccAddr, addr20byte)
+	consAddr, err := types.ConsAddressFromBech32(address)
 	s.Require().NoError(err)
 
 	// When the verb is different from 's' or 'p', then the address is always formatted to base 16, with uppercase letters for A-F
-	expected := "1C54E513C590FC51F1299131BCA49E3601C345EC"
+	expected := fmt.Sprintf("%X", types.AccAddress(addr20byte))
 
 	// GENERAL
 	actual := fmt.Sprintf("%v", consAddr)

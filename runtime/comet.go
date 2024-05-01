@@ -10,6 +10,8 @@ import (
 
 var _ corecomet.Service = &ContextAwareCometInfoService{}
 
+// ContextAwareCometInfoService provides CometInfo which is embedded as a value in a Context.
+// This the legacy (server v1, baseapp) way of accessing CometInfo at the module level.
 type ContextAwareCometInfoService struct{}
 
 func (c ContextAwareCometInfoService) CometInfo(ctx context.Context) corecomet.Info {

@@ -2,6 +2,7 @@ package appmodule
 
 import (
 	"cosmossdk.io/core/branch"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
@@ -15,6 +16,7 @@ import (
 type Environment struct {
 	Logger log.Logger
 
+	CometInfoService   comet.Service
 	BranchService      branch.Service
 	EventService       event.Service
 	GasService         gas.Service

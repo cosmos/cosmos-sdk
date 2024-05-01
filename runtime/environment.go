@@ -18,6 +18,7 @@ func NewEnvironment(
 ) appmodule.Environment {
 	env := appmodule.Environment{
 		Logger:             logger,
+		CometInfoService:   ContextAwareCometInfoService{},
 		EventService:       EventService{},
 		HeaderService:      HeaderService{},
 		BranchService:      BranchService{},
@@ -35,7 +36,10 @@ func NewEnvironment(
 
 type EnvOption func(*appmodule.Environment)
 
-func EnvWithRouterService(queryServiceRouter *baseapp.GRPCQueryRouter, msgServiceRouter *baseapp.MsgServiceRouter) EnvOption {
+func EnvWithRouterService(
+	queryServiceRouter *baseapp.GRPCQueryRouter,
+	msgServiceRouter *baseapp.MsgServiceRouter,
+) EnvOption {
 	return func(env *appmodule.Environment) {
 		env.RouterService = NewRouterService(env.KVStoreService, queryServiceRouter, msgServiceRouter)
 	}

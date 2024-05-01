@@ -271,9 +271,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 		s.Require().False(itr.Valid())
 
 		err = itr.Close()
-		if err != nil {
-			return
-		}
+		s.Require().NoError(err, "Failed to close iterator")
 	}
 
 	// iterator with a start and end domain over multiple versions

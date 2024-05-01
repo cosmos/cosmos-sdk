@@ -87,7 +87,7 @@ func FromABCIEvidence(e consensusv1.Evidence, conAc address.Codec) *Equivocation
 	}
 	return &Equivocation{
 		Height:           e.Height,
-		Power:            e.TotalVotingPower,
+		Power:            e.Validator.Power,
 		ConsensusAddress: consAddr,
 		Time:             time,
 	}

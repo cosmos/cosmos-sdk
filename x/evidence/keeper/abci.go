@@ -31,8 +31,8 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 			if evidence == nil {
 				continue // skip if no evidence
 			}
-			evidence := types.FromABCIEvidence(*evidence, k.stakingKeeper.ConsensusAddressCodec())
-			err := k.handleEquivocationEvidence(ctx, evidence)
+			e := types.FromABCIEvidence(*evidence, k.stakingKeeper.ConsensusAddressCodec())
+			err := k.handleEquivocationEvidence(ctx, e)
 			if err != nil {
 				return err
 			}

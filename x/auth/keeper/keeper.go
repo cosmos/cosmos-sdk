@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -82,10 +83,9 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 type AccountKeeper struct {
 	appmodule.Environment
 
-	addressCodec      address.Codec
-	AccountsModKeeper types.AccountsModKeeper
+	addressCodec address.Codec
 
-	cdc          codec.BinaryCodec
+	cdc          codec.Codec
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
 
@@ -113,7 +113,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI, accountsModKeeper types.AccountsModKeeper,
+	env appmodule.Environment, cdc codec.Codec, proto func() sdk.AccountI,
 	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -124,17 +124,16 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	ak := AccountKeeper{
-		Environment:       env,
-		addressCodec:      ac,
-		bech32Prefix:      bech32Prefix,
-		proto:             proto,
-		cdc:               cdc,
-		AccountsModKeeper: accountsModKeeper,
-		permAddrs:         permAddrs,
-		authority:         authority,
-		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
-		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		Environment:   env,
+		addressCodec:  ac,
+		bech32Prefix:  bech32Prefix,
+		proto:         proto,
+		cdc:           cdc,
+		permAddrs:     permAddrs,
+		authority:     authority,
+		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -301,7 +300,17 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 		}
 
 		if err := ak.BranchService.Execute(ctx, func(ctx context.Context) error {
-			result, err := ak.AccountsModKeeper.SendModuleMessageUntyped(ctx, signer, msg)
+			wantSenders, _, err := ak.cdc.GetMsgV1Signers(msg)
+			if err != nil {
+				return fmt.Errorf("cannot get signers: %w", err)
+			}
+			if len(wantSenders) != 1 {
+				return fmt.Errorf("expected only one signer, got %d", len(wantSenders))
+			}
+			if !bytes.Equal(signer, wantSenders[0]) {
+				return fmt.Errorf("signer does not match expected signer")
+			}
+			result, err := ak.Environment.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
 			if err != nil {
 				// If an error occurs during message execution, append error response
 				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}

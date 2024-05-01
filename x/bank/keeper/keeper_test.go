@@ -112,9 +112,10 @@ func addIBCMetadata(ctx context.Context, k keeper.BaseKeeper) {
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx        context.Context
-	bankKeeper keeper.BaseKeeper
-	authKeeper *banktestutil.MockAccountKeeper
+	ctx              context.Context
+	bankKeeper       keeper.BaseKeeper
+	authKeeper       *banktestutil.MockAccountKeeper
+	accountModKeeper *banktestutil.MockAccountsModKeeper
 
 	queryClient banktypes.QueryClient
 	msgServer   banktypes.MsgServer
@@ -143,13 +144,16 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
+	accountModKeeper := banktestutil.NewMockAccountsModKeeper(ctrl)
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	suite.ctx = ctx
 	suite.authKeeper = authKeeper
+	suite.accountModKeeper = accountModKeeper
 	suite.bankKeeper = keeper.NewBaseKeeper(
 		env,
 		encCfg.Codec,
 		suite.authKeeper,
+		suite.accountModKeeper,
 		map[string]bool{addr: true},
 		authority,
 	)
@@ -312,6 +316,7 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 			env,
 			moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec,
 			suite.authKeeper,
+			suite.accountModKeeper,
 			nil,
 			authority,
 		)
@@ -1778,10 +1783,10 @@ func (suite *KeeperTestSuite) TestUndelegateCoins_Invalid() {
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
 
-	suite.authKeeper.EXPECT().HasAccount(ctx, accAddrs[0]).Return(false)
 	suite.mockDelegateCoins(ctx, acc0, holderAcc)
 	require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 
+	suite.accountModKeeper.EXPECT().IsAccountsModuleAccount(ctx, accAddrs[0]).Return(false)
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc0.GetAddress()).Return(nil)

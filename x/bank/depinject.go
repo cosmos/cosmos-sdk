@@ -37,7 +37,8 @@ type ModuleInputs struct {
 	Cdc         codec.Codec
 	Environment appmodule.Environment
 
-	AccountKeeper types.AccountKeeper
+	AccountKeeper    types.AccountKeeper
+	AccountModKeeper types.AccountsModKeeper
 }
 
 type ModuleOutputs struct {
@@ -86,6 +87,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.Environment,
 		in.Cdc,
 		in.AccountKeeper,
+		in.AccountModKeeper,
 		blockedAddresses,
 		authStr,
 	)

@@ -77,29 +77,29 @@ func initFixture(t *testing.T) *fixture {
 	router := baseapp.NewMsgServiceRouter()
 	queryRouter := baseapp.NewGRPCQueryRouter()
 
+	authority := authtypes.NewModuleAddress("gov")
+
+	authKeeper := authkeeper.NewAccountKeeper(
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, router)),
+		cdc,
+		authtypes.ProtoBaseAccount,
+		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
+		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		sdk.Bech32MainPrefix,
+		authority.String(),
+	)
+
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountsKeeper, err := accounts.NewKeeper(
 		cdc,
+		authKeeper,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, router)),
 		addresscodec.NewBech32Codec("cosmos"),
 		cdc.InterfaceRegistry(),
 		account,
 	)
 	assert.NilError(t, err)
-
-	authority := authtypes.NewModuleAddress("gov")
-
-	authKeeper := authkeeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		authtypes.ProtoBaseAccount,
-		accountsKeeper,
-		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authority.String(),
-	)
 
 	blockedAddresses := map[string]bool{
 		authKeeper.GetAuthority(): false,
@@ -108,6 +108,7 @@ func initFixture(t *testing.T) *fixture {
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authKeeper,
+		accountsKeeper,
 		blockedAddresses,
 		authority.String(),
 	)
@@ -116,7 +117,7 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, bankKeeper.SetParams(newCtx, params))
 
 	accountsModule := accounts.NewAppModule(cdc, accountsKeeper)
-	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, authKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, authKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
@@ -161,8 +162,8 @@ func TestAsyncExec(t *testing.T) {
 		Amount:      coins,
 	}
 	msg2 := &banktypes.MsgSend{
-		FromAddress: addrs[1].String(),
-		ToAddress:   addrs[0].String(),
+		FromAddress: addrs[0].String(),
+		ToAddress:   addrs[1].String(),
 		Amount:      coins,
 	}
 	failingMsg := &banktypes.MsgSend{

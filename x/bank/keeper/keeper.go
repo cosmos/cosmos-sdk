@@ -59,6 +59,7 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak                     types.AccountKeeper
+	accountsModKeeper      types.AccountsModKeeper
 	cdc                    codec.BinaryCodec
 	mintCoinsRestrictionFn types.MintingRestrictionFn
 }
@@ -85,6 +86,7 @@ func NewBaseKeeper(
 	env appmodule.Environment,
 	cdc codec.BinaryCodec,
 	ak types.AccountKeeper,
+	accountsModKeeper types.AccountsModKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseKeeper {
@@ -99,6 +101,7 @@ func NewBaseKeeper(
 		Environment:            env,
 		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority),
 		ak:                     ak,
+		accountsModKeeper:      accountsModKeeper,
 		cdc:                    cdc,
 		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
 	}
@@ -440,7 +443,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		// check if it's an x/accounts smart account
-		if k.ak.HasAccount(ctx, addr) {
+		if k.accountsModKeeper.IsAccountsModuleAccount(ctx, addr) {
 			return nil
 		}
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
@@ -461,7 +464,7 @@ func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, 
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		// check if it's an x/accounts smart account
-		if k.ak.HasAccount(ctx, addr) {
+		if k.accountsModKeeper.IsAccountsModuleAccount(ctx, addr) {
 			return nil
 		}
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)

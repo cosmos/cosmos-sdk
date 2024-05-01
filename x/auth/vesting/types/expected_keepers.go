@@ -3,8 +3,6 @@ package types
 import (
 	"context"
 
-	"cosmossdk.io/x/auth/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,8 +12,4 @@ type BankKeeper interface {
 	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	BlockedAddr(addr sdk.AccAddress) bool
-}
-
-type AccountsModKeeper interface {
-	types.AccountsModKeeper
 }

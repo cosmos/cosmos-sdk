@@ -29,3 +29,8 @@ type AccountKeeper interface {
 	SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
 	GetModulePermissions() map[string]types.PermissionsForAddress
 }
+
+// AccountsModKeeper defines the contract for x/accounts APIs
+type AccountsModKeeper interface {
+	IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool
+}

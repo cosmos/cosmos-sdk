@@ -44,14 +44,23 @@ func (e eventService) EventManager(ctx context.Context) event.Manager { return e
 
 var _ AuthKeeper = (*mockAuthKeepr)(nil)
 
+var accNum uint64 = 0
+
 type mockAuthKeepr struct{}
 
+func NewMockAuthKeeper() mockAuthKeepr {
+	accNum = 0
+	return mockAuthKeepr{}
+}
+
 func (m mockAuthKeepr) NextAccountNumber(ctx context.Context) uint64 {
-	return 1
+	num := accNum
+	accNum = accNum + 1
+	return num
 }
 
 func (m mockAuthKeepr) CurrentAccountNumber(ctx context.Context) (uint64, error) {
-	return 0, nil
+	return accNum, nil
 }
 
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
@@ -90,8 +99,11 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 		queryRouter,
 		msgRouter,
 	))
+
+	mockAuthKeepr := NewMockAuthKeeper()
+
 	env.EventService = eventService{}
-	m, err := NewKeeper(codec.NewProtoCodec(ir), mockAuthKeepr{}, env, addressCodec, ir, accounts...)
+	m, err := NewKeeper(codec.NewProtoCodec(ir), mockAuthKeepr, env, addressCodec, ir, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

@@ -286,9 +286,12 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), logger.With(log.ModuleKey, "x/consensus")), authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
+	app.AuthKeeper = authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), logger.With(log.ModuleKey, "x/auth"), runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), appCodec, authtypes.ProtoBaseAccount, maccPerms, signingCtx.AddressCodec(), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
 	// add keepers
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
+		app.AuthKeeper,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), logger.With(log.ModuleKey, "x/accounts"), runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())),
 		signingCtx.AddressCodec(),
 		appCodec.InterfaceRegistry(),
@@ -308,12 +311,11 @@ func NewSimApp(
 	}
 	app.AccountsKeeper = accountsKeeper
 
-	app.AuthKeeper = authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), logger.With(log.ModuleKey, "x/auth")), appCodec, authtypes.ProtoBaseAccount, accountsKeeper, maccPerms, signingCtx.AddressCodec(), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), logger.With(log.ModuleKey, "x/bank")),
 		appCodec,
 		app.AuthKeeper,
+		app.AccountsKeeper,
 		BlockedAddresses(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -430,7 +432,7 @@ func NewSimApp(
 	app.ModuleManager = module.NewManager(
 		genutil.NewAppModule(appCodec, app.AuthKeeper, app.StakingKeeper, app, txConfig, genutiltypes.DefaultMessageValidator),
 		accounts.NewAppModule(appCodec, app.AccountsKeeper),
-		auth.NewAppModule(appCodec, app.AuthKeeper, app.AccountsKeeper, authsims.RandomGenesisAccounts),
+		auth.NewAppModule(appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts),
 		vesting.NewAppModule(app.AuthKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AuthKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AuthKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
@@ -482,8 +484,10 @@ func NewSimApp(
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
+	// NOTE: Preferly, we want auth module accounts get import first then accounts module's accounts after
+	// since both module use the same accNumber sequence tracking
 	genesisModuleOrder := []string{
-		accounts.ModuleName, authtypes.ModuleName, banktypes.ModuleName,
+		authtypes.ModuleName, accounts.ModuleName, banktypes.ModuleName,
 		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
 		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, nft.ModuleName, group.ModuleName, upgradetypes.ModuleName,
@@ -522,7 +526,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, app.AccountsKeeper, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 

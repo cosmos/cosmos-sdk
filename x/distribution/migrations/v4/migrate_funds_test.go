@@ -58,7 +58,6 @@ func TestFundsMigration(t *testing.T) {
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encCfg.Codec,
 		authtypes.ProtoBaseAccount,
-		acctsModKeeper,
 		maccPerms,
 		addressCodec,
 		sdk.Bech32MainPrefix,
@@ -70,6 +69,7 @@ func TestFundsMigration(t *testing.T) {
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		encCfg.Codec,
 		accountKeeper,
+		acctsModKeeper,
 		map[string]bool{},
 		authority,
 	)

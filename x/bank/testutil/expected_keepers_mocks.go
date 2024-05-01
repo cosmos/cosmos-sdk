@@ -216,3 +216,41 @@ func (mr *MockAccountKeeperMockRecorder) ValidatePermissions(macc interface{}) *
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissions", reflect.TypeOf((*MockAccountKeeper)(nil).ValidatePermissions), macc)
 }
+
+
+// MockAccountsModKeeper is a mock of AccountsModKeeper interface.
+type MockAccountsModKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockAccountsModKeeperMockRecorder
+}
+
+// MockAccountsModKeeperMockRecorder is the mock recorder for MockAccountsModKeeper.
+type MockAccountsModKeeperMockRecorder struct {
+	mock *MockAccountsModKeeper
+}
+
+// NewMockAccountsModKeeper creates a new mock instance.
+func NewMockAccountsModKeeper(ctrl *gomock.Controller) *MockAccountsModKeeper {
+	mock := &MockAccountsModKeeper{ctrl: ctrl}
+	mock.recorder = &MockAccountsModKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAccountsModKeeper) EXPECT() *MockAccountsModKeeperMockRecorder {
+	return m.recorder
+}
+
+// IsAccountsModuleAccount mocks base method.
+func (m *MockAccountsModKeeper) IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsAccountsModuleAccount", ctx, accountAddr)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsAccountsModuleAccount indicates an expected call of IsAccountsModuleAccount.
+func (mr *MockAccountsModKeeperMockRecorder) IsAccountsModuleAccount(ctx, accountAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAccountsModuleAccount", reflect.TypeOf((*MockAccountsModKeeper)(nil).IsAccountsModuleAccount), ctx, accountAddr)
+}

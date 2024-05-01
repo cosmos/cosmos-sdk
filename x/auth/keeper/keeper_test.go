@@ -76,7 +76,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		env,
 		suite.encCfg.Codec,
 		types.ProtoBaseAccount,
-		acctsModKeeper,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",

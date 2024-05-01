@@ -37,6 +37,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	accountModKeeper := banktestutil.NewMockAccountsModKeeper(ctrl)
 
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addr, err := ac.BytesToString(accAddrs[4])
@@ -48,6 +49,7 @@ func TestBankStateCompatibility(t *testing.T) {
 		env,
 		encCfg.Codec,
 		authKeeper,
+		accountModKeeper,
 		map[string]bool{addr: true},
 		authority,
 	)

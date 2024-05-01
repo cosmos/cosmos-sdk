@@ -137,7 +137,6 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)),
 		cdc,
 		authtypes.ProtoBaseAccount,
-		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -151,13 +150,14 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		accountKeeper,
+		acctsModKeeper,
 		blockedAddresses,
 		authority.String(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
 

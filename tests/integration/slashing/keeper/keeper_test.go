@@ -88,7 +88,6 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)),
 		cdc,
 		authtypes.ProtoBaseAccount,
-		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -102,6 +101,7 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)),
 		cdc,
 		accountKeeper,
+		acctsModKeeper,
 		blockedAddresses,
 		authority.String(),
 	)

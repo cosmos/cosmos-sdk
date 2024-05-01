@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
@@ -16,7 +15,7 @@ import (
 func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
-	bi := sdk.UnwrapSDKContext(ctx).CometInfo()
+	bi := k.CometInfoService.CometInfo(ctx)
 
 	evidences := bi.Evidence
 	for _, evidence := range evidences {

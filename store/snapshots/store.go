@@ -162,6 +162,7 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 	}
 
 	ch := make(chan io.ReadCloser)
+
 	go func() {
 		defer close(ch)
 		for i := uint32(0); i < snapshot.Chunks; i++ {
@@ -170,15 +171,21 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 			chunk, err := s.loadChunkFile(height, format, i)
 			if err != nil {
 				_ = pw.CloseWithError(err)
+				_ = chunk.Close()
 				return
 			}
-			_, err = io.Copy(pw, chunk)
+			err = func() error {
+				defer chunk.Close()
+				if _, err := io.Copy(pw, chunk); err != nil {
+					return fmt.Errorf("failed to copy chunk %d: %w", i, err)
+				}
+				return nil
+			}()
 			if err != nil {
 				_ = pw.CloseWithError(err)
 				return
 			}
-			chunk.Close()
-			pw.Close()
+			_ = pw.Close()
 		}
 	}()
 

@@ -30,7 +30,6 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 		return sdk.FormatInvariant(group.ModuleName, weightInvariant, msg), broken
 	}
 }
-
 func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KVStoreService, groupTable orm.AutoUInt64Table, groupMemberByGroupIndex orm.Index) (string, bool) {
 	var msg string
 	var broken bool
@@ -42,12 +41,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 		msg += fmt.Sprintf("PrefixScan failure on group table\n%v\n", err)
 		return msg, broken
 	}
-	defer func(groupIt orm.Iterator) {
-		err := groupIt.Close()
-		if err != nil {
-			return
-		}
-	}(groupIt)
+	defer groupIt.Close()
 
 	groups := make(map[uint64]group.GroupInfo)
 	for {
@@ -60,7 +54,6 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 			msg += fmt.Sprintf("LoadNext failure on group table iterator\n%v\n", err)
 			return msg, broken
 		}
-
 		groups[groupInfo.Id] = groupInfo
 	}
 
@@ -68,6 +61,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 	sort.Slice(groupByIDs, func(i, j int) bool {
 		return groupByIDs[i] < groupByIDs[j]
 	})
+
 	for _, groupID := range groupByIDs {
 		groupInfo := groups[groupID]
 		membersWeight, err := groupmath.NewNonNegativeDecFromString("0")
@@ -76,34 +70,38 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 			return msg, broken
 		}
 
-		memIt, err := groupMemberByGroupIndex.Get(kvStore, groupInfo.Id)
+		err = func() error {
+			memIt, err := groupMemberByGroupIndex.Get(kvStore, groupInfo.Id)
+			if err != nil {
+				return fmt.Errorf("error while returning group member iterator for group with ID %d\n%v", groupInfo.Id, err)
+			}
+			defer memIt.Close()
+
+			for {
+				var groupMember group.GroupMember
+				_, err = memIt.LoadNext(&groupMember)
+				if errors.ErrORMIteratorDone.Is(err) {
+					break
+				}
+				if err != nil {
+					return fmt.Errorf("LoadNext failure on member table iterator\n%v", err)
+				}
+
+				curMemWeight, err := groupmath.NewPositiveDecFromString(groupMember.GetMember().GetWeight())
+				if err != nil {
+					return fmt.Errorf("error while parsing non-nengative decimal for group member %s\n%v", groupMember.Member.Address, err)
+				}
+
+				membersWeight, err = groupmath.Add(membersWeight, curMemWeight)
+				if err != nil {
+					return fmt.Errorf("decimal addition error while adding group member voting weight to total voting weight\n%v", err)
+				}
+			}
+			return nil
+		}()
 		if err != nil {
-			msg += fmt.Sprintf("error while returning group member iterator for group with ID %d\n%v\n", groupInfo.Id, err)
+			msg += err.Error() + "\n"
 			return msg, broken
-		}
-
-		for {
-			var groupMember group.GroupMember
-			_, err = memIt.LoadNext(&groupMember)
-			if errors.ErrORMIteratorDone.Is(err) {
-				break
-			}
-			if err != nil {
-				msg += fmt.Sprintf("LoadNext failure on member table iterator\n%v\n", err)
-				return msg, broken
-			}
-
-			curMemWeight, err := groupmath.NewPositiveDecFromString(groupMember.GetMember().GetWeight())
-			if err != nil {
-				msg += fmt.Sprintf("error while parsing non-nengative decimal for group member %s\n%v\n", groupMember.Member.Address, err)
-				return msg, broken
-			}
-
-			membersWeight, err = groupmath.Add(membersWeight, curMemWeight)
-			if err != nil {
-				msg += fmt.Sprintf("decimal addition error while adding group member voting weight to total voting weight\n%v\n", err)
-				return msg, broken
-			}
 		}
 
 		groupWeight, err := groupmath.NewNonNegativeDecFromString(groupInfo.GetTotalWeight())
@@ -116,10 +114,6 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 			broken = true
 			msg += fmt.Sprintf("group's TotalWeight must be equal to the sum of its members' weights\ngroup weight: %s\nSum of group members weights: %s\n", groupWeight.String(), membersWeight.String())
 			break
-		}
-		err = memIt.Close()
-		if err != nil {
-			return "", broken
 		}
 	}
 

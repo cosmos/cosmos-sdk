@@ -1,5 +1,10 @@
 package store
 
+const (
+	pruneDefaultKeepRecent = 362880
+	pruneDefaultInterval   = 10
+)
+
 // PruneOptions defines the pruning configuration.
 type PruneOptions struct {
 	// KeepRecent sets the number of recent versions to keep.
@@ -11,11 +16,10 @@ type PruneOptions struct {
 }
 
 // DefaultPruneOptions returns the default pruning options.
-// Interval is set to 0, which means no pruning will be done.
 func DefaultPruneOptions() *PruneOptions {
 	return &PruneOptions{
-		KeepRecent: 0,
-		Interval:   0,
+		KeepRecent: pruneDefaultKeepRecent,
+		Interval:   pruneDefaultInterval,
 	}
 }
 

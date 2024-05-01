@@ -6,13 +6,13 @@ import (
 
 	"github.com/cockroachdb/errors"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/slashing/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.

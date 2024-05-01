@@ -3,8 +3,9 @@ package keeper
 import (
 	"context"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/x/staking/types"
+
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // TrackHistoricalInfo saves the latest historical-info and deletes the oldest

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/core/appmodule"
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
@@ -305,9 +304,9 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.DeepEqual(t, amt, val.GetBondedTokens())
 
 	// Now a validator, for two blocks
-	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_COMMIT))
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_COMMIT))
 	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 2).WithHeaderInfo(coreheader.Info{Height: signedBlocksWindow + 2})
-	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_ABSENT))
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_ABSENT))
 
 	info, found := f.slashingKeeper.ValidatorSigningInfo.Get(f.ctx, sdk.ConsAddress(valpubkey.Address()))
 	assert.Assert(t, found)
@@ -358,7 +357,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	height := int64(0)
 	for ; height < signedBlocksWindow; height++ {
 		f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height})
-		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_COMMIT)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_COMMIT)
 		assert.NilError(t, err)
 	}
 
@@ -368,7 +367,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	// 501 blocks missed
 	for ; height < signedBlocksWindow+(signedBlocksWindow-minSignedPerWindow)+1; height++ {
 		f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height})
-		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_ABSENT)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_ABSENT)
 		assert.NilError(t, err)
 	}
 
@@ -386,7 +385,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// another block missed
 	f.ctx = f.ctx.WithHeaderInfo(coreheader.Info{Height: height})
-	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_ABSENT))
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_ABSENT))
 
 	// validator should not have been slashed twice
 	validator, _ = f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))
@@ -437,7 +436,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	height := int64(0)
 	for ; height < int64(100); height++ {
 		f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
-		assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_COMMIT))
+		assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_COMMIT))
 	}
 
 	// kick first validator out of validator set
@@ -466,7 +465,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	newPower := power + 50
 
 	// validator misses a block
-	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_ABSENT))
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_ABSENT))
 	height++
 
 	// shouldn't be jailed/kicked yet
@@ -480,7 +479,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// misses 500 blocks + within the signing windows i.e. 700-1700
 	// validators misses all 1000 blocks of a SignedBlockWindows
 	for ; height < latest+1; height++ {
-		err = f.slashingKeeper.HandleValidatorSignature(f.ctx.WithHeaderInfo(coreheader.Info{Height: height}), val.Address(), newPower, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_ABSENT)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx.WithHeaderInfo(coreheader.Info{Height: height}), val.Address(), newPower, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_ABSENT)
 		assert.NilError(t, err)
 	}
 
@@ -511,7 +510,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator rejoins and starts signing again
 	err = f.stakingKeeper.Unjail(f.ctx, consAddr)
 	assert.NilError(t, err)
-	err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_COMMIT)
+	err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_COMMIT)
 	assert.NilError(t, err)
 
 	// validator should not be kicked since we reset counter/array when it was jailed
@@ -531,7 +530,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	latest = signedBlocksWindow + height
 	for ; height < latest+minSignedPerWindow; height++ {
 		f.ctx = f.ctx.WithBlockHeight(height).WithHeaderInfo(coreheader.Info{Height: height})
-		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, consensusv1.BlockIDFlag_BLOCK_ID_FLAG_ABSENT)
+		err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, consensustypes.BlockIDFlag_BLOCK_ID_FLAG_ABSENT)
 		assert.NilError(t, err)
 	}
 

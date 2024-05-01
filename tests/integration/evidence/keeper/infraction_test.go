@@ -12,7 +12,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
@@ -225,7 +224,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.sdkCtx, sdk.ConsAddress(valpubkey.Address()), info)
 	assert.NilError(t, err)
 	// handle a signature to set signing info
-	err = f.slashingKeeper.HandleValidatorSignature(ctx, valpubkey.Address(), selfDelegation.Int64(), consensusv1.BlockIDFlag_BLOCK_ID_FLAG_COMMIT)
+	err = f.slashingKeeper.HandleValidatorSignature(ctx, valpubkey.Address(), selfDelegation.Int64(), consensusparamtypes.BlockIDFlag_BLOCK_ID_FLAG_COMMIT)
 	assert.NilError(t, err)
 	// double sign less than max age
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
@@ -389,7 +388,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.Equal(t, bytes.Equal(consAddrBeforeRotn, consAddrAfterRotn), false)
 
 	// handle a signature to set signing info
-	err = f.slashingKeeper.HandleValidatorSignature(ctx, NewConsPubkey.Address().Bytes(), selfDelegation.Int64(), consensusv1.BlockIDFlag_BLOCK_ID_FLAG_COMMIT)
+	err = f.slashingKeeper.HandleValidatorSignature(ctx, NewConsPubkey.Address().Bytes(), selfDelegation.Int64(), consensusparamtypes.BlockIDFlag_BLOCK_ID_FLAG_COMMIT)
 	assert.NilError(t, err)
 
 	// double sign less than max age

@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
@@ -19,21 +18,29 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 		return nil
 	}
 
-	bi := sdk.UnwrapSDKContext(ctx).CometInfo()
+	// If the user is using the legacy CometBFT consensus, we need to convert the
+	// evidence to the new types.Misbehavior type and store it in the cache.
 
-	evidences := bi.Evidence
-	for _, evidence := range evidences {
-		switch evidence.Type {
+	res := consensusv1.QueryCometInfoResponse{}
+	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryCometInfoRequest{}, &res); err != nil {
+		return err
+	}
+
+	for _, evidence := range res.CometInfo.Evidence {
+		switch evidence.EvidenceType {
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.
-		case comet.LightClientAttack, comet.DuplicateVote:
-			evidence := types.FromABCIEvidence(evidence, k.stakingKeeper.ConsensusAddressCodec())
-			err := k.handleEquivocationEvidence(ctx, evidence)
+		case consensusv1.MisbehaviorType_MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK, consensusv1.MisbehaviorType_MISBEHAVIOR_TYPE_DUPLICATE_VOTE:
+			if evidence == nil {
+				continue // skip if no evidence
+			}
+			e := types.FromABCIEvidence(*evidence, k.stakingKeeper.ConsensusAddressCodec())
+			err := k.handleEquivocationEvidence(ctx, e)
 			if err != nil {
 				return err
 			}
 		default:
-			k.Logger.Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
+			k.Logger.Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.EvidenceType))
 		}
 	}
 	return nil

@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/log"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
-	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
@@ -84,7 +83,7 @@ func TestBeginBlocker(t *testing.T) {
 		}}},
 	})
 
-	err = slashing.BeginBlocker(ctx, slashingKeeper)
+	err = slashingKeeper.BeginBlocker(ctx)
 	require.NoError(t, err)
 
 	info, err := slashingKeeper.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(pk.Address()))
@@ -102,7 +101,7 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < signedBlocksWindow; height++ {
 		ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height})
 
-		err = slashing.BeginBlocker(ctx, slashingKeeper)
+		err = slashingKeeper.BeginBlocker(ctx)
 		require.NoError(t, err)
 	}
 
@@ -117,7 +116,7 @@ func TestBeginBlocker(t *testing.T) {
 			}}},
 		})
 
-		err = slashing.BeginBlocker(ctx, slashingKeeper)
+		err = slashingKeeper.BeginBlocker(ctx)
 		require.NoError(t, err)
 	}
 

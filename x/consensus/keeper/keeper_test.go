@@ -257,6 +257,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "valid params",
 			input: &types.ConsensusMsgParams{
+				Signer:    "consensus", // must be "consensus"
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,
@@ -269,6 +270,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "invalid  params",
 			input: &types.ConsensusMsgParams{
+				Signer:    "consensus",
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
@@ -281,6 +283,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "nil version params",
 			input: &types.ConsensusMsgParams{
+				Signer:    "consensus",
 				Abci:      defaultConsensusParams.Abci,
 				Version:   nil,
 				Block:     defaultConsensusParams.Block,
@@ -293,6 +296,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "nil evidence params",
 			input: &types.ConsensusMsgParams{
+				Signer:    "consensus",
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,
@@ -305,6 +309,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "nil block params",
 			input: &types.ConsensusMsgParams{
+				Signer:    "consensus",
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     nil,
@@ -317,6 +322,7 @@ func (s *KeeperTestSuite) TestSetParams() {
 		{
 			name: "nil validator params",
 			input: &types.ConsensusMsgParams{
+				Signer:    "consensus",
 				Abci:      defaultConsensusParams.Abci,
 				Version:   &cmtproto.VersionParams{App: 1},
 				Block:     defaultConsensusParams.Block,

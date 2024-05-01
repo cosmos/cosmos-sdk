@@ -6,6 +6,7 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "tendermint/types/params.proto";
+import "cosmos/consensus/v1/consensus.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 
@@ -17,6 +18,11 @@ service Msg {
   // The authority is defined in the keeper.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
+  }
+
+  // CometInfo is used to set the information of cometbft to be used by other modules
+  rpc SetCometInfo(consensus.v1.MsgCometInfoRequest) returns (consensus.v1.MsgCometInfoResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.52";
   }
 }
 

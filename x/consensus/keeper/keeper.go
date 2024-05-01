@@ -39,6 +39,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 		Environment: env,
 		authority:   authority,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+		cometInfo:   collections.NewItem(sb, collections.NewPrefix("CometInfo"), "comet_info", codec.CollValue[types.CometInfo](cdc)),
 	}
 }
 
@@ -101,6 +102,10 @@ func (k Keeper) SetParams(
 	ctx context.Context,
 	req *types.ConsensusMsgParams,
 ) (*types.ConsensusMsgParamsResponse, error) {
+	if req.Signer != "consensus" {
+		return nil, fmt.Errorf("invalid signer; expected %s, got %s", "consensus", req.Signer)
+	}
+
 	consensusParams, err := req.ToProtoConsensusParams()
 	if err != nil {
 		return nil, err
@@ -118,15 +123,18 @@ func (k Keeper) SetParams(
 
 // GetCometInfo returns info related to comet. If the application is using v1 then the information will be present on context,
 // if the application is using v2 then the information will be present in the cometInfo store.
-// TODO: use or delete
-func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
+func (k Keeper) GetCometInfo(
+	ctx context.Context,
+	_ *types.QueryCometInfoRequest,
+) (*types.QueryCometInfoResponse, error) {
 	ci, err := k.cometInfo.Get(ctx)
 	// if the value is not found we may be using baseapp and not have consensus messages
 	if errors.Is(err, collections.ErrNotFound) {
 		ci := sdk.UnwrapSDKContext(ctx).CometInfo()
-		res := &types.MsgCometInfoResponse{CometInfo: &types.CometInfo{
+		res := &types.QueryCometInfoResponse{CometInfo: &types.CometInfo{
 			ValidatorsHash:  ci.ValidatorsHash,
 			ProposerAddress: ci.ProposerAddress,
+			LastCommit:      &types.CommitInfo{},
 		}}
 
 		for _, vote := range ci.LastCommit.Votes {
@@ -139,8 +147,8 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest
 			})
 		}
 		res.CometInfo.LastCommit.Round = ci.LastCommit.Round
-
 		for _, evi := range ci.Evidence {
+			evi := evi
 			res.CometInfo.Evidence = append(res.CometInfo.Evidence, &types.Evidence{
 				EvidenceType: types.MisbehaviorType(evi.Type),
 				Validator: &types.Validator{
@@ -153,8 +161,19 @@ func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest
 			})
 		}
 
-		return res, err
+		return res, nil
 	}
 
-	return &types.MsgCometInfoResponse{CometInfo: &ci}, err
+	return &types.QueryCometInfoResponse{CometInfo: &ci}, err
+}
+
+// SetCometInfo is called by the framework to set the value at genesis.
+func (k Keeper) SetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
+	if req.Signer != "consensus" { // TODO move this to core when up-streamed from server/v2
+		return nil, fmt.Errorf("invalid signer; expected %s, got %s", "consensus", req.Signer)
+	}
+
+	err := k.cometInfo.Set(ctx, *req.CometInfo)
+
+	return &types.MsgCometInfoResponse{}, err
 }

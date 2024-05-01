@@ -752,6 +752,21 @@ func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
 	return m.recorder
 }
 
+// GetCometInfo mocks base method.
+func (m *MockConsensusKeeper) GetCometInfo(arg0 context.Context, arg1 *types2.QueryCometInfoRequest) (*types2.QueryCometInfoResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCometInfo", arg0, arg1)
+	ret0, _ := ret[0].(*types2.QueryCometInfoResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCometInfo indicates an expected call of GetCometInfo.
+func (mr *MockConsensusKeeperMockRecorder) GetCometInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometInfo", reflect.TypeOf((*MockConsensusKeeper)(nil).GetCometInfo), arg0, arg1)
+}
+
 // Params mocks base method.
 func (m *MockConsensusKeeper) Params(arg0 context.Context, arg1 *types2.QueryParamsRequest) (*types2.QueryParamsResponse, error) {
 	m.ctrl.T.Helper()

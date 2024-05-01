@@ -119,4 +119,5 @@ func (StakingHooksWrapper) IsOnePerModuleType() {}
 
 type ConsensusKeeper interface {
 	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
+	GetCometInfo(context.Context, *consensustypes.QueryCometInfoRequest) (*consensustypes.QueryCometInfoResponse, error)
 }

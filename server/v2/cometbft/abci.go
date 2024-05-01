@@ -373,8 +373,9 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// for passing consensus info as a consensus message
-	cometInfo := &consensustypes.ConsensusMsgCometInfoRequest{
-		Info: &consensustypes.CometInfo{
+	cometInfo := &consensustypes.MsgCometInfoRequest{
+		Signer: "consensus",
+		CometInfo: &consensustypes.CometInfo{
 			Evidence:        ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,

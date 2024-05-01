@@ -83,6 +83,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	ck.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
 		Params: simtestutil.DefaultConsensusParams,
 	}, nil).AnyTimes()
+	ck.EXPECT().GetCometInfo(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryCometInfoResponse{
+		CometInfo: &consensustypes.CometInfo{},
+	}, nil).AnyTimes()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	consensustypes.RegisterQueryServer(queryHelper, ck)
 

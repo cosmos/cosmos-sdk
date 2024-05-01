@@ -2,8 +2,8 @@ package tx_test
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"testing"
-
 
 	"github.com/cosmos/gogoproto/proto"
 	types2 "github.com/cosmos/gogoproto/types/any"
@@ -208,17 +208,23 @@ func TestTx_GetSigners(t *testing.T) {
 	require.Nil(t, err)
 }
 
-type DummyProtoMessage1 struct{}
+type DummyProtoMessage1 struct {
+	Name string
+}
 
-func (d *DummyProtoMessage1) Reset()         {}
-func (d *DummyProtoMessage1) String() string { return "/dummy.proto.message1" }
-func (d *DummyProtoMessage1) ProtoMessage()  {}
+func (d *DummyProtoMessage1) Reset()                   {}
+func (d *DummyProtoMessage1) String() string           { return "/dummy.proto.message1" }
+func (d *DummyProtoMessage1) ProtoMessage()            {}
+func (d *DummyProtoMessage1) Marshal() ([]byte, error) { return json.Marshal(d) }
+func (d *DummyProtoMessage1) XXX_MessageName() string  { return "dummy.proto.message1" }
 
 type DummyProtoMessage2 struct{}
 
-func (d *DummyProtoMessage2) Reset()         {}
-func (d *DummyProtoMessage2) String() string { return "/dummy.proto.message2" }
-func (d *DummyProtoMessage2) ProtoMessage()  {}
+func (d *DummyProtoMessage2) Reset()                   {}
+func (d *DummyProtoMessage2) String() string           { return "/dummy.proto.message2" }
+func (d *DummyProtoMessage2) ProtoMessage()            {}
+func (d *DummyProtoMessage2) Marshal() ([]byte, error) { return json.Marshal(d) }
+func (d *DummyProtoMessage2) XXX_MessageName() string  { return "dummy.proto.message2" }
 
 type dummyAddressCodec struct{}
 

@@ -1,9 +1,9 @@
 package tx_test
 
 import (
+	"encoding/json"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,16 +14,23 @@ import (
 
 func Test_SetMsg(t *testing.T) {
 	cases := map[string]struct {
-		msg    sdk.Msg
-		expErr bool
+		msg        sdk.Msg
+		msgTypeURL string
+		expErr     bool
 	}{
 		"Set nil Msg": {
 			msg:    nil,
 			expErr: true,
 		},
+		"Set empty message": {
+			msg:        &DummyProtoMessage1{},
+			msgTypeURL: "/dummy.proto.message1",
+			expErr:     false,
+		},
 		"Set a valid message": {
-			msg:    &DummyProtoMessage1{},
-			expErr: false,
+			msg:        &DummyProtoMessage1{Name: "some-name"},
+			msgTypeURL: "/dummy.proto.message1",
+			expErr:     false,
 		},
 	}
 
@@ -34,18 +41,23 @@ func Test_SetMsg(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
-
-			expected := mustAny(tc.msg)
 			require.NoError(t, err)
-			require.Equal(t, expected, actual)
+
+			b, err := json.Marshal(tc.msg)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.msgTypeURL, actual.TypeUrl)
+			require.Equal(t, b, actual.GetValue())
+			require.Equal(t, tc.msg, actual.GetCachedValue())
 		})
 	}
 }
 
 func Test_SetMsgs(t *testing.T) {
 	cases := map[string]struct {
-		msgs   []sdk.Msg
-		expErr bool
+		msgs       []sdk.Msg
+		msgTypeURL []string
+		expErr     bool
 	}{
 		"Set nil slice of messages": {
 			msgs:   nil,
@@ -60,8 +72,9 @@ func Test_SetMsgs(t *testing.T) {
 			expErr: true,
 		},
 		"Set valid messages": {
-			msgs:   []sdk.Msg{&DummyProtoMessage1{}, &DummyProtoMessage2{}},
-			expErr: false,
+			msgs:       []sdk.Msg{&DummyProtoMessage1{Name: "name1"}, &DummyProtoMessage2{}},
+			msgTypeURL: []string{"/dummy.proto.message1", "/dummy.proto.message2"},
+			expErr:     false,
 		},
 	}
 
@@ -72,15 +85,17 @@ func Test_SetMsgs(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
-
-			expected := make([]*types.Any, len(tc.msgs))
-			for i, msg := range tc.msgs {
-				a := mustAny(msg)
-				expected[i] = a
-			}
-
 			require.NoError(t, err)
-			require.Equal(t, expected, actual)
+			require.Equal(t, len(tc.msgs), len(actual))
+
+			for i, msg := range tc.msgs {
+				b, err := json.Marshal(msg)
+				require.NoError(t, err)
+
+				require.Equal(t, msg, actual[i].GetCachedValue())
+				require.Equal(t, tc.msgTypeURL[i], actual[i].GetTypeUrl())
+				require.Equal(t, b, actual[i].GetValue())
+			}
 		})
 	}
 }
@@ -164,12 +179,4 @@ func TestTx_UnpackInterfaces(t *testing.T) {
 			require.Equal(t, tc.expErr, err != nil)
 		})
 	}
-}
-
-func mustAny(msg proto.Message) *types.Any {
-	a, err := types.NewAnyWithValue(msg)
-	if err != nil {
-		panic(err)
-	}
-	return a
 }

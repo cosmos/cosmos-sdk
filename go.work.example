@@ -16,7 +16,6 @@ use (
 	./simapp
 	./simapp/v2
 	./tests
-	./tests/starship/tests
 	./store
 	./tools/cosmovisor
 	./tools/confix

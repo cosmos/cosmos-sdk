@@ -8,8 +8,7 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-
-	"cosmossdk.io/x/upgrade/expected"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // PreBlocker will check if there is a scheduled plan and if it is ready to be executed.
@@ -20,7 +19,7 @@ import (
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
-func (k Keeper) PreBlocker(ctx context.Context, consensusKeeper expected.ConsensusKeeper) error {
+func (k Keeper) PreBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
 	blockHeight := k.HeaderService.HeaderInfo(ctx).Height
@@ -46,12 +45,12 @@ func (k Keeper) PreBlocker(ctx context.Context, consensusKeeper expected.Consens
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
 				var appVersion uint64
 
-				cp, err := consensusKeeper.GetParams(ctx)
-				if err != nil {
-					return err
+				var res consensusv1.QueryParamsResponse
+				if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+					return errors.New("failed to query consensus params")
 				}
-				if cp.Version != nil {
-					appVersion = cp.Version.App
+				if res.Params.Version != nil {
+					appVersion = res.Params.Version.App
 				}
 
 				return fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)

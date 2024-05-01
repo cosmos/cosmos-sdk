@@ -4,7 +4,6 @@ import (
 	"context"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
@@ -12,6 +11,7 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // AccountKeeper defines the expected account keeper (noalias)
@@ -118,5 +118,5 @@ type StakingHooksWrapper struct{ StakingHooks }
 func (StakingHooksWrapper) IsOnePerModuleType() {}
 
 type ConsensusKeeper interface {
-	GetParams(ctx context.Context) (cmtproto.ConsensusParams, error)
+	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
 }

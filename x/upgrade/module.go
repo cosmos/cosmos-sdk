@@ -2,7 +2,6 @@ package upgrade
 
 import (
 	"context"
-	"cosmossdk.io/x/upgrade/expected"
 	"encoding/json"
 	"fmt"
 
@@ -43,15 +42,13 @@ var (
 
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
-	keeper          *keeper.Keeper
-	consensusKeeper expected.ConsensusKeeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper *keeper.Keeper, consensusKeeper expected.ConsensusKeeper) AppModule {
+func NewAppModule(keeper *keeper.Keeper) AppModule {
 	return AppModule{
-		keeper:          keeper,
-		consensusKeeper: consensusKeeper,
+		keeper: keeper,
 	}
 }
 
@@ -154,5 +151,5 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 //
 // CONTRACT: this is called *before* all other modules' BeginBlock functions
 func (am AppModule) PreBlock(ctx context.Context) error {
-	return am.keeper.PreBlocker(ctx, am.consensusKeeper)
+	return am.keeper.PreBlocker(ctx)
 }

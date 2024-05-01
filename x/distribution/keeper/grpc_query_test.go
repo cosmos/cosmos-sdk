@@ -153,14 +153,14 @@ func TestQueryCommunityPool(t *testing.T) {
 
 	cases := []struct {
 		name   string
-		req    *types.QueryCommunityPoolRequest
-		resp   *types.QueryCommunityPoolResponse
+		req    *types.QueryCommunityPoolRequest  //nolint:staticcheck // Testing deprecated method
+		resp   *types.QueryCommunityPoolResponse //nolint:staticcheck // Testing deprecated method
 		errMsg string
 	}{
 		{
 			name: "success",
-			req:  &types.QueryCommunityPoolRequest{},
-			resp: &types.QueryCommunityPoolResponse{
+			req:  &types.QueryCommunityPoolRequest{}, //nolint:staticcheck // Testing deprecated method
+			resp: &types.QueryCommunityPoolResponse{ //nolint:staticcheck // Testing deprecated method
 				Pool: decCoins,
 			},
 			errMsg: "",

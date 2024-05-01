@@ -30,6 +30,7 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 		return sdk.FormatInvariant(group.ModuleName, weightInvariant, msg), broken
 	}
 }
+
 func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KVStoreService, groupTable orm.AutoUInt64Table, groupMemberByGroupIndex orm.Index) (string, bool) {
 	var msg string
 	var broken bool

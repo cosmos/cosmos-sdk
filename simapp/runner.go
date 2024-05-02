@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"cosmossdk.io/log"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -27,7 +29,8 @@ const SimAppChainID = "simulation-app"
 
 // this list of seeds was imported from the original simulation runner: https://github.com/cosmos/tools/blob/v1.0.0/cmd/runsim/main.go#L32
 var defaultSeeds = []int64{
-	1, 2, 4, 7, 32, 123, 124, 582, 1893, 2989,
+	1, 2, 4, 7,
+	32, 123, 124, 582, 1893, 2989,
 	3012, 4728, 37827, 981928, 87821, 891823782,
 	989182, 89182391, 11, 22, 44, 77, 99, 2020,
 	3232, 123123, 124124, 582582, 18931893,
@@ -48,6 +51,7 @@ type SimulationApp interface {
 	runtime.AppSimI
 	SetNotSigverifyTx()
 	GetBaseApp() *baseapp.BaseApp
+	TxConfig() client.TxConfig
 }
 
 func Run[T SimulationApp](
@@ -82,7 +86,6 @@ func RunWithSeeds[T SimulationApp](
 ) {
 	cfg := cli.NewConfigFromFlags()
 	cfg.ChainID = SimAppChainID
-
 	for i := range seeds {
 		seed := seeds[i]
 		t.Run(fmt.Sprintf("seed: %d", seed), func(t *testing.T) {
@@ -91,15 +94,17 @@ func RunWithSeeds[T SimulationApp](
 			tCfg := cfg.Clone()
 			tCfg.Seed = seed
 			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
+
 			app := testInstance.App
 			stateFactory := setupStateFactory(app)
 			_, simParams, err := simulation.SimulateFromSeed(
 				t,
+				testInstance.Logger,
 				WriteToDebugLog(testInstance.Logger),
 				app.GetBaseApp(),
 				stateFactory.AppStateFn,
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simtestutil.SimulationOperations(app, stateFactory.Codec, tCfg),
+				simtestutil.SimulationOperations(app, stateFactory.Codec, tCfg, testInstance.App.TxConfig()),
 				stateFactory.BlockedAddr,
 				tCfg,
 				stateFactory.Codec,
@@ -126,11 +131,15 @@ type TestInstance[T SimulationApp] struct {
 	Logger  log.Logger
 }
 
-func NewSimulationAppInstance[T SimulationApp](t *testing.T, tCfg simtypes.Config, appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T) TestInstance[T] {
+func NewSimulationAppInstance[T SimulationApp](
+	t *testing.T,
+	tCfg simtypes.Config,
+	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+) TestInstance[T] {
 	workDir := t.TempDir()
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
-	if cli.FlagVerboseValue {
+	if true { // cli.FlagVerboseValue {
 		logger = log.NewTestLoggerInfo(t).With("seed", tCfg.Seed)
 	} else {
 		logger = log.NewNopLogger()

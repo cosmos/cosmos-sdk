@@ -75,7 +75,6 @@ func TestAppImportExport(t *testing.T) {
 		newApp := newTestInstance.App
 		var genesisState GenesisState
 		require.NoError(t, json.Unmarshal(exported.AppState, &genesisState))
-
 		ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 		_, err = newApp.ModuleManager.InitGenesis(ctxB, genesisState)
 		if IsEmptyValidatorSetErr(err) {
@@ -127,18 +126,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		}
 		require.NoError(t, err)
 		newStateFactory := setupStateFactory(newApp)
-		_, _, err = simulation.SimulateFromSeed(
-			t,
-			WriteToDebugLog(newTestInstance.Logger),
-			newApp.BaseApp,
-			newStateFactory.AppStateFn,
-			simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-			simtestutil.SimulationOperations(newApp, newStateFactory.Codec, newTestInstance.Cfg),
-			newStateFactory.BlockedAddr,
-			newTestInstance.Cfg,
-			newStateFactory.Codec,
-			codectestutil.CodecOptions{}.GetAddressCodec(),
-		)
+		_, _, err = simulation.SimulateFromSeed(t, nil, WriteToDebugLog(newTestInstance.Logger), newApp.BaseApp, newStateFactory.AppStateFn, simtypes.RandomAccounts, simtestutil.SimulationOperations(newApp, newStateFactory.Codec, newTestInstance.Cfg, newApp.TxConfig()), newStateFactory.BlockedAddr, newTestInstance.Cfg, newStateFactory.Codec, codectestutil.CodecOptions{}.GetAddressCodec())
 		require.NoError(t, err)
 	})
 }

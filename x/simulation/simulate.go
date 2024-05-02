@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"math/rand"
@@ -9,6 +10,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"cosmossdk.io/log"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -59,6 +62,7 @@ func initChain(
 // operations, testing the provided invariants, but using the provided config.Seed.
 func SimulateFromSeed(
 	tb testing.TB,
+	logger log.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
 	appStateFn simulation.AppStateFn,
@@ -76,8 +80,9 @@ func SimulateFromSeed(
 	r := rand.New(rand.NewSource(config.Seed))
 	params := RandomParams(r)
 
-	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
-	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
+	startTime := time.Now()
+	logger.Info("Starting SimulateFromSeed with randomness", "time", startTime)
+	logger.Debug("Randomized simulation setup", "params", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := randAccFn(r, params.NumKeys())
@@ -93,11 +98,6 @@ func SimulateFromSeed(
 	}
 
 	config.ChainID = chainID
-
-	fmt.Printf(
-		"Starting the simulation from time %v (unixtime %v)\n",
-		blockTime.UTC().Format(time.UnixDate), blockTime.Unix(),
-	)
 
 	// remove module account address if they exist in accs
 	var tmpAccs []simulation.Account
@@ -131,7 +131,7 @@ func SimulateFromSeed(
 
 	go func() {
 		receivedSignal := <-c
-		fmt.Fprintf(w, "\nExiting early due to %s, on block %d, operation %d\n", receivedSignal, blockHeight, opCount)
+		logger.Error("Exiting early", "signal", receivedSignal, "height", blockHeight, "op-count", opCount)
 		err = fmt.Errorf("exited due to %s", receivedSignal)
 		stopEarly = true
 	}()
@@ -247,7 +247,7 @@ func SimulateFromSeed(
 		}
 
 		if proposerAddress == nil {
-			fmt.Fprintf(w, "\nSimulation stopped early as all validators have been unbonded; nobody left to propose a block!\n")
+			logger.Info("Simulation stopped early as all validators have been unbonded; nobody left to propose a block")
 			stopEarly = true
 			break
 		}
@@ -278,11 +278,8 @@ func SimulateFromSeed(
 		return true, exportedParams, err
 	}
 
-	fmt.Fprintf(
-		w,
-		"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
-		blockHeight, blockTime, opCount,
-	)
+	logger.Info("Simulation complete", "height", blockHeight, "block-time", blockTime, "opsCount", opCount,
+		"run-time", time.Since(startTime), "app-hash", hex.EncodeToString(app.LastCommitID().Hash))
 
 	if config.ExportStatsPath != "" {
 		fmt.Println("Exporting simulation statistics...")

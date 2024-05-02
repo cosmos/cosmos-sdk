@@ -5,6 +5,7 @@ package cosmos.gov.v1;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "cosmos/gov/v1/gov.proto";
+import "cosmos/query/v1/query.proto";
 import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/x/gov/types/v1";
@@ -13,59 +14,78 @@ option go_package = "cosmossdk.io/x/gov/types/v1";
 service Query {
   // Constitution queries the chain's constitution.
   rpc Constitution(QueryConstitutionRequest) returns (QueryConstitutionResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/constitution";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/constitution";
   }
 
   // Proposal queries proposal details based on ProposalID.
   rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/proposals/{proposal_id}";
   }
 
   // Proposals queries all proposals based on given status.
   rpc Proposals(QueryProposalsRequest) returns (QueryProposalsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/proposals";
   }
 
   // Vote queries voted information based on proposalID, voterAddr.
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}";
   }
 
   // Votes queries votes of a given proposal.
   rpc Votes(QueryVotesRequest) returns (QueryVotesResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/votes";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/proposals/{proposal_id}/votes";
   }
 
   // Params queries all parameters of the gov module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/params";
   }
 
   // Deposit queries single deposit information based on proposalID, depositAddr.
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}";
   }
 
   // Deposits queries all deposits of a single proposal.
   rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/deposits";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/proposals/{proposal_id}/deposits";
   }
 
   // TallyResult queries the tally of a proposal vote.
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/tally";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/proposals/{proposal_id}/tally";
   }
 
   // ProposalVoteOptions queries the valid voting options for a proposal.
   rpc ProposalVoteOptions(QueryProposalVoteOptionsRequest) returns (QueryProposalVoteOptionsResponse) {
+<<<<<<< HEAD
     option (google.api.http).get          = "/cosmos/gov/v1/proposals/{proposal_id}/vote_options";
     option (cosmos_proto.method_added_in) = "x/gov v1.0.0";
+=======
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/proposals/{proposal_id}/vote_options";
+>>>>>>> 69551a0fd (feat: mark gov  module query safe)
   }
 
   // MessageBasedParams queries the message specific governance params based on a msg url.
   rpc MessageBasedParams(QueryMessageBasedParamsRequest) returns (QueryMessageBasedParamsResponse) {
+<<<<<<< HEAD
     option (google.api.http).get          = "/cosmos/gov/v1/params/{msg_url}";
     option (cosmos_proto.method_added_in) = "x/gov v1.0.0";
+=======
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/gov/v1/params/{msg_url}";
+>>>>>>> 69551a0fd (feat: mark gov  module query safe)
   }
 }
 

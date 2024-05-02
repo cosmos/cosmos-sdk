@@ -41,7 +41,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return nil
 	}
 
-	ci := k.CometInfoService.CometInfo(ctx)
+	ci := k.cometInfoService.CometInfo(ctx)
 	historicalEntry := types.HistoricalRecord{
 		Time:           &headerInfo.Time,
 		ValidatorsHash: ci.ValidatorsHash,

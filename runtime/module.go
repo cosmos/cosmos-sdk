@@ -16,6 +16,7 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -101,6 +102,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
+			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -273,6 +275,10 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
+}
+
+func ProvideCometService() comet.Service {
+	return ContextAwareCometInfoService{}
 }
 
 type AddressCodecInputs struct {

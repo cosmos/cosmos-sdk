@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/collections/indexes"
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
@@ -76,6 +77,7 @@ type Keeper struct {
 	authority             string
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
+	cometInfoService      comet.Service
 
 	Schema collections.Schema
 
@@ -138,6 +140,7 @@ func NewKeeper(
 	authority string,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
+	cometInfoService comet.Service,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	// ensure bonded and not bonded module accounts are set
@@ -167,6 +170,7 @@ func NewKeeper(
 		authority:             authority,
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
+		cometInfoService:      cometInfoService,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, HistoricalInfoCodec(cdc)),
 		Delegations: collections.NewMap(

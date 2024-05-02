@@ -12,10 +12,10 @@ import (
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
-func (k Keeper) BeginBlocker(ctx context.Context) error {
+func (k Keeper) BeginBlocker(ctx context.Context, cometService comet.Service) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
-	bi := k.CometInfoService.CometInfo(ctx)
+	bi := cometService.CometInfo(ctx)
 
 	evidences := bi.Evidence
 	for _, evidence := range evidences {

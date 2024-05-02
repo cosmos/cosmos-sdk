@@ -114,7 +114,7 @@ type StartCmdOptions struct {
 	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
 	// PostSetup can be used to setup extra services under the same cancellable context,
 	// it's not called in stand-alone mode, only for in-process mode.
-	PostSetup func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group, app types.Application) error
+	PostSetup func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// PostSetupStandalone can be used to setup extra services under the same cancellable context,
 	PostSetupStandalone func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
@@ -351,7 +351,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	}
 
 	if opts.PostSetup != nil {
-		if err := opts.PostSetup(svrCtx, clientCtx, ctx, g, app); err != nil {
+		if err := opts.PostSetup(svrCtx, clientCtx, ctx, g); err != nil {
 			return err
 		}
 	}

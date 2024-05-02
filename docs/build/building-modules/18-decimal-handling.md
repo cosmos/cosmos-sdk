@@ -5,7 +5,12 @@ sidebar_position: 1
 
 ## Introduction
 
-In the Cosmos SDK we have 2 types of decimals `LegacyDec` and `Dec`. `LegacyDec` is the old decimal type that was used, which is still available to be used and `Dec` is the new decimal type and is more performant than `LegacyDec`. These are state-breaking changes and will require an upgrade but it is recommended to use `Dec` for new modules.
+In the Cosmos SDK, there are two types of decimals: `LegacyDec` and `Dec`. `LegacyDec` is the older decimal type that is still available for use, while `Dec` is the newer, more performant decimal type. The implementation of `Dec` is adapted from Regen Network's `regen-ledger`, specifically from [this module](https://github.com/regen-network/regen-ledger/tree/main/types/math). Migrating from `LegacyDec` to `Dec` involves state-breaking changes, specifically:
+
+* **Data Format**: The internal representation of decimals changes, affecting how data is stored and processed.
+* **Precision Handling**: `Dec` supports flexible precision up to 34 decimal places, unlike `LegacyDec` which has a fixed precision of 18 decimal places.
+
+These changes require a state migration to update existing decimal values to the new format. It is recommended to use `Dec` for new modules to leverage its enhanced performance and flexibility.
 
 ## Why the Change?
 
@@ -13,7 +18,7 @@ In the Cosmos SDK we have 2 types of decimals `LegacyDec` and `Dec`. `LegacyDec`
 * **Immutable Operations**: `Dec` operations are safer for concurrent use as they do not mutate the original values.
 * **Better Performance**: `Dec` operations are faster and more efficient than `LegacyDec`.`
 
-## Using `Dec` in Modules that havent used `LegacyDec`
+## Using `Dec` in Modules that haven't used `LegacyDec`
 
 If you are creating a new module or updating an existing module that has not used `LegacyDec`, you can directly use `Dec` without any changes.
 
@@ -43,7 +48,7 @@ import (
 example := math.NewDecFromInt64(100)
 ```
 
-# Modules migrating from `LegacyDec` to `Dec`
+## Modules migrating from `LegacyDec` to `Dec`
 
 When migrating from `LegacyDec` to `Dec`, you need to update your module to use the new decimal type. **These types are state breaking changes and require a migration.**
 

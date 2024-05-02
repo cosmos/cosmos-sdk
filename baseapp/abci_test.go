@@ -1773,6 +1773,10 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+	})
+
 	// the same txs as in PrepareProposal
 	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{
 		Tx: reqProposalTxBytes,

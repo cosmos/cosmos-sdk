@@ -84,7 +84,7 @@ func TestBeginBlocker(t *testing.T) {
 			BlockIDFlag: comet.BlockIDFlagCommit,
 		}}},
 	})
-	cometInfoService := runtime.ContextAwareCometInfoService{}
+	cometInfoService := runtime.NewContextAwareCometInfoService()
 
 	err = slashing.BeginBlocker(ctx, slashingKeeper, cometInfoService)
 	require.NoError(t, err)

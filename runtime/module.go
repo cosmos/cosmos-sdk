@@ -174,7 +174,11 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec address.ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	customGetSigners []signing.CustomGetSigner,
+) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -211,7 +215,11 @@ func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtim
 	return nil
 }
 
-func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
+func ProvideKVStoreKey(
+	config *runtimev1alpha1.Module,
+	key depinject.ModuleKey,
+	app *AppBuilder,
+) *storetypes.KVStoreKey {
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
@@ -278,7 +286,7 @@ func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 }
 
 func ProvideCometService() comet.Service {
-	return ContextAwareCometInfoService{}
+	return NewContextAwareCometInfoService()
 }
 
 type AddressCodecInputs struct {

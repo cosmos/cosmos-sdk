@@ -106,7 +106,7 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	cometInfoService := runtime.ContextAwareCometInfoService{}
+	cometInfoService := runtime.NewContextAwareCometInfoService()
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometInfoService)
 

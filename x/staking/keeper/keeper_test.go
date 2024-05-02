@@ -98,7 +98,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		authority,
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
-		runtime.ContextAwareCometInfoService{},
+		runtime.NewContextAwareCometInfoService(),
 	)
 	require.NoError(keeper.Params.Set(ctx, stakingtypes.DefaultParams()))
 

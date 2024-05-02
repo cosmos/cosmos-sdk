@@ -17,3 +17,7 @@ type ContextAwareCometInfoService struct{}
 func (c ContextAwareCometInfoService) CometInfo(ctx context.Context) corecomet.Info {
 	return sdk.UnwrapSDKContext(ctx).CometInfo()
 }
+
+func NewContextAwareCometInfoService() *ContextAwareCometInfoService {
+	return &ContextAwareCometInfoService{}
+}

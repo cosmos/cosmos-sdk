@@ -71,7 +71,7 @@ var (
 	// The default power validators are initialized to have within tests
 	initAmt          = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins        = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-	cometInfoService = runtime.ContextAwareCometInfoService{}
+	cometInfoService = runtime.NewContextAwareCometInfoService()
 )
 
 type fixture struct {
@@ -137,7 +137,7 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(grpcQueryRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.ContextAwareCometInfoService{})
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(grpcQueryRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
 
 	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger()), cdc, codec.NewLegacyAmino(), stakingKeeper, authority.String())
 
@@ -450,7 +450,10 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 
 	// query evidence from store
 	var evidences []exported.Evidence
-	assert.NilError(t, f.evidenceKeeper.Evidences.Walk(ctx, nil, func(key []byte, value exported.Evidence) (stop bool, err error) {
+	assert.NilError(t, f.evidenceKeeper.Evidences.Walk(ctx, nil, func(
+		key []byte,
+		value exported.Evidence,
+	) (stop bool, err error) {
 		evidences = append(evidences, value)
 		return false, nil
 	}))

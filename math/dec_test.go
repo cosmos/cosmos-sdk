@@ -711,3 +711,13 @@ func TestInfDecString(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrInfiniteString)
 }
+
+func TestDecToLegacyDec(t *testing.T) {
+    dec := NewDecFromInt64(123)
+
+    legacyDec, err := DecToLegacyDec(dec)
+    require.NoError(t, err)
+
+    expected, _ := LegacyNewDecFromStr("123.000000000000000000") 
+    require.True(t, legacyDec.Equal(expected))
+}

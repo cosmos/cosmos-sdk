@@ -782,3 +782,13 @@ func (s *decimalTestSuite) TestConvertToBigIntMutativeForLegacyDec() {
 	s.Require().NotEqual(big.NewInt(50), i.BigIntMut())
 	s.Require().NotEqual(big.NewInt(50), i.BigInt())
 }
+
+func TestLegacyDecToDec(t *testing.T) {
+	legacyDec, _ := math.LegacyNewDecFromStr("123.000000000000000000") 
+
+	dec, err := math.LegacyDecToDec(legacyDec)
+	require.NoError(t, err)
+
+	expected, _ := math.NewDecFromString("123.000000000000000000")
+	require.True(t, dec.Equal(expected))
+}

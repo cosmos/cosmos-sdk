@@ -109,9 +109,6 @@ const (
 
 // StartCmdOptions defines options that can be customized in `StartCmdWithOptions`,
 type StartCmdOptions struct {
-	// PreSetup can be used to setup extra services under the same cancellable context,
-	// it's not called in stand-alone mode, only for in-process mode.
-	PreSetup func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group, app types.Application) error
 	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
 	// default to the builtin db opener.
 	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
@@ -316,12 +313,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
 	g, ctx := getCtx(svrCtx, true)
-
-	if opts.PreSetup != nil {
-		if err := opts.PreSetup(svrCtx, clientCtx, ctx, g, app); err != nil {
-			return err
-		}
-	}
 
 	if gRPCOnly {
 		// TODO: Generalize logic so that gRPC only is really in startStandAlone

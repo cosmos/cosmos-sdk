@@ -138,7 +138,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	workDir := t.TempDir()
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
-	if true { // cli.FlagVerboseValue {
+	if cli.FlagVerboseValue {
 		logger = log.NewTestLoggerInfo(t).With("seed", tCfg.Seed)
 	} else {
 		logger = log.NewNopLogger()

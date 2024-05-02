@@ -82,6 +82,20 @@ jobs:
         run: |
           make test-sim-multi-seed-short
 
+  test-sim-fuzz:
+    runs-on: large-sdk-runner
+    needs: [build]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          check-latest: true
+      - name: test-sim-fuzz
+        run: |
+          make test-sim-fuzz
+
 #  sims-notify-success:
 #    needs:
 #      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]

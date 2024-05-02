@@ -237,3 +237,10 @@ func AssertEqualStores(t *testing.T, app ComparableStoreApp, newApp ComparableSt
 		}
 	}
 }
+
+func FuzzFullAppSimulation(f *testing.F) {
+	f.Add(int64(1))
+	f.Fuzz(func(t *testing.T, seed int64) {
+		RunWithSeeds(t, NewSimApp, setupStateFactory, []int64{seed})
+	})
+}

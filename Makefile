@@ -351,6 +351,12 @@ SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 
+#? test-sim-fuzz: Run fuzz test for simapp
+test-sim-fuzz:
+	@echo "Running application fuzz for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
+#ld flags are a quick fix to make it work on current osx
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly  -json -ldflags=-extldflags=-Wl,-ld_classic  -fuzz=FuzzFullAppSimulation  .
+
 #? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
@@ -390,7 +396,7 @@ test-sim-profile-streaming:
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out -EnableStreaming=true
 
-.PHONY: test-sim-profile test-sim-benchmark
+.PHONY: test-sim-profile test-sim-benchmark test-sim-fuzz
 
 #? benchmark: Run benchmark tests
 benchmark:

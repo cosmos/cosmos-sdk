@@ -717,7 +717,17 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
+<<<<<<< HEAD
 			return gInfo, nil, nil, 0, err
+=======
+			if mode == execModeReCheck {
+				// if the ante handler fails on recheck, we want to remove the tx from the mempool
+				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
+					return gInfo, nil, anteEvents, errors.Join(err, mempoolErr)
+				}
+			}
+			return gInfo, nil, nil, err
+>>>>>>> 599ae55c4 (fix: remove txs from mempool when antehandler fails in recheck (#20144))
 		}
 
 		priority = ctx.Priority()

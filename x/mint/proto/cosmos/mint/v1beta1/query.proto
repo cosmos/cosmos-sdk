@@ -81,5 +81,9 @@ message QueryEpochProvisionsRequest {}
 // Query/EpochProvisions RPC method.
 message QueryEpochProvisionsResponse {
   // epoch_provisions is the current minting per epoch provisions value.
-  bytes epoch_provisions = 1 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  bytes epoch_provisions = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
 }

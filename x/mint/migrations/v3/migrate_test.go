@@ -30,5 +30,6 @@ func TestMigrateStore(t *testing.T) {
 
 	newLastReductionEpoch, err := lastReductionEpoch.Get(ctx)
 	require.NoError(t, err)
-	require.Equal(t, newLastReductionEpoch, int64(1))
+	// check that new LastReductionEpoch equals default value `0` after migration.
+	require.Equal(t, newLastReductionEpoch, int64(0))
 }

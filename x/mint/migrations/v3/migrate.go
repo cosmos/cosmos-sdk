@@ -12,5 +12,16 @@ func MigrateStore(ctx context.Context, lastReductionEpoch collections.Item[int64
 	if err != nil {
 		return fmt.Errorf("failed to get last reduction epoch: %w", err)
 	}
-	return lastReductionEpoch.Set(ctx, lre)
+
+	// Set LastReductionEpoch to default value `0`
+	if lre != 0 {
+		lre = 0
+	}
+
+	// Initialize the LastReductionEpoch with the default value
+	if err := lastReductionEpoch.Set(ctx, lre); err != nil {
+		return err
+	}
+
+	return nil
 }

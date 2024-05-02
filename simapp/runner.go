@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -97,7 +96,7 @@ func RunWithSeeds[T SimulationApp](
 
 			app := testInstance.App
 			stateFactory := setupStateFactory(app)
-			_, simParams, err := simulation.SimulateFromSeed(
+			simParams, err := simulation.SimulateFromSeed(
 				t,
 				testInstance.Logger,
 				WriteToDebugLog(testInstance.Logger),
@@ -108,7 +107,7 @@ func RunWithSeeds[T SimulationApp](
 				stateFactory.BlockedAddr,
 				tCfg,
 				stateFactory.Codec,
-				codectestutil.CodecOptions{}.GetAddressCodec(),
+				app.TxConfig().SigningContext().AddressCodec(),
 			)
 			require.NoError(t, err)
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)

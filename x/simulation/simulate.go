@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"os"
-	"os/signal"
-	"syscall"
 	"testing"
 	"time"
 
@@ -71,8 +68,8 @@ func SimulateFromSeed(
 	blockedAddrs map[string]bool,
 	config simulation.Config,
 	cdc codec.JSONCodec,
-	addresscodec address.Codec,
-) (stopEarly bool, exportedParams Params, err error) {
+	addressCodec address.Codec,
+) (exportedParams Params, err error) {
 	tb.Helper()
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
@@ -94,7 +91,7 @@ func SimulateFromSeed(
 	// At least 2 accounts must be added here, otherwise when executing SimulateMsgSend
 	// two accounts will be selected to meet the conditions from != to and it will fall into an infinite loop.
 	if len(accs) <= 1 {
-		return true, params, fmt.Errorf("at least two genesis accounts are required")
+		return params, fmt.Errorf("at least two genesis accounts are required")
 	}
 
 	config.ChainID = chainID
@@ -103,9 +100,9 @@ func SimulateFromSeed(
 	var tmpAccs []simulation.Account
 
 	for _, acc := range accs {
-		accAddr, err := addresscodec.BytesToString(acc.Address)
+		accAddr, err := addressCodec.BytesToString(acc.Address)
 		if err != nil {
-			return true, params, err
+			return params, err
 		}
 		if !blockedAddrs[accAddr] {
 			tmpAccs = append(tmpAccs, acc)
@@ -124,17 +121,6 @@ func SimulateFromSeed(
 		proposerAddress = validators.randomProposer(r)
 		opCount         = 0
 	)
-
-	// Setup code to catch SIGTERM's
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-
-	go func() {
-		receivedSignal := <-c
-		logger.Error("Exiting early", "signal", receivedSignal, "height", blockHeight, "op-count", opCount)
-		err = fmt.Errorf("exited due to %s", receivedSignal)
-		stopEarly = true
-	}()
 
 	finalizeBlockReq := RandomRequestFinalizeBlock(
 		r,
@@ -183,7 +169,7 @@ func SimulateFromSeed(
 		exportedParams = params
 	}
 
-	for blockHeight < int64(config.NumBlocks+config.InitialBlockHeight) && !stopEarly {
+	for blockHeight < int64(config.NumBlocks+config.InitialBlockHeight) {
 		pastTimes = append(pastTimes, blockTime)
 		pastVoteInfos = append(pastVoteInfos, finalizeBlockReq.DecidedLastCommit.Votes)
 
@@ -192,7 +178,7 @@ func SimulateFromSeed(
 
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
-			return true, params, err
+			return params, err
 		}
 
 		ctx := app.NewContextLegacy(false, cmtproto.Header{
@@ -241,14 +227,13 @@ func SimulateFromSeed(
 		if config.Commit {
 			_, err := app.Commit()
 			if err != nil {
-				return true, params, err
+				return params, err
 			}
 
 		}
 
 		if proposerAddress == nil {
 			logger.Info("Simulation stopped early as all validators have been unbonded; nobody left to propose a block")
-			stopEarly = true
 			break
 		}
 
@@ -267,17 +252,6 @@ func SimulateFromSeed(
 		}
 	}
 
-	if stopEarly {
-		if config.ExportStatsPath != "" {
-			fmt.Println("Exporting simulation statistics...")
-			eventStats.ExportJSON(config.ExportStatsPath)
-		} else {
-			eventStats.Print(w)
-		}
-
-		return true, exportedParams, err
-	}
-
 	logger.Info("Simulation complete", "height", blockHeight, "block-time", blockTime, "opsCount", opCount,
 		"run-time", time.Since(startTime), "app-hash", hex.EncodeToString(app.LastCommitID().Hash))
 
@@ -287,8 +261,7 @@ func SimulateFromSeed(
 	} else {
 		eventStats.Print(w)
 	}
-
-	return false, exportedParams, nil
+	return exportedParams, err
 }
 
 type blockSimFn func(

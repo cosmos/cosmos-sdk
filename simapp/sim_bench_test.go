@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -65,7 +64,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(b, log.NewNopLogger(), os.Stdout, app.BaseApp, simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()), simtypes.RandomAccounts, simtestutil.SimulationOperations(app, app.AppCodec(), config, app.txConfig), BlockedAddresses(), config, app.AppCodec(), codectestutil.CodecOptions{}.GetAddressCodec())
+	simParams, simErr := simulation.SimulateFromSeed(b, log.NewNopLogger(), os.Stdout, app.BaseApp, simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()), simtypes.RandomAccounts, simtestutil.SimulationOperations(app, app.AppCodec(), config, app.txConfig), BlockedAddresses(), config, app.AppCodec(), app.txConfig.SigningContext().AddressCodec())
 
 	// export state and simParams before the simulation error is checked
 	if err = simtestutil.CheckExportSimulation(app, config, simParams); err != nil {

@@ -28,7 +28,6 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -126,18 +125,18 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		}
 		require.NoError(t, err)
 		newStateFactory := setupStateFactory(newApp)
-		_, _, err = simulation.SimulateFromSeed(
+		_, err = simulation.SimulateFromSeed(
 			t,
 			newTestInstance.Logger,
 			WriteToDebugLog(newTestInstance.Logger),
 			newApp.BaseApp,
 			newStateFactory.AppStateFn,
 			simtypes.RandomAccounts,
-			simtestutil.SimulationOperations(newApp, newStateFactory.Codec, newTestInstance.Cfg, newApp.TxConfig()),
+			simtestutil.SimulationOperations(newApp, newApp.AppCodec(), newTestInstance.Cfg, newApp.TxConfig()),
 			newStateFactory.BlockedAddr,
 			newTestInstance.Cfg,
 			newStateFactory.Codec,
-			codectestutil.CodecOptions{}.GetAddressCodec(),
+			newApp.TxConfig().SigningContext().AddressCodec(),
 		)
 		require.NoError(t, err)
 	})

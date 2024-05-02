@@ -126,7 +126,19 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		}
 		require.NoError(t, err)
 		newStateFactory := setupStateFactory(newApp)
-		_, _, err = simulation.SimulateFromSeed(t, nil, WriteToDebugLog(newTestInstance.Logger), newApp.BaseApp, newStateFactory.AppStateFn, simtypes.RandomAccounts, simtestutil.SimulationOperations(newApp, newStateFactory.Codec, newTestInstance.Cfg, newApp.TxConfig()), newStateFactory.BlockedAddr, newTestInstance.Cfg, newStateFactory.Codec, codectestutil.CodecOptions{}.GetAddressCodec())
+		_, _, err = simulation.SimulateFromSeed(
+			t,
+			newTestInstance.Logger,
+			WriteToDebugLog(newTestInstance.Logger),
+			newApp.BaseApp,
+			newStateFactory.AppStateFn,
+			simtypes.RandomAccounts,
+			simtestutil.SimulationOperations(newApp, newStateFactory.Codec, newTestInstance.Cfg, newApp.TxConfig()),
+			newStateFactory.BlockedAddr,
+			newTestInstance.Cfg,
+			newStateFactory.Codec,
+			codectestutil.CodecOptions{}.GetAddressCodec(),
+		)
 		require.NoError(t, err)
 	})
 }

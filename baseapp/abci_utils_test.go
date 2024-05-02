@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	coreabci "cosmossdk.io/core/abci"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
@@ -755,14 +756,14 @@ func extendedCommitToLastCommit(ec abci.ExtendedCommitInfo) (abci.ExtendedCommit
 	sort.Sort(extendedVoteInfos(ec.Votes))
 
 	// convert the extended commit info to last commit info
-	lastCommit := comet.CommitInfo{
+	lastCommit := coreabci.CommitInfo{
 		Round: ec.Round,
-		Votes: make([]comet.VoteInfo, len(ec.Votes)),
+		Votes: make([]coreabci.VoteInfo, len(ec.Votes)),
 	}
 
 	for i, vote := range ec.Votes {
-		lastCommit.Votes[i] = comet.VoteInfo{
-			Validator: comet.Validator{
+		lastCommit.Votes[i] = coreabci.VoteInfo{
+			Validator: coreabci.Validator{
 				Address: vote.Validator.Address,
 				Power:   vote.Validator.Power,
 			},

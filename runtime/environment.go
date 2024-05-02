@@ -18,7 +18,7 @@ func NewEnvironment(
 ) appmodule.Environment {
 	env := appmodule.Environment{
 		Logger:             logger,
-		CometInfoService:   ContextAwareCometInfoService{},
+		ABCIInfoService:    ContextAwareABCIInfoService{},
 		EventService:       EventService{},
 		HeaderService:      HeaderService{},
 		BranchService:      BranchService{},

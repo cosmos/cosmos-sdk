@@ -15,7 +15,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/comet"
+	coreabci "cosmossdk.io/core/abci"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -150,7 +150,7 @@ func ValidateVoteExtensions(
 // it checks that the ExtendedCommit + LastCommit (for the same height), are consistent with each other + that
 // they are ordered correctly (by voting power) in accordance with
 // [comet](https://github.com/cometbft/cometbft/blob/4ce0277b35f31985bbf2c25d3806a184a4510010/types/validator_set.go#L784).
-func validateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc comet.CommitInfo) error {
+func validateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc coreabci.CommitInfo) error {
 	// check that the rounds are the same
 	if ec.Round != lc.Round {
 		return fmt.Errorf("extended commit round %d does not match last commit round %d", ec.Round, lc.Round)

@@ -21,7 +21,7 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	if err != nil {
 		return err
 	}
-	ci := k.CometInfoService.CometInfo(ctx)
+	ci := k.ABCIInfoService.ABCIInfo(ctx)
 	for _, vote := range ci.LastCommit.Votes {
 		err := k.HandleValidatorSignatureWithParams(ctx, params, vote.Validator.Address, vote.Validator.Power, vote.BlockIDFlag)
 		if err != nil {

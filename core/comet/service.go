@@ -2,7 +2,8 @@ package comet
 
 import (
 	"context"
-	"time"
+
+	"cosmossdk.io/core/abci"
 )
 
 // Service is an interface that can be used to get information specific to Comet
@@ -11,60 +12,38 @@ type Service interface {
 }
 
 // Info is the information comet provides apps in ABCI
-type Info struct {
-	Evidence []Evidence // Evidence misbehavior of the block
-	// ValidatorsHash returns the hash of the validators
-	// For Comet, it is the hash of the next validator set
-	ValidatorsHash  []byte
-	ProposerAddress []byte     // ProposerAddress is  the address of the block proposer
-	LastCommit      CommitInfo // DecidedLastCommit returns the last commit info
-}
+type Info abci.Info
 
 // MisbehaviorType is the type of misbehavior for a validator
-type MisbehaviorType int32
+type MisbehaviorType abci.MisbehaviorType
 
 const (
-	Unknown           MisbehaviorType = 0
-	DuplicateVote     MisbehaviorType = 1
-	LightClientAttack MisbehaviorType = 2
+	Unknown           = abci.Unknown
+	DuplicateVote     = abci.DuplicateVote
+	LightClientAttack = abci.LightClientAttack
 )
 
 // Evidence is the misbehavior information of ABCI
-type Evidence struct {
-	Type             MisbehaviorType
-	Validator        Validator
-	Height           int64
-	Time             time.Time
-	TotalVotingPower int64
-}
+type Evidence abci.Evidence
 
 // CommitInfo is the commit information of ABCI
-type CommitInfo struct {
-	Round int32
-	Votes []VoteInfo
-}
+type CommitInfo abci.CommitInfo
 
 // VoteInfo is the vote information of ABCI
-type VoteInfo struct {
-	Validator   Validator
-	BlockIDFlag BlockIDFlag
-}
+type VoteInfo abci.VoteInfo
 
 // BlockIDFlag indicates which BlockID the signature is for
-type BlockIDFlag int32
+type BlockIDFlag abci.BlockIDFlag
 
 const (
-	BlockIDFlagUnknown BlockIDFlag = 0
+	BlockIDFlagUnknown = abci.BlockIDFlagUnknown
 	// BlockIDFlagAbsent - no vote was received from a validator.
-	BlockIDFlagAbsent BlockIDFlag = 1
+	BlockIDFlagAbsent = abci.BlockIDFlagAbsent
 	// BlockIDFlagCommit - voted for the Commit.BlockID.
-	BlockIDFlagCommit BlockIDFlag = 2
+	BlockIDFlagCommit = abci.BlockIDFlagCommit
 	// BlockIDFlagNil - voted for nil.
-	BlockIDFlagNil BlockIDFlag = 3
+	BlockIDFlagNil = abci.BlockIDFlagNil
 )
 
 // Validator is the validator information of ABCI
-type Validator struct {
-	Address []byte
-	Power   int64
-}
+type Validator abci.Validator

@@ -412,7 +412,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	budget.ClaimedAmount = &claimedAmount
 
 	// Update the last claim time for the budget
-	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period)
+	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period * time.Duration(periodsPassed))
 	budget.LastClaimedAt = &nextClaimFrom
 
 	k.Logger.Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))

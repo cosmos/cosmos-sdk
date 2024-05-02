@@ -152,6 +152,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 
 	testCases := map[string]struct {
 		preRun           func()
+		postRun          func()
 		recipientAddress sdk.AccAddress
 		expErr           bool
 		expErrMsg        string
@@ -245,6 +246,13 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			},
 			recipientAddress: recipientAddr,
 			claimableFunds:   sdk.NewInt64Coin("foo", 100), // claiming the whole budget, 2 * 50foo = 100foo
+			postRun: func() {
+				prop, err := suite.poolKeeper.BudgetProposal.Get(suite.ctx, recipientAddr)
+				suite.Require().NoError(err)
+				suite.Require().Equal(uint64(0), prop.TranchesLeft)
+				// check if the lastClaimedAt is correct (in this case 2 periods after the start time)
+				suite.Require().Equal(startTime.Add(period*time.Duration(2)), *prop.LastClaimedAt)
+			},
 		},
 		"double claim attempt with budget period not passed": {
 			preRun: func() {
@@ -368,6 +376,10 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.claimableFunds, resp.Amount)
+			}
+
+			if tc.postRun != nil {
+				tc.postRun()
 			}
 		})
 	}

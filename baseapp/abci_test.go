@@ -2490,7 +2490,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	// the same txs as in PrepareProposal
 	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.baseApp.LastBlockHeight() + 1,
-		Txs:    reqProposalTxBytes[:],
+		Txs:    reqProposalTxBytes,
 	})
 	require.NoError(t, err)
 

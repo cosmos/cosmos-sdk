@@ -32,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 var (
@@ -81,12 +80,6 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetParamStore(paramStore{db: dbm.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
-	mem := mempool.NewPriorityMempool[int64](mempool.PriorityNonceMempoolConfig[int64]{
-		TxPriority:      mempool.NewDefaultTxPriority(),
-		MaxTx:           0,
-		SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
-	})
-	app.SetMempool(mem)
 
 	// mount stores and seal
 	require.Nil(t, app.LoadLatestVersion())

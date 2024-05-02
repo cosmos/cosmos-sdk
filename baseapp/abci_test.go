@@ -10,6 +10,7 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
@@ -1695,11 +1696,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 }
 
 func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
-	pool := mempool.NewPriorityMempool[int64](mempool.PriorityNonceMempoolConfig[int64]{
-		TxPriority:      mempool.NewDefaultTxPriority(),
-		MaxTx:           0,
-		SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
-	})
+	pool := mempool.NewSenderNonceMempool()
 
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
@@ -1716,10 +1713,9 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	suite.baseApp.InitChain(abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
-	require.NoError(t, err)
 
 	tx := newTxCounter(t, suite.txConfig, 0, 1)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
@@ -1729,8 +1725,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 		Tx:   txBytes,
 		Type: abci.CheckTxType_New,
 	}
-	_, err = suite.baseApp.CheckTx(&reqCheckTx)
-	require.NoError(t, err)
+	_ = suite.baseApp.CheckTx(reqCheckTx)
 
 	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
 
@@ -1747,8 +1742,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
-	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
-	require.NoError(t, err)
+	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
 	require.Equal(t, 2, len(resPrepareProposal.Txs))
 
 	// call recheck on the first tx, it MUST return an error
@@ -1756,41 +1750,37 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 		Tx:   txBytes,
 		Type: abci.CheckTxType_Recheck,
 	}
-	resp, err := suite.baseApp.CheckTx(&reqReCheckTx)
-	require.NoError(t, err)
+	resp := suite.baseApp.CheckTx(reqReCheckTx)
+
 	require.True(t, resp.IsErr())
 	require.Equal(t, "recheck failed in ante handler", resp.Log)
 
 	// call prepareProposal again, should return only the second tx
-	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
-	require.NoError(t, err)
+	resPrepareProposal = suite.baseApp.PrepareProposal(reqPrepareProposal)
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 	require.Equal(t, tx2Bytes, resPrepareProposal.Txs[0])
 
 	// check the mempool, it should have only the second tx
 	require.Equal(t, 1, pool.CountTx())
 
-	reqProposalTxBytes := [][]byte{
-		tx2Bytes,
-	}
+	reqProposalTxBytes := tx2Bytes
+
 	reqProcessProposal := abci.RequestProcessProposal{
-		Txs:    reqProposalTxBytes,
+		Txs:    [][]byte{reqProposalTxBytes},
 		Height: reqPrepareProposal.Height,
 	}
 
-	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
-	require.NoError(t, err)
+	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 
 	// the same txs as in PrepareProposal
-	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.baseApp.LastBlockHeight() + 1,
-		Txs:    reqProposalTxBytes,
+	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{
+		Tx: reqProposalTxBytes,
 	})
 	require.NoError(t, err)
 
 	require.Equal(t, 0, pool.CountTx())
 
-	require.NotEmpty(t, res.TxResults[0].Events)
-	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+	require.NotEmpty(t, res.Events)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 }

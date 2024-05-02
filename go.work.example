@@ -24,6 +24,7 @@ use (
 	./x/authz
 	./x/bank
 	./x/circuit
+	./x/consensus
 	./x/distribution
 	./x/evidence
 	./x/feegrant

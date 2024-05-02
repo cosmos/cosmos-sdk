@@ -56,7 +56,7 @@ The minter is a space for holding current inflation information.
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L10-L24
+https://github.com/cosmos/cosmos-sdk/blob/7e402fb1435790976fa4eafdb3467940fb7f6d1c/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L10-L30
 ```
 
 ### Params

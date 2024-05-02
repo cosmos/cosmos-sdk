@@ -17,5 +17,5 @@ message GenesisState {
 
   // reduction_started_epoch is the first epoch in which the reduction of mint
   // begins.
-  int64 reduction_started_epoch = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.51"];
+  int64 reduction_started_epoch = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.52"];
 }

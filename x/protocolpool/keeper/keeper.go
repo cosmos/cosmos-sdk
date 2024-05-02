@@ -392,6 +392,10 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	// Calculate how many periods have passed
 	periodsPassed := int64(timeElapsed) / int64(*budget.Period)
 
+	if periodsPassed > int64(budget.TranchesLeft) {
+		periodsPassed = int64(budget.TranchesLeft)
+	}
+
 	// Calculate the amount to distribute for all passed periods
 	coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.BudgetPerTranche.Amount)
 	amount = sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
@@ -402,6 +406,8 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	} else {
 		budget.TranchesLeft = 0
 	}
+
+	fmt.Println("TRANCHES LEFT", budget.TranchesLeft, budget.BudgetPerTranche, periodsPassed)
 
 	// update the ClaimedAmount
 	claimedAmount := budget.ClaimedAmount.Add(amount)

@@ -223,6 +223,29 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			expErr:           false,
 			claimableFunds:   sdk.NewInt64Coin("foo", 50),
 		},
+		"claiming budget after a long time": {
+			preRun: func() {
+				// Prepare the budget proposal with valid start time and period
+				budget := types.Budget{
+					RecipientAddress: recipientStrAddr,
+					TotalBudget:      &fooCoin,
+					LastClaimedAt:    &startTime,
+					TranchesLeft:     2,
+					Period:           &period,
+					BudgetPerTranche: &fooCoin2,
+				}
+				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				suite.Require().NoError(err)
+
+				// fast forward the block time by 240 hours
+				hinfo := suite.environment.HeaderService.HeaderInfo(suite.ctx)
+				hinfo.Time = hinfo.Time.Add(240 * time.Hour)
+				suite.ctx = suite.ctx.WithHeaderInfo(hinfo)
+
+			},
+			recipientAddress: recipientAddr,
+			claimableFunds:   sdk.NewInt64Coin("foo", 100), // claiming the whole budget, 2 * 50foo = 100foo
+		},
 		"double claim attempt with budget period not passed": {
 			preRun: func() {
 				// Prepare the budget proposal with valid start time and period
@@ -337,7 +360,13 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			msg := &types.MsgClaimBudget{
 				RecipientAddress: addr,
 			}
+			// if name == "valid claim 2" {
+			// 	hinfo := suite.environment.HeaderService.HeaderInfo(suite.ctx)
+			// 	hinfo.Time = hinfo.Time.Add(180000 * time.Second)
+			// 	suite.ctx = suite.ctx.WithHeaderInfo(hinfo)
+			// }
 			suite.mockSendCoinsFromModuleToAccount(tc.recipientAddress)
+
 			resp, err := suite.msgServer.ClaimBudget(suite.ctx, msg)
 			if tc.expErr {
 				suite.Require().Error(err)

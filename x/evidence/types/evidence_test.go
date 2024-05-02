@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/abci"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/types"
 
@@ -80,8 +79,8 @@ func TestEquivocationValidateBasic(t *testing.T) {
 
 func TestEvidenceAddressConversion(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
-	tmEvidence := newCometMisbehavior(1, 100, time.Now(), comet.DuplicateVote,
-		abci.Validator{Address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, Power: 100})
+	tmEvidence := NewCometMisbehavior(1, 100, time.Now(), comet.DuplicateVote,
+		comet.Validator{Address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, Power: 100})
 
 	evidence := types.FromABCIEvidence(tmEvidence, address.NewBech32Codec("testcnclcons"))
 	consAddr := evidence.GetConsensusAddress(address.NewBech32Codec("testcnclcons"))
@@ -90,7 +89,7 @@ func TestEvidenceAddressConversion(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 }
 
-func newCometMisbehavior(height, tvp int64, t time.Time, tpe abci.MisbehaviorType, val abci.Validator) comet.Evidence {
+func NewCometMisbehavior(height, tvp int64, t time.Time, tpe comet.MisbehaviorType, val comet.Validator) comet.Evidence {
 	return comet.Evidence{
 		Height:           height,
 		Time:             t,

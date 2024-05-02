@@ -7,7 +7,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	coreabci "cosmossdk.io/core/abci"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
@@ -395,15 +394,15 @@ func UnwrapSDKContext(ctx context.Context) Context {
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence
-func ToSDKEvidence(ev []abci.Misbehavior) []coreabci.Evidence {
-	evidence := make([]coreabci.Evidence, len(ev))
+func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
+	evidence := make([]comet.Evidence, len(ev))
 	for i, e := range ev {
-		evidence[i] = coreabci.Evidence{
-			Type:             coreabci.MisbehaviorType(e.Type),
+		evidence[i] = comet.Evidence{
+			Type:             comet.MisbehaviorType(e.Type),
 			Height:           e.Height,
 			Time:             e.Time,
 			TotalVotingPower: e.TotalVotingPower,
-			Validator: coreabci.Validator{
+			Validator: comet.Validator{
 				Address: e.Validator.Address,
 				Power:   e.Validator.Power,
 			},
@@ -413,37 +412,37 @@ func ToSDKEvidence(ev []abci.Misbehavior) []coreabci.Evidence {
 }
 
 // ToSDKCommitInfo takes comet commit info and returns sdk commit info
-func ToSDKCommitInfo(commit abci.CommitInfo) coreabci.CommitInfo {
-	ci := coreabci.CommitInfo{
+func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
 		Round: commit.Round,
 	}
 
 	for _, v := range commit.Votes {
-		ci.Votes = append(ci.Votes, coreabci.VoteInfo{
-			Validator: coreabci.Validator{
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
 				Address: v.Validator.Address,
 				Power:   v.Validator.Power,
 			},
-			BlockIDFlag: coreabci.BlockIDFlag(v.BlockIdFlag),
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
 		})
 	}
 	return ci
 }
 
 // ToSDKExtendedCommitInfo takes comet extended commit info and returns sdk commit info
-func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) coreabci.CommitInfo {
-	ci := coreabci.CommitInfo{
+func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
 		Round: commit.Round,
-		Votes: make([]coreabci.VoteInfo, len(commit.Votes)),
+		Votes: make([]comet.VoteInfo, len(commit.Votes)),
 	}
 
 	for i, v := range commit.Votes {
-		ci.Votes[i] = coreabci.VoteInfo{
-			Validator: coreabci.Validator{
+		ci.Votes[i] = comet.VoteInfo{
+			Validator: comet.Validator{
 				Address: v.Validator.Address,
 				Power:   v.Validator.Power,
 			},
-			BlockIDFlag: coreabci.BlockIDFlag(v.BlockIdFlag),
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
 		}
 	}
 

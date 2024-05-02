@@ -3,24 +3,17 @@ package runtime
 import (
 	"context"
 
-	"cosmossdk.io/core/abci"
-	corecomet "cosmossdk.io/core/abci"
+	corecomet "cosmossdk.io/core/comet"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ corecomet.Service = &ContextAwareABCIInfoService{}
+var _ corecomet.Service = &ContextAwareCometInfoService{}
 
-// ContextAwareABCIInfoService provides CometInfo which is embedded as a value in a Context.
+// ContextAwareCometInfoService provides CometInfo which is embedded as a value in a Context.
 // This the legacy (server v1, baseapp) way of accessing CometInfo at the module level.
-type ContextAwareABCIInfoService struct{}
+type ContextAwareCometInfoService struct{}
 
-func (c ContextAwareABCIInfoService) ABCIInfo(ctx context.Context) abci.Info {
-	ci := sdk.UnwrapSDKContext(ctx).CometInfo()
-	return abci.Info{
-		Evidence:        ci.Evidence,
-		ValidatorsHash:  ci.ValidatorsHash,
-		ProposerAddress: ci.ProposerAddress,
-		LastCommit:      ci.LastCommit,
-	}
+func (c ContextAwareCometInfoService) CometInfo(ctx context.Context) corecomet.Info {
+	return sdk.UnwrapSDKContext(ctx).CometInfo()
 }

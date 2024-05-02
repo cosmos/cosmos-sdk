@@ -7,7 +7,7 @@ import (
 	"github.com/cockroachdb/errors"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
-	"cosmossdk.io/core/abci"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/slashing/types"
 
@@ -16,7 +16,7 @@ import (
 )
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
-func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.Address, power int64, signed abci.BlockIDFlag) error {
+func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 	return k.HandleValidatorSignatureWithParams(ctx, params, addr, power, signed)
 }
 
-func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed abci.BlockIDFlag) error {
+func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
 	height := k.HeaderService.HeaderInfo(ctx).Height
 
 	// fetch the validator public key
@@ -80,7 +80,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	}
 
 	modifiedSignInfo := false
-	missed := signed == abci.BlockIDFlagAbsent
+	missed := signed == comet.BlockIDFlagAbsent
 	switch {
 	case !previous && missed:
 		// Bitmap value has changed from not missed to missed, so we flip the bit

@@ -967,3 +967,7 @@ func FormatDec(v string) (string, error) {
 
 	return intPart + "." + decPart, nil
 }
+
+func LegacyDecToDec(ld LegacyDec) (Dec, error) {
+    return NewDecFromString(ld.String())
+}

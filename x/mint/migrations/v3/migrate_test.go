@@ -3,12 +3,12 @@ package v3_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 	v3 "cosmossdk.io/x/mint/migrations/v3"
 	"cosmossdk.io/x/mint/types"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"

@@ -146,7 +146,7 @@ The minting module contains the following parameters:
 | GoalBonded             | string (dec)    | "0.670000000000000000" |
 | BlocksPerYear          | string (uint64) | "6311520"              |
 | EpochIdentifier        | string          | "week"                 |
-| GenesisEpochProvisions | string (dec)    | "5000000"             |
+| GenesisEpochProvisions | string (dec)    | "5000000"              |
 | ReductionFactor        | string (dec)    | "0.500000000000000000" |
 | ReductionPeriodInEpochs| string (int64)  | "156"                  |
 

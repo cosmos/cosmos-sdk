@@ -49,7 +49,7 @@ message QueryInflationRequest {}
 // method.
 message QueryInflationResponse {
   // inflation is the current minting inflation value.
-  bytes inflation = 1 [
+  string inflation = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
@@ -65,7 +65,7 @@ message QueryAnnualProvisionsRequest {}
 // Query/AnnualProvisions RPC method.
 message QueryAnnualProvisionsResponse {
   // annual_provisions is the current minting annual provisions value.
-  bytes annual_provisions = 1 [
+  string annual_provisions = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
@@ -81,7 +81,7 @@ message QueryEpochProvisionsRequest {}
 // Query/EpochProvisions RPC method.
 message QueryEpochProvisionsResponse {
   // epoch_provisions is the current minting per epoch provisions value.
-  bytes epoch_provisions = 1 [
+  string epoch_provisions = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false

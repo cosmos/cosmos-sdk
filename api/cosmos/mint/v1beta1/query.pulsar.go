@@ -1239,8 +1239,8 @@ func (x *fastReflection_QueryInflationResponse) Interface() protoreflect.ProtoMe
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryInflationResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Inflation) != 0 {
-		value := protoreflect.ValueOfBytes(x.Inflation)
+	if x.Inflation != "" {
+		value := protoreflect.ValueOfString(x.Inflation)
 		if !f(fd_QueryInflationResponse_inflation, value) {
 			return
 		}
@@ -1261,7 +1261,7 @@ func (x *fastReflection_QueryInflationResponse) Range(f func(protoreflect.FieldD
 func (x *fastReflection_QueryInflationResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryInflationResponse.inflation":
-		return len(x.Inflation) != 0
+		return x.Inflation != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryInflationResponse"))
@@ -1279,7 +1279,7 @@ func (x *fastReflection_QueryInflationResponse) Has(fd protoreflect.FieldDescrip
 func (x *fastReflection_QueryInflationResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryInflationResponse.inflation":
-		x.Inflation = nil
+		x.Inflation = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryInflationResponse"))
@@ -1298,7 +1298,7 @@ func (x *fastReflection_QueryInflationResponse) Get(descriptor protoreflect.Fiel
 	switch descriptor.FullName() {
 	case "cosmos.mint.v1beta1.QueryInflationResponse.inflation":
 		value := x.Inflation
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryInflationResponse"))
@@ -1320,7 +1320,7 @@ func (x *fastReflection_QueryInflationResponse) Get(descriptor protoreflect.Fiel
 func (x *fastReflection_QueryInflationResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryInflationResponse.inflation":
-		x.Inflation = value.Bytes()
+		x.Inflation = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryInflationResponse"))
@@ -1357,7 +1357,7 @@ func (x *fastReflection_QueryInflationResponse) Mutable(fd protoreflect.FieldDes
 func (x *fastReflection_QueryInflationResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryInflationResponse.inflation":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryInflationResponse"))
@@ -1520,7 +1520,7 @@ func (x *fastReflection_QueryInflationResponse) ProtoMethods() *protoiface.Metho
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Inflation", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1530,25 +1530,23 @@ func (x *fastReflection_QueryInflationResponse) ProtoMethods() *protoiface.Metho
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Inflation = append(x.Inflation[:0], dAtA[iNdEx:postIndex]...)
-				if x.Inflation == nil {
-					x.Inflation = []byte{}
-				}
+				x.Inflation = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2017,8 +2015,8 @@ func (x *fastReflection_QueryAnnualProvisionsResponse) Interface() protoreflect.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryAnnualProvisionsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.AnnualProvisions) != 0 {
-		value := protoreflect.ValueOfBytes(x.AnnualProvisions)
+	if x.AnnualProvisions != "" {
+		value := protoreflect.ValueOfString(x.AnnualProvisions)
 		if !f(fd_QueryAnnualProvisionsResponse_annual_provisions, value) {
 			return
 		}
@@ -2039,7 +2037,7 @@ func (x *fastReflection_QueryAnnualProvisionsResponse) Range(f func(protoreflect
 func (x *fastReflection_QueryAnnualProvisionsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryAnnualProvisionsResponse.annual_provisions":
-		return len(x.AnnualProvisions) != 0
+		return x.AnnualProvisions != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryAnnualProvisionsResponse"))
@@ -2057,7 +2055,7 @@ func (x *fastReflection_QueryAnnualProvisionsResponse) Has(fd protoreflect.Field
 func (x *fastReflection_QueryAnnualProvisionsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryAnnualProvisionsResponse.annual_provisions":
-		x.AnnualProvisions = nil
+		x.AnnualProvisions = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryAnnualProvisionsResponse"))
@@ -2076,7 +2074,7 @@ func (x *fastReflection_QueryAnnualProvisionsResponse) Get(descriptor protorefle
 	switch descriptor.FullName() {
 	case "cosmos.mint.v1beta1.QueryAnnualProvisionsResponse.annual_provisions":
 		value := x.AnnualProvisions
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryAnnualProvisionsResponse"))
@@ -2098,7 +2096,7 @@ func (x *fastReflection_QueryAnnualProvisionsResponse) Get(descriptor protorefle
 func (x *fastReflection_QueryAnnualProvisionsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryAnnualProvisionsResponse.annual_provisions":
-		x.AnnualProvisions = value.Bytes()
+		x.AnnualProvisions = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryAnnualProvisionsResponse"))
@@ -2135,7 +2133,7 @@ func (x *fastReflection_QueryAnnualProvisionsResponse) Mutable(fd protoreflect.F
 func (x *fastReflection_QueryAnnualProvisionsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryAnnualProvisionsResponse.annual_provisions":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryAnnualProvisionsResponse"))
@@ -2298,7 +2296,7 @@ func (x *fastReflection_QueryAnnualProvisionsResponse) ProtoMethods() *protoifac
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AnnualProvisions", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2308,25 +2306,23 @@ func (x *fastReflection_QueryAnnualProvisionsResponse) ProtoMethods() *protoifac
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.AnnualProvisions = append(x.AnnualProvisions[:0], dAtA[iNdEx:postIndex]...)
-				if x.AnnualProvisions == nil {
-					x.AnnualProvisions = []byte{}
-				}
+				x.AnnualProvisions = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2795,8 +2791,8 @@ func (x *fastReflection_QueryEpochProvisionsResponse) Interface() protoreflect.P
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryEpochProvisionsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.EpochProvisions) != 0 {
-		value := protoreflect.ValueOfBytes(x.EpochProvisions)
+	if x.EpochProvisions != "" {
+		value := protoreflect.ValueOfString(x.EpochProvisions)
 		if !f(fd_QueryEpochProvisionsResponse_epoch_provisions, value) {
 			return
 		}
@@ -2817,7 +2813,7 @@ func (x *fastReflection_QueryEpochProvisionsResponse) Range(f func(protoreflect.
 func (x *fastReflection_QueryEpochProvisionsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryEpochProvisionsResponse.epoch_provisions":
-		return len(x.EpochProvisions) != 0
+		return x.EpochProvisions != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryEpochProvisionsResponse"))
@@ -2835,7 +2831,7 @@ func (x *fastReflection_QueryEpochProvisionsResponse) Has(fd protoreflect.FieldD
 func (x *fastReflection_QueryEpochProvisionsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryEpochProvisionsResponse.epoch_provisions":
-		x.EpochProvisions = nil
+		x.EpochProvisions = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryEpochProvisionsResponse"))
@@ -2854,7 +2850,7 @@ func (x *fastReflection_QueryEpochProvisionsResponse) Get(descriptor protoreflec
 	switch descriptor.FullName() {
 	case "cosmos.mint.v1beta1.QueryEpochProvisionsResponse.epoch_provisions":
 		value := x.EpochProvisions
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryEpochProvisionsResponse"))
@@ -2876,7 +2872,7 @@ func (x *fastReflection_QueryEpochProvisionsResponse) Get(descriptor protoreflec
 func (x *fastReflection_QueryEpochProvisionsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryEpochProvisionsResponse.epoch_provisions":
-		x.EpochProvisions = value.Bytes()
+		x.EpochProvisions = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryEpochProvisionsResponse"))
@@ -2913,7 +2909,7 @@ func (x *fastReflection_QueryEpochProvisionsResponse) Mutable(fd protoreflect.Fi
 func (x *fastReflection_QueryEpochProvisionsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.mint.v1beta1.QueryEpochProvisionsResponse.epoch_provisions":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.QueryEpochProvisionsResponse"))
@@ -3076,7 +3072,7 @@ func (x *fastReflection_QueryEpochProvisionsResponse) ProtoMethods() *protoiface
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EpochProvisions", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3086,25 +3082,23 @@ func (x *fastReflection_QueryEpochProvisionsResponse) ProtoMethods() *protoiface
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.EpochProvisions = append(x.EpochProvisions[:0], dAtA[iNdEx:postIndex]...)
-				if x.EpochProvisions == nil {
-					x.EpochProvisions = []byte{}
-				}
+				x.EpochProvisions = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -3253,7 +3247,7 @@ type QueryInflationResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// inflation is the current minting inflation value.
-	Inflation []byte `protobuf:"bytes,1,opt,name=inflation,proto3" json:"inflation,omitempty"`
+	Inflation string `protobuf:"bytes,1,opt,name=inflation,proto3" json:"inflation,omitempty"`
 }
 
 func (x *QueryInflationResponse) Reset() {
@@ -3276,11 +3270,11 @@ func (*QueryInflationResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_mint_v1beta1_query_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *QueryInflationResponse) GetInflation() []byte {
+func (x *QueryInflationResponse) GetInflation() string {
 	if x != nil {
 		return x.Inflation
 	}
-	return nil
+	return ""
 }
 
 // QueryAnnualProvisionsRequest is the request type for the
@@ -3319,7 +3313,7 @@ type QueryAnnualProvisionsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// annual_provisions is the current minting annual provisions value.
-	AnnualProvisions []byte `protobuf:"bytes,1,opt,name=annual_provisions,json=annualProvisions,proto3" json:"annual_provisions,omitempty"`
+	AnnualProvisions string `protobuf:"bytes,1,opt,name=annual_provisions,json=annualProvisions,proto3" json:"annual_provisions,omitempty"`
 }
 
 func (x *QueryAnnualProvisionsResponse) Reset() {
@@ -3342,11 +3336,11 @@ func (*QueryAnnualProvisionsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_mint_v1beta1_query_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *QueryAnnualProvisionsResponse) GetAnnualProvisions() []byte {
+func (x *QueryAnnualProvisionsResponse) GetAnnualProvisions() string {
 	if x != nil {
 		return x.AnnualProvisions
 	}
-	return nil
+	return ""
 }
 
 // QueryEpochProvisionsRequest is the request type for the
@@ -3385,7 +3379,7 @@ type QueryEpochProvisionsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// epoch_provisions is the current minting per epoch provisions value.
-	EpochProvisions []byte `protobuf:"bytes,1,opt,name=epoch_provisions,json=epochProvisions,proto3" json:"epoch_provisions,omitempty"`
+	EpochProvisions string `protobuf:"bytes,1,opt,name=epoch_provisions,json=epochProvisions,proto3" json:"epoch_provisions,omitempty"`
 }
 
 func (x *QueryEpochProvisionsResponse) Reset() {
@@ -3408,11 +3402,11 @@ func (*QueryEpochProvisionsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_mint_v1beta1_query_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *QueryEpochProvisionsResponse) GetEpochProvisions() []byte {
+func (x *QueryEpochProvisionsResponse) GetEpochProvisions() string {
 	if x != nil {
 		return x.EpochProvisions
 	}
-	return nil
+	return ""
 }
 
 var File_cosmos_mint_v1beta1_query_proto protoreflect.FileDescriptor
@@ -3440,7 +3434,7 @@ var file_cosmos_mint_v1beta1_query_proto_rawDesc = []byte{
 	0x66, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x6e,
 	0x0a, 0x16, 0x51, 0x75, 0x65, 0x72, 0x79, 0x49, 0x6e, 0x66, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x54, 0x0a, 0x09, 0x69, 0x6e, 0x66, 0x6c,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x42, 0x36, 0xc8, 0xde, 0x1f,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x36, 0xc8, 0xde, 0x1f,
 	0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
 	0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63,
 	0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0xa8, 0xe7,
@@ -3450,7 +3444,7 @@ var file_cosmos_mint_v1beta1_query_proto_rawDesc = []byte{
 	0x01, 0x0a, 0x1d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x6e, 0x6e, 0x75, 0x61, 0x6c, 0x50, 0x72,
 	0x6f, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
 	0x12, 0x63, 0x0a, 0x11, 0x61, 0x6e, 0x6e, 0x75, 0x61, 0x6c, 0x5f, 0x70, 0x72, 0x6f, 0x76, 0x69,
-	0x73, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x42, 0x36, 0xc8, 0xde, 0x1f,
+	0x73, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x36, 0xc8, 0xde, 0x1f,
 	0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
 	0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63,
 	0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0xa8, 0xe7,
@@ -3460,7 +3454,7 @@ var file_cosmos_mint_v1beta1_query_proto_rawDesc = []byte{
 	0x75, 0x65, 0x73, 0x74, 0x22, 0x7c, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x70, 0x6f,
 	0x63, 0x68, 0x50, 0x72, 0x6f, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70,
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x10, 0x65, 0x70, 0x6f, 0x63, 0x68, 0x5f, 0x70, 0x72,
-	0x6f, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x42, 0x31,
+	0x6f, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x31,
 	0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
 	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79,
 	0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65,

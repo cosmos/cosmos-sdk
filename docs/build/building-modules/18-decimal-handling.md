@@ -15,14 +15,14 @@ These changes require a state migration to update existing decimal values to the
 ## Why the Change?
 
 * **Enhanced Precision**: `Dec` uses the [apd](https://github.com/cockroachdb/apd) library for arbitrary precision decimals, suitable for accurate financial calculations.
-* **Immutable Operations**: `Dec` operations are safer for concurrent use as they do not mutate the original values.
+* **Immutable Operations**: `Dec` operations are safer for concurrent use, as they do not mutate the original values.
 * **Better Performance**: `Dec` operations are faster and more efficient than `LegacyDec`.`
 
 ## Using `Dec` in Modules that haven't used `LegacyDec`
 
 If you are creating a new module or updating an existing module that has not used `LegacyDec`, you can directly use `Dec` without any changes.
 
-As an example we will use `DecCoin` which is a common type used in the Cosmos SDK.
+As an example, we will use `DecCoin` which is a common type used in the Cosmos SDK.
 
 
 ```protobuf

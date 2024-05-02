@@ -81,6 +81,29 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		if err != nil {
 			return nil, err
 		}
+
+		// Set initial value for all withdrawed token
+		err = pva.WithdrawedCoins.Set(ctx, coin.Denom, math.ZeroInt())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	bondDenom, err := getStakingDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set initial value for all locked token
+	err = pva.DelegatedFree.Set(ctx, bondDenom, math.ZeroInt())
+	if err != nil {
+		return nil, err
+	}
+
+	// Set initial value for all locked token
+	err = pva.DelegatedLocking.Set(ctx, bondDenom, math.ZeroInt())
+	if err != nil {
+		return nil, err
 	}
 
 	err = pva.StartTime.Set(ctx, msg.StartTime)
@@ -105,12 +128,6 @@ func (pva *PeriodicLockingAccount) Delegate(ctx context.Context, msg *lockuptype
 	return pva.BaseLockup.Delegate(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-func (pva *PeriodicLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
-) {
-	return pva.BaseLockup.Undelegate(ctx, msg)
-}
-
 func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -123,7 +140,7 @@ func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, ms
 	return pva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-// IterateSendEnabledEntries iterates over all the SendEnabled entries.
+// IteratePeriods iterates over all the Periods entries.
 func (pva PeriodicLockingAccount) IteratePeriods(
 	ctx context.Context,
 	cb func(value lockuptypes.Period) (bool, error),
@@ -183,10 +200,7 @@ func (pva PeriodicLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTim
 		unlockedCoins = unlockedCoins.Add(period.Amount...)
 
 		// update the start time of the next period
-		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
-		if err != nil {
-			return true, err
-		}
+		currentPeriodStartTime = currentPeriodStartTime.Add(period.Length)
 		return false, nil
 	})
 	if err != nil {
@@ -250,10 +264,7 @@ func (pva PeriodicLockingAccount) GetLockCoinInfoWithDenom(ctx context.Context, 
 		unlocked = unlocked.Add(sdk.NewCoin(denom, period.Amount.AmountOf(denom)))
 
 		// update the start time of the next period
-		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(period.Length))
-		if err != nil {
-			return true, err
-		}
+		currentPeriodStartTime = currentPeriodStartTime.Add(period.Length)
 		return false, nil
 	})
 	if err != nil {
@@ -324,9 +335,9 @@ func (pva PeriodicLockingAccount) RegisterInitHandler(builder *accountstd.InitBu
 
 func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.Delegate)
-	accountstd.RegisterExecuteHandler(builder, pva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, pva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, pva.WithdrawUnlockedCoins)
+	pva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

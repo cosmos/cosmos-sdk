@@ -156,7 +156,8 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx, am.inflationCalculator)
+	// Note: Set `mintAtBeginBlock` to `true` and disable mint hooks at app level, to mint tokens based on supply not on epochs.
+	return am.keeper.BeginBlocker(ctx, am.inflationCalculator, false)
 }
 
 // AppModuleSimulation functions

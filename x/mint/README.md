@@ -9,6 +9,10 @@ sidebar_position: 1
 * [State](#state)
     * [Minter](#minter)
     * [Params](#params)
+    * [LastReductionEpoch](#lastreductionepoch)
+* [Begin Epoch](#begin-epoch)
+    * [NextEpochProvisions](#nextepochprovisions)
+    * [EpochProvision](#epochprovision)
 * [Begin-Block](#begin-block)
     * [NextInflationRate](#nextinflationrate)
     * [NextAnnualProvisions](#nextannualprovisions)
@@ -70,9 +74,36 @@ it can be updated with governance or the address with authority.
 https://github.com/cosmos/cosmos-sdk/blob/7e402fb1435790976fa4eafdb3467940fb7f6d1c/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L32-L90
 ```
 
+### LastReductionEpoch
+
+Last reduction epoch stores the epoch number when the last reduction of coin mint amount per epoch has happened.
+
+## Begin-Epoch
+
+Minting parameters are recalculated and inflation is paid at the beginning
+of each epoch. An epoch is signaled by x/epochs
+
+### NextEpochProvisions
+
+The target epoch provision is recalculated on each reduction period
+(default 3 years). At the time of the reduction, the current provision is
+multiplied by the reduction factor (default `2/3`), to calculate the
+provisions for the next epoch. Consequently, the rewards of the next
+period will be lowered by a `1` - reduction factor.
+
+### EpochProvision
+
+Calculate the provisions generated for each epoch based on current epoch
+provisions. The provisions are then minted by the `mint` module's
+`ModuleMinterAccount`. These rewards are transferred to a
+`FeeCollector`, which handles distributing the rewards per the chain's needs.
+This fee collector is specified as the `auth` module's `FeeCollector` `ModuleAccount`.
+
 ## Begin-Block
 
 Minting parameters are recalculated and inflation paid at the beginning of each block.
+
+NOTE: Only one of BeginBlock or BeginEpoch hooks should be enabled for minting.
 
 ### Inflation rate calculation
 

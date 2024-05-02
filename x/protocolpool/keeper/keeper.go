@@ -407,8 +407,6 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 		budget.TranchesLeft = 0
 	}
 
-	fmt.Println("TRANCHES LEFT", budget.TranchesLeft, budget.BudgetPerTranche, periodsPassed)
-
 	// update the ClaimedAmount
 	claimedAmount := budget.ClaimedAmount.Add(amount)
 	budget.ClaimedAmount = &claimedAmount

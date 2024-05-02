@@ -720,7 +720,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			if mode == runTxModeReCheck {
 				// if the ante handler fails on recheck, we want to remove the tx from the mempool
 				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
-					return gInfo, nil, anteEvents, 0, fmt.Errorf("error: %w, mempool error: %w", err, mempoolErr)
+					return gInfo, nil, anteEvents, 0, fmt.Errorf("error: %v, mempool error: %w", err, mempoolErr)
 				}
 			}
 			return gInfo, nil, nil, 0, err

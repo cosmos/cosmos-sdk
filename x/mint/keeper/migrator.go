@@ -1,6 +1,10 @@
 package keeper
 
-import "context"
+import (
+	"context"
+
+	v3 "cosmossdk.io/x/mint/migrations/v3"
+)
 
 // Migrator is a struct for handling in-place state migrations.
 type Migrator struct {
@@ -20,4 +24,9 @@ func NewMigrator(k Keeper) Migrator {
 // module state.
 func (m Migrator) Migrate1to2(ctx context.Context) error {
 	return nil
+}
+
+// Migrate2to3 migrates from version 2 to 3.
+func (m Migrator) Migrate2to3(ctx context.Context) error {
+	return v3.MigrateStore(ctx, m.keeper.LastReductionEpoch)
 }

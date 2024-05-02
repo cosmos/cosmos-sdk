@@ -67,7 +67,7 @@ it can be updated with governance or the address with authority.
 * Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L26-L59
+https://github.com/cosmos/cosmos-sdk/blob/7e402fb1435790976fa4eafdb3467940fb7f6d1c/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L32-L90
 ```
 
 ## Begin-Block
@@ -137,14 +137,18 @@ BlockProvision(params Params) sdk.Coin {
 
 The minting module contains the following parameters:
 
-| Key                 | Type            | Example                |
-|---------------------|-----------------|------------------------|
-| MintDenom           | string          | "uatom"                |
-| InflationRateChange | string (dec)    | "0.130000000000000000" |
-| InflationMax        | string (dec)    | "0.200000000000000000" |
-| InflationMin        | string (dec)    | "0.070000000000000000" |
-| GoalBonded          | string (dec)    | "0.670000000000000000" |
-| BlocksPerYear       | string (uint64) | "6311520"              |
+| Key                    | Type            | Example                |
+|------------------------|-----------------|------------------------|
+| MintDenom              | string          | "uatom"                |
+| InflationRateChange    | string (dec)    | "0.130000000000000000" |
+| InflationMax           | string (dec)    | "0.200000000000000000" |
+| InflationMin           | string (dec)    | "0.070000000000000000" |
+| GoalBonded             | string (dec)    | "0.670000000000000000" |
+| BlocksPerYear          | string (uint64) | "6311520"              |
+| EpochIdentifier        | string          | "week"                 |
+| GenesisEpochProvisions | string (dec)    | "5000000"             |
+| ReductionFactor        | string (dec)    | "0.500000000000000000" |
+| ReductionPeriodInEpochs| string (int64)  | "156"                  |
 
 
 ## Events
@@ -195,6 +199,26 @@ Example Output:
 22268504368893.612100895088410693
 ```
 
+##### epoch-provisions
+
+The `epoch-provisions` command allows users to query the current minting epoch provisions value
+
+```shell
+simd query mint epoch-provisions [flags]
+```
+
+Example:
+
+```shell
+simd query mint epoch-provisions
+```
+
+Example Output:
+
+```shell
+5000000.000000000000000000
+```
+
 ##### inflation
 
 The `inflation` command allows users to query the current minting inflation value
@@ -226,12 +250,16 @@ simd query mint params [flags]
 Example:
 
 ```yml
-blocks_per_year: "4360000"
-goal_bonded: "0.670000000000000000"
-inflation_max: "0.200000000000000000"
-inflation_min: "0.070000000000000000"
-inflation_rate_change: "0.130000000000000000"
+blocks_per_year: "6311520"
+epoch_identifier: week
+genesis_epoch_provisions: "5000000000000000000000000"
+goal_bonded: "670000000000000000"
+inflation_max: "200000000000000000"
+inflation_min: "70000000000000000"
+inflation_rate_change: "130000000000000000"
 mint_denom: stake
+reduction_factor: "500000000000000000"
+reduction_period_in_epochs: "156"
 ```
 
 ### gRPC
@@ -258,6 +286,29 @@ Example Output:
 {
   "annualProvisions": "1432452520532626265712995618"
 }
+```
+
+#### EpochProvisions
+
+The `EpochProvisions` endpoint allows users to query the current minting epoch provisions value
+
+```shell
+/cosmos.mint.v1beta1.Query/EpochProvisions
+```
+
+Example:
+
+```shell
+grpcurl -plaintext localhost:9090 cosmos.mint.v1beta1.Query/EpochProvisions
+```
+
+Example Output:
+
+```json
+{
+  "epochProvisions": "5000000000000000000000000"
+}
+
 ```
 
 #### Inflation
@@ -306,7 +357,11 @@ Example Output:
     "inflationMax": "200000000000000000",
     "inflationMin": "70000000000000000",
     "goalBonded": "670000000000000000",
-    "blocksPerYear": "6311520"
+    "blocksPerYear": "6311520",
+    "epochIdentifier": "week",
+    "reductionPeriodInEpochs": "156",
+    "reductionFactor": "500000000000000000",
+    "genesisEpochProvisions": "5000000000000000000000000"
   }
 }
 ```
@@ -332,6 +387,26 @@ Example Output:
 ```json
 {
   "annualProvisions": "1432452520532626265712995618"
+}
+```
+
+#### epoch-provisions
+
+```shell
+/cosmos/mint/v1beta1/epoch_provisions
+```
+
+Example:
+
+```shell
+curl "localhost:1317/cosmos/mint/v1beta1/epoch_provisions"
+```
+
+Example Output:
+
+```json
+{
+  "epochProvisions": "5000000000000000000000000"
 }
 ```
 
@@ -377,7 +452,11 @@ Example Output:
     "inflationMax": "200000000000000000",
     "inflationMin": "70000000000000000",
     "goalBonded": "670000000000000000",
-    "blocksPerYear": "6311520"
+    "blocksPerYear": "6311520",
+    "epochIdentifier": "week",
+    "reductionPeriodInEpochs": "156",
+    "reductionFactor": "500000000000000000",
+    "genesisEpochProvisions": "5000000000000000000000000"
   }
 }
 ```

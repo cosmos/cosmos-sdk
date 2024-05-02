@@ -81,7 +81,7 @@ service Query {
   // Deprecated: Prefer to use x/protocolpool module's CommunityPool rpc method.
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.50";
+    option (cosmos_proto.method_added_in)      = "cosmos-sdk 0.50";
     option deprecated                          = true;
     option (google.api.http).get               = "/cosmos/distribution/v1beta1/community_pool";
   }

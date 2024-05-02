@@ -360,13 +360,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			msg := &types.MsgClaimBudget{
 				RecipientAddress: addr,
 			}
-			// if name == "valid claim 2" {
-			// 	hinfo := suite.environment.HeaderService.HeaderInfo(suite.ctx)
-			// 	hinfo.Time = hinfo.Time.Add(180000 * time.Second)
-			// 	suite.ctx = suite.ctx.WithHeaderInfo(hinfo)
-			// }
 			suite.mockSendCoinsFromModuleToAccount(tc.recipientAddress)
-
 			resp, err := suite.msgServer.ClaimBudget(suite.ctx, msg)
 			if tc.expErr {
 				suite.Require().Error(err)

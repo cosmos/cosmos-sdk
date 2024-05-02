@@ -913,8 +913,8 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		if err != nil {
 			if mode == execModeReCheck {
 				// if the ante handler fails on recheck, we want to remove the tx from the mempool
-				if err := app.mempool.Remove(tx); err != nil {
-					return gInfo, nil, anteEvents, errors.Join(err, err)
+				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
+					return gInfo, nil, anteEvents, errors.Join(err, mempoolErr)
 				}
 			}
 			return gInfo, nil, nil, err
